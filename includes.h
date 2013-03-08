@@ -6,7 +6,9 @@
 #include <string>
 #include <inttypes.h>
 #include <cmath>
+#ifndef _WIN32
 #include <endian.h>
+#endif
 #include <FL/Fl.H>
 #include <FL/Fl_Shared_Image.H>
 #include <FL/Fl_Window.H>
