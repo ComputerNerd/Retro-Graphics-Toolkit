@@ -261,7 +261,15 @@ void save_tiles(Fl_Widget*,void*)
 		fclose(myfile);
 	}
 }
-
+#if _WIN32
+uint16_t swap_word(uint16_t w)
+{
+	uint8_t a,b;
+	a=w&255;
+	b=w>>8;
+	return (a<<8)|b;
+}
+#endif
 void save_map(Fl_Widget*,void*)
 {
 	uint16_t x,y;
@@ -288,7 +296,11 @@ void save_map(Fl_Widget*,void*)
 								printf("Warning tile value %d exceeded 2047 at x: %d y: %d\n",tile,x,y);
 								tile=2047;
 							}
-							tile=htobe16(tile);//needs to be big endian 
+							#if _WIN32
+							tile=swap_word(tile);
+							#else
+							tile=htobe16(tile);//needs to be big endian
+							#endif
 							*TheMap=(uint16_t)tile_map[((y*map_size_x)+x)*4]<<8;//get attributes
 							*TheMap++|=(uint16_t)tile;//add tile
 						}
