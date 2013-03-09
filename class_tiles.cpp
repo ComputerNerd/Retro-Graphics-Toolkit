@@ -425,20 +425,21 @@ void tiles::remove_duplicate_tiles()
 	uint32_t tile_remove_c=0;
 	int32_t cur_tile,curT;
 	puts("Pass 1");
-	for (cur_tile=0;cur_tile<=tiles_amount*tileSize;cur_tile+=tileSize)
+	for (cur_tile=0;cur_tile<=tiles_amount;cur_tile++)
 	{
-		for (curT=tiles_amount*tileSize;curT>=0;curT-=tileSize)
+		for (curT=tiles_amount;curT>=0;curT--)
 		{
 			if (cur_tile == curT)//dont compare it's self
 				continue;
-			if (memcmp(&tileDat[cur_tile],&tileDat[curT],tileSize) == 0)
+			if (cmp_tiles(cur_tile,(uint32_t *)&tileDat[curT*tileSize]))
 			{
-				sub_tile_map(curT/tileSize,cur_tile/tileSize,false,false);
-				remove_tile_at(curT/tileSize);
+				sub_tile_map(curT,cur_tile,false,false);
+				remove_tile_at(curT);
 				tile_remove_c++;
+				printf("Deleted tile %d\nRemoved %d tiles\n",curT,tile_remove_c);
 			}
 		}
-		printf("On tile %d Removed %d\r",cur_tile/tileSize,tile_remove_c);
+		printf("On tile %d Removed %d\n",cur_tile,tile_remove_c);
 	}
 	printf("Removed %d tiles\n",tile_remove_c);
 	tile_remove_c=0;
@@ -447,6 +448,16 @@ bool tiles::cmp_trueC(uint32_t one,uint32_t * two)
 {//this should be faster than memcmp as it returns as soon as there is a difference
 	uint32_t * onePtr =(uint32_t *)&truetileDat[one*256];
 	for (uint8_t x=0;x<64;x++)
+	{
+		if (*onePtr++ != *two++)
+			return false;
+	}
+	return true;
+}
+bool tiles::cmp_tiles(uint32_t one,uint32_t * two)
+{
+	uint32_t * onePtr =(uint32_t *)&tileDat[one*tileSize];
+	for (uint8_t x=0;x<tileSize;x+=4)
 	{
 		if (*onePtr++ != *two++)
 			return false;

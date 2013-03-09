@@ -1,4 +1,5 @@
 #pragma once
+#include <inttypes.h>
 class editor : public Fl_Double_Window
 {
 	private:
@@ -6,12 +7,7 @@ class editor : public Fl_Double_Window
 	void _editor();
 	void draw_non_gui();
 	public:
-	unsigned char mouse_x,mouse_y;
-	//Fl_Tabs* o;
-	/*Fl_Slider* s_r;
-	Fl_Slider* s_g;
-	Fl_Slider* s_b;*/
-	//used s_red,s_green,s_blue are used for tile editor s_r,s_g,s_b are used for palette editor
+	uint8_t mouse_x,mouse_y;
 	Fl_Scrollbar * map_x_scroll;
 	Fl_Scrollbar * map_y_scroll;
 	Fl_Slider* map_w;

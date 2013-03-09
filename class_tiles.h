@@ -26,5 +26,6 @@ public:
 	void remove_duplicate_tiles();
 	void get_tiles(uint8_t *,uint8_t *,uint32_t);/*!< get_tiles allows use to easy copy tiles from another class*/
 	bool cmp_trueC(uint32_t one,uint32_t * two);/*!<Used to compare two truecolor tiles returns true if the same*/
+	bool cmp_tiles(uint32_t one,uint32_t * two);/*!<Used to compare two tiles returns true if the same*/
 }
 extern tiles_main;

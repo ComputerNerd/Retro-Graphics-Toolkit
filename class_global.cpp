@@ -41,8 +41,8 @@ void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y)
 void editor::draw_non_gui()
 {
 	//When resizing the window things move around so we need to compensate for that
-	unsigned char per_row;
-	unsigned char per_row_rgb;
+	uint8_t per_row;
+	uint8_t per_row_rgb;
 	switch (game_system)
 	{
 		case sega_genesis:
@@ -60,10 +60,10 @@ void editor::draw_non_gui()
 	//palette_bar_offset_y=(double)((double)h()/600.0)*(double)default_palette_bar_offset_y;//this command needs to be done for more than one window so there is no point of writting this more than once so we put it here
 	
 
-	short x,y;//we will need to reuse these later
-	unsigned char box_size=pal_size->value();
-	unsigned char tiles_size=tile_size->value();
-	unsigned char placer_tile_size=place_tile_size->value();
+	int16_t x,y;//we will need to reuse these later
+	uint8_t box_size=pal_size->value();
+	uint8_t tiles_size=tile_size->value();
+	uint8_t placer_tile_size=place_tile_size->value();
 	switch (mode_editor)
 	{
 		case pal_edit:
@@ -79,7 +79,6 @@ void editor::draw_non_gui()
 			tile_edit_truecolor_off_y=(double)((double)h()/600.0)*(double)default_tile_edit_truecolor_off_y;
 			tile_edit_offset_y=(double)((double)h()/600.0)*(double)default_tile_edit_offset_y;
 			tile_edit_offset_x=(tiles_size*9)+tile_edit_truecolor_off_x;//I muliplyed it by 9 instead of 8 to give spacing between the tiles
-
 			tiles_main.draw_truecolor(tiles_main.current_tile,tile_edit_truecolor_off_x,tile_edit_truecolor_off_y,false,false,tiles_size);
 			//draw palette selection box
 			tileEdit_pal.draw_boxes();
@@ -87,20 +86,20 @@ void editor::draw_non_gui()
 			if (show_grid == true)
 			{
 				//draw the grid
-				if (tiles_size > 3)
+				if (tiles_size > 4)
 				{
 					for (y=0;y<8;y++)
 					{
 						for (x=0;x<8;x++)
 						{
-							fl_draw_box(FL_EMBOSSED_FRAME,(x*tiles_size)+tile_edit_offset_x,(y*tiles_size)+tile_edit_offset_y,tiles_size,tiles_size,NULL);
+							fl_draw_box(FL_EMBOSSED_FRAME,(x*tiles_size)+tile_edit_offset_x,(y*tiles_size)+tile_edit_offset_y,tiles_size,tiles_size,0);
 						}
 					}
 					for (y=0;y<8;y++)
 					{
 						for (x=0;x<8;x++)
 						{
-							fl_draw_box(FL_EMBOSSED_FRAME,(x*tiles_size)+tile_edit_truecolor_off_x,(y*tiles_size)+tile_edit_truecolor_off_y,tiles_size,tiles_size,NULL);
+							fl_draw_box(FL_EMBOSSED_FRAME,(x*tiles_size)+tile_edit_truecolor_off_x,(y*tiles_size)+tile_edit_truecolor_off_y,tiles_size,tiles_size,0);
 						}
 					}
 				}
@@ -137,7 +136,7 @@ void editor::draw_non_gui()
 			}
 			else
 			{
-				unsigned char type_temp;
+				uint8_t type_temp;
 				if (palette_adder==0)
 				{
 					type_temp=1;
@@ -176,7 +175,6 @@ void editor::draw_non_gui()
 
 void editor::draw()
 {
-	//cout << "drawing" << endl;
 	if (damage() == FL_DAMAGE_USER1)
 	{
 		draw_non_gui();
@@ -207,7 +205,7 @@ int editor::handle(int event)
 	//printf("Event was %s (%d)\n", fl_eventnames[event], event);     // e.g. "Event was FL_PUSH (1)"
 	if (Fl_Double_Window::handle(event)) return (1);
 	//printf("Event was %s (%d)\n", fl_eventnames[event], event);     // e.g. "Event was FL_PUSH (1)"
-	unsigned char tiles_size;
+	uint8_t tiles_size;
 	switch(event)
 	{
 		case FL_PUSH:
@@ -237,10 +235,7 @@ int editor::handle(int event)
 						temp_two+=+map_scroll_pos_y;
 						if (Fl::event_button() == FL_LEFT_MOUSE)
 						{
-							
-							//printf("Setting tile: %d to location x: %d y: %d\n",tiles_main.current_tile,temp_one+map_scroll_pos_x,temp_two+map_scroll_pos_y);
 							set_tile_full(tiles_main.current_tile,temp_one,temp_two,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
-							//redraw();
 							damage(FL_DAMAGE_USER1);
 						}
 						else
@@ -248,26 +243,19 @@ int editor::handle(int event)
 							fl_alert("Tile attributes id: %d h-flip: %d v-flip %d priority: %d pal row: %d\nAt location x: %d y: %d",get_tile(temp_one,temp_two),get_hflip(temp_one,temp_two),get_vflip(temp_one,temp_two),get_prio(temp_one,temp_two),get_palette_map(temp_one,temp_two),temp_one,temp_two);
 						}
 					}
-
 					if (Fl::event_x() > tile_placer_tile_offset_x && Fl::event_y() > tile_placer_tile_offset_y && Fl::event_x() < tile_placer_tile_offset_x+(tiles_size*8) && Fl::event_y() < tile_placer_tile_offset_y+(tiles_size*8))
 					{
 						
-						unsigned char temp_two,temp_one;
+						uint8_t temp_two,temp_one;
 						temp_one=(Fl::event_x()-tile_placer_tile_offset_x)/tiles_size;
 						temp_two=(Fl::event_y()-tile_placer_tile_offset_y)/tiles_size;
-						//temp_one+=temp_two;
 						if (G_hflip == true)
-						{
 							temp_one=7-temp_one;
-						}
 						if (G_vflip == true)
-						{
 							temp_two=7-temp_two;
-						}
 						//now we know which pixel we are editing
 						//see if it is even or odd
 						unsigned char temp_1,temp_2;
-						//if ((temp_one/2)*2 == temp_one)
 						if (temp_one & 1)//faster
 						{
 							//odd
@@ -292,11 +280,9 @@ int editor::handle(int event)
 							temp_2+=tileMap_pal.box_sel<<4;
 							tiles_main.tileDat[(tiles_main.current_tile*32)+(temp_one/2)+(temp_two*4)]=temp_2;
 						}
-						//redraw();
 						damage(FL_DAMAGE_USER1);//no need to redraw the gui
 					}
 				break;
-
 				case tile_edit:
 					//first see if we are in a "valid" range
 					tiles_size=tile_size->value();
@@ -314,13 +300,11 @@ int editor::handle(int event)
 						tiles_main.truetileDat[cal_offset_truecolor(temp_one,temp_two,2,tiles_main.current_tile)]=truecolor_temp[2];//blue
 						tiles_main.truetileDat[cal_offset_truecolor(temp_one,temp_two,3,tiles_main.current_tile)]=truecolor_temp[3];//alpha
 						tiles_main.truecolor_to_tile(tileEdit_pal.theRow,tiles_main.current_tile);
-						//redraw();
 						damage(FL_DAMAGE_USER1);
 					}
 
 					if (Fl::event_x() > tile_edit_offset_x && Fl::event_y() > tile_edit_offset_y && Fl::event_x() < tile_edit_offset_x+(tiles_size*8) && Fl::event_y() < tile_edit_offset_y+(tiles_size*8))
 					{
-						
 						uint8_t temp_two,temp_one;
 						temp_one=(Fl::event_x()-tile_edit_offset_x)/tiles_size;
 						temp_two=(Fl::event_y()-tile_edit_offset_y)/tiles_size;
@@ -329,7 +313,6 @@ int editor::handle(int event)
 						tiles_main.truetileDat[cal_offset_truecolor(temp_one,temp_two,1,tiles_main.current_tile)]=rgb_pal[get_pal+1];//green
 						tiles_main.truetileDat[cal_offset_truecolor(temp_one,temp_two,2,tiles_main.current_tile)]=rgb_pal[get_pal+2];//blue
 						tiles_main.truecolor_to_tile(tileEdit_pal.theRow,tiles_main.current_tile);
-						//redraw();
 						damage(FL_DAMAGE_USER1);
 					}
 				break;
