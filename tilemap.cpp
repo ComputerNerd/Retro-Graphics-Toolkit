@@ -80,7 +80,7 @@ bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha)
 						else
 						{
 							uint8_t xx=0;
-							for (unsigned char x=0;x<32;x+=4)//pixels x
+							for (uint8_t x=0;x<32;x+=4)//pixels x
 							{
 								the_image[a+b+y+xx]=tiles_main.truetileDat[truecolor_tile_ptr+x];
 								the_image[a+b+y+xx+1]=tiles_main.truetileDat[truecolor_tile_ptr+x+1];
@@ -111,7 +111,7 @@ bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha)
 					else
 					{
 						uint8_t xx=0;
-						for (unsigned char x=0;x<32;x+=4)//pixels x
+						for (uint8_t x=0;x<32;x+=4)//pixels x
 						{
 							the_image[a+b+y+xx]=tiles_main.truetileDat[truecolor_tile_ptr+x];
 							the_image[a+b+y+xx+1]=tiles_main.truetileDat[truecolor_tile_ptr+x+1];
@@ -137,13 +137,13 @@ void generate_optimal_palette(Fl_Widget*,void * row)
 	This function is one of the more importan features of the program
 	This will look at the tile map and based on that find an optimal palette
 	*/
-	unsigned char * image;
-	//unsigned char * colors;
-	unsigned int w,h;
+	uint8_t * image;
+	//uint8_t * colors;
+	uint32_t w,h;
 	w=map_size_x*8;
 	h=map_size_y*8;
-	unsigned int colors_found;
-	unsigned char * found_colors;
+	uint32_t colors_found;
+	uint8_t * found_colors;
 	switch (game_system)
 	{
 		case sega_genesis:
@@ -151,17 +151,17 @@ void generate_optimal_palette(Fl_Widget*,void * row)
 			{
 				case 0:
 					//this is easy we just convert tilemap to image count unique colors if less than 16 then just use that else reduce palete
-					image = (unsigned char *)malloc(w*h*3);
-					found_colors = (unsigned char *)malloc(w*3+3);
+					image = (uint8_t *)malloc(w*h*3);
+					found_colors = (uint8_t *)malloc(w*3+3);
 					truecolor_to_image(image,-1,false);
 					colors_found=count_colors(image,w,h,found_colors);
 					printf("Unique colors %d\n",colors_found);
 					if (colors_found < 17)
 					{
 						printf("16 or less colors\n");
-						for (unsigned char x=0;x<colors_found;x++)
+						for (uint8_t x=0;x<colors_found;x++)
 						{
-							unsigned char r,g,b;
+							uint8_t r,g,b;
 							r=found_colors[(x*3)];
 							g=found_colors[(x*3)+1];
 							b=found_colors[(x*3)+2];
@@ -184,28 +184,26 @@ void generate_optimal_palette(Fl_Widget*,void * row)
 					}
 					else
 					{
-						//unsigned char * image_2 = (unsigned char *)malloc(w*h*3);
-						//memcpy(image_2,image,w*h*3);
 						printf("More than 16 colors reducing to 16 colors\n");
 						/*this uses denesis lee's v3 color quant which is fonund at http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c*/
-						unsigned char user_pal[3][256];
+						uint8_t user_pal[3][256];
 						
-						unsigned char rgb_pal2[768];
-						unsigned char colorz=16;
+						uint8_t rgb_pal2[768];
+						uint8_t colorz=16;
 						bool can_go_again=true;
 try_again_color:
 						dl3quant(image,w,h,colorz,user_pal);
-						for (unsigned short x=0;x<colorz;x++)
+						for (uint16_t x=0;x<colorz;x++)
 						{
-							unsigned char r=0,g=0,b=0;
+							uint8_t r=0,g=0,b=0;
 							
 							r=user_pal[0][x];
 							g=user_pal[1][x];
 							b=user_pal[2][x];
 							//printf("R=%d G=%d B=%d\n",r,g,b);
-							r=(short)(r+18)/36;//prevents overflow glitch
-							g=(short)(g+18)/36;
-							b=(short)(b+18)/36;
+							r=(int16_t)(r+18)/36;//prevents overflow glitch
+							g=(int16_t)(g+18)/36;
+							b=(int16_t)(b+18)/36;
 							//r*=2;
 							//g*=2;
 							//b*=2;
@@ -216,7 +214,7 @@ try_again_color:
 							rgb_pal2[(x*3)+1]=g*36;
 							rgb_pal2[(x*3)+2]=b*36;
 						}
-						unsigned char new_colors = count_colors(rgb_pal2,colorz,1,rgb_pal);
+						uint8_t new_colors = count_colors(rgb_pal2,colorz,1,rgb_pal);
 						printf("Unique colors in palette %d\n",new_colors);
 						if (new_colors < 16)
 						{
@@ -241,9 +239,9 @@ try_again_color:
 							colorz--;
 							goto try_again_color;
 						}
-						for (unsigned char x=0;x<16;x++)
+						for (uint8_t x=0;x<16;x++)
 						{
-							unsigned char r=0,g=0,b=0;
+							uint8_t r=0,g=0,b=0;
 							
 							r=rgb_pal[x*3];
 							g=rgb_pal[(x*3)+1];
@@ -274,21 +272,21 @@ try_again_color:
 			switch((uintptr_t)row)
 			{
 				case 0:
-					image = (unsigned char *)malloc(w*h*3);
-					found_colors = (unsigned char *)malloc(w*3+3);
+					image = (uint8_t *)malloc(w*h*3);
+					found_colors = (uint8_t *)malloc(w*3+3);
 					truecolor_to_image(image,-1,false);
 					colors_found=count_colors(image,w,h,found_colors);
 					if (colors_found < 5)
 					{
 						printf("4 or less colors\n");
-						for (unsigned char x=0;x<colors_found;x++)
+						for (uint8_t x=0;x<colors_found;x++)
 						{
-							unsigned char r,g,b;
+							uint8_t r,g,b;
 							r=found_colors[(x*3)];
 							g=found_colors[(x*3)+1];
 							b=found_colors[(x*3)+2];
 							printf("R=%d G=%d B=%d\n",r,g,b);
-							unsigned char temp = to_nes_color_rgb(r,g,b);
+							uint8_t temp = to_nes_color_rgb(r,g,b);
 							palette[x]=temp;
 							
 						}
@@ -297,34 +295,34 @@ try_again_color:
 					else
 					{
 						printf("more than 4 colors\n");
-						unsigned char user_pal[3][256];
+						uint8_t user_pal[3][256];
 						
-						unsigned char rgb_pal2[768];
-						unsigned char colorz=4;
+						uint8_t rgb_pal2[768];
+						uint8_t colorz=4;
 						bool can_go_again=true;
 try_again_nes_color:
 						dl3quant(image,w,h,colorz,user_pal);
-						for (unsigned short x=0;x<colorz;x++)
+						for (uint16_t x=0;x<colorz;x++)
 						{
-							unsigned char r=0,g=0,b=0;
+							uint8_t r=0,g=0,b=0;
 							
 							r=user_pal[0][x];
 							g=user_pal[1][x];
 							b=user_pal[2][x];
 							//printf("R=%d G=%d B=%d\n",r,g,b);
-							unsigned char temp=to_nes_color_rgb(r,g,b);
+							uint8_t temp=to_nes_color_rgb(r,g,b);
 							//r*=2;
 							//g*=2;
 							//b*=2;
 							//bgr
 							//palette[x*2]=b;
 							//palette[(x*2)+1]=r+(g<<4);
-							unsigned int temp_rgb = MakeRGBcolor(temp);
+							uint32_t temp_rgb = MakeRGBcolor(temp);
 							rgb_pal2[(x*3)]=(temp_rgb>>16)&255;
 							rgb_pal2[(x*3)+1]=(temp_rgb>>8)&255;
 							rgb_pal2[(x*3)+2]=temp_rgb&255;
 						}
-						unsigned char new_colors = count_colors(rgb_pal2,colorz,1,rgb_pal);
+						uint8_t new_colors = count_colors(rgb_pal2,colorz,1,rgb_pal);
 						printf("Unique colors in palette %d\n",new_colors);
 						if (new_colors < 4)
 						{
@@ -349,7 +347,7 @@ try_again_nes_color:
 							colorz--;
 							goto try_again_nes_color;
 						}
-						for (unsigned char x=0;x<4;x++)
+						for (uint8_t x=0;x<4;x++)
 						{
 							palette[x]=to_nes_color(x);
 						}

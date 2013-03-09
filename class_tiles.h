@@ -25,7 +25,15 @@ public:
 	void blank_tile(uint32_t);/*!<This makes the tile use color 0*/ 
 	void remove_duplicate_tiles();
 	void get_tiles(uint8_t *,uint8_t *,uint32_t);/*!< get_tiles allows use to easy copy tiles from another class*/
+#if __LP64__
+	bool cmp_trueC(uint32_t one,uint64_t * two);/*!<Used to compare two truecolor tiles returns true if the same*/
+#else
 	bool cmp_trueC(uint32_t one,uint32_t * two);/*!<Used to compare two truecolor tiles returns true if the same*/
+#endif
+#if __LP64__
+	bool cmp_tiles(uint32_t one,uint64_t * two);/*!<Used to compare two tiles returns true if the same*/
+#else
 	bool cmp_tiles(uint32_t one,uint32_t * two);/*!<Used to compare two tiles returns true if the same*/
+#endif
 }
 extern tiles_main;

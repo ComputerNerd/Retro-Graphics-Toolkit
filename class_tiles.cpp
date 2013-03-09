@@ -431,7 +431,11 @@ void tiles::remove_duplicate_tiles()
 		{
 			if (cur_tile == curT)//dont compare it's self
 				continue;
+			#if __LP64__
+			if (cmp_tiles(cur_tile,(uint64_t *)&tileDat[curT*tileSize]))
+			#else
 			if (cmp_tiles(cur_tile,(uint32_t *)&tileDat[curT*tileSize]))
+			#endif
 			{
 				sub_tile_map(curT,cur_tile,false,false);
 				remove_tile_at(curT);
@@ -444,6 +448,18 @@ void tiles::remove_duplicate_tiles()
 	printf("Removed %d tiles\n",tile_remove_c);
 	tile_remove_c=0;
 }
+#if __LP64__
+bool tiles::cmp_trueC(uint32_t one,uint64_t * two)
+{//this should be faster than memcmp as it returns as soon as there is a difference
+	uint64_t * onePtr =(uint64_t *)&truetileDat[one*256];
+	for (uint8_t x=0;x<32;x++)
+	{
+		if (*onePtr++ != *two++)
+			return false;
+	}
+	return true;
+}
+#else
 bool tiles::cmp_trueC(uint32_t one,uint32_t * two)
 {//this should be faster than memcmp as it returns as soon as there is a difference
 	uint32_t * onePtr =(uint32_t *)&truetileDat[one*256];
@@ -454,6 +470,19 @@ bool tiles::cmp_trueC(uint32_t one,uint32_t * two)
 	}
 	return true;
 }
+#endif
+#if __LP64__
+bool tiles::cmp_tiles(uint32_t one,uint64_t * two)
+{
+	uint64_t * onePtr =(uint64_t *)&tileDat[one*tileSize];
+	for (uint8_t x=0;x<tileSize;x+=8)
+	{
+		if (*onePtr++ != *two++)
+			return false;
+	}
+	return true;
+}
+#else
 bool tiles::cmp_tiles(uint32_t one,uint32_t * two)
 {
 	uint32_t * onePtr =(uint32_t *)&tileDat[one*tileSize];
@@ -464,6 +493,7 @@ bool tiles::cmp_tiles(uint32_t one,uint32_t * two)
 	}
 	return true;
 }
+#endif
 void tiles::get_tiles(uint8_t * fromTiles,uint8_t * fromTrueTiles,uint32_t theAmount)
 {
 	switch(game_system)

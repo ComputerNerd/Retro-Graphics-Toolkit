@@ -801,7 +801,7 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 	image = (uint8_t *)malloc(w*h*4);
 	if (image==0)
 		show_malloc_error(w*h*4)
-	unsigned int truecolor_tile_ptr=0;
+	uint32_t truecolor_tile_ptr=0;
 	uint32_t x_tile=0,y_tile=0;
 	uint8_t truecolor_tile[256];
 	for (uint8_t rowz=0;rowz<4;rowz++)
@@ -1050,7 +1050,11 @@ void remove_duplicate_truecolor(Fl_Widget*,void*)
 		{
 			if (cur_tile == curT)//dont compare it's self
 				continue;
+			#if __LP64__
+			if (tiles_main.cmp_trueC(cur_tile,(uint64_t *)&tiles_main.truetileDat[curT*256]))
+			#else
 			if (tiles_main.cmp_trueC(cur_tile,(uint32_t *)&tiles_main.truetileDat[curT*256]))
+			#endif
 			{
 				sub_tile_map(curT,cur_tile,false,false);
 				tiles_main.remove_tile_at(curT);
@@ -1071,8 +1075,12 @@ void remove_duplicate_truecolor(Fl_Widget*,void*)
 		{
 			if (cur_tile == curT)//dont compare it's self
 				continue;
-			tiles_main.hflip_truecolor(curT,(uint32_t *)&trueColTemp[0]);
-			if (tiles_main.cmp_trueC(cur_tile,(uint32_t *)&trueColTemp[0]))
+			tiles_main.hflip_truecolor(curT,(uint32_t *)trueColTemp);
+			#if __LP64__
+			if (tiles_main.cmp_trueC(cur_tile,(uint64_t *)trueColTemp))
+			#else
+			if (tiles_main.cmp_trueC(cur_tile,(uint32_t *)trueColTemp))
+			#endif
 			{
 				sub_tile_map(curT,cur_tile,true,false);
 				tiles_main.remove_tile_at(curT);
@@ -1092,8 +1100,12 @@ void remove_duplicate_truecolor(Fl_Widget*,void*)
 		{
 			if (cur_tile == curT)//dont compare it's self
 				continue;
-			tiles_main.vflip_truecolor(curT,&trueColTemp[0]);
-			if (tiles_main.cmp_trueC(cur_tile,(uint32_t *)&trueColTemp[0]))
+			tiles_main.vflip_truecolor(curT,trueColTemp);
+			#if __LP64__
+			if (tiles_main.cmp_trueC(cur_tile,(uint64_t *)trueColTemp))
+			#else
+			if (tiles_main.cmp_trueC(cur_tile,(uint32_t *)trueColTemp))
+			#endif
 			{
 				sub_tile_map(curT,cur_tile,false,true);
 				tiles_main.remove_tile_at(curT);
@@ -1113,9 +1125,13 @@ void remove_duplicate_truecolor(Fl_Widget*,void*)
 		{
 			if (cur_tile == curT)//dont compare it's self
 				continue;
-			tiles_main.hflip_truecolor(curT,(uint32_t *)&trueColTemp[0]);
+			tiles_main.hflip_truecolor(curT,(uint32_t *)trueColTemp);
 			tiles_main.vflip_truecolor_ptr(trueColTemp,trueColTemp);
-			if (tiles_main.cmp_trueC(cur_tile,(uint32_t *)&trueColTemp[0]))
+			#if __LP64__
+			if (tiles_main.cmp_trueC(cur_tile,(uint64_t *)trueColTemp))
+			#else
+			if (tiles_main.cmp_trueC(cur_tile,(uint32_t *)trueColTemp))
+			#endif
 			{
 				sub_tile_map(curT,cur_tile,true,true);
 				tiles_main.remove_tile_at(curT);

@@ -1,6 +1,7 @@
 /*	quantizer.h
 
 	See quantizer.c for more information
+	From http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c
 */
 #pragma once
 

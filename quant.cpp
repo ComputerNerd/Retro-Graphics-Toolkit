@@ -1,4 +1,6 @@
-/*	quantizer.c
+/*
+	from http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c
+	quantizer.c
 
 	The code in this file was originally written by Dennis Lee in files dl1quant.c, dl1quant.h, dl3quant.c, dl3quant.h
 
