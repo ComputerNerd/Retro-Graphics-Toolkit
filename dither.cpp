@@ -29,8 +29,8 @@ uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row)
 		case 255://alpha
 			//chan/=128;
 			//chan*=255;
-			chan&=128;
-			return chan;
+			val&=128;
+			return val;
 		break;
 	}
 	row*=max_rgb;

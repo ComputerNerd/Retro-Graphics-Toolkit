@@ -9,26 +9,23 @@
 void fill_tile(Fl_Widget* o, void*)
 {
 	//fills tile with currently selected color
-	unsigned char color;
-	color=tileMap_pal.box_sel;
-	uint8_t * tile_ptr_temp;
 	if (mode_editor == tile_place)
 	{
+		uint8_t color;
+		color=tileMap_pal.box_sel;
+		uint8_t * tile_ptr_temp;
 		switch (game_system)
 		{
 			case sega_genesis:
 				tile_ptr_temp = &tiles_main.tileDat[tiles_main.current_tile*32];
 				color+=color<<4;
-				for (unsigned int x=0;x<32;x++)
-				{
-					tile_ptr_temp[x]=color;
-				}
+				memset(tile_ptr_temp,color,32);
 			break;
 			case NES:
 				tile_ptr_temp = &tiles_main.tileDat[tiles_main.current_tile*16];
 				//for the NES it is different
-				unsigned char col_1;
-				unsigned char col_2;
+				uint8_t col_1;
+				uint8_t col_2;
 				col_1=color&1;
 				col_2=(color>>1)&1;
 				uint32_t x;
@@ -50,7 +47,7 @@ void fill_tile(Fl_Widget* o, void*)
 	}
 	else if (mode_editor == tile_edit)
 	{
-		for (unsigned int x=tiles_main.current_tile*256;x<(tiles_main.current_tile*256)+256;x+=4)
+		for (uint32_t x=tiles_main.current_tile*256;x<(tiles_main.current_tile*256)+256;x+=4)
 		{
 			tiles_main.truetileDat[x]=truecolor_temp[0];//red
 			tiles_main.truetileDat[x+1]=truecolor_temp[1];//green
@@ -59,7 +56,8 @@ void fill_tile(Fl_Widget* o, void*)
 		}
 		tiles_main.truecolor_to_tile(tileEdit_pal.theRow,tiles_main.current_tile);
 	}
-	//window->redraw();
+	else
+		fl_alert("To prevent accidental modificatin be in the Tile editor or Tile map editor to use this");
 	window->damage(FL_DAMAGE_USER1);
 }
 
@@ -79,7 +77,7 @@ void blank_tile(Fl_Widget* o, void*)
 
 void callback_resize_map(Fl_Widget* o, void*)
 {
-	unsigned char w,h;
+	uint8_t w,h;
 	w=window->map_w->value();
 	h=window->map_h->value();
 	resize_tile_map(w,h);
@@ -506,7 +504,7 @@ void update_all_tiles(Fl_Widget*,void*)
 		sel_pal=tileEdit_pal.theRow;
 	}
 	if (tiles_main.tiles_amount > 63)
-		printf("\n");
+		puts("");
 	for (unsigned int x=0;x<tiles_main.tiles_amount+1;x++)
 	{
 		tiles_main.truecolor_to_tile(sel_pal,x);
@@ -834,6 +832,7 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 				truecolor_tile_ptr+=32;
 			}
 			//convert back to tile
+			uint8_t * TileTempPtr;
 			switch (game_system)
 			{
 				case sega_genesis:
@@ -843,50 +842,53 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 						tempSet=get_prio(x_tile,y_tile)^true;
 						set_palette_type(tempSet);
 					}
-					for (unsigned char y=0;y<8;y++)
+					TileTempPtr=&tiles_main.tileDat[current_tile];
+					for (uint16_t y=0;y<256;y+=32)
 					{
-						for (unsigned char x=0;x<32;x+=4)
+						for (uint8_t x=0;x<32;x+=4)
 						{
 							//even,odd
 							if (x & 4)
 							{
 								//odd
-								if (truecolor_tile[(y*32)+x+3] != 0)
+								if (truecolor_tile[y+x+3] != 0)
 								{
-									temp=find_near_color_from_row(get_palette_map(x_tile,y_tile),truecolor_tile[(y*32)+x],truecolor_tile[(y*32)+x+1],truecolor_tile[(y*32)+x+2]);
-									tiles_main.tileDat[current_tile+(x/8)+(y*4)]|=temp;
+									temp=find_near_color_from_row(get_palette_map(x_tile,y_tile),truecolor_tile[y+x],truecolor_tile[y+x+1],truecolor_tile[y+x+2]);
+									*TileTempPtr++|=temp;
 								}
 							}
 							else
 							{
 								//even
-								if (truecolor_tile[(y*32)+x+3] != 0)
+								if (truecolor_tile[y+x+3] != 0)
 								{
-									temp=find_near_color_from_row(get_palette_map(x_tile,y_tile),truecolor_tile[(y*32)+x],truecolor_tile[(y*32)+x+1],truecolor_tile[(y*32)+x+2]);
-									tiles_main.tileDat[current_tile+(x/8)+(y*4)]=temp<<4;
+									temp=find_near_color_from_row(get_palette_map(x_tile,y_tile),truecolor_tile[y*+x],truecolor_tile[y+x+1],truecolor_tile[y+x+2]);
+									*TileTempPtr=temp<<4;
 								}
 								else
-									tiles_main.tileDat[current_tile+(x/8)+(y*4)]=0;
+									*TileTempPtr=0;
 							}
 						}
 
 					}
+				
 				break;
 				case NES:
 					current_tile*=16;
-					for (unsigned char x=0;x<16;x++)
+					TileTempPtr=&tiles_main.tileDat[current_tile];
+					for (uint8_t x=0;x<16;x++)
 					{
 						tiles_main.tileDat[current_tile+x]=0;
 					}
-					for (unsigned char y=0;y<8;y++)
+					for (uint8_t y=0;y<8;y++)
 					{
-						for (unsigned char x=0;x<8;x++)
+						for (uint8_t x=0;x<8;x++)
 						{
 							if (truecolor_tile[(y*32)+(x*4)+3] != 0)
 							{
 								temp=find_near_color_from_row(get_palette_map(x_tile,y_tile),truecolor_tile[(y*32)+(x*4)],truecolor_tile[(y*32)+(x*4)+1],truecolor_tile[(y*32)+(x*4)+2]);
-								tiles_main.tileDat[y+current_tile]|=(temp&1)<<(7-x);
-								tiles_main.tileDat[y+8+current_tile]|=((temp>>1)&1)<<(7-x);
+								TileTempPtr[y]|=(temp&1)<<(7-x);
+								TileTempPtr[y+8]|=((temp>>1)&1)<<(7-x);
 							}
 						}
 					}
