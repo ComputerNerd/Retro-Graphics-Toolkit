@@ -389,7 +389,7 @@ void load_tiles(Fl_Widget*,void* split)
 	if (load_file_generic() == true)
 	{
 		FILE * myfile;
-		fopen(the_file.c_str(),"rb");
+		myfile = fopen(the_file.c_str(),"rb");
 		if (myfile!=0)
 		{
 			fseek(myfile, 0L, SEEK_END);
@@ -493,7 +493,7 @@ void load_tiles(Fl_Widget*,void* split)
 		else
 		{
 			//cout << "file.is_open() returnd false meaning that the file could not be read" << endl;
-			fl_alert("File Cannot be loaded");
+			fl_alert("The file %s Cannot be loaded",the_file.c_str());
 		}
 	}
 }
