@@ -856,13 +856,15 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 									temp=find_near_color_from_row(get_palette_map(x_tile,y_tile),truecolor_tile[y+x],truecolor_tile[y+x+1],truecolor_tile[y+x+2]);
 									*TileTempPtr++|=temp;
 								}
+								else
+									TileTempPtr++;
 							}
 							else
 							{
 								//even
 								if (truecolor_tile[y+x+3] != 0)
 								{
-									temp=find_near_color_from_row(get_palette_map(x_tile,y_tile),truecolor_tile[y*+x],truecolor_tile[y+x+1],truecolor_tile[y+x+2]);
+									temp=find_near_color_from_row(get_palette_map(x_tile,y_tile),truecolor_tile[y+x],truecolor_tile[y+x+1],truecolor_tile[y+x+2]);
 									*TileTempPtr=temp<<4;
 								}
 								else
