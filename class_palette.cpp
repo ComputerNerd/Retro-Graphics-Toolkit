@@ -2,9 +2,9 @@
 #include "callbacks_palette.h"
 #include "class_palette.h"
 #include "color_convert.h"
-palette_bar palEdit;//(palette_bar_offset_x,default_palette_bar_offset_y,4);
-palette_bar tileEdit_pal;//(palette_bar_offset_x,default_palette_bar_offset_y);
-palette_bar tileMap_pal;//(palette_bar_offset_x,default_palette_bar_offset_y);
+palette_bar palEdit;
+palette_bar tileEdit_pal;
+palette_bar tileMap_pal;
 void palette_bar::more_init(uint8_t x,uint16_t offsetx,uint16_t offsety)
 {
 	rows=x;
@@ -31,22 +31,12 @@ void palette_bar::more_init(uint8_t x,uint16_t offsetx,uint16_t offsety)
 	pal_b->align(FL_ALIGN_LEFT);
 	pal_b->callback(update_palette, (void*)2);
 }
-/*palette_bar::palette_bar(uint16_t offsetx,uint16_t offsety)
-{
-	rows=1;
-	offx=offsetx;
-	offy=offsety;
-}
-palette_bar::palette_bar(uint16_t offsetx,uint16_t offsety,uint8_t x)
-{
-	rows=x;
-	offx=offsetx;
-	offy=offsety;
-}*/
 void palette_bar::check_box(int16_t x,int16_t y)
 {
-	/*this function is in chage of seeing if the mouse click is on a box and what box it is
-	for x and y pass the mouser cordinace*/
+	/*!
+	This function is in charge of seeing if the mouse click is on a box and what box it is
+	for x and y pass the mouser cordinace
+	*/
 	uint8_t boxSize=window->pal_size->value();
 	x-=offx;
 	y-=offy;

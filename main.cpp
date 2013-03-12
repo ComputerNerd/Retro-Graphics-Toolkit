@@ -29,12 +29,8 @@ void fill_tile(Fl_Widget* o, void*)
 				col_1=color&1;
 				col_2=(color>>1)&1;
 				uint32_t x;
-				/*for (x=0;x<16;x++)
-				{
-					tile_ptr_temp[x]=0;//we will be using the OR operation later on
-				}*/
 				memset(tile_ptr_temp,0,16);
-				for (unsigned char y=0;y<8;y++)
+				for (uint8_t y=0;y<8;y++)
 				{
 					for (x=0;x<8;x++)
 					{
@@ -97,11 +93,20 @@ void set_mode_tabs(Fl_Widget* o, void*)
 	intptr_t val=(intptr_t)(Fl_Tabs*)window->the_tabs->value();
 	
 	if (val==pal_id)
+	{
 		mode_editor=pal_edit;
+		palEdit.updateSlider();
+	}
 	else if (val==tile_edit_id)
+	{
 		mode_editor=tile_edit;
+		tileEdit_pal.updateSlider();
+	}
 	else if (val==tile_place_id)
+	{
 		mode_editor=tile_place;
+		tileMap_pal.updateSlider();
+	}
 }
 void set_ditherAlg(Fl_Widget*, void* typeset)
 {
@@ -114,7 +119,7 @@ void set_ditherAlg(Fl_Widget*, void* typeset)
 
 void set_tile_row(Fl_Widget*, void* row)
 {
-	unsigned char selrow=(uintptr_t)row;
+	uint8_t selrow=(uintptr_t)row;
 	switch (mode_editor)
 	{
 		case tile_edit:
@@ -181,9 +186,9 @@ void update_map_scroll_y(Fl_Widget*,void*)
 
 void update_map_size(Fl_Widget*,void*)
 {
-	unsigned short old_scroll=window->map_x_scroll->value();
-	unsigned char tile_size_placer=window->place_tile_size->value();
-	int map_scroll=((tile_size_placer*8)*map_size_x)-map_off_x;//size of all offscreen tiles in pixels
+	uint16_t old_scroll=window->map_x_scroll->value();
+	uint8_t tile_size_placer=window->place_tile_size->value();
+	int32_t map_scroll=((tile_size_placer*8)*map_size_x)-map_off_x;//size of all offscreen tiles in pixels
 	//map_scroll-=(tile_size_placer*8);
 	if (map_scroll < 0)
 	{
@@ -381,8 +386,8 @@ void load_tiles(Fl_Widget*,void* split)
 {
 	//if append==1 then we will append data but if not it will erase over current tiles
 	//format row,append
-	unsigned char append=(uintptr_t)split&0xFF;
-	unsigned char row=(uintptr_t)split>>8;
+	uint8_t append=(uintptr_t)split&0xFF;
+	uint8_t row=(uintptr_t)split>>8;
 
 	if (load_file_generic() == true)
 	{
@@ -392,7 +397,7 @@ void load_tiles(Fl_Widget*,void* split)
 		{
 			fseek(myfile, 0L, SEEK_END);
 			file_size = ftell(myfile);//file.tellg();
-			unsigned char truecolor_multiplier;
+			uint8_t truecolor_multiplier;
 			truecolor_multiplier=256/tiles_main.tileSize;
 			if ((file_size/tiles_main.tileSize)*tiles_main.tileSize != file_size)
 			{
@@ -401,14 +406,14 @@ void load_tiles(Fl_Widget*,void* split)
 				return;//return so that the file does not get loaded
 			}
 			rewind(myfile);
-			unsigned int offset_tiles;
-			unsigned int offset_tiles_bytes;
+			uint32_t offset_tiles;
+			uint32_t offset_tiles_bytes;
 			
 			if (append == 1)
 			{
 				offset_tiles=tiles_main.tiles_amount+1;
 				offset_tiles_bytes=offset_tiles*tiles_main.tileSize;
-				tiles_main.tileDat = (unsigned char *)realloc(tiles_main.tileDat,file_size+((tiles_main.tiles_amount+1)*tiles_main.tileSize));
+				tiles_main.tileDat = (uint8_t *)realloc(tiles_main.tileDat,file_size+((tiles_main.tiles_amount+1)*tiles_main.tileSize));
 				if (tiles_main.tileDat == 0)
 				{
 					fclose(myfile);
@@ -418,7 +423,7 @@ void load_tiles(Fl_Widget*,void* split)
 			else
 			{
 				free(tiles_main.tileDat);
-				tiles_main.tileDat = (unsigned char *)malloc(file_size);
+				tiles_main.tileDat = (uint8_t *)malloc(file_size);
 				if (tiles_main.tileDat == 0)
 				{
 					fclose(myfile);
@@ -429,22 +434,22 @@ void load_tiles(Fl_Widget*,void* split)
 			}
 			fread(tiles_main.tileDat+offset_tiles_bytes,1,file_size,myfile);
 			fclose(myfile);
-			tiles_main.truetileDat = (unsigned char *)realloc(tiles_main.truetileDat,(file_size*truecolor_multiplier)+(offset_tiles_bytes*truecolor_multiplier));
+			tiles_main.truetileDat = (uint8_t *)realloc(tiles_main.truetileDat,(file_size*truecolor_multiplier)+(offset_tiles_bytes*truecolor_multiplier));
 			if (tiles_main.truetileDat == 0)
 				show_malloc_error(file_size*truecolor_multiplier)
 			switch (game_system)
 			{
 				case sega_genesis:
-					for (unsigned int c=offset_tiles;c<(file_size/tiles_main.tileSize)+offset_tiles;c++)
+					for (uint32_t c=offset_tiles;c<(file_size/tiles_main.tileSize)+offset_tiles;c++)
 					{
 
-						for (unsigned char y=0;y<8;y++)
+						for (uint8_t y=0;y<8;y++)
 						{
-							for (unsigned char x=0;x<4;x++)
+							for (uint8_t x=0;x<4;x++)
 							{
 								//even,odd
-								unsigned char temp=tiles_main.tileDat[(c*32)+(y*4)+x];
-								unsigned char temp_1,temp_2;
+								uint8_t temp=tiles_main.tileDat[(c*32)+(y*4)+x];
+								uint8_t temp_1,temp_2;
 								temp_1=temp>>4;//first pixel
 								temp_2=temp&15;//second pixel
 								tiles_main.truetileDat[cal_offset_truecolor(x*2,y,0,c)]=rgb_pal[(row*48)+(temp_1*3)];
@@ -459,14 +464,14 @@ void load_tiles(Fl_Widget*,void* split)
 					}
 				break;
 				case NES:
-					for (unsigned int c=offset_tiles;c<(file_size/tiles_main.tileSize)+offset_tiles;c++)
+					for (uint32_t c=offset_tiles;c<(file_size/tiles_main.tileSize)+offset_tiles;c++)
 					{
-						for (unsigned char y=0;y<8;y++)
+						for (uint8_t y=0;y<8;y++)
 						{
-							for (unsigned char x=0;x<8;x++)
+							for (uint8_t x=0;x<8;x++)
 
 							{
-								unsigned char temp;
+								uint8_t temp;
 								temp=(tiles_main.tileDat[(c*16)+y]>>x)&1;
 								temp|=((tiles_main.tileDat[(c*16)+y+8]>>x)&1)<<1;
 								tiles_main.truetileDat[cal_offset_truecolor(x,y,0,c)]=rgb_pal[(row*12)+(temp*3)];
@@ -494,7 +499,7 @@ void load_tiles(Fl_Widget*,void* split)
 }
 void update_all_tiles(Fl_Widget*,void*)
 {
-	unsigned char sel_pal;
+	uint8_t sel_pal;
 	if (mode_editor == tile_place)
 	{
 		sel_pal=tileMap_pal.theRow;
@@ -505,7 +510,7 @@ void update_all_tiles(Fl_Widget*,void*)
 	}
 	if (tiles_main.tiles_amount > 63)
 		puts("");
-	for (unsigned int x=0;x<tiles_main.tiles_amount+1;x++)
+	for (uint32_t x=0;x<tiles_main.tiles_amount+1;x++)
 	{
 		tiles_main.truecolor_to_tile(sel_pal,x);
 		if ((x % 64) == 0)
@@ -603,7 +608,7 @@ void fill_tile_map_with_tile(Fl_Widget*,void*)
 	window->redraw();
 }
 
-void zero_error_tile_map(int x)
+void zero_error_tile_map(int32_t x)
 {//this is a long string I do not want it stored more than once
 	fl_alert("Please enter value greater than zero you on the other hand entered %d",x);
 }
@@ -615,7 +620,7 @@ void load_tile_map(Fl_Widget*,void*)
 	{
 		//get width and height
 		string tilemap_file=the_file;
-		int w,h;
+		int32_t w,h;
 		char str[16];
 		char * str_ptr;
 		str_ptr=&str[0];
@@ -666,7 +671,7 @@ void load_tile_map(Fl_Widget*,void*)
 		{
 			return;
 		}
-		int offset=atoi(str_ptr);
+		int32_t offset=atoi(str_ptr);
 		ifstream file (tilemap_file.c_str(), ios::in|ios::binary|ios::ate);
 		file_size = file.tellg();
 		uint32_t size_temp;
@@ -784,7 +789,7 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 	//to fix this I created this function It convertes the tilemap to image and dithers all tiles
 	//so first create ram for image
 	uint8_t * image;
-	unsigned int w,h;
+	uint32_t w,h;
 	uint8_t useHiL=palette_muliplier;
 	uint8_t type_temp;
 	bool tempSet;
@@ -826,7 +831,7 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 			if (current_tile == -1)
 				goto dont_convert_tile;
 			truecolor_tile_ptr=0;
-			for (unsigned int y=0;y<w*4*8;y+=w*4)//pixels y
+			for (uint32_t y=0;y<w*4*8;y+=w*4)//pixels y
 			{
 				memcpy(&truecolor_tile[truecolor_tile_ptr],&image[a+b+y],32);
 				truecolor_tile_ptr+=32;
@@ -925,7 +930,7 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 			fl_alert("Error loading image");
 			return;
 		}
-		unsigned int w,h;
+		uint32_t w,h;
 		w=loaded_image->w();
 		h=loaded_image->h();
 		cout << "image width: " << w << "image height: " << h << endl;
@@ -945,7 +950,7 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 			return;
 		}
 		//start by copying the data
-		unsigned char * img_ptr=(unsigned char *)loaded_image->data()[0];
+		uint8_t * img_ptr=(uint8_t *)loaded_image->data()[0];
 		//printf("First Pixel Red: %d Green: %d Blue: %d\n",img_ptr[0],img_ptr[1],img_ptr[2]);
 		//now we can convert to tiles
 		if (loaded_image->d() != 3 && loaded_image->d() != 4)
@@ -967,12 +972,12 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 			case 3:
 				for (unsigned long a=0;a<(h*w*3)-w*3;a+=w*3*8)//a tiles y
 				{
-					for (unsigned int b=0;b<w*3;b+=24)//b tiles x
+					for (uint32_t b=0;b<w*3;b+=24)//b tiles x
 					{
-						for (unsigned int y=0;y<w*3*8;y+=w*3)//pixels y
+						for (uint32_t y=0;y<w*3*8;y+=w*3)//pixels y
 						{
 							uint8_t xx=0;
-							for (unsigned char x=0;x<32;x+=4)//pixels x
+							for (uint8_t x=0;x<32;x+=4)//pixels x
 							{
 								tiles_main.truetileDat[truecolor_tile_ptr+x]=img_ptr[a+b+y+xx];
 								tiles_main.truetileDat[truecolor_tile_ptr+x+1]=img_ptr[a+b+y+xx+1];
@@ -988,11 +993,11 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 			case 4:
 				for (unsigned long a=0;a<(h*w*4)-w*4;a+=w*4*8)//a tiles y
 				{
-					for (unsigned int b=0;b<w*4;b+=32)//b tiles x
+					for (uint32_t b=0;b<w*4;b+=32)//b tiles x
 					{
-						for (unsigned int y=0;y<w*4*8;y+=w*4)//pixels y
+						for (uint32_t y=0;y<w*4*8;y+=w*4)//pixels y
 						{
-							for (unsigned char x=0;x<32;x+=4)//pixels x
+							for (uint8_t x=0;x<32;x+=4)//pixels x
 							{
 								tiles_main.truetileDat[truecolor_tile_ptr+x]=img_ptr[a+b+y+x];
 								tiles_main.truetileDat[truecolor_tile_ptr+x+1]=img_ptr[a+b+y+x+1];
@@ -1015,9 +1020,9 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 		window->map_w->value(w/8);
 		window->map_h->value(h/8);
 		uint32_t tilecounter=0;
-		for (unsigned short y=0;y<h/8;y++)
+		for (uint16_t y=0;y<h/8;y++)
 		{
-			for (unsigned short x=0;x<w/8;x++)
+			for (uint16_t x=0;x<w/8;x++)
 			{
 				set_tile(tilecounter,x,y);
 				tilecounter++;
@@ -1167,7 +1172,6 @@ void set_game_system(Fl_Widget*,void* selection)
 		fl_alert("You are already in that mode");
 		return;
 	}
-//	unsigned int rgb_out;
 	switch((uintptr_t)selection)
 	{
 		case sega_genesis:
@@ -1182,7 +1186,7 @@ void set_game_system(Fl_Widget*,void* selection)
 				uint8_t c;
 				for (c=0;c<64;c++)
 				{
-					unsigned short temp=to_sega_genesis_color(c);
+					uint16_t temp=to_sega_genesis_color(c);
 					pal_temp[c*2]=temp>>8;
 					pal_temp[(c*2)+1]=temp&255;
 				}
@@ -1195,13 +1199,13 @@ void set_game_system(Fl_Widget*,void* selection)
 			palEdit.changeSystem();
 			tileEdit_pal.changeSystem();
 			tileMap_pal.changeSystem();
-			tiles_main.tileDat = (unsigned char *)realloc(tiles_main.tileDat,(tiles_main.tiles_amount+1)*32);
+			tiles_main.tileDat = (uint8_t *)realloc(tiles_main.tileDat,(tiles_main.tiles_amount+1)*32);
 		break;
 		case NES:
 			game_system=NES;
 			tiles_main.tileSize=16;
 			shadow_highlight_switch->hide();
-			for (unsigned char c=0;c<16;c++)
+			for (uint8_t c=0;c<16;c++)
 			{
 				palette[c]=to_nes_color(c);
 			}
@@ -1209,7 +1213,7 @@ void set_game_system(Fl_Widget*,void* selection)
 			tileEdit_pal.changeSystem();
 			tileMap_pal.changeSystem();
 
-			tiles_main.tileDat = (unsigned char *)realloc(tiles_main.tileDat,(tiles_main.tiles_amount+1)*16);
+			tiles_main.tileDat = (uint8_t *)realloc(tiles_main.tileDat,(tiles_main.tiles_amount+1)*16);
 		break;
 		default:
 			show_default_error
@@ -1234,7 +1238,7 @@ void tilemap_remove_callback(Fl_Widget*,void*)
 		{
 			return;
 		}
-		int tile=atoi(str_ptr);
+		int32_t tile=atoi(str_ptr);
 		sub_tile_map(tile,tile-1);
 		window->redraw();
 }
@@ -1589,14 +1593,14 @@ int main(int argc, char **argv)
 	window->resizable(window);
 	Fl::scheme("plastic");
 	fl_register_images();
-	tile_map=(unsigned char *)malloc(16);
+	tile_map=(uint8_t *)malloc(16);
 	if (tile_map == 0)
 	{
 		show_malloc_error(12)
 	}
 	map_size_x=2;
 	map_size_y=2;
-	unsigned char abc;
+	uint8_t abc;
 	for (abc=0;abc<16;abc++)
 	{
 		tile_map[abc]=0x00;
