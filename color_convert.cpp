@@ -119,7 +119,7 @@ uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_
 		}
 			//update progress bar
 			printf("counting colors %% %f Colors Found: %d\r",((float)y/(float)h)*100.0,colors_amount/3);
-			if (colors_amount > 256)
+			if (colors_amount > 768)
 			{
 				printf("\nOver 256 colors timing out no need for operation to countinue.\n");
 				return colors_amount/3;//to save on multiplication we have it times 3
