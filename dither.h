@@ -8,4 +8,5 @@
         (a) = 255; \
     else \
         (a) += (b);
+
 void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha=false);

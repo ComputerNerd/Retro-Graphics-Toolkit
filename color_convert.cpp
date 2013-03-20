@@ -38,9 +38,9 @@ unsigned char to_nes_color(unsigned char pal_index)
 			unsigned char b=rgb_out&255;
 			unsigned char g=(rgb_out>>8)&255;
 			unsigned char r=(rgb_out>>16)&255;
-			int rdiff= (int)r - (int)rgb_pal[pal_index*3];
-			int gdiff= (int)g - (int)rgb_pal[(pal_index*3)+1];
-			int bdiff= (int)b - (int)rgb_pal[(pal_index*3)+2];
+			int rdiff= (int)r - (int)currentProject->rgbPal[pal_index*3];
+			int gdiff= (int)g - (int)currentProject->rgbPal[(pal_index*3)+1];
+			int bdiff= (int)b - (int)currentProject->rgbPal[(pal_index*3)+2];
 			int dist = (rdiff*rdiff) + (gdiff*gdiff) + (bdiff*bdiff);
 			if (dist < min_error)
 			{
@@ -55,18 +55,18 @@ unsigned short to_sega_genesis_color(unsigned char pal_index)
 {
 	//note this function only set the new rgb colors not the outputed sega genesis palette format
 	pal_index*=3;
-	unsigned char r=rgb_pal[pal_index];
-	unsigned char g=rgb_pal[pal_index+1];
-	unsigned char b=rgb_pal[pal_index+2];
+	unsigned char r=currentProject->rgbPal[pal_index];
+	unsigned char g=currentProject->rgbPal[pal_index+1];
+	unsigned char b=currentProject->rgbPal[pal_index+2];
 	r=(r+18)/36;
 	g=(g+18)/36;
 	b=(b+18)/36;
 	r+=r;//multiply by 2 in the sega genesis hardware all palette have 3 valid bits but bit zero is always set to zero
 	g+=g;
 	b+=b;
-	rgb_pal[pal_index]=r*18;
-	rgb_pal[pal_index+1]=g*18;
-	rgb_pal[pal_index+2]=b*18;
+	currentProject->rgbPal[pal_index]=r*18;
+	currentProject->rgbPal[pal_index+1]=g*18;
+	currentProject->rgbPal[pal_index+2]=b*18;
 	//bgr format
 	return r+(g<<4)+(b<<8);
 }
@@ -143,13 +143,13 @@ void update_emphesis(Fl_Widget*,void*)
 			emps=tileMap_pal.pal_b->value();
 		break;
 	}
-	for (unsigned char c=0;c<48;c+=3)
+	for (uint8_t c=0;c<48;c+=3)
 	{
 		unsigned int rgb_out;
-		rgb_out=MakeRGBcolor(palette[c/3]+(emps<<6));
-		rgb_pal[c]=(rgb_out>>16)&255;//red
-		rgb_pal[c+1]=(rgb_out>>8)&255;//green
-		rgb_pal[c+2]=rgb_out&255;//blue
+		rgb_out=MakeRGBcolor(currentProject->palDat[c/3]+(emps<<6));
+		currentProject->rgbPal[c]=(rgb_out>>16)&255;//red
+		currentProject->rgbPal[c+1]=(rgb_out>>8)&255;//green
+		currentProject->rgbPal[c+2]=rgb_out&255;//blue
 	}
 	window->redraw();
 }

@@ -32,5 +32,6 @@
 #include <FL/Fl_Image.H>
 #include <FL/Fl_Progress.H>
 #include <inttypes.h>
+#include "project.h"
 //wow! look at all the inclueds
 using namespace std;

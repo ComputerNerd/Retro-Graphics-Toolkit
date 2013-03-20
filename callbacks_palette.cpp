@@ -18,7 +18,7 @@ void save_palette(Fl_Widget*, void* start_end)
 		if (myfile.is_open())
 		{
 			//save the palette
-			myfile.write((char *)palette+start,end-start);
+			myfile.write((char *)currentProject->palDat+start,end-start);
 			cout << "Great Success! File saved!" << endl;
 		}
 		else
@@ -56,29 +56,29 @@ void update_palette(Fl_Widget* o, void* v)
 		switch ((uintptr_t)v)
 		{
 			case 0://red
-				temp_var=palette[(temp_entry*2)+1];//get the green value we need to save it for later
+				temp_var=currentProject->palDat[(temp_entry*2)+1];//get the green value we need to save it for later
 				//temp_var>>=4;
 				//temp_var<<=4;//put the green value back in proper place
 				temp_var&=0xF0;
 				temp_var+=(unsigned char)s->value();//value() returns a double so we need to cast it to unsigned char
-				palette[(temp_entry*2)+1]=temp_var;
+				currentProject->palDat[(temp_entry*2)+1]=temp_var;
 				//now convert the new red value
-				rgb_pal[temp_entry*3]=(unsigned char)palette_adder+s->value()*palette_muliplier;
+				currentProject->rgbPal[temp_entry*3]=(unsigned char)palette_adder+s->value()*palette_muliplier;
 			break;
 			case 1://green
 				//this is very similar to what I just did above
-				temp_var=palette[(temp_entry*2)+1];
+				temp_var=currentProject->palDat[(temp_entry*2)+1];
 				temp_var&=15;//get only the red value
 				//now add the new green value to it
 				temp_var+=(unsigned char)s->value()<<4;
-				palette[(temp_entry*2)+1]=temp_var;
+				currentProject->palDat[(temp_entry*2)+1]=temp_var;
 				//now convert the new green value
-				rgb_pal[(temp_entry*3)+1]=(unsigned char)palette_adder+s->value()*palette_muliplier;
+				currentProject->rgbPal[(temp_entry*3)+1]=(unsigned char)palette_adder+s->value()*palette_muliplier;
 			break;
 			case 2:
 				//blue takes the least commands
-				palette[temp_entry*2]=(unsigned char)s->value();
-				rgb_pal[(temp_entry*3)+2]=(unsigned char)palette_adder+s->value()*palette_muliplier;
+				currentProject->palDat[temp_entry*2]=(unsigned char)s->value();
+				currentProject->rgbPal[(temp_entry*3)+2]=(unsigned char)palette_adder+s->value()*palette_muliplier;
 			break;
 		}
 	}
@@ -111,12 +111,12 @@ void update_palette(Fl_Widget* o, void* v)
 			*/
 			case 0://Hue
 				//first read out value
-				pal=palette[temp_entry];
+				pal=currentProject->palDat[temp_entry];
 				pal&=48;
 				pal|=(uint8_t)s->value();
 			break;
 			case 1://Value
-				pal=palette[temp_entry];
+				pal=currentProject->palDat[temp_entry];
 				pal&=15;
 				pal|=((uint8_t)s->value())<<4;
 			break;
@@ -125,15 +125,15 @@ void update_palette(Fl_Widget* o, void* v)
 				return;
 			break;
 		}
-		palette[temp_entry]=pal;
+		currentProject->palDat[temp_entry]=pal;
 		rgb_out=MakeRGBcolor(pal);
-		rgb_pal[temp_entry*3+2]=rgb_out&255;//blue
-		rgb_pal[temp_entry*3+1]=(rgb_out>>8)&255;//green
-		rgb_pal[temp_entry*3]=(rgb_out>>16)&255;//red
+		currentProject->rgbPal[temp_entry*3+2]=rgb_out&255;//blue
+		currentProject->rgbPal[temp_entry*3+1]=(rgb_out>>8)&255;//green
+		currentProject->rgbPal[temp_entry*3]=(rgb_out>>16)&255;//red
 	}
 	if (mode_editor == tile_edit)
 	{
-		tiles_main.truecolor_to_tile(tileEdit_pal.theRow,tiles_main.current_tile);//update tile
+		currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);//update tile
 	}
 	window->redraw();//update the palette
 }
@@ -162,7 +162,7 @@ void Butt_CB(Fl_Widget*, void* offset)
 			//read the palette to the buffer
 			file.seekg (0, ios::beg);
 			//cout << "reading to buffer" << endl; Who is gonna care about that???
-			file.read ((char *)palette+(uintptr_t)offset, file_size);
+			file.read ((char *)currentProject->palDat+(uintptr_t)offset, file_size);
 			file.close();
 			//now convert each value to rgb
 			for (unsigned char pal=(uintptr_t)offset; pal < file_size+(uintptr_t)offset;pal+=2)
@@ -173,27 +173,27 @@ void Butt_CB(Fl_Widget*, void* offset)
 				//cout << "converting palette number " << (unsigned short)pal/2 << endl;//cout does not print char or unsigned char so it has to be cast to something else
 				printf("Converting palette number: %d\n",pal/2);
 				unsigned char rgb_array = pal+(pal/2);//multiply pal by 1.5
-				unsigned char temp_var = palette[pal];
+				unsigned char temp_var = currentProject->palDat[pal];
 				temp_var*=palette_muliplier;
 				temp_var+=palette_adder;
-				rgb_pal[rgb_array+2]=temp_var;
+				currentProject->rgbPal[rgb_array+2]=temp_var;
 				//<< = left bitshift >> = right bitshifts
 				//seperating the gr values will require some bitwise operations
 				//to get g shift to the right by 4
-				temp_var = palette[pal+1];
+				temp_var = currentProject->palDat[pal+1];
 				temp_var>>=4;
 				temp_var*=palette_muliplier;
 				temp_var+=palette_adder;
-				rgb_pal[rgb_array+1]=temp_var;
+				currentProject->rgbPal[rgb_array+1]=temp_var;
 				//to get r value apply the and opperation by 0xF or 15
-				temp_var = palette[pal+1];
+				temp_var = currentProject->palDat[pal+1];
 				temp_var&=0xF;
 				temp_var*=palette_muliplier;
 				temp_var+=palette_adder;
-				rgb_pal[rgb_array]=temp_var;
+				currentProject->rgbPal[rgb_array]=temp_var;
 				//now tell us the rgb values
-				//cout << "Red: " << (unsigned short) rgb_pal[rgb_array] << " Green: " << (unsigned short) rgb_pal[rgb_array+1] << " Blue: " << (unsigned short) rgb_pal[rgb_array+2] << endl;
-				printf("Red: %d Green: %d Blue: %d",rgb_pal[rgb_array],rgb_pal[rgb_array+1],rgb_pal[rgb_array+2]);
+				//cout << "Red: " << (unsigned short) currentProject->rgbPal[rgb_array] << " Green: " << (unsigned short) currentProject->rgbPal[rgb_array+1] << " Blue: " << (unsigned short) currentProject->rgbPal[rgb_array+2] << endl;
+				printf("Red: %d Green: %d Blue: %d\n",currentProject->rgbPal[rgb_array],currentProject->rgbPal[rgb_array+1],currentProject->rgbPal[rgb_array+2]);
 			}
 			//mode_editor=pal_edit;
 			window->redraw();

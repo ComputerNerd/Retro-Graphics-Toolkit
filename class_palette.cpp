@@ -88,12 +88,12 @@ void palette_bar::draw_boxes()
 		uint16_t loc_x,loc_y;
 		loc_x=(double)((double)window->w()/800.0)*(double)palette_preview_box_x;
 		loc_y=(double)((double)window->h()/600.0)*(double)palette_preview_box_y;
-		fl_rectf(loc_x,loc_y,box_size*4,box_size*4,rgb_pal[(box_sel*3)+(theRow*a)],rgb_pal[(box_sel*3)+(theRow*a)+1],rgb_pal[(box_sel*3)+(theRow*a)+2]);//this will show larger preview of current color
+		fl_rectf(loc_x,loc_y,box_size*4,box_size*4,currentProject->rgbPal[(box_sel*3)+(theRow*a)],currentProject->rgbPal[(box_sel*3)+(theRow*a)+1],currentProject->rgbPal[(box_sel*3)+(theRow*a)+2]);//this will show larger preview of current color
 	}
 	if (theRow >= rows)
 	{
 		for (x=0;x<z;x++)
-			fl_rectf(offx+(x*box_size),offy,box_size,box_size,rgb_pal[(x*3)+(a*theRow)],rgb_pal[(x*3)+1+(a*theRow)],rgb_pal[(x*3)+2+(a*theRow)]);
+			fl_rectf(offx+(x*box_size),offy,box_size,box_size,currentProject->rgbPal[(x*3)+(a*theRow)],currentProject->rgbPal[(x*3)+1+(a*theRow)],currentProject->rgbPal[(x*3)+2+(a*theRow)]);
 		fl_draw_box(FL_EMBOSSED_FRAME,box_sel*box_size+offx,offy,box_size,box_size,0);
 	}
 	else
@@ -101,7 +101,7 @@ void palette_bar::draw_boxes()
 		for (y=0;y<rows;y++)
 		{
 			for (x=0;x<z;x++)
-				fl_rectf(offx+(x*box_size),offy+(y*box_size),box_size,box_size,rgb_pal[(x*3)+(y*a)],rgb_pal[(x*3)+(y*a)+1],rgb_pal[(x*3)+(y*a)+2]);
+				fl_rectf(offx+(x*box_size),offy+(y*box_size),box_size,box_size,currentProject->rgbPal[(x*3)+(y*a)],currentProject->rgbPal[(x*3)+(y*a)+1],currentProject->rgbPal[(x*3)+(y*a)+2]);
 		}
 		fl_draw_box(FL_EMBOSSED_FRAME,box_sel*box_size+offx,theRow*box_size+offy,box_size,box_size,0);
 	}
@@ -118,13 +118,13 @@ void palette_bar::updateSlider()
 	switch (game_system)
 	{
 		case sega_genesis:
-			pal_b->value(palette[(box_sel*2)+(theRow*32)]);
-			pal_g->value(palette[1+(box_sel*2)+(theRow*32)]>>4);
-			pal_r->value(palette[1+(box_sel*2)+(theRow*32)]&15);
+			pal_b->value(currentProject->palDat[(box_sel*2)+(theRow*32)]);
+			pal_g->value(currentProject->palDat[1+(box_sel*2)+(theRow*32)]>>4);
+			pal_r->value(currentProject->palDat[1+(box_sel*2)+(theRow*32)]&15);
 		break;
 		case NES:
-			pal_r->value(palette[box_sel+(theRow*4)]&15);
-			pal_g->value((palette[box_sel+(theRow*4)]>>4)&3);
+			pal_r->value(currentProject->palDat[box_sel+(theRow*4)]&15);
+			pal_g->value((currentProject->palDat[box_sel+(theRow*4)]>>4)&3);
 		break;
 	}
 }

@@ -28,28 +28,56 @@ uint16_t tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
 uint16_t true_color_box_x,true_color_box_y;
 uint8_t tile_zoom_edit;
 uint8_t game_system;
-uint8_t palette[128];
+//uint8_t currentProject->palDat[128];
 uint8_t truecolor_temp[4];/*!< This stores the rgba data selected with the truecolor sliders*/
-string the_file;//this is for tempory use only
+std::string the_file;//this is for tempory use only
 uint8_t mode_editor;//this is used to determin which thing to draw
 uint8_t palette_muliplier;
 uint8_t palette_adder;
-uint8_t rgb_pal[192];
+//uint8_t currentProject->rgbPal[192];
 //uint8_t palette_entry;
 //uint8_t rgb_temp[3];
 //uint8_t tile_palette_row;//sets which palette row the tile displays
 //uint8_t tile_palette_row_placer;//sets which palette row the tile placer displays
 //uint8_t * tiles;
-uint8_t * tile_map;
+//uint8_t * currentProject->tileMapC->tileMapDat; //moved to class
 //uint32_t tiles_amount;
 //uint32_t current_tile;//current tile that we are editing minus one
 //uint32_t current_tile_placer;
 uint32_t file_size;
-uint16_t map_size_x;
-uint16_t map_size_y;
-uint8_t * attr_nes;
+//uint16_t currentProject->tileMapC->mapSizeW;
+//uint16_t currentProject->tileMapC->mapSizeH;
+//uint8_t * attr_nes;
 uint8_t ditherAlg;
 #define PI 3.141592653589793238462643383279
+
+bool verify_str_number_only(char * str)
+{
+/*!
+Fltk provides an input text box that makes it easy for the user to type text however as a side effect they can accidently enter non number characters that may be handled weird by atoi()
+this function address that issue by error checking the string and it also gives the user feedback so they are aware that the input box takes only numbers
+this function returns true when the string contains only numbers 0-9 and false when there is other stuff
+it will also allow the use of the - symbol as negative
+*/
+	while(*str++)
+	{
+		if (*str != 0 && *str != '-')
+		{
+			if (*str < '0')
+			{
+				fl_alert("Please enter only numbers in decimal format\nCharacter entered %c",*str);
+				return false;
+			}
+			if (*str > '9')
+			{
+				fl_alert("Please enter only numbers in decimal format\nCharacter entered %c",*str);
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
 inline int wave(int p,int color)
 {
 	return (color+p+8)%12 < 6;
@@ -62,11 +90,9 @@ inline int clamp(int v)
 {
 	return v<0 ? 0 : v>255 ? 255 : v;
 }
- uint32_t MakeRGBcolor(uint32_t pixel,
-                          float saturation = 1.1f, float hue_tweak = 0.0f,
-                          float contrast = 1.0f, float brightness = 1.0f,
-                          float gamma = 2.2f)
-    {
+//uint32_t MakeRGBcolor(uint32_t pixel,float saturation = 1.1f, float hue_tweak = 0.0f,float contrast = 1.0f, float brightness = 1.0f,float gamma = 2.2f)
+uint32_t MakeRGBcolor(uint32_t pixel,float saturation, float hue_tweak,float contrast, float brightness,float gamma)
+{
         /*!
 	 The input value is a NES color index (with de-emphasis bits).
          We need RGB values. Convert the index into RGB.
@@ -119,7 +145,7 @@ inline int clamp(int v)
                      + 0x00100*clamp(255 * gammafix(y + -0.274788f*i + -0.635691f*q,gamma))
                      + 0x00001*clamp(255 * gammafix(y + -1.108545f*i +  1.709007f*q,gamma));
         return rgb;
-    }
+}
  //the game system defines are also defined in global.h
 #define sega_genesis 0
 #define NES 1
@@ -173,31 +199,31 @@ from genvdp.txt
 uint32_t get_tile(uint16_t x,uint16_t y)
 {
 	//first calulate which tile we want
-	if (map_size_x < x || map_size_y < y)
+	if (currentProject->tileMapC->mapSizeW < x || currentProject->tileMapC->mapSizeH < y)
 	{
 		fl_alert("Error tried to get a non existen tile on the map");
 		return 0;
 	}
-	uint32_t selected_tile=((y*map_size_x)+x)*4;
+	uint32_t selected_tile=((y*currentProject->tileMapC->mapSizeW)+x)*4;
 	//get both bytes
 	uint8_t temp_1,temp_2,temp_3;
-	temp_1=tile_map[selected_tile+1];//least sigficant is stored in the lowest address
-	temp_2=tile_map[selected_tile+2];
-	temp_3=tile_map[selected_tile+3];//most sigficant
+	temp_1=currentProject->tileMapC->tileMapDat[selected_tile+1];//least sigficant is stored in the lowest address
+	temp_2=currentProject->tileMapC->tileMapDat[selected_tile+2];
+	temp_3=currentProject->tileMapC->tileMapDat[selected_tile+3];//most sigficant
 	//printf("Returned %d\n",(temp_1<<16)+(temp_2<<8)+temp_3);
 	return (temp_1<<16)+(temp_2<<8)+temp_3;
 }
 int32_t get_tileRow(uint16_t x,uint16_t y,uint8_t useRow)
 {
 	//first calulate which tile we want
-	uint32_t selected_tile=((y*map_size_x)+x)*4;
+	uint32_t selected_tile=((y*currentProject->tileMapC->mapSizeW)+x)*4;
 	//get both bytes
-	if (((tile_map[selected_tile]>>5)&3) == useRow)
+	if (((currentProject->tileMapC->tileMapDat[selected_tile]>>5)&3) == useRow)
 	{
 		uint8_t temp_1,temp_2,temp_3;
-		temp_1=tile_map[selected_tile+1];//least sigficant is stored in the lowest address
-		temp_2=tile_map[selected_tile+2];
-		temp_3=tile_map[selected_tile+3];//most sigficant
+		temp_1=currentProject->tileMapC->tileMapDat[selected_tile+1];//least sigficant is stored in the lowest address
+		temp_2=currentProject->tileMapC->tileMapDat[selected_tile+2];
+		temp_3=currentProject->tileMapC->tileMapDat[selected_tile+3];//most sigficant
 		return (temp_1<<16)+(temp_2<<8)+temp_3;
 	}
 	else
@@ -233,56 +259,37 @@ void set_palette_type(uint8_t type)
 		//first get blue value
 		//the rgb array is in rgb format and the genesis palette is bgr format
 		uint8_t rgb_array = pal+(pal/2);//multiply pal by 1.5
-		uint8_t temp_var = palette[pal];
+		uint8_t temp_var = currentProject->palDat[pal];
 		temp_var*=palette_muliplier;
 		temp_var+=palette_adder;
-		rgb_pal[rgb_array+2]=temp_var;
+		currentProject->rgbPal[rgb_array+2]=temp_var;
 		//seperating the gr values will require some bitwise operations
 		//to get g shift to the right by 4
-		temp_var = palette[pal+1];
+		temp_var = currentProject->palDat[pal+1];
 		temp_var>>=4;
 		temp_var*=palette_muliplier;
 		temp_var+=palette_adder;
-		rgb_pal[rgb_array+1]=temp_var;
+		currentProject->rgbPal[rgb_array+1]=temp_var;
 		//to get r value apply the and opperation by 0xF or 15
-		temp_var = palette[pal+1];
+		temp_var = currentProject->palDat[pal+1];
 		temp_var&=0xF;
 		temp_var*=palette_muliplier;
 		temp_var+=palette_adder;
-		rgb_pal[rgb_array]=temp_var;
+		currentProject->rgbPal[rgb_array]=temp_var;
 	}
 	//window->redraw();
-}
-uint8_t get_palette_map(uint16_t x,uint16_t y)
-{
-	return (tile_map[((y*map_size_x)+x)*4]>>5)&3;
-}
-
-bool get_hflip(uint16_t x,uint16_t y)
-{
-	return (tile_map[((y*map_size_x)+x)*4]>>3)&1;
-}
-
-bool get_vflip(uint16_t x,uint16_t y)
-{
-	return (tile_map[((y*map_size_x)+x)*4]>>4)&1;
-}
-
-bool get_prio(uint16_t x,uint16_t y)
-{
-	return (tile_map[((y*map_size_x)+x)*4]>>7)&1;
 }
 
 void set_tile_full(uint32_t tile,uint16_t x,uint16_t y,uint8_t palette_row,bool use_hflip,bool use_vflip,bool highorlow_prio)
 {
-	if (map_size_x < x || map_size_y < y)
+	if (currentProject->tileMapC->mapSizeW < x || currentProject->tileMapC->mapSizeH < y)
 	{
 		fl_alert("Error tried to set a non existen tile on the map");
 		return;
 	}
-	uint32_t selected_tile=((y*map_size_x)+x)*4;
+	uint32_t selected_tile=((y*currentProject->tileMapC->mapSizeW)+x)*4;
 	uint8_t flags;
-	uint8_t the_tiles;
+	//uint8_t the_tiles;
 	/*
 	7  6  5  4  3  2  1 0
 	15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
@@ -304,45 +311,45 @@ void set_tile_full(uint32_t tile,uint16_t x,uint16_t y,uint8_t palette_row,bool 
 	flags|=use_hflip<<3;
 	flags|=use_vflip<<4;
 	flags|=highorlow_prio<<7;
-	tile_map[selected_tile]=flags;
+	currentProject->tileMapC->tileMapDat[selected_tile]=flags;
 	//in little endain the least sigficant byte is stored in the lowest address
-	tile_map[selected_tile+1]=(tile>>16)&255;
-	tile_map[selected_tile+2]=(tile>>8)&255;
-	tile_map[selected_tile+3]=tile&255;
+	currentProject->tileMapC->tileMapDat[selected_tile+1]=(tile>>16)&255;
+	currentProject->tileMapC->tileMapDat[selected_tile+2]=(tile>>8)&255;
+	currentProject->tileMapC->tileMapDat[selected_tile+3]=tile&255;
 }
 
 void set_tile(uint32_t tile,uint16_t x,uint16_t y)
 {
 	//we must split into two varibles
-	if (map_size_x < x || map_size_y < y)
+	if (currentProject->tileMapC->mapSizeW < x || currentProject->tileMapC->mapSizeH < y)
 	{
 		fl_alert("Error: Tried to set a non existent tile on the tile map");
 		return;
 	}
-	uint32_t selected_tile=((y*map_size_x)+x)*4;
-	tile_map[selected_tile+1]=(tile>>16)&255;
-	tile_map[selected_tile+2]=(tile>>8)&255;
-	tile_map[selected_tile+3]=tile&255;
+	uint32_t selected_tile=((y*currentProject->tileMapC->mapSizeW)+x)*4;
+	currentProject->tileMapC->tileMapDat[selected_tile+1]=(tile>>16)&255;
+	currentProject->tileMapC->tileMapDat[selected_tile+2]=(tile>>8)&255;
+	currentProject->tileMapC->tileMapDat[selected_tile+3]=tile&255;
 }
 void set_tile_clear_flags(uint32_t tile,uint16_t x,uint16_t y)
 {
-	uint32_t selected_tile=((y*map_size_x)+x)*4;
-	tile_map[selected_tile]=0;
-	tile_map[selected_tile+1]=(tile>>16)&255;
-	tile_map[selected_tile+2]=(tile>>8)&255;
-	tile_map[selected_tile+3]=tile&255;
+	uint32_t selected_tile=((y*currentProject->tileMapC->mapSizeW)+x)*4;
+	currentProject->tileMapC->tileMapDat[selected_tile]=0;
+	currentProject->tileMapC->tileMapDat[selected_tile+1]=(tile>>16)&255;
+	currentProject->tileMapC->tileMapDat[selected_tile+2]=(tile>>8)&255;
+	currentProject->tileMapC->tileMapDat[selected_tile+3]=tile&255;
 }
 void invert_vflip(uint16_t x,uint16_t y)
 {
-	tile_map[((y*map_size_x)+x)*4]^=16;
+	currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]^=16;
 }
 void invert_hflip(uint16_t x,uint16_t y)
 {
-	tile_map[((y*map_size_x)+x)*4]^=8;
+	currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]^=8;
 }
 void invert_prio(uint16_t x,uint16_t y)
 {
-	tile_map[((y*map_size_x)+x)*4]^=128;
+	currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]^=128;
 }
 /*
     7  6  5  4  3  2  1 0
@@ -375,9 +382,9 @@ uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b)
 	row*=max_rgb;
     for (i=row; i<max_rgb+row; i+=3)
 	{
-        int Rdiff = (int) r - (int)rgb_pal[i];
-        int Gdiff = (int) g - (int)rgb_pal[i+1];
-        int Bdiff = (int) b - (int)rgb_pal[i+2];
+        int Rdiff = (int) r - (int)currentProject->rgbPal[i];
+        int Gdiff = (int) g - (int)currentProject->rgbPal[i+1];
+        int Bdiff = (int) b - (int)currentProject->rgbPal[i+2];
         distanceSquared = Rdiff*Rdiff + Gdiff*Gdiff + Bdiff*Bdiff;
         if (distanceSquared <= minDistanceSquared) {
             minDistanceSquared = distanceSquared;
@@ -406,9 +413,9 @@ uint8_t find_near_color_from_row(uint8_t row,uint8_t r,uint8_t g,uint8_t b)
 	row*=max_rgb;
     for (i=0; i<max_rgb; i+=3)
 	{
-        int Rdiff = (int) r - (int)rgb_pal[i+row];
-        int Gdiff = (int) g - (int)rgb_pal[i+row+1];
-        int Bdiff = (int) b - (int)rgb_pal[i+row+2];
+        int Rdiff = (int) r - (int)currentProject->rgbPal[i+row];
+        int Gdiff = (int) g - (int)currentProject->rgbPal[i+row+1];
+        int Bdiff = (int) b - (int)currentProject->rgbPal[i+row+2];
         distanceSquared = Rdiff*Rdiff + Gdiff*Gdiff + Bdiff*Bdiff;
         if (distanceSquared <= minDistanceSquared) {
             minDistanceSquared = distanceSquared;
@@ -451,40 +458,40 @@ void set_hflip(uint16_t x,uint16_t y,bool hflip_set)
 {
 	if (hflip_set == true)
 	{
-		tile_map[((y*map_size_x)+x)*4]|= 1 << 3;
+		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]|= 1 << 3;
 	}
 	else
 	{
-		tile_map[((y*map_size_x)+x)*4]&= ~(1 << 3);
+		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]&= ~(1 << 3);
 	}
 }
 void set_vflip(uint16_t x,uint16_t y,bool vflip_set)
 {
 	if (vflip_set == true)
 	{
-		tile_map[((y*map_size_x)+x)*4]|= 1 << 4;
+		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]|= 1 << 4;
 	}
 	else
 	{
-		tile_map[((y*map_size_x)+x)*4]&= ~(1 << 4);
+		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]&= ~(1 << 4);
 	}
 }
 void set_prio(uint16_t x,uint16_t y,bool prio_set)
 {
 	if (prio_set == true)
 	{
-		tile_map[((y*map_size_x)+x)*4] |= 1 << 7;
+		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4] |= 1 << 7;
 	}
 	else
 	{
-		tile_map[((y*map_size_x)+x)*4] &= ~(1 << 7);
+		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4] &= ~(1 << 7);
 	}
 }
 
 void resize_tile_map(uint16_t new_x,uint16_t new_y)
 {
-	//map_size_x and map_size_y hold old map size
-	if (new_x == map_size_x && new_y == map_size_y) return;
+	//currentProject->tileMapC->mapSizeW and currentProject->tileMapC->mapSizeH hold old map size
+	if (new_x == currentProject->tileMapC->mapSizeW && new_y == currentProject->tileMapC->mapSizeH) return;
 	//now create a temp buffer to hold the old data
 	uint16_t x,y;//needed for loop varibles to copy data
 	//uint8_t * temp = new uint8_t [(new_x*new_y)*2];
@@ -502,14 +509,14 @@ void resize_tile_map(uint16_t new_x,uint16_t new_y)
 	{
 		for (x=0;x<new_x;x++)
 		{
-			if (x < map_size_x && y < map_size_y)
+			if (x < currentProject->tileMapC->mapSizeW && y < currentProject->tileMapC->mapSizeH)
 			{	
 				sel_map=((y*new_x)+x)*4;
-				uint32_t sel_map_old=((y*map_size_x)+x)*4;
-				temp[sel_map]=tile_map[sel_map_old];
-				temp[sel_map+1]=tile_map[sel_map_old+1];
-				temp[sel_map+2]=tile_map[sel_map_old+2];
-				temp[sel_map+3]=tile_map[sel_map_old+3];
+				uint32_t sel_map_old=((y*currentProject->tileMapC->mapSizeW)+x)*4;
+				temp[sel_map]=currentProject->tileMapC->tileMapDat[sel_map_old];
+				temp[sel_map+1]=currentProject->tileMapC->tileMapDat[sel_map_old+1];
+				temp[sel_map+2]=currentProject->tileMapC->tileMapDat[sel_map_old+2];
+				temp[sel_map+3]=currentProject->tileMapC->tileMapDat[sel_map_old+3];
 			}
 			else
 			{
@@ -521,23 +528,23 @@ void resize_tile_map(uint16_t new_x,uint16_t new_y)
 			}
 		}
 	}
-	tile_map = (uint8_t *)realloc(tile_map,(new_x*new_y)*4);
-	if (tile_map == 0)
+	currentProject->tileMapC->tileMapDat = (uint8_t *)realloc(currentProject->tileMapC->tileMapDat,(new_x*new_y)*4);
+	if (currentProject->tileMapC->tileMapDat == 0)
 	{
-		//fl_alert("An error occured while realloc tile_map");
+		//fl_alert("An error occured while realloc currentProject->tileMapC->tileMapDat");
 		show_realloc_error((new_x*new_y)*4)
 		return;
 	}
 	for (uint32_t c=0;c<(new_x*new_y)*4;c++)
 	{
-		tile_map[c]=temp[c];
+		currentProject->tileMapC->tileMapDat[c]=temp[c];
 	}
 	free(temp);
-	map_size_x=new_x;
+	currentProject->tileMapC->mapSizeW=new_x;
 	//calulate new scroll size
 	uint16_t old_scroll=window->map_x_scroll->value();
 	uint8_t tile_size_placer=window->place_tile_size->value();
-	int32_t map_scroll=((tile_size_placer*8)*map_size_x)-map_off_x;//size of all offscreen tiles in pixels
+	int32_t map_scroll=((tile_size_placer*8)*currentProject->tileMapC->mapSizeW)-map_off_x;//size of all offscreen tiles in pixels
 	//map_scroll-=(tile_size_placer*8);
 	if (map_scroll < 0)
 	{
@@ -550,10 +557,10 @@ void resize_tile_map(uint16_t new_x,uint16_t new_y)
 		old_scroll=map_scroll;
 	}
 	window->map_x_scroll->value(old_scroll,(map_scroll/2),0,map_scroll+(map_scroll/2));//the reason for adding map_scroll/2 to map_scroll is because without it the user will not be able to scroll the tilemap all the way
-	map_size_y=new_y;
+	currentProject->tileMapC->mapSizeH=new_y;
 	old_scroll=window->map_y_scroll->value();
 	tile_size_placer=window->place_tile_size->value();
-	map_scroll=((tile_size_placer*8)*map_size_y)-map_off_y;//size of all offscreen tiles in pixels
+	map_scroll=((tile_size_placer*8)*currentProject->tileMapC->mapSizeH)-map_off_y;//size of all offscreen tiles in pixels
 	//map_scroll-=(tile_size_placer*8);
 	if (map_scroll < 0)
 	{
@@ -569,7 +576,8 @@ void resize_tile_map(uint16_t new_x,uint16_t new_y)
 
 }
 
-bool load_file_generic(const char * the_tile="Pick a file",bool save_file=false)
+//bool load_file_generic(const char * the_tile="Pick a file",bool save_file=false)
+bool load_file_generic(const char * the_tile,bool save_file)
 {	
 	// Create native chooser
 	Fl_Native_File_Chooser native;

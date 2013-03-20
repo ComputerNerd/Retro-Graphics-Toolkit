@@ -11,7 +11,6 @@ public:
 	uint32_t current_tile;/*!< The current tile that is being edited*/
 	uint8_t * tileDat;/*!< Pointer to the tile data*/
 	uint8_t * truetileDat;/*< Pointer to Truecolor tile data*/
-	string tileName;/*!< This is the "Project name" of this tileset*/
 	void remove_tile_at(uint32_t);
 	void truecolor_to_tile(uint8_t,uint32_t);/*!< truecolor_to_tile will update/dither the selected tile*/
 	void draw_truecolor(uint32_t,uint16_t x,uint16_t y,bool usehflip,bool usevflip,uint8_t zoom);
@@ -35,5 +34,5 @@ public:
 #else
 	bool cmp_tiles(uint32_t one,uint32_t * two);/*!<Used to compare two tiles returns true if the same*/
 #endif
-}
-extern tiles_main;
+};
+//extern tiles_main;

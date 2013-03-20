@@ -21,7 +21,7 @@ void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y)
 		for (uint8_t c=0;c<16*3;c++)
 			*ptr_grid++=255;
 	}
-	if (rgba[3]==0)
+	if (rgba[3]==0)//prevent divide by zero
 	{
 		//just draw grid and return
 		fl_draw_image(grid,x,y,32,32,3);
@@ -79,10 +79,10 @@ void editor::draw_non_gui()
 			tile_edit_truecolor_off_y=(double)((double)h()/600.0)*(double)default_tile_edit_truecolor_off_y;
 			tile_edit_offset_y=(double)((double)h()/600.0)*(double)default_tile_edit_offset_y;
 			tile_edit_offset_x=(tiles_size*9)+tile_edit_truecolor_off_x;//I muliplyed it by 9 instead of 8 to give spacing between the tiles
-			tiles_main.draw_truecolor(tiles_main.current_tile,tile_edit_truecolor_off_x,tile_edit_truecolor_off_y,false,false,tiles_size);
+			currentProject->tileC->draw_truecolor(currentProject->tileC->current_tile,tile_edit_truecolor_off_x,tile_edit_truecolor_off_y,false,false,tiles_size);
 			//draw palette selection box
 			tileEdit_pal.draw_boxes();
-			tiles_main.draw_tile(tile_edit_offset_x,tile_edit_offset_y,tiles_main.current_tile,tiles_size,tileEdit_pal.theRow,false,false);
+			currentProject->tileC->draw_tile(tile_edit_offset_x,tile_edit_offset_y,currentProject->tileC->current_tile,tiles_size,tileEdit_pal.theRow,false,false);
 			if (show_grid == true)
 			{
 				//draw the grid
@@ -109,8 +109,8 @@ void editor::draw_non_gui()
 			tile_placer_tile_offset_y=(double)((double)h()/600.0)*(double)default_tile_placer_tile_offset_y;
 			tileMap_pal.draw_boxes();
 			//now draw the tile
-			tiles_main.draw_tile(tile_placer_tile_offset_x,tile_placer_tile_offset_y,tiles_main.current_tile,placer_tile_size,tileMap_pal.theRow,G_hflip,G_vflip);
-			//tiles_main.draw_truecolor(tiles_main.current_tile,tile_placer_tile_offset_x,tile_placer_tile_offset_y,G_hflip,G_vflip,placer_tile_size);
+			currentProject->tileC->draw_tile(tile_placer_tile_offset_x,tile_placer_tile_offset_y,currentProject->tileC->current_tile,placer_tile_size,tileMap_pal.theRow,G_hflip,G_vflip);
+			//currentProject->tileC->draw_truecolor(currentProject->tileC->current_tile,tile_placer_tile_offset_x,tile_placer_tile_offset_y,G_hflip,G_vflip,placer_tile_size);
 			//convert posistion
 			map_off_y=(double)((double)h()/600.0)*(double)default_map_off_y;
 			map_off_x=(double)((double)w()/800.0)*(double)default_map_off_x;
@@ -122,15 +122,15 @@ void editor::draw_non_gui()
 			if (palette_muliplier==18 || game_system != sega_genesis)
 			{
 				//shadow highlight is disabled
-				for (y=0;y<min((int)map_size_y-map_scroll_pos_y,(int)max_map_h);y++)
+				for (y=0;y<min((int)currentProject->tileMapC->mapSizeH-map_scroll_pos_y,(int)max_map_h);y++)
 				{
-					for (x=0;x<min((int)map_size_x-map_scroll_pos_x,(int)max_map_w);x++)
+					for (x=0;x<min((int)currentProject->tileMapC->mapSizeW-map_scroll_pos_x,(int)max_map_w);x++)
 					{//remember to change back to drawtile
 						uint32_t tempx,tempy;
 						tempx=x+map_scroll_pos_x;
 						tempy=y+map_scroll_pos_y;
-						tiles_main.draw_tile(map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),get_tile(x+map_scroll_pos_x,y+map_scroll_pos_y),placer_tile_size,get_palette_map(x+map_scroll_pos_x,y+map_scroll_pos_y),get_hflip(x+map_scroll_pos_x,y+map_scroll_pos_y),get_vflip(x+map_scroll_pos_x,y+map_scroll_pos_y));
-						//tiles_main.draw_truecolor(get_tile(tempx,tempy),map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),get_hflip(tempx,tempy),get_vflip(tempx,tempy),placer_tile_size);
+						currentProject->tileC->draw_tile(map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),get_tile(x+map_scroll_pos_x,y+map_scroll_pos_y),placer_tile_size,currentProject->tileMapC->get_palette_map(x+map_scroll_pos_x,y+map_scroll_pos_y),currentProject->tileMapC->get_hflip(x+map_scroll_pos_x,y+map_scroll_pos_y),currentProject->tileMapC->get_vflip(x+map_scroll_pos_x,y+map_scroll_pos_y));
+						//currentProject->tileC->draw_truecolor(get_tile(tempx,tempy),map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),currentProject->tileMapC->get_hflip(tempx,tempy),currentProject->tileMapC->get_vflip(tempx,tempy),placer_tile_size);
 					}
 				}
 			}
@@ -145,13 +145,13 @@ void editor::draw_non_gui()
 				{
 					type_temp=2;
 				}
-				for (y=0;y<min((int)map_size_y-map_scroll_pos_y,(int)max_map_h);y++)
+				for (y=0;y<min((int)currentProject->tileMapC->mapSizeH-map_scroll_pos_y,(int)max_map_h);y++)
 				{
-					for (x=0;x<min((int)map_size_x-map_scroll_pos_x,(int)max_map_w);x++)
+					for (x=0;x<min((int)currentProject->tileMapC->mapSizeW-map_scroll_pos_x,(int)max_map_w);x++)
 					{
-						bool temp=get_prio(x+map_scroll_pos_x,y+map_scroll_pos_y)^true;
+						bool temp=currentProject->tileMapC->get_prio(x+map_scroll_pos_x,y+map_scroll_pos_y)^true;
 						set_palette_type(temp);
-						tiles_main.draw_tile(map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),get_tile(x+map_scroll_pos_x,y+map_scroll_pos_y),placer_tile_size,get_palette_map(x+map_scroll_pos_x,y+map_scroll_pos_y),get_hflip(x+map_scroll_pos_x,y+map_scroll_pos_y),get_vflip(x+map_scroll_pos_x,y+map_scroll_pos_y));
+						currentProject->tileC->draw_tile(map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),get_tile(x+map_scroll_pos_x,y+map_scroll_pos_y),placer_tile_size,currentProject->tileMapC->get_palette_map(x+map_scroll_pos_x,y+map_scroll_pos_y),currentProject->tileMapC->get_hflip(x+map_scroll_pos_x,y+map_scroll_pos_y),currentProject->tileMapC->get_vflip(x+map_scroll_pos_x,y+map_scroll_pos_y));
 					}
 				}
 				set_palette_type(type_temp);
@@ -160,9 +160,9 @@ void editor::draw_non_gui()
 			if (show_grid_placer == true)
 			{
 				//draw box over tiles
-				for (y=0;y<min((int)map_size_y-map_scroll_pos_y,(int)max_map_h);y++)
+				for (y=0;y<min((int)currentProject->tileMapC->mapSizeH-map_scroll_pos_y,(int)max_map_h);y++)
 				{
-					for (x=0;x<min((int)map_size_x-map_scroll_pos_x,(int)max_map_w);x++)
+					for (x=0;x<min((int)currentProject->tileMapC->mapSizeW-map_scroll_pos_x,(int)max_map_w);x++)
 					{
 						fl_draw_box(FL_EMBOSSED_FRAME,map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),placer_tile_size*8,placer_tile_size*8,NULL);
 					}
@@ -226,7 +226,7 @@ int editor::handle(int event)
 				case tile_place:
 					tiles_size=place_tile_size->value();
 					//see if the user placed a tile on the map
-					if (Fl::event_x() > map_off_x && Fl::event_y() > map_off_y && Fl::event_x() < map_off_x+((tiles_size*8)*map_size_x) && Fl::event_y() < map_off_y+((tiles_size*8)*map_size_y))
+					if (Fl::event_x() > map_off_x && Fl::event_y() > map_off_y && Fl::event_x() < map_off_x+((tiles_size*8)*currentProject->tileMapC->mapSizeW) && Fl::event_y() < map_off_y+((tiles_size*8)*currentProject->tileMapC->mapSizeH))
 					{
 						uint16_t temp_two,temp_one;
 						temp_one=((Fl::event_x()-map_off_x)/tiles_size)/8;
@@ -235,13 +235,11 @@ int editor::handle(int event)
 						temp_two+=+map_scroll_pos_y;
 						if (Fl::event_button() == FL_LEFT_MOUSE)
 						{
-							set_tile_full(tiles_main.current_tile,temp_one,temp_two,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
+							set_tile_full(currentProject->tileC->current_tile,temp_one,temp_two,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
 							damage(FL_DAMAGE_USER1);
 						}
 						else
-						{
-							fl_alert("Tile attributes id: %d h-flip: %d v-flip %d priority: %d pal row: %d\nAt location x: %d y: %d",get_tile(temp_one,temp_two),get_hflip(temp_one,temp_two),get_vflip(temp_one,temp_two),get_prio(temp_one,temp_two),get_palette_map(temp_one,temp_two),temp_one,temp_two);
-						}
+							fl_alert("Tile attributes id: %d h-flip: %d v-flip %d priority: %d pal row: %d\nAt location x: %d y: %d",get_tile(temp_one,temp_two),currentProject->tileMapC->get_hflip(temp_one,temp_two),currentProject->tileMapC->get_vflip(temp_one,temp_two),currentProject->tileMapC->get_prio(temp_one,temp_two),currentProject->tileMapC->get_palette_map(temp_one,temp_two),temp_one,temp_two);
 					}
 					if (Fl::event_x() > tile_placer_tile_offset_x && Fl::event_y() > tile_placer_tile_offset_y && Fl::event_x() < tile_placer_tile_offset_x+(tiles_size*8) && Fl::event_y() < tile_placer_tile_offset_y+(tiles_size*8))
 					{
@@ -260,25 +258,25 @@ int editor::handle(int event)
 						{
 							//odd
 							//split pixels
-							unsigned char temp=tiles_main.tileDat[(tiles_main.current_tile*32)+(temp_one/2)+(temp_two*4)];
+							unsigned char temp=currentProject->tileC->tileDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)];
 							//first,second pixel
 							temp_1=temp>>4;//first pixel
 							temp_2=temp&15;//second pixel
 							//put temp_1 back in proper place
 							temp_1<<=4;
 							temp_1+=tileMap_pal.box_sel;
-							tiles_main.tileDat[(tiles_main.current_tile*32)+(temp_one/2)+(temp_two*4)]=temp_1;
+							currentProject->tileC->tileDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)]=temp_1;
 						}
 						else
 						{
 							//even
 							//split pixels
-							unsigned char temp=tiles_main.tileDat[(tiles_main.current_tile*32)+(temp_one/2)+(temp_two*4)];
+							unsigned char temp=currentProject->tileC->tileDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)];
 							//first,second pixel
 							temp_1=temp>>4;//first pixel
 							temp_2=temp&15;//second pixel
 							temp_2+=tileMap_pal.box_sel<<4;
-							tiles_main.tileDat[(tiles_main.current_tile*32)+(temp_one/2)+(temp_two*4)]=temp_2;
+							currentProject->tileC->tileDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)]=temp_2;
 						}
 						damage(FL_DAMAGE_USER1);//no need to redraw the gui
 					}
@@ -295,11 +293,11 @@ int editor::handle(int event)
 						temp_two=(Fl::event_y()-tile_edit_truecolor_off_y)/tiles_size;
 						//true color tiles are slightly easier to edit
 						//I now have a proper function to calulate the offset so I am using that
-						tiles_main.truetileDat[cal_offset_truecolor(temp_one,temp_two,0,tiles_main.current_tile)]=truecolor_temp[0];//red
-						tiles_main.truetileDat[cal_offset_truecolor(temp_one,temp_two,1,tiles_main.current_tile)]=truecolor_temp[1];//green
-						tiles_main.truetileDat[cal_offset_truecolor(temp_one,temp_two,2,tiles_main.current_tile)]=truecolor_temp[2];//blue
-						tiles_main.truetileDat[cal_offset_truecolor(temp_one,temp_two,3,tiles_main.current_tile)]=truecolor_temp[3];//alpha
-						tiles_main.truecolor_to_tile(tileEdit_pal.theRow,tiles_main.current_tile);
+						currentProject->tileC->truetileDat[cal_offset_truecolor(temp_one,temp_two,0,currentProject->tileC->current_tile)]=truecolor_temp[0];//red
+						currentProject->tileC->truetileDat[cal_offset_truecolor(temp_one,temp_two,1,currentProject->tileC->current_tile)]=truecolor_temp[1];//green
+						currentProject->tileC->truetileDat[cal_offset_truecolor(temp_one,temp_two,2,currentProject->tileC->current_tile)]=truecolor_temp[2];//blue
+						currentProject->tileC->truetileDat[cal_offset_truecolor(temp_one,temp_two,3,currentProject->tileC->current_tile)]=truecolor_temp[3];//alpha
+						currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);
 						damage(FL_DAMAGE_USER1);
 					}
 
@@ -309,10 +307,10 @@ int editor::handle(int event)
 						temp_one=(Fl::event_x()-tile_edit_offset_x)/tiles_size;
 						temp_two=(Fl::event_y()-tile_edit_offset_y)/tiles_size;
 						uint8_t get_pal=(tileEdit_pal.theRow*48)+(tileEdit_pal.box_sel*3);
-						tiles_main.truetileDat[cal_offset_truecolor(temp_one,temp_two,0,tiles_main.current_tile)]=rgb_pal[get_pal];//red
-						tiles_main.truetileDat[cal_offset_truecolor(temp_one,temp_two,1,tiles_main.current_tile)]=rgb_pal[get_pal+1];//green
-						tiles_main.truetileDat[cal_offset_truecolor(temp_one,temp_two,2,tiles_main.current_tile)]=rgb_pal[get_pal+2];//blue
-						tiles_main.truecolor_to_tile(tileEdit_pal.theRow,tiles_main.current_tile);
+						currentProject->tileC->truetileDat[cal_offset_truecolor(temp_one,temp_two,0,currentProject->tileC->current_tile)]=currentProject->rgbPal[get_pal];//red
+						currentProject->tileC->truetileDat[cal_offset_truecolor(temp_one,temp_two,1,currentProject->tileC->current_tile)]=currentProject->rgbPal[get_pal+1];//green
+						currentProject->tileC->truetileDat[cal_offset_truecolor(temp_one,temp_two,2,currentProject->tileC->current_tile)]=currentProject->rgbPal[get_pal+2];//blue
+						currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);
 						damage(FL_DAMAGE_USER1);
 					}
 				break;

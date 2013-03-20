@@ -7,17 +7,17 @@
 #define LEFT 2
 #define DOWN 3
 #define RIGHT 4
-uint8_t useHiL;
-uint8_t useMode;
-uint8_t rgbPixelsize;
+static uint8_t useHiL;//no use for these varibles outside of this file
+static uint8_t useMode;
+static uint8_t rgbPixelsize;
 uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row)
 {
 	//returns closest value
 	//palette_muliplier
-	unsigned char i;
-    int distanceSquared, minDistanceSquared, bestIndex = 0;
+	uint8_t i;
+    int32_t distanceSquared, minDistanceSquared, bestIndex = 0;
     minDistanceSquared = 255*255 + 1;
-	unsigned char max_rgb;
+	uint8_t max_rgb;
 	switch (useMode)
 	{
 		case sega_genesis:
@@ -27,8 +27,6 @@ uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row)
 			max_rgb=12;//4*3=12
 		break;
 		case 255://alpha
-			//chan/=128;
-			//chan*=255;
 			val&=128;
 			return val;
 		break;
@@ -36,22 +34,22 @@ uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row)
 	row*=max_rgb;
     for (i=0; i<max_rgb; i+=3)
 	{
-        int Rdiff = (int) val - (int)rgb_pal[i+row+chan];
+        int32_t Rdiff = (int) val - (int)currentProject->rgbPal[i+row+chan];
         distanceSquared = Rdiff*Rdiff;
         if (distanceSquared < minDistanceSquared) {
             minDistanceSquared = distanceSquared;
             bestIndex = i;
         }
     }
-    return rgb_pal[bestIndex+row+chan];
+    return currentProject->rgbPal[bestIndex+row+chan];
 }
 
 /* variables needed for the Riemersma
  * dither algorithm */ 
-static int cur_x=0, cur_y=0;
-static int img_width=0, img_height=0; 
-static unsigned char *img_ptr_dither;
-static unsigned char rgb_select=0;
+static int32_t cur_x=0, cur_y=0;
+static int32_t img_width=0, img_height=0; 
+static uint8_t *img_ptr_dither;
+static uint8_t rgb_select=0;
     
 #define SIZE 16 /* queue size: number of
                  * pixels remembered */ 
@@ -60,16 +58,16 @@ static unsigned char rgb_select=0;
                  * queue, versus the oldest
                  * pixel */
     
-static int weights[SIZE]; /* weights for
+static int32_t weights[SIZE]; /* weights for
                            * the errors
                            * of recent
                            * pixels */
     
-static void init_weights(int a[],int size,int max) 
+static void init_weights(int32_t a[],int32_t size,int32_t max) 
 {
   double m = exp(log(max)/(size-1));
   double v;
-  int i;
+  int32_t i;
     
   for (i=0, v=1.0; i<size; i++) {
     a[i]=(int)(v+0.5); /* store rounded
@@ -78,12 +76,12 @@ static void init_weights(int a[],int size,int max)
   } /*for */
 }
     
-static void dither_pixel(unsigned char *pixel) 
+static void dither_pixel(uint8_t *pixel) 
 {
-static int error[SIZE]; /* queue with error
+static int32_t error[SIZE]; /* queue with error
                          * values of recent
                          * pixels */
-  int i,pvalue,err;
+  int32_t i,pvalue,err;
     
   for (i=0,err=0L; i<SIZE; i++)
     err+=error[i]*weights[i];
@@ -103,10 +101,10 @@ static int error[SIZE]; /* queue with error
   //pvalue = (pvalue>=128) ? 255 : 0;
 	if ((game_system == sega_genesis) && (useHiL == 9))
 	{
-		bool tempSet=get_prio(cur_x/8,cur_y/8)^true;
+		bool tempSet=currentProject->tileMapC->get_prio(cur_x/8,cur_y/8)^true;
 		set_palette_type(tempSet);
 	}
-	pvalue=nearest_color_chan(pvalue,rgb_select,get_palette_map(cur_x/8,cur_y/8));
+	pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->tileMapC->get_palette_map(cur_x/8,cur_y/8));
   /* shift queue */ 
   memmove(error, error+1,
     (SIZE-1)*sizeof error[0]); 
@@ -114,7 +112,7 @@ static int error[SIZE]; /* queue with error
   *pixel=(unsigned char)pvalue;
 }
     
-static void move(int direction)
+static void move(int32_t direction)
 {
   /* dither the current pixel */
   if (cur_x >= 0 && cur_x < img_width &&
@@ -142,7 +140,7 @@ static void move(int direction)
   } /* switch */
 }
     
-void hilbert_level(int level,int direction)
+void hilbert_level(int32_t level,int32_t direction)
 {
   if (level==1) {
     switch (direction) {
@@ -209,9 +207,9 @@ void hilbert_level(int level,int direction)
   } /* if */
 }
     
-int log2(int value)
+int32_t log2(int32_t value)
 {
-  int result=0;
+  int32_t result=0;
   while (value>1) {
     value >>= 1;
     result++;
@@ -219,9 +217,9 @@ int log2(int value)
   return result;
 }
     
-void Riemersma(uint8_t *image, int width,int height,uint8_t rgb_sel)
+void Riemersma(uint8_t *image, int32_t width,int32_t height,uint8_t rgb_sel)
 {
-  int level,size;
+  int32_t level,size;
 	rgb_select=rgb_sel;
   /* determine the required order of the
    * Hilbert curve */ 
@@ -288,17 +286,17 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha)
 				b_old=image[x+(y*w*rgbPixelsize)+2];
 				if (useAlpha)
 					a_old=image[x+(y*w*rgbPixelsize)+3];
-				pal_row=get_palette_map(x/rgbRowsize,y/8);
+				pal_row=currentProject->tileMapC->get_palette_map(x/rgbRowsize,y/8);
 				//find nearest color
 				if ((game_system == sega_genesis) && (useHiL == 9))
 				{
-					tempSet=get_prio(x/rgbRowsize,y/8)^true;
+					tempSet=currentProject->tileMapC->get_prio(x/rgbRowsize,y/8)^true;
 					set_palette_type(tempSet);
 				}
 				temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old);
-				r_new=rgb_pal[temp];
-				g_new=rgb_pal[temp+1];
-				b_new=rgb_pal[temp+2];
+				r_new=currentProject->rgbPal[temp];
+				g_new=currentProject->rgbPal[temp+1];
+				b_new=currentProject->rgbPal[temp+2];
 				if (useAlpha)
 				{
 					a_old/=128;
@@ -334,33 +332,33 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha)
 				b_old=image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2];
 				if (useAlpha)
 					a_old=image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+3];
-				pal_row=get_palette_map(x/8,y/8);
+				pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
 				//find nearest color
 				if ((game_system == sega_genesis) && (useHiL == 9))
 				{
-					tempSet=get_prio(x/8,y/8)^true;
+					tempSet=currentProject->tileMapC->get_prio(x/8,y/8)^true;
 					set_palette_type(tempSet);
 				}
 				temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old);
-				r_new=rgb_pal[temp];
-				g_new=rgb_pal[temp+1];
-				b_new=rgb_pal[temp+2];
+				r_new=currentProject->rgbPal[temp];
+				g_new=currentProject->rgbPal[temp+1];
+				b_new=currentProject->rgbPal[temp+2];
 				if (useAlpha)
 				{
 					a_new=a_old;
 					//a_new/=128;
 					//a_new*=255;
 					a_new&=128;
-					error_rgb[3]=(short)a_old-(short)a_new;
+					error_rgb[3]=(int16_t)a_old-(int16_t)a_new;
 					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+3]=a_new;
 				}
-				error_rgb[0]=(short)r_old-(short)r_new;
-				error_rgb[1]=(short)g_old-(short)g_new;
-				error_rgb[2]=(short)b_old-(short)b_new;
+				error_rgb[0]=(int16_t)r_old-(int16_t)r_new;
+				error_rgb[1]=(int16_t)g_old-(int16_t)g_new;
+				error_rgb[2]=(int16_t)b_old-(int16_t)b_new;
 				image[(x*rgbPixelsize)+(y*w*rgbPixelsize)]=r_new;
 				image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+1]=g_new;
 				image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2]=b_new;
-				for (unsigned char channel=0;channel<rgbPixelsize;channel++)
+				for (uint8_t channel=0;channel<rgbPixelsize;channel++)
 				{
 					//add the offset
 					if (x+1 < w)

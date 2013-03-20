@@ -2,7 +2,7 @@
 #include "class_tiles.h"
 #include "dither.h"
 #include "tilemap.h"
-tiles tiles_main;
+//tiles tiles_main;
 tiles::tiles()
 {
 	tileDat=(uint8_t *)calloc(32,1);
@@ -18,7 +18,7 @@ tiles::tiles()
 		exit(1);
 	}
 	tileSize=32;
-	tileName="default";
+	//tileName="default";
 }
 tiles::~tiles()
 {
@@ -247,9 +247,9 @@ void tiles::draw_tile(uint16_t x_off,uint16_t y_off,uint32_t tile_draw,uint8_t z
 					temp_1=temp>>4;//first pixel
 					temp_2=temp&15;//second pixel
 					//now based on the temp_1 and temp_2 get the two colors
-					red_temp=rgb_pal[(pal_row*48)+(temp_1*3)];
-					green_temp=rgb_pal[(pal_row*48)+(temp_1*3)+1];
-					blue_temp=rgb_pal[(pal_row*48)+(temp_1*3)+2];
+					red_temp=currentProject->rgbPal[(pal_row*48)+(temp_1*3)];
+					green_temp=currentProject->rgbPal[(pal_row*48)+(temp_1*3)+1];
+					blue_temp=currentProject->rgbPal[(pal_row*48)+(temp_1*3)+2];
 					for (c=0;c<zoom;c++)//ha ha c++ bad programming pun
 					{
 						for (d=0;d<zoom;d++)
@@ -259,9 +259,9 @@ void tiles::draw_tile(uint16_t x_off,uint16_t y_off,uint32_t tile_draw,uint8_t z
 							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d,(y*zoom)+c,zoom,2)]=blue_temp;
 						}
 					}
-					red_temp=rgb_pal[(pal_row*48)+(temp_2*3)];
-					green_temp=rgb_pal[(pal_row*48)+(temp_2*3)+1];
-					blue_temp=rgb_pal[(pal_row*48)+(temp_2*3)+2];
+					red_temp=currentProject->rgbPal[(pal_row*48)+(temp_2*3)];
+					green_temp=currentProject->rgbPal[(pal_row*48)+(temp_2*3)+1];
+					blue_temp=currentProject->rgbPal[(pal_row*48)+(temp_2*3)+2];
 					for (c=0;c<zoom;c++)//ha ha c++ bad programming pun
 					{
 						for (d=0;d<zoom;d++)
@@ -282,9 +282,9 @@ void tiles::draw_tile(uint16_t x_off,uint16_t y_off,uint32_t tile_draw,uint8_t z
 						uint8_t temp;
 						temp=(tileTemp[y]>>(7-x))&1;
 						temp|=((tileTemp[y+8]>>(7-x))&1)<<1;
-						red_temp=rgb_pal[(pal_row*12)+(temp*3)];
-						green_temp=rgb_pal[(pal_row*12)+(temp*3)+1];
-						blue_temp=rgb_pal[(pal_row*12)+(temp*3)+2];
+						red_temp=currentProject->rgbPal[(pal_row*12)+(temp*3)];
+						green_temp=currentProject->rgbPal[(pal_row*12)+(temp*3)+1];
+						blue_temp=currentProject->rgbPal[(pal_row*12)+(temp*3)+2];
 						for (c=0;c<zoom;c++)//yes the same old c++ joke I wonder how many program have it
 						{
 							for (d=0;d<zoom;d++)
@@ -437,7 +437,7 @@ void tiles::remove_duplicate_tiles()
 			if (cmp_tiles(cur_tile,(uint32_t *)&tileDat[curT*tileSize]))
 			#endif
 			{
-				sub_tile_map(curT,cur_tile,false,false);
+				currentProject->tileMapC->sub_tile_map(curT,cur_tile,false,false);
 				remove_tile_at(curT);
 				tile_remove_c++;
 				printf("Deleted tile %d\nRemoved %d tiles\n",curT,tile_remove_c);
