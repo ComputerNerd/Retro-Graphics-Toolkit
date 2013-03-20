@@ -13,11 +13,31 @@ void initProject()
 	currentProject->Name.assign("Add a description here");
 	
 }
-bool addProjectAfter(uint32_t id)
+bool addProject()
 {
+	
+	projects = (struct Project **) realloc(projects,(projects_count+1)*sizeof(void *));
+	if (projects == 0)
+	{
+		show_realloc_error((projects_count+1)*sizeof(void *))
+		return false;
+	}
+	projects[projects_count] = new struct Project;
+	currentProject=projects[projects_count];
+	currentProject->tileC = new tiles;
+	currentProject->tileMapC = new tileMap;
+	currentProject->Name.assign("Add a description here");
 	projects_count++;
-	projects = (struct Project **) realloc(projects,projects_count*sizeof(void *));
-	//if (id != projects_count)
-	//	memmove(arr+id, arr+id+1, (projects_count-id-1)*sizeof(void *));
+	return true;
+}
+bool removeProject(uint32_t id)
+{
+	//removes selected project
+	delete projects[id]->tileC;
+	delete projects[id]->tileMapC;
+	delete projects[id];
+	if (projects_count == 1)
+		return true;
+	projects_count--;
 	return true;
 }

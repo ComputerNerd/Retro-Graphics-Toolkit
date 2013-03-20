@@ -20,5 +20,5 @@ extern struct Project ** projects;
 extern uint32_t projects_count;//holds how many projects there are this is needed for realloc when adding or removing function
 extern struct Project * currentProject;
 void initProject();/*!< this needs to be called before using addProject*/
-bool addProjectAfter(uint32_t id);
+bool addProject()
 bool removeProject(uint32_t id);
