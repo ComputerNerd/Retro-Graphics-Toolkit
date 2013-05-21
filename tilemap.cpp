@@ -5,6 +5,8 @@ Stuff related to tilemap operations goes here*/
 #include "color_convert.h"
 tileMap::tileMap()
 {
+	mapSizeW=2;
+	mapSizeH=2;
 	tileMapDat=(uint8_t *)calloc(16,1);
 }
 tileMap::~tileMap()
@@ -443,7 +445,7 @@ void generate_optimal_palette(Fl_Widget*,void * row)
 					image = (uint8_t *)malloc(w*h*3);
 					found_colors = (uint8_t *)malloc(w*3+3);
 					truecolor_to_image(image,-1,false);
-					colors_found=count_colors(image,w,h,found_colors);
+					colors_found=count_colors(image,w,h,&found_colors[0],false);
 					printf("Unique colors %d\n",colors_found);
 					if (colors_found < 17)
 					{
@@ -548,7 +550,7 @@ try_again_color:
 						//free(image_2);
 					}
 					free(image);
-					free(found_colors);
+					//free(found_colors);
 					window->redraw();
 				break;
 
