@@ -550,7 +550,7 @@ try_again_color:
 						//free(image_2);
 					}
 					free(image);
-					//free(found_colors);
+					free(found_colors);
 					window->redraw();
 				break;
 
