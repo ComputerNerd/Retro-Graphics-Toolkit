@@ -3,7 +3,6 @@
 editor *window = new editor(800,600,"Retro Graphics Toolkit");//this creates the window
 void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y)
 {
-	//the formula for alpha blending is simple
 	uint8_t grid[32*32*3];
 	//first generate grid
 	uint8_t * ptr_grid=grid;
@@ -21,7 +20,7 @@ void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y)
 		for (uint8_t c=0;c<16*3;c++)
 			*ptr_grid++=255;
 	}
-	if (rgba[3]==0)//prevent divide by zero
+	if (rgba[3]==0)//no need to mix in picture if alpha is 0
 	{
 		//just draw grid and return
 		fl_draw_image(grid,x,y,32,32,3);

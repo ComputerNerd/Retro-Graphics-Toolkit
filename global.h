@@ -13,6 +13,8 @@ This function calculates pointer offset for truecolor tiles
 for example cal_offset_truecolor(8,8,0,32);
 would edit the red pixel (8,8) located on tile 32 
 */
+void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row);
+bool saveBinAsText(void * ptr,size_t sizeBin,FILE * myfile);
 bool verify_str_number_only(char * str);
 uint32_t cal_offset_truecolor(uint16_t x,uint16_t y,uint16_t rgb,uint32_t tile);
 //void draw_tile(uint16_t x_off,uint16_t y_off,uint32_t tile_draw,uint8_t zoom,uint8_t pal_row,bool hflip_tile,bool vflip_tile);
@@ -48,17 +50,7 @@ extern  intptr_t pal_id;
 extern  intptr_t tile_edit_id;
 extern  intptr_t tile_place_id;
 extern bool show_grid_placer;
-//uint32_t get_sel_tile();
-/*#define get_sel_tile if (mode_editor == tile_place) sel_tile=current_tile_placer; \
-	else if (mode_editor == tile_edit) sel_tile=current_tile; \
-	else \
-	{ \
-		fl_alert("To prevent accidently altering tiles be in the tile editor or tile placer"); \
-		return; \
-	}*/
-
 extern uint8_t tile_zoom_edit;
-//extern uint8_t palette[128];
 extern uint8_t truecolor_temp[4];
 //extern uint8_t * truecolor_tiles;
 extern std::string the_file;//this is for tempory use only
@@ -90,26 +82,11 @@ extern uint16_t tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
 #define default_true_color_box_y 112
 #define default_true_color_box_x 320
 extern uint16_t true_color_box_x,true_color_box_y;
-//uint16_t tile_edit_offset_y;
 extern bool show_grid;
 extern uint8_t palette_muliplier;
 extern bool G_hflip;
 extern bool G_vflip;
 extern bool G_highlow_p;
 extern uint8_t palette_adder;
-//extern uint8_t rgb_pal[192];
-//extern uint8_t palette_entry;
-//extern uint8_t rgb_temp[3];
-//extern uint8_t tile_palette_row;//sets which palette row the tile displays
-//extern uint8_t tile_palette_row_placer;//sets which palette row the tile placer displays
-//tile editor
-//extern uint8_t * tiles;
-//extern uint8_t * tile_map;
-//extern uint32_t tiles_amount;//tiles there are minus one
-//extern uint32_t current_tile;//current tile that we are editing minus one
-//extern uint32_t current_tile_placer;
 extern uint32_t file_size;
-//extern uint16_t map_size_x;
-//extern uint16_t map_size_y;
-//extern uint8_t * attr_nes;
 extern uint8_t ditherAlg;

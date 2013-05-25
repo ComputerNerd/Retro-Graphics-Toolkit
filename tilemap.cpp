@@ -5,6 +5,8 @@ Stuff related to tilemap operations goes here*/
 #include "color_convert.h"
 tileMap::tileMap()
 {
+	mapSizeW=2;
+	mapSizeH=2;
 	tileMapDat=(uint8_t *)calloc(16,1);
 }
 tileMap::~tileMap()
@@ -44,11 +46,22 @@ bool tileMap::saveToFile()
 	Saves tilemap to file returns true on success or cancelation
 	returns false if there was an error but remeber if the user cancles this it is not an error
 	*/
+	//first see how this file should be saved
+	uint8_t type=fl_choice("How would like this file saved?","Binary","C header",0);
 	uint16_t x,y;
 	FILE * myfile;
 	if (load_file_generic("Save tilemap to",true) == true)
 	{
-		myfile = fopen(the_file.c_str(),"wb");
+		if (type == 1)
+		{
+			char temp[2048];
+			myfile = fopen(the_file.c_str(),"w");
+			sprintf(temp,"//Width %d Height %d\n",mapSizeW,mapSizeH);
+			fputs((const char *)temp,myfile);
+			fputs("const uint8_t mapDat[]={",myfile);
+		}
+		else
+			myfile = fopen(the_file.c_str(),"wb");
 		if (myfile!=0)
 		{
 			switch (game_system)
@@ -79,7 +92,14 @@ bool tileMap::saveToFile()
 					}
 					//TheMap--;
 					TheMap-=mapSizeW*mapSizeH;//return to begining so it can be freeded and the file saved
-					fwrite(TheMap,2,mapSizeW*mapSizeH,myfile);
+					if (type == 1)
+					{
+						if (saveBinAsText(TheMap,mapSizeW*mapSizeH*2,myfile)==false)
+							return false;
+						fputs("};",myfile);
+					}
+					else
+						fwrite(TheMap,2,mapSizeW*mapSizeH,myfile);
 					free(TheMap);
 				}//brackets used to prevent TheMap conflict
 				break;
@@ -103,7 +123,14 @@ bool tileMap::saveToFile()
 					}
 					//TheMap--;
 					TheMap-=mapSizeW*mapSizeH;//return to begining so it can be freeded and the file sized
-					fwrite(TheMap,1,mapSizeW*mapSizeH,myfile);
+					if (type == 1)
+					{
+						if (saveBinAsText(TheMap,mapSizeW*mapSizeH,myfile)==false)
+							return false;
+						fputs("};",myfile);
+					}
+					else
+						fwrite(TheMap,1,mapSizeW*mapSizeH,myfile);
 					free(TheMap);
 				}
 				break;
@@ -121,7 +148,13 @@ bool tileMap::saveToFile()
 	{
 		if (load_file_generic("Save attributes to",true) == true)
 		{
-			myfile = fopen(the_file.c_str(),"wb");
+			if (type == 1)
+			{
+				myfile = fopen(the_file.c_str(),"w");
+				fputs("const uint8_t attrDat[]={",myfile);
+			}
+			else
+				myfile = fopen(the_file.c_str(),"wb");
 			if (myfile!=0)
 			{
 				uint8_t * AttrMap = (uint8_t *)malloc((mapSizeW/4)*(mapSizeH/4));
@@ -136,8 +169,14 @@ bool tileMap::saveToFile()
 				}
 				//AttrMap-=(mapSizeW/4)*(mapSizeH/4);
 				printf("%d %d\n",AttrMap,freeAttrMap);
-				fwrite(freeAttrMap,1,(mapSizeW/4)*(mapSizeH/4),myfile);
-				
+				if (type == 1)
+				{
+					if (saveBinAsText(freeAttrMap,(mapSizeW/4)*(mapSizeH/4),myfile)==false)
+							return false;
+						fputs("};",myfile);
+				}
+				else
+					fwrite(freeAttrMap,1,(mapSizeW/4)*(mapSizeH/4),myfile);		
 				free(freeAttrMap);
 				fclose(myfile);
 				puts("File Saved");
@@ -146,7 +185,6 @@ bool tileMap::saveToFile()
 			{
 				return false;
 			}
-			
 		}
 	}
 	return true;
@@ -443,7 +481,7 @@ void generate_optimal_palette(Fl_Widget*,void * row)
 					image = (uint8_t *)malloc(w*h*3);
 					found_colors = (uint8_t *)malloc(w*3+3);
 					truecolor_to_image(image,-1,false);
-					colors_found=count_colors(image,w,h,found_colors);
+					colors_found=count_colors(image,w,h,&found_colors[0],false);
 					printf("Unique colors %d\n",colors_found);
 					if (colors_found < 17)
 					{

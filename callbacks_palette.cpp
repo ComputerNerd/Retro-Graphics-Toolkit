@@ -3,6 +3,7 @@
 #include "class_global.h"
 void save_palette(Fl_Widget*, void* start_end)
 {
+	uint8_t type=fl_choice("How would like this file saved?","Binary","C header",0);
 	if (load_file_generic("Save palette",true) == true)
 	{
 		unsigned char start,end;
@@ -13,19 +14,41 @@ void save_palette(Fl_Widget*, void* start_end)
 		//open the file
 		cout << "entry start: " << start/2 << " entry end: " << end/2 << endl;
 		cout << "saving the palette to " << the_file << endl;
-		ofstream myfile;
-		myfile.open(the_file.c_str(),ios::binary | ios::trunc);
-		if (myfile.is_open())
+		FILE * myfile=0;
+		if (type == 1)
+		{
+			myfile = fopen(the_file.c_str(),"w");
+			fputs("const uint8_t palDat[]={",myfile);
+		}
+		else
+			myfile = fopen(the_file.c_str(),"wb");
+		if (myfile!=0)
 		{
 			//save the palette
-			myfile.write((char *)currentProject->palDat+start,end-start);
-			cout << "Great Success! File saved!" << endl;
+			if (type == 1)
+			{
+				if (saveBinAsText(currentProject->palDat+start,end-start,myfile)==false)
+				{
+					fl_alert("Error: can not save file %s",the_file.c_str());
+					return;
+				}
+				fputs("};",myfile);
+			}
+			else
+			{
+				if (fwrite(currentProject->palDat+start,1,end-start,myfile)==0)
+				{
+					fl_alert("Error: can not save file %s",the_file.c_str());
+					return;
+				}
+			}
+			puts("Great Success! File saved!");
 		}
 		else
 		{
 			cout << "myfile.is_open() returned false that means there was an error in creating the file" << endl;
 		}
-		myfile.close();
+		fclose(myfile);
 	}
 
 }
@@ -39,7 +62,7 @@ void update_palette(Fl_Widget* o, void* v)
 		
 		//rgb_temp[fl_intptr_t(v)] = s->value();
 		uint8_t temp_var;
-		uint8_t temp_entry;
+		uint8_t temp_entry=0;
 		switch (mode_editor)
 		{
 			case pal_edit:
@@ -87,7 +110,7 @@ void update_palette(Fl_Widget* o, void* v)
 		uint8_t pal;
 //		unsigned short temp;
 		unsigned int rgb_out;
-		uint8_t temp_entry;
+		uint8_t temp_entry=0;
 		switch (mode_editor)
 		{
 			case pal_edit:
@@ -150,7 +173,6 @@ void Butt_CB(Fl_Widget*, void* offset)
 			file_size = file.tellg();
 			if (file_size > 128-(uintptr_t)offset)
 			{
-				//cout << "error file size is bigger than " << 128-(unsigned short)offset << " bytes not a valid palette?" << endl;
 				fl_alert("Error: The file size is bigger than %d bytes it is not a valid palette",(int)128-(int)(uintptr_t)offset);
 				file.close();
 				return;//end function due to errrors
@@ -161,7 +183,6 @@ void Butt_CB(Fl_Widget*, void* offset)
 			}
 			//read the palette to the buffer
 			file.seekg (0, ios::beg);
-			//cout << "reading to buffer" << endl; Who is gonna care about that???
 			file.read ((char *)currentProject->palDat+(uintptr_t)offset, file_size);
 			file.close();
 			//now convert each value to rgb
@@ -192,7 +213,6 @@ void Butt_CB(Fl_Widget*, void* offset)
 				temp_var+=palette_adder;
 				currentProject->rgbPal[rgb_array]=temp_var;
 				//now tell us the rgb values
-				//cout << "Red: " << (unsigned short) currentProject->rgbPal[rgb_array] << " Green: " << (unsigned short) currentProject->rgbPal[rgb_array+1] << " Blue: " << (unsigned short) currentProject->rgbPal[rgb_array+2] << endl;
 				printf("Red: %d Green: %d Blue: %d\n",currentProject->rgbPal[rgb_array],currentProject->rgbPal[rgb_array+1],currentProject->rgbPal[rgb_array+2]);
 			}
 			//mode_editor=pal_edit;

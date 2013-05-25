@@ -1,6 +1,6 @@
 #include "global.h"
 /*Some users may not be programmers and will not run a debugger these error messages should make it easier for them to convey a glitch to me
-All they have to do is copy the error message*/
+All they have to do is copy and paste the error message*/
 void malloc_error(int line,const char * file,const char * function,int bytes)
 {
 	fl_alert("malloc error in file %s function %s line %d\nNumber of bytes attempted %d",file,function,line,bytes);

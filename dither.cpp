@@ -1,7 +1,6 @@
 #include <inttypes.h>
 #include "dither.h"
 #include "global.h"
-
 #define NONE 0
 #define UP 1
 #define LEFT 2
@@ -17,7 +16,7 @@ uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row)
 	uint8_t i;
     int32_t distanceSquared, minDistanceSquared, bestIndex = 0;
     minDistanceSquared = 255*255 + 1;
-	uint8_t max_rgb;
+	uint8_t max_rgb=0;
 	switch (useMode)
 	{
 		case sega_genesis:
@@ -298,10 +297,7 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha)
 				g_new=currentProject->rgbPal[temp+1];
 				b_new=currentProject->rgbPal[temp+2];
 				if (useAlpha)
-				{
-					a_old/=128;
-					a_old*=255;
-				}
+					a_old&=128;//get only the MSB
 				image[x+(y*w*rgbPixelsize)]=r_new;
 				image[x+(y*w*rgbPixelsize)+1]=g_new;
 				image[x+(y*w*rgbPixelsize)+2]=b_new;
@@ -346,8 +342,6 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha)
 				if (useAlpha)
 				{
 					a_new=a_old;
-					//a_new/=128;
-					//a_new*=255;
 					a_new&=128;
 					error_rgb[3]=(int16_t)a_old-(int16_t)a_new;
 					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+3]=a_new;

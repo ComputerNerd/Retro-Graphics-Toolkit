@@ -1,3 +1,18 @@
+/*
+ This file is part of Retro Graphics Toolkit
+
+    Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or any later version.
+
+    Retro Graphics Toolkit is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #include "global.h"
 #include "callbacks_palette.h"
 #include "callback_tiles.h"
@@ -243,23 +258,36 @@ void save_tiles_truecolor(Fl_Widget*,void*)
 
 void save_tiles(Fl_Widget*,void*)
 {
+	uint8_t type=fl_choice("How would like this file saved?","Binary","C header",0);
 	if (load_file_generic("Pick a location to save tiles",true) == true)
 	{
 		FILE * myfile;
-		//myfile.open(the_file,ios::binary | ios::trunc);
-		myfile = fopen(the_file.c_str(),"wb");
-		if (myfile!=0)
+		if (type == 1)
 		{
-			fwrite(currentProject->tileC->tileDat,1,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize,myfile);
-			
-			puts("File saved");
+			myfile = fopen(the_file.c_str(),"w");
+			char temp[2048];
+			sprintf(temp,"//%d tiles\n",currentProject->tileC->tiles_amount+1);
+			fputs((const char *)temp,myfile);
+			fputs("const uint8_t tileDat[]={",myfile);
 		}
 		else
+			myfile = fopen(the_file.c_str(),"wb");
+		if (myfile!=0)
 		{
-			//cout << "myfile.is_open() returned false that means there was an error in creating the file" << endl;
-			fl_alert("Error: can not save file %s",the_file.c_str());
-			//cout << "File that could not be saved: " << the_file << endl;
+			if (type == 1)
+			{
+				if (saveBinAsText(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize,myfile)==false)
+				{
+					fl_alert("Error: can not save file %s",the_file.c_str());
+					return;
+				}
+				fputs("};",myfile);
+			}
+			else
+				fwrite(currentProject->tileC->tileDat,currentProject->tileC->tileSize,(currentProject->tileC->tiles_amount+1),myfile);
 		}
+		else
+			fl_alert("Error: can not save file %s",the_file.c_str());
 		fclose(myfile);
 	}
 }
@@ -331,7 +359,7 @@ void load_tiles(Fl_Widget*,void* split)
 					for (uint32_t c=offset_tiles;c<(file_size/currentProject->tileC->tileSize)+offset_tiles;c++)
 					{
 
-						for (uint8_t y=0;y<8;y++)
+						/*for (uint8_t y=0;y<8;y++)
 						{
 							for (uint8_t x=0;x<4;x++)
 							{
@@ -348,13 +376,14 @@ void load_tiles(Fl_Widget*,void* split)
 								currentProject->tileC->truetileDat[cal_offset_truecolor((x*2)+1,y,1,c)]=currentProject->rgbPal[(row*48)+(temp_2*3)+1];
 								currentProject->tileC->truetileDat[cal_offset_truecolor((x*2)+1,y,2,c)]=currentProject->rgbPal[(row*48)+(temp_2*3)+2];
 							}
-						}
+						}*/
+						tileToTrueCol(&currentProject->tileC->tileDat[(c*32)],&currentProject->tileC->truetileDat[(c*256)],row);
 					}
 				break;
 				case NES:
 					for (uint32_t c=offset_tiles;c<(file_size/currentProject->tileC->tileSize)+offset_tiles;c++)
 					{
-						for (uint8_t y=0;y<8;y++)
+						/*for (uint8_t y=0;y<8;y++)
 						{
 							for (uint8_t x=0;x<8;x++)
 
@@ -366,7 +395,8 @@ void load_tiles(Fl_Widget*,void* split)
 								currentProject->tileC->truetileDat[cal_offset_truecolor(x,y,1,c)]=currentProject->rgbPal[(row*12)+(temp*3)+1];
 								currentProject->tileC->truetileDat[cal_offset_truecolor(x,y,2,c)]=currentProject->rgbPal[(row*12)+(temp*3)+2];
 							}
-						}
+						}*/
+						tileToTrueCol(&currentProject->tileC->tileDat[(c*16)],&currentProject->tileC->truetileDat[(c*256)],row);
 					}
 			}
 			currentProject->tileC->tiles_amount=(file_size/currentProject->tileC->tileSize)-1;
@@ -487,28 +517,81 @@ void shadow_highligh_findout(Fl_Widget*,void*)
 {
 	if (game_system != sega_genesis)
 	{
-		fl_alert("Y u no use genesis\n");
+		fl_alert("Only the Sega Genesis/Mega Drive supports shadow highligh mode\n");
 		return;
 	}
-	//this function will see if 3 or less pixels are above 126+9=135 and if so set prioity to low or set priority to high if bright tile
+	uint8_t type=fl_choice("How will it be determined if the tile is shadowed or not?","Tile brightness","Delta",0);
+	//this function will see if 3 or less pixels are above 125 and if so set prioity to low or set priority to high if bright tile
 	uint16_t x,y;
 	uint32_t xx;
-	for (y=0;y<currentProject->tileMapC->mapSizeH;y++)
+	if (type==0)
 	{
-		for (x=0;x<currentProject->tileMapC->mapSizeW;x++)
+		for (y=0;y<currentProject->tileMapC->mapSizeH;y++)
 		{
-			uint32_t cur_tile=get_tile(x,y);
-			uint8_t over=0;
-			for (xx=cur_tile*256;xx<cur_tile*256+256;xx+=4)
+			for (x=0;x<currentProject->tileMapC->mapSizeW;x++)
 			{
-				if ((currentProject->tileC->truetileDat[xx] > 135) || (currentProject->tileC->truetileDat[xx+1] > 135) || (currentProject->tileC->truetileDat[xx+2] > 135))
-					over++;
+				uint32_t cur_tile=get_tile(x,y);
+				uint8_t over=0;
+				for (xx=cur_tile*256;xx<cur_tile*256+256;xx+=4)
+				{
+					if ((currentProject->tileC->truetileDat[xx] > 125) || (currentProject->tileC->truetileDat[xx+1] > 125) || (currentProject->tileC->truetileDat[xx+2] > 125))
+						over++;
+				}
+				if (over > 4)
+					set_prio(x,y,true);//normal
+				else
+					set_prio(x,y,false);//shadowed
 			}
-			if (over > 3)
-				set_prio(x,y,true);
-			else
-				set_prio(x,y,false);
 		}
+	}
+	else
+	{
+		uint8_t temp[256];
+		uint8_t useHiL=palette_muliplier;
+		uint8_t type_temp;
+		//uint8_t dithOld=ditherAlg;
+		ditherAlg=2;//nearest color
+		if (palette_adder==0)
+		{
+			type_temp=1;
+		}
+		else
+		{
+			type_temp=2;
+		}
+		for (y=0;y<currentProject->tileMapC->mapSizeH;y++)
+		{
+			for (x=0;x<currentProject->tileMapC->mapSizeW;x++)
+			{
+				uint32_t cur_tile=get_tile(x,y);
+				uint8_t errorSh=0,errorNorm=0;
+				uint8_t * ptrorgin=&currentProject->tileC->truetileDat[(cur_tile*256)];
+				set_palette_type(0);//normal
+				currentProject->tileC->truecolor_to_tile(currentProject->tileMapC->get_palette_map(x,y),cur_tile);
+				tileToTrueCol(&currentProject->tileC->tileDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tileMapC->get_palette_map(x,y));
+				for (xx=0;xx<256;xx++)
+				{
+					errorNorm+=abs(temp[xx]-ptrorgin[xx]);
+				}
+				set_palette_type(1);//shadow
+				currentProject->tileC->truecolor_to_tile(currentProject->tileMapC->get_palette_map(x,y),cur_tile);
+				tileToTrueCol(&currentProject->tileC->tileDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tileMapC->get_palette_map(x,y));
+				for (xx=0;xx<256;xx++)
+				{
+					errorSh+=abs(temp[xx]-ptrorgin[xx]);
+				}
+				if (errorSh < errorNorm)
+					set_prio(x,y,false);//shadowed
+				else
+					set_prio(x,y,true);//normal
+			}
+		}
+		if (useHiL==9)
+			set_palette_type(type_temp);//0 normal 1 shadow 2 highlight
+		else
+			set_palette_type(0);
+		//ditherAlg=dithOld;
+			
 	}
 	window->redraw();
 }
@@ -639,7 +722,7 @@ dont_convert_tile:
 	//update progress currentProject->tileMapC->mapSizeH
 	printf("Stage 3 %%: %f\r",(((float)y_tile/(float)currentProject->tileMapC->mapSizeH/3.0f)+(2.0f/3.0f))*100.0f);
 	}
-	puts("");
+	putchar('\n');
 	puts("Done with image");
 	}
 	free(image);
@@ -653,7 +736,6 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 	Fl_Shared_Image * loaded_image;
 	if (load_file_generic("Load image") == true)
 	{
-		//cout << "about to load image" << endl;
 		loaded_image=Fl_Shared_Image::get(the_file.c_str());
 		if (loaded_image == 0)
 		{
@@ -994,7 +1076,6 @@ void editor::_editor()
 	menu->add("&File/&Save tile map and if nes attributes",0,save_map,0,0);
 
 	menu->add("&Action/&update dither all tiles",0,update_all_tiles,0,0);
-	menu->add("&Action/&Fill tile with selected color",0,fill_tile,(void *)0,(int)0);
 	menu->add("&Action/&Delete currently selected tile",0,delete_tile_at_location,(void *)0,(int)0);
 	menu->add("&Action/&File tile map with selection includeing attrabutes",0,fill_tile_map_with_tile,(void *)0,(int)0);
 	menu->add("&Action/&Dither tilemap as image",0,dither_tilemap_as_image,(void *)0,(int)0);
@@ -1003,6 +1084,7 @@ void editor::_editor()
 	menu->add("&Action/&Auto determin if use shadow highlight",0,shadow_highligh_findout,(void *)0,(int)0);
 
 	menu->add("&Tile Actions/&Append blank tile to end of buffer",0,new_tile,0,0);
+	menu->add("&Tile Actions/&Fill tile with selected color",0,fill_tile,(void *)0,(int)0);
 	menu->add("&Tile Actions/&Fill tile with color 0",0,blank_tile,0,0);
 	menu->add("&Tile Actions/&Remove duplicate truecolor tiles",0,remove_duplicate_truecolor,0,0);
 	menu->add("&Tile Actions/&Remove duplicate tiles",0,remove_duplicate_tiles,0,0);

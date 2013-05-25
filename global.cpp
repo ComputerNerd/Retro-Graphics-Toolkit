@@ -50,7 +50,73 @@ uint32_t file_size;
 //uint8_t * attr_nes;
 uint8_t ditherAlg;
 #define PI 3.141592653589793238462643383279
-
+bool saveBinAsText(void * ptr,size_t sizeBin,FILE * myfile)
+{
+	/*!
+	This function saves binary data as plain text useful for c headers each byte is seperated by a comma
+	Returns True on sucess false on error
+	*/
+	uint8_t * dat=(uint8_t *)ptr;
+	char str[16];
+	for (size_t x=0;x<sizeBin-1;x++)
+	{
+		sprintf(str,"%d",*dat);
+		if (fputs(str,myfile)==0)
+			return false;
+		if (fputc(',',myfile)==0)
+			return false;
+		if ((x&63)==63)
+		{
+			if (fputc('\n',myfile)==0)
+				return false;
+		}
+		dat++;
+	}
+	sprintf(str,"%d",*dat);
+	if (fputs(str,myfile)==0)
+		return false;
+	return true;
+}
+void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row)
+{
+	switch (game_system)
+	{
+		case sega_genesis:
+			for (uint8_t y=0;y<8;y++)
+			{
+				for (uint8_t x=0;x<4;x++)
+				{
+					//even,odd
+					uint8_t temp=*input++;
+					uint8_t temp_1,temp_2;
+					temp_1=temp>>4;//first pixel
+					temp_2=temp&15;//second pixel
+					*output++=currentProject->rgbPal[(row*48)+(temp_1*3)];
+					*output++=currentProject->rgbPal[(row*48)+(temp_1*3)+1];
+					*output++=currentProject->rgbPal[(row*48)+(temp_1*3)+2];
+					*output++=currentProject->rgbPal[(row*48)+(temp_2*3)];
+					*output++=currentProject->rgbPal[(row*48)+(temp_2*3)+1];
+					*output++=currentProject->rgbPal[(row*48)+(temp_2*3)+2];
+				}
+			}
+		break;
+		case NES:
+			for (uint8_t y=0;y<8;y++)
+			{
+				for (uint8_t x=0;x<8;x++)
+				{
+					uint8_t temp;
+					temp=(input[+y]>>x)&1;
+					temp|=((input[+y+8]>>x)&1)<<1;
+					*output++=currentProject->rgbPal[(row*12)+(temp*3)];
+					*output++=currentProject->rgbPal[(row*12)+(temp*3)+1];
+					*output++=currentProject->rgbPal[(row*12)+(temp*3)+2];
+				}
+			}
+		break;
+	}
+	
+}
 bool verify_str_number_only(char * str)
 {
 /*!
@@ -240,11 +306,11 @@ void set_palette_type(uint8_t type)
 			palette_muliplier=18;
 			palette_adder=0;
 		break;
-		case 1:
+		case 1://shadow
 			palette_muliplier=9;
 			palette_adder=0;
 		break;
-		case 2:
+		case 2://highlight
 			palette_muliplier=9;
 			palette_adder=126;
 		break;

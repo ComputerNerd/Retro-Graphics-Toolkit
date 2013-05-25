@@ -74,17 +74,16 @@ unsigned short to_sega_genesis_color(unsigned char pal_index)
 uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_found,bool useAlpha=false)
 {
 	/*!
-	Scans for colors in an image stops at over 256 but only checks if over 256 after doing one line
-	this function does not consider a same color with different alpha value to be a different color
+	Scans for colors in an image stops at over 256 as if there is an excess of 256 colors there is no reason to countinue
 	*/
 	//memset(colors_found,0,w*h*3);
-	unsigned int colors_amount=3;
+	uint32_t colors_amount=3;
 	colors_found[0]=*image_ptr++;
 	colors_found[1]=*image_ptr++;
 	colors_found[2]=*image_ptr++;
 	if (useAlpha)
 		image_ptr++;
-	uint32_t start=1;
+	uint8_t start=1;
 	unsigned int y;
 
 	for (y=0;y<h;y++)
@@ -116,14 +115,15 @@ uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_
 				colors_found[colors_amount+2]=b;
 				colors_amount+=3;
 			}
+			if (colors_amount >= 765)
+			{
+				printf("\nOver 255 colors timing out no need for operation to countinue.\n");
+				return colors_amount/3;//to save on multiplication we have it times 3
+			}
 		}
 			//update progress bar
 			printf("counting colors %% %f Colors Found: %d\r",((float)y/(float)h)*100.0,colors_amount/3);
-			if (colors_amount > 768)
-			{
-				printf("\nOver 256 colors timing out no need for operation to countinue.\n");
-				return colors_amount/3;//to save on multiplication we have it times 3
-			}
+			
 	}
 	printf("\n");
 	return colors_amount/3;
