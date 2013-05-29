@@ -245,7 +245,8 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha)
 	this function will take an input with or without alpha and dither it
 	*/
 	uint8_t ditherSetting=window->ditherPower->value();
-	uint8_t type_temp,temp;
+	uint8_t type_temp=palTypeGen;
+	uint8_t temp=0;
 	uint8_t rgbRowsize;
 	uint16_t x,y;
 	if (useAlpha)
@@ -258,20 +259,10 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha)
 		rgbPixelsize=3;
 		rgbRowsize=24;
 	}
-	bool tempSet;
 	uint8_t r_old,g_old,b_old,a_old;
 	uint8_t r_new,g_new,b_new,a_new;
 	uint8_t pal_row;
 	int16_t error_rgb[4];
-	useHiL=palette_muliplier;
-	if (palette_adder==0)
-	{
-		type_temp=1;
-	}
-	else
-	{
-		type_temp=2;
-	}
 	switch (ditherAlg)
 	{
 	case 2://nearest color
@@ -287,10 +278,10 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha)
 					a_old=image[x+(y*w*rgbPixelsize)+3];
 				pal_row=currentProject->tileMapC->get_palette_map(x/rgbRowsize,y/8);
 				//find nearest color
-				if ((game_system == sega_genesis) && (useHiL == 9))
+				if (game_system == sega_genesis && type_temp != 0)
 				{
-					tempSet=currentProject->tileMapC->get_prio(x/rgbRowsize,y/8)^true;
-					set_palette_type(tempSet);
+					uint8_t tempSet=(currentProject->tileMapC->get_prio(x/rgbRowsize,y/8)^1)*8;
+					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted
 				}
 				temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old);
 				r_new=currentProject->rgbPal[temp];
@@ -330,10 +321,10 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha)
 					a_old=image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+3];
 				pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
 				//find nearest color
-				if ((game_system == sega_genesis) && (useHiL == 9))
+				if (game_system == sega_genesis && type_temp != 0)
 				{
-					tempSet=currentProject->tileMapC->get_prio(x/8,y/8)^true;
-					set_palette_type(tempSet);
+					uint8_t tempSet=(currentProject->tileMapC->get_prio(x/8,y/8)^1)*8;
+					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted
 				}
 				temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old);
 				r_new=currentProject->rgbPal[temp];
@@ -377,7 +368,7 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha)
 		}
 	break;
 	}
-	if ((game_system == sega_genesis) && (useHiL == 9))
+	if (game_system == sega_genesis)
 		set_palette_type(type_temp);
 
 }

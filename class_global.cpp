@@ -31,7 +31,11 @@ void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y)
 	for (uint16_t c=0;c<32*32;c++)
 	{
 		for (uint8_t e=0;e<3;e++)
-			*ptr_grid++=((double)rgba[e]*percent)+((double)*ptr_grid*(1.0-percent));
+		{
+			//*ptr_grid++=((double)rgba[e]*percent)+((double)*ptr_grid*(1.0-percent));//undefined
+			uint8_t gridNerd=*ptr_grid;
+			*ptr_grid++=((double)rgba[e]*percent)+((double)gridNerd*(1.0-percent));
+		}
 			
 	}
 	fl_draw_image(grid,x,y,32,32,3);
@@ -57,8 +61,6 @@ void editor::draw_non_gui()
 		break;
 	}
 	//palette_bar_offset_y=(double)((double)h()/600.0)*(double)default_palette_bar_offset_y;//this command needs to be done for more than one window so there is no point of writting this more than once so we put it here
-	
-
 	int16_t x,y;//we will need to reuse these later
 	uint8_t box_size=pal_size->value();
 	uint8_t tiles_size=tile_size->value();
@@ -118,39 +120,34 @@ void editor::draw_non_gui()
 			max_map_w=((placer_tile_size*8)+w()-map_off_x)/(placer_tile_size*8);//this will puroposly allow one tile to go partly off screen that is normal I added that on purpose
 			max_map_h=((placer_tile_size*8)+h()-map_off_y)/(placer_tile_size*8);
 			//see if shadow highlight is enabled
-			if (palette_muliplier==18 || game_system != sega_genesis)
+			if (palTypeGen==0 || game_system != sega_genesis || showTrueColor==true)
 			{
 				//shadow highlight is disabled
 				for (y=0;y<min((int)currentProject->tileMapC->mapSizeH-map_scroll_pos_y,(int)max_map_h);y++)
 				{
 					for (x=0;x<min((int)currentProject->tileMapC->mapSizeW-map_scroll_pos_x,(int)max_map_w);x++)
-					{//remember to change back to drawtile
+					{
 						uint32_t tempx,tempy;
 						tempx=x+map_scroll_pos_x;
 						tempy=y+map_scroll_pos_y;
-						currentProject->tileC->draw_tile(map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),get_tile(x+map_scroll_pos_x,y+map_scroll_pos_y),placer_tile_size,currentProject->tileMapC->get_palette_map(x+map_scroll_pos_x,y+map_scroll_pos_y),currentProject->tileMapC->get_hflip(x+map_scroll_pos_x,y+map_scroll_pos_y),currentProject->tileMapC->get_vflip(x+map_scroll_pos_x,y+map_scroll_pos_y));
-						//currentProject->tileC->draw_truecolor(get_tile(tempx,tempy),map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),currentProject->tileMapC->get_hflip(tempx,tempy),currentProject->tileMapC->get_vflip(tempx,tempy),placer_tile_size);
+						if (showTrueColor)
+							currentProject->tileC->draw_truecolor(currentProject->tileMapC->get_tile(tempx,tempy),map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),currentProject->tileMapC->get_hflip(tempx,tempy),currentProject->tileMapC->get_vflip(tempx,tempy),placer_tile_size);
+						else
+							currentProject->tileC->draw_tile(map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),currentProject->tileMapC->get_tile(x+map_scroll_pos_x,y+map_scroll_pos_y),placer_tile_size,currentProject->tileMapC->get_palette_map(x+map_scroll_pos_x,y+map_scroll_pos_y),currentProject->tileMapC->get_hflip(x+map_scroll_pos_x,y+map_scroll_pos_y),currentProject->tileMapC->get_vflip(x+map_scroll_pos_x,y+map_scroll_pos_y));
+						
 					}
 				}
 			}
 			else
 			{
-				uint8_t type_temp;
-				if (palette_adder==0)
-				{
-					type_temp=1;
-				}
-				else
-				{
-					type_temp=2;
-				}
+				uint8_t type_temp=palTypeGen;
 				for (y=0;y<min((int)currentProject->tileMapC->mapSizeH-map_scroll_pos_y,(int)max_map_h);y++)
 				{
 					for (x=0;x<min((int)currentProject->tileMapC->mapSizeW-map_scroll_pos_x,(int)max_map_w);x++)
 					{
-						bool temp=currentProject->tileMapC->get_prio(x+map_scroll_pos_x,y+map_scroll_pos_y)^true;
+						uint8_t temp=(currentProject->tileMapC->get_prio(x+map_scroll_pos_x,y+map_scroll_pos_y)^1)*8;
 						set_palette_type(temp);
-						currentProject->tileC->draw_tile(map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),get_tile(x+map_scroll_pos_x,y+map_scroll_pos_y),placer_tile_size,currentProject->tileMapC->get_palette_map(x+map_scroll_pos_x,y+map_scroll_pos_y),currentProject->tileMapC->get_hflip(x+map_scroll_pos_x,y+map_scroll_pos_y),currentProject->tileMapC->get_vflip(x+map_scroll_pos_x,y+map_scroll_pos_y));
+						currentProject->tileC->draw_tile(map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),currentProject->tileMapC->get_tile(x+map_scroll_pos_x,y+map_scroll_pos_y),placer_tile_size,currentProject->tileMapC->get_palette_map(x+map_scroll_pos_x,y+map_scroll_pos_y),currentProject->tileMapC->get_hflip(x+map_scroll_pos_x,y+map_scroll_pos_y),currentProject->tileMapC->get_vflip(x+map_scroll_pos_x,y+map_scroll_pos_y));
 					}
 				}
 				set_palette_type(type_temp);
@@ -238,7 +235,7 @@ int editor::handle(int event)
 							damage(FL_DAMAGE_USER1);
 						}
 						else
-							fl_alert("Tile attributes id: %d h-flip: %d v-flip %d priority: %d pal row: %d\nAt location x: %d y: %d",get_tile(temp_one,temp_two),currentProject->tileMapC->get_hflip(temp_one,temp_two),currentProject->tileMapC->get_vflip(temp_one,temp_two),currentProject->tileMapC->get_prio(temp_one,temp_two),currentProject->tileMapC->get_palette_map(temp_one,temp_two),temp_one,temp_two);
+							fl_alert("Tile attributes id: %d h-flip: %d v-flip %d priority: %d pal row: %d\nAt location x: %d y: %d",currentProject->tileMapC->get_tile(temp_one,temp_two),currentProject->tileMapC->get_hflip(temp_one,temp_two),currentProject->tileMapC->get_vflip(temp_one,temp_two),currentProject->tileMapC->get_prio(temp_one,temp_two),currentProject->tileMapC->get_palette_map(temp_one,temp_two),temp_one,temp_two);
 					}
 					if (Fl::event_x() > tile_placer_tile_offset_x && Fl::event_y() > tile_placer_tile_offset_y && Fl::event_x() < tile_placer_tile_offset_x+(tiles_size*8) && Fl::event_y() < tile_placer_tile_offset_y+(tiles_size*8))
 					{

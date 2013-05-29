@@ -349,7 +349,7 @@ static void set_palette1(int index, int level)
 
 static void	build_table3(unsigned char *image, int size);
 static unsigned long	calc_err(int, int);
-static int	reduce_table3(int num_colors);
+static int reduce_table3(int num_colors,bool showProgress);
 static void	set_palette3(void);
 static int	bestcolor3(int r, int g, int b);
 
@@ -423,16 +423,13 @@ int dl3floste(unsigned char *inbuf, unsigned char *outbuf, int width, int height
 }
 
 
-int dl3quant(unsigned char *inbuf, int width, int height, int quant_to, unsigned char userpal[3][256])
+int dl3quant(unsigned char *inbuf, int width, int height, int quant_to, unsigned char userpal[3][256],bool showProgress)
 {
 	if (init_table() == 0) return 1;
 	build_table3(inbuf, width * height);
-
-	if ( reduce_table3(quant_to) ) return 0;	// Return if stop button pressed
+	if ( reduce_table3(quant_to,showProgress) ) return 0;	// Return if stop button pressed
 	set_palette3();
-
 	copy_pal(userpal);
-
 	return 0;		// Success
 }
 
@@ -553,57 +550,67 @@ static void recount_dist(int c1)
 	}
 }
 
-static int reduce_table3(int num_colors)
+static int reduce_table3(int num_colors,bool showProgress)
 {
 	int i, c1=0, c2=0, grand_total, bailout = FALSE;
 	unsigned long err;
-	//progress bar slows down quantiznation
-	//progress_init("Quantize Pass 1", 1);
-
 	// Make the progress bar
-	/*Fl_Window *w = (Fl_Window*)window;           // access parent window
-	w->begin();                                // add progress bar to it..
-	Fl_Progress *progress = new Fl_Progress(10,200,200,30);
-	progress->minimum(0);                      // set progress range to be 0.0 ~ 1.0
-	progress->maximum(1);
-	progress->color(0x88888800);               // background color
-	progress->selection_color(0x4444ff00);     // progress bar color
-	progress->labelcolor(FL_WHITE);            // percent text color
-	w->end();   */                               // end adding to window
-
-	printf("Quantize Pass 1\n");
-	//progress->label("Quantize Pass 1");
+	Fl_Window *w;
+	Fl_Progress *progress;
+	if (showProgress)
+	{
+		w = new Fl_Window(250,45,"Progress");           // access parent window
+		w->begin();                                // add progress bar to it..
+		progress = new Fl_Progress(25,7,200,30);
+		progress->minimum(0);                      // set progress range to be 0.0 ~ 1.0
+		progress->maximum(1);
+		progress->color(0x88888800);               // background color
+		progress->selection_color(0x4444ff00);     // progress bar color
+		progress->labelcolor(FL_WHITE);            // percent text color
+		w->end();                                  // end adding to window
+		w->show();
+		printf("Quantize Pass 1\n");
+		progress->label("Quantize Pass 1");
+	}
 	for (i = 0; i < (tot_colors - 1); i++)
 	{
-		if ( i%32 == 0 ) printf("%% %f\r",((float)i) / (tot_colors-1)); //bailout = progress_update( ((float) i) / (tot_colors-1) );
+		//if ( i%32 == 0 ) printf("%% %f\r",((float)i) / (tot_colors-1)); //bailout = progress_update( ((float) i) / (tot_colors-1) );
 		//if (bailout) goto stop;
-	/*	if ( i%64 == 0 )
+		if ( i%512 == 0 )
 		{
-			progress->value(((float)i) / (tot_colors-1));
-			Fl::check();
-		}*/
+			if (showProgress)
+			{
+				progress->value(((float)i) / (tot_colors-1));
+				Fl::check();
+			}
+		}
 		recount_next(i);
 	}
-	//progress_end();
 
 	rgb_table3[i].err = ~0L;
 	rgb_table3[i].cc = tot_colors;
 
 	grand_total = tot_colors-num_colors;
-	//progress_init("Quantize Pass 2", 1);
-	printf("Quantize Pass 2\n");
-	//progress->label("Quantize Pass 2");
+	if (showProgress)
+	{
+		printf("Quantize Pass 2\n");
+		progress->label("Quantize Pass 2");
+		//Fl::check();
+	}
 	while (tot_colors > num_colors)
 	{
-		if ( (tot_colors-num_colors)%8 == 0 )
-			printf("%% %f\r",((float) (grand_total-tot_colors+num_colors))/grand_total); //progress_update( ((float) (grand_total-tot_colors+num_colors)) /
+		//if ( (tot_colors-num_colors)%8 == 0 )
+		//	printf("%% %f\r",((float) (grand_total-tot_colors+num_colors))/grand_total); //progress_update( ((float) (grand_total-tot_colors+num_colors)) /
 				//grand_total );
 		//if (bailout) goto stop;
-		/*if ( (tot_colors-num_colors)%64 == 0 )
+		if ( (tot_colors-num_colors)%384 == 0 )
 		{
-			progress->value(((float) (grand_total-tot_colors+num_colors))/grand_total);
-			Fl::check();
-		}*/
+			if (showProgress)
+			{
+				progress->value(((float) (grand_total-tot_colors+num_colors))/grand_total);
+				Fl::check();
+			}
+		}
 		err = ~0L;
 		for (i = 0; i < tot_colors; i++)
 		{
@@ -640,9 +647,14 @@ static int reduce_table3(int num_colors)
 	}
 stop:
 	//progress_end();
-	/*w->remove(progress);// remove progress bar from window
-	delete(progress);// deallocate it
-	w->redraw();// tell window to redraw now that progress removed*/
+	if (showProgress)
+	{
+		w->remove(progress);// remove progress bar from window
+		delete(progress);// deallocate it
+		//w->draw();
+		delete w;
+		Fl::check();
+	}
 	//return bailout;
 	return 0;
 }

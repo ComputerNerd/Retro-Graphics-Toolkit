@@ -32,8 +32,8 @@ uint8_t game_system;
 uint8_t truecolor_temp[4];/*!< This stores the rgba data selected with the truecolor sliders*/
 std::string the_file;//this is for tempory use only
 uint8_t mode_editor;//this is used to determin which thing to draw
-uint8_t palette_muliplier;
-uint8_t palette_adder;
+//uint8_t palette_muliplier;
+//uint8_t palette_adder;
 //uint8_t currentProject->rgbPal[192];
 //uint8_t palette_entry;
 //uint8_t rgb_temp[3];
@@ -50,6 +50,8 @@ uint32_t file_size;
 //uint8_t * attr_nes;
 uint8_t ditherAlg;
 #define PI 3.141592653589793238462643383279
+uint8_t palTypeGen=0;
+bool showTrueColor=false;
 bool saveBinAsText(void * ptr,size_t sizeBin,FILE * myfile)
 {
 	/*!
@@ -82,6 +84,7 @@ void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row)
 	switch (game_system)
 	{
 		case sega_genesis:
+			row*=48;
 			for (uint8_t y=0;y<8;y++)
 			{
 				for (uint8_t x=0;x<4;x++)
@@ -91,16 +94,19 @@ void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row)
 					uint8_t temp_1,temp_2;
 					temp_1=temp>>4;//first pixel
 					temp_2=temp&15;//second pixel
-					*output++=currentProject->rgbPal[(row*48)+(temp_1*3)];
-					*output++=currentProject->rgbPal[(row*48)+(temp_1*3)+1];
-					*output++=currentProject->rgbPal[(row*48)+(temp_1*3)+2];
-					*output++=currentProject->rgbPal[(row*48)+(temp_2*3)];
-					*output++=currentProject->rgbPal[(row*48)+(temp_2*3)+1];
-					*output++=currentProject->rgbPal[(row*48)+(temp_2*3)+2];
+					*output++=currentProject->rgbPal[row+(temp_1*3)];
+					*output++=currentProject->rgbPal[row+(temp_1*3)+1];
+					*output++=currentProject->rgbPal[row+(temp_1*3)+2];
+					*output++=255;
+					*output++=currentProject->rgbPal[row+(temp_2*3)];
+					*output++=currentProject->rgbPal[row+(temp_2*3)+1];
+					*output++=currentProject->rgbPal[row+(temp_2*3)+2];
+					*output++=255;
 				}
 			}
 		break;
 		case NES:
+			row*=12;
 			for (uint8_t y=0;y<8;y++)
 			{
 				for (uint8_t x=0;x<8;x++)
@@ -108,9 +114,10 @@ void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row)
 					uint8_t temp;
 					temp=(input[+y]>>x)&1;
 					temp|=((input[+y+8]>>x)&1)<<1;
-					*output++=currentProject->rgbPal[(row*12)+(temp*3)];
-					*output++=currentProject->rgbPal[(row*12)+(temp*3)+1];
-					*output++=currentProject->rgbPal[(row*12)+(temp*3)+2];
+					*output++=currentProject->rgbPal[row+(temp*3)];
+					*output++=currentProject->rgbPal[row+(temp*3)+1];
+					*output++=currentProject->rgbPal[row+(temp*3)+2];
+					*output++=255;
 				}
 			}
 		break;
@@ -215,109 +222,11 @@ uint32_t MakeRGBcolor(uint32_t pixel,float saturation, float hue_tweak,float con
  //the game system defines are also defined in global.h
 #define sega_genesis 0
 #define NES 1
-/*
-from genvdp.txt
 
-----------------------------------------------------------------------------
- 13.) Background Layers
- ----------------------------------------------------------------------------
-
- The VDP manages two background layers, called plane A and plane B.
-
- Name Tables
- -----------
-
- There are three tables stored in video RAM that define the layout for
- planes A, B, and W.
-
- Each table is a matrix of 16-bit words. Each word has the following format:
-  I aded the numbering not in origonal gendvp.txt
-    15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
-    p  c   c  v  h  n n n n n n n n n n n
-
-    p = Priority flag
-    c = Palette select
-    v = Vertical flip
-    h = Horizontal flip
-    n = Pattern name
- 
- The pattern name is the upper 11 bits of the physical address of pattern
- in video RAM. Bit zero of the name is ignored in interlace mode 2.
-
- The vertical and horizontal flip flags tell the VDP to draw the pattern
- flipped in either direction.
-
- The palette select allows the pattern to be shown in one of four
- 16-color palettes.
-
- The priority flag is described later.
-
- The name tables for plane A and B share the same dimensions. The name
- table size cannot exceed 8192 bytes, so while a 64x64 or 128x32 name
- table is allowed, a size of 128x128 or 64x128 is invalid.
-
- The name table for plane W is 32x32 in 32-cell mode, and 64x32 in 40-cell
- mode. This size is fixed and is entirely dependant on the display width.
-
-*/
-
-
-uint32_t get_tile(uint16_t x,uint16_t y)
-{
-	//first calulate which tile we want
-	if (currentProject->tileMapC->mapSizeW < x || currentProject->tileMapC->mapSizeH < y)
-	{
-		fl_alert("Error tried to get a non existen tile on the map");
-		return 0;
-	}
-	uint32_t selected_tile=((y*currentProject->tileMapC->mapSizeW)+x)*4;
-	//get both bytes
-	uint8_t temp_1,temp_2,temp_3;
-	temp_1=currentProject->tileMapC->tileMapDat[selected_tile+1];//least sigficant is stored in the lowest address
-	temp_2=currentProject->tileMapC->tileMapDat[selected_tile+2];
-	temp_3=currentProject->tileMapC->tileMapDat[selected_tile+3];//most sigficant
-	//printf("Returned %d\n",(temp_1<<16)+(temp_2<<8)+temp_3);
-	return (temp_1<<16)+(temp_2<<8)+temp_3;
-}
-int32_t get_tileRow(uint16_t x,uint16_t y,uint8_t useRow)
-{
-	//first calulate which tile we want
-	uint32_t selected_tile=((y*currentProject->tileMapC->mapSizeW)+x)*4;
-	//get both bytes
-	if (((currentProject->tileMapC->tileMapDat[selected_tile]>>5)&3) == useRow)
-	{
-		uint8_t temp_1,temp_2,temp_3;
-		temp_1=currentProject->tileMapC->tileMapDat[selected_tile+1];//least sigficant is stored in the lowest address
-		temp_2=currentProject->tileMapC->tileMapDat[selected_tile+2];
-		temp_3=currentProject->tileMapC->tileMapDat[selected_tile+3];//most sigficant
-		return (temp_1<<16)+(temp_2<<8)+temp_3;
-	}
-	else
-	{
-		return -1;
-	}
-}
+const uint8_t palTab[]={0,49,87,119,146,174,206,255,0,27,49,71,87,103,119,130,130,146,157,174,190,206,228,255};
 void set_palette_type(uint8_t type)
 {
-	//get the type
-	switch (type)
-	{
-		case 0://normal
-			palette_muliplier=18;
-			palette_adder=0;
-		break;
-		case 1://shadow
-			palette_muliplier=9;
-			palette_adder=0;
-		break;
-		case 2://highlight
-			palette_muliplier=9;
-			palette_adder=126;
-		break;
-		default:
-			show_default_error
-		break;
-	}
+	palTypeGen=type;
 	//now reconvert all the colors
 	for (uint8_t pal=0; pal < 128;pal+=2)
 	{
@@ -326,22 +235,18 @@ void set_palette_type(uint8_t type)
 		//the rgb array is in rgb format and the genesis palette is bgr format
 		uint8_t rgb_array = pal+(pal/2);//multiply pal by 1.5
 		uint8_t temp_var = currentProject->palDat[pal];
-		temp_var*=palette_muliplier;
-		temp_var+=palette_adder;
-		currentProject->rgbPal[rgb_array+2]=temp_var;
+		temp_var>>=1;
+		currentProject->rgbPal[rgb_array+2]=palTab[temp_var+type];
 		//seperating the gr values will require some bitwise operations
 		//to get g shift to the right by 4
 		temp_var = currentProject->palDat[pal+1];
-		temp_var>>=4;
-		temp_var*=palette_muliplier;
-		temp_var+=palette_adder;
-		currentProject->rgbPal[rgb_array+1]=temp_var;
+		temp_var>>=5;
+		currentProject->rgbPal[rgb_array+1]=palTab[temp_var+type];
 		//to get r value apply the and opperation by 0xF or 15
 		temp_var = currentProject->palDat[pal+1];
 		temp_var&=0xF;
-		temp_var*=palette_muliplier;
-		temp_var+=palette_adder;
-		currentProject->rgbPal[rgb_array]=temp_var;
+		temp_var>>=1;
+		currentProject->rgbPal[rgb_array]=palTab[temp_var+type];
 	}
 	//window->redraw();
 }
@@ -428,10 +333,9 @@ void invert_prio(uint16_t x,uint16_t y)
     h = Horizontal flip
     n = Pattern name
 */
-
 uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b)
 {
-	
+
 	uint8_t i;
 	int distanceSquared, minDistanceSquared, bestIndex = 0;
 	minDistanceSquared = 255*255 + 255*255 + 255*255 + 1;
@@ -444,25 +348,27 @@ uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b)
 		case NES:
 			max_rgb=12;//4*3=12
 		break;
+		default:
+			show_default_error
+		break;
 	}
 	row*=max_rgb;
-    for (i=row; i<max_rgb+row; i+=3)
+	for (i=row; i<max_rgb+row; i+=3)
 	{
-        int Rdiff = (int) r - (int)currentProject->rgbPal[i];
-        int Gdiff = (int) g - (int)currentProject->rgbPal[i+1];
-        int Bdiff = (int) b - (int)currentProject->rgbPal[i+2];
-        distanceSquared = Rdiff*Rdiff + Gdiff*Gdiff + Bdiff*Bdiff;
-        if (distanceSquared <= minDistanceSquared) {
-            minDistanceSquared = distanceSquared;
-            bestIndex = i;
-        }
-    }
+		int Rdiff = (int) r - (int)currentProject->rgbPal[i];
+		int Gdiff = (int) g - (int)currentProject->rgbPal[i+1];
+		int Bdiff = (int) b - (int)currentProject->rgbPal[i+2];
+		distanceSquared = Rdiff*Rdiff + Gdiff*Gdiff + Bdiff*Bdiff;
+		if (distanceSquared <= minDistanceSquared) {
+			minDistanceSquared = distanceSquared;
+			bestIndex = i;
+		}
+	}
     return bestIndex;
 }
 
 uint8_t find_near_color_from_row(uint8_t row,uint8_t r,uint8_t g,uint8_t b)
 {
-	
 	uint8_t i;
     int distanceSquared, minDistanceSquared, bestIndex = 0;
     minDistanceSquared = 255*255 + 255*255 + 255*255 + 1;
@@ -474,6 +380,9 @@ uint8_t find_near_color_from_row(uint8_t row,uint8_t r,uint8_t g,uint8_t b)
 		break;
 		case NES:
 			max_rgb=12;//4*3=12
+		break;
+		default:
+			show_default_error
 		break;
 	}
 	row*=max_rgb;

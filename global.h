@@ -31,9 +31,6 @@ void set_tile(uint32_t tile,uint16_t x,uint16_t y);
 void set_prio(uint16_t x,uint16_t y,bool prio_set);
 void set_hflip(uint16_t x,uint16_t y,bool hflip_set);
 void set_vflip(uint16_t x,uint16_t y,bool vflip_set);
-uint32_t get_tile(uint16_t x,uint16_t y);
-int32_t get_tileRow(uint16_t x,uint16_t y,uint8_t useRow);
-
 void set_palette_type(uint8_t type);
 uint32_t MakeRGBcolor(uint32_t pixel,float saturation = 1.1f, float hue_tweak = 0.0f,float contrast = 1.0f, float brightness = 1.0f,float gamma = 2.2f);
 //uint32_t MakeRGBcolor(uint32_t pixel,float saturation, float hue_tweak,float contrast, float brightness ,float gamma );
@@ -83,10 +80,13 @@ extern uint16_t tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
 #define default_true_color_box_x 320
 extern uint16_t true_color_box_x,true_color_box_y;
 extern bool show_grid;
-extern uint8_t palette_muliplier;
+//extern uint8_t palette_muliplier;
 extern bool G_hflip;
 extern bool G_vflip;
 extern bool G_highlow_p;
-extern uint8_t palette_adder;
+//extern uint8_t palette_adder;
 extern uint32_t file_size;
 extern uint8_t ditherAlg;
+extern uint8_t palTypeGen;
+extern const uint8_t palTab[];
+extern bool showTrueColor;

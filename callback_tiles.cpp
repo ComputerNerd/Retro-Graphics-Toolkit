@@ -5,7 +5,6 @@ void delete_tile_at_location(Fl_Widget*, void* row)
 {
 	//this function will delete the tile that the user has selected
 	//remeber both current_tile and tiles_amount are counting from zero that means that a value of zero means one tile
-	//in this case we will still need a temp buffer even after switching to malloc because it can not delete part of it
 	currentProject->tileC->remove_tile_at(currentProject->tileC->current_tile);
 	window->redraw();
 }

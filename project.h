@@ -12,7 +12,7 @@ struct Project/*!<Holds all data needed for a project based system for examaple 
 	uint8_t gameSystem;
 	tileMap * tileMapC;
 	tiles * tileC;
-	uint8_t rgbPal[192];
+	uint8_t rgbPal[256];
 	uint8_t palDat[128];
 	
 };

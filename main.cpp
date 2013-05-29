@@ -358,7 +358,6 @@ void load_tiles(Fl_Widget*,void* split)
 				case sega_genesis:
 					for (uint32_t c=offset_tiles;c<(file_size/currentProject->tileC->tileSize)+offset_tiles;c++)
 					{
-
 						/*for (uint8_t y=0;y<8;y++)
 						{
 							for (uint8_t x=0;x<4;x++)
@@ -530,11 +529,11 @@ void shadow_highligh_findout(Fl_Widget*,void*)
 		{
 			for (x=0;x<currentProject->tileMapC->mapSizeW;x++)
 			{
-				uint32_t cur_tile=get_tile(x,y);
+				uint32_t cur_tile=currentProject->tileMapC->get_tile(x,y);
 				uint8_t over=0;
 				for (xx=cur_tile*256;xx<cur_tile*256+256;xx+=4)
 				{
-					if ((currentProject->tileC->truetileDat[xx] > 125) || (currentProject->tileC->truetileDat[xx+1] > 125) || (currentProject->tileC->truetileDat[xx+2] > 125))
+					if ((currentProject->tileC->truetileDat[xx] > 130) || (currentProject->tileC->truetileDat[xx+1] > 130) || (currentProject->tileC->truetileDat[xx+2] > 130))
 						over++;
 				}
 				if (over > 4)
@@ -547,38 +546,32 @@ void shadow_highligh_findout(Fl_Widget*,void*)
 	else
 	{
 		uint8_t temp[256];
-		uint8_t useHiL=palette_muliplier;
-		uint8_t type_temp;
-		//uint8_t dithOld=ditherAlg;
-		ditherAlg=2;//nearest color
-		if (palette_adder==0)
-		{
-			type_temp=1;
-		}
-		else
-		{
-			type_temp=2;
-		}
+		//uint8_t useHiL=palette_muliplier;
+		uint8_t type_temp=palTypeGen;
 		for (y=0;y<currentProject->tileMapC->mapSizeH;y++)
 		{
 			for (x=0;x<currentProject->tileMapC->mapSizeW;x++)
 			{
-				uint32_t cur_tile=get_tile(x,y);
-				uint8_t errorSh=0,errorNorm=0;
+				uint32_t cur_tile=currentProject->tileMapC->get_tile(x,y);
+				uint32_t errorSh=0,errorNorm=0;
 				uint8_t * ptrorgin=&currentProject->tileC->truetileDat[(cur_tile*256)];
 				set_palette_type(0);//normal
 				currentProject->tileC->truecolor_to_tile(currentProject->tileMapC->get_palette_map(x,y),cur_tile);
 				tileToTrueCol(&currentProject->tileC->tileDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tileMapC->get_palette_map(x,y));
-				for (xx=0;xx<256;xx++)
+				for (xx=0;xx<256;xx+=4)
 				{
 					errorNorm+=abs(temp[xx]-ptrorgin[xx]);
+					errorNorm+=abs(temp[xx+1]-ptrorgin[xx+1]);
+					errorNorm+=abs(temp[xx+2]-ptrorgin[xx+2]);
 				}
-				set_palette_type(1);//shadow
+				set_palette_type(8);//shadow
 				currentProject->tileC->truecolor_to_tile(currentProject->tileMapC->get_palette_map(x,y),cur_tile);
 				tileToTrueCol(&currentProject->tileC->tileDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tileMapC->get_palette_map(x,y));
-				for (xx=0;xx<256;xx++)
+				for (xx=0;xx<256;xx+=4)
 				{
 					errorSh+=abs(temp[xx]-ptrorgin[xx]);
+					errorSh+=abs(temp[xx+1]-ptrorgin[xx+1]);
+					errorSh+=abs(temp[xx+2]-ptrorgin[xx+2]);
 				}
 				if (errorSh < errorNorm)
 					set_prio(x,y,false);//shadowed
@@ -586,11 +579,7 @@ void shadow_highligh_findout(Fl_Widget*,void*)
 					set_prio(x,y,true);//normal
 			}
 		}
-		if (useHiL==9)
-			set_palette_type(type_temp);//0 normal 1 shadow 2 highlight
-		else
-			set_palette_type(0);
-		//ditherAlg=dithOld;
+		set_palette_type(type_temp);//0 normal 8 shadow 16 highlight
 			
 	}
 	window->redraw();
@@ -603,17 +592,8 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 	//so first create ram for image
 	uint8_t * image;
 	uint32_t w,h;
-	uint8_t useHiL=palette_muliplier;
-	uint8_t type_temp;
-	bool tempSet;
-	if (palette_adder==0)
-	{
-		type_temp=1;
-	}
-	else
-	{
-		type_temp=2;
-	}
+	uint8_t type_temp=palTypeGen;
+	uint8_t tempSet=0;
 	w=currentProject->tileMapC->mapSizeW*8;
 	h=currentProject->tileMapC->mapSizeH*8;
 	image = (uint8_t *)malloc(w*h*4);
@@ -624,109 +604,111 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 	uint8_t truecolor_tile[256];
 	for (uint8_t rowz=0;rowz<4;rowz++)
 	{
-	printf("Row %d\n",rowz);
-	puts("Starting");
-	printf("Stage 1 %%: 0\n");
-	truecolor_to_image(image,rowz);
-	printf("Stage 1 %%: %f\n",(1.0f/3.0f)*100.0f);
-	ditherImage(image,w,h,true);
-	printf("Stage 2 %%: %f\n",(2.0f/3.0f)*100.0f);
-	//convert back to tiles
-	x_tile=0;
-	y_tile=0;
-	puts("Stage 3 starting");
-	for (uint64_t a=0;a<(h*w*4)-w*4;a+=w*4*8)//a tiles y
-	{
-		for (uint32_t b=0;b<w*4;b+=32)//b tiles x
-		{	
-			uint8_t temp;
-			int32_t current_tile=get_tileRow(x_tile,y_tile,rowz);
-			if (current_tile == -1)
-				goto dont_convert_tile;
-			truecolor_tile_ptr=0;
-			for (uint32_t y=0;y<w*4*8;y+=w*4)//pixels y
-			{
-				memcpy(&truecolor_tile[truecolor_tile_ptr],&image[a+b+y],32);
-				truecolor_tile_ptr+=32;
-			}
-			//convert back to tile
-			uint8_t * TileTempPtr;
-			switch (game_system)
-			{
-				case sega_genesis:
-					current_tile*=32;
-					if (useHiL == 9)
-					{
-						tempSet=currentProject->tileMapC->get_prio(x_tile,y_tile)^true;
-						set_palette_type(tempSet);
-					}
-					TileTempPtr=&currentProject->tileC->tileDat[current_tile];
-					for (uint16_t y=0;y<256;y+=32)
-					{
-						for (uint8_t x=0;x<32;x+=4)
+		printf("Row %d\n",rowz);
+		puts("Starting");
+		printf("Stage 1 %%: 0\n");
+		truecolor_to_image(image,rowz);
+		printf("Stage 1 %%: %f\n",(1.0f/3.0f)*100.0f);
+		ditherImage(image,w,h,true);
+		printf("Stage 2 %%: %f\n",(2.0f/3.0f)*100.0f);
+		//convert back to tiles
+		x_tile=0;
+		y_tile=0;
+		puts("Stage 3 starting");
+		for (uint64_t a=0;a<(h*w*4)-w*4;a+=w*4*8)//a tiles y
+		{
+			for (uint32_t b=0;b<w*4;b+=32)//b tiles x
+			{	
+				uint8_t temp;
+				int32_t current_tile=currentProject->tileMapC->get_tileRow(x_tile,y_tile,rowz);
+				if (current_tile == -1)
+					goto dont_convert_tile;
+				truecolor_tile_ptr=0;
+				for (uint32_t y=0;y<w*4*8;y+=w*4)//pixels y
+				{
+					memcpy(&truecolor_tile[truecolor_tile_ptr],&image[a+b+y],32);
+					truecolor_tile_ptr+=32;
+				}
+				//convert back to tile
+				uint8_t * TileTempPtr;
+				switch (game_system)
+				{
+					case sega_genesis:
+						current_tile*=32;
+						if (type_temp != 0)
 						{
-							//even,odd
-							if (x & 4)
-							{
-								//odd
-								if (truecolor_tile[y+x+3] != 0)
-								{
-									temp=find_near_color_from_row(currentProject->tileMapC->get_palette_map(x_tile,y_tile),truecolor_tile[y+x],truecolor_tile[y+x+1],truecolor_tile[y+x+2]);
-									*TileTempPtr++|=temp;
-								}
-								else
-									TileTempPtr++;
-							}
-							else
-							{
-								//even
-								if (truecolor_tile[y+x+3] != 0)
-								{
-									temp=find_near_color_from_row(currentProject->tileMapC->get_palette_map(x_tile,y_tile),truecolor_tile[y+x],truecolor_tile[y+x+1],truecolor_tile[y+x+2]);
-									*TileTempPtr=temp<<4;
-								}
-								else
-									*TileTempPtr=0;
-							}
+							tempSet=(currentProject->tileMapC->get_prio(x_tile,y_tile)^1)*8;
+							set_palette_type(tempSet);
 						}
+						TileTempPtr=&currentProject->tileC->tileDat[current_tile];
+						for (uint16_t y=0;y<256;y+=32)
+						{
+							for (uint8_t x=0;x<32;x+=4)
+							{
+								//even,odd
+								if (x & 4)
+								{
+									//odd
+									if (truecolor_tile[y+x+3] != 0)
+									{
+										temp=find_near_color_from_row(currentProject->tileMapC->get_palette_map(x_tile,y_tile),truecolor_tile[y+x],truecolor_tile[y+x+1],truecolor_tile[y+x+2]);
+										*TileTempPtr++|=temp;
+									}
+									else
+										TileTempPtr++;
+								}
+								else
+								{
+									//even
+									if (truecolor_tile[y+x+3] != 0)
+									{
+										temp=find_near_color_from_row(currentProject->tileMapC->get_palette_map(x_tile,y_tile),truecolor_tile[y+x],truecolor_tile[y+x+1],truecolor_tile[y+x+2]);
+										*TileTempPtr=temp<<4;
+									}
+									else
+										*TileTempPtr=0;
+								}
+							}
 
-					}
-				
-				break;
-				case NES:
-					current_tile*=16;
-					TileTempPtr=&currentProject->tileC->tileDat[current_tile];
-					for (uint8_t x=0;x<16;x++)
-					{
-						currentProject->tileC->tileDat[current_tile+x]=0;
-					}
-					for (uint8_t y=0;y<8;y++)
-					{
-						for (uint8_t x=0;x<8;x++)
+						}
+					
+					break;
+					case NES:
+						current_tile*=16;
+						TileTempPtr=&currentProject->tileC->tileDat[current_tile];
+						for (uint8_t x=0;x<16;x++)
 						{
-							if (truecolor_tile[(y*32)+(x*4)+3] != 0)
+							currentProject->tileC->tileDat[current_tile+x]=0;
+						}
+						for (uint8_t y=0;y<8;y++)
+						{
+							for (uint8_t x=0;x<8;x++)
 							{
-								temp=find_near_color_from_row(currentProject->tileMapC->get_palette_map(x_tile,y_tile),truecolor_tile[(y*32)+(x*4)],truecolor_tile[(y*32)+(x*4)+1],truecolor_tile[(y*32)+(x*4)+2]);
-								TileTempPtr[y]|=(temp&1)<<(7-x);
-								TileTempPtr[y+8]|=((temp>>1)&1)<<(7-x);
+								if (truecolor_tile[(y*32)+(x*4)+3] != 0)
+								{
+									temp=find_near_color_from_row(currentProject->tileMapC->get_palette_map(x_tile,y_tile),truecolor_tile[(y*32)+(x*4)],truecolor_tile[(y*32)+(x*4)+1],truecolor_tile[(y*32)+(x*4)+2]);
+									TileTempPtr[y]|=(temp&1)<<(7-x);
+									TileTempPtr[y+8]|=((temp>>1)&1)<<(7-x);
+								}
 							}
 						}
-					}
-				break;
+					break;
+				}
+	dont_convert_tile:
+			x_tile++;	
 			}
-dont_convert_tile:
-		x_tile++;	
+		x_tile=0;
+		y_tile++;
+		//update progress currentProject->tileMapC->mapSizeH
+		printf("Stage 3 %%: %f\r",(((float)y_tile/(float)currentProject->tileMapC->mapSizeH/3.0f)+(2.0f/3.0f))*100.0f);
 		}
-	x_tile=0;
-	y_tile++;
-	//update progress currentProject->tileMapC->mapSizeH
-	printf("Stage 3 %%: %f\r",(((float)y_tile/(float)currentProject->tileMapC->mapSizeH/3.0f)+(2.0f/3.0f))*100.0f);
-	}
-	putchar('\n');
-	puts("Done with image");
+		putchar('\n');
+		puts("Done with image");
+		window->damage(FL_DAMAGE_USER1);
+		Fl::check();
 	}
 	free(image);
-	if (game_system == sega_genesis && useHiL == 9)
+	if (game_system == sega_genesis)
 		set_palette_type(type_temp);
 	window->redraw();
 }
@@ -1054,8 +1036,16 @@ void tilemap_remove_callback(Fl_Widget*,void*)
 		currentProject->tileMapC->sub_tile_map(tile,tile-1,false,false);
 		window->redraw();
 }
-
-
+void trueColTileToggle(Fl_Widget*,void*)
+{
+	showTrueColor^=1;
+	window->damage(FL_DAMAGE_USER1);
+}
+void tileDPicker(Fl_Widget*,void*)
+{
+	currentProject->tileMapC->pickRowDelta();
+	window->damage(FL_DAMAGE_USER1);
+}
 void editor::_editor()
 {
 	//create the window
@@ -1089,7 +1079,8 @@ void editor::_editor()
 	menu->add("&Tile Actions/&Remove duplicate truecolor tiles",0,remove_duplicate_truecolor,0,0);
 	menu->add("&Tile Actions/&Remove duplicate tiles",0,remove_duplicate_tiles,0,0);
 	menu->add("&TileMap Actions/&Remove tiles after x",0,tilemap_remove_callback,0,0);
-
+	menu->add("&TileMap Actions/&Toggle TrueColor Viewing (defaults to off)",0,trueColTileToggle,0,0);
+	menu->add("&TileMap Actions/&Pick Tile row based on delta",0,tileDPicker,0,0);
 	tile_placer_tile_offset_y=default_tile_placer_tile_offset_y;
 	true_color_box_x=default_true_color_box_x;
 	true_color_box_y=default_true_color_box_y;
@@ -1127,13 +1118,13 @@ void editor::_editor()
 		o->tooltip("This mode uses the color sets that the vdp uses when shadow highlight mode is enabled by setting bit 3 (the LSB being bit 0) to 1 in the vdp register 0C also for the tile to be shadowed the tile's prioraty must be set at 0 or low prioraty");
 		o->type(102);
         o->down_box(FL_ROUND_DOWN_BOX);
-       o->callback((Fl_Callback*) set_palette_type_callback,(void *)1);
+       o->callback((Fl_Callback*) set_palette_type_callback,(void *)8);
       } // Fl_Round_Button* o
       { Fl_Round_Button* o = new Fl_Round_Button(256, 288, 64, 32, "Highlight");
 	  o->tooltip("This mode uses the color sets that a highlighted sprite or tile uses to make a tile highlighted use a mask sprite");
         o->type(102);
         o->down_box(FL_ROUND_DOWN_BOX);
-        o->callback((Fl_Callback*) set_palette_type_callback,(void *)2);
+        o->callback((Fl_Callback*) set_palette_type_callback,(void *)16);
       } // Fl_Round_Button* o
       shadow_highlight_switch->end();
 		} // Fl_Group* o
@@ -1396,9 +1387,7 @@ void editor::_editor()
 			o->end();
 		}
 	}
-
 }
-
 int main(int argc, char **argv)
 {
 	printf("Welcome to Retro graphics Toolkit\nWritten by sega16/nintendo8\nBuild %s %s\n",__DATE__,__TIME__);
@@ -1406,20 +1395,7 @@ int main(int argc, char **argv)
 	window->resizable(window);
 	Fl::scheme("plastic");
 	fl_register_images();
-	/*tile_map=(uint8_t *)malloc(16);
-	if (tile_map == 0)
-	{
-		show_malloc_error(16)
-	}
-	currentProject->tileMapC->mapSizeW=2;
-	currentProject->tileMapC->mapSizeH=2;
-	uint8_t abc;
-	for (abc=0;abc<16;abc++)
-	{
-		tile_map[abc]=0x00;
-	}*/
-	palette_muliplier=18;
-	palette_adder=0;
+	showTrueColor=false;
 	//// For a nicer looking browser under linux, call Fl_File_Icon::load_system_icons();
 	//// (If you do this, you'll need to link with fltk_images)
 	//// NOTE: If you do not load the system icons, the file chooser will still work, but
