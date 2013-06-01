@@ -20,6 +20,8 @@ public:
 	void sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vflip);
 	void pickRow(uint8_t amount);
 	void pickRowDelta();
+	bool selection;
+	uint16_t cur_x,cur_y;
 };
 void sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip=false,bool vflip=false);
 bool truecolor_to_image(uint8_t * the_image,int8_t useRow=-1,bool useAlpha=true);

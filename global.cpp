@@ -28,28 +28,12 @@ uint16_t tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
 uint16_t true_color_box_x,true_color_box_y;
 uint8_t tile_zoom_edit;
 uint8_t game_system;
-//uint8_t currentProject->palDat[128];
 uint8_t truecolor_temp[4];/*!< This stores the rgba data selected with the truecolor sliders*/
 std::string the_file;//this is for tempory use only
 uint8_t mode_editor;//this is used to determin which thing to draw
-//uint8_t palette_muliplier;
-//uint8_t palette_adder;
-//uint8_t currentProject->rgbPal[192];
-//uint8_t palette_entry;
-//uint8_t rgb_temp[3];
-//uint8_t tile_palette_row;//sets which palette row the tile displays
-//uint8_t tile_palette_row_placer;//sets which palette row the tile placer displays
-//uint8_t * tiles;
-//uint8_t * currentProject->tileMapC->tileMapDat; //moved to class
-//uint32_t tiles_amount;
-//uint32_t current_tile;//current tile that we are editing minus one
-//uint32_t current_tile_placer;
 uint32_t file_size;
-//uint16_t currentProject->tileMapC->mapSizeW;
-//uint16_t currentProject->tileMapC->mapSizeH;
-//uint8_t * attr_nes;
 uint8_t ditherAlg;
-#define PI 3.141592653589793238462643383279
+#define PI 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491298336733624406566430860213949463952247371907021798609437027705392171762931767523846748184676694051320005681271452635608277857713427577896091736371787214684409012249534301465495853710507922796892589235420199561121290219608640344181598136297747713099605187072113499999983729780499510597317328160963185950244594553469083026425223082533446850352619311881710100031378387528865875332083814206171776691473035982534904287554687311595628638823537875937519577818577805321712268066130019278766111959092164201989
 uint8_t palTypeGen=0;
 bool showTrueColor=false;
 bool saveBinAsText(void * ptr,size_t sizeBin,FILE * myfile)
@@ -222,8 +206,7 @@ uint32_t MakeRGBcolor(uint32_t pixel,float saturation, float hue_tweak,float con
  //the game system defines are also defined in global.h
 #define sega_genesis 0
 #define NES 1
-
-const uint8_t palTab[]={0,49,87,119,146,174,206,255,0,27,49,71,87,103,119,130,130,146,157,174,190,206,228,255};
+const uint8_t palTab[]={0,49,87,119,146,174,206,255,0,27,49,71,87,103,119,130,130,146,157,174,190,206,228,255};//from http://gendev.spritesmind.net/forum/viewtopic.php?t=1389
 void set_palette_type(uint8_t type)
 {
 	palTypeGen=type;

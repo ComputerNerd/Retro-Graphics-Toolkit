@@ -7,6 +7,7 @@ tileMap::tileMap()
 {
 	mapSizeW=2;
 	mapSizeH=2;
+	selection=false;
 	tileMapDat=(uint8_t *)calloc(16,1);
 }
 tileMap::~tileMap()

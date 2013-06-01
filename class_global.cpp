@@ -219,64 +219,6 @@ int editor::handle(int event)
 			}
 			switch (mode_editor)
 			{
-				case tile_place:
-					tiles_size=place_tile_size->value();
-					//see if the user placed a tile on the map
-					if (Fl::event_x() > map_off_x && Fl::event_y() > map_off_y && Fl::event_x() < map_off_x+((tiles_size*8)*currentProject->tileMapC->mapSizeW) && Fl::event_y() < map_off_y+((tiles_size*8)*currentProject->tileMapC->mapSizeH))
-					{
-						uint16_t temp_two,temp_one;
-						temp_one=((Fl::event_x()-map_off_x)/tiles_size)/8;
-						temp_two=((Fl::event_y()-map_off_y)/tiles_size)/8;
-						temp_one+=+map_scroll_pos_x;
-						temp_two+=+map_scroll_pos_y;
-						if (Fl::event_button() == FL_LEFT_MOUSE)
-						{
-							set_tile_full(currentProject->tileC->current_tile,temp_one,temp_two,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
-							damage(FL_DAMAGE_USER1);
-						}
-						else
-							fl_alert("Tile attributes id: %d h-flip: %d v-flip %d priority: %d pal row: %d\nAt location x: %d y: %d",currentProject->tileMapC->get_tile(temp_one,temp_two),currentProject->tileMapC->get_hflip(temp_one,temp_two),currentProject->tileMapC->get_vflip(temp_one,temp_two),currentProject->tileMapC->get_prio(temp_one,temp_two),currentProject->tileMapC->get_palette_map(temp_one,temp_two),temp_one,temp_two);
-					}
-					if (Fl::event_x() > tile_placer_tile_offset_x && Fl::event_y() > tile_placer_tile_offset_y && Fl::event_x() < tile_placer_tile_offset_x+(tiles_size*8) && Fl::event_y() < tile_placer_tile_offset_y+(tiles_size*8))
-					{
-						
-						uint8_t temp_two,temp_one;
-						temp_one=(Fl::event_x()-tile_placer_tile_offset_x)/tiles_size;
-						temp_two=(Fl::event_y()-tile_placer_tile_offset_y)/tiles_size;
-						if (G_hflip == true)
-							temp_one=7-temp_one;
-						if (G_vflip == true)
-							temp_two=7-temp_two;
-						//now we know which pixel we are editing
-						//see if it is even or odd
-						unsigned char temp_1,temp_2;
-						if (temp_one & 1)//faster
-						{
-							//odd
-							//split pixels
-							unsigned char temp=currentProject->tileC->tileDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)];
-							//first,second pixel
-							temp_1=temp>>4;//first pixel
-							temp_2=temp&15;//second pixel
-							//put temp_1 back in proper place
-							temp_1<<=4;
-							temp_1+=tileMap_pal.box_sel;
-							currentProject->tileC->tileDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)]=temp_1;
-						}
-						else
-						{
-							//even
-							//split pixels
-							unsigned char temp=currentProject->tileC->tileDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)];
-							//first,second pixel
-							temp_1=temp>>4;//first pixel
-							temp_2=temp&15;//second pixel
-							temp_2+=tileMap_pal.box_sel<<4;
-							currentProject->tileC->tileDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)]=temp_2;
-						}
-						damage(FL_DAMAGE_USER1);//no need to redraw the gui
-					}
-				break;
 				case tile_edit:
 					//first see if we are in a "valid" range
 					tiles_size=tile_size->value();
@@ -308,6 +250,66 @@ int editor::handle(int event)
 						currentProject->tileC->truetileDat[cal_offset_truecolor(temp_one,temp_two,2,currentProject->tileC->current_tile)]=currentProject->rgbPal[get_pal+2];//blue
 						currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);
 						damage(FL_DAMAGE_USER1);
+					}
+				break;
+				case tile_place:
+					tiles_size=place_tile_size->value();
+					//see if the user placed a tile on the map
+					if (Fl::event_x() > map_off_x && Fl::event_y() > map_off_y && Fl::event_x() < map_off_x+((tiles_size*8)*currentProject->tileMapC->mapSizeW) && Fl::event_y() < map_off_y+((tiles_size*8)*currentProject->tileMapC->mapSizeH))
+					{
+						uint16_t temp_two,temp_one;
+						temp_one=((Fl::event_x()-map_off_x)/tiles_size)/8;
+						temp_two=((Fl::event_y()-map_off_y)/tiles_size)/8;
+						temp_one+=+map_scroll_pos_x;
+						temp_two+=+map_scroll_pos_y;
+						if (Fl::event_button() == FL_LEFT_MOUSE)
+						{
+							set_tile_full(currentProject->tileC->current_tile,temp_one,temp_two,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
+							damage(FL_DAMAGE_USER1);
+						}
+						else
+						{
+							//fl_alert("Tile attributes id: %d h-flip: %d v-flip %d priority: %d pal row: %d\nAt location x: %d y: %d",currentProject->tileMapC->get_tile(temp_one,temp_two),currentProject->tileMapC->get_hflip(temp_one,temp_two),currentProject->tileMapC->get_vflip(temp_one,temp_two),currentProject->tileMapC->get_prio(temp_one,temp_two),currentProject->tileMapC->get_palette_map(temp_one,temp_two),temp_one,temp_two);
+						}
+					}
+					if (Fl::event_x() > tile_placer_tile_offset_x && Fl::event_y() > tile_placer_tile_offset_y && Fl::event_x() < tile_placer_tile_offset_x+(tiles_size*8) && Fl::event_y() < tile_placer_tile_offset_y+(tiles_size*8))
+					{
+						
+						uint8_t temp_two,temp_one;
+						temp_one=(Fl::event_x()-tile_placer_tile_offset_x)/tiles_size;
+						temp_two=(Fl::event_y()-tile_placer_tile_offset_y)/tiles_size;
+						if (G_hflip == true)
+							temp_one=7-temp_one;
+						if (G_vflip == true)
+							temp_two=7-temp_two;
+						//now we know which pixel we are editing
+						//see if it is even or odd
+						uint8_t temp_1,temp_2;
+						if (temp_one & 1)//faster
+						{
+							//odd
+							//split pixels
+							uint8_t temp=currentProject->tileC->tileDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)];
+							//first,second pixel
+							temp_1=temp>>4;//first pixel
+							temp_2=temp&15;//second pixel
+							//put temp_1 back in proper place
+							temp_1<<=4;
+							temp_1+=tileMap_pal.box_sel;
+							currentProject->tileC->tileDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)]=temp_1;
+						}
+						else
+						{
+							//even
+							//split pixels
+							unsigned char temp=currentProject->tileC->tileDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)];
+							//first,second pixel
+							temp_1=temp>>4;//first pixel
+							temp_2=temp&15;//second pixel
+							temp_2+=tileMap_pal.box_sel<<4;
+							currentProject->tileC->tileDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)]=temp_2;
+						}
+						damage(FL_DAMAGE_USER1);//no need to redraw the gui
 					}
 				break;
 			}
