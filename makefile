@@ -1,7 +1,7 @@
 CC=g++
-#to disable debug remove -ggdb and replace it wil 02
-#gentoo fix needs include directory set to /usr/include/fltk-1 if other distro maybe this does not apply
-CFLAGS=-march=native -I/usr/include/fltk-1/ -c -Wall -O2 -ggdb
+#to disable debug remove -ggdb and replace it wil 03
+#gentoo fix needs include directory set to /usr/include/fltk-1 if you are using a different distro then this may not apply to you
+CFLAGS=-march=native -I/usr/include/fltk-1/ -c -Wall -O3 -funroll-loops -pipe -march=native
 LDFLAGS=
 SOURCES=project.cpp main.cpp callbacks_palette.cpp callback_tiles.cpp class_global.cpp global.cpp quant.cpp tilemap.cpp color_convert.cpp errorMsg.cpp class_palette.cpp dither.cpp \
 	class_tiles.cpp

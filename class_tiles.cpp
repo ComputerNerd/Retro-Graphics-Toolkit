@@ -414,6 +414,19 @@ void tiles::blank_tile(uint32_t tileUsage)
 }
 void tiles::remove_duplicate_tiles()
 {
+	char bufT[1024];
+	Fl_Window *win;
+	Fl_Progress *progress;
+	win = new Fl_Window(250,45,"Progress");		// access parent window
+	win->begin();								// add progress bar to it..
+	progress = new Fl_Progress(25,7,200,30);
+	progress->minimum(0);						// set progress range to be 0.0 ~ 1.0
+	progress->maximum(1);
+	progress->color(0x88888800);				// background color
+	progress->selection_color(0x4444ff00);		// progress bar color
+	progress->labelcolor(FL_WHITE);				// percent text color
+	win->end();									// end adding to window
+	win->show();
 	uint32_t tile_remove_c=0;
 	int32_t cur_tile,curT;
 	uint8_t * tileTemp=(uint8_t *)alloca(tileSize);
@@ -433,10 +446,15 @@ void tiles::remove_duplicate_tiles()
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,false,false);
 				remove_tile_at(curT);
 				tile_remove_c++;
-				printf("Deleted tile %d\nRemoved %d tiles\n",curT,tile_remove_c);
+				//printf("Deleted tile %d\nRemoved %d tiles\n",curT,tile_remove_c);
 			}
 		}
+		progress->value((float)cur_tile/(float)tiles_amount/4.0);
+		sprintf(bufT,"Removed %d tiles",tile_remove_c);
+		progress->label(bufT);
+		Fl::check();
 	}
+	//tile_remove_c=0;
 	puts("Pass 2 h-flip");
 	for (cur_tile=0;cur_tile<=tiles_amount;cur_tile++)
 	{
@@ -451,13 +469,18 @@ void tiles::remove_duplicate_tiles()
 			if (cmp_tiles(cur_tile,(uint32_t *)tileTemp))
 			#endif
 			{
-				currentProject->tileMapC->sub_tile_map(curT,cur_tile,false,false);
+				currentProject->tileMapC->sub_tile_map(curT,cur_tile,true,false);
 				remove_tile_at(curT);
 				tile_remove_c++;
-				printf("Deleted tile %d\nRemoved %d tiles\n",curT,tile_remove_c);
+				//printf("Deleted tile %d\nRemoved %d tiles\n",curT,tile_remove_c);
 			}
 		}
+		progress->value(((float)cur_tile/(float)tiles_amount/4.0)+.25);
+		sprintf(bufT,"Removed %d tiles",tile_remove_c);
+		progress->label(bufT);
+		Fl::check();
 	}
+	//tile_remove_c=0;
 	puts("Pass 3 v-flip");
 	for (cur_tile=0;cur_tile<=tiles_amount;cur_tile++)
 	{
@@ -472,13 +495,18 @@ void tiles::remove_duplicate_tiles()
 			if (cmp_tiles(cur_tile,(uint32_t *)tileTemp))
 			#endif
 			{
-				currentProject->tileMapC->sub_tile_map(curT,cur_tile,false,false);
+				currentProject->tileMapC->sub_tile_map(curT,cur_tile,false,true);
 				remove_tile_at(curT);
 				tile_remove_c++;
-				printf("Deleted tile %d\nRemoved %d tiles\n",curT,tile_remove_c);
+				//printf("Deleted tile %d\nRemoved %d tiles\n",curT,tile_remove_c);
 			}
 		}
+		progress->value(((float)cur_tile/(float)tiles_amount/4.0)+.5);
+		sprintf(bufT,"Removed %d tiles",tile_remove_c);
+		progress->label(bufT);
+		Fl::check();
 	}
+	//tile_remove_c=0;
 	puts("Pass 4 vh-flip");
 	for (cur_tile=0;cur_tile<=tiles_amount;cur_tile++)
 	{
@@ -494,15 +522,23 @@ void tiles::remove_duplicate_tiles()
 			if (cmp_tiles(cur_tile,(uint32_t *)tileTemp))
 			#endif
 			{
-				currentProject->tileMapC->sub_tile_map(curT,cur_tile,false,false);
+				currentProject->tileMapC->sub_tile_map(curT,cur_tile,true,true);
 				remove_tile_at(curT);
 				tile_remove_c++;
-				printf("Deleted tile %d\nRemoved %d tiles\n",curT,tile_remove_c);
+				//printf("Deleted tile %d\nRemoved %d tiles\n",curT,tile_remove_c);
 			}
 		}
+		progress->value(((float)cur_tile/(float)tiles_amount/4.0)+.75);
+		sprintf(bufT,"Removed %d tiles",tile_remove_c);
+		progress->label(bufT);
+		Fl::check();
 	}
 	printf("Removed %d tiles\n",tile_remove_c);
-	tile_remove_c=0;
+	win->remove(progress);// remove progress bar from window
+	delete(progress);// deallocate it
+	//w->draw();
+	delete win;
+	Fl::check();
 }
 #if __LP64__
 bool tiles::cmp_trueC(uint32_t one,uint64_t * two)

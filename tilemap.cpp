@@ -544,7 +544,7 @@ double min3(double a,double b,double c)
  * @param   Number  b       The blue color value
  * @return  Array           The HSL representation
  */
-void rgbToHsl(double r,double g,double b,double * hh,double * ll,double * ss)
+void rgbToHls(double r,double g,double b,double * hh,double * ll,double * ss)
 {
     r /= 255.0;
     g /= 255.0;
@@ -616,7 +616,7 @@ void tileMap::set_pal_row(uint16_t x,uint16_t y,uint8_t row)
 void tileMap::pickRow(uint8_t amount)
 {
 	double divide=(double)amount;//convert to double
-	double h,s,v;
+	double h,l,s;
 	h=0.0;
 	uint16_t z;
 	uint32_t x,y;
@@ -629,13 +629,16 @@ void tileMap::pickRow(uint8_t amount)
 			double hh=0.0;
 			for (z=0;z<256;z+=4)
 			{
-				rgbtohsv(truePtr[0],truePtr[1],truePtr[2],&h,&s,&v);
+				rgbToHls(truePtr[0],truePtr[1],truePtr[2],&h,&l,&s);
 				truePtr+=4;
 				hh+=h;
 			}
-			hh/=64.0/(divide+0.1);
+			hh/=64.0/divide;
 			if (hh >= 4.0)
+			{
 				printf("hh >= 4.0 %f %d\n",hh,(int)hh);
+				hh=3.5;
+			}
 			set_pal_row(x,y,hh);
 		}
 	}
@@ -662,10 +665,11 @@ void tileMap::pickRowDelta()
 		for (x=0;x<mapSizeW;x++)
 		{
 			uint32_t cur_tile=get_tile(x,y);
-			uint8_t * ptrorgin=&currentProject->tileC->truetileDat[cur_tile*256];
 			memset(d,0,4*sizeof(uint32_t));
+			uint8_t * ptrorgin=&currentProject->tileC->truetileDat[cur_tile*256];
 			for (t=0;t<4;t++)
 			{
+				currentProject->tileC->truecolor_to_tile(t,cur_tile);
 				tileToTrueCol(&currentProject->tileC->tileDat[(cur_tile*currentProject->tileC->tileSize)],temp,t);
 				for (p=0;p<256;p+=4)
 				{

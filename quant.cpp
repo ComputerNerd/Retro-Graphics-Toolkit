@@ -348,7 +348,7 @@ static void set_palette1(int index, int level)
  */
 
 static void	build_table3(unsigned char *image, int size);
-static unsigned long	calc_err(int, int);
+inline static unsigned long	calc_err(int, int);
 static int reduce_table3(int num_colors,bool showProgress,Fl_Progress *progress);
 static void	set_palette3(void);
 static int	bestcolor3(int r, int g, int b);
@@ -464,7 +464,7 @@ static void build_table3(unsigned char *image, int size)
 	{
 		index = ((image[0]&248)<<7) + ((image[1]&248)<<2) + (image[2]>>3);
 
-		rgb_table3[index].r += image[0] * CScale;
+		rgb_table3[index].r += image[0];// * CScale;
 		rgb_table3[index].g += image[1];
 		rgb_table3[index].b += image[2];
 		rgb_table3[index].pixel_count++;
@@ -479,8 +479,7 @@ static void build_table3(unsigned char *image, int size)
 			rgb_table3[tot_colors++] = rgb_table3[i];
 		}
 }
-
-static unsigned long calc_err(int c1, int c2)
+inline static unsigned long calc_err(int c1, int c2)
 {
 	unsigned long dist1, dist2, P1, P2, P3;
 	int R1, G1, B1, R2, G2, B2, R3, G3, B3;
