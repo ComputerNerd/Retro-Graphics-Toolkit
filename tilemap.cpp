@@ -679,7 +679,7 @@ void tileMap::pickRowDelta()
 		}
 	}
 }
-void reduceImageGenesis(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t offsetPal)
+void reduceImageGenesis(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t offsetPal,Fl_Progress *progress)
 {
 	uint8_t off2=offsetPal*2;
 	uint8_t off3=offsetPal*3;
@@ -724,7 +724,7 @@ void reduceImageGenesis(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_
 		uint8_t colorz=16;
 		bool can_go_again=true;
 try_again_color:
-		dl3quant(image,w,h,colorz,user_pal,true);
+		dl3quant(image,w,h,colorz,user_pal,true,progress);
 		for (uint16_t x=0;x<colorz;x++)
 		{
 			uint8_t r,g,b;
@@ -777,7 +777,7 @@ try_again_color:
 		}
 	}
 }
-void reduceImageNES(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t offsetPal)
+void reduceImageNES(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t offsetPal,Fl_Progress *progress)
 {
 	uint8_t off3=offsetPal*3;
 	uint32_t colors_found;
@@ -810,7 +810,7 @@ void reduceImageNES(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t of
 						uint8_t colorz=4;
 						bool can_go_again=true;
 try_again_nes_color:
-						dl3quant(image,w,h,colorz,user_pal,true);
+						dl3quant(image,w,h,colorz,user_pal,true,progress);
 						for (uint16_t x=0;x<colorz;x++)
 						{
 							uint8_t r=0,g=0,b=0;
@@ -857,6 +857,18 @@ try_again_nes_color:
 }
 void generate_optimal_palette(Fl_Widget*,void * row)
 {
+	Fl_Window *win;
+	Fl_Progress *progress;
+	win = new Fl_Window(250,45,"Progress");           // access parent window
+	win->begin();                                // add progress bar to it..
+	progress = new Fl_Progress(25,7,200,30);
+	progress->minimum(0);                      // set progress range to be 0.0 ~ 1.0
+	progress->maximum(1);
+	progress->color(0x88888800);               // background color
+	progress->selection_color(0x4444ff00);     // progress bar color
+	progress->labelcolor(FL_WHITE);            // percent text color
+	win->end();                                  // end adding to window
+	win->show();
 	/*
 	This function is one of the more importan features of the program
 	This will look at the tile map and based on that find an optimal palette
@@ -877,7 +889,7 @@ void generate_optimal_palette(Fl_Widget*,void * row)
 				case 0:
 					//this is easy we just convert tilemap to image count unique colors if less than 16 then just use that else reduce palete
 					image = (uint8_t *)malloc(w*h*3);
-					reduceImageGenesis(image,found_colors,-1,0);
+					reduceImageGenesis(image,found_colors,-1,0,progress);
 					free(image);
 					//free(found_colors);
 					window->redraw();
@@ -887,7 +899,7 @@ void generate_optimal_palette(Fl_Widget*,void * row)
 					currentProject->tileMapC->pickRow(4);
 					for (uint8_t nerdL=0;nerdL<4;nerdL++)
 					{
-						reduceImageGenesis(image,found_colors,nerdL,nerdL*16);
+						reduceImageGenesis(image,found_colors,nerdL,nerdL*16,progress);
 						window->damage(FL_DAMAGE_USER1);
 						Fl::check();
 					}
@@ -904,7 +916,7 @@ void generate_optimal_palette(Fl_Widget*,void * row)
 			{
 				case 0:
 					image = (uint8_t *)malloc(w*h*3);
-					reduceImageNES(image,found_colors,-1,0);
+					reduceImageNES(image,found_colors,-1,0,progress);
 					free(image);
 					//free(found_colors);
 					window->redraw();
@@ -914,7 +926,7 @@ void generate_optimal_palette(Fl_Widget*,void * row)
 					currentProject->tileMapC->pickRow(4);
 					for (uint8_t nerdL=0;nerdL<4;nerdL++)
 					{
-						reduceImageNES(image,found_colors,nerdL,nerdL*4);
+						reduceImageNES(image,found_colors,nerdL,nerdL*4,progress);
 						window->damage(FL_DAMAGE_USER1);
 						Fl::check();
 					}
@@ -930,4 +942,9 @@ void generate_optimal_palette(Fl_Widget*,void * row)
 			show_default_error
 		break;
 	}
+	win->remove(progress);// remove progress bar from window
+	delete(progress);// deallocate it
+	//w->draw();
+	delete win;
+	Fl::check();
 }

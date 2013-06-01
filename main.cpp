@@ -67,7 +67,7 @@ void fill_tile(Fl_Widget* o, void*)
 		currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);
 	}
 	else
-		fl_alert("To prevent accidental modificatin be in the Tile editor or Tile map editor to use this");
+		fl_alert("To prevent accidental modification be in the Tile editor or Tile map editor to use this");
 	window->damage(FL_DAMAGE_USER1);
 }
 
@@ -93,14 +93,12 @@ void callback_resize_map(Fl_Widget* o, void*)
 	resize_tile_map(w,h);
 	window->redraw();
 }
-
 void update_offset_tile_edit(Fl_Widget* o, void*)
 {
 	tile_zoom_edit=window->tile_size->value();
 	tile_edit_offset_x=16+(tile_zoom_edit*8);
 	window->redraw();
 }
-
 void set_mode_tabs(Fl_Widget* o, void*)
 {
 
@@ -190,14 +188,12 @@ void update_map_scroll_x(Fl_Widget*,void*)
 	//cout << "map scroll pos x = " << (short)map_scroll_pos_x << endl;//chars needed to casted to something else
 	window->redraw();
 }
-
 void update_map_scroll_y(Fl_Widget*,void*)
 {
 	map_scroll_pos_y=window->map_y_scroll->value();
 	//cout << "map scroll pos x = " << (short)map_scroll_pos_x << endl;//chars needed to casted to something else
 	window->redraw();
 }
-
 void update_map_size(Fl_Widget*,void*)
 {
 	uint16_t old_scroll=window->map_x_scroll->value();
@@ -234,8 +230,6 @@ void update_map_size(Fl_Widget*,void*)
 	window->map_y_scroll->value(old_scroll,(map_scroll/2),0,map_scroll+(map_scroll/2));
 	window->redraw();
 }
-
-
 void save_tiles_truecolor(Fl_Widget*,void*)
 {
 	if (load_file_generic("Save truecolor tiles",true) == true)
@@ -255,7 +249,6 @@ void save_tiles_truecolor(Fl_Widget*,void*)
 		
 	}
 }
-
 void save_tiles(Fl_Widget*,void*)
 {
 	uint8_t type=fl_choice("How would like this file saved?","Binary","C header",0);
@@ -291,13 +284,11 @@ void save_tiles(Fl_Widget*,void*)
 		fclose(myfile);
 	}
 }
-
 void save_map(Fl_Widget*,void*)
 {
 	if (currentProject->tileMapC->saveToFile() == 0)
 		fl_alert("Error: can not save file %s\nTry making sure that you have permission to save the file here",the_file.c_str());
 }
-
 void load_tiles(Fl_Widget*,void* split)
 {
 	//if append==1 then we will append data but if not it will erase over current tiles
@@ -353,51 +344,8 @@ void load_tiles(Fl_Widget*,void* split)
 			currentProject->tileC->truetileDat = (uint8_t *)realloc(currentProject->tileC->truetileDat,(file_size*truecolor_multiplier)+(offset_tiles_bytes*truecolor_multiplier));
 			if (currentProject->tileC->truetileDat == 0)
 				show_malloc_error(file_size*truecolor_multiplier)
-			switch (game_system)
-			{
-				case sega_genesis:
-					for (uint32_t c=offset_tiles;c<(file_size/currentProject->tileC->tileSize)+offset_tiles;c++)
-					{
-						/*for (uint8_t y=0;y<8;y++)
-						{
-							for (uint8_t x=0;x<4;x++)
-							{
-								//even,odd
-								uint8_t temp=currentProject->tileC->tileDat[(c*32)+(y*4)+x];
-								uint8_t temp_1,temp_2;
-								temp_1=temp>>4;//first pixel
-								temp_2=temp&15;//second pixel
-								currentProject->tileC->truetileDat[cal_offset_truecolor(x*2,y,0,c)]=currentProject->rgbPal[(row*48)+(temp_1*3)];
-								currentProject->tileC->truetileDat[cal_offset_truecolor(x*2,y,1,c)]=currentProject->rgbPal[(row*48)+(temp_1*3)+1];
-								currentProject->tileC->truetileDat[cal_offset_truecolor(x*2,y,2,c)]=currentProject->rgbPal[(row*48)+(temp_1*3)+2];
-
-								currentProject->tileC->truetileDat[cal_offset_truecolor((x*2)+1,y,0,c)]=currentProject->rgbPal[(row*48)+(temp_2*3)];
-								currentProject->tileC->truetileDat[cal_offset_truecolor((x*2)+1,y,1,c)]=currentProject->rgbPal[(row*48)+(temp_2*3)+1];
-								currentProject->tileC->truetileDat[cal_offset_truecolor((x*2)+1,y,2,c)]=currentProject->rgbPal[(row*48)+(temp_2*3)+2];
-							}
-						}*/
-						tileToTrueCol(&currentProject->tileC->tileDat[(c*32)],&currentProject->tileC->truetileDat[(c*256)],row);
-					}
-				break;
-				case NES:
-					for (uint32_t c=offset_tiles;c<(file_size/currentProject->tileC->tileSize)+offset_tiles;c++)
-					{
-						/*for (uint8_t y=0;y<8;y++)
-						{
-							for (uint8_t x=0;x<8;x++)
-
-							{
-								uint8_t temp;
-								temp=(currentProject->tileC->tileDat[(c*16)+y]>>x)&1;
-								temp|=((currentProject->tileC->tileDat[(c*16)+y+8]>>x)&1)<<1;
-								currentProject->tileC->truetileDat[cal_offset_truecolor(x,y,0,c)]=currentProject->rgbPal[(row*12)+(temp*3)];
-								currentProject->tileC->truetileDat[cal_offset_truecolor(x,y,1,c)]=currentProject->rgbPal[(row*12)+(temp*3)+1];
-								currentProject->tileC->truetileDat[cal_offset_truecolor(x,y,2,c)]=currentProject->rgbPal[(row*12)+(temp*3)+2];
-							}
-						}*/
-						tileToTrueCol(&currentProject->tileC->tileDat[(c*16)],&currentProject->tileC->truetileDat[(c*256)],row);
-					}
-			}
+			for (uint32_t c=offset_tiles;c<(file_size/currentProject->tileC->tileSize)+offset_tiles;c++)
+				tileToTrueCol(&currentProject->tileC->tileDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetileDat[(c*256)],row);
 			currentProject->tileC->tiles_amount=(file_size/currentProject->tileC->tileSize)-1;
 			currentProject->tileC->tiles_amount+=+offset_tiles-1;
 			window->tile_select->maximum(currentProject->tileC->tiles_amount);
@@ -408,10 +356,7 @@ void load_tiles(Fl_Widget*,void* split)
 			window->redraw();
 		}
 		else
-		{
-			//cout << "file.is_open() returnd false meaning that the file could not be read" << endl;
 			fl_alert("The file %s Cannot be loaded",the_file.c_str());
-		}
 	}
 }
 void update_all_tiles(Fl_Widget*,void*)
@@ -426,7 +371,7 @@ void update_all_tiles(Fl_Widget*,void*)
 		sel_pal=tileEdit_pal.theRow;
 	}
 	if (currentProject->tileC->tiles_amount > 63)
-		puts("");
+		putchar('\n');
 	for (uint32_t x=0;x<currentProject->tileC->tiles_amount+1;x++)
 	{
 		currentProject->tileC->truecolor_to_tile(sel_pal,x);
@@ -435,9 +380,6 @@ void update_all_tiles(Fl_Widget*,void*)
 	}
 	window->redraw();
 }
-
-
-
 void load_truecolor_tiles(Fl_Widget*,void*)
 {
 	//start by loading the file
@@ -488,7 +430,6 @@ void load_truecolor_tiles(Fl_Widget*,void*)
 		window->redraw();
 	}
 }
-
 void fill_tile_map_with_tile(Fl_Widget*,void*)
 {
 	if (mode_editor != tile_place)
@@ -503,10 +444,8 @@ void fill_tile_map_with_tile(Fl_Widget*,void*)
 			set_tile_full(currentProject->tileC->current_tile,x,y,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
 		}
 	}
-	window->redraw();
+	window->damage(FL_DAMAGE_USER1);
 }
-
-
 void load_tile_map(Fl_Widget*,void*)
 {
 	if (currentProject->tileMapC->loadFromFile() == false)
@@ -584,7 +523,6 @@ void shadow_highligh_findout(Fl_Widget*,void*)
 	}
 	window->redraw();
 }
-
 void dither_tilemap_as_image(Fl_Widget*,void*)
 {
 	//normally this program dithers all tiles individully this is not always desirable
@@ -712,7 +650,6 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 		set_palette_type(type_temp);
 	window->redraw();
 }
-
 void load_image_to_tilemap(Fl_Widget*,void*)
 {
 	Fl_Shared_Image * loaded_image;
@@ -831,12 +768,10 @@ void set_palette_type_callback(Fl_Widget*,void* type)
 	set_palette_type((uintptr_t)type);
 	window->redraw();
 }
-
 void remove_duplicate_tiles(Fl_Widget*,void*)
 {
 	currentProject->tileC->remove_duplicate_tiles();
 }
-
 void remove_duplicate_truecolor(Fl_Widget*,void*)
 {
 	//sub_tile_map
@@ -945,8 +880,6 @@ void remove_duplicate_truecolor(Fl_Widget*,void*)
 	tile_remove_c=0;
 	window->redraw();
 }
-
-
 void rgb_pal_to_entry(Fl_Widget*,void*)
 {
 	//this function will convert a rgb value to the nearst palette entry
@@ -956,9 +889,6 @@ void rgb_pal_to_entry(Fl_Widget*,void*)
 		return;
 	}
 }
-
-
-
 void set_game_system(Fl_Widget*,void* selection)
 {
 	if ((uintptr_t)selection == game_system)
@@ -1016,7 +946,6 @@ void set_game_system(Fl_Widget*,void* selection)
 	}
 	window->redraw();
 }
-
 void tilemap_remove_callback(Fl_Widget*,void*)
 {
 		char str[16];
@@ -1024,17 +953,12 @@ void tilemap_remove_callback(Fl_Widget*,void*)
 		str_ptr=&str[0];
 		str_ptr=(char *)fl_input("Enter Tile");
 		if (str_ptr == 0)
-		{
 			return;
-		}
-
 		if (verify_str_number_only(str_ptr) == false)
-		{
 			return;
-		}
 		int32_t tile=atoi(str_ptr);
 		currentProject->tileMapC->sub_tile_map(tile,tile-1,false,false);
-		window->redraw();
+		window->damage(FL_DAMAGE_USER1);
 }
 void trueColTileToggle(Fl_Widget*,void*)
 {
@@ -1088,7 +1012,7 @@ void editor::_editor()
 	tile_edit_truecolor_off_y=default_tile_edit_truecolor_off_y;
 	{ /*Fl_Tabs**/ the_tabs = new Fl_Tabs(0, 24, 800, 576);
 	the_tabs->callback(set_mode_tabs);
-		{Fl_Group* o = new Fl_Group(0, 48, 800, 576, "palette editor");
+		{ Fl_Group* o = new Fl_Group(0, 48, 800, 576, "palette editor");
 			//cout << "palette editor as group: " << o->as_group() << endl;
 			pal_id=(intptr_t)o->as_group();
 			//stuff realed to this group should go here
@@ -1110,12 +1034,12 @@ void editor::_editor()
 	{ shadow_highlight_switch = new Fl_Group(0, 0, 800, 480);
 		{ Fl_Round_Button* o = new Fl_Round_Button(128, 288, 64, 32, "Normal");
 		o->type(102);
-		o->tooltip("This is the default sega genesis color.When shadow/hilight mode is disabled all tiles will look like this however when enabling shadow higligh mode and a tile is set to high prioraty you will the tile will use these set of colors");
+		o->tooltip("This is the default sega genesis color.When shadow/highlight mode is disabled all tiles will look like this however when enabling shadow higligh mode and a tile is set to high prioraty you will the tile will use these set of colors");
 		o->down_box(FL_ROUND_DOWN_BOX);
 		o->callback((Fl_Callback*) set_palette_type_callback,(void *)0);
 		} // Fl_Round_Button* o
 		{ Fl_Round_Button* o = new Fl_Round_Button(192, 288, 64, 32, "Shadow");
-		o->tooltip("This mode uses the color sets that the vdp uses when shadow highlight mode is enabled by setting bit 3 (the LSB being bit 0) to 1 in the vdp register 0C also for the tile to be shadowed the tile's prioraty must be set at 0 or low prioraty");
+		o->tooltip("This mode uses the color sets that the vdp uses when shadow highlight mode is enabled by setting bit 3 (the LSB being bit 0) to 1 in the vdp register 0C also for the tile to be shadowed the tile's priority must be set at 0 or low priority");
 		o->type(102);
         o->down_box(FL_ROUND_DOWN_BOX);
        o->callback((Fl_Callback*) set_palette_type_callback,(void *)8);
@@ -1175,8 +1099,6 @@ void editor::_editor()
 
       			o->end();
 			} // Fl_Group* o
-
-
 		{ Fl_Group* o = new Fl_Group(5, 48, 800, 567, "Tile Editor");
 			//stuff realed to this group should go here
 			tile_edit_id=(intptr_t)o->as_group();
@@ -1264,7 +1186,7 @@ void editor::_editor()
 
 			tile_edit_offset_y=default_tile_edit_offset_y;
 			tile_size = new Fl_Hor_Value_Slider(496,default_palette_bar_offset_y+72,304,24,"Tile Zoom Factor");
-			tile_size->tooltip("This slider sets magification a value of 10 would mean the image is being displayed 10 times larger");
+			tile_size->tooltip("This slider sets magnification a value of 10 would mean the image is being displayed 10 times larger");
 			tile_size->minimum(1);
 			tile_size->maximum(64);
 			tile_size->step(1);
@@ -1374,7 +1296,7 @@ void editor::_editor()
 			}
 			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,432,96,32,"Show grid?");
 				o->callback(set_grid_placer);
-				o->tooltip("This button Toggles whether or not you a grid is visible over the tilemap this will allow you to easily see were each tile is");
+				o->tooltip("This button Toggles whether or not a grid is visible over the tilemap this will allow you to easily see were each tile is");
 			}
 			place_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off+96,496,128,24,"Tile Zoom Factor");
 			place_tile_size->minimum(1);
@@ -1383,7 +1305,7 @@ void editor::_editor()
 			place_tile_size->value(12);
 			place_tile_size->align(FL_ALIGN_LEFT);
 			place_tile_size->callback(update_map_size);
-			place_tile_size->tooltip("By chaning this slider you are changing the magnification of the tile for example if this slider was set to 10 that would mean that the tile is magnified by a factor of 10");
+			place_tile_size->tooltip("By changing this slider you are changing the magnification of the tile for example if this slider was set to 10 that would mean that the tile is magnified by a factor of 10");
 			o->end();
 		}
 	}
