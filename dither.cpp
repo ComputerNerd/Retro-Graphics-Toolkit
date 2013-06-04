@@ -26,7 +26,9 @@ uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row)
 			max_rgb=12;//4*3=12
 		break;
 		case 255://alpha
-			val&=128;
+			//val&=128;
+			//val= val==255 ? 255 : 0;
+			val=val/255*128;
 			return val;
 		break;
 	}
@@ -288,7 +290,9 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha)
 				g_new=currentProject->rgbPal[temp+1];
 				b_new=currentProject->rgbPal[temp+2];
 				if (useAlpha)
-					a_old&=128;//get only the MSB
+					a_old=a_old/128*255;
+					//a_old=a_old==255 ? 255 : 0;
+					//a_old&=128;//get only the MSB
 				image[x+(y*w*rgbPixelsize)]=r_new;
 				image[x+(y*w*rgbPixelsize)+1]=g_new;
 				image[x+(y*w*rgbPixelsize)+2]=b_new;
@@ -332,8 +336,8 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha)
 				b_new=currentProject->rgbPal[temp+2];
 				if (useAlpha)
 				{
-					a_new=a_old;
-					a_new&=128;
+					a_new=a_old/128*255;
+					//a_new&=128;
 					error_rgb[3]=(int16_t)a_old-(int16_t)a_new;
 					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+3]=a_new;
 				}

@@ -2,6 +2,8 @@
 Header for globals included with all other files.
 */ 
 #pragma once
+#define likely(x)       __builtin_expect((x),1)
+#define unlikely(x)     __builtin_expect((x),0)
 #include "includes.h"
 #include "class_global.h"
 #include "class_palette.h"

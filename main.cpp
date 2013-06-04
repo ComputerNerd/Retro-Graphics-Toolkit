@@ -448,12 +448,12 @@ void fill_tile_map_with_tile(Fl_Widget*,void*)
 }
 void load_tile_map(Fl_Widget*,void*)
 {
-	if (currentProject->tileMapC->loadFromFile() == false)
+	if (unlikely(currentProject->tileMapC->loadFromFile() == false))
 		fl_alert("Error: Cannot load file %s",the_file.c_str());
 }
 void shadow_highligh_findout(Fl_Widget*,void*)
 {
-	if (game_system != sega_genesis)
+	if (unlikely(game_system != sega_genesis))
 	{
 		fl_alert("Only the Sega Genesis/Mega Drive supports shadow highligh mode\n");
 		return;
@@ -598,7 +598,7 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 								else
 								{
 									//even
-									if (truecolor_tile[y+x+3] != 0)
+									if (likely(truecolor_tile[y+x+3] != 0))
 									{
 										temp=find_near_color_from_row(currentProject->tileMapC->get_palette_map(x_tile,y_tile),truecolor_tile[y+x],truecolor_tile[y+x+1],truecolor_tile[y+x+2]);
 										*TileTempPtr=temp<<4;
@@ -665,77 +665,110 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 		w=loaded_image->w();
 		h=loaded_image->h();
 		printf("image width: %d image height: %d\n",w,h);
-		if ((w/8)*8 != w && (h/8)*8 != h)
-		{
-			fl_alert("Error both width and height are not a multiple of 8");
-			return;
-		}
-		if ((w/8)*8 != w)
-		{
-			fl_alert("Error width is not a multiple of 8");
-			return;
-		}
-		if ((h/8)*8 != h)
-		{
-			fl_alert("Error height is not a multiple of 8");
-			return;
-		}
+		uint16_t w8,h8;
+		uint32_t wt,ht;
+		uint8_t wr,hr;
+		wt=w&(~7U);
+		ht=h&(~7U);
+		wr=w&7;
+		hr=h&7;
+		w8=w/8;
+		h8=h/8;
+		if (wr!=0)
+			w8++;
+		if (hr!=0)
+			h8++;
+		if ((wr != 0) && (hr != 0))
+			fl_alert("Warning both width and height are not a multiple of 8");
+		else if (wr != 0)
+			fl_alert("Warning width is not a multiple of 8");
+		else if (hr != 0)
+			fl_alert("Warning height is not a multiple of 8");
+		printf("w %d h %d wt %d ht %d wr %d hr %d w8 %d h8 %d\n",w,h,wt,ht,wr,hr,w8,h8);
 		//start by copying the data
 		uint8_t * img_ptr=(uint8_t *)loaded_image->data()[0];
 		//printf("First Pixel Red: %d Green: %d Blue: %d\n",img_ptr[0],img_ptr[1],img_ptr[2]);
 		//now we can convert to tiles
-		if (loaded_image->d() != 3 && loaded_image->d() != 4)
+		if (unlikely(loaded_image->d() != 3 && loaded_image->d() != 4))
 		{
 			fl_alert("Please use color depth of 3 or 4\nYou Used %d",loaded_image->d());
 			loaded_image->release();
 			return;
 		}
-		unsigned long truecolor_tile_ptr=0;
-		currentProject->tileC->truetileDat = (uint8_t *)realloc(currentProject->tileC->truetileDat,((w/8)*(h/8))*256);
-		currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,((w/8)*(h/8))*currentProject->tileC->tileSize);
-		currentProject->tileC->tiles_amount=(w/8)*(h/8);
-		currentProject->tileC->tiles_amount--;
+		else
+		{
+			printf("Image depth %d\n",loaded_image->d());
+		}
+		uint64_t truecolor_tile_ptr=0;
+		currentProject->tileC->truetileDat = (uint8_t *)realloc(currentProject->tileC->truetileDat,w8*h8*256);
+		currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,w8*h8*currentProject->tileC->tileSize);
+		currentProject->tileC->tiles_amount=(w8*h8)-1;
 		window->tile_select->maximum(currentProject->tileC->tiles_amount);
 		window->tile_select_2->maximum(currentProject->tileC->tiles_amount);
 		//uint8_t sizeTemp,sizeTemp2;
+		uint64_t a;
+		uint32_t b,y,x;
+		uint8_t xx;
 		switch (loaded_image->d())
 		{
 			case 3:
-				for (unsigned long a=0;a<(h*w*3)-w*3;a+=w*3*8)//a tiles y
+				for (a=0;a<(ht*wt*3)-wt*3;a+=w*3*8)//a tiles y
 				{
-					for (uint32_t b=0;b<w*3;b+=24)//b tiles x
+					for (b=0;b<wt*3;b+=24)//b tiles x
 					{
-						for (uint32_t y=0;y<w*3*8;y+=w*3)//pixels y
+						for (y=0;y<wt*3*8;y+=w*3)//pixels y
 						{
-							uint8_t xx=0;
-							for (uint8_t x=0;x<32;x+=4)//pixels x
+							xx=0;
+							for (x=0;x<32;x+=4)//pixels x
 							{
-								currentProject->tileC->truetileDat[truecolor_tile_ptr+x]=img_ptr[a+b+y+xx];
-								currentProject->tileC->truetileDat[truecolor_tile_ptr+x+1]=img_ptr[a+b+y+xx+1];
-								currentProject->tileC->truetileDat[truecolor_tile_ptr+x+2]=img_ptr[a+b+y+xx+2];
+								memcpy(&currentProject->tileC->truetileDat[truecolor_tile_ptr+x],&img_ptr[a+b+y+xx],3);
 								currentProject->tileC->truetileDat[truecolor_tile_ptr+x+3]=255;//solid
 								xx+=3;
 							}
 							truecolor_tile_ptr+=32;
 						}
 					}
+					if (wr!=0)
+					{//handle borders
+						b+=24;
+						uint32_t yy=wt*3*8;
+						for (y=0;y<8;y++)
+						{
+							xx=0;
+							for (x=0;x<wr*4;x+=4)
+							{
+								memcpy(&currentProject->tileC->truetileDat[truecolor_tile_ptr+x],&img_ptr[a+b+yy+xx],3);
+								currentProject->tileC->truetileDat[truecolor_tile_ptr+x+3]=255;//solid
+								xx+=3;
+							}
+							memset(&currentProject->tileC->truetileDat[truecolor_tile_ptr+x+4],0,32-xx-4);
+							truecolor_tile_ptr+=32;
+							yy+=w*3;
+						}
+					}
 				}
 			break;
 			case 4:
-				for (unsigned long a=0;a<(h*w*4)-w*4;a+=w*4*8)//a tiles y
+				for (a=0;a<(ht*wt*4)-wt*4;a+=w*4*8)//a tiles y
 				{
-					for (uint32_t b=0;b<w*4;b+=32)//b tiles x
+					for (b=0;b<wt*4;b+=32)//b tiles x
 					{
-						for (uint32_t y=0;y<w*4*8;y+=w*4)//pixels y
+						for (y=0;y<wt*4*8;y+=w*4)//pixels y
 						{
-							for (uint8_t x=0;x<32;x+=4)//pixels x
-							{
-								currentProject->tileC->truetileDat[truecolor_tile_ptr+x]=img_ptr[a+b+y+x];
-								currentProject->tileC->truetileDat[truecolor_tile_ptr+x+1]=img_ptr[a+b+y+x+1];
-								currentProject->tileC->truetileDat[truecolor_tile_ptr+x+2]=img_ptr[a+b+y+x+2];
-								currentProject->tileC->truetileDat[truecolor_tile_ptr+x+3]=img_ptr[a+b+y+x+3];
-							}
+							memcpy(&currentProject->tileC->truetileDat[truecolor_tile_ptr],&img_ptr[a+b+y],32);
 							truecolor_tile_ptr+=32;
+						}
+					}
+					if (wr!=0)
+					{//handle borders
+						b+=24;
+						uint32_t yy=wt*4*8;
+						for (y=0;y<8;y++)
+						{
+							memcpy(&currentProject->tileC->truetileDat[truecolor_tile_ptr],&img_ptr[a+b+y],wr*4);
+							memset(&currentProject->tileC->truetileDat[truecolor_tile_ptr+x+4],0,32-(wr*4)-4);
+							truecolor_tile_ptr+=32;
+							yy+=w*3;
 						}
 					}
 				}
@@ -747,15 +780,15 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 			break;
 		}
 		loaded_image->release();
-		resize_tile_map(w/8,h/8);
-		window->map_w->value(w/8);
-		window->map_h->value(h/8);
+		resize_tile_map(w8,h8);
+		window->map_w->value(w8);
+		window->map_h->value(h8);
 		uint32_t tilecounter=0;
-		for (uint16_t y=0;y<h/8;y++)
+		for (y=0;y<h8;y++)
 		{
-			for (uint16_t x=0;x<w/8;x++)
+			for (x=0;x<w8;x++)
 			{
-				set_tile(tilecounter,x,y);
+				set_tile_full(tilecounter,x,y,0,false,false,false);
 				tilecounter++;
 			}
 		}
@@ -970,6 +1003,10 @@ void tileDPicker(Fl_Widget*,void*)
 	currentProject->tileMapC->pickRowDelta();
 	window->damage(FL_DAMAGE_USER1);
 }
+void showAbout(Fl_Widget*,void*)
+{
+	fl_alert("Retro Graphics Toolkit is written by sega16/nintendo8/sonic master or whatever you want to call me\nThis program was build on %s %s\nTechiclly speaking this date was the last time that main.cpp was updated.",__DATE__,__TIME__);
+}
 void editor::_editor()
 {
 	//create the window
@@ -1005,6 +1042,7 @@ void editor::_editor()
 	menu->add("&TileMap Actions/&Remove tiles after x",0,tilemap_remove_callback,0,0);
 	menu->add("&TileMap Actions/&Toggle TrueColor Viewing (defaults to off)",0,trueColTileToggle,0,0);
 	menu->add("&TileMap Actions/&Pick Tile row based on delta",0,tileDPicker,0,0);
+	menu->add("&Helo/&About",0,showAbout,0,0);
 	tile_placer_tile_offset_y=default_tile_placer_tile_offset_y;
 	true_color_box_x=default_true_color_box_x;
 	true_color_box_y=default_true_color_box_y;
@@ -1026,6 +1064,7 @@ void editor::_editor()
 			pal_size->callback(update_box_size);
 			
 			ditherPower = new Fl_Hor_Value_Slider(128,416,320,24,"Dither Power");
+			ditherPower->tooltip("A lower value resualts in more dithering artifacts a higer value resualts in less artifacts");
 			ditherPower->minimum(1); ditherPower->maximum(64);
 			ditherPower->step(1);
 			ditherPower->value(16);

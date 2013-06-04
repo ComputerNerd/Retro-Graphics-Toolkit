@@ -119,7 +119,7 @@ bool tileMap::saveToFile()
 							#else
 							tile=htobe16(tile);//needs to be big endian
 							#endif
-							*TheMap=(uint16_t)tileMapDat[((y*mapSizeW)+x)*4]<<8;//get attributes
+							*TheMap=(uint16_t)tileMapDat[((y*mapSizeW)+x)*4];//get attributes
 							*TheMap++|=(uint16_t)tile;//add tile
 						}
 					}

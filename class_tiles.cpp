@@ -2,6 +2,10 @@
 #include "class_tiles.h"
 #include "dither.h"
 #include "tilemap.h"
+#ifdef _WIN32
+//Needed for alloca()
+#include <malloc.h>
+#endif
 //tiles tiles_main;
 tiles::tiles()
 {
