@@ -14,6 +14,8 @@ void initProject()
 	currentProject->tileC = new tiles;
 	currentProject->tileMapC = new tileMap;
 	currentProject->Name.assign("Add a description here");
+	memset(currentProject->palDat,0,128);
+	memset(currentProject->rgbPal,0,192);
 }
 bool appendProject()
 {
@@ -29,6 +31,8 @@ bool appendProject()
 	currentProject->tileMapC = new tileMap;
 	currentProject->Name.assign("Add a description here");
 	projects_count++;
+	memset(currentProject->palDat,0,128);
+	memset(currentProject->rgbPal,0,192);
 	return true;
 }
 bool removeProject(uint32_t id)
