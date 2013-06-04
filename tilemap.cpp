@@ -885,6 +885,9 @@ void generate_optimal_palette(Fl_Widget*,void * row)
 	uint32_t colors_found;
 	//uint8_t * found_colors;
 	uint8_t found_colors[768];
+	uint8_t rowAuto;
+	if ((uintptr_t)row==4)
+		 rowAuto = fl_ask("Do you want which row each tile to use be selected automaticlly by hue\nBy pressing no this assumes that you have already picked which tile uses what row");
 	switch (game_system)
 	{
 		case sega_genesis:
@@ -900,7 +903,8 @@ void generate_optimal_palette(Fl_Widget*,void * row)
 				break;
 				case 4:
 					image = (uint8_t *)malloc(w*h*3);
-					currentProject->tileMapC->pickRow(4);
+					if (rowAuto)
+						currentProject->tileMapC->pickRow(4);
 					for (uint8_t nerdL=0;nerdL<4;nerdL++)
 					{
 						reduceImageGenesis(image,found_colors,nerdL,nerdL*16,progress);
@@ -927,7 +931,8 @@ void generate_optimal_palette(Fl_Widget*,void * row)
 				break;
 				case 4:
 					image = (uint8_t *)malloc(w*h*3);
-					currentProject->tileMapC->pickRow(4);
+					if (rowAuto)
+						currentProject->tileMapC->pickRow(4);
 					for (uint8_t nerdL=0;nerdL<4;nerdL++)
 					{
 						reduceImageNES(image,found_colors,nerdL,nerdL*4,progress);
