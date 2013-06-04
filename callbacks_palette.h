@@ -1,6 +1,6 @@
 //and of cource we "get" to define the functions twice once in the header and then include the actual code in the cpp file
 #if _WIN32
-#include <Windows.h>
+#include <windows.h>
 #endif
 #include <FL/Fl.H>
 #pragma once
