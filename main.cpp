@@ -1007,21 +1007,23 @@ void showAbout(Fl_Widget*,void*)
 {
 	fl_alert("Retro Graphics Toolkit is written by sega16/nintendo8/sonic master or whatever you want to call me\nThis program was build on %s %s\nTechiclly speaking this date was the last time that main.cpp was updated.",__DATE__,__TIME__);
 }
+void toggleRowSolo(Fl_Widget*,void*)
+{
+	rowSolo^=true;
+	window->redraw();
+}
 void editor::_editor()
 {
 	//create the window
 	menu = new Fl_Menu_Bar(0,0,800,25);		// Create menubar, items..
-	menu->add("&File/&Open character palette",(int)0, Butt_CB,(void *)0,(int)0);
-	menu->add("&File/&Open level palette",  (int)0, Butt_CB,(void *)32,(int)0);
+	menu->add("&File/&Open palette",(int)0, loadPalette,(void *)0,(int)0);
 	menu->add("&File/&Open tiles",(int)0,load_tiles,(void*)0,(int)0);
 	menu->add("&File/&Open Truecolor Tiles",(int)0,load_truecolor_tiles,0,(int)0);
 	menu->add("&File/&Append tiles",(int)0,load_tiles,(void*)1,(int)0);
 	menu->add("&File/&Open tile map and if NES attrabiuts",(int)0,load_tile_map,(void *)0,(int)0);
 	menu->add("&File/&import image to tilemap",(int)0,load_image_to_tilemap,(void *)0,(int)0);
 
-	menu->add("&File/&Save character palette",  0, save_palette,(void*)0x0020);
-	menu->add("&File/&Save level palette", 0, save_palette,(void*)0x2080);
-	menu->add("&File/&Save all palette to one file",  0, save_palette,(void*)0x0080);
+	menu->add("&File/&Save Palette",  0, save_palette,(void*)0);
 	menu->add("&File/&Save tiles",0,save_tiles,0,0);
 	menu->add("&File/&Save truecolor tiles",0,save_tiles_truecolor,0,0);
 	menu->add("&File/&Save tile map and if nes attributes",0,save_map,0,0);
@@ -1321,6 +1323,10 @@ void editor::_editor()
 			tileMap_pal.more_init();
 
 			//buttons for tile settings
+			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,184,64,32,"Show only selected row");
+				o->callback(toggleRowSolo);
+				o->tooltip("When checked Tiles that do not use the selected row will not be drawn");
+			}
 			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,336,64,32,"hflip");
 				o->callback(set_hflip);
 				o->tooltip("This sets whether or not the tile is flipped horizontally");

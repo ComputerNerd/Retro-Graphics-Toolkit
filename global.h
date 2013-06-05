@@ -13,7 +13,7 @@ Header for globals included with all other files.
 /*!
 This function calculates pointer offset for truecolor tiles
 for example cal_offset_truecolor(8,8,0,32);
-would edit the red pixel (8,8) located on tile 32 
+would edit the red pixel at (8,8) located on tile 32 
 */
 void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row);
 bool saveBinAsText(void * ptr,size_t sizeBin,FILE * myfile);
@@ -92,3 +92,4 @@ extern uint8_t ditherAlg;
 extern uint8_t palTypeGen;
 extern const uint8_t palTab[];
 extern bool showTrueColor;
+extern bool rowSolo;

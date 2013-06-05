@@ -6,5 +6,5 @@
 #pragma once
 void save_palette(Fl_Widget*, void* start_end);
 void update_palette(Fl_Widget* o, void* v);
-void Butt_CB(Fl_Widget*, void* offset);
+void loadPalette(Fl_Widget*, void* offset);
 //void set_palette_type(Fl_Widget*, void* type); Moved to global

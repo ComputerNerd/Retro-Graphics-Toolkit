@@ -143,10 +143,11 @@ void update_emphesis(Fl_Widget*,void*)
 			emps=tileMap_pal.pal_b->value();
 		break;
 	}
+	emps<<=6;
 	for (uint8_t c=0;c<48;c+=3)
 	{
 		unsigned int rgb_out;
-		rgb_out=MakeRGBcolor(currentProject->palDat[c/3]+(emps<<6));
+		rgb_out=MakeRGBcolor(currentProject->palDat[c/3]|emps);
 		currentProject->rgbPal[c]=(rgb_out>>16)&255;//red
 		currentProject->rgbPal[c+1]=(rgb_out>>8)&255;//green
 		currentProject->rgbPal[c+2]=rgb_out&255;//blue

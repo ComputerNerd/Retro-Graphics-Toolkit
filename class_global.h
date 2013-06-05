@@ -28,4 +28,4 @@ class editor : public Fl_Double_Window
 	editor(int W, int H, const char *L = 0);
 	int handle(int);
 };
-extern editor *window; //= new editor(800,600,"Sega Genesis Toolkit");
+extern editor *window;

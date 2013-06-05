@@ -1,19 +1,47 @@
 //this is were all the callbacks for palette realted functions go
 #include "global.h"
 #include "class_global.h"
+#include "color_convert.h"
 void save_palette(Fl_Widget*, void* start_end)
 {
+	char temp[4];
+	switch (game_system)
+	{
+		case sega_genesis:
+			strcpy(temp,"63");
+		break;
+		case NES:
+			strcpy(temp,"15");
+		break;
+	}
+	char * returned=(char *)fl_input("Counting from zero enter the first entry that you want saved","0");
+	if (returned==0)
+		return;
+	if (verify_str_number_only(returned) == false)
+			return;
+	uint8_t start = atoi(returned);
+	returned=(char *)fl_input("Counting from zero enter the last entry that you want saved",temp);
+	if (returned==0)
+		return;
+	if (verify_str_number_only(returned) == false)
+			return;
+	uint8_t end = atoi(returned);
+	if (game_system==sega_genesis)
+	{
+		start*=2;
+		end *=2;
+	}
 	uint8_t type=fl_choice("How would like this file saved?","Binary","C header",0);
 	if (load_file_generic("Save palette",true) == true)
 	{
-		unsigned char start,end;
+		//unsigned char start,end;
 		//split the varible into two
 		//varible format start,end
-		end=(uintptr_t)start_end&0xFF;
-		start=(uintptr_t)start_end>>8;
+		//end=(uintptr_t)start_end&0xFF;
+		//start=(uintptr_t)start_end>>8;
 		//open the file
-		cout << "entry start: " << start/2 << " entry end: " << end/2 << endl;
-		cout << "saving the palette to " << the_file << endl;
+		//cout << "entry start: " << start/2 << " entry end: " << end/2 << endl;
+		//cout << "saving the palette to " << the_file << endl;
 		FILE * myfile=0;
 		if (type == 1)
 		{
@@ -158,38 +186,62 @@ void update_palette(Fl_Widget* o, void* v)
 	}
 	window->redraw();//update the palette
 }
-void Butt_CB(Fl_Widget*, void* offset)
+void loadPalette(Fl_Widget*, void*)
 {
+	uint8_t offset;
+	char * inputTemp=(char *)fl_input("Counting from zero enter the first entry that you want the palette to start at","0");
+	if (inputTemp==0)
+		return;
+	if (verify_str_number_only(inputTemp) == false)
+			return;
+	offset=atoi(inputTemp);
+	uint8_t palSize;
+	switch (game_system)
+	{
+		case sega_genesis:
+			offset*=2;
+			palSize=128;
+		break;
+		case NES:
+			palSize=16;
+		break;
+	}
+		
+	
 	if(load_file_generic("Load palette") == true)
 	{
-		cout << "offset=" << (uintptr_t)offset << endl;
-		cout << "loading file" << the_file << endl;
+		//cout << "offset=" << (uintptr_t)offset << endl;
+		//cout << "loading file" << the_file << endl;
 		ifstream file (the_file.c_str(), ios::in|ios::binary|ios::ate);
 		if (file.is_open())
 		{
 			//copy 32 bytes to the palette buffer
 			file_size = file.tellg();
-			if (file_size > 128-(uintptr_t)offset)
+			if (file_size > palSize-offset)
 			{
-				fl_alert("Error: The file size is bigger than %d bytes it is not a valid palette",(int)128-(int)(uintptr_t)offset);
+				fl_alert("Error: The file size is bigger than %d (%d-%d) bytes it is not a valid palette",palSize-offset,palSize,offset);
 				file.close();
 				return;//end function due to errrors
 			}
-			if (offset == 0 && file_size != 32)
-			{
-				cout << "warning file size not 32 bytes file size is: " << file_size << "\nthis should be normal if all your colors are stored in one file" << endl;
-			}
 			//read the palette to the buffer
 			file.seekg (0, ios::beg);
-			file.read ((char *)currentProject->palDat+(uintptr_t)offset, file_size);
+			file.read ((char *)currentProject->palDat+offset, file_size);
 			file.close();
 			//now convert each value to rgb
-			set_palette_type(palTypeGen);
+			switch (game_system)
+			{
+				case sega_genesis:
+					set_palette_type(palTypeGen);
+				break;
+				case NES:
+					update_emphesis(0,0);
+				break;
+			}
 			window->redraw();
 		}
 		else
 		{
-			cout << "file.is_open() returned false meaning there was some trouble reading the file." << endl;
+			fl_alert("file.is_open() returned false meaning there was some trouble reading the file.");
 		}
 	}
 }
