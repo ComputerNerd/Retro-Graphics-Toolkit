@@ -204,9 +204,7 @@ uint32_t MakeRGBcolor(uint32_t pixel,float saturation, float hue_tweak,float con
                      + 0x00001*clamp(255 * gammafix(y + -1.108545f*i +  1.709007f*q,gamma));
         return rgb;
 }
- //the game system defines are also defined in global.h
-#define sega_genesis 0
-#define NES 1
+
 const uint8_t palTab[]={0,49,87,119,146,174,206,255,0,27,49,71,87,103,119,130,130,146,157,174,190,206,228,255};//from http://gendev.spritesmind.net/forum/viewtopic.php?t=1389
 void set_palette_type(uint8_t type)
 {

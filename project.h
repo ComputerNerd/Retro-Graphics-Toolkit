@@ -14,6 +14,7 @@ struct Project/*!<Holds all data needed for a project based system for examaple 
 	tiles * tileC;
 	uint8_t rgbPal[256];
 	uint8_t palDat[128];
+	uint8_t palType[64];/*!<Sets 3 different types for each palette entry free locked and reserved*/
 	
 };
 extern struct Project ** projects;

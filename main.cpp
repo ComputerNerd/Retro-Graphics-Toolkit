@@ -829,8 +829,7 @@ void remove_duplicate_truecolor(Fl_Widget*,void*)
 			}
 		}
 		//if ((cur_tile % 4096) == 0)
-			printf("On tile %d Removed %d\r",cur_tile,tile_remove_c);
-		
+		//printf("On tile %d Removed %d\r",cur_tile,tile_remove_c);
 	}
 	printf("Removed %d tiles\n",tile_remove_c);
 	tile_remove_c=0;
@@ -855,8 +854,7 @@ void remove_duplicate_truecolor(Fl_Widget*,void*)
 			}
 		}
 		//if ((cur_tile % 4096) == 0)
-			printf("On tile %d Removed %d\r",cur_tile,tile_remove_c);
-		
+		//printf("On tile %d Removed %d\r",cur_tile,tile_remove_c);
 	}
 	printf("Removed %d tiles\n",tile_remove_c);
 	tile_remove_c=0;
@@ -880,8 +878,7 @@ void remove_duplicate_truecolor(Fl_Widget*,void*)
 			}
 		}
 		//if ((cur_tile % 4096) == 0)
-			printf("On tile %d Removed %d\r",cur_tile,tile_remove_c);
-		
+		//printf("On tile %d Removed %d\r",cur_tile,tile_remove_c);
 	}
 	printf("Removed %d tiles\n",tile_remove_c);
 	tile_remove_c=0;
@@ -906,8 +903,7 @@ void remove_duplicate_truecolor(Fl_Widget*,void*)
 			}
 		}
 		//if ((cur_tile % 4096) == 0)
-			printf("On tile %d Removed %d\r",cur_tile,tile_remove_c);
-		
+		//printf("On tile %d Removed %d\r",cur_tile,tile_remove_c);
 	}
 	printf("Removed %d tiles\n",tile_remove_c);
 	tile_remove_c=0;
@@ -937,7 +933,6 @@ void set_game_system(Fl_Widget*,void* selection)
 			currentProject->tileC->tileSize=32;
 			//create_shadow_highlight_buttons();
 			shadow_highlight_switch->show();
-
 			{//for varibles to be declared inside of switch statment I must put brackes around so the compiler knows when to free them
 				uint8_t pal_temp[128];
 				uint8_t c;
@@ -1012,39 +1007,48 @@ void toggleRowSolo(Fl_Widget*,void*)
 	rowSolo^=true;
 	window->redraw();
 }
+void clearPalette(Fl_Widget*,void*)
+{
+	if (fl_ask("This will set all colors to 0 are you sure you want to do this?"))
+	{
+		memset(currentProject->palDat,0,128);
+		memset(currentProject->rgbPal,0,192);
+		window->damage(FL_DAMAGE_USER1);
+		palEdit.updateSlider();
+		tileEdit_pal.updateSlider();
+		tileMap_pal.updateSlider();
+	}
+}
 void editor::_editor()
 {
 	//create the window
-	menu = new Fl_Menu_Bar(0,0,800,25);		// Create menubar, items..
+	menu = new Fl_Menu_Bar(0,0,800,24);		// Create menubar, items..
 	menu->add("&File/&Open palette",(int)0, loadPalette,(void *)0,(int)0);
 	menu->add("&File/&Open tiles",(int)0,load_tiles,(void*)0,(int)0);
 	menu->add("&File/&Open Truecolor Tiles",(int)0,load_truecolor_tiles,0,(int)0);
 	menu->add("&File/&Append tiles",(int)0,load_tiles,(void*)1,(int)0);
 	menu->add("&File/&Open tile map and if NES attrabiuts",(int)0,load_tile_map,(void *)0,(int)0);
 	menu->add("&File/&import image to tilemap",(int)0,load_image_to_tilemap,(void *)0,(int)0);
-
 	menu->add("&File/&Save Palette",  0, save_palette,(void*)0);
 	menu->add("&File/&Save tiles",0,save_tiles,0,0);
 	menu->add("&File/&Save truecolor tiles",0,save_tiles_truecolor,0,0);
 	menu->add("&File/&Save tile map and if nes attributes",0,save_map,0,0);
-
-	menu->add("&Action/&update dither all tiles",0,update_all_tiles,0,0);
-	menu->add("&Action/&Delete currently selected tile",0,delete_tile_at_location,(void *)0,(int)0);
-	menu->add("&Action/&File tile map with selection includeing attrabutes",0,fill_tile_map_with_tile,(void *)0,(int)0);
-	menu->add("&Action/&Dither tilemap as image",0,dither_tilemap_as_image,(void *)0,(int)0);
-	menu->add("&Action/&generate optimal palette with one row",0,generate_optimal_palette,(void *)0,(int)0);
-	menu->add("&Action/&generate optimal palette with four rows",0,generate_optimal_palette,(void *)4,(int)0);
-	menu->add("&Action/&Auto determin if use shadow highlight",0,shadow_highligh_findout,(void *)0,(int)0);
-
+	menu->add("&Palette Actions/&generate optimal palette with x amount of colors",0,generate_optimal_palette,(void *)0,(int)0);
+	menu->add("&Palette Actions/&Clear entire Palette",0,clearPalette,(void *)0,(int)0);
 	menu->add("&Tile Actions/&Append blank tile to end of buffer",0,new_tile,0,0);
 	menu->add("&Tile Actions/&Fill tile with selected color",0,fill_tile,(void *)0,(int)0);
 	menu->add("&Tile Actions/&Fill tile with color 0",0,blank_tile,0,0);
 	menu->add("&Tile Actions/&Remove duplicate truecolor tiles",0,remove_duplicate_truecolor,0,0);
 	menu->add("&Tile Actions/&Remove duplicate tiles",0,remove_duplicate_tiles,0,0);
+	menu->add("&Tile Actions/&update dither all tiles",0,update_all_tiles,0,0);
+	menu->add("&Tile Actions/&Delete currently selected tile",0,delete_tile_at_location,(void *)0,(int)0);
 	menu->add("&TileMap Actions/&Remove tiles after x",0,tilemap_remove_callback,0,0);
 	menu->add("&TileMap Actions/&Toggle TrueColor Viewing (defaults to off)",0,trueColTileToggle,0,0);
 	menu->add("&TileMap Actions/&Pick Tile row based on delta",0,tileDPicker,0,0);
-	menu->add("&Helo/&About",0,showAbout,0,0);
+	menu->add("&TileMap Actions/&Auto determin if use shadow highlight",0,shadow_highligh_findout,(void *)0,(int)0);
+	menu->add("&TileMap Actions/&Dither tilemap as image",0,dither_tilemap_as_image,(void *)0,(int)0);
+	menu->add("&TileMap Actions/&File tile map with selection includeing attrabutes",0,fill_tile_map_with_tile,(void *)0,(int)0);
+	menu->add("&Help/&About",0,showAbout,0,0);
 	tile_placer_tile_offset_y=default_tile_placer_tile_offset_y;
 	true_color_box_x=default_true_color_box_x;
 	true_color_box_y=default_true_color_box_y;
@@ -1052,11 +1056,12 @@ void editor::_editor()
 	tile_edit_truecolor_off_y=default_tile_edit_truecolor_off_y;
 	{ /*Fl_Tabs**/ the_tabs = new Fl_Tabs(0, 24, 800, 576);
 	the_tabs->callback(set_mode_tabs);
-		{ Fl_Group* o = new Fl_Group(0, 48, 800, 576, "palette editor");
+	int rx,ry,rw,rh;
+	the_tabs->client_area(rx,ry,rw,rh);
+		{ Fl_Group* o = new Fl_Group(rx, ry, rw, rh, "palette editor");
 			//cout << "palette editor as group: " << o->as_group() << endl;
 			pal_id=(intptr_t)o->as_group();
 			//stuff realed to this group should go here
-			
 			palEdit.more_init(4);
 			pal_size = new Fl_Hor_Value_Slider(128,384,320,24,"Palette box size");
 			pal_size->minimum(1); pal_size->maximum(42);
@@ -1064,25 +1069,22 @@ void editor::_editor()
 			pal_size->value(32);
 			pal_size->align(FL_ALIGN_LEFT);
 			pal_size->callback(update_box_size);
-			
 			ditherPower = new Fl_Hor_Value_Slider(128,416,320,24,"Dither Power");
 			ditherPower->tooltip("A lower value resualts in more dithering artifacts a higer value resualts in less artifacts");
-			ditherPower->minimum(1); ditherPower->maximum(64);
+			ditherPower->minimum(1); ditherPower->maximum(255);
 			ditherPower->step(1);
 			ditherPower->value(16);
 			ditherPower->align(FL_ALIGN_LEFT);
-			
-	{ shadow_highlight_switch = new Fl_Group(0, 0, 800, 480);
-		{ Fl_Round_Button* o = new Fl_Round_Button(128, 288, 64, 32, "Normal");
-		o->type(102);
+	{ shadow_highlight_switch = new Fl_Group(112, 288, 800, 480);
+		{ Fl_Round_Button* o = new Fl_Round_Button(112, 288, 64, 32, "Normal");
+		o->type(FL_RADIO_BUTTON);
 		o->tooltip("This is the default sega genesis color.When shadow/highlight mode is disabled all tiles will look like this however when enabling shadow higligh mode and a tile is set to high prioraty you will the tile will use these set of colors");
-		o->down_box(FL_ROUND_DOWN_BOX);
 		o->callback((Fl_Callback*) set_palette_type_callback,(void *)0);
+		o->set();
 		} // Fl_Round_Button* o
-		{ Fl_Round_Button* o = new Fl_Round_Button(192, 288, 64, 32, "Shadow");
+		{ Fl_Round_Button* o = new Fl_Round_Button(180, 288, 64, 32, "Shadow");
 		o->tooltip("This mode uses the color sets that the vdp uses when shadow highlight mode is enabled by setting bit 3 (the LSB being bit 0) to 1 in the vdp register 0C also for the tile to be shadowed the tile's priority must be set at 0 or low priority");
-		o->type(102);
-        o->down_box(FL_ROUND_DOWN_BOX);
+		o->type(FL_RADIO_BUTTON);
        o->callback((Fl_Callback*) set_palette_type_callback,(void *)8);
       } // Fl_Round_Button* o
       { Fl_Round_Button* o = new Fl_Round_Button(256, 288, 64, 32, "Highlight");
@@ -1093,51 +1095,43 @@ void editor::_editor()
       } // Fl_Round_Button* o
       shadow_highlight_switch->end();
 		} // Fl_Group* o
-		
 			{
-				Fl_Group *o = new Fl_Group(0, 0, 800, 480);
+				Fl_Group *o = new Fl_Group(128, 320, 800, 480);
 				{
 					Fl_Round_Button* o = new Fl_Round_Button(128, 320, 96, 32, "Sega Genesis");
 					o->tooltip("Sets the editing mode to Sega Genesis or Sega Mega Drive");
-					o->type(102);
-					o->down_box(FL_ROUND_DOWN_BOX);
+					o->type(FL_RADIO_BUTTON);
 					o->callback((Fl_Callback*) set_game_system,(void *)sega_genesis);
+					o->set();
 				} // Fl_Round_Button* o
 				{
 					Fl_Round_Button* o = new Fl_Round_Button(256, 320, 64, 32, "NES");
 					o->tooltip("Sets the editing mode to Nintendo Entertamint System or Famicon");
-					o->type(102);
-
-					o->down_box(FL_ROUND_DOWN_BOX);
+					o->type(FL_RADIO_BUTTON);
 					o->callback((Fl_Callback*) set_game_system,(void *)NES);
 				} // Fl_Round_Button* o
 				o->end();
 			} // End of buttons
-
 			{
 				Fl_Group *o = new Fl_Group(0, 0, 800, 500);
 				{
 					Fl_Round_Button* o = new Fl_Round_Button(128, 440, 96, 32, "Floyd Steinberg");
-					o->type(102);
-					o->down_box(FL_ROUND_DOWN_BOX);
+					o->type(FL_RADIO_BUTTON);
+					o->set();
 					o->callback((Fl_Callback*) set_ditherAlg,(void *)0);
 				} // Fl_Round_Button* o
 				{
 					Fl_Round_Button* o = new Fl_Round_Button(256, 440, 64, 32, "Reimesha");
-					o->type(102);
-					o->down_box(FL_ROUND_DOWN_BOX);
+					o->type(FL_RADIO_BUTTON);
 					o->callback((Fl_Callback*) set_ditherAlg,(void *)1);
 				} // Fl_Round_Button* o
 				{
 					Fl_Round_Button* o = new Fl_Round_Button(384, 440, 64, 32, "Nearest Color");
-					o->type(102);
-					o->down_box(FL_ROUND_DOWN_BOX);
+					o->type(FL_RADIO_BUTTON);
 					o->callback((Fl_Callback*) set_ditherAlg,(void *)2);
 				} // Fl_Round_Button* o
 				o->end();
 			} // End of buttons
-
-
       			o->end();
 			} // Fl_Group* o
 		{ Fl_Group* o = new Fl_Group(5, 48, 800, 567, "Tile Editor");
@@ -1147,26 +1141,23 @@ void editor::_editor()
 			{ Fl_Group* o = new Fl_Group(0, 0, 800, 567);
 				{ Fl_Round_Button* o = new Fl_Round_Button(384, default_palette_bar_offset_y+40, 56, 32, "Row 0");
 					//o->tooltip("Radio button, only one button is set at a time, in the corresponding group.");
-					o->type(102);
-					o->down_box(FL_ROUND_DOWN_BOX);
+					o->type(FL_RADIO_BUTTON);
+					o->set();
 					o->callback((Fl_Callback*) set_tile_row,(void *)0);
 				} // Fl_Round_Button* o
 				{ Fl_Round_Button* o = new Fl_Round_Button(448, default_palette_bar_offset_y+40, 56, 32, "Row 1");
 					//o->tooltip("Radio button, only one button is set at a time, in the corresponding group.");
-					o->type(102);
-					o->down_box(FL_ROUND_DOWN_BOX);
+					o->type(FL_RADIO_BUTTON);
 					o->callback((Fl_Callback*) set_tile_row,(void *)1);
 				} // Fl_Round_Button* o
 				{ Fl_Round_Button* o = new Fl_Round_Button(512, default_palette_bar_offset_y+40, 56, 32, "Row 2");
 					//o->tooltip("Radio button, only one button is set at a time, in the corresponding group.");
-					o->type(102);
-					o->down_box(FL_ROUND_DOWN_BOX);
+					o->type(FL_RADIO_BUTTON);
 					o->callback((Fl_Callback*) set_tile_row,(void *)2);
 				} // Fl_Round_Button* o
 				{ Fl_Round_Button* o = new Fl_Round_Button(576, default_palette_bar_offset_y+40, 56, 32, "Row 3");
 					//o->tooltip("Radio button, only one button is set at a time, in the corresponding group.");
-					o->type(102);
-					o->down_box(FL_ROUND_DOWN_BOX);
+					o->type(FL_RADIO_BUTTON);
 					o->callback((Fl_Callback*) set_tile_row,(void *)3);
 				} // Fl_Round_Button* o
 
@@ -1184,29 +1175,21 @@ void editor::_editor()
 				o->tooltip("This button will delete the curretly selected tile");
 				o->callback(delete_tile_at_location);
 			}
-
 			tileEdit_pal.more_init();
-
-			//The reason what makes sega genesis toolkit the best grapics solution is that it will allow for true color images and automaticlly dither them
-
 			rgb_red = new Fl_Hor_Value_Slider(48,default_palette_bar_offset_y+136,128,24,"RGB red");
 			rgb_red->minimum(0);
 			rgb_red->maximum(255);
 			rgb_red->step(1);
-
 			rgb_red->value(0);
 			rgb_red->align(FL_ALIGN_LEFT);
 			rgb_red->callback(update_truecolor,(void *)0);
-
 			rgb_green = new Fl_Hor_Value_Slider(192,default_palette_bar_offset_y+136,128,24,"Green");
 			rgb_green->minimum(0);
 			rgb_green->maximum(255);
 			rgb_green->step(1);
 			rgb_green->value(0);
-
 			rgb_green->align(FL_ALIGN_LEFT);
 			rgb_green->callback(update_truecolor,(void *)1);
-
 			rgb_blue = new Fl_Hor_Value_Slider(336,default_palette_bar_offset_y+136,128,24,"Blue");
 			rgb_blue->minimum(0);
 			rgb_blue->maximum(255);
@@ -1214,7 +1197,6 @@ void editor::_editor()
 			rgb_blue->value(0);
 			rgb_blue->align(FL_ALIGN_LEFT);
 			rgb_blue->callback(update_truecolor,(void *)2);
-
 			rgb_alpha = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+136,128,24,"Alpha");
 			rgb_alpha->minimum(0);
 			rgb_alpha->maximum(255);
@@ -1222,9 +1204,7 @@ void editor::_editor()
 			rgb_alpha->value(0);
 			rgb_alpha->align(FL_ALIGN_LEFT);
 			rgb_alpha->callback(update_truecolor,(void *)3);
-
 			tile_edit_offset_x=default_tile_edit_offset_x;
-
 			tile_edit_offset_y=default_tile_edit_offset_y;
 			tile_size = new Fl_Hor_Value_Slider(496,default_palette_bar_offset_y+72,304,24,"Tile Zoom Factor");
 			tile_size->tooltip("This slider sets magnification a value of 10 would mean the image is being displayed 10 times larger");
@@ -1246,37 +1226,31 @@ void editor::_editor()
 			tile_select->callback(set_tile_current);
 			o->end();
 		}
-		{ Fl_Group* o = new Fl_Group(5, 48, 640, 480, "Plane Mapping Editor");
+		{ Fl_Group* o = new Fl_Group(rx,ry,rw,rh,"Plane Mapping Editor");
 			//o->callback(set_mode_tabs);
 			tile_place_id=(intptr_t)o->as_group();
 			{
 				Fl_Group* o = new Fl_Group(0, 0, 800, 567);
 				{
 					Fl_Round_Button* o = new Fl_Round_Button(tile_place_buttons_x_off, 208, 60, 32, "Row 0");
-					//o->tooltip("Radio button, only one button is set at a time, in the corresponding group.");
-					o->type(102);
-					o->down_box(FL_ROUND_DOWN_BOX);
+					o->type(FL_RADIO_BUTTON);
+					o->set();
 					o->callback((Fl_Callback*) set_tile_row,(void *)0);
 				} // Fl_Round_Button* o
 				{
 					Fl_Round_Button* o = new Fl_Round_Button(tile_place_buttons_x_off, 240, 60, 32, "Row 1");
-					//o->tooltip("Radio button, only one button is set at a time, in the corresponding group.");
-					o->type(102);
-					o->down_box(FL_ROUND_DOWN_BOX);
+					o->type(FL_RADIO_BUTTON);
 					o->callback((Fl_Callback*) set_tile_row,(void *)1);
 				} // Fl_Round_Button* o
 				{
 					Fl_Round_Button* o = new Fl_Round_Button(tile_place_buttons_x_off, 272, 60, 32, "Row 2");
-					//o->tooltip("Radio button, only one button is set at a time, in the corresponding group.");
-					o->type(102);
-					o->down_box(FL_ROUND_DOWN_BOX);
+					o->type(FL_RADIO_BUTTON);
 					o->callback((Fl_Callback*) set_tile_row,(void *)2);
 				} // Fl_Round_Button* o
 				{
 					Fl_Round_Button* o = new Fl_Round_Button(tile_place_buttons_x_off, 304, 60, 32, "Row 3");
 					//o->tooltip("Radio button, only one button is set at a time, in the corresponding group.");
-					o->type(102);
-					o->down_box(FL_ROUND_DOWN_BOX);
+					o->type(FL_RADIO_BUTTON);
 					o->callback((Fl_Callback*) set_tile_row,(void *)3);
 				} // Fl_Round_Button* o
 				o->end();
@@ -1288,7 +1262,6 @@ void editor::_editor()
 			map_w->value(2);
 			map_w->align(FL_ALIGN_LEFT);
 			map_w->callback(callback_resize_map);
-
 			map_h = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+104,312,24,"Map height");
 			map_h->minimum(1);
 			map_h->maximum(0xFFFF);
@@ -1296,20 +1269,16 @@ void editor::_editor()
 			map_h->value(2);
 			map_h->align(FL_ALIGN_LEFT);
 			map_h->callback(callback_resize_map);
-
 			map_x_scroll = new Fl_Scrollbar(default_map_off_x-32, default_map_off_y-42, 800-8-default_map_off_x, 24);
 			map_x_scroll->value(0,0,0,0);
 			map_x_scroll->type(FL_HORIZONTAL);
 			map_x_scroll->tooltip("Use this scroll bar to move around the tile map if you are zoomed in and there is not enough room to display the entire tilemap at once. This scroll bar will move the map left and right.");
 			map_x_scroll->callback(update_map_scroll_x);
-
 			map_y_scroll = new Fl_Scrollbar(default_map_off_x-32, default_map_off_y, 24, 600-8-default_map_off_y);
 			map_y_scroll->value(0,0,0,0);
 			//map_x_scroll->type(FL_HORIZONTAL);
 			map_y_scroll->tooltip("Use this scroll bar to move around the tile map if you are zoomed in and there is not enough room to display the entire tilemap at once. This scroll bar will move the map up and down.");
 			map_y_scroll->callback(update_map_scroll_y);
-
-
 			//now for the tile select slider
 			tile_select_2 = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+40,312,24,"Tile Select");
 			tile_select_2->tooltip("This slider allows you to choice which tile you would like to place on the map remember you can both horizontally and vertically flip the tile once placed on the map and select which row the tile uses");
@@ -1319,9 +1288,7 @@ void editor::_editor()
 			tile_select_2->value(0);
 			tile_select_2->align(FL_ALIGN_LEFT);
 			tile_select_2->callback(set_tile_current);
-
 			tileMap_pal.more_init();
-
 			//buttons for tile settings
 			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,184,64,32,"Show only selected row");
 				o->callback(toggleRowSolo);
@@ -1335,7 +1302,7 @@ void editor::_editor()
 				o->callback(set_vflip);
 				o->tooltip("This sets whether or not the tile is flipped vertically");
 			}
-			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,400,68,32,"priority");
+			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,400,72,32,"priority");
 				o->callback(set_prio_callback);
 				o->tooltip("If checked tile is high priority");
 			}
@@ -1343,7 +1310,7 @@ void editor::_editor()
 				o->callback(set_grid_placer);
 				o->tooltip("This button Toggles whether or not a grid is visible over the tilemap this will allow you to easily see were each tile is");
 			}
-			place_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off+96,496,128,24,"Tile Zoom Factor");
+			place_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off+120,496,128,24,"Tile Zoom Factor");
 			place_tile_size->minimum(1);
 			place_tile_size->maximum(16);
 			place_tile_size->step(1);
