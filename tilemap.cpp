@@ -640,6 +640,15 @@ void tileMap::pickRow(uint8_t amount)
 		}
 	}
 }
+void tileMap::allRowZero(void)
+{
+	uint32_t x,y;
+	for (y=0;y<mapSizeH;y++)
+	{
+		for (x=0;x<mapSizeW;x++)
+			set_pal_row(x,y,0);
+	}
+}
 inline uint8_t pick4Delta(uint32_t * d)
 {
 	if ((d[0] < d[1]) && (d[0] < d[2]) && (d[0] < d[3]))
@@ -650,13 +659,14 @@ inline uint8_t pick4Delta(uint32_t * d)
 		return 2;
 	return 3;
 }
-void tileMap::pickRowDelta()
+void tileMap::pickRowDelta(void)
 {
 	uint32_t d[4];
 	uint32_t x,y;
 	uint8_t t;
 	uint16_t p;
 	uint8_t temp[256];
+	putchar('\n');
 	for (y=0;y<mapSizeH;y++)
 	{
 		for (x=0;x<mapSizeW;x++)
@@ -676,7 +686,6 @@ void tileMap::pickRowDelta()
 				}
 			}
 			set_pal_row(x,y,pick4Delta(d));
-			
 		}
 	}
 }
@@ -697,6 +706,15 @@ void reduceImageGenesis(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_
 		for (uint8_t x=0;x<colors_found;x++)
 		{
 			uint8_t r,g,b;
+againFun:
+			if (currentProject->palType[x+offsetPal]) {
+				offsetPal++;
+				off3+=3;
+				off2+=2;
+				if (offsetPal >= 64)
+					break;
+				goto againFun;
+			}
 			r=found_colors[(x*3)];
 			g=found_colors[(x*3)+1];
 			b=found_colors[(x*3)+2];
@@ -722,6 +740,7 @@ void reduceImageGenesis(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_
 		/*this uses denesis lee's v3 color quant which is fonund at http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c*/
 		uint8_t user_pal[3][256];			
 		uint8_t rgb_pal2[768];
+		uint8_t rgb_pal3[768];
 		uint8_t colorz=maxCol;
 		bool can_go_again=true;
 try_again_color:
@@ -739,7 +758,7 @@ try_again_color:
 			rgb_pal2[(x*3)+1]=palTab[g];
 			rgb_pal2[(x*3)+2]=palTab[b];
 		}
-		uint8_t new_colors = count_colors(rgb_pal2,colorz,1,&currentProject->rgbPal[off3]);
+		uint8_t new_colors = count_colors(rgb_pal2,colorz,1,&rgb_pal3[off3]);
 		printf("Unique colors in palette %d\n",new_colors);
 		if (new_colors < maxCol)
 		{
@@ -764,9 +783,21 @@ try_again_color:
 			colorz--;
 			goto try_again_color;
 		}
+		uint8_t off3o=off3;
 		for (uint8_t x=0;x<maxCol;x++)
 		{
 			uint8_t r,g,b;
+againNerd:
+			if (currentProject->palType[x+offsetPal]) {
+				offsetPal++;
+				off3+=3;
+				off2+=2;
+				if (offsetPal >= 64)
+					break;
+				printf("%d %d %d\n",offsetPal,off2,off3);
+				goto againNerd;
+			}
+			memcpy(currentProject->rgbPal+off3+(x*3),&rgb_pal3[off3o+(x*3)],3);
 			r=currentProject->rgbPal[(x*3)+off3];
 			g=currentProject->rgbPal[(x*3)+1+off3];
 			b=currentProject->rgbPal[(x*3)+2+off3];
@@ -793,6 +824,13 @@ void reduceImageNES(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t of
 		for (uint8_t x=0;x<colors_found;x++)
 		{
 			uint8_t r,g,b;
+againFun:
+			if (currentProject->palType[x+offsetPal]) {
+				offsetPal++;
+				if (offsetPal >= 16)
+					break;
+				goto againFun;
+			}
 			r=found_colors[(x*3)];
 			g=found_colors[(x*3)+1];
 			b=found_colors[(x*3)+2];
@@ -807,6 +845,7 @@ void reduceImageNES(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t of
 		printf("%d colors needs quantization\n",colors_found);
 		uint8_t user_pal[3][256];				
 		uint8_t rgb_pal2[768];
+		uint8_t rgb_pal3[768];
 		uint8_t colorz=maxCol;
 		bool can_go_again=true;
 try_again_nes_color:
@@ -823,7 +862,7 @@ try_again_nes_color:
 			rgb_pal2[(x*3)+1]=(temp_rgb>>8)&255;
 			rgb_pal2[(x*3)+2]=temp_rgb&255;
 		}
-		uint8_t new_colors = count_colors(rgb_pal2,colorz,1,&currentProject->rgbPal[off3]);
+		uint8_t new_colors = count_colors(rgb_pal2,colorz,1,&rgb_pal3[off3]);
 		printf("Unique colors in palette %d\n",new_colors);
 		if (new_colors < maxCol)
 		{
@@ -848,8 +887,17 @@ try_again_nes_color:
 			colorz--;
 			goto try_again_nes_color;
 		}
+		uint8_t off3o=off3;
 		for (uint8_t x=0;x<maxCol;x++)
 		{
+againNerd:
+			if (currentProject->palType[x+offsetPal]) {
+				offsetPal++;
+				if (offsetPal >= 16)
+					break;
+				goto againNerd;
+			}
+			memcpy(currentProject->rgbPal+off3+(x*3),&rgb_pal3[off3o+(x*3)],3);
 			currentProject->palDat[x+offsetPal]=to_nes_color(x+offsetPal);
 		}
 		update_emphesis(NULL,NULL);
@@ -914,13 +962,17 @@ void generate_optimal_palette(Fl_Widget*,void*)
 	//uint8_t * found_colors;
 	uint8_t found_colors[768];
 	uint8_t rowAuto;
-	if (rows!=1)
+	if (rows==1)
+		rowAuto = fl_ask("Would you like all tiles on the tilemap to be set to row 0? (This is where all generated colors will apear)");
+	else
 		 rowAuto = fl_ask("Since you used more than one row tiles can be selected based on the hue\nDo you want which row each tile to use be selected automaticlly by hue\nBy pressing no this assumes that you have already picked which tile uses what row");
 	switch (game_system)
 	{
 		case sega_genesis:
 			if (rows==1)
 			{
+				if (rowAuto)
+					currentProject->tileMapC->allRowZero();
 				image = (uint8_t *)malloc(w*h*3);
 				reduceImageGenesis(image,found_colors,-1,0,progress,perRow[0]);
 				free(image);
@@ -945,6 +997,8 @@ void generate_optimal_palette(Fl_Widget*,void*)
 		case NES:
 			if (rows==1)
 			{
+				if (rowAuto)
+					currentProject->tileMapC->allRowZero();
 				image = (uint8_t *)malloc(w*h*3);
 				reduceImageNES(image,found_colors,-1,0,progress,perRow[0]);
 				free(image);

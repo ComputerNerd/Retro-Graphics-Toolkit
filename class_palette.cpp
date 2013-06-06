@@ -5,8 +5,21 @@
 palette_bar palEdit;
 palette_bar tileEdit_pal;
 palette_bar tileMap_pal;
+uint8_t palette_bar::getEntry(void)
+{
+	return box_sel+(theRow*perRow);
+}
 void palette_bar::more_init(uint8_t x,uint16_t offsetx,uint16_t offsety)
 {
+	switch (game_system)
+	{
+		case sega_genesis:
+			perRow=16;
+		break;
+		case NES:
+			perRow=4;
+		break;
+	}
 	rows=x;
 	offx=offsetx;
 	offy=offsety;
@@ -44,18 +57,8 @@ void palette_bar::check_box(int16_t x,int16_t y)
 		return;
 	if (y < 0)
 		return;
-	uint8_t z;
-	switch (game_system)
-	{
-		case sega_genesis:
-			z=16;
-		break;
-		case NES:
-			z=4;
-		break;
-	}
 	x/=boxSize;
-	if (x >= z)
+	if (x >= perRow)
 		return;
 	y/=boxSize;
 	if (y >= rows)
@@ -71,18 +74,8 @@ void palette_bar::check_box(int16_t x,int16_t y)
 void palette_bar::draw_boxes()
 {
 	uint8_t box_size=window->pal_size->value();
-	uint8_t x,y,z,a;
-	switch (game_system)
-	{
-		case sega_genesis:
-			z=16;
-			a=48;
-		break;
-		case NES:
-			z=4;
-			a=12;
-		break;
-	}
+	uint8_t x,y,a;
+	a=perRow*3;
 	if (rows!=1)
 	{
 		uint16_t loc_x,loc_y;
@@ -92,7 +85,7 @@ void palette_bar::draw_boxes()
 	}
 	if (theRow >= rows)
 	{
-		for (x=0;x<z;x++)
+		for (x=0;x<perRow;x++)
 			fl_rectf(offx+(x*box_size),offy,box_size,box_size,currentProject->rgbPal[(x*3)+(a*theRow)],currentProject->rgbPal[(x*3)+1+(a*theRow)],currentProject->rgbPal[(x*3)+2+(a*theRow)]);
 		fl_draw_box(FL_EMBOSSED_FRAME,box_sel*box_size+offx,offy,box_size,box_size,0);
 	}
@@ -100,7 +93,7 @@ void palette_bar::draw_boxes()
 	{
 		for (y=0;y<rows;y++)
 		{
-			for (x=0;x<z;x++)
+			for (x=0;x<perRow;x++)
 				fl_rectf(offx+(x*box_size),offy+(y*box_size),box_size,box_size,currentProject->rgbPal[(x*3)+(y*a)],currentProject->rgbPal[(x*3)+(y*a)+1],currentProject->rgbPal[(x*3)+(y*a)+2]);
 		}
 		fl_draw_box(FL_EMBOSSED_FRAME,box_sel*box_size+offx,theRow*box_size+offy,box_size,box_size,0);
@@ -115,24 +108,40 @@ void palette_bar::changeRow(uint8_t r)
 }
 void palette_bar::updateSlider()
 {
-	switch (game_system)
+	if (currentProject->palType[box_sel+(theRow*perRow)])
 	{
-		case sega_genesis:
-			pal_b->value(currentProject->palDat[(box_sel*2)+(theRow*32)]);
-			pal_g->value(currentProject->palDat[1+(box_sel*2)+(theRow*32)]>>4);
-			pal_r->value(currentProject->palDat[1+(box_sel*2)+(theRow*32)]&15);
-		break;
-		case NES:
-			pal_r->value(currentProject->palDat[box_sel+(theRow*4)]&15);
-			pal_g->value((currentProject->palDat[box_sel+(theRow*4)]>>4)&3);
-		break;
+		pal_b->hide();
+		pal_g->hide();
+		pal_r->hide();
 	}
+	else
+	{
+		pal_b->show();
+		pal_g->show();
+		pal_r->show();
+		switch (game_system)
+		{
+			case sega_genesis:
+				pal_b->value(currentProject->palDat[(box_sel*2)+(theRow*32)]);
+				pal_g->value(currentProject->palDat[1+(box_sel*2)+(theRow*32)]>>4);
+				pal_r->value(currentProject->palDat[1+(box_sel*2)+(theRow*32)]&15);		
+			break;
+			case NES:
+				pal_r->value(currentProject->palDat[box_sel+(theRow*4)]&15);
+				pal_g->value((currentProject->palDat[box_sel+(theRow*4)]>>4)&3);
+			break;
+		}
+	}
+	window->palType[currentProject->palType[box_sel+(theRow*perRow)]]->setonly();
+	window->palType[currentProject->palType[box_sel+(theRow*perRow)]+3]->setonly();
+	window->palType[currentProject->palType[box_sel+(theRow*perRow)]+6]->setonly();
 }
 void palette_bar::changeSystem()
 {
 	switch (game_system)
 	{
 		case sega_genesis:
+			perRow=16;
 			pal_r->label("Red");
 			pal_g->label("Green");
 			pal_b->label("Blue");
@@ -146,6 +155,7 @@ void palette_bar::changeSystem()
 			updateSlider();
 		break;
 		case NES:
+			perRow=4;
 			if (box_sel > 3)
 				box_sel=3;//box_sel starts at zero yes there are 4 colors per row
 			pal_r->label("Hue");

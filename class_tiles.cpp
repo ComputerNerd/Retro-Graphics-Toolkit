@@ -69,14 +69,7 @@ void tiles::truecolor_to_tile(uint8_t palette_row,uint32_t cur_tile)
 	uint8_t true_color_temp[256];
 	memcpy(true_color_temp,&truetileDat[tile_256],256);
 	if (game_system == NES)
-	{
-		//part of the NES tile convertsion code uses the bitwise OR operation
-		//we need to clear the old tile data first
-		for (uint8_t x=0;x<16;x++)
-		{
-			tileDat[x+tile_16]=0;
-		}
-	}
+		memset(tileDat+tile_16,0,16);
 	ditherImage(&true_color_temp[0],8,8,true);
 	//now image needs to be checked for alpha
 	uint8_t * truePtr=true_color_temp;
@@ -117,9 +110,7 @@ void tiles::truecolor_to_tile(uint8_t palette_row,uint32_t cur_tile)
 				break;
 			}
 		}
-
 	}//end of loop
-
 }
 void tiles::draw_truecolor(uint32_t tile_draw,uint16_t x,uint16_t y,bool usehflip,bool usevflip,uint8_t zoom)
 {

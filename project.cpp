@@ -16,6 +16,7 @@ void initProject()
 	currentProject->Name.assign("Add a description here");
 	memset(currentProject->palDat,0,128);
 	memset(currentProject->rgbPal,0,192);
+	memset(currentProject->palType,0,64);
 }
 bool appendProject()
 {
@@ -33,6 +34,7 @@ bool appendProject()
 	projects_count++;
 	memset(currentProject->palDat,0,128);
 	memset(currentProject->rgbPal,0,192);
+	memset(currentProject->palType,0,64);
 	return true;
 }
 bool removeProject(uint32_t id)

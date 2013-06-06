@@ -23,6 +23,7 @@ class editor : public Fl_Double_Window
 	Fl_Slider* tile_select;
 	Fl_Slider* tile_select_2;
 	Fl_Tabs* the_tabs;
+	Fl_Round_Button * palType[9];
 	void draw();
 	editor(int X, int Y, int W, int H, const char *L = 0);
 	editor(int W, int H, const char *L = 0);

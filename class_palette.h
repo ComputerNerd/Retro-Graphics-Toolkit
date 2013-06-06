@@ -10,6 +10,8 @@ public:
 	Fl_Slider* pal_b;
 	uint8_t box_sel;/*!< tells what palette entry is selected*/
 	uint8_t theRow;/*!< tells what row in the palette is selected*/
+	uint8_t perRow;
+	uint8_t getEntry(void);
 	void check_box(int16_t,int16_t);
 	void draw_boxes();
 	void more_init(uint8_t x=1,uint16_t offsetx=16,uint16_t offsety=56);//this one should be called in a function that creates the gui elements

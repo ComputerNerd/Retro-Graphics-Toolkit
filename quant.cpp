@@ -581,11 +581,9 @@ static int reduce_table3(int num_colors,bool showProgress,Fl_Progress *progress)
 
 	grand_total = tot_colors-num_colors;
 	if (showProgress)
-	{
-		printf("Quantize Pass 2\n");
 		progress->label("Quantize Pass 2");
-		//Fl::check();
-	}
+	else
+		puts("Quantize Pass 2");
 	while (tot_colors > num_colors)
 	{
 		//if ( (tot_colors-num_colors)%8 == 0 )

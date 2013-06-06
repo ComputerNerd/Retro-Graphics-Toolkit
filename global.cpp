@@ -210,8 +210,7 @@ void set_palette_type(uint8_t type)
 {
 	palTypeGen=type;
 	//now reconvert all the colors
-	for (uint8_t pal=0; pal < 128;pal+=2)
-	{
+	for (uint8_t pal=0; pal < 128;pal+=2) {
 		//to convert to rgb first get value of color then multiply it by 16 to get rgb
 		//first get blue value
 		//the rgb array is in rgb format and the genesis palette is bgr format
@@ -235,8 +234,7 @@ void set_palette_type(uint8_t type)
 
 void set_tile_full(uint32_t tile,uint16_t x,uint16_t y,uint8_t palette_row,bool use_hflip,bool use_vflip,bool highorlow_prio)
 {
-	if (currentProject->tileMapC->mapSizeW < x || currentProject->tileMapC->mapSizeH < y)
-	{
+	if (currentProject->tileMapC->mapSizeW < x || currentProject->tileMapC->mapSizeH < y) {
 		fl_alert("Error tried to set a non existen tile on the map");
 		return;
 	}
@@ -274,8 +272,7 @@ void set_tile_full(uint32_t tile,uint16_t x,uint16_t y,uint8_t palette_row,bool 
 void set_tile(uint32_t tile,uint16_t x,uint16_t y)
 {
 	//we must split into two varibles
-	if (currentProject->tileMapC->mapSizeW < x || currentProject->tileMapC->mapSizeH < y)
-	{
+	if (currentProject->tileMapC->mapSizeW < x || currentProject->tileMapC->mapSizeH < y) {
 		fl_alert("Error: Tried to set a non existent tile on the tile map");
 		return;
 	}
@@ -317,88 +314,39 @@ void invert_prio(uint16_t x,uint16_t y)
 */
 uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b)
 {
-
 	uint8_t i;
 	int distanceSquared, minDistanceSquared, bestIndex = 0;
 	minDistanceSquared = 255*255 + 255*255 + 255*255 + 1;
-	uint8_t max_rgb;
-	switch (game_system)
-	{
-		case sega_genesis:
-			max_rgb=48;//16*3=48
-		break;
-		case NES:
-			max_rgb=12;//4*3=12
-		break;
-		default:
-			show_default_error
-		break;
-	}
+	uint8_t max_rgb=palEdit.perRow*3;
 	row*=max_rgb;
-	for (i=row; i<max_rgb+row; i+=3)
-	{
+	for (i=row; i<max_rgb+row; i+=3) {
 		int Rdiff = (int) r - (int)currentProject->rgbPal[i];
 		int Gdiff = (int) g - (int)currentProject->rgbPal[i+1];
 		int Bdiff = (int) b - (int)currentProject->rgbPal[i+2];
 		distanceSquared = Rdiff*Rdiff + Gdiff*Gdiff + Bdiff*Bdiff;
 		if (distanceSquared <= minDistanceSquared) {
-			minDistanceSquared = distanceSquared;
-			bestIndex = i;
+			if (currentProject->palType[i/3]!=2) {
+				minDistanceSquared = distanceSquared;
+				bestIndex = i;
+			}
 		}
 	}
     return bestIndex;
 }
-
 uint8_t find_near_color_from_row(uint8_t row,uint8_t r,uint8_t g,uint8_t b)
 {
-	uint8_t i;
-    int distanceSquared, minDistanceSquared, bestIndex = 0;
-    minDistanceSquared = 255*255 + 255*255 + 255*255 + 1;
-	uint8_t max_rgb;
-	switch (game_system)
-	{
-		case sega_genesis:
-			max_rgb=48;//16*3=48
-		break;
-		case NES:
-			max_rgb=12;//4*3=12
-		break;
-		default:
-			show_default_error
-		break;
-	}
-	row*=max_rgb;
-    for (i=0; i<max_rgb; i+=3)
-	{
-        int Rdiff = (int) r - (int)currentProject->rgbPal[i+row];
-        int Gdiff = (int) g - (int)currentProject->rgbPal[i+row+1];
-        int Bdiff = (int) b - (int)currentProject->rgbPal[i+row+2];
-        distanceSquared = Rdiff*Rdiff + Gdiff*Gdiff + Bdiff*Bdiff;
-        if (distanceSquared <= minDistanceSquared) {
-            minDistanceSquared = distanceSquared;
-            bestIndex = i;
-        }
-    }
-    return bestIndex/3;
+	return (find_near_color_from_row_rgb(row,r,g,b)/3)-(row*palEdit.perRow);
 }
-
 inline uint16_t add_pixel(int16_t a,int16_t b)
 {
 	if (a+b > 255)
-	{
 		a=255;
-	}
 	else if (a+b < 0)
-	{
 		a=0;
-	}
 	else
-	{
 		a+=b;
-	}
 	return a;
 }
-
 uint32_t cal_offset_truecolor(uint16_t x,uint16_t y,uint16_t rgb,uint32_t tile)
 {
 	/*
@@ -410,39 +358,26 @@ uint32_t cal_offset_truecolor(uint16_t x,uint16_t y,uint16_t rgb,uint32_t tile)
 	*/
 	return (x*4)+(y*32)+rgb+(tile*256);
 }
-
 void set_hflip(uint16_t x,uint16_t y,bool hflip_set)
 {
 	if (hflip_set == true)
-	{
 		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]|= 1 << 3;
-	}
 	else
-	{
 		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]&= ~(1 << 3);
-	}
 }
 void set_vflip(uint16_t x,uint16_t y,bool vflip_set)
 {
 	if (vflip_set == true)
-	{
 		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]|= 1 << 4;
-	}
 	else
-	{
 		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]&= ~(1 << 4);
-	}
 }
 void set_prio(uint16_t x,uint16_t y,bool prio_set)
 {
 	if (prio_set == true)
-	{
 		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4] |= 1 << 7;
-	}
 	else
-	{
 		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4] &= ~(1 << 7);
-	}
 }
 
 void resize_tile_map(uint16_t new_x,uint16_t new_y)
@@ -532,7 +467,6 @@ void resize_tile_map(uint16_t new_x,uint16_t new_y)
 	window->map_y_scroll->value(old_scroll,(map_scroll/2),0,map_scroll+(map_scroll/2));
 
 }
-
 //bool load_file_generic(const char * the_tile="Pick a file",bool save_file=false)
 bool load_file_generic(const char * the_tile,bool save_file)
 {	

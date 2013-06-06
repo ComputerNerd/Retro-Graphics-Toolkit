@@ -78,8 +78,8 @@ extern uint16_t tile_edit_offset_x;
 #define default_tile_edit_truecolor_off_y 224;
 extern uint16_t tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
 #define true_color_box_size 48
-#define default_true_color_box_y 112
-#define default_true_color_box_x 320
+#define default_true_color_box_y 188
+#define default_true_color_box_x 732
 extern uint16_t true_color_box_x,true_color_box_y;
 extern bool show_grid;
 //extern uint8_t palette_muliplier;
