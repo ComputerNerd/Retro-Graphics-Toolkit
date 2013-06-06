@@ -70,21 +70,18 @@ void fill_tile(Fl_Widget* o, void*)
 		fl_alert("To prevent accidental modification be in the Tile editor or Tile map editor to use this");
 	window->damage(FL_DAMAGE_USER1);
 }
-
 void update_truecolor(Fl_Widget* o, void* v)
 {
 	Fl_Slider* s = (Fl_Slider*)o;
 	truecolor_temp[fl_intptr_t(v)] = s->value();
 	window->redraw();
 }
-
 void blank_tile(Fl_Widget* o, void*)
 {
 	//this will fill the current tile with zeros
 	currentProject->tileC->blank_tile(currentProject->tileC->current_tile);
 	window->damage(FL_DAMAGE_USER1);
 }
-
 void callback_resize_map(Fl_Widget* o, void*)
 {
 	uint8_t w,h;
@@ -101,9 +98,7 @@ void update_offset_tile_edit(Fl_Widget* o, void*)
 }
 void set_mode_tabs(Fl_Widget* o, void*)
 {
-
 	intptr_t val=(intptr_t)(Fl_Tabs*)window->the_tabs->value();
-	
 	if (val==pal_id)
 	{
 		mode_editor=pal_edit;
@@ -128,12 +123,10 @@ void set_ditherAlg(Fl_Widget*, void* typeset)
 		window->ditherPower->hide();//imagine the user trying to change the power and nothing happening not fun at all
 	ditherAlg=(uintptr_t)typeset;
 }
-
 void set_tile_row(Fl_Widget*, void* row)
 {
 	uint8_t selrow=(uintptr_t)row;
-	switch (mode_editor)
-	{
+	switch (mode_editor) {
 		case tile_edit:
 			tileEdit_pal.changeRow(selrow);
 			currentProject->tileC->truecolor_to_tile(selrow,currentProject->tileC->current_tile);
@@ -142,7 +135,6 @@ void set_tile_row(Fl_Widget*, void* row)
 			tileMap_pal.changeRow(selrow);
 		break;
 	}
-	
 	window->redraw();//trigger a redraw so that the new row is displayed
 }
 void update_box_size(Fl_Widget*, void* )
@@ -246,7 +238,6 @@ void save_tiles_truecolor(Fl_Widget*,void*)
 		{
 			fl_alert("Error: can not save file %s",the_file.c_str());
 		}
-		
 	}
 }
 void save_tiles(Fl_Widget*,void*)
@@ -294,63 +285,106 @@ void load_tiles(Fl_Widget*,void* split)
 	//if append==1 then we will append data but if not it will erase over current tiles
 	//format row,append
 	uint8_t append=(uintptr_t)split&0xFF;
-	uint8_t row=(uintptr_t)split>>8;
-
-	if (load_file_generic() == true)
-	{
+		char * returned=(char *)fl_input("What row should these tiles use?\nEnter 0 to 3 to selected a row or -1 to -4 to auto determin based on tilemap\n The number after the negative symbol is the default row +1 if not tile is found","-1");
+	if (returned==0)
+		return;
+	if (verify_str_number_only(returned) == false)
+			return;
+	int8_t row=atoi(returned);
+	if (unlikely((row > 3) || (row < -4))) {
+		fl_alert("You entered %d which is out of range it must be in range of -4 to 3",row);
+		return;
+	}
+	uint8_t defaultRow=row >= 0 ? row:abs(row)-1;
+	uint8_t compression = fl_choice("What format is the tile?","Uncompressed","Nemesis Compressed",0);
+	if (load_file_generic() == true) {
 		FILE * myfile;
+		std::ostringstream outDecomp;
 		myfile = fopen(the_file.c_str(),"rb");
-		if (myfile!=0)
-		{
+		if (likely(myfile!=0)) {
 			fseek(myfile, 0L, SEEK_END);
 			file_size = ftell(myfile);//file.tellg();
+			rewind(myfile);
 			uint8_t truecolor_multiplier;
 			truecolor_multiplier=256/currentProject->tileC->tileSize;
-			if ((file_size/currentProject->tileC->tileSize)*currentProject->tileC->tileSize != file_size)
-			{
-				fl_alert("Error: This is not a valid tile file each tile is %d bytes and this file is not a multiple of %d so it is not a valid tile file",currentProject->tileC->tileSize,currentProject->tileC->tileSize);
+			if (compression==1) {
+				uint8_t * datcmp=(uint8_t *)malloc(file_size);
+				if (unlikely(datcmp==0))
+					show_malloc_error(file_size)
+				fread(datcmp,1,file_size,myfile);
 				fclose(myfile);
-				return;//return so that the file does not get loaded
+				std::string input;
+				input.assign((const char *)datcmp,file_size);
+				free(datcmp);
+				std::istringstream iss(input);
+				//iss.write((char *)datcmp,file_size);
+				nemesis decomp;
+				decomp.decode(iss,outDecomp);
+				file_size=outDecomp.str().length();
 			}
-			rewind(myfile);
+			else {
+				if ((file_size/currentProject->tileC->tileSize)*currentProject->tileC->tileSize != file_size) {
+					fl_alert("Error: This is not a valid tile file each tile is %d bytes and this file is not a multiple of %d so it is not a valid tile file",currentProject->tileC->tileSize,currentProject->tileC->tileSize);
+					fclose(myfile);
+					return;//return so that the file does not get loaded
+				}
+			}
 			uint32_t offset_tiles;
 			uint32_t offset_tiles_bytes;
-			
-			if (append == 1)
-			{
+			if (append == 1) {
 				offset_tiles=currentProject->tileC->tiles_amount+1;
 				offset_tiles_bytes=offset_tiles*currentProject->tileC->tileSize;
 				currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,file_size+((currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize));
-				if (currentProject->tileC->tileDat == 0)
-				{
-					fclose(myfile);
+				if (currentProject->tileC->tileDat == 0) {
+					if (compression==0)
+						fclose(myfile);
 					show_realloc_error(file_size)
 				}
 			}
-			else
-			{
+			else {
 				free(currentProject->tileC->tileDat);
 				currentProject->tileC->tileDat = (uint8_t *)malloc(file_size);
-				if (currentProject->tileC->tileDat == 0)
-				{
-					fclose(myfile);
+				if (currentProject->tileC->tileDat == 0) {
+					if (compression==0)
+						fclose(myfile);
 					show_malloc_error(file_size)
 				}
 				offset_tiles=0;
 				offset_tiles_bytes=0;
 			}
-			fread(currentProject->tileC->tileDat+offset_tiles_bytes,1,file_size,myfile);
-			fclose(myfile);
+			if (compression==0) {
+				fread(currentProject->tileC->tileDat+offset_tiles_bytes,1,file_size,myfile);
+				fclose(myfile);
+			}
+			else if (compression==1) {
+				string output=outDecomp.str();
+				output.copy((char *)currentProject->tileC->tileDat+offset_tiles_bytes,file_size);
+			}
 			currentProject->tileC->truetileDat = (uint8_t *)realloc(currentProject->tileC->truetileDat,(file_size*truecolor_multiplier)+(offset_tiles_bytes*truecolor_multiplier));
 			if (currentProject->tileC->truetileDat == 0)
 				show_malloc_error(file_size*truecolor_multiplier)
-			for (uint32_t c=offset_tiles;c<(file_size/currentProject->tileC->tileSize)+offset_tiles;c++)
-				tileToTrueCol(&currentProject->tileC->tileDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetileDat[(c*256)],row);
+			for (uint32_t c=offset_tiles;c<(file_size/currentProject->tileC->tileSize)+offset_tiles;c++) {
+				if (row < 0) {
+					uint32_t x,y;
+					uint8_t foundRow=defaultRow;
+					for (y=0;y<currentProject->tileMapC->mapSizeH;y++) {
+						for (x=0;x<currentProject->tileMapC->mapSizeW;x++) {
+							if (currentProject->tileMapC->get_tile(x,y) == c) {
+								foundRow=currentProject->tileMapC->get_palette_map(x,y);
+								goto doTile;
+							}
+						}
+					}
+doTile:
+					tileToTrueCol(&currentProject->tileC->tileDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetileDat[(c*256)],foundRow);
+				}
+				else
+					tileToTrueCol(&currentProject->tileC->tileDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetileDat[(c*256)],defaultRow);
+			}
 			currentProject->tileC->tiles_amount=(file_size/currentProject->tileC->tileSize)-1;
-			currentProject->tileC->tiles_amount+=+offset_tiles-1;
+			currentProject->tileC->tiles_amount+=offset_tiles > 1 ? offset_tiles-1:0;
 			window->tile_select->maximum(currentProject->tileC->tiles_amount);
 			window->tile_select->value(0);
-
 			window->tile_select_2->maximum(currentProject->tileC->tiles_amount);
 			window->tile_select_2->value(0);
 			window->redraw();
@@ -363,17 +397,12 @@ void update_all_tiles(Fl_Widget*,void*)
 {
 	uint8_t sel_pal;
 	if (mode_editor == tile_place)
-	{
 		sel_pal=tileMap_pal.theRow;
-	}
 	else
-	{
 		sel_pal=tileEdit_pal.theRow;
-	}
 	if (currentProject->tileC->tiles_amount > 63)
 		putchar('\n');
-	for (uint32_t x=0;x<currentProject->tileC->tiles_amount+1;x++)
-	{
+	for (uint32_t x=0;x<currentProject->tileC->tiles_amount+1;x++) {
 		currentProject->tileC->truecolor_to_tile(sel_pal,x);
 		if ((x % 64) == 0)
 			printf("Progress: %f\r",((float)x/(float)currentProject->tileC->tiles_amount)*100.0);
@@ -390,8 +419,7 @@ void load_truecolor_tiles(Fl_Widget*,void*)
 		myfile = fopen(the_file.c_str(),"rb");
 		fseek(myfile, 0L, SEEK_END);
 		file_size = ftell(myfile);
-		if ((file_size/256)*256 != file_size)
-		{
+		if ((file_size/256)*256 != file_size) {
 			fl_alert("Error: this file is not a multiple of 256 it is not a valid truecolor tiles. The file size is: %d",file_size);
 			fclose(myfile);
 			return;
@@ -400,11 +428,8 @@ void load_truecolor_tiles(Fl_Widget*,void*)
 		free(currentProject->tileC->tileDat);
 		currentProject->tileC->truetileDat = (uint8_t *)malloc(file_size);
 		if (currentProject->tileC->truetileDat == 0)
-		{
 			show_malloc_error(file_size)
-		}
-		switch (game_system)
-		{
+		switch (game_system) {
 			case sega_genesis:
 				currentProject->tileC->tileDat = (uint8_t *)malloc(file_size/6);
 			break;
@@ -413,10 +438,7 @@ void load_truecolor_tiles(Fl_Widget*,void*)
 			break;
 		}
 		if (currentProject->tileC->tileDat == 0)
-		{
 			show_malloc_error(file_size/6)
-		}
-
 		//file.seekg (0, ios::beg);//return to the beginning of the file
 		rewind(myfile);
 		//file.read ((char *)currentProject->tileC->truetileDat, file_size);
@@ -432,17 +454,13 @@ void load_truecolor_tiles(Fl_Widget*,void*)
 }
 void fill_tile_map_with_tile(Fl_Widget*,void*)
 {
-	if (mode_editor != tile_place)
-	{
+	if (mode_editor != tile_place) {
 		fl_alert("To prevent aciddental modifaction to the tile map be in plane editing mode");
 		return;
 	}
-	for (uint16_t y=0;y<currentProject->tileMapC->mapSizeH;y++)
-	{
+	for (uint16_t y=0;y<currentProject->tileMapC->mapSizeH;y++) {
 		for (uint16_t x=0;x<currentProject->tileMapC->mapSizeW;x++)
-		{
 			set_tile_full(currentProject->tileC->current_tile,x,y,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
-		}
 	}
 	window->damage(FL_DAMAGE_USER1);
 }
@@ -453,8 +471,7 @@ void load_tile_map(Fl_Widget*,void*)
 }
 void shadow_highligh_findout(Fl_Widget*,void*)
 {
-	if (unlikely(game_system != sega_genesis))
-	{
+	if (unlikely(game_system != sega_genesis)) {
 		fl_alert("Only the Sega Genesis/Mega Drive supports shadow highligh mode\n");
 		return;
 	}
@@ -462,16 +479,12 @@ void shadow_highligh_findout(Fl_Widget*,void*)
 	//this function will see if 3 or less pixels are above 125 and if so set prioity to low or set priority to high if bright tile
 	uint16_t x,y;
 	uint32_t xx;
-	if (type==0)
-	{
-		for (y=0;y<currentProject->tileMapC->mapSizeH;y++)
-		{
-			for (x=0;x<currentProject->tileMapC->mapSizeW;x++)
-			{
+	if (type==0) {
+		for (y=0;y<currentProject->tileMapC->mapSizeH;y++) {
+			for (x=0;x<currentProject->tileMapC->mapSizeW;x++) {
 				uint32_t cur_tile=currentProject->tileMapC->get_tile(x,y);
 				uint8_t over=0;
-				for (xx=cur_tile*256;xx<cur_tile*256+256;xx+=4)
-				{
+				for (xx=cur_tile*256;xx<cur_tile*256+256;xx+=4) {
 					if ((currentProject->tileC->truetileDat[xx] > 130) || (currentProject->tileC->truetileDat[xx+1] > 130) || (currentProject->tileC->truetileDat[xx+2] > 130))
 						over++;
 				}
@@ -482,23 +495,19 @@ void shadow_highligh_findout(Fl_Widget*,void*)
 			}
 		}
 	}
-	else
-	{
+	else {
 		uint8_t temp[256];
 		//uint8_t useHiL=palette_muliplier;
 		uint8_t type_temp=palTypeGen;
-		for (y=0;y<currentProject->tileMapC->mapSizeH;y++)
-		{
-			for (x=0;x<currentProject->tileMapC->mapSizeW;x++)
-			{
+		for (y=0;y<currentProject->tileMapC->mapSizeH;y++) {
+			for (x=0;x<currentProject->tileMapC->mapSizeW;x++) {
 				uint32_t cur_tile=currentProject->tileMapC->get_tile(x,y);
 				uint32_t errorSh=0,errorNorm=0;
 				uint8_t * ptrorgin=&currentProject->tileC->truetileDat[(cur_tile*256)];
 				set_palette_type(0);//normal
 				currentProject->tileC->truecolor_to_tile(currentProject->tileMapC->get_palette_map(x,y),cur_tile);
 				tileToTrueCol(&currentProject->tileC->tileDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tileMapC->get_palette_map(x,y));
-				for (xx=0;xx<256;xx+=4)
-				{
+				for (xx=0;xx<256;xx+=4) {
 					errorNorm+=abs(temp[xx]-ptrorgin[xx]);
 					errorNorm+=abs(temp[xx+1]-ptrorgin[xx+1]);
 					errorNorm+=abs(temp[xx+2]-ptrorgin[xx+2]);
@@ -506,8 +515,7 @@ void shadow_highligh_findout(Fl_Widget*,void*)
 				set_palette_type(8);//shadow
 				currentProject->tileC->truecolor_to_tile(currentProject->tileMapC->get_palette_map(x,y),cur_tile);
 				tileToTrueCol(&currentProject->tileC->tileDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tileMapC->get_palette_map(x,y));
-				for (xx=0;xx<256;xx+=4)
-				{
+				for (xx=0;xx<256;xx+=4) {
 					errorSh+=abs(temp[xx]-ptrorgin[xx]);
 					errorSh+=abs(temp[xx+1]-ptrorgin[xx+1]);
 					errorSh+=abs(temp[xx+2]-ptrorgin[xx+2]);
@@ -518,8 +526,7 @@ void shadow_highligh_findout(Fl_Widget*,void*)
 					set_prio(x,y,true);//normal
 			}
 		}
-		set_palette_type(type_temp);//0 normal 8 shadow 16 highlight
-			
+		set_palette_type(type_temp);//0 normal 8 shadow 16 highlight		
 	}
 	window->redraw();
 }
@@ -579,27 +586,21 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 							set_palette_type(tempSet);
 						}
 						TileTempPtr=&currentProject->tileC->tileDat[current_tile];
-						for (uint16_t y=0;y<256;y+=32)
-						{
-							for (uint8_t x=0;x<32;x+=4)
-							{
+						for (uint16_t y=0;y<256;y+=32) {
+							for (uint8_t x=0;x<32;x+=4) {
 								//even,odd
-								if (x & 4)
-								{
+								if (x & 4) {
 									//odd
-									if (truecolor_tile[y+x+3] != 0)
-									{
+									if (truecolor_tile[y+x+3] != 0) {
 										temp=find_near_color_from_row(currentProject->tileMapC->get_palette_map(x_tile,y_tile),truecolor_tile[y+x],truecolor_tile[y+x+1],truecolor_tile[y+x+2]);
 										*TileTempPtr++|=temp;
 									}
 									else
 										TileTempPtr++;
 								}
-								else
-								{
+								else {
 									//even
-									if (likely(truecolor_tile[y+x+3] != 0))
-									{
+									if (likely(truecolor_tile[y+x+3] != 0)) {
 										temp=find_near_color_from_row(currentProject->tileMapC->get_palette_map(x_tile,y_tile),truecolor_tile[y+x],truecolor_tile[y+x+1],truecolor_tile[y+x+2]);
 										*TileTempPtr=temp<<4;
 									}
@@ -607,9 +608,7 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 										*TileTempPtr=0;
 								}
 							}
-
 						}
-					
 					break;
 					case NES:
 						current_tile*=16;
@@ -656,8 +655,7 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 	if (load_file_generic("Load image") == true)
 	{
 		loaded_image=Fl_Shared_Image::get(the_file.c_str());
-		if (loaded_image == 0)
-		{
+		if (loaded_image == 0) {
 			fl_alert("Error loading image");
 			return;
 		}
@@ -696,9 +694,7 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 			return;
 		}
 		else
-		{
 			printf("Image depth %d\n",loaded_image->d());
-		}
 		uint64_t truecolor_tile_ptr=0;
 		currentProject->tileC->truetileDat = (uint8_t *)realloc(currentProject->tileC->truetileDat,w8*h8*256);
 		currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,w8*h8*currentProject->tileC->tileSize);
@@ -912,16 +908,14 @@ void remove_duplicate_truecolor(Fl_Widget*,void*)
 void rgb_pal_to_entry(Fl_Widget*,void*)
 {
 	//this function will convert a rgb value to the nearst palette entry
-	if (mode_editor != tile_edit)
-	{
+	if (mode_editor != tile_edit) {
 		fl_alert("Be in Tile editor to use this");
 		return;
 	}
 }
 void set_game_system(Fl_Widget*,void* selection)
 {
-	if ((uintptr_t)selection == game_system)
-	{
+	if ((uintptr_t)selection == game_system) {
 		fl_alert("You are already in that mode");
 		return;
 	}
@@ -936,14 +930,12 @@ void set_game_system(Fl_Widget*,void* selection)
 			{//for varibles to be declared inside of switch statment I must put brackes around so the compiler knows when to free them
 				uint8_t pal_temp[128];
 				uint8_t c;
-				for (c=0;c<64;c++)
-				{
+				for (c=0;c<64;c++) {
 					uint16_t temp=to_sega_genesis_color(c);
 					pal_temp[c*2]=temp>>8;
 					pal_temp[(c*2)+1]=temp&255;
 				}
-				for (c=0;c<64;c++)
-				{
+				for (c=0;c<64;c++) {
 					currentProject->palDat[c*2]=pal_temp[c*2];
 					currentProject->palDat[(c*2)+1]=pal_temp[(c*2)+1];
 				}
@@ -958,13 +950,10 @@ void set_game_system(Fl_Widget*,void* selection)
 			currentProject->tileC->tileSize=16;
 			shadow_highlight_switch->hide();
 			for (uint8_t c=0;c<16;c++)
-			{
 				currentProject->palDat[c]=to_nes_color(c);
-			}
 			palEdit.changeSystem();
 			tileEdit_pal.changeSystem();
 			tileMap_pal.changeSystem();
-
 			currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*16);
 		break;
 		default:
@@ -985,6 +974,10 @@ void tilemap_remove_callback(Fl_Widget*,void*)
 		if (verify_str_number_only(str_ptr) == false)
 			return;
 		int32_t tile=atoi(str_ptr);
+		if (tile < 0) {
+			fl_alert("You must enter a value equal to or about 0 but you entered %d\n",tile);
+			return;
+		}
 		currentProject->tileMapC->sub_tile_map(tile,tile-1,false,false);
 		window->damage(FL_DAMAGE_USER1);
 }
@@ -1202,7 +1195,6 @@ void editor::_editor()
 					o->type(FL_RADIO_BUTTON);
 					o->callback((Fl_Callback*) set_tile_row,(void *)3);
 				} // Fl_Round_Button* o
-
 			o->end();
 		} // Fl_Group* o
 			{ Fl_Check_Button* o = new Fl_Check_Button(640,default_palette_bar_offset_y+40,120,32,"Show grid?");
@@ -1289,7 +1281,7 @@ void editor::_editor()
 			//o->callback(set_mode_tabs);
 			tile_place_id=(intptr_t)o->as_group();
 			{
-				Fl_Group* o = new Fl_Group(208, 60, 800, 567);
+				Fl_Group* o = new Fl_Group(tile_place_buttons_x_off, 208, 60, 128);
 				{
 					Fl_Round_Button* o = new Fl_Round_Button(tile_place_buttons_x_off, 208, 60, 32, "Row 0");
 					o->type(FL_RADIO_BUTTON);

@@ -10,6 +10,7 @@
 tiles::tiles()
 {
 	current_tile=0;
+	tiles_amount=0;
 	tileDat=(uint8_t *)calloc(32,1);
 	if (tileDat == 0)
 	{
@@ -114,9 +115,15 @@ void tiles::truecolor_to_tile(uint8_t palette_row,uint32_t cur_tile)
 }
 void tiles::draw_truecolor(uint32_t tile_draw,uint16_t x,uint16_t y,bool usehflip,bool usevflip,uint8_t zoom)
 {
+	static uint8_t DontShow=0;
 	if (tiles_amount < tile_draw)
 	{
-		fl_alert("Warning tried to draw truecolor tile # %d at X: %d y: %d\nBut there is only %d tiles (zero is first tile).",tile_draw,x,y,tiles_amount);
+		if (unlikely(DontShow==0)) {
+			fl_alert("Warning tried to draw truecolor tile # %d at X: %d y: %d\nBut there is only %d tiles (zero is first tile).\nNote that this message will not be shown again.\n Instead it will be outputed to stdout",tile_draw,x,y,tiles_amount);
+			DontShow=1;
+		}
+		else
+			printf("Warning tried to draw truecolor tile # %d at X: %d y: %d\nBut there is only %d tiles (zero is first tile).\n",tile_draw,x,y,tiles_amount);
 		return;
 	}
 	uint8_t xx,yy,zz;
@@ -182,12 +189,16 @@ inline unsigned int cal_offset_zoom_rgb(uint16_t x,uint16_t y,uint16_t zoom,uint
 }
 void tiles::draw_tile(uint16_t x_off,uint16_t y_off,uint32_t tile_draw,uint8_t zoom,uint8_t pal_row,bool Usehflip,bool Usevflip)
 {
-	if (tiles_amount < tile_draw)
-	{
-		fl_alert("Warning tried to draw tile # %d at X: %d y: %d\nBut there is only %d tiles (zero is first tile).",tile_draw,x_off,y_off,tiles_amount);
+	static uint8_t DontShow=0;
+	if (tiles_amount < tile_draw) {
+		if (unlikely(DontShow==0)) {
+			fl_alert("Warning tried to draw tile # %d at X: %d y: %d\nBut there is only %d tiles (zero is first tile).\nNote that this message will not be shown again.\n Instead it will be outputed to stdout",tile_draw,x_off,y_off,tiles_amount);
+			DontShow=1;
+		}
+		else
+			printf("Warning tried to draw tile # %d at X: %d y: %d\nBut there is only %d tiles (zero is first tile).\n",tile_draw,x_off,y_off,tiles_amount);
 		return;
 	}
-	
 	//uint8_t a;
 	int8_t x,y;
 	uint8_t * temp_img_ptr = (uint8_t *)malloc(((8*zoom)*(8*zoom))*3);

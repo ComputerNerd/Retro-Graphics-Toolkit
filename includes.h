@@ -3,7 +3,6 @@
 #if _WIN32
 #include <windows.h>
 #endif
-#include <string>
 #include <inttypes.h>
 #include <cmath>
 #ifndef _WIN32
@@ -29,9 +28,13 @@
 #include <FL/Fl_Button.H>
 #include <fstream>
 #include <iostream>
+#include <algorithm>
+#include <sstream>
+#include <string>
 #include <FL/Fl_Image.H>
 #include <FL/Fl_Progress.H>
 #include <inttypes.h>
 #include "project.h"
+#include "kens.h"
 //wow! look at all the inclueds
 using namespace std;
