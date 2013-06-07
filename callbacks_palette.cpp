@@ -188,6 +188,7 @@ void update_palette(Fl_Widget* o, void* v)
 }
 void loadPalette(Fl_Widget*, void*)
 {
+	uint32_t file_size;
 	uint8_t offset;
 	char * inputTemp=(char *)fl_input("Counting from zero enter the first entry that you want the palette to start at","0");
 	if (inputTemp==0)
@@ -196,8 +197,7 @@ void loadPalette(Fl_Widget*, void*)
 			return;
 	offset=atoi(inputTemp);
 	uint8_t palSize;
-	switch (game_system)
-	{
+	switch (game_system) {
 		case sega_genesis:
 			offset*=2;
 			palSize=128;
@@ -206,19 +206,14 @@ void loadPalette(Fl_Widget*, void*)
 			palSize=16;
 		break;
 	}
-		
-	
-	if(load_file_generic("Load palette") == true)
-	{
+	if(load_file_generic("Load palette") == true) {
 		//cout << "offset=" << (uintptr_t)offset << endl;
 		//cout << "loading file" << the_file << endl;
 		ifstream file (the_file.c_str(), ios::in|ios::binary|ios::ate);
-		if (file.is_open())
-		{
+		if (file.is_open()) {
 			//copy 32 bytes to the palette buffer
 			file_size = file.tellg();
-			if (file_size > palSize-offset)
-			{
+			if (file_size > palSize-offset) {
 				fl_alert("Error: The file size is bigger than %d (%d-%d) bytes it is not a valid palette",palSize-offset,palSize,offset);
 				file.close();
 				return;//end function due to errrors
@@ -228,8 +223,7 @@ void loadPalette(Fl_Widget*, void*)
 			file.read ((char *)currentProject->palDat+offset, file_size);
 			file.close();
 			//now convert each value to rgb
-			switch (game_system)
-			{
+			switch (game_system) {
 				case sega_genesis:
 					set_palette_type(palTypeGen);
 				break;
@@ -240,8 +234,6 @@ void loadPalette(Fl_Widget*, void*)
 			window->redraw();
 		}
 		else
-		{
 			fl_alert("file.is_open() returned false meaning there was some trouble reading the file.");
-		}
 	}
 }

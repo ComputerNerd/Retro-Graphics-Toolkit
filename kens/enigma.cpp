@@ -39,11 +39,6 @@
 #define ERROR_UNKNOWN				0x01
 #define ERROR_SOURCE_FILE_DOES_NOT_EXIST	0x02
 #define ERROR_CANT_CREATE_DESTINATION_FILE	0x04
-
-
-static long Result;
-static long end_result;
-
 //-----------------------------------------------------------------------------------------------
 // Name: LoadBuffer(char *&Buffer)
 // Desc: Loads the content of the destination file into a buffer and returns its size

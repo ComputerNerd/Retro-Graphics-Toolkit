@@ -33,8 +33,7 @@ uint8_t tileMap::get_palette_map(uint16_t x,uint16_t y)
 uint32_t tileMap::get_tile(uint16_t x,uint16_t y)
 {
 	//first calulate which tile we want
-	if (mapSizeW < x || mapSizeH < y)
-	{
+	if (mapSizeW < x || mapSizeH < y) {
 		fl_alert("Error tried to get a non-existent tile on the map");
 		return 0;
 	}
@@ -51,8 +50,7 @@ int32_t tileMap::get_tileRow(uint16_t x,uint16_t y,uint8_t useRow)
 	//first calulate which tile we want
 	uint32_t selected_tile=((y*mapSizeW)+x)*4;
 	//get both bytes
-	if (((tileMapDat[selected_tile]>>5)&3) == useRow)
-	{
+	if (((tileMapDat[selected_tile]>>5)&3) == useRow) {
 		uint8_t temp_1,temp_2,temp_3;
 		temp_1=tileMapDat[selected_tile+1];//least sigficant is stored in the lowest address
 		temp_2=tileMapDat[selected_tile+2];
@@ -78,13 +76,15 @@ bool tileMap::saveToFile()
 	returns false if there was an error but remeber if the user cancles this it is not an error
 	*/
 	//first see how this file should be saved
-	uint8_t type=fl_choice("How would like this file saved?","Binary","C header",0);
+	
 	uint16_t x,y;
 	FILE * myfile;
-	if (load_file_generic("Save tilemap to",true) == true)
-	{
-		if (type == 1)
-		{
+	uint32_t fileSize;
+	uint8_t type,compression;
+	if (load_file_generic("Save tilemap to",true) == true) {
+		type=fl_choice("How would like this file saved?","Binary","C header",0);
+		compression=fl_choice("In what format would you like this tilemap saved","Uncompressed","Enigma Compression",0);
+		if (type == 1) {
 			char temp[2048];
 			myfile = fopen(the_file.c_str(),"w");
 			sprintf(temp,"//Width %d Height %d\n",mapSizeW,mapSizeH);
@@ -93,12 +93,10 @@ bool tileMap::saveToFile()
 		}
 		else
 			myfile = fopen(the_file.c_str(),"wb");
-		if (myfile!=0)
-		{
-			switch (game_system)
-			{
+		if (myfile!=0) {
+			switch (game_system) {
 				case sega_genesis:
-				{
+					{
 					uint16_t * TheMap;
 					TheMap = (uint16_t *)malloc((mapSizeW*mapSizeH)*2);
 
@@ -158,8 +156,9 @@ bool tileMap::saveToFile()
 							return false;
 						fputs("};",myfile);
 					}
-					else
+					else {
 						fwrite(TheMap,1,mapSizeW*mapSizeH,myfile);
+					}
 					free(TheMap);
 				}
 				break;
@@ -170,25 +169,19 @@ bool tileMap::saveToFile()
 		else
 			return false;
 	}
-	if (game_system == NES)
-	{
-		if (load_file_generic("Save attributes to",true) == true)
-		{
-			if (type == 1)
-			{
+	if (game_system == NES) {
+		if (load_file_generic("Save attributes to",true) == true) {
+			if (type == 1) {
 				myfile = fopen(the_file.c_str(),"w");
 				fputs("const uint8_t attrDat[]={",myfile);
 			}
 			else
 				myfile = fopen(the_file.c_str(),"wb");
-			if (myfile!=0)
-			{
+			if (myfile!=0) {
 				uint8_t * AttrMap = (uint8_t *)malloc((mapSizeW/4)*(mapSizeH/4));
 				uint8_t * freeAttrMap=AttrMap;
-				for (y=0;y<mapSizeH;y+=4)
-				{
-					for (x=0;x<mapSizeW;x+=4)
-					{
+				for (y=0;y<mapSizeH;y+=4) {
+					for (x=0;x<mapSizeW;x+=4) {
 						*AttrMap++ = get_palette_map(x,y) | (get_palette_map(x+2,y)<<4) | (get_palette_map(x,y+2) << 4) | (get_palette_map(x+2,y+2) << 6);
 						printf("x: %d y: %d\n",x,y);
 					}
@@ -224,6 +217,7 @@ bool tileMap::loadFromFile()
 //start by loading the file
 	/*Only will return false when there is a malloc error or file error
 	the file saving user cancalation and not entering the number correctly return true*/
+	uint32_t file_size;
 	if (load_file_generic("Load tile map data") == true)
 	{
 		uint8_t compression=fl_choice("What kind of compression is this tilemap?","Uncompressed","Enigma Compressed",0);
@@ -362,21 +356,17 @@ void tileMap::sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vfl
 {
 	uint16_t x,y;
 	int32_t temp;
-	for (y=0;y<mapSizeH;y++)
-	{
-		for (x=0;x<mapSizeW;x++)
-		{
+	for (y=0;y<mapSizeH;y++) {
+		for (x=0;x<mapSizeW;x++) {
 			temp=get_tile(x,y);
-			if (temp == oldTile)
-			{
+			if (temp == oldTile) {
 				set_tile(newTile,x,y);
 				if (hflip == true)
 					set_hflip(x,y,true);
 				if (vflip == true)
 					set_vflip(x,y,true);
 			}
-			else if (temp > oldTile)
-			{
+			else if (temp > oldTile) {
 				temp--;
 				if (temp < 0)
 					temp=0;
@@ -391,8 +381,7 @@ bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha)
 	the_image pointer to image must be able to hold the image using rgba 32bit
 	useRow what row to use or -1 for no row
 	*/
-	if (the_image == 0)
-	{
+	if (the_image == 0) {
 		fl_alert("Error malloc must be called before generating this image");
 		return false;
 	}
@@ -403,18 +392,15 @@ bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha)
 	uint16_t x_tile=0,y_tile=0;
 	uint32_t truecolor_tile_ptr=0;
 	uint8_t pixelSize,pSize2;
-	if (useAlpha)
-	{
+	if (useAlpha) {
 		pixelSize=4;
 		pSize2=32;
 	}
-	else
-	{
+	else {
 		pixelSize=3;
 		pSize2=24;
 	}
-	if (useRow != -1)
-	{
+	if (useRow != -1) {
 		for (uint64_t a=0;a<(h*w*pixelSize)-w*pixelSize;a+=w*pixelSize*8)//a tiles y
 		{
 			for (uint32_t b=0;b<w*pixelSize;b+=pSize2)//b tiles x
@@ -653,19 +639,15 @@ void tileMap::pickRowDelta(void)
 	uint16_t p;
 	uint8_t temp[256];
 	putchar('\n');
-	for (y=0;y<mapSizeH;y++)
-	{
-		for (x=0;x<mapSizeW;x++)
-		{
+	for (y=0;y<mapSizeH;y++) {
+		for (x=0;x<mapSizeW;x++) {
 			uint32_t cur_tile=get_tile(x,y);
 			memset(d,0,4*sizeof(uint32_t));
 			uint8_t * ptrorgin=&currentProject->tileC->truetileDat[cur_tile*256];
-			for (t=0;t<4;t++)
-			{
+			for (t=0;t<4;t++) {
 				currentProject->tileC->truecolor_to_tile(t,cur_tile);
 				tileToTrueCol(&currentProject->tileC->tileDat[(cur_tile*currentProject->tileC->tileSize)],temp,t);
-				for (p=0;p<256;p+=4)
-				{
+				for (p=0;p<256;p+=4) {
 					d[t]+=abs(temp[p]-ptrorgin[p]);
 					d[t]+=abs(temp[p+1]-ptrorgin[p+1]);
 					d[t]+=abs(temp[p+2]-ptrorgin[p+2]);
@@ -686,11 +668,9 @@ void reduceImageGenesis(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_
 	truecolor_to_image(image,row,false);
 	colors_found=count_colors(image,w,h,&found_colors[0],false);
 	printf("Unique colors %d\n",colors_found);
-	if (colors_found <= maxCol)
-	{
+	if (colors_found <= maxCol) {
 		printf("%d colors\n",colors_found);
-		for (uint8_t x=0;x<colors_found;x++)
-		{
+		for (uint8_t x=0;x<colors_found;x++) {
 			uint8_t r,g,b;
 againFun:
 			if (currentProject->palType[x+offsetPal]) {
@@ -746,32 +726,24 @@ try_again_color:
 		}
 		uint8_t new_colors = count_colors(rgb_pal2,colorz,1,&rgb_pal3[off3]);
 		printf("Unique colors in palette %d\n",new_colors);
-		if (new_colors < maxCol)
-		{
-			if (can_go_again == true)
-			{
+		if (new_colors < maxCol) {
+			if (can_go_again == true) {
 				if (colorz != 255)
-				{
 					colorz++;
-				}
 				else
-				{
 					can_go_again=false;
-				}
 				printf("Trying again at %d needs more color\n",colorz);
 				goto try_again_color;
 			}
 		}
-		if (new_colors > maxCol)
-		{
+		if (new_colors > maxCol) {
 			can_go_again=false;
 			puts("Woops too many colors");
 			colorz--;
 			goto try_again_color;
 		}
 		uint8_t off3o=off3;
-		for (uint8_t x=0;x<maxCol;x++)
-		{
+		for (uint8_t x=0;x<maxCol;x++) {
 			uint8_t r,g,b;
 againNerd:
 			if (currentProject->palType[x+offsetPal]) {

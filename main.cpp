@@ -284,6 +284,7 @@ void load_tiles(Fl_Widget*,void* split)
 {
 	//if append==1 then we will append data but if not it will erase over current tiles
 	//format row,append
+	uint32_t file_size;
 	uint8_t append=(uintptr_t)split&0xFF;
 		char * returned=(char *)fl_input("What row should these tiles use?\nEnter 0 to 3 to selected a row or -1 to -4 to auto determin based on tilemap\n The number after the negative symbol is the default row +1 if not tile is found","-1");
 	if (returned==0)
@@ -412,6 +413,7 @@ void update_all_tiles(Fl_Widget*,void*)
 void load_truecolor_tiles(Fl_Widget*,void*)
 {
 	//start by loading the file
+	uint32_t file_size;
 	if (load_file_generic() == true)
 	{
 		//ios::ifstream file (the_file.c_str(), ios::in|ios::binary|ios::ate);

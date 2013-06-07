@@ -87,7 +87,6 @@ extern bool G_hflip;
 extern bool G_vflip;
 extern bool G_highlow_p;
 //extern uint8_t palette_adder;
-extern uint32_t file_size;
 extern uint8_t ditherAlg;
 extern uint8_t palTypeGen;
 extern const uint8_t palTab[];
