@@ -43,57 +43,6 @@
 
 static long Result;
 static long end_result;
-
-//-----------------------------------------------------------------------------------------------
-// Name: LoadBuffer(char *&Buffer)
-// Desc: Loads the content of the destination file into a buffer and returns its size
-//-----------------------------------------------------------------------------------------------
-/*long LoadBuffer(char *&Buffer)
-{
-	unsigned long Size, Read;
-	FILE *hFile = fopen("/tmp/nem-buf.tmp", "rb");
-	Size = GetFileSize(hFile);
-	if (Buffer==NULL) Buffer = new char[Size];
-	fread(Buffer, (size_t)Size, 1, hFile);
-	fclose(hFile);
-	return Size;
-}
-
-//-- Compression --------------------------------------------------------------------------------
-long Comp(char *SrcFile, char *DstFile)
-{
-	return NComp(SrcFile, DstFile);
-}
-
-//-- Compression To Buffer ----------------------------------------------------------------------
-long CompToBuf(char *SrcFile, char *&DstBuffer, long *BufSize)
-{
-	Result = NComp(SrcFile, (char *)"/tmp/nem-buf.tmp");
-	*BufSize = LoadBuffer(DstBuffer);
-	return Result;
-}
-
-//-- Decompression ------------------------------------------------------------------------------
-long Decomp(char *SrcFile, char *DstFile, long Pointer)
-{
-	return NDecomp(SrcFile, DstFile, Pointer);
-}
-
-//-- Decompression To Buffer --------------------------------------------------------------------
-long DecompToBuf(char *SrcFile, char *&DstBuffer, long *BufSize, long Pointer)
-{
-	end_result = NDecomp(SrcFile, (char *)"/tmp/~nem-buf.tmp", Pointer);
-	*BufSize = LoadBuffer(DstBuffer);
-	return end_result;
-}
-
-long FreeBuffer(char *&Buffer)
-{
-	delete[] Buffer;
-	Buffer = NULL;
-	return 0;
-}*/
-
 long NComp(char *SrcFile, char *DstFile)
 {
          std::ifstream src(SrcFile, std::ios::in|std::ios::binary);

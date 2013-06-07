@@ -242,42 +242,72 @@ void save_tiles_truecolor(Fl_Widget*,void*)
 }
 void save_tiles(Fl_Widget*,void*)
 {
-	uint8_t type=fl_choice("How would like this file saved?","Binary","C header",0);
-	if (load_file_generic("Pick a location to save tiles",true) == true)
-	{
-		FILE * myfile;
-		if (type == 1)
-		{
+	if (load_file_generic("Pick a location to save tiles",true) == true){
+		uint8_t type=fl_choice("How would like this file saved?","Binary","C header",0);
+		uint8_t compression=fl_choice("What kind of compression do you want used?","Uncompressed","Nemesis",0);
+		FILE* myfile;
+		uint8_t* compdat;
+		uint32_t compsize;
+		if (type==1)
 			myfile = fopen(the_file.c_str(),"w");
-			char temp[2048];
-			sprintf(temp,"//%d tiles\n",currentProject->tileC->tiles_amount+1);
-			fputs((const char *)temp,myfile);
-			fputs("const uint8_t tileDat[]={",myfile);
-		}
 		else
 			myfile = fopen(the_file.c_str(),"wb");
-		if (myfile!=0)
-		{
-			if (type == 1)
-			{
-				if (saveBinAsText(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize,myfile)==false)
-				{
-					fl_alert("Error: can not save file %s",the_file.c_str());
-					return;
+		if (likely(myfile!=0)){
+			if (type == 1){
+				char temp[2048];
+				sprintf(temp,"//%d tiles",currentProject->tileC->tiles_amount+1);
+				fputs((const char *)temp,myfile);
+				if (compression==1)
+					fputs(" nemesis compressed",myfile);
+				else
+					fputc('\n',myfile);
+				fputs("const uint8_t tileDat[]={",myfile);
+			}
+			if (compression==1){
+				string input;
+				input.assign((const char *)currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize);
+				std::istringstream iss(input);
+				std::ostringstream outfun;
+				nemesis comp;
+				comp.encode(iss,outfun);
+				compsize=outfun.str().length();
+				printf("Compressed to %d uncompressed would be %d so therefore the file the ratio is %f\n",compsize,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize,(double)compsize/(double)((currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize)*100.0);
+				compdat=(uint8_t*)malloc(compsize);
+				if (compdat==0)
+					show_malloc_error(compsize)
+				string output=outfun.str();
+				output.copy((char *)compdat,compsize);
+			}
+			if (type == 1){
+				if (compression==1){
+					if(saveBinAsText(compdat,compsize,myfile)==false){
+						free(compdat);
+						fl_alert("Error: can not save file %s",the_file.c_str());
+						return;
+					}
+				}else{
+					if (saveBinAsText(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize,myfile)==false) {
+						fl_alert("Error: can not save file %s",the_file.c_str());
+						return;
+					}
 				}
 				fputs("};",myfile);
+			}else{
+				if(compression==1)
+					fwrite(compdat,1,compsize,myfile);
+				else
+					fwrite(currentProject->tileC->tileDat,currentProject->tileC->tileSize,(currentProject->tileC->tiles_amount+1),myfile);
 			}
-			else
-				fwrite(currentProject->tileC->tileDat,currentProject->tileC->tileSize,(currentProject->tileC->tiles_amount+1),myfile);
-		}
-		else
+			if (compression==1)
+				free(compdat);
+		}else
 			fl_alert("Error: can not save file %s",the_file.c_str());
 		fclose(myfile);
 	}
 }
 void save_map(Fl_Widget*,void*)
 {
-	if (currentProject->tileMapC->saveToFile() == 0)
+	if (currentProject->tileMapC->saveToFile() == false)
 		fl_alert("Error: can not save file %s\nTry making sure that you have permission to save the file here",the_file.c_str());
 }
 void load_tiles(Fl_Widget*,void* split)
@@ -654,10 +684,9 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 void load_image_to_tilemap(Fl_Widget*,void*)
 {
 	Fl_Shared_Image * loaded_image;
-	if (load_file_generic("Load image") == true)
-	{
+	if (load_file_generic("Load image") == true){
 		loaded_image=Fl_Shared_Image::get(the_file.c_str());
-		if (loaded_image == 0) {
+		if (loaded_image == 0){
 			fl_alert("Error loading image");
 			return;
 		}
@@ -689,13 +718,11 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 		uint8_t * img_ptr=(uint8_t *)loaded_image->data()[0];
 		//printf("First Pixel Red: %d Green: %d Blue: %d\n",img_ptr[0],img_ptr[1],img_ptr[2]);
 		//now we can convert to tiles
-		if (unlikely(loaded_image->d() != 3 && loaded_image->d() != 4))
-		{
+		if (unlikely(loaded_image->d() != 3 && loaded_image->d() != 4)){
 			fl_alert("Please use color depth of 3 or 4\nYou Used %d",loaded_image->d());
 			loaded_image->release();
 			return;
-		}
-		else
+		}else
 			printf("Image depth %d\n",loaded_image->d());
 		uint64_t truecolor_tile_ptr=0;
 		currentProject->tileC->truetileDat = (uint8_t *)realloc(currentProject->tileC->truetileDat,w8*h8*256);
@@ -707,8 +734,7 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 		uint64_t a;
 		uint32_t b,y,x;
 		uint8_t xx;
-		switch (loaded_image->d())
-		{
+		switch (loaded_image->d()){
 			case 3:
 				for (a=0;a<(ht*wt*3)-wt*3;a+=w*3*8)//a tiles y
 				{
@@ -728,13 +754,11 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 					}
 					if (wr!=0)
 					{//handle borders
-						b+=24;
+						b+=48;
 						uint32_t yy=wt*3*8;
-						for (y=0;y<8;y++)
-						{
+						for (y=0;y<8;y++){
 							xx=0;
-							for (x=0;x<wr*4;x+=4)
-							{
+							for (x=0;x<wr*4;x+=4){
 								memcpy(&currentProject->tileC->truetileDat[truecolor_tile_ptr+x],&img_ptr[a+b+yy+xx],3);
 								currentProject->tileC->truetileDat[truecolor_tile_ptr+x+3]=255;//solid
 								xx+=3;
@@ -782,16 +806,13 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 		window->map_w->value(w8);
 		window->map_h->value(h8);
 		uint32_t tilecounter=0;
-		for (y=0;y<h8;y++)
-		{
-			for (x=0;x<w8;x++)
-			{
+		for (y=0;y<h8;y++){
+			for (x=0;x<w8;x++){
 				set_tile_full(tilecounter,x,y,0,false,false,false);
 				tilecounter++;
 			}
 		}
 		window->redraw();
-		
 	}
 }
 void set_palette_type_callback(Fl_Widget*,void* type)
