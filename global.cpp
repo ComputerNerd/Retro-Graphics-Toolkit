@@ -36,6 +36,27 @@ uint8_t ditherAlg;
 uint8_t palTypeGen=0;
 bool showTrueColor=false;
 bool rowSolo=false;
+uint8_t nearest_color_index(uint8_t val)
+{
+	//returns closest value
+	//palette_muliplier
+	uint8_t i;
+    int32_t distanceSquared, minDistanceSquared, bestIndex = 0;
+    minDistanceSquared = 255*255 + 1;
+	if (game_system!=sega_genesis) {
+		fl_alert("This function is for use with sega genesis/mega drive only");
+		return 0;
+	}
+    for (i=palTypeGen; i<8+palTypeGen; i++) {
+        int32_t Rdiff = (int) val - (int)palTab[i];
+        distanceSquared = Rdiff*Rdiff;
+        if (distanceSquared < minDistanceSquared) {
+            minDistanceSquared = distanceSquared;
+            bestIndex = i;
+        }
+    }
+    return bestIndex;
+}
 bool saveBinAsText(void * ptr,size_t sizeBin,FILE * myfile)
 {
 	/*!
@@ -44,15 +65,13 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * myfile)
 	*/
 	uint8_t * dat=(uint8_t *)ptr;
 	char str[16];
-	for (size_t x=0;x<sizeBin-1;x++)
-	{
+	for (size_t x=0;x<sizeBin-1;x++){
 		sprintf(str,"%d",*dat);
 		if (fputs(str,myfile)==0)
 			return false;
 		if (fputc(',',myfile)==0)
 			return false;
-		if ((x&63)==63)
-		{
+		if ((x&63)==63){
 			if (fputc('\n',myfile)==0)
 				return false;
 		}
@@ -63,16 +82,14 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * myfile)
 		return false;
 	return true;
 }
-void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row)
+void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha)
 {
 	switch (game_system)
 	{
 		case sega_genesis:
 			row*=48;
-			for (uint8_t y=0;y<8;y++)
-			{
-				for (uint8_t x=0;x<4;x++)
-				{
+			for (uint8_t y=0;y<8;y++){
+				for (uint8_t x=0;x<4;x++){
 					//even,odd
 					uint8_t temp=*input++;
 					uint8_t temp_1,temp_2;
@@ -81,11 +98,13 @@ void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row)
 					*output++=currentProject->rgbPal[row+(temp_1*3)];
 					*output++=currentProject->rgbPal[row+(temp_1*3)+1];
 					*output++=currentProject->rgbPal[row+(temp_1*3)+2];
-					*output++=255;
+					if(useAlpha)
+						*output++=255;
 					*output++=currentProject->rgbPal[row+(temp_2*3)];
 					*output++=currentProject->rgbPal[row+(temp_2*3)+1];
 					*output++=currentProject->rgbPal[row+(temp_2*3)+2];
-					*output++=255;
+					if(useAlpha)
+						*output++=255;
 				}
 			}
 		break;
@@ -96,12 +115,13 @@ void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row)
 				for (uint8_t x=0;x<8;x++)
 				{
 					uint8_t temp;
-					temp=(input[+y]>>x)&1;
-					temp|=((input[+y+8]>>x)&1)<<1;
+					temp=(input[y]>>x)&1;
+					temp|=((input[y+8]>>x)&1)<<1;
 					*output++=currentProject->rgbPal[row+(temp*3)];
 					*output++=currentProject->rgbPal[row+(temp*3)+1];
 					*output++=currentProject->rgbPal[row+(temp*3)+2];
-					*output++=255;
+					if(useAlpha)
+						*output++=255;
 				}
 			}
 		break;
@@ -204,12 +224,13 @@ uint32_t MakeRGBcolor(uint32_t pixel,float saturation, float hue_tweak,float con
         return rgb;
 }
 
-const uint8_t palTab[]={0,49,87,119,146,174,206,255,0,27,49,71,87,103,119,130,130,146,157,174,190,206,228,255};//from http://gendev.spritesmind.net/forum/viewtopic.php?t=1389
+const uint8_t palTab[]=   {0,49,87,119,146,174,206,255,0,27,49,71,87,103,119,130,130,146,157,174,190,206,228,255};//from http://gendev.spritesmind.net/forum/viewtopic.php?t=1389
+const uint8_t palTabEmu[]={0,36,72,108,144,180,216,252,0,18,36,54,72, 90,108,126,126,144,162,180,198,216,234,252};
 void set_palette_type(uint8_t type)
 {
 	palTypeGen=type;
 	//now reconvert all the colors
-	for (uint8_t pal=0; pal < 128;pal+=2) {
+	for (uint8_t pal=0; pal < 128;pal+=2){
 		//to convert to rgb first get value of color then multiply it by 16 to get rgb
 		//first get blue value
 		//the rgb array is in rgb format and the genesis palette is bgr format
@@ -267,7 +288,6 @@ void set_tile_full(uint32_t tile,uint16_t x,uint16_t y,uint8_t palette_row,bool 
 	currentProject->tileMapC->tileMapDat[selected_tile+2]=(tile>>8)&255;
 	currentProject->tileMapC->tileMapDat[selected_tile+3]=tile&255;
 }
-
 void set_tile(uint32_t tile,uint16_t x,uint16_t y)
 {
 	//we must split into two varibles

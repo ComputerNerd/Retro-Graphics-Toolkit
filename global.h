@@ -15,7 +15,8 @@ This function calculates pointer offset for truecolor tiles
 for example cal_offset_truecolor(8,8,0,32);
 would edit the red pixel at (8,8) located on tile 32 
 */
-void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row);
+uint8_t nearest_color_index(uint8_t val);
+void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha=true);
 bool saveBinAsText(void * ptr,size_t sizeBin,FILE * myfile);
 bool verify_str_number_only(char * str);
 uint32_t cal_offset_truecolor(uint16_t x,uint16_t y,uint16_t rgb,uint32_t tile);

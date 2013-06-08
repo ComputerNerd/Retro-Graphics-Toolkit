@@ -3,6 +3,7 @@ Stuff related to tilemap operations goes here*/
 #include "global.h"
 #include "quant.h"
 #include "color_convert.h"
+#include "dither.h"
 tileMap::tileMap()
 {
 	mapSizeW=2;
@@ -470,27 +471,6 @@ bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha)
 	puts("Done");
 	return true;
 }
-uint8_t nearest_color_index(uint8_t val)
-{
-	//returns closest value
-	//palette_muliplier
-	uint8_t i;
-    int32_t distanceSquared, minDistanceSquared, bestIndex = 0;
-    minDistanceSquared = 255*255 + 1;
-	if (game_system!=sega_genesis) {
-		fl_alert("This function is for use with sega genesis/mega drive only");
-		return 0;
-	}
-    for (i=palTypeGen; i<8+palTypeGen; i++) {
-        int32_t Rdiff = (int) val - (int)palTab[i+palTypeGen];
-        distanceSquared = Rdiff*Rdiff;
-        if (distanceSquared < minDistanceSquared) {
-            minDistanceSquared = distanceSquared;
-            bestIndex = i;
-        }
-    }
-    return bestIndex;
-}
 double max3(double a,double b,double c)
 {
 	if ((a > b) && (a > c))
@@ -666,6 +646,7 @@ void reduceImageGenesis(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_
 	w=currentProject->tileMapC->mapSizeW*8;
 	h=currentProject->tileMapC->mapSizeH*8;
 	truecolor_to_image(image,row,false);
+	ditherImage(image,w,h,false,true);
 	colors_found=count_colors(image,w,h,&found_colors[0],false);
 	printf("Unique colors %d\n",colors_found);
 	if (colors_found <= maxCol) {
@@ -775,12 +756,11 @@ void reduceImageNES(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t of
 	w=currentProject->tileMapC->mapSizeW*8;
 	h=currentProject->tileMapC->mapSizeH*8;
 	truecolor_to_image(image,row,false);
+	ditherImage(image,w,h,false,true);
 	colors_found=count_colors(image,w,h,found_colors);
-	if (colors_found <= maxCol)
-	{
+	if (colors_found <= maxCol){
 		printf("%d colors\n",colors_found);
-		for (uint8_t x=0;x<colors_found;x++)
-		{
+		for (uint8_t x=0;x<colors_found;x++){
 			uint8_t r,g,b;
 againFun:
 			if (currentProject->palType[x+offsetPal]) {
@@ -859,7 +839,7 @@ void generate_optimal_palette(Fl_Widget*,void*)
 	char temp[4];
 	uint8_t rowSize;
 	uint8_t rows;
-	switch (game_system) {
+	switch (game_system){
 		case sega_genesis:
 			strcpy(temp,"64");
 			rowSize=16;
@@ -914,9 +894,9 @@ void generate_optimal_palette(Fl_Widget*,void*)
 		rowAuto = fl_ask("Would you like all tiles on the tilemap to be set to row 0? (This is where all generated colors will apear)");
 	else
 		 rowAuto = fl_ask("Since you used more than one row tiles can be selected based on the hue\nDo you want which row each tile to use be selected automaticlly by hue\nBy pressing no this assumes that you have already picked which tile uses what row");
-	switch (game_system) {
+	switch (game_system){
 		case sega_genesis:
-			if (rows==1) {
+			if (rows==1){
 				if (rowAuto)
 					currentProject->tileMapC->allRowZero();
 				image = (uint8_t *)malloc(w*h*3);
@@ -924,8 +904,7 @@ void generate_optimal_palette(Fl_Widget*,void*)
 				free(image);
 				//free(found_colors);
 				window->redraw();
-			}
-			else {
+			}else{
 				image = (uint8_t *)malloc(w*h*3);
 				if (rowAuto)
 					currentProject->tileMapC->pickRow(rows);
@@ -939,7 +918,7 @@ void generate_optimal_palette(Fl_Widget*,void*)
 			}
 		break;
 		case NES:
-			if (rows==1) {
+			if (rows==1){
 				if (rowAuto)
 					currentProject->tileMapC->allRowZero();
 				image = (uint8_t *)malloc(w*h*3);
@@ -947,8 +926,7 @@ void generate_optimal_palette(Fl_Widget*,void*)
 				free(image);
 				//free(found_colors);
 				window->redraw();
-			}
-			else {
+			}else{
 					image = (uint8_t *)malloc(w*h*3);
 					if (rowAuto)
 						currentProject->tileMapC->pickRow(rows);

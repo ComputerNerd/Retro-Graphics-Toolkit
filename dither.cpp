@@ -1,6 +1,7 @@
 #include <inttypes.h>
 #include "dither.h"
 #include "global.h"
+#include "color_convert.h"
 #define NONE 0
 #define UP 1
 #define LEFT 2
@@ -9,6 +10,8 @@
 static uint8_t useHiL;//no use for these varibles outside of this file
 static uint8_t useMode;
 static uint8_t rgbPixelsize;
+static bool USEofColGlob;
+static uint8_t *img_ptr_dither;
 uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row)
 {
 	//returns closest value
@@ -20,36 +23,40 @@ uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row)
 	switch (useMode)
 	{
 		case sega_genesis:
+			if(USEofColGlob)
+				return palTab[nearest_color_index(val)];
 			max_rgb=48;//16*3=48
 		break;
 		case NES:
+			if(USEofColGlob){
+				img_ptr_dither-=chan;
+				uint8_t returnme=toNesChan(*img_ptr_dither,*img_ptr_dither+1,*img_ptr_dither+2,chan);
+				img_ptr_dither+=chan;
+				return returnme;
+			}
 			max_rgb=12;//4*3=12
 		break;
 		case 255://alpha
-			//val&=128;
-			//val= val==255 ? 255 : 0;
 			val=val/255*128;
 			return val;
 		break;
 	}
 	row*=max_rgb;
-    for (i=0; i<max_rgb; i+=3)
-	{
-        int32_t Rdiff = (int) val - (int)currentProject->rgbPal[i+row+chan];
-        distanceSquared = Rdiff*Rdiff;
-        if (distanceSquared < minDistanceSquared) {
-            minDistanceSquared = distanceSquared;
-            bestIndex = i;
-        }
-    }
+	for (i=0; i<max_rgb; i+=3){
+		int32_t Rdiff = (int) val - (int)currentProject->rgbPal[i+row+chan];
+		distanceSquared = Rdiff*Rdiff;
+		if (distanceSquared < minDistanceSquared) {
+			minDistanceSquared = distanceSquared;
+			bestIndex = i;
+		}
+	}
     return currentProject->rgbPal[bestIndex+row+chan];
 }
-
 /* variables needed for the Riemersma
  * dither algorithm */ 
 static int32_t cur_x=0, cur_y=0;
 static int32_t img_width=0, img_height=0; 
-static uint8_t *img_ptr_dither;
+
 static uint8_t rgb_select=0;
     
 #define SIZE 16 /* queue size: number of
@@ -240,24 +247,22 @@ void Riemersma(uint8_t *image, int32_t width,int32_t height,uint8_t rgb_sel)
     hilbert_level(level,UP);
   move(NONE);
 }
-
-void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha)
+void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpace)
 {
 	/*!
 	this function will take an input with or without alpha and dither it
+	Also note that this function now has the option to first dither to color space
 	*/
 	uint8_t ditherSetting=window->ditherPower->value();
 	uint8_t type_temp=palTypeGen;
 	uint8_t temp=0;
 	uint8_t rgbRowsize;
 	uint16_t x,y;
-	if (useAlpha)
-	{
+	if (useAlpha){
 		rgbPixelsize=4;
 		rgbRowsize=32;
 	}
-	else
-	{
+	else{
 		rgbPixelsize=3;
 		rgbRowsize=24;
 	}
@@ -265,34 +270,44 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha)
 	uint8_t r_new,g_new,b_new,a_new;
 	uint8_t pal_row;
 	int16_t error_rgb[4];
-	switch (ditherAlg)
-	{
+	switch (ditherAlg){
 	case 2://nearest color
-		for (y=0;y<h;y++)
-		{
-			for (x=0;x<w*rgbPixelsize;x+=rgbPixelsize)
-			{
-				//we need to get nearest color
+		for (y=0;y<h;y++){
+			for (x=0;x<w*rgbPixelsize;x+=rgbPixelsize){
 				r_old=image[x+(y*w*rgbPixelsize)];
 				g_old=image[x+(y*w*rgbPixelsize)+1];
 				b_old=image[x+(y*w*rgbPixelsize)+2];
 				if (useAlpha)
 					a_old=image[x+(y*w*rgbPixelsize)+3];
-				pal_row=currentProject->tileMapC->get_palette_map(x/rgbRowsize,y/8);
+				if(!colSpace)
+					pal_row=currentProject->tileMapC->get_palette_map(x/rgbRowsize,y/8);
 				//find nearest color
-				if (game_system == sega_genesis && type_temp != 0)
-				{
+				if (game_system == sega_genesis && type_temp != 0){
 					uint8_t tempSet=(currentProject->tileMapC->get_prio(x/rgbRowsize,y/8)^1)*8;
 					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted
 				}
-				temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old);
-				r_new=currentProject->rgbPal[temp];
-				g_new=currentProject->rgbPal[temp+1];
-				b_new=currentProject->rgbPal[temp+2];
+				if(colSpace){
+					switch (game_system){
+						case sega_genesis:
+							r_new=palTab[nearest_color_index(r_old)];
+							g_new=palTab[nearest_color_index(g_old)];
+							b_new=palTab[nearest_color_index(b_old)];
+						break;
+						case NES:
+							{uint32_t temprgb=toNesRgb(r_old,g_old,b_old);
+							b_new=temprgb&255;
+							g_new=(temprgb>>8)&255;
+							r_new=(temprgb>>16)&255;}
+						break;
+					}
+				}else{
+					temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old);
+					r_new=currentProject->rgbPal[temp];
+					g_new=currentProject->rgbPal[temp+1];
+					b_new=currentProject->rgbPal[temp+2];
+				}
 				if (useAlpha)
 					a_old=a_old/128*255;
-					//a_old=a_old==255 ? 255 : 0;
-					//a_old&=128;//get only the MSB
 				image[x+(y*w*rgbPixelsize)]=r_new;
 				image[x+(y*w*rgbPixelsize)+1]=g_new;
 				image[x+(y*w*rgbPixelsize)+2]=b_new;
@@ -303,39 +318,52 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha)
 	break;
 	case 1:
 		useMode=game_system;
+		USEofColGlob=colSpace;
 		Riemersma(image,w,h,0);
 		Riemersma(image,w,h,1);
 		Riemersma(image,w,h,2);
-		if (useAlpha)
-		{
+		if (useAlpha){
 			useMode=255;
 			Riemersma(image,w,h,3);
 		}
 	break;
 	case 0:
-		for (y=0;y<h;y++)
-		{
-			for (x=0;x<w;x++)
-			{
+		for (y=0;y<h;y++){
+			for (x=0;x<w;x++){
 				//we need to get nearest color
 				r_old=image[(x*rgbPixelsize)+(y*w*rgbPixelsize)];
 				g_old=image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+1];
 				b_old=image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2];
 				if (useAlpha)
 					a_old=image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+3];
-				pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
+				if(!colSpace)
+					pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
 				//find nearest color
-				if (game_system == sega_genesis && type_temp != 0)
-				{
+				if (game_system == sega_genesis && type_temp != 0){
 					uint8_t tempSet=(currentProject->tileMapC->get_prio(x/8,y/8)^1)*8;
 					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted
 				}
-				temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old);
-				r_new=currentProject->rgbPal[temp];
-				g_new=currentProject->rgbPal[temp+1];
-				b_new=currentProject->rgbPal[temp+2];
-				if (useAlpha)
-				{
+				if(colSpace){
+					switch (game_system){
+						case sega_genesis:
+							r_new=palTab[nearest_color_index(r_old)];
+							g_new=palTab[nearest_color_index(g_old)];
+							b_new=palTab[nearest_color_index(b_old)];
+						break;
+						case NES:
+							{uint32_t temprgb=toNesRgb(r_old,g_old,b_old);
+							b_new=temprgb&255;
+							g_new=(temprgb>>8)&255;
+							r_new=(temprgb>>16)&255;}
+						break;
+					}
+				}else{
+					temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old);
+					r_new=currentProject->rgbPal[temp];
+					g_new=currentProject->rgbPal[temp+1];
+					b_new=currentProject->rgbPal[temp+2];
+				}
+				if (useAlpha){
 					a_new=a_old/128*255;
 					//a_new&=128;
 					error_rgb[3]=(int16_t)a_old-(int16_t)a_new;
@@ -347,8 +375,7 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha)
 				image[(x*rgbPixelsize)+(y*w*rgbPixelsize)]=r_new;
 				image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+1]=g_new;
 				image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2]=b_new;
-				for (uint8_t channel=0;channel<rgbPixelsize;channel++)
-				{
+				for (uint8_t channel=0;channel<rgbPixelsize;channel++){
 					//add the offset
 					if (x+1 < w)
 					{
@@ -366,7 +393,6 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha)
 					{
 						plus_truncate_uchar(image[((x+1)*rgbPixelsize)+((y+1)*w*rgbPixelsize)+channel],(error_rgb[channel]) / ditherSetting);
 					}
-
 				}
 			}
 		}

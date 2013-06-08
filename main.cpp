@@ -20,6 +20,8 @@
 #include "color_convert.h"
 #include "errorMsg.h"
 #include "dither.h"
+#include <zlib.h>
+#include <png.h>
 void fill_tile(Fl_Widget* o, void*)
 {
 	//fills tile with currently selected color
@@ -579,14 +581,14 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 	uint32_t truecolor_tile_ptr=0;
 	uint32_t x_tile=0,y_tile=0;
 	uint8_t truecolor_tile[256];
-	for (uint8_t rowz=0;rowz<4;rowz++)
-	{
+	for (uint8_t rowz=0;rowz<4;rowz++){
 		printf("Row %d\n",rowz);
 		puts("Starting");
 		printf("Stage 1 %%: 0\n");
 		truecolor_to_image(image,rowz);
 		printf("Stage 1 %%: %f\n",(1.0f/3.0f)*100.0f);
-		ditherImage(image,w,h,true);
+		ditherImage(image,w,h,true,true);
+		ditherImage(image,w,h,true,false);
 		printf("Stage 2 %%: %f\n",(2.0f/3.0f)*100.0f);
 		//convert back to tiles
 		x_tile=0;
@@ -608,12 +610,10 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 				}
 				//convert back to tile
 				uint8_t * TileTempPtr;
-				switch (game_system)
-				{
+				switch (game_system){
 					case sega_genesis:
 						current_tile*=32;
-						if (type_temp != 0)
-						{
+						if (type_temp != 0){
 							tempSet=(currentProject->tileMapC->get_prio(x_tile,y_tile)^1)*8;
 							set_palette_type(tempSet);
 						}
@@ -938,12 +938,12 @@ void rgb_pal_to_entry(Fl_Widget*,void*)
 }
 void set_game_system(Fl_Widget*,void* selection)
 {
-	if ((uintptr_t)selection == game_system) {
+	uint8_t sel8=(uintptr_t)selection;
+	if (unlikely(sel8 == game_system)){
 		fl_alert("You are already in that mode");
 		return;
 	}
-	switch((uintptr_t)selection)
-	{
+	switch(sel8){
 		case sega_genesis:
 			//fl_alert("Sega genesis Mode");
 			game_system=sega_genesis;
@@ -953,15 +953,12 @@ void set_game_system(Fl_Widget*,void* selection)
 			{//for varibles to be declared inside of switch statment I must put brackes around so the compiler knows when to free them
 				uint8_t pal_temp[128];
 				uint8_t c;
-				for (c=0;c<64;c++) {
-					uint16_t temp=to_sega_genesis_color(c);
-					pal_temp[c*2]=temp>>8;
-					pal_temp[(c*2)+1]=temp&255;
+				for (c=0;c<128;c+=2){
+					uint16_t temp=to_sega_genesis_color(c/2);
+					pal_temp[c]=temp>>8;
+					pal_temp[c+1]=temp&255;
 				}
-				for (c=0;c<64;c++) {
-					currentProject->palDat[c*2]=pal_temp[c*2];
-					currentProject->palDat[(c*2)+1]=pal_temp[(c*2)+1];
-				}
+				memcpy(currentProject->palDat,pal_temp,128);
 			}
 			palEdit.changeSystem();
 			tileEdit_pal.changeSystem();
@@ -1060,6 +1057,73 @@ void setPalType(Fl_Widget*,void* type)
 	}
 	window->redraw();
 }
+int savePNG(const char * fileName,uint32_t width,uint32_t height,void * ptr)
+{
+	//saves a 24bit png with rgb byte order
+	png_byte * dat=(png_byte*)ptr;//convert to uint8_t
+	FILE * fp=fopen(fileName,"wb");
+	if (fp==0)
+		return 1;
+	png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, (png_voidp)0,0,0);
+	if (!png_ptr)
+		return 1;
+	png_infop info_ptr = png_create_info_struct(png_ptr);
+	if (!info_ptr){
+		png_destroy_write_struct(&png_ptr,(png_infopp)NULL);
+		return 1;
+	}
+	if (setjmp(png_jmpbuf(png_ptr))){
+		png_destroy_write_struct(&png_ptr, &info_ptr);
+		fclose(fp);
+		return 1;
+	}
+	png_init_io(png_ptr, fp);
+	png_set_IHDR(png_ptr, info_ptr, width, height,8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);//must be called before other png_set_*() functions
+	png_set_compression_level(png_ptr,Z_BEST_COMPRESSION);
+	uint32_t y;
+	png_set_user_limits(png_ptr, width, height);
+	png_write_info(png_ptr, info_ptr);
+	for (y=0;y<height;y++)
+		png_write_row(png_ptr, &dat[(y*width*3)]);
+	png_write_end(png_ptr, info_ptr);
+	png_destroy_write_struct(&png_ptr, &info_ptr);
+	fclose(fp);//done with file
+	return 0;//will return 0 on success non-zero in error
+}
+void save_tilemap_as_image(Fl_Widget*,void*)
+{
+	if(load_file_generic("Save png",true)==true){
+		uint32_t w=currentProject->tileMapC->mapSizeW*8;
+		uint32_t h=currentProject->tileMapC->mapSizeH*8;
+		uint8_t * image=(uint8_t*)malloc(w*h*3);
+		uint8_t * imageold=image;
+		uint8_t * imgold;
+		if(image==0)
+			show_malloc_error(w*h*3)
+		uint8_t temptile[192];
+		uint32_t x,y;
+		uint32_t w3=w*3;//do this once instead of thousands of times in the loop
+		uint32_t h3=h*3;
+		uint32_t w21=w*21;
+		uint8_t * tempptr,yy;
+		for(y=0;y<h;y+=8){
+			for(x=0;x<w;x+=8){
+				tileToTrueCol(currentProject->tileC->tileDat+(currentProject->tileMapC->get_tile(x/8,y/8)*currentProject->tileC->tileSize),temptile,currentProject->tileMapC->get_palette_map(x/8,y/8),false);
+				tempptr=temptile;
+				imgold=image;
+				for(yy=0;yy<8;yy++){
+					memcpy(image,tempptr,24);
+					image+=w3;
+					tempptr+=24;
+				}
+				image=imgold+24;
+			}
+			image+=w21;
+		}
+		savePNG(the_file.c_str(),w,h,(void*)imageold);
+		free(imageold);
+	}
+}
 void editor::_editor()
 {
 	//create the window
@@ -1070,6 +1134,7 @@ void editor::_editor()
 	menu->add("&File/&Append tiles",(int)0,load_tiles,(void*)1,(int)0);
 	menu->add("&File/&Open tile map and if NES attrabiuts",(int)0,load_tile_map,(void *)0,(int)0);
 	menu->add("&File/&import image to tilemap",(int)0,load_image_to_tilemap,(void *)0,(int)0);
+	menu->add("&File/&save tilemap as image",(int)0,save_tilemap_as_image,(void *)0,(int)0);
 	menu->add("&File/&Save Palette",  0, save_palette,(void*)0);
 	menu->add("&File/&Save tiles",0,save_tiles,0,0);
 	menu->add("&File/&Save truecolor tiles",0,save_tiles_truecolor,0,0);

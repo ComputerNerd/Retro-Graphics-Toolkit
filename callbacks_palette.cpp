@@ -5,8 +5,7 @@
 void save_palette(Fl_Widget*, void* start_end)
 {
 	char temp[4];
-	switch (game_system)
-	{
+	switch (game_system){
 		case sega_genesis:
 			strcpy(temp,"63");
 		break;
@@ -26,14 +25,12 @@ void save_palette(Fl_Widget*, void* start_end)
 	if (verify_str_number_only(returned) == false)
 			return;
 	uint8_t end = atoi(returned);
-	if (game_system==sega_genesis)
-	{
+	if (game_system==sega_genesis){
 		start*=2;
 		end *=2;
 	}
 	uint8_t type=fl_choice("How would like this file saved?","Binary","C header",0);
-	if (load_file_generic("Save palette",true) == true)
-	{
+	if (load_file_generic("Save palette",true)==true){
 		//unsigned char start,end;
 		//split the varible into two
 		//varible format start,end
@@ -43,42 +40,32 @@ void save_palette(Fl_Widget*, void* start_end)
 		//cout << "entry start: " << start/2 << " entry end: " << end/2 << endl;
 		//cout << "saving the palette to " << the_file << endl;
 		FILE * myfile=0;
-		if (type == 1)
-		{
+		if (type == 1){
 			myfile = fopen(the_file.c_str(),"w");
 			fputs("const uint8_t palDat[]={",myfile);
 		}
 		else
 			myfile = fopen(the_file.c_str(),"wb");
-		if (myfile!=0)
-		{
+		if (likely(myfile!=0)){
 			//save the palette
-			if (type == 1)
-			{
-				if (saveBinAsText(currentProject->palDat+start,end-start,myfile)==false)
-				{
+			if (type == 1){
+				if (saveBinAsText(currentProject->palDat+start,end-start,myfile)==false){
 					fl_alert("Error: can not save file %s",the_file.c_str());
 					return;
 				}
 				fputs("};",myfile);
-			}
-			else
-			{
-				if (fwrite(currentProject->palDat+start,1,end-start,myfile)==0)
-				{
+			}else{
+				if (fwrite(currentProject->palDat+start,1,end-start,myfile)==0){
 					fl_alert("Error: can not save file %s",the_file.c_str());
 					return;
 				}
 			}
+			fclose(myfile);
 			puts("Great Success! File saved!");
 		}
 		else
-		{
-			cout << "myfile.is_open() returned false that means there was an error in creating the file" << endl;
-		}
-		fclose(myfile);
+			fl_alert("myfile.is_open() returned false that means there was an error in creating the file");
 	}
-
 }
 void update_palette(Fl_Widget* o, void* v)
 {
@@ -181,9 +168,7 @@ void update_palette(Fl_Widget* o, void* v)
 		currentProject->rgbPal[temp_entry*3]=(rgb_out>>16)&255;//red
 	}
 	if (mode_editor == tile_edit)
-	{
 		currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);//update tile
-	}
 	window->redraw();//update the palette
 }
 void loadPalette(Fl_Widget*, void*)

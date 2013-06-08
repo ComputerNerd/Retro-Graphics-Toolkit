@@ -71,30 +71,25 @@ void tiles::truecolor_to_tile(uint8_t palette_row,uint32_t cur_tile)
 	memcpy(true_color_temp,&truetileDat[tile_256],256);
 	if (game_system == NES)
 		memset(tileDat+tile_16,0,16);
-	ditherImage(&true_color_temp[0],8,8,true);
+	ditherImage(&true_color_temp[0],8,8,true,true);
+	ditherImage(&true_color_temp[0],8,8,true,false);
 	//now image needs to be checked for alpha
 	uint8_t * truePtr=true_color_temp;
 	truePtr=true_color_temp;
-	for (uint8_t y=0;y<8;y++)
-	{
-		for (uint8_t x=0;x<8;x++)
-		{
+	for (uint8_t y=0;y<8;y++){
+		for (uint8_t x=0;x<8;x++){
 			uint8_t temp=find_near_color_from_row(palette_row,truePtr[0],truePtr[1],truePtr[2]);
 			truePtr+=3;
 			//get difference
 			//sega genesis tile format
 			//even pixel,odd pixel
-			switch (game_system)
-			{
+			switch (game_system){
 				case sega_genesis:
-					if (x & 1)
-					{
+					if (x & 1){
 						//this is an odd (not a strange pixel but odd number) pixel
 						if (*truePtr++ != 0)
 							tileDat[(y*4)+(x/2)+tile_32]|=temp;
-					}
-					else
-					{
+					}else{
 						//even pixel
 						if (*truePtr++ != 0)
 							tileDat[(y*4)+(x/2)+tile_32]=temp<<4;
@@ -103,8 +98,7 @@ void tiles::truecolor_to_tile(uint8_t palette_row,uint32_t cur_tile)
 					}
 				break;
 				case NES:
-					if (*truePtr++ != 0)
-					{
+					if (*truePtr++ != 0){
 						tileDat[y+tile_16]|=(temp&1)<<(7-x);
 						tileDat[y+8+tile_16]|=((temp>>1)&1)<<(7-x);
 					}
@@ -116,8 +110,7 @@ void tiles::truecolor_to_tile(uint8_t palette_row,uint32_t cur_tile)
 void tiles::draw_truecolor(uint32_t tile_draw,uint16_t x,uint16_t y,bool usehflip,bool usevflip,uint8_t zoom)
 {
 	static uint8_t DontShow=0;
-	if (tiles_amount < tile_draw)
-	{
+	if (tiles_amount < tile_draw){
 		if (unlikely(DontShow==0)) {
 			fl_alert("Warning tried to draw truecolor tile # %d at X: %d y: %d\nBut there is only %d tiles (zero is first tile).\nNote that this message will not be shown again.\n Instead it will be outputed to stdout",tile_draw,x,y,tiles_amount);
 			DontShow=1;
@@ -131,17 +124,14 @@ void tiles::draw_truecolor(uint32_t tile_draw,uint16_t x,uint16_t y,bool usehfli
 	uint8_t grid[192];
 	uint8_t * grid_ptr=grid;
 	uint8_t * truePtr;
-	for (zz=0;zz<4;zz++)
-	{
-		for (xx=0;xx<4;xx++)
-		{
+	for (zz=0;zz<4;zz++){
+		for (xx=0;xx<4;xx++){
 			for (yy=0;yy<3;yy++)
 				*grid_ptr++=255;
 			for (yy=0;yy<3;yy++)
 				*grid_ptr++=160;
 		}
-		for (xx=0;xx<4;xx++)
-		{
+		for (xx=0;xx<4;xx++){
 			for (yy=0;yy<3;yy++)
 				*grid_ptr++=160;
 			for (yy=0;yy<3;yy++)
@@ -154,17 +144,14 @@ void tiles::draw_truecolor(uint32_t tile_draw,uint16_t x,uint16_t y,bool usehfli
 		hflip_truecolor(tile_draw,(uint32_t *)trueColTemp);
 	else if (usehflip == false && usevflip == true)
 		vflip_truecolor(tile_draw,trueColTemp);
-	else
-	{
+	else{
 		hflip_truecolor(tile_draw,(uint32_t *)trueColTemp);
 		vflip_truecolor_ptr(trueColTemp,trueColTemp);
 	}
 	truePtr=&trueColTemp[3];
 	grid_ptr=grid;
-	for (zz=0;zz<64;zz++)
-	{
-		for (xx=0;xx<3;xx++)
-		{
+	for (zz=0;zz<64;zz++){
+		for (xx=0;xx<3;xx++){
 			if (*truePtr != 0)//save some cpu time
 			{
 				double percent=(double)*truePtr/255.0;
@@ -177,8 +164,7 @@ void tiles::draw_truecolor(uint32_t tile_draw,uint16_t x,uint16_t y,bool usehfli
 		}
 		truePtr+=4;//next alpha value
 	}
-	for (yy=0;yy<8;yy++)
-	{
+	for (yy=0;yy<8;yy++){
 		for (xx=0;xx<8;xx++)
 			fl_rectf(x+(xx*zoom),y+(yy*zoom),zoom,zoom,grid[(((yy*8)+xx)*3)],grid[1+(((yy*8)+xx)*3)],grid[2+(((yy*8)+xx)*3)]);
 	}
@@ -214,21 +200,17 @@ void tiles::draw_tile(uint16_t x_off,uint16_t y_off,uint32_t tile_draw,uint8_t z
 		hflip_tile(tile_draw,tileTemp);
 	else if (Usehflip == false && Usevflip == true)
 		vflip_tile(tile_draw,tileTemp);
-	else if (Usehflip == true && Usevflip == true)
-	{
+	else if (Usehflip == true && Usevflip == true){
 		hflip_tile(tile_draw,tileTemp);
 		vflip_tile_ptr(tileTemp,tileTemp);//vflip creates temp buffer having dst and src to be the same will not cause issue
 	}
 	else
 		memcpy(tileTemp,&tileDat[tile_draw*tileSize],tileSize);
 	tile_draw*=tileSize;
-	switch (game_system)
-	{
+	switch (game_system){
 		case sega_genesis:
-			for (y=0;y<8;y++)
-			{
-				for (x=0;x<4;x++)
-				{
+			for (y=0;y<8;y++){
+				for (x=0;x<4;x++){
 					//get two pixels
 					uint8_t temp=tileTemp[(y*4)+x];
 					//split the two pixels
@@ -242,8 +224,7 @@ void tiles::draw_tile(uint16_t x_off,uint16_t y_off,uint32_t tile_draw,uint8_t z
 					blue_temp=currentProject->rgbPal[(pal_row*48)+(temp_1*3)+2];
 					for (c=0;c<zoom;c++)//ha ha c++ bad programming pun
 					{
-						for (d=0;d<zoom;d++)
-						{
+						for (d=0;d<zoom;d++){
 							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d,(y*zoom)+c,zoom,0)]=red_temp;
 							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d,(y*zoom)+c,zoom,1)]=green_temp;
 							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d,(y*zoom)+c,zoom,2)]=blue_temp;
@@ -254,8 +235,7 @@ void tiles::draw_tile(uint16_t x_off,uint16_t y_off,uint32_t tile_draw,uint8_t z
 					blue_temp=currentProject->rgbPal[(pal_row*48)+(temp_2*3)+2];
 					for (c=0;c<zoom;c++)//ha ha c++ bad programming pun
 					{
-						for (d=0;d<zoom;d++)
-						{
+						for (d=0;d<zoom;d++){
 							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d+zoom,(y*zoom)+c,zoom,0)]=red_temp;
 							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d+zoom,(y*zoom)+c,zoom,1)]=green_temp;
 							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d+zoom,(y*zoom)+c,zoom,2)]=blue_temp;
@@ -277,8 +257,7 @@ void tiles::draw_tile(uint16_t x_off,uint16_t y_off,uint32_t tile_draw,uint8_t z
 						blue_temp=currentProject->rgbPal[(pal_row*12)+(temp*3)+2];
 						for (c=0;c<zoom;c++)//yes the same old c++ joke I wonder how many program have it
 						{
-							for (d=0;d<zoom;d++)
-							{
+							for (d=0;d<zoom;d++){
 								temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+d,(y*zoom)+c,zoom,0)]=red_temp;
 								temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+d,(y*zoom)+c,zoom,1)]=green_temp;
 								temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+d,(y*zoom)+c,zoom,2)]=blue_temp;
@@ -298,8 +277,7 @@ void tiles::hflip_truecolor(uint32_t id,uint32_t * out)
 	uint8_t y;
 	uint32_t * trueColPtr=(uint32_t *)&truetileDat[id*256];
 	trueColPtr+=7;//32-4 28/4
-	for (y=0;y<8;y++)
-	{
+	for (y=0;y<8;y++){
 		*out++=*trueColPtr--;//this is 32bit so only one copy needed
 		*out++=*trueColPtr--;
 		*out++=*trueColPtr--;
@@ -317,9 +295,7 @@ void tiles::vflip_truecolor_ptr(uint8_t * in,uint8_t * out)
 	uint8_t temp[256];
 	memcpy(temp,in,256);
 	for (y=0;y<256;y+=32)
-	{
 		memcpy(&out[224-y],&temp[y],32);
-	}
 }
 void tiles::vflip_truecolor(uint32_t id,uint8_t * out)
 {
@@ -339,14 +315,11 @@ void tiles::hflip_tile(uint32_t id,uint8_t * out)
 {
 	uint8_t x,y;
 	uint8_t * tilePtr=&tileDat[id*tileSize];
-	switch (game_system)
-	{
+	switch (game_system){
 		case sega_genesis:
 			memcpy(out,tilePtr,32);
-			for (y=0;y<8;y++)
-			{
-				for (x=0;x<4;x++)
-				{
+			for (y=0;y<8;y++){
+				for (x=0;x<4;x++){
 					//*out++=swap_4bit(*out); //may be undefined
 					uint8_t temp=*out;
 					*out++=swap_4bit(temp);
@@ -354,8 +327,7 @@ void tiles::hflip_tile(uint32_t id,uint8_t * out)
 			}
 			out-=tileSize;
 			uint8_t temp[4];
-			for (y=0;y<8;y++)
-			{
+			for (y=0;y<8;y++){
 				memcpy(temp,out,4);
 				*out++=temp[3];
 				*out++=temp[2];
@@ -365,8 +337,7 @@ void tiles::hflip_tile(uint32_t id,uint8_t * out)
 		break;
 		case NES:
 			memcpy(out,tilePtr,16);
-			for (y=0;y<16;y++)
-			{
+			for (y=0;y<16;y++){
 				//*out++=reverse_bits(*out); //may be undefined
 				uint8_t temp=*out;
 				*out++=reverse_bits(temp);
@@ -377,16 +348,13 @@ void tiles::hflip_tile(uint32_t id,uint8_t * out)
 void tiles::vflip_tile_ptr(uint8_t * in,uint8_t * out)
 {
 	uint8_t y;
-	switch (game_system)
-	{
+	switch (game_system){
 		case sega_genesis:
 		{//brackts are used so compiler knows how long they are in scope
 			uint8_t temp[32];
 			memcpy(temp,in,32);
 			for (y=0;y<32;y+=4)
-			{
 				memcpy(&out[28-y],&temp[y],4);
-			}
 		}
 		break;
 		case NES:
@@ -408,15 +376,11 @@ void tiles::vflip_tile(uint32_t id,uint8_t * out)
 }
 void tiles::blank_tile(uint32_t tileUsage)
 {
-	if (mode_editor == tile_edit)
-	{
+	if (mode_editor == tile_edit){
 		memset(&truetileDat[tileUsage*256],0,256);
 		truecolor_to_tile(tileEdit_pal.theRow,tileUsage);
-	}
-	else
-	{
+	}else
 		memset(&tileDat[tileUsage*tileSize],0,tileSize);
-	}
 }
 void tiles::remove_duplicate_tiles()
 {
@@ -437,10 +401,8 @@ void tiles::remove_duplicate_tiles()
 	int32_t cur_tile,curT;
 	uint8_t * tileTemp=(uint8_t *)alloca(tileSize);
 	puts("Pass 1");
-	for (cur_tile=0;cur_tile<=tiles_amount;cur_tile++)
-	{
-		for (curT=tiles_amount;curT>=0;curT--)
-		{
+	for (cur_tile=0;cur_tile<=tiles_amount;cur_tile++){
+		for (curT=tiles_amount;curT>=0;curT--){
 			if (cur_tile == curT)//dont compare it's self
 				continue;
 			#if __LP64__
@@ -462,10 +424,8 @@ void tiles::remove_duplicate_tiles()
 	}
 	//tile_remove_c=0;
 	puts("Pass 2 h-flip");
-	for (cur_tile=0;cur_tile<=tiles_amount;cur_tile++)
-	{
-		for (curT=tiles_amount;curT>=0;curT--)
-		{
+	for (cur_tile=0;cur_tile<=tiles_amount;cur_tile++){
+		for (curT=tiles_amount;curT>=0;curT--){
 			if (cur_tile == curT)//dont compare it's self
 				continue;
 			hflip_tile(curT,tileTemp);
