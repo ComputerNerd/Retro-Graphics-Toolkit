@@ -754,7 +754,7 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 					}
 					if (wr!=0)
 					{//handle borders
-						b+=48;
+						b+=24;
 						uint32_t yy=wt*3*8;
 						for (y=0;y<8;y++){
 							xx=0;
