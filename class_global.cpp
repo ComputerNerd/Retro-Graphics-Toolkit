@@ -6,15 +6,13 @@ void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y)
 	uint8_t grid[32*32*3];
 	//first generate grid
 	uint8_t * ptr_grid=grid;
-	for (uint8_t e=0;e<16;e++)
-	{
+	for (uint8_t e=0;e<16;e++){
 		for (uint8_t c=0;c<16*3;c++)
 			*ptr_grid++=255;
 		for (uint8_t c=0;c<16*3;c++)
 			*ptr_grid++=160;
 	}
-	for (uint8_t e=0;e<16;e++)
-	{
+	for (uint8_t e=0;e<16;e++){
 		for (uint8_t c=0;c<16*3;c++)
 			*ptr_grid++=160;
 		for (uint8_t c=0;c<16*3;c++)
@@ -28,10 +26,8 @@ void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y)
 	}
 	ptr_grid=grid;
 	double percent=rgba[3]/255.0;
-	for (uint16_t c=0;c<32*32;c++)
-	{
-		for (uint8_t e=0;e<3;e++)
-		{
+	for (uint16_t c=0;c<32*32;c++){
+		for (uint8_t e=0;e<3;e++){
 			//*ptr_grid++=((double)rgba[e]*percent)+((double)*ptr_grid*(1.0-percent));//undefined
 			uint8_t gridNerd=*ptr_grid;
 			*ptr_grid++=((double)rgba[e]*percent)+((double)gridNerd*(1.0-percent));
@@ -65,8 +61,7 @@ void editor::draw_non_gui()
 	uint8_t box_size=pal_size->value();
 	uint8_t tiles_size=tile_size->value();
 	uint8_t placer_tile_size=place_tile_size->value();
-	switch (mode_editor)
-	{
+	switch (mode_editor){
 		case pal_edit:
 			palEdit.draw_boxes();
 		break;

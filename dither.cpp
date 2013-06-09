@@ -94,21 +94,14 @@ static int32_t error[SIZE]; /* queue with error
   for (i=0,err=0L; i<SIZE; i++)
     err+=error[i]*weights[i];
   //pvalue=*pixel + err/MAX;
- if (*pixel+err/MAX > 255)
-  {
-	  pvalue=255;
-  }
-  else if (*pixel+err/MAX < 0)
-  {
-	  pvalue=0;
-  }
-  else
-  {
-	  pvalue=*pixel + err/MAX;
-  }
+	if (*pixel+err/MAX > 255)
+		pvalue=255;
+	else if (*pixel+err/MAX < 0)
+		pvalue=0;
+	else
+		pvalue=*pixel + err/MAX;
   //pvalue = (pvalue>=128) ? 255 : 0;
-	if ((game_system == sega_genesis) && (useHiL == 9))
-	{
+	if ((game_system == sega_genesis) && (useHiL == 9)){
 		bool tempSet=currentProject->tileMapC->get_prio(cur_x/8,cur_y/8)^true;
 		set_palette_type(tempSet);
 	}

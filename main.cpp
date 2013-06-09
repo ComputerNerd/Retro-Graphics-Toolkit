@@ -1105,18 +1105,19 @@ void save_tilemap_as_image(Fl_Widget*,void*)
 		uint32_t w3=w*3;//do this once instead of thousands of times in the loop
 		uint32_t h3=h*3;
 		uint32_t w21=w*21;
+		uint32_t w24_24=(w*24)-24;
 		uint8_t * tempptr,yy;
 		for(y=0;y<h;y+=8){
 			for(x=0;x<w;x+=8){
 				tileToTrueCol(currentProject->tileC->tileDat+(currentProject->tileMapC->get_tile(x/8,y/8)*currentProject->tileC->tileSize),temptile,currentProject->tileMapC->get_palette_map(x/8,y/8),false);
 				tempptr=temptile;
 				imgold=image;
-				for(yy=0;yy<8;yy++){
+				for(yy=0;yy<8;++yy){
 					memcpy(image,tempptr,24);
 					image+=w3;
 					tempptr+=24;
 				}
-				image=imgold+24;
+				image-=w24_24;
 			}
 			image+=w21;
 		}

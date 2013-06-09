@@ -88,8 +88,8 @@ void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha)
 	{
 		case sega_genesis:
 			row*=48;
-			for (uint8_t y=0;y<8;y++){
-				for (uint8_t x=0;x<4;x++){
+			for (uint8_t y=0;y<8;++y){
+				for (uint8_t x=0;x<4;++x){
 					//even,odd
 					uint8_t temp=*input++;
 					uint8_t temp_1,temp_2;
@@ -110,9 +110,9 @@ void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha)
 		break;
 		case NES:
 			row*=12;
-			for (uint8_t y=0;y<8;y++)
+			for (uint8_t y=0;y<8;++y)
 			{
-				for (uint8_t x=0;x<8;x++)
+				for (int8_t x=7;x>=0;--x)
 				{
 					uint8_t temp;
 					temp=(input[y]>>x)&1;
