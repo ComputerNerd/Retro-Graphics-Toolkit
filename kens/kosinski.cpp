@@ -37,7 +37,7 @@
 #define ERROR_MODULED_GREATHER_THAN_65535	0x03
 #define ERROR_CANT_CREATE_DESTINATION_FILE	0x04
 
-long Result;
+/*long Result;
 long end_result;
 
 long LoadBuffer(char *&Buffer)
@@ -97,7 +97,7 @@ long DecompToBuf(char *SrcFile, char *&DstBuffer, long *BufSize, long Pointer, b
 long Decomp(char *SrcFile, char *DstFile, long Pointer, bool Moduled)
 {
 	return KDecomp(SrcFile, DstFile, Pointer, Moduled);
-}
+}*/
 
 long KComp(char *SrcFile, char *DstFile, int SlideWin, int RecLen, bool Moduled)
 {

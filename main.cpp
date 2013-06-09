@@ -195,13 +195,10 @@ void update_map_size(Fl_Widget*,void*)
 	int32_t map_scroll=((tile_size_placer*8)*currentProject->tileMapC->mapSizeW)-map_off_x;//size of all offscreen tiles in pixels
 	//map_scroll-=(tile_size_placer*8);
 	if (map_scroll < 0)
-	{
 		map_scroll=0;
-	}
 	map_scroll/=tile_size_placer*8;//now size of all tiles
 	//cout << "tiles off screen: " << map_scroll << endl;
-	if (old_scroll > map_scroll)
-	{
+	if (old_scroll > map_scroll){
 		old_scroll=map_scroll;
 		map_scroll_pos_x=map_scroll;
 	}
@@ -211,13 +208,10 @@ void update_map_size(Fl_Widget*,void*)
 	map_scroll=((tile_size_placer*8)*currentProject->tileMapC->mapSizeH)-map_off_y;//size of all offscreen tiles in pixels
 	//map_scroll-=(tile_size_placer*8);
 	if (map_scroll < 0)
-	{
 		map_scroll=0;
-	}
 	map_scroll/=tile_size_placer*8;//now size of all tiles
 	//cout << "tiles off screen: " << map_scroll << endl;
-	if (old_scroll > map_scroll)
-	{
+	if (old_scroll > map_scroll){
 		old_scroll=map_scroll;
 		map_scroll_pos_y=map_scroll;
 	}
@@ -226,27 +220,23 @@ void update_map_size(Fl_Widget*,void*)
 }
 void save_tiles_truecolor(Fl_Widget*,void*)
 {
-	if (load_file_generic("Save truecolor tiles",true) == true)
-	{
+	if (load_file_generic("Save truecolor tiles",true) == true){
 		FILE * myfile;
 		myfile = fopen(the_file.c_str(),"wb");
-		if (myfile!=0)
-		{
+		if (myfile!=0){
 			fwrite(currentProject->tileC->truetileDat,1,(currentProject->tileC->tiles_amount+1)*256,myfile);
 			puts("Great Sucess File Saved!");
 			fclose(myfile);
 		}
 		else
-		{
 			fl_alert("Error: can not save file %s",the_file.c_str());
-		}
 	}
 }
 void save_tiles(Fl_Widget*,void*)
 {
 	if (load_file_generic("Pick a location to save tiles",true) == true){
 		uint8_t type=fl_choice("How would like this file saved?","Binary","C header",0);
-		uint8_t compression=fl_choice("What kind of compression do you want used?","Uncompressed","Nemesis",0);
+		uint8_t compression=fl_choice("What kind of compression do you want used?","Uncompressed","Nemesis","Kosinski");
 		FILE* myfile;
 		uint8_t* compdat;
 		uint32_t compsize;
@@ -265,23 +255,28 @@ void save_tiles(Fl_Widget*,void*)
 					fputc('\n',myfile);
 				fputs("const uint8_t tileDat[]={",myfile);
 			}
-			if (compression==1){
+			if(compression){
 				string input;
 				input.assign((const char *)currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize);
 				std::istringstream iss(input);
 				std::ostringstream outfun;
-				nemesis comp;
-				comp.encode(iss,outfun);
+				if(compression==2){
+						kosinski comp;
+						comp.encode(iss,outfun);
+				}else{
+					nemesis comp;
+					comp.encode(iss,outfun);
+				}
 				compsize=outfun.str().length();
-				printf("Compressed to %d uncompressed would be %d so therefore the file the ratio is %f\n",compsize,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize,(double)compsize/(double)((currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize)*100.0);
 				compdat=(uint8_t*)malloc(compsize);
 				if (compdat==0)
 					show_malloc_error(compsize)
 				string output=outfun.str();
 				output.copy((char *)compdat,compsize);
+				printf("Compressed to %d uncompressed would be %d so therefore the file the ratio is %f\n",compsize,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize,(double)compsize/(double)((currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize)*100.0);
 			}
 			if (type == 1){
-				if (compression==1){
+				if (compression){
 					if(saveBinAsText(compdat,compsize,myfile)==false){
 						free(compdat);
 						fl_alert("Error: can not save file %s",the_file.c_str());
@@ -295,7 +290,7 @@ void save_tiles(Fl_Widget*,void*)
 				}
 				fputs("};",myfile);
 			}else{
-				if(compression==1)
+				if(compression)
 					fwrite(compdat,1,compsize,myfile);
 				else
 					fwrite(currentProject->tileC->tileDat,currentProject->tileC->tileSize,(currentProject->tileC->tiles_amount+1),myfile);
@@ -329,10 +324,10 @@ void load_tiles(Fl_Widget*,void* split)
 		return;
 	}
 	uint8_t defaultRow=row >= 0 ? row:abs(row)-1;
-	uint8_t compression = fl_choice("What format is the tile?","Uncompressed","Nemesis Compressed",0);
+	uint8_t compression = fl_choice("What format is the tile?","Uncompressed","Nemesis Compressed","Kosinski");
 	if (load_file_generic() == true) {
 		FILE * myfile;
-		std::ostringstream outDecomp;
+		std::stringstream outDecomp;
 		myfile = fopen(the_file.c_str(),"rb");
 		if (likely(myfile!=0)) {
 			fseek(myfile, 0L, SEEK_END);
@@ -340,7 +335,7 @@ void load_tiles(Fl_Widget*,void* split)
 			rewind(myfile);
 			uint8_t truecolor_multiplier;
 			truecolor_multiplier=256/currentProject->tileC->tileSize;
-			if (compression==1) {
+			if(compression){
 				uint8_t * datcmp=(uint8_t *)malloc(file_size);
 				if (unlikely(datcmp==0))
 					show_malloc_error(file_size)
@@ -350,12 +345,16 @@ void load_tiles(Fl_Widget*,void* split)
 				input.assign((const char *)datcmp,file_size);
 				free(datcmp);
 				std::istringstream iss(input);
-				//iss.write((char *)datcmp,file_size);
-				nemesis decomp;
-				decomp.decode(iss,outDecomp);
+				if (compression==2){
+					kosinski decomp;
+					decomp.decode(iss,outDecomp);
+				}else{
+					nemesis decomp;
+					decomp.decode(iss,outDecomp);
+				}
 				file_size=outDecomp.str().length();
-			}
-			else {
+				printf("Decompressed to %d bytes\n",file_size);
+			}else{
 				if ((file_size/currentProject->tileC->tileSize)*currentProject->tileC->tileSize != file_size) {
 					fl_alert("Error: This is not a valid tile file each tile is %d bytes and this file is not a multiple of %d so it is not a valid tile file",currentProject->tileC->tileSize,currentProject->tileC->tileSize);
 					fclose(myfile);
@@ -373,8 +372,7 @@ void load_tiles(Fl_Widget*,void* split)
 						fclose(myfile);
 					show_realloc_error(file_size)
 				}
-			}
-			else {
+			}else{
 				free(currentProject->tileC->tileDat);
 				currentProject->tileC->tileDat = (uint8_t *)malloc(file_size);
 				if (currentProject->tileC->tileDat == 0) {
@@ -385,13 +383,12 @@ void load_tiles(Fl_Widget*,void* split)
 				offset_tiles=0;
 				offset_tiles_bytes=0;
 			}
-			if (compression==0) {
-				fread(currentProject->tileC->tileDat+offset_tiles_bytes,1,file_size,myfile);
-				fclose(myfile);
-			}
-			else if (compression==1) {
+			if (compression) {
 				string output=outDecomp.str();
 				output.copy((char *)currentProject->tileC->tileDat+offset_tiles_bytes,file_size);
+			}else{
+				fread(currentProject->tileC->tileDat+offset_tiles_bytes,1,file_size,myfile);
+				fclose(myfile);
 			}
 			currentProject->tileC->truetileDat = (uint8_t *)realloc(currentProject->tileC->truetileDat,(file_size*truecolor_multiplier)+(offset_tiles_bytes*truecolor_multiplier));
 			if (currentProject->tileC->truetileDat == 0)
