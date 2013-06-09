@@ -1022,8 +1022,7 @@ void toggleRowSolo(Fl_Widget*,void*)
 }
 void clearPalette(Fl_Widget*,void*)
 {
-	if (fl_ask("This will set all colors to 0 are you sure you want to do this?"))
-	{
+	if (fl_ask("This will set all colors to 0 are you sure you want to do this?")){
 		memset(currentProject->palDat,0,128);
 		memset(currentProject->rgbPal,0,192);
 		window->damage(FL_DAMAGE_USER1);
@@ -1097,7 +1096,6 @@ void save_tilemap_as_image(Fl_Widget*,void*)
 		uint32_t h=currentProject->tileMapC->mapSizeH*8;
 		uint8_t * image=(uint8_t*)malloc(w*h*3);
 		uint8_t * imageold=image;
-		uint8_t * imgold;
 		if(image==0)
 			show_malloc_error(w*h*3)
 		uint8_t temptile[192];
@@ -1111,7 +1109,6 @@ void save_tilemap_as_image(Fl_Widget*,void*)
 			for(x=0;x<w;x+=8){
 				tileToTrueCol(currentProject->tileC->tileDat+(currentProject->tileMapC->get_tile(x/8,y/8)*currentProject->tileC->tileSize),temptile,currentProject->tileMapC->get_palette_map(x/8,y/8),false);
 				tempptr=temptile;
-				imgold=image;
 				for(yy=0;yy<8;++yy){
 					memcpy(image,tempptr,24);
 					image+=w3;

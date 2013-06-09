@@ -77,42 +77,41 @@ bool tileMap::saveToFile()
 	returns false if there was an error but remeber if the user cancles this it is not an error
 	*/
 	//first see how this file should be saved
-	
 	uint16_t x,y;
 	FILE * myfile;
 	uint32_t fileSize;
-	uint8_t type,compression;
+	uint8_t type,compression, * mapptr;
 	if (load_file_generic("Save tilemap to",true) == true) {
 		type=fl_choice("How would like this file saved?","Binary","C header",0);
 		compression=fl_choice("In what format would you like this tilemap saved","Uncompressed","Enigma Compression",0);
 		if (type == 1) {
 			char temp[2048];
 			myfile = fopen(the_file.c_str(),"w");
-			sprintf(temp,"//Width %d Height %d\n",mapSizeW,mapSizeH);
+			sprintf(temp,"//Width %d Height %d",mapSizeW,mapSizeH);
 			fputs((const char *)temp,myfile);
+			if(compression==1)
+				fputs(" Enigma compressed",myfile);
+			fputc('\n',myfile);
 			fputs("const uint8_t mapDat[]={",myfile);
 		}
 		else
 			myfile = fopen(the_file.c_str(),"wb");
-		if (myfile!=0) {
+		if (likely(myfile!=0)) {
 			switch (game_system) {
 				case sega_genesis:
 					{
 					uint16_t * TheMap;
-					TheMap = (uint16_t *)malloc((mapSizeW*mapSizeH)*2);
-
-					for (y=0;y<mapSizeH;y++)
-					{
-						for (x=0;x<mapSizeW;x++)
-						{
+					fileSize=(mapSizeW*mapSizeH)*2;
+					TheMap = (uint16_t*)malloc(fileSize);
+					for (y=0;y<mapSizeH;y++){
+						for (x=0;x<mapSizeW;x++){
 							uint32_t tile=get_tile(x,y);
-							if (tile > 2047)
-							{
+							if (tile > 2047){
 								printf("Warning tile value %d exceeded 2047 at x: %d y: %d\n",tile,x,y);
 								tile=2047;
 							}
 							#if _WIN32
-							tile=swap_word(tile);
+							tile=swap_word(tile);//mingw appears not to provide htobe16 function
 							#else
 							tile=htobe16(tile);//needs to be big endian
 							#endif
@@ -120,27 +119,17 @@ bool tileMap::saveToFile()
 							*TheMap++|=(uint16_t)tile;//add tile
 						}
 					}
-					//TheMap--;
 					TheMap-=mapSizeW*mapSizeH;//return to begining so it can be freeded and the file saved
-					if (type == 1)
-					{
-						if (saveBinAsText(TheMap,mapSizeW*mapSizeH*2,myfile)==false)
-							return false;
-						fputs("};",myfile);
-					}
-					else
-						fwrite(TheMap,2,mapSizeW*mapSizeH,myfile);
-					free(TheMap);
+					mapptr=(uint8_t*)TheMap;
 				}//brackets used to prevent TheMap conflict
 				break;
 				case NES:
 				{
 					uint8_t * TheMap;
-					TheMap = (uint8_t *)malloc(mapSizeW*mapSizeH);
-					for (y=0;y<mapSizeH;y++)
-					{
-						for (x=0;x<mapSizeW;x++)
-						{
+					fileSize=mapSizeW*mapSizeH;
+					TheMap = (uint8_t *)malloc(fileSize);
+					for (y=0;y<mapSizeH;y++){
+						for (x=0;x<mapSizeW;x++){
 							uint32_t tile=get_tile(x,y);
 							if (tile > 255) {
 								printf("Warning tile value %d exceeded 255 at x: %d y: %d\n",tile,x,y);
@@ -149,48 +138,59 @@ bool tileMap::saveToFile()
 							*TheMap++=tile;
 						}
 					}
-					//TheMap--;
 					TheMap-=mapSizeW*mapSizeH;//return to begining so it can be freeded and the file sized
-					if (type == 1)
-					{
-						if (saveBinAsText(TheMap,mapSizeW*mapSizeH,myfile)==false)
-							return false;
-						fputs("};",myfile);
-					}
-					else {
-						fwrite(TheMap,1,mapSizeW*mapSizeH,myfile);
-					}
-					free(TheMap);
+					mapptr=TheMap;
 				}
 				break;
 			}
+			if(compression==1){
+				string input,output;
+				std::ostringstream outcomp;
+				enigma ecomp;
+				input.assign((const char*)mapptr,fileSize);
+				std::stringstream iss(input);
+				ecomp.encode(iss,outcomp);
+				output=outcomp.str();
+				fileSize=outcomp.str().length();
+				mapptr=(uint8_t*)realloc(mapptr,fileSize);
+				output.copy((char*)mapptr,fileSize);
+				printf("compressed to %d bytes\n",fileSize);
+			}
+			if (type == 1){
+				if (saveBinAsText(mapptr,fileSize,myfile)==false){
+					free(mapptr);
+					return false;
+				}
+				fputs("};",myfile);
+			}else
+				fwrite(mapptr,1,fileSize,myfile);
+			free(mapptr);
 			fclose(myfile);
 			puts("File Saved");
 		}
 		else
 			return false;
 	}
-	if (game_system == NES) {
+	if (game_system == NES){
 		if (load_file_generic("Save attributes to",true) == true) {
-			if (type == 1) {
+			if (type == 1){
 				myfile = fopen(the_file.c_str(),"w");
 				fputs("const uint8_t attrDat[]={",myfile);
 			}
 			else
 				myfile = fopen(the_file.c_str(),"wb");
-			if (myfile!=0) {
+			if (likely(myfile!=0)) {
 				uint8_t * AttrMap = (uint8_t *)malloc((mapSizeW/4)*(mapSizeH/4));
 				uint8_t * freeAttrMap=AttrMap;
 				for (y=0;y<mapSizeH;y+=4) {
 					for (x=0;x<mapSizeW;x+=4) {
-						*AttrMap++ = get_palette_map(x,y) | (get_palette_map(x+2,y)<<4) | (get_palette_map(x,y+2) << 4) | (get_palette_map(x+2,y+2) << 6);
+						*AttrMap++ = get_palette_map(x,y) | (get_palette_map(x+2,y)<<2) | (get_palette_map(x,y+2) << 4) | (get_palette_map(x+2,y+2) << 6);
 						printf("x: %d y: %d\n",x,y);
 					}
 				}
 				//AttrMap-=(mapSizeW/4)*(mapSizeH/4);
 				printf("%d %d\n",AttrMap,freeAttrMap);
-				if (type == 1)
-				{
+				if (type == 1){
 					if (saveBinAsText(freeAttrMap,(mapSizeW/4)*(mapSizeH/4),myfile)==false)
 							return false;
 						fputs("};",myfile);
@@ -202,9 +202,7 @@ bool tileMap::saveToFile()
 				puts("File Saved");
 			}
 			else
-			{
 				return false;
-			}
 		}
 	}
 	return true;
@@ -855,6 +853,7 @@ void generate_optimal_palette(Fl_Widget*,void*)
 	if (verify_str_number_only(returned) == false)
 			return;
 	int8_t colors=atoi(returned);
+	int8_t colorstotal=colors;
 	uint8_t asdf;
 	for (asdf=0;asdf<4;asdf++) {
 		perRow[asdf]=colors > rowSize ? rowSize:colors;
@@ -893,7 +892,7 @@ void generate_optimal_palette(Fl_Widget*,void*)
 	if (rows==1)
 		rowAuto = fl_ask("Would you like all tiles on the tilemap to be set to row 0? (This is where all generated colors will apear)");
 	else
-		 rowAuto = fl_ask("Since you used more than one row tiles can be selected based on the hue\nDo you want which row each tile to use be selected automaticlly by hue\nBy pressing no this assumes that you have already picked which tile uses what row");
+		 rowAuto = fl_choice("How would you like the palette map to be handled","Dont change anythin","Pick based on hue","Generate contiguos palette then pick based on delta(recommended)");
 	switch (game_system){
 		case sega_genesis:
 			if (rows==1){
@@ -906,12 +905,17 @@ void generate_optimal_palette(Fl_Widget*,void*)
 				window->redraw();
 			}else{
 				image = (uint8_t *)malloc(w*h*3);
-				if (rowAuto)
-					currentProject->tileMapC->pickRow(rows);
-				for (uint8_t nerdL=0;nerdL<rows;nerdL++) {
-					reduceImageGenesis(image,found_colors,nerdL,nerdL*16,progress,perRow[nerdL]);
-					window->damage(FL_DAMAGE_USER1);
-					Fl::check();
+				if(rowAuto==2){
+						reduceImageGenesis(image,found_colors,-1,0,progress,colorstotal);
+						currentProject->tileMapC->pickRowDelta();
+				}else{
+					if (rowAuto==1)
+						currentProject->tileMapC->pickRow(rows);
+					for (uint8_t nerdL=0;nerdL<rows;nerdL++) {
+						reduceImageGenesis(image,found_colors,nerdL,nerdL*16,progress,perRow[nerdL]);
+						window->damage(FL_DAMAGE_USER1);
+						Fl::check();
+					}
 				}
 				//currentProject->tileMapC->pickRowDelta();
 				free(image);
@@ -927,7 +931,11 @@ void generate_optimal_palette(Fl_Widget*,void*)
 				//free(found_colors);
 				window->redraw();
 			}else{
-					image = (uint8_t *)malloc(w*h*3);
+				image = (uint8_t *)malloc(w*h*3);
+				if(rowAuto==2){
+					reduceImageNES(image,found_colors,-1,0,progress,colorstotal);
+					currentProject->tileMapC->pickRowDelta();
+				}else{
 					if (rowAuto)
 						currentProject->tileMapC->pickRow(rows);
 					for (uint8_t nerdL=0;nerdL<rows;nerdL++)
@@ -936,6 +944,7 @@ void generate_optimal_palette(Fl_Widget*,void*)
 						window->damage(FL_DAMAGE_USER1);
 						Fl::check();
 					}
+				}
 					free(image);
 					window->redraw();
 			}
