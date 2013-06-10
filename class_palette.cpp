@@ -170,7 +170,6 @@ void palette_bar::changeSystem()
 			pal_b->step(1);
 			pal_b->callback(update_emphesis);
 			updateSlider();
-			update_emphesis(0,0);
 		break;
 	}
 }

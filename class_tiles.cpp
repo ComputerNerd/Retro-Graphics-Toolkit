@@ -63,16 +63,22 @@ void tiles::remove_tile_at(uint32_t tileDel)
 }
 void tiles::truecolor_to_tile(uint8_t palette_row,uint32_t cur_tile)
 {
+	truecolor_to_tile_ptr(palette_row,cur_tile,truetileDat+(cur_tile*256));
+}
+void tiles::truecolor_to_tile_ptr(uint8_t palette_row,uint32_t cur_tile,uint8_t * tileinput,bool Usedither)
+{
 	//dithers a truecolor tile to tile
 	uint32_t tile_256=cur_tile*256;
 	uint32_t tile_32=cur_tile*32;
 	uint32_t tile_16=cur_tile*16;
 	uint8_t true_color_temp[256];
-	memcpy(true_color_temp,&truetileDat[tile_256],256);
+	memcpy(true_color_temp,tileinput,256);
 	if (game_system == NES)
 		memset(tileDat+tile_16,0,16);
-	ditherImage(&true_color_temp[0],8,8,true,true);
-	ditherImage(&true_color_temp[0],8,8,true,false);
+	if(Usedither){
+		ditherImage(&true_color_temp[0],8,8,true,true);
+		ditherImage(&true_color_temp[0],8,8,true,false);
+	}
 	//now image needs to be checked for alpha
 	uint8_t * truePtr=true_color_temp;
 	truePtr=true_color_temp;

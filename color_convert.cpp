@@ -2,14 +2,13 @@
 uint8_t nespaltab_r[64];
 uint8_t nespaltab_g[64];
 uint8_t nespaltab_b[64];
-unsigned char to_nes_color_rgb(unsigned char red,unsigned char green,unsigned char blue)
+uint8_t to_nes_color_rgb(uint8_t red,uint8_t green,uint8_t blue)
 {
 	//this function does not set any values to global palette it is done in other functions
 	int min_error =(255*255) +(255*255) +(255*255) +1;
-	unsigned char bestcolor=0;
-	for (unsigned char a=0;a<16;a++){
-		for (unsigned char c=0;c<4;c++)//c++ haha
-		{
+	uint8_t bestcolor=0;
+	for (uint8_t a=0;a<16;a++){
+		for (uint8_t c=0;c<4;c++){
 			uint8_t temp=a|(c<<4);
 			int rdiff= (int)nespaltab_r[temp] - (int)red;
 			int gdiff= (int)nespaltab_g[temp] - (int)green;
@@ -23,17 +22,18 @@ unsigned char to_nes_color_rgb(unsigned char red,unsigned char green,unsigned ch
 	}
 	return bestcolor;
 }
-uint8_t to_nes_color(unsigned char pal_index)
+uint8_t to_nes_color(uint8_t pal_index)
 {
 	//this function does not set any values to global palette it is done in other functions
+	pal_index*=3;
 	int min_error =(255*255) +(255*255) +(255*255) +1;
 	uint8_t bestcolor=0;
-	for (unsigned char a=0;a<16;a++){
-		for (unsigned char c=0;c<4;c++){
+	for (uint8_t a=0;a<16;a++){
+		for (uint8_t c=0;c<4;c++){
 			uint8_t temp=a|(c<<4);
-			int rdiff= (int)nespaltab_r[temp] - (int)currentProject->rgbPal[pal_index*3];
-			int gdiff= (int)nespaltab_g[temp] - (int)currentProject->rgbPal[(pal_index*3)+1];
-			int bdiff= (int)nespaltab_b[temp] - (int)currentProject->rgbPal[(pal_index*3)+2];
+			int rdiff= (int)nespaltab_r[temp] - (int)currentProject->rgbPal[pal_index];
+			int gdiff= (int)nespaltab_g[temp] - (int)currentProject->rgbPal[pal_index+1];
+			int bdiff= (int)nespaltab_b[temp] - (int)currentProject->rgbPal[pal_index+2];
 			int dist = (rdiff*rdiff) + (gdiff*gdiff) + (bdiff*bdiff);
 			if (dist <= min_error){
 				min_error = dist;
@@ -123,9 +123,9 @@ uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_
 	if (useAlpha)
 		image_ptr++;
 	uint8_t start=1;
-	unsigned int y;
-	for (y=0;y<h;y++){
-		for (uint32_t x=start;x<w;x++){
+	uint32_t y;
+	for (y=0;y<h;++y){
+		for (uint32_t x=start;x<w;++x){
 			start=0;
 			uint8_t r,g,b;
 			r=*image_ptr++;
@@ -148,7 +148,7 @@ uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_
 			}
 			if (colors_amount >= 765){
 				printf("\nOver 255 colors timing out no need for operation to countinue.\n");
-				return colors_amount/3;//to save on multiplication we have it times 3
+				return colors_amount/3;
 			}
 		}
 			//update progress
@@ -156,6 +156,19 @@ uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_
 	}
 	printf("\n");
 	return colors_amount/3;
+}
+void updateNesTab(uint8_t emps){
+	uint8_t c,v;
+	uint32_t rgb_out;
+	for(c=0;c<16;++c){
+		for(v=0;v<4;++v){
+			uint8_t temp=c|(v<<4);
+			rgb_out=MakeRGBcolor(temp|emps);
+			nespaltab_r[temp]=(rgb_out>>16)&255;//red
+			nespaltab_g[temp]=(rgb_out>>8)&255;//green
+			nespaltab_b[temp]=rgb_out&255;//blue
+		}
+	}
 }
 void update_emphesis(Fl_Widget*,void*)
 {
@@ -180,14 +193,7 @@ void update_emphesis(Fl_Widget*,void*)
 	emps<<=6;
 	uint8_t c,v;
 	uint32_t rgb_out;
-	for(c=0;c<16;c++){
-		for(v=0;v<4;v++){
-			rgb_out=MakeRGBcolor((c|(v<<4))|emps);
-			nespaltab_r[c|(v<<4)]=(rgb_out>>16)&255;//red
-			nespaltab_g[c|(v<<4)]=(rgb_out>>8)&255;//green
-			nespaltab_b[c|(v<<4)]=rgb_out&255;//blue
-		}
-	}
+	updateNesTab(emps);
 	for (c=0;c<48;c+=3){
 		rgb_out=MakeRGBcolor(currentProject->palDat[c/3]|emps);
 		currentProject->rgbPal[c]=(rgb_out>>16)&255;//red

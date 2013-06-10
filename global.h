@@ -10,21 +10,12 @@ Header for globals included with all other files.
 #include "errorMsg.h"
 #include "class_tiles.h"
 //functions
-/*!
-This function calculates pointer offset for truecolor tiles
-for example cal_offset_truecolor(8,8,0,32);
-would edit the red pixel at (8,8) located on tile 32 
-*/
 uint8_t nearest_color_index(uint8_t val);
 void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha=true);
 bool saveBinAsText(void * ptr,size_t sizeBin,FILE * myfile);
 bool verify_str_number_only(char * str);
 uint32_t cal_offset_truecolor(uint16_t x,uint16_t y,uint16_t rgb,uint32_t tile);
-//void draw_tile(uint16_t x_off,uint16_t y_off,uint32_t tile_draw,uint8_t zoom,uint8_t pal_row,bool hflip_tile,bool vflip_tile);
-//void draw_truecolor(uint32_t tile,uint16_t x,uint16_t y,bool usehflip,bool usevflip,uint8_t zoom);
 bool load_file_generic(const char * the_tile="Pick a file",bool save_file=false);
-//bool load_file_generic(const char * the_tile,bool save_file);
-void truecolor_to_tile(uint8_t palette_row,uint32_t tile);
 uint8_t find_near_color_from_row(uint8_t row,uint8_t r,uint8_t g,uint8_t b);
 uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b);
 //map related functions

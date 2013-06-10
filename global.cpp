@@ -154,7 +154,6 @@ it will also allow the use of the - symbol as negative
 	}
 	return true;
 }
-
 inline int wave(int p,int color)
 {
 	return (color+p+8)%12 < 6;
@@ -223,7 +222,6 @@ uint32_t MakeRGBcolor(uint32_t pixel,float saturation, float hue_tweak,float con
                      + 0x00001*clamp(255 * gammafix(y + -1.108545f*i +  1.709007f*q,gamma));
         return rgb;
 }
-
 const uint8_t palTab[]=   {0,49,87,119,146,174,206,255,0,27,49,71,87,103,119,130,130,146,157,174,190,206,228,255};//from http://gendev.spritesmind.net/forum/viewtopic.php?t=1389
 const uint8_t palTabEmu[]={0,36,72,108,144,180,216,252,0,18,36,54,72, 90,108,126,126,144,162,180,198,216,234,252};
 void set_palette_type(uint8_t type)
@@ -251,7 +249,6 @@ void set_palette_type(uint8_t type)
 	}
 	//window->redraw();
 }
-
 void set_tile_full(uint32_t tile,uint16_t x,uint16_t y,uint8_t palette_row,bool use_hflip,bool use_vflip,bool highorlow_prio)
 {
 	if (currentProject->tileMapC->mapSizeW < x || currentProject->tileMapC->mapSizeH < y) {
@@ -398,7 +395,6 @@ void set_prio(uint16_t x,uint16_t y,bool prio_set)
 	else
 		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4] &= ~(1 << 7);
 }
-
 void resize_tile_map(uint16_t new_x,uint16_t new_y)
 {
 	//currentProject->tileMapC->mapSizeW and currentProject->tileMapC->mapSizeH hold old map size
@@ -408,48 +404,42 @@ void resize_tile_map(uint16_t new_x,uint16_t new_y)
 	//uint8_t * temp = new uint8_t [(new_x*new_y)*2];
 	uint8_t * temp=0;
 	temp=(uint8_t *)malloc((new_x*new_y)*4);
-	if (temp == 0)
-	{
+	if (temp == 0){
 		//cout << "error" << endl;
 		show_malloc_error((new_x*new_y)*4)
 		return;
 	}
 	//now copy old data to temp
 	uint32_t sel_map;
-	for (y=0;y<new_y;y++)
-	{
-		for (x=0;x<new_x;x++)
-		{
-			if (x < currentProject->tileMapC->mapSizeW && y < currentProject->tileMapC->mapSizeH)
-			{	
-				sel_map=((y*new_x)+x)*4;
+	for (y=0;y<new_y;y++){
+		for (x=0;x<new_x;x++){
+			sel_map=((y*new_x)+x)*4;
+			if (x < currentProject->tileMapC->mapSizeW && y < currentProject->tileMapC->mapSizeH){
 				uint32_t sel_map_old=((y*currentProject->tileMapC->mapSizeW)+x)*4;
-				temp[sel_map]=currentProject->tileMapC->tileMapDat[sel_map_old];
+				/*temp[sel_map]=currentProject->tileMapC->tileMapDat[sel_map_old];
 				temp[sel_map+1]=currentProject->tileMapC->tileMapDat[sel_map_old+1];
 				temp[sel_map+2]=currentProject->tileMapC->tileMapDat[sel_map_old+2];
-				temp[sel_map+3]=currentProject->tileMapC->tileMapDat[sel_map_old+3];
-			}
-			else
-			{
-				sel_map=((y*new_x)+x)*4;
-				temp[sel_map]=0;
+				temp[sel_map+3]=currentProject->tileMapC->tileMapDat[sel_map_old+3];*/
+				memcpy(&temp[sel_map],&currentProject->tileMapC->tileMapDat[sel_map_old],4);
+			}else{
+				/*temp[sel_map]=0;
 				temp[sel_map+1]=0;
 				temp[sel_map+2]=0;
-				temp[sel_map+3]=0;
+				temp[sel_map+3]=0;*/
+				memset(&temp[sel_map],0,4);
 			}
 		}
 	}
 	currentProject->tileMapC->tileMapDat = (uint8_t *)realloc(currentProject->tileMapC->tileMapDat,(new_x*new_y)*4);
-	if (currentProject->tileMapC->tileMapDat == 0)
-	{
-		//fl_alert("An error occured while realloc currentProject->tileMapC->tileMapDat");
+	if (currentProject->tileMapC->tileMapDat == 0){
 		show_realloc_error((new_x*new_y)*4)
 		return;
 	}
-	for (uint32_t c=0;c<(new_x*new_y)*4;c++)
+	/*for (uint32_t c=0;c<(new_x*new_y)*4;c++)
 	{
 		currentProject->tileMapC->tileMapDat[c]=temp[c];
-	}
+	}*/
+	memcpy(currentProject->tileMapC->tileMapDat,temp,(new_x*new_y)*4);
 	free(temp);
 	currentProject->tileMapC->mapSizeW=new_x;
 	//calulate new scroll size
@@ -458,15 +448,11 @@ void resize_tile_map(uint16_t new_x,uint16_t new_y)
 	int32_t map_scroll=((tile_size_placer*8)*currentProject->tileMapC->mapSizeW)-map_off_x;//size of all offscreen tiles in pixels
 	//map_scroll-=(tile_size_placer*8);
 	if (map_scroll < 0)
-	{
 		map_scroll=0;
-	}
 	map_scroll/=tile_size_placer*8;//now size of all tiles
 	//cout << "tiles off screen: " << map_scroll << endl;
 	if (old_scroll > map_scroll)
-	{
 		old_scroll=map_scroll;
-	}
 	window->map_x_scroll->value(old_scroll,(map_scroll/2),0,map_scroll+(map_scroll/2));//the reason for adding map_scroll/2 to map_scroll is because without it the user will not be able to scroll the tilemap all the way
 	currentProject->tileMapC->mapSizeH=new_y;
 	old_scroll=window->map_y_scroll->value();
@@ -474,17 +460,12 @@ void resize_tile_map(uint16_t new_x,uint16_t new_y)
 	map_scroll=((tile_size_placer*8)*currentProject->tileMapC->mapSizeH)-map_off_y;//size of all offscreen tiles in pixels
 	//map_scroll-=(tile_size_placer*8);
 	if (map_scroll < 0)
-	{
 		map_scroll=0;
-	}
 	map_scroll/=tile_size_placer*8;//now size of all tiles
 	//cout << "tiles off screen: " << map_scroll << endl;
 	if (old_scroll > map_scroll)
-	{
 		old_scroll=map_scroll;
-	}
 	window->map_y_scroll->value(old_scroll,(map_scroll/2),0,map_scroll+(map_scroll/2));
-
 }
 //bool load_file_generic(const char * the_tile="Pick a file",bool save_file=false)
 bool load_file_generic(const char * the_tile,bool save_file)
@@ -493,13 +474,9 @@ bool load_file_generic(const char * the_tile,bool save_file)
 	Fl_Native_File_Chooser native;
 	native.title(the_tile);
 	if (save_file == false)
-	{
 		native.type(Fl_Native_File_Chooser::BROWSE_FILE);
-	}
 	else
-	{
 		native.type(Fl_Native_File_Chooser::BROWSE_SAVE_FILE);
-	}
 	// Show native chooser
 	switch ( native.show() )
 	{

@@ -12,6 +12,7 @@ public:
 	uint8_t * tileDat;/*!< Pointer to the tile data*/
 	uint8_t * truetileDat;/*< Pointer to Truecolor tile data*/
 	void remove_tile_at(uint32_t);
+	void truecolor_to_tile_ptr(uint8_t palette_row,uint32_t cur_tile,uint8_t * tileinput,bool Usedither=true);
 	void truecolor_to_tile(uint8_t,uint32_t);/*!< truecolor_to_tile will update/dither the selected tile*/
 	void draw_truecolor(uint32_t,uint16_t x,uint16_t y,bool usehflip,bool usevflip,uint8_t zoom);
 	void draw_tile(uint16_t,uint16_t,uint32_t,uint8_t,uint8_t,bool,bool);
@@ -35,4 +36,3 @@ public:
 	bool cmp_tiles(uint32_t one,uint32_t * two);/*!<Used to compare two tiles returns true if the same*/
 #endif
 };
-//extern tiles_main;

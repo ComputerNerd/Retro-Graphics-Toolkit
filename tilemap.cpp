@@ -81,7 +81,7 @@ bool tileMap::saveToFile()
 	FILE * myfile;
 	uint32_t fileSize;
 	uint8_t type,compression, * mapptr;
-	if (load_file_generic("Save tilemap to",true) == true) {
+	if (load_file_generic("Save tilemap to",true) == true){
 		type=fl_choice("How would like this file saved?","Binary","C header",0);
 		compression=fl_choice("In what format would you like this tilemap saved","Uncompressed","Enigma Compression",0);
 		if (type == 1) {
@@ -342,8 +342,29 @@ bool tileMap::loadFromFile()
 					}
 				}
 				//now load attributes
-				if (load_file_generic("Load Attribtues") == true)
-					fl_alert("FIXME: feature not added");
+				if (load_file_generic("Load Attribtues") == true){
+					FILE * fp=fopen(the_file.c_str(),"wb");
+					fseek(fp, 0L, SEEK_END);
+					uint32_t sz=ftell(fp);
+					rewind(fp);
+					uint8_t* tempbuf=(uint8_t*)alloca(sz);
+					fread(tempbuf,1,sz,fp);
+					for (y=0;y<h;y+=4) {
+						for (x=0;x<w;x+=4) {
+							set_pal_row(x,y,*tempbuf&3);
+							set_pal_row(x,y+1,*tempbuf&3);
+							set_pal_row(x+1,y,*tempbuf&3);
+							set_pal_row(x+1,y+1,*tempbuf&3);
+							
+							set_pal_row(x+2,y,((*tempbuf)>>2)&3);
+							set_pal_row(x+2,y+1,((*tempbuf)>>2)&3);
+							set_pal_row(x+3,y,((*tempbuf)>>2)&3);
+							set_pal_row(x+3,y+1,((*tempbuf)>>2)&3);
+
+							++tempbuf;
+						}
+					}
+				}
 			break;
 		}
 		tempMap-=file_size;
@@ -355,17 +376,17 @@ void tileMap::sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vfl
 {
 	uint16_t x,y;
 	int32_t temp;
-	for (y=0;y<mapSizeH;y++) {
-		for (x=0;x<mapSizeW;x++) {
+	for (y=0;y<mapSizeH;y++){
+		for (x=0;x<mapSizeW;x++){
 			temp=get_tile(x,y);
-			if (temp == oldTile) {
+			if (temp == oldTile){
 				set_tile(newTile,x,y);
 				if (hflip == true)
 					set_hflip(x,y,true);
 				if (vflip == true)
 					set_vflip(x,y,true);
 			}
-			else if (temp > oldTile) {
+			else if (temp > oldTile){
 				temp--;
 				if (temp < 0)
 					temp=0;
@@ -647,12 +668,12 @@ void reduceImageGenesis(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_
 	ditherImage(image,w,h,false,true);
 	colors_found=count_colors(image,w,h,&found_colors[0],false);
 	printf("Unique colors %d\n",colors_found);
-	if (colors_found <= maxCol) {
+	if (colors_found <= maxCol){
 		printf("%d colors\n",colors_found);
-		for (uint8_t x=0;x<colors_found;x++) {
+		for (uint8_t x=0;x<colors_found;x++){
 			uint8_t r,g,b;
 againFun:
-			if (currentProject->palType[x+offsetPal]) {
+			if (currentProject->palType[x+offsetPal]){
 				offsetPal++;
 				off3+=3;
 				off2+=2;
@@ -678,9 +699,7 @@ againFun:
 			currentProject->palDat[(x*2)+1+off2]=(r<<1)|(g<<5);	
 		}
 		window->redraw();
-	}
-	else
-	{
+	}else{
 		puts("More than 16 colors reducing to 16 colors");
 		/*this uses denesis lee's v3 color quant which is fonund at http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c*/
 		uint8_t user_pal[3][256];			
@@ -690,8 +709,7 @@ againFun:
 		bool can_go_again=true;
 try_again_color:
 		dl3quant(image,w,h,colorz,user_pal,true,progress);
-		for (uint16_t x=0;x<colorz;x++)
-		{
+		for (uint16_t x=0;x<colorz;x++){
 			uint8_t r,g,b;
 			r=user_pal[0][x];
 			g=user_pal[1][x];
@@ -705,8 +723,8 @@ try_again_color:
 		}
 		uint8_t new_colors = count_colors(rgb_pal2,colorz,1,&rgb_pal3[off3]);
 		printf("Unique colors in palette %d\n",new_colors);
-		if (new_colors < maxCol) {
-			if (can_go_again == true) {
+		if (new_colors < maxCol){
+			if (can_go_again == true){
 				if (colorz != 255)
 					colorz++;
 				else
@@ -722,10 +740,10 @@ try_again_color:
 			goto try_again_color;
 		}
 		uint8_t off3o=off3;
-		for (uint8_t x=0;x<maxCol;x++) {
+		for (uint8_t x=0;x<maxCol;x++){
 			uint8_t r,g,b;
 againNerd:
-			if (currentProject->palType[x+offsetPal]) {
+			if (currentProject->palType[x+offsetPal]){
 				offsetPal++;
 				off3+=3;
 				off2+=2;
@@ -761,7 +779,7 @@ void reduceImageNES(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t of
 		for (uint8_t x=0;x<colors_found;x++){
 			uint8_t r,g,b;
 againFun:
-			if (currentProject->palType[x+offsetPal]) {
+			if (currentProject->palType[x+offsetPal]){
 				offsetPal++;
 				if (offsetPal >= 16)
 					break;
@@ -775,9 +793,7 @@ againFun:
 			currentProject->palDat[x+offsetPal]=temp;
 		}
 		update_emphesis(NULL,NULL);
-	}
-	else
-	{
+	}else{
 		printf("%d colors needs quantization\n",colors_found);
 		uint8_t user_pal[3][256];				
 		uint8_t rgb_pal2[768];
@@ -786,8 +802,7 @@ againFun:
 		bool can_go_again=true;
 try_again_nes_color:
 		dl3quant(image,w,h,colorz,user_pal,true,progress);
-		for (uint16_t x=0;x<colorz;x++)
-		{
+		for (uint16_t x=0;x<colorz;x++){
 			uint8_t r,g,b;
 			r=user_pal[0][x];
 			g=user_pal[1][x];
@@ -892,7 +907,7 @@ void generate_optimal_palette(Fl_Widget*,void*)
 	if (rows==1)
 		rowAuto = fl_ask("Would you like all tiles on the tilemap to be set to row 0? (This is where all generated colors will apear)");
 	else
-		 rowAuto = fl_choice("How would you like the palette map to be handled","Dont change anythin","Pick based on hue","Generate contiguos palette then pick based on delta(recommended)");
+		 rowAuto = fl_choice("How would you like the palette map to be handled","Dont change anythin","Pick based on hue","Generate contiguos palette then pick based on delta");
 	switch (game_system){
 		case sega_genesis:
 			if (rows==1){
@@ -908,6 +923,8 @@ void generate_optimal_palette(Fl_Widget*,void*)
 				if(rowAuto==2){
 						reduceImageGenesis(image,found_colors,-1,0,progress,colorstotal);
 						currentProject->tileMapC->pickRowDelta();
+						window->damage(FL_DAMAGE_USER1);
+						Fl::check();
 				}else{
 					if (rowAuto==1)
 						currentProject->tileMapC->pickRow(rows);
@@ -935,6 +952,8 @@ void generate_optimal_palette(Fl_Widget*,void*)
 				if(rowAuto==2){
 					reduceImageNES(image,found_colors,-1,0,progress,colorstotal);
 					currentProject->tileMapC->pickRowDelta();
+					window->damage(FL_DAMAGE_USER1);
+					Fl::check();
 				}else{
 					if (rowAuto)
 						currentProject->tileMapC->pickRow(rows);
