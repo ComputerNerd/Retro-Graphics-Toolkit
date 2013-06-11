@@ -670,6 +670,18 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 			fl_alert("Error loading image");
 			return;
 		}
+		uint8_t tilebit;
+		switch(game_system){
+			case sega_genesis:
+				tilebit=7;
+			break;
+			case NES:
+				tilebit=15;
+			break;
+			default:
+				show_default_error
+			break;
+		}
 		uint32_t w,h;
 		w=loaded_image->w();
 		h=loaded_image->h();
@@ -677,16 +689,22 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 		uint16_t w8,h8;
 		uint32_t wt,ht;
 		uint8_t wr,hr;
-		wt=w&(~7U);
-		ht=h&(~7U);
-		wr=w&7;
-		hr=h&7;
+		wt=w&(~(uint32_t)tilebit);
+		ht=h&(~(uint32_t)tilebit);
+		wr=w&tilebit;
+		hr=h&tilebit;
 		w8=w/8;
 		h8=h/8;
 		if (wr!=0)
 			w8++;
 		if (hr!=0)
 			h8++;
+		if(game_system==NES){
+			if((wr-8)>0)
+				w8++;
+			if((hr-8)>0)
+				h8++;
+		}
 		if ((wr != 0) && (hr != 0))
 			fl_alert("Warning both width and height are not a multiple of 8");
 		else if (wr != 0)
@@ -944,6 +962,8 @@ void set_game_system(Fl_Widget*,void* selection)
 			tileEdit_pal.changeSystem();
 			tileMap_pal.changeSystem();
 			currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*32);
+			window->map_w->step(1);
+			window->map_h->step(1);
 		break;
 		case NES:
 			game_system=NES;
@@ -957,6 +977,17 @@ void set_game_system(Fl_Widget*,void* selection)
 			tileMap_pal.changeSystem();
 			update_emphesis(0,0);
 			currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*16);
+			//on the NES tilemaps need to be a multiple of 2
+			if(((currentProject->tileMapC->mapSizeW)&1) && ((currentProject->tileMapC->mapSizeH)&1))
+				resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeH+1);
+			if((currentProject->tileMapC->mapSizeW)&1)
+				resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeH);
+			if((currentProject->tileMapC->mapSizeH)&1)
+				resize_tile_map(currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeH+1);
+			window->map_w->value(currentProject->tileMapC->mapSizeW);
+			window->map_h->value(currentProject->tileMapC->mapSizeH);
+			window->map_w->step(2);
+			window->map_h->step(2);
 		break;
 		default:
 			show_default_error

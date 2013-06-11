@@ -353,16 +353,6 @@ uint8_t find_near_color_from_row(uint8_t row,uint8_t r,uint8_t g,uint8_t b)
 {
 	return (find_near_color_from_row_rgb(row,r,g,b)/3)-(row*palEdit.perRow);
 }
-inline uint16_t add_pixel(int16_t a,int16_t b)
-{
-	if (a+b > 255)
-		a=255;
-	else if (a+b < 0)
-		a=0;
-	else
-		a+=b;
-	return a;
-}
 uint32_t cal_offset_truecolor(uint16_t x,uint16_t y,uint16_t rgb,uint32_t tile)
 {
 	/*
@@ -398,7 +388,8 @@ void set_prio(uint16_t x,uint16_t y,bool prio_set)
 void resize_tile_map(uint16_t new_x,uint16_t new_y)
 {
 	//currentProject->tileMapC->mapSizeW and currentProject->tileMapC->mapSizeH hold old map size
-	if (new_x == currentProject->tileMapC->mapSizeW && new_y == currentProject->tileMapC->mapSizeH) return;
+	if (new_x == currentProject->tileMapC->mapSizeW && new_y == currentProject->tileMapC->mapSizeH)
+		return;
 	//now create a temp buffer to hold the old data
 	uint16_t x,y;//needed for loop varibles to copy data
 	//uint8_t * temp = new uint8_t [(new_x*new_y)*2];

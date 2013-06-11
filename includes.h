@@ -2,6 +2,7 @@
 
 #if _WIN32
 #include <windows.h>
+#include <malloc.h>//Needed for alloca()
 #endif
 #include <inttypes.h>
 #include <cmath>
