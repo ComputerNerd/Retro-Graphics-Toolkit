@@ -594,20 +594,49 @@ void tileMap::pickRow(uint8_t amount)
 	h=0.0;
 	uint16_t z;
 	uint32_t x,y;
-	for (y=0;y<mapSizeH;y++) {
-		for (x=0;x<mapSizeW;x++) {
+	uint32_t cnt[4];
+	double weightPal[4];
+	double maxPal=divide;
+	//now using 2 pass method try to make each row have about the same amount of tiles
+	for (y=0;y<mapSizeH;++y){//pass 1
+		for (x=0;x<mapSizeW;++x){
 			uint32_t cur_tile=get_tile(x,y);
 			uint8_t * truePtr=&currentProject->tileC->truetileDat[cur_tile*256];
 			double hh=0.0;
 			for (z=0;z<256;z+=4) {
 				rgbToHls(truePtr[0],truePtr[1],truePtr[2],&h,&l,&s);
 				truePtr+=4;
-				hh+=h;
+				hh+=h+s;
 			}
 			hh/=64.0/divide;
-			if (hh >= 4.0) {
-				printf("hh >= 4.0 %f %d\n",hh,(int)hh);
-				hh=3.5;
+			if (hh >= maxPal) {
+				printf("hh >= %f %f %d\n",maxPal,hh,(int)hh);
+				hh=divide-0.5;
+			}
+			//set_pal_row(x,y,hh);
+			cnt[(int)hh]++;
+		}
+	}
+	for(x=1;x<amount;++x){
+		if(cnt[x]<(currentProject->tileC->tiles_amount/6)){
+			divide=(4-x)+amount;
+			break;
+		}
+	}
+	for (y=0;y<mapSizeH;++y){//pass 2
+		for (x=0;x<mapSizeW;++x){
+			uint32_t cur_tile=get_tile(x,y);
+			uint8_t * truePtr=&currentProject->tileC->truetileDat[cur_tile*256];
+			double hh=0.0;
+			for (z=0;z<256;z+=4) {
+				rgbToHls(truePtr[0],truePtr[1],truePtr[2],&h,&l,&s);
+				truePtr+=4;
+				hh+=h+s;
+			}
+			hh/=64.0/divide;
+			if (hh >= maxPal) {
+				printf("hh >= %f %f %d\n",maxPal,hh,(int)hh);
+				hh=divide-0.5;
 			}
 			set_pal_row(x,y,hh);
 		}
@@ -687,7 +716,11 @@ void reduceImage(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t offse
 	w=currentProject->tileMapC->mapSizeW*8;
 	h=currentProject->tileMapC->mapSizeH*8;
 	truecolor_to_image(image,row,false);
+	progress->label("Dithering to colorspace");
+	Fl::check();
 	ditherImage(image,w,h,false,true);
+	progress->label("Quantizing image");
+	Fl::check();
 	colors_found=count_colors(image,w,h,&found_colors[0],false);
 	printf("Unique colors %d\n",colors_found);
 	if (colors_found <= maxCol){
@@ -736,7 +769,7 @@ againFun:
 			update_emphesis(0,0);
 		window->redraw();
 	}else{
-		puts("More than 16 colors reducing to 16 colors");
+		printf("More than %d colors reducing to %d colors\n",maxCol,maxCol);
 		uint8_t user_pal[3][256];			
 		uint8_t rgb_pal2[768];
 		uint8_t rgb_pal3[768];
@@ -798,7 +831,6 @@ try_again_color:
 		}
 		uint8_t new_colors = count_colors(rgb_pal2,colorz,1,&rgb_pal3[off3]);
 		printf("Unique colors in palette %d\n",new_colors);
-		//if(alg!=1){//scolorq is too slow for this
 			if (new_colors < maxCol){
 				if (can_go_again == true){
 					if (colorz != 512)
@@ -809,7 +841,6 @@ try_again_color:
 					goto try_again_color;
 				}
 			}
-		//}
 		if (new_colors > maxCol){
 			can_go_again=false;
 			puts("Woops too many colors");
@@ -922,10 +953,7 @@ void generate_optimal_palette(Fl_Widget*,void*)
 	uint8_t fun_palette;
 	uint8_t alg=fl_choice("What color reduction algorthium would you like used","Densise Lee v3","scolorq",0);
 	uint8_t yuv;
-	if(alg==0)
-		fl_ask("You you like the image to be calculated in YCbCr color space\nHint: No is the better option");
-	else
-		yuv=0;
+	yuv=fl_ask("You you like the image to be calculated in YCbCr color space\nHint: No is the better option");
 	switch (game_system){
 		case sega_genesis:
 			fun_palette=16;

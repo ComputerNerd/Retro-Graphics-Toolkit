@@ -31,7 +31,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <time.h>
 #include <limits>
 #include <stdint.h>
-#include <Fl/fl_ask.h>
+#include <FL/fl_ask.H>
 using namespace std;
 
 template <typename T, int length>
