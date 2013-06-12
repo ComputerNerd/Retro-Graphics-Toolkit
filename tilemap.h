@@ -19,7 +19,7 @@ public:
 	bool loadFromFile();
 	void sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vflip);
 	void pickRow(uint8_t amount);
-	void pickRowDelta(void);
+	void pickRowDelta(bool showProgress=false,Fl_Progress *progress=0);
 	void allRowZero(void);
 	bool selection;
 	uint16_t cur_x,cur_y;

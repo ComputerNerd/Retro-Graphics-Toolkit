@@ -621,7 +621,7 @@ void tileMap::allRowZero(void)
 			set_pal_row(x,y,0);
 	}
 }
-inline uint8_t pick4Delta(uint32_t * d)
+inline uint8_t pick4Delta(double * d)
 {
 	if ((d[0] < d[1]) && (d[0] < d[2]) && (d[0] < d[3]))
 		return 0;
@@ -631,29 +631,35 @@ inline uint8_t pick4Delta(uint32_t * d)
 		return 2;
 	return 3;
 }
-void tileMap::pickRowDelta(void)
+void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress)
 {
-	uint32_t d[4];
+	if(showProgress){
+		progress->maximum(mapSizeH);
+		progress->label("Picking tiles based on delta");
+	}
+	double d[4];
 	uint32_t x,y;
 	uint8_t t;
 	uint16_t p;
 	uint8_t temp[256];
-	putchar('\n');
-	for (y=0;y<mapSizeH;y++) {
-		for (x=0;x<mapSizeW;x++) {
+	for (y=0;y<mapSizeH;y++){
+		for (x=0;x<mapSizeW;x++){
 			uint32_t cur_tile=get_tile(x,y);
-			memset(d,0,4*sizeof(uint32_t));
+			for (t=0;t<4;t++)
+				d[t]=0.0;
 			uint8_t * ptrorgin=&currentProject->tileC->truetileDat[cur_tile*256];
-			for (t=0;t<4;t++) {
+			for (t=0;t<4;t++){
 				currentProject->tileC->truecolor_to_tile(t,cur_tile);
 				tileToTrueCol(&currentProject->tileC->tileDat[(cur_tile*currentProject->tileC->tileSize)],temp,t);
 				for (p=0;p<256;p+=4) {
-					d[t]+=abs(temp[p]-ptrorgin[p]);
-					d[t]+=abs(temp[p+1]-ptrorgin[p+1]);
-					d[t]+=abs(temp[p+2]-ptrorgin[p+2]);
+					d[t]+=ciede2000rgb(temp[p],temp[p+1],temp[p+2],ptrorgin[p],ptrorgin[p+1],ptrorgin[p+2]);
 				}
 			}
 			set_pal_row(x,y,pick4Delta(d));
+		}
+		if((y&1)&&showProgress){
+			progress->value(y);
+			Fl::check();
 		}
 	}
 }
@@ -664,6 +670,7 @@ inline uint8_t Clamp255(int n)
 }
 void reduceImage(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t offsetPal,Fl_Progress *progress,uint8_t maxCol,uint8_t yuv,uint8_t alg)
 {
+	progress->maximum(1.0);
 	uint8_t off2=offsetPal*2;
 	uint8_t off3=offsetPal*3;
 	uint32_t colors_found;
@@ -791,7 +798,7 @@ try_again_color:
 		}
 		uint8_t new_colors = count_colors(rgb_pal2,colorz,1,&rgb_pal3[off3]);
 		printf("Unique colors in palette %d\n",new_colors);
-		if(alg!=1){//scolorq is too slow for this
+		//if(alg!=1){//scolorq is too slow for this
 			if (new_colors < maxCol){
 				if (can_go_again == true){
 					if (colorz != 512)
@@ -802,7 +809,7 @@ try_again_color:
 					goto try_again_color;
 				}
 			}
-		}
+		//}
 		if (new_colors > maxCol){
 			can_go_again=false;
 			puts("Woops too many colors");
@@ -888,8 +895,8 @@ void generate_optimal_palette(Fl_Widget*,void*)
 	win = new Fl_Window(250,45,"Progress");           // access parent window
 	win->begin();                                // add progress bar to it..
 	progress = new Fl_Progress(25,7,200,30);
-	progress->minimum(0);                      // set progress range to be 0.0 ~ 1.0
-	progress->maximum(1);
+	progress->minimum(0.0);                      // set progress range to be 0.0 ~ 1.0
+	progress->maximum(1.0);
 	progress->color(0x88888800);               // background color
 	progress->selection_color(0x4444ff00);     // progress bar color
 	progress->labelcolor(FL_WHITE);            // percent text color
@@ -940,7 +947,7 @@ void generate_optimal_palette(Fl_Widget*,void*)
 	}else{
 		if(rowAuto==2){
 			reduceImage(image,found_colors,-1,0,progress,colorstotal,yuv,alg);
-			currentProject->tileMapC->pickRowDelta();
+			currentProject->tileMapC->pickRowDelta(true,progress);
 			window->damage(FL_DAMAGE_USER1);
 			Fl::check();
 		}else{

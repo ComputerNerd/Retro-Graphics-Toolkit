@@ -11,6 +11,7 @@ void update_emphesis(Fl_Widget*,void*);
 uint8_t toNesChan(uint8_t ri,uint8_t gi,uint8_t bi,uint8_t chan);
 uint32_t toNesRgb(uint8_t ri,uint8_t gi,uint8_t bi);
 void updateNesTab(uint8_t emps);
+double ciede2000rgb(uint8_t r1,uint8_t g1,uint8_t b1,uint8_t r2,uint8_t g2,uint8_t b2);
 #define CLIP(X) ( (X) > 255 ? 255 : (X) < 0 ? 0 : X)
 
 // RGB -> YUV

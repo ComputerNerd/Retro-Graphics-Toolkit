@@ -1058,7 +1058,7 @@ int scolorq_wrapper(uint8_t*in255,uint8_t*out,uint8_t user_pal[3][256],uint32_t 
 	    }
 	}
     }
-    sum /= 3;
+    sum /= 3.0;
     for(int i=0; i<3; i++) {
 	for(int j=0; j<3; j++) {
 	    for(int k=0; k<3; k++) {

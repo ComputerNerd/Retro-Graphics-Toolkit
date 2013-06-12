@@ -24,22 +24,14 @@ void save_palette(Fl_Widget*, void* start_end)
 		return;
 	if (verify_str_number_only(returned) == false)
 			return;
-	uint8_t end = atoi(returned);
+	uint8_t end = atoi(returned)+1;
 	if (game_system==sega_genesis){
 		start*=2;
 		end *=2;
 	}
 	uint8_t type=fl_choice("How would like this file saved?","Binary","C header",0);
 	if (load_file_generic("Save palette",true)==true){
-		//unsigned char start,end;
-		//split the varible into two
-		//varible format start,end
-		//end=(uintptr_t)start_end&0xFF;
-		//start=(uintptr_t)start_end>>8;
-		//open the file
-		//cout << "entry start: " << start/2 << " entry end: " << end/2 << endl;
-		//cout << "saving the palette to " << the_file << endl;
-		FILE * myfile=0;
+		FILE * myfile;
 		if (type == 1){
 			myfile = fopen(the_file.c_str(),"w");
 			fputs("const uint8_t palDat[]={",myfile);
