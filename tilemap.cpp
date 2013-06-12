@@ -4,6 +4,7 @@ Stuff related to tilemap operations goes here*/
 #include "quant.h"
 #include "color_convert.h"
 #include "dither.h"
+#include "spatial_color_quant.h"
 tileMap::tileMap()
 {
 	mapSizeW=2;
@@ -656,7 +657,12 @@ void tileMap::pickRowDelta(void)
 		}
 	}
 }
-void reduceImage(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t offsetPal,Fl_Progress *progress,uint8_t maxCol)
+inline uint8_t Clamp255(int n)
+{
+    n = n>255 ? 255 : n;
+    return n<0 ? 0 : n;
+}
+void reduceImage(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t offsetPal,Fl_Progress *progress,uint8_t maxCol,uint8_t yuv,uint8_t alg)
 {
 	uint8_t off2=offsetPal*2;
 	uint8_t off3=offsetPal*3;
@@ -690,11 +696,11 @@ againFun:
 					break;
 				goto againFun;
 			}
+			r=found_colors[(x*3)];
+			g=found_colors[(x*3)+1];
+			b=found_colors[(x*3)+2];
 			switch(game_system){
 				case sega_genesis:
-					r=found_colors[(x*3)];
-					g=found_colors[(x*3)+1];
-					b=found_colors[(x*3)+2];
 					printf("R=%d G=%d B=%d\n",r,g,b);
 					r=nearest_color_index(r);
 					g=nearest_color_index(g);
@@ -710,9 +716,6 @@ againFun:
 					currentProject->palDat[(x*2)+1+off2]=(r<<1)|(g<<5);
 				break;
 				case NES:
-					r=found_colors[(x*3)];
-					g=found_colors[(x*3)+1];
-					b=found_colors[(x*3)+2];
 					printf("R=%d G=%d B=%d\n",r,g,b);
 					{uint8_t temp = to_nes_color_rgb(r,g,b);
 					currentProject->palDat[x+offsetPal]=temp;}
@@ -727,19 +730,47 @@ againFun:
 		window->redraw();
 	}else{
 		puts("More than 16 colors reducing to 16 colors");
-		/*this uses denesis lee's v3 color quant which is fonund at http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c*/
 		uint8_t user_pal[3][256];			
 		uint8_t rgb_pal2[768];
 		uint8_t rgb_pal3[768];
-		uint8_t colorz=maxCol;
+		uint16_t colorz=maxCol;
 		bool can_go_again=true;
+		uint8_t*imageuse;
+		uint8_t*output;
+		if(alg==1)
+			output=(uint8_t*)malloc(w*h*3);
+		if(yuv){
+			imageuse=(uint8_t*)malloc(w*h*3);
+			uint32_t x,y;
+			uint8_t*imageptr=image;
+			uint8_t*outptr=imageuse;
+			for(y=0;y<h;y++){
+				for(x=0;x<w;x++){
+					outptr[0]=CRGB2Y(imageptr[0],imageptr[1],imageptr[2]);
+					outptr[1]=CRGB2Cb(imageptr[0],imageptr[1],imageptr[2]);
+					outptr[2]=CRGB2Cr(imageptr[0],imageptr[1],imageptr[2]);
+					imageptr+=3;
+					outptr+=3;
+				}
+			}
+		}
+		else
+			imageuse=image;
 try_again_color:
-		dl3quant(image,w,h,colorz,user_pal,true,progress);
+		if(alg==1)
+			scolorq_wrapper(imageuse,output,user_pal,w,h,colorz);
+		else
+			dl3quant(imageuse,w,h,colorz,user_pal,true,progress,yuv);/*this uses denesis lee's v3 color quant which is fonund at http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c*/
 		for (uint16_t x=0;x<colorz;x++){
 			uint8_t r,g,b;
 			r=user_pal[0][x];
 			g=user_pal[1][x];
 			b=user_pal[2][x];
+			if(yuv){
+				r=CYCbCr2R(r,g,b);
+				g=CYCbCr2G(r,g,b);
+				b=CYCbCr2B(r,g,b);
+			}
 			switch(game_system){
 				case sega_genesis:
 					r=nearest_color_index(r);
@@ -760,17 +791,19 @@ try_again_color:
 		}
 		uint8_t new_colors = count_colors(rgb_pal2,colorz,1,&rgb_pal3[off3]);
 		printf("Unique colors in palette %d\n",new_colors);
-		if (new_colors < maxCol){
-			if (can_go_again == true){
-				if (colorz != 255)
-					colorz++;
-				else
-					can_go_again=false;
-				printf("Trying again at %d needs more color\n",colorz);
-				goto try_again_color;
+		if(alg!=1){//scolorq is too slow for this
+			if (new_colors < maxCol){
+				if (can_go_again == true){
+					if (colorz != 512)
+						colorz++;
+					else
+						can_go_again=false;
+					printf("Trying again at %d needs more color\n",colorz);
+					goto try_again_color;
+				}
 			}
 		}
-		if (new_colors > maxCol) {
+		if (new_colors > maxCol){
 			can_go_again=false;
 			puts("Woops too many colors");
 			colorz--;
@@ -808,6 +841,12 @@ againNerd:
 		}
 		if(game_system==NES)
 			update_emphesis(0,0);
+		if(alg==1){
+			truecolorimageToTiles(output,row,false);
+			free(output);
+		}
+		if(yuv)
+			free(imageuse);
 	}
 }
 
@@ -874,6 +913,12 @@ void generate_optimal_palette(Fl_Widget*,void*)
 	else
 		 rowAuto = fl_choice("How would you like the palette map to be handled","Dont change anythin","Pick based on hue","Generate contiguos palette then pick based on delta");
 	uint8_t fun_palette;
+	uint8_t alg=fl_choice("What color reduction algorthium would you like used","Densise Lee v3","scolorq",0);
+	uint8_t yuv;
+	if(alg==0)
+		fl_ask("You you like the image to be calculated in YCbCr color space\nHint: No is the better option");
+	else
+		yuv=0;
 	switch (game_system){
 		case sega_genesis:
 			fun_palette=16;
@@ -885,15 +930,16 @@ void generate_optimal_palette(Fl_Widget*,void*)
 			show_default_error
 		break;
 	}
+	image = (uint8_t *)malloc(w*h*3);
 	if (rows==1){
 		if (rowAuto)
 			currentProject->tileMapC->allRowZero();
-		image = (uint8_t *)malloc(w*h*3);
-		reduceImage(image,found_colors,-1,0,progress,perRow[0]);
+		reduceImage(image,found_colors,-1,0,progress,perRow[0],yuv,alg);
+		window->damage(FL_DAMAGE_USER1);
+		Fl::check();
 	}else{
-		image = (uint8_t *)malloc(w*h*3);
 		if(rowAuto==2){
-			reduceImage(image,found_colors,-1,0,progress,colorstotal);
+			reduceImage(image,found_colors,-1,0,progress,colorstotal,yuv,alg);
 			currentProject->tileMapC->pickRowDelta();
 			window->damage(FL_DAMAGE_USER1);
 			Fl::check();
@@ -901,18 +947,72 @@ void generate_optimal_palette(Fl_Widget*,void*)
 			if (rowAuto)
 				currentProject->tileMapC->pickRow(rows);
 			for (uint8_t nerdL=0;nerdL<rows;nerdL++){
-				reduceImage(image,found_colors,nerdL,nerdL*fun_palette,progress,perRow[nerdL]);
+				reduceImage(image,found_colors,nerdL,nerdL*fun_palette,progress,perRow[nerdL],yuv,alg);
 				window->damage(FL_DAMAGE_USER1);
 				Fl::check();
 			}
 		}		
 	}
 	free(image);
-	window->redraw();
-	
 	win->remove(progress);// remove progress bar from window
 	delete(progress);// deallocate it
 	//w->draw();
 	delete win;
 	Fl::check();
+}
+void truecolorimageToTiles(uint8_t * image,int8_t rowusage,bool useAlpha)
+{
+	uint8_t type_temp=palTypeGen;
+	uint8_t tempSet=0;
+	uint8_t truecolor_tile[256];
+	uint32_t x_tile=0;
+	uint32_t y_tile=0;
+	uint8_t pSize=useAlpha ? 4:3;
+	uint8_t pTile=useAlpha ? 32:24;
+	uint32_t w=currentProject->tileMapC->mapSizeW*8;
+	uint32_t h=currentProject->tileMapC->mapSizeH*8;
+	uint16_t truecolor_tile_ptr;
+	for (uint32_t a=0;a<(h*w*pSize)-w*pSize;a+=w*pSize*8)//a tiles y
+	{
+		for (uint32_t b=0;b<w*pSize;b+=pTile)//b tiles x
+		{	
+			uint8_t temp;
+			int32_t current_tile;
+			if(rowusage==-1){
+				current_tile=currentProject->tileMapC->get_tile(x_tile,y_tile);
+			}else{
+				current_tile=currentProject->tileMapC->get_tileRow(x_tile,y_tile,rowusage);
+				if (current_tile == -1)
+					goto dont_convert_tile;
+			}
+			truecolor_tile_ptr=0;
+			for (uint32_t y=0;y<w*pSize*8;y+=w*pSize)//pixels y
+			{
+				if(useAlpha){
+					memcpy(&truecolor_tile[truecolor_tile_ptr],&image[a+b+y],32);
+					truecolor_tile_ptr+=32;
+				}else{
+					for(uint8_t xx=0;xx<24;xx+=3){
+						memcpy(&truecolor_tile[truecolor_tile_ptr],&image[a+b+y+xx],3);
+						truecolor_tile_ptr+=3;
+						truecolor_tile[truecolor_tile_ptr]=255;
+						++truecolor_tile_ptr;
+					}
+				}
+			}
+			//convert back to tile
+			uint8_t * TileTempPtr;
+			if ((type_temp != 0) && (game_system == sega_genesis)){
+				tempSet=(currentProject->tileMapC->get_prio(x_tile,y_tile)^1)*8;
+				set_palette_type(tempSet);
+			}
+			currentProject->tileC->truecolor_to_tile_ptr(currentProject->tileMapC->get_palette_map(x_tile,y_tile),current_tile,truecolor_tile,false);
+dont_convert_tile:
+		x_tile++;	
+		}
+	x_tile=0;
+	y_tile++;
+	}
+	if (game_system == sega_genesis)
+		set_palette_type(type_temp);
 }

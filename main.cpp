@@ -569,8 +569,6 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 	//so first create ram for image
 	uint8_t * image;
 	uint32_t w,h;
-	uint8_t type_temp=palTypeGen;
-	uint8_t tempSet=0;
 	w=currentProject->tileMapC->mapSizeW*8;
 	h=currentProject->tileMapC->mapSizeH*8;
 	uint32_t truecolor_tile_ptr=0;
@@ -578,7 +576,6 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 	uint8_t method=fl_choice("How would you like this tilemap dithered?","Dither each palette row seperatly","Dither entire image at once","cancel");
 	if(method==2)
 		return;
-	uint8_t truecolor_tile[256];
 	image = (uint8_t *)malloc(w*h*4);
 	if (image==0)
 		show_malloc_error(w*h*4)
@@ -586,33 +583,7 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 		truecolor_to_image(image,-1);
 		ditherImage(image,w,h,true,true);
 		ditherImage(image,w,h,true,false);
-		x_tile=0;
-		y_tile=0;
-		for (uint32_t a=0;a<(h*w*4)-w*4;a+=w*4*8)//a tiles y
-		{
-			for (uint32_t b=0;b<w*4;b+=32)//b tiles x
-			{	
-				uint8_t temp;
-				uint32_t current_tile=currentProject->tileMapC->get_tile(x_tile,y_tile);
-				truecolor_tile_ptr=0;
-				for (uint32_t y=0;y<w*4*8;y+=w*4)//pixels y
-				{
-					memcpy(&truecolor_tile[truecolor_tile_ptr],&image[a+b+y],32);
-					truecolor_tile_ptr+=32;
-				}
-				//convert back to tile
-				uint8_t * TileTempPtr;
-				if ((type_temp != 0) && (game_system == sega_genesis)){
-					tempSet=(currentProject->tileMapC->get_prio(x_tile,y_tile)^1)*8;
-					set_palette_type(tempSet);
-				}
-				currentProject->tileC->truecolor_to_tile_ptr(currentProject->tileMapC->get_palette_map(x_tile,y_tile),current_tile,truecolor_tile,false);
-			x_tile++;	
-			}
-		x_tile=0;
-		y_tile++;
-			//update progress currentProject->tileMapC->mapSizeH
-		}
+		truecolorimageToTiles(image,-1);
 	}else{
 		for (uint8_t rowz=0;rowz<4;rowz++){
 			printf("Row %d\n",rowz);
@@ -620,36 +591,7 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 			ditherImage(image,w,h,true,true);
 			ditherImage(image,w,h,true,false);
 			//convert back to tiles
-			x_tile=0;
-			y_tile=0;
-			for (uint32_t a=0;a<(h*w*4)-w*4;a+=w*4*8)//a tiles y
-			{
-				for (uint32_t b=0;b<w*4;b+=32)//b tiles x
-				{	
-					uint8_t temp;
-					int32_t current_tile=currentProject->tileMapC->get_tileRow(x_tile,y_tile,rowz);
-					if (current_tile == -1)
-						goto dont_convert_tile;
-					truecolor_tile_ptr=0;
-					for (uint32_t y=0;y<w*4*8;y+=w*4)//pixels y
-					{
-						memcpy(&truecolor_tile[truecolor_tile_ptr],&image[a+b+y],32);
-						truecolor_tile_ptr+=32;
-					}
-					//convert back to tile
-					uint8_t * TileTempPtr;
-					if ((type_temp != 0) && (game_system == sega_genesis)){
-						tempSet=(currentProject->tileMapC->get_prio(x_tile,y_tile)^1)*8;
-						set_palette_type(tempSet);
-					}
-					currentProject->tileC->truecolor_to_tile_ptr(currentProject->tileMapC->get_palette_map(x_tile,y_tile),current_tile,truecolor_tile,false);
-		dont_convert_tile:
-				x_tile++;	
-				}
-			x_tile=0;
-			y_tile++;
-			//update progress currentProject->tileMapC->mapSizeH
-			}
+			truecolorimageToTiles(image,rowz);
 		}
 	}
 	putchar('\n');
@@ -657,8 +599,6 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 	window->damage(FL_DAMAGE_USER1);
 	Fl::check();
 	free(image);
-	if (game_system == sega_genesis)
-		set_palette_type(type_temp);
 	window->redraw();
 }
 void load_image_to_tilemap(Fl_Widget*,void*)
