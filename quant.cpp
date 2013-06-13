@@ -464,10 +464,10 @@ static void build_table3(unsigned char *image, int size)
 	for (i = 0; i < size; i++)
 	{
 		index = ((image[0]&248)<<7) + ((image[1]&248)<<2) + (image[2]>>3);
-		if(useageYUV)
+		/*if(useageYUV)
 			rgb_table3[index].r += image[0]*5/2;
-		else
-			rgb_table3[index].r += image[0];// * CScale;
+		else*/
+		rgb_table3[index].r += image[0];// * CScale;
 		rgb_table3[index].g += image[1];
 		rgb_table3[index].b += image[2];
 		rgb_table3[index].pixel_count++;

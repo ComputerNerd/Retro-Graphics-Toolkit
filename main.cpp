@@ -1094,6 +1094,10 @@ void save_tilemap_as_image(Fl_Widget*,void*)
 		free(imageold);
 	}
 }
+void pickNearAlg(Fl_Widget*,void*)
+{
+	nearestAlg=fl_choice("Which nearest color algorthim would you like to use?","ciede2000","Euclidean distance",0);
+}
 void editor::_editor()
 {
 	//create the window
@@ -1111,6 +1115,7 @@ void editor::_editor()
 	menu->add("&File/&Save tile map and if nes attributes",0,save_map,0,0);
 	menu->add("&Palette Actions/&generate optimal palette with x amount of colors",0,generate_optimal_palette,(void *)0,(int)0);
 	menu->add("&Palette Actions/&Clear entire Palette",0,clearPalette,(void *)0,(int)0);
+	menu->add("&Palette Actions/&Pick nearest color algorithm",0,pickNearAlg,(void *)0,(int)0);
 	menu->add("&Tile Actions/&Append blank tile to end of buffer",0,new_tile,0,0);
 	menu->add("&Tile Actions/&Fill tile with selected color",0,fill_tile,(void *)0,(int)0);
 	menu->add("&Tile Actions/&Fill tile with color 0",0,blank_tile,0,0);
@@ -1121,9 +1126,9 @@ void editor::_editor()
 	menu->add("&TileMap Actions/&Remove tiles after x",0,tilemap_remove_callback,0,0);
 	menu->add("&TileMap Actions/&Toggle TrueColor Viewing (defaults to off)",0,trueColTileToggle,0,0);
 	menu->add("&TileMap Actions/&Pick Tile row based on delta",0,tileDPicker,0,0);
-	menu->add("&TileMap Actions/&Auto determin if use shadow highlight",0,shadow_highligh_findout,(void *)0,(int)0);
+	menu->add("&TileMap Actions/&Auto determine if use shadow highlight",0,shadow_highligh_findout,(void *)0,(int)0);
 	menu->add("&TileMap Actions/&Dither tilemap as image",0,dither_tilemap_as_image,(void *)0,(int)0);
-	menu->add("&TileMap Actions/&File tile map with selection includeing attrabutes",0,fill_tile_map_with_tile,(void *)0,(int)0);
+	menu->add("&TileMap Actions/&File tile map with selection includeing attributes",0,fill_tile_map_with_tile,(void *)0,(int)0);
 	menu->add("&Help/&About",0,showAbout,0,0);
 	tile_placer_tile_offset_y=default_tile_placer_tile_offset_y;
 	true_color_box_x=default_true_color_box_x;

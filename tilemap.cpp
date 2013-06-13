@@ -406,7 +406,7 @@ bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha)
 		fl_alert("Error malloc must be called before generating this image");
 		return false;
 	}
-	puts("Truecolor to image starting");
+	//puts("Truecolor to image starting");
 	uint32_t w,h;
 	w=currentProject->tileMapC->mapSizeW*8;
 	h=currentProject->tileMapC->mapSizeH*8;
@@ -416,8 +416,7 @@ bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha)
 	if (useAlpha) {
 		pixelSize=4;
 		pSize2=32;
-	}
-	else {
+	}else{
 		pixelSize=3;
 		pSize2=24;
 	}
@@ -427,14 +426,12 @@ bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha)
 			for (uint32_t b=0;b<w*pixelSize;b+=pSize2)//b tiles x
 			{
 				truecolor_tile_ptr=currentProject->tileMapC->get_tileRow(x_tile,y_tile,useRow)*256;
-				if (truecolor_tile_ptr != -256)
-				{
+				if (truecolor_tile_ptr != -256){
 					for (uint32_t y=0;y<w*pSize2;y+=w*pixelSize)//pixels y
 					{
 						if (useAlpha)
 							memcpy(&the_image[a+b+y],&currentProject->tileC->truetileDat[truecolor_tile_ptr],32);
-						else
-						{
+						else{
 							uint8_t xx=0;
 							for (uint8_t x=0;x<32;x+=4)//pixels x
 							{
@@ -457,9 +454,7 @@ bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha)
 			x_tile=0;
 			y_tile++;
 		}
-	}
-	else
-	{
+	}else{
 		for (uint64_t a=0;a<(h*w*pixelSize)-w*pixelSize;a+=w*pixelSize*8)//a tiles y
 		{
 			for (uint32_t b=0;b<w*pixelSize;b+=pSize2)//b tiles x
@@ -469,8 +464,7 @@ bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha)
 				{
 					if (useAlpha)
 						memcpy(&the_image[a+b+y],&currentProject->tileC->truetileDat[truecolor_tile_ptr],32);
-					else
-					{
+					else{
 						uint8_t xx=0;
 						for (uint8_t x=0;x<32;x+=4)//pixels x
 						{
@@ -488,7 +482,7 @@ bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha)
 			y_tile++;
 		}
 	}
-	puts("Done");
+	//puts("Done");
 	return true;
 }
 double max3(double a,double b,double c)
@@ -646,11 +640,27 @@ inline uint8_t pick4Delta(double * d)
 		return 2;
 	return 3;
 }
+inline uint8_t pick4Deltai(uint32_t * d)
+{
+	if ((d[0] <= d[1]) && (d[0] <= d[2]) && (d[0] <= d[3]))
+		return 0;
+	if ((d[1] <= d[2]) && (d[1] <= d[3]))
+		return 1;
+	if (d[2] <= d[3])
+		return 2;
+	return 3;
+}
+inline uint32_t sqri(int fun)
+{
+	return fun*fun;
+}
 void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress)
 {
+	uint8_t alg=fl_choice("Which method do you think works better for this image (try both)","ciede2000","Root mean squared error",0);
 	uint8_t type_temp=palTypeGen;
 	uint8_t tempSet=0;
 	double d[4];
+	uint32_t di[4];
 	uint32_t x,y;
 	uint8_t t;
 	uint16_t p;
@@ -663,6 +673,10 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress)
 	uint8_t **imageout=(uint8_t**)malloc(4*sizeof(void*));
 	uint32_t xtile,ytile;
 	xtile=ytile=0;
+	if(showProgress){
+		progress->maximum(12);
+		progress->value(0);
+	}
 	for(x=0;x<4;x++){
 		if(showProgress){
 			sprintf((char*)temp,"Dithering %d",x);
@@ -671,8 +685,20 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress)
 		}
 		imageout[x]=(uint8_t*)malloc(w*h*4);
 		truecolor_to_image(imageout[x],-1);
+		if(showProgress){
+			progress->value((x*3)+1);
+			Fl::check();
+		}
 		ditherImage(imageout[x],w,h,true,true,true,x);
+		if(showProgress){
+			progress->value((x*3)+2);
+			Fl::check();
+		}
 		ditherImage(imageout[x],w,h,true,false,true,x);
+		if(showProgress){
+			progress->value((x*3)+3);
+			Fl::check();
+		}
 	}
 	if(showProgress){
 		progress->maximum(mapSizeH);
@@ -681,20 +707,36 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress)
 	for (uint32_t a=0;a<(h*w*4)-w*4;a+=w*4*8){//a tiles y
 		for (uint32_t b=0;b<w*4;b+=32){//b tiles x
 			uint32_t cur_tile=get_tile(xtile,ytile);
-			for (t=0;t<4;t++)
-				d[t]=0.0;
+			if(alg)
+				memset(di,0,4*sizeof(uint32_t));
+			else{
+				for (t=0;t<4;t++)
+					d[t]=0.0;
+			}
 			if ((type_temp != 0) && (game_system == sega_genesis)){
 				tempSet=(currentProject->tileMapC->get_prio(xtile,ytile)^1)*8;
 				set_palette_type(tempSet);
 			}
 			for (t=0;t<4;t++){
 				for (uint32_t y=0;y<w*4*8;y+=w*4){//pixels y
-					for(x=0;x<32;x+=4)
-						d[t]+=ciede2000rgb(imagein[a+b+y+x],imagein[a+b+y+x+1],imagein[a+b+y+x+2],imageout[t][a+b+y+x],imageout[t][a+b+y+x+1],imageout[t][a+b+y+x+2]);
+					if(alg){
+						for(x=0;x<32;x+=4)
+							di[t]+=sqri(imagein[a+b+y+x]-imageout[t][a+b+y+x])+sqri(imagein[a+b+y+x+1]-imageout[t][a+b+y+x+1])+sqri(imagein[a+b+y+x+2]-imageout[t][a+b+y+x+2]);
+					}else{
+						for(x=0;x<32;x+=4)
+							d[t]+=ciede2000rgb(imagein[a+b+y+x],imagein[a+b+y+x+1],imagein[a+b+y+x+2],imageout[t][a+b+y+x],imageout[t][a+b+y+x+1],imageout[t][a+b+y+x+2]);
+					}
 				}
+				//di[t]=sqrt(di[t]);//not needed only relative error matters in this case
 			}
+			
 			uint16_t truecolor_tile_ptr=0;
-			uint8_t sillyrow=pick4Delta(d);
+			
+			uint8_t sillyrow;
+			if(alg)
+				sillyrow=pick4Deltai(di);
+			else
+				sillyrow=pick4Delta(d);
 			set_pal_row(xtile,ytile,sillyrow);
 			for (uint32_t y=0;y<w*4*8;y+=w*4){//pixels y
 				memcpy(&temp[truecolor_tile_ptr],&imageout[sillyrow][a+b+y],32);
@@ -746,7 +788,8 @@ void reduceImage(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t offse
 	truecolor_to_image(image,row,false);
 	progress->label("Dithering to colorspace");
 	Fl::check();
-	ditherImage(image,w,h,false,true);
+	if(!yuv)
+		ditherImage(image,w,h,false,true);
 	progress->label("Quantizing image");
 	Fl::check();
 	colors_found=count_colors(image,w,h,&found_colors[0],false);
@@ -813,10 +856,10 @@ againFun:
 			uint8_t*imageptr=image;
 			uint8_t*outptr=imageuse;
 			for(y=0;y<h;y++){
-				for(x=0;x<w;x++){
-					outptr[0]=CRGB2Y(imageptr[0],imageptr[1],imageptr[2]);
-					outptr[1]=CRGB2Cb(imageptr[0],imageptr[1],imageptr[2]);
-					outptr[2]=CRGB2Cr(imageptr[0],imageptr[1],imageptr[2]);
+				for(x=0;x<w;x++){//conversion formula from http://en.wikipedia.org/wiki/YCbCr
+					outptr[0]=Clamp255(16+((65.738*(double)imageptr[0]+129.057*(double)imageptr[1]+25.064*(double)imageptr[2])/256.0));
+					outptr[1]=Clamp255(128-((-37.945*(double)imageptr[0]-74.494*(double)imageptr[1]+112.439*(double)imageptr[2])/256.0));
+					outptr[2]=Clamp255(128+((112.439*(double)imageptr[0]-94.154*(double)imageptr[1]-18.285*(double)imageptr[2])/256.0));
 					imageptr+=3;
 					outptr+=3;
 				}
@@ -835,9 +878,9 @@ try_again_color:
 			g=user_pal[1][x];
 			b=user_pal[2][x];
 			if(yuv){
-				r=CYCbCr2R(r,g,b);
-				g=CYCbCr2G(r,g,b);
-				b=CYCbCr2B(r,g,b);
+				r=((298.082*(double)r+408.583*(double)b)/256.0)-222.921;
+				g=((298.082*(double)r-100.291*(double)g-208.120*(double)b)/256.0)+135.576;
+				b=((298.082*(double)r-516.412*(double)g)/256.0)-276.836;
 			}
 			switch(game_system){
 				case sega_genesis:
@@ -1021,6 +1064,10 @@ void generate_optimal_palette(Fl_Widget*,void*)
 	delete(progress);// deallocate it
 	//w->draw();
 	delete win;
+	palEdit.updateSlider();
+	tileEdit_pal.updateSlider();
+	tileMap_pal.updateSlider();
+	window->redraw();
 	Fl::check();
 }
 void truecolorimageToTiles(uint8_t * image,int8_t rowusage,bool useAlpha)

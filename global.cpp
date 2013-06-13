@@ -38,6 +38,7 @@ uint8_t ditherAlg;
 uint8_t palTypeGen=0;
 bool showTrueColor=false;
 bool rowSolo=false;
+uint8_t nearestAlg=1;
 uint8_t nearest_color_index(uint8_t val)
 {
 	//returns closest value
@@ -330,19 +331,37 @@ void invert_prio(uint16_t x,uint16_t y)
     h = Horizontal flip
     n = Pattern name
 */
+inline uint32_t doublesilly(uint32_t silly)
+{
+	return silly*silly;
+}
 uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b)
 {
 	uint8_t i;
 	int bestIndex = 0;
-	double minerror=9001.0;
+	
 	uint8_t max_rgb=palEdit.perRow*3;
 	row*=max_rgb;
-	for (i=row; i<max_rgb+row; i+=3) {
-		double distance=ciede2000rgb(r,g,b,currentProject->rgbPal[i],currentProject->rgbPal[i+1],currentProject->rgbPal[i+2]);
-		if (distance <= minerror) {
-			if (currentProject->palType[i/3]!=2) {
-				minerror = distance;
-				bestIndex = i;
+	if(nearestAlg){
+		uint32_t minerror=(255*255)+(255*255)+(255*255)+1;
+		for (i=row; i<max_rgb+row; i+=3) {
+			uint32_t distance=doublesilly(currentProject->rgbPal[i]-r)+doublesilly(currentProject->rgbPal[i+1]-g)+doublesilly(currentProject->rgbPal[i+2]-b);
+			if (distance <= minerror) {
+				if (currentProject->palType[i/3]!=2) {
+					minerror = distance;
+					bestIndex = i;
+				}
+			}
+		}
+	}else{
+		double minerror=10000;
+		for (i=row; i<max_rgb+row; i+=3) {
+			double distance=ciede2000rgb(r,g,b,currentProject->rgbPal[i],currentProject->rgbPal[i+1],currentProject->rgbPal[i+2]);
+			if (distance <= minerror) {
+				if (currentProject->palType[i/3]!=2) {
+					minerror = distance;
+					bestIndex = i;
+				}
 			}
 		}
 	}

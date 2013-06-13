@@ -84,3 +84,4 @@ extern uint8_t palTypeGen;
 extern const uint8_t palTab[];
 extern bool showTrueColor;
 extern bool rowSolo;
+extern uint8_t nearestAlg;
