@@ -70,9 +70,23 @@ double ciede2000(double L1,double a1,double b1,double L2,double a2,double b2,dou
 	double Rt=-1.0*sin(2.0*dtheta)*Rc;
 	return sqrt(square(dL/(Kl*Sl))+square(dC/(Kc*Sc))+square(dH/(Kh*Sh))+(Rt*(dC/(Kc*Sc))*(dH/(Kh*Sh))));
 }
-void rgbtociflab(uint8_t R,uint8_t G,uint8_t B,double * L,double * a,double * b)
+//macros from http://www.getreuer.info/home/colorspace
+/** 
+ * @brief Inverse sRGB gamma correction, transforms R' to R 
+ */
+#define INVGAMMACORRECTION(t)	\
+	(((t) <= 0.0404482362771076) ? \
+	((t)/12.92) : pow(((t) + 0.055)/1.055, 2.4))
+/** @brief XYZ color of the D65 white point */
+#define WHITEPOINT_X	0.950456
+#define WHITEPOINT_Y	1.0
+#define WHITEPOINT_Z	1.088754
+#define LABF(t)	\
+	((t >= 8.85645167903563082e-3) ? \
+	pow(t,0.333333333333333) : (841.0/108.0)*(t) + (4.0/29.0))
+void rgbtociflab(uint8_t ri,uint8_t gi,uint8_t bi,double * L,double * a,double * b)
 {
-		//conversion code from http://www.easyrgb.com/index.php?X=MATH
+/*		//conversion code from http://www.easyrgb.com/index.php?X=MATH
 	double var_R = R/255.0;        //R from 0 to 255
 	double var_G = G/255.0;        //G from 0 to 255
 	double var_B = B/255.0;        //B from 0 to 255
@@ -112,7 +126,26 @@ void rgbtociflab(uint8_t R,uint8_t G,uint8_t B,double * L,double * a,double * b)
 		var_Z=(7.787*var_Z)+(16.0/116.0);
 	*L=(116.0* var_Y)-16.0;
 	*a=500.0*(var_X-var_Y);
-	*b=200.0*(var_Y-var_Z);
+	*b=200.0*(var_Y-var_Z);*/
+	//conversion code from http://www.getreuer.info/home/colorspace
+	double R=(double)ri/255.0;
+	double G=(double)gi/255.0;
+	double B=(double)bi/255.0;
+	R = INVGAMMACORRECTION(R);
+	G = INVGAMMACORRECTION(G);
+	B = INVGAMMACORRECTION(B);
+	double X = (double)(0.4123955889674142161*R + 0.3575834307637148171*G + 0.1804926473817015735*B);
+	double Y = (double)(0.2125862307855955516*R + 0.7151703037034108499*G + 0.07220049864333622685*B);
+	double Z = (double)(0.01929721549174694484*R + 0.1191838645808485318*G + 0.9504971251315797660*B);
+	X /= WHITEPOINT_X;
+	Y /= WHITEPOINT_Y;
+	Z /= WHITEPOINT_Z;
+	X = LABF(X);
+	Y = LABF(Y);
+	Z = LABF(Z);
+	*L = 116*Y - 16;
+	*a = 500*(X - Y);
+	*b = 200*(Y - Z);
 }
 double ciede2000rgb(uint8_t R1,uint8_t G1,uint8_t B1,uint8_t R2,uint8_t G2,uint8_t B2)
 {

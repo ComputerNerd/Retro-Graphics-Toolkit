@@ -948,10 +948,13 @@ void tilemap_remove_callback(Fl_Widget*,void*)
 			return;
 		int32_t tile=atoi(str_ptr);
 		if (tile < 0) {
-			fl_alert("You must enter a value equal to or about 0 but you entered %d\n",tile);
+			fl_alert("You must enter greater than or equal to 0 but you entered %d\n",tile);
 			return;
 		}
-		currentProject->tileMapC->sub_tile_map(tile,tile-1,false,false);
+		if(tile)
+			currentProject->tileMapC->sub_tile_map(tile,tile-1,false,false);
+		else
+			currentProject->tileMapC->sub_tile_map(0,0,false,false);
 		window->damage(FL_DAMAGE_USER1);
 }
 void trueColTileToggle(Fl_Widget*,void*)
@@ -961,7 +964,23 @@ void trueColTileToggle(Fl_Widget*,void*)
 }
 void tileDPicker(Fl_Widget*,void*)
 {
-	currentProject->tileMapC->pickRowDelta();
+	Fl_Window *win;
+	Fl_Progress *progress;
+	win = new Fl_Window(250,45,"Progress");           // access parent window
+	win->begin();                                // add progress bar to it..
+	progress = new Fl_Progress(25,7,200,30);
+	progress->minimum(0.0);                      // set progress range to be 0.0 ~ 1.0
+	progress->maximum(1.0);
+	progress->color(0x88888800);               // background color
+	progress->selection_color(0x4444ff00);     // progress bar color
+	progress->labelcolor(FL_WHITE);            // percent text color
+	win->end();                                  // end adding to window
+	win->show();
+	currentProject->tileMapC->pickRowDelta(true,progress);
+	win->remove(progress);// remove progress bar from window
+	delete(progress);// deallocate it
+	//w->draw();
+	delete win;
 	window->damage(FL_DAMAGE_USER1);
 }
 void showAbout(Fl_Widget*,void*)

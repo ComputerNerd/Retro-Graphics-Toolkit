@@ -589,6 +589,7 @@ void tileMap::set_pal_row(uint16_t x,uint16_t y,uint8_t row)
 }
 void tileMap::pickRow(uint8_t amount)
 {
+	uint8_t type=fl_choice("How would you describe this image","Varying hue","Varying brightness","Varying saturation");
 	double divide=(double)amount;//convert to double
 	double h,l,s;
 	h=0.0;
@@ -597,8 +598,7 @@ void tileMap::pickRow(uint8_t amount)
 	uint32_t cnt[4];
 	double weightPal[4];
 	double maxPal=divide;
-	//now using 2 pass method try to make each row have about the same amount of tiles
-	for (y=0;y<mapSizeH;++y){//pass 1
+	for (y=0;y<mapSizeH;++y){
 		for (x=0;x<mapSizeW;++x){
 			uint32_t cur_tile=get_tile(x,y);
 			uint8_t * truePtr=&currentProject->tileC->truetileDat[cur_tile*256];
@@ -606,32 +606,17 @@ void tileMap::pickRow(uint8_t amount)
 			for (z=0;z<256;z+=4) {
 				rgbToHls(truePtr[0],truePtr[1],truePtr[2],&h,&l,&s);
 				truePtr+=4;
-				hh+=h+s;
-			}
-			hh/=64.0/divide;
-			if (hh >= maxPal) {
-				printf("hh >= %f %f %d\n",maxPal,hh,(int)hh);
-				hh=divide-0.5;
-			}
-			//set_pal_row(x,y,hh);
-			cnt[(int)hh]++;
-		}
-	}
-	for(x=1;x<amount;++x){
-		if(cnt[x]<(currentProject->tileC->tiles_amount/6)){
-			divide=(4-x)+amount;
-			break;
-		}
-	}
-	for (y=0;y<mapSizeH;++y){//pass 2
-		for (x=0;x<mapSizeW;++x){
-			uint32_t cur_tile=get_tile(x,y);
-			uint8_t * truePtr=&currentProject->tileC->truetileDat[cur_tile*256];
-			double hh=0.0;
-			for (z=0;z<256;z+=4) {
-				rgbToHls(truePtr[0],truePtr[1],truePtr[2],&h,&l,&s);
-				truePtr+=4;
-				hh+=h+s;
+				switch(type){
+					case 0:
+						hh+=h;
+					break;
+					case 1:
+						hh+=l;
+					break;
+					case 2:
+						hh+=s;
+					break;
+				}
 			}
 			hh/=64.0/divide;
 			if (hh >= maxPal) {
@@ -641,6 +626,7 @@ void tileMap::pickRow(uint8_t amount)
 			set_pal_row(x,y,hh);
 		}
 	}
+
 }
 void tileMap::allRowZero(void)
 {
@@ -652,45 +638,87 @@ void tileMap::allRowZero(void)
 }
 inline uint8_t pick4Delta(double * d)
 {
-	if ((d[0] < d[1]) && (d[0] < d[2]) && (d[0] < d[3]))
+	if ((d[0] <= d[1]) && (d[0] <= d[2]) && (d[0] <= d[3]))
 		return 0;
-	if ((d[1] < d[2]) && (d[1] < d[3]))
+	if ((d[1] <= d[2]) && (d[1] <= d[3]))
 		return 1;
-	if (d[2] < d[3])
+	if (d[2] <= d[3])
 		return 2;
 	return 3;
 }
 void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress)
 {
-	if(showProgress){
-		progress->maximum(mapSizeH);
-		progress->label("Picking tiles based on delta");
-	}
+	uint8_t type_temp=palTypeGen;
+	uint8_t tempSet=0;
 	double d[4];
 	uint32_t x,y;
 	uint8_t t;
 	uint16_t p;
 	uint8_t temp[256];
-	for (y=0;y<mapSizeH;y++){
-		for (x=0;x<mapSizeW;x++){
-			uint32_t cur_tile=get_tile(x,y);
-			for (t=0;t<4;t++)
-				d[t]=0.0;
-			uint8_t * ptrorgin=&currentProject->tileC->truetileDat[cur_tile*256];
-			for (t=0;t<4;t++){
-				currentProject->tileC->truecolor_to_tile(t,cur_tile);
-				tileToTrueCol(&currentProject->tileC->tileDat[(cur_tile*currentProject->tileC->tileSize)],temp,t);
-				for (p=0;p<256;p+=4) {
-					d[t]+=ciede2000rgb(temp[p],temp[p+1],temp[p+2],ptrorgin[p],ptrorgin[p+1],ptrorgin[p+2]);
-				}
-			}
-			set_pal_row(x,y,pick4Delta(d));
-		}
-		if((y&1)&&showProgress){
-			progress->value(y);
+	uint32_t w,h;
+	w=mapSizeW*8;
+	h=mapSizeH*8;
+	uint8_t * imagein=(uint8_t*)malloc(w*h*4);
+	truecolor_to_image(imagein,-1);
+	uint8_t **imageout=(uint8_t**)malloc(4*sizeof(void*));
+	uint32_t xtile,ytile;
+	xtile=ytile=0;
+	for(x=0;x<4;x++){
+		if(showProgress){
+			sprintf((char*)temp,"Dithering %d",x);
+			progress->label((char*)temp);
 			Fl::check();
 		}
+		imageout[x]=(uint8_t*)malloc(w*h*4);
+		truecolor_to_image(imageout[x],-1);
+		ditherImage(imageout[x],w,h,true,true,true,x);
+		ditherImage(imageout[x],w,h,true,false,true,x);
 	}
+	if(showProgress){
+		progress->maximum(mapSizeH);
+		progress->label("Picking tiles based on delta");
+	}
+	for (uint32_t a=0;a<(h*w*4)-w*4;a+=w*4*8){//a tiles y
+		for (uint32_t b=0;b<w*4;b+=32){//b tiles x
+			uint32_t cur_tile=get_tile(xtile,ytile);
+			for (t=0;t<4;t++)
+				d[t]=0.0;
+			if ((type_temp != 0) && (game_system == sega_genesis)){
+				tempSet=(currentProject->tileMapC->get_prio(xtile,ytile)^1)*8;
+				set_palette_type(tempSet);
+			}
+			for (t=0;t<4;t++){
+				for (uint32_t y=0;y<w*4*8;y+=w*4){//pixels y
+					for(x=0;x<32;x+=4)
+						d[t]+=ciede2000rgb(imagein[a+b+y+x],imagein[a+b+y+x+1],imagein[a+b+y+x+2],imageout[t][a+b+y+x],imageout[t][a+b+y+x+1],imageout[t][a+b+y+x+2]);
+				}
+			}
+			uint16_t truecolor_tile_ptr=0;
+			uint8_t sillyrow=pick4Delta(d);
+			set_pal_row(xtile,ytile,sillyrow);
+			for (uint32_t y=0;y<w*4*8;y+=w*4){//pixels y
+				memcpy(&temp[truecolor_tile_ptr],&imageout[sillyrow][a+b+y],32);
+				truecolor_tile_ptr+=32;
+			}
+			currentProject->tileC->truecolor_to_tile_ptr(sillyrow,cur_tile,temp,false);
+			xtile++;
+		}
+		if(showProgress){
+			progress->value(ytile);
+			window->redraw();
+			Fl::check();
+		}
+		xtile=0;
+		ytile++;
+	}
+	free(imagein);
+	free(imageout[0]);
+	free(imageout[1]);
+	free(imageout[2]);
+	free(imageout[3]);
+	free(imageout);
+	if (game_system == sega_genesis)
+		set_palette_type(type_temp);
 }
 inline uint8_t Clamp255(int n)
 {
@@ -949,9 +977,9 @@ void generate_optimal_palette(Fl_Widget*,void*)
 	if (rows==1)
 		rowAuto = fl_ask("Would you like all tiles on the tilemap to be set to row 0? (This is where all generated colors will apear)");
 	else
-		 rowAuto = fl_choice("How would you like the palette map to be handled","Dont change anythin","Pick based on hue","Generate contiguos palette then pick based on delta");
+		 rowAuto = fl_choice("How would you like the palette map to be handled","Don't change anythin","Pick based on hue","Generate contiguous palette then pick based on delta");
 	uint8_t fun_palette;
-	uint8_t alg=fl_choice("What color reduction algorthium would you like used","Densise Lee v3","scolorq",0);
+	uint8_t alg=fl_choice("What color reduction algorithm would you like used","Densise Lee v3","scolorq",0);
 	uint8_t yuv;
 	yuv=fl_ask("You you like the image to be calculated in YCbCr color space\nHint: No is the better option");
 	switch (game_system){
@@ -1007,10 +1035,8 @@ void truecolorimageToTiles(uint8_t * image,int8_t rowusage,bool useAlpha)
 	uint32_t w=currentProject->tileMapC->mapSizeW*8;
 	uint32_t h=currentProject->tileMapC->mapSizeH*8;
 	uint16_t truecolor_tile_ptr;
-	for (uint32_t a=0;a<(h*w*pSize)-w*pSize;a+=w*pSize*8)//a tiles y
-	{
-		for (uint32_t b=0;b<w*pSize;b+=pTile)//b tiles x
-		{	
+	for (uint32_t a=0;a<(h*w*pSize)-w*pSize;a+=w*pSize*8){//a tiles y
+		for (uint32_t b=0;b<w*pSize;b+=pTile){//b tiles x
 			uint8_t temp;
 			int32_t current_tile;
 			if(rowusage==-1){

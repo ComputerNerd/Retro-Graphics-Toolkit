@@ -11,6 +11,8 @@ static uint8_t useHiL;//no use for these varibles outside of this file
 static uint8_t useMode;
 static uint8_t rgbPixelsize;
 static bool USEofColGlob;
+static bool forcedfun;
+static uint8_t theforcedfun;
 static uint8_t *img_ptr_dither;
 uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row)
 {
@@ -105,7 +107,10 @@ static int32_t error[SIZE]; /* queue with error
 		bool tempSet=currentProject->tileMapC->get_prio(cur_x/8,cur_y/8)^true;
 		set_palette_type(tempSet);
 	}
-	pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->tileMapC->get_palette_map(cur_x/8,cur_y/8));
+	if(forcedfun)
+		pvalue=nearest_color_chan(pvalue,rgb_select,theforcedfun);
+	else
+		pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->tileMapC->get_palette_map(cur_x/8,cur_y/8));
   /* shift queue */ 
   memmove(error, error+1,
     (SIZE-1)*sizeof error[0]); 
@@ -240,7 +245,7 @@ void Riemersma(uint8_t *image, int32_t width,int32_t height,uint8_t rgb_sel)
     hilbert_level(level,UP);
   move(NONE);
 }
-void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpace)
+void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpace,bool forceRow,uint8_t forcedrow)
 {
 	/*!
 	this function will take an input with or without alpha and dither it
@@ -272,8 +277,12 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 				b_old=image[x+(y*w*rgbPixelsize)+2];
 				if (useAlpha)
 					a_old=image[x+(y*w*rgbPixelsize)+3];
-				if(!colSpace)
-					pal_row=currentProject->tileMapC->get_palette_map(x/rgbRowsize,y/8);
+				if(!colSpace){
+					if(forceRow)
+						pal_row=forcedrow;
+					else
+						pal_row=currentProject->tileMapC->get_palette_map(x/rgbRowsize,y/8);
+				}
 				//find nearest color
 				if (game_system == sega_genesis && type_temp != 0){
 					uint8_t tempSet=(currentProject->tileMapC->get_prio(x/rgbRowsize,y/8)^1)*8;
@@ -312,6 +321,8 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 	case 1:
 		useMode=game_system;
 		USEofColGlob=colSpace;
+		forcedfun=forceRow;
+		theforcedfun=forcedrow;
 		Riemersma(image,w,h,0);
 		Riemersma(image,w,h,1);
 		Riemersma(image,w,h,2);
@@ -329,8 +340,12 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 				b_old=image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2];
 				if (useAlpha)
 					a_old=image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+3];
-				if(!colSpace)
-					pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
+				if(!colSpace){
+					if(forceRow)
+						pal_row=forcedrow;
+					else
+						pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
+				}
 				//find nearest color
 				if (game_system == sega_genesis && type_temp != 0){
 					uint8_t tempSet=(currentProject->tileMapC->get_prio(x/8,y/8)^1)*8;
@@ -370,20 +385,16 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 				image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2]=b_new;
 				for (uint8_t channel=0;channel<rgbPixelsize;channel++){
 					//add the offset
-					if (x+1 < w)
-					{
+					if (x+1 < w){
 						plus_truncate_uchar(image[((x+1)*rgbPixelsize)+(y*w*rgbPixelsize)+channel],(error_rgb[channel]*7) / ditherSetting);
 					}
-					if (x-1 > 0 && y+1 < h)
-					{
+					if (x-1 > 0 && y+1 < h){
 						plus_truncate_uchar(image[((x-1)*rgbPixelsize)+((y+1)*w*rgbPixelsize)+channel],(error_rgb[channel]*3) / ditherSetting);
 					}
-					if (y+1 < h)
-					{
+					if (y+1 < h){
 						plus_truncate_uchar(image[(x*rgbPixelsize)+((y+1)*w*rgbPixelsize)+channel],(error_rgb[channel]*5) / ditherSetting);
 					}
-					if (x+1 < w && y+1 < h)
-					{
+					if (x+1 < w && y+1 < h){
 						plus_truncate_uchar(image[((x+1)*rgbPixelsize)+((y+1)*w*rgbPixelsize)+channel],(error_rgb[channel]) / ditherSetting);
 					}
 				}
