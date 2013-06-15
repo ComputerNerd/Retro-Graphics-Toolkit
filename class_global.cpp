@@ -56,16 +56,17 @@ void editor::draw_non_gui()
 			show_default_error
 		break;
 	}
-	//palette_bar_offset_y=(double)((double)h()/600.0)*(double)default_palette_bar_offset_y;//this command needs to be done for more than one window so there is no point of writting this more than once so we put it here
 	int16_t x,y;//we will need to reuse these later
 	uint8_t box_size=pal_size->value();
 	uint8_t tiles_size=tile_size->value();
 	uint8_t placer_tile_size=place_tile_size->value();
 	switch (mode_editor){
 		case pal_edit:
+			palEdit.updateSize();
 			palEdit.draw_boxes();
 		break;
 		case tile_edit:
+			tileEdit_pal.updateSize();
 			//draw truecolor preview box
 			true_color_box_y=(double)((double)h()/600.0)*(double)default_true_color_box_y;
 			true_color_box_x=(double)((double)w()/800.0)*(double)default_true_color_box_x;
@@ -82,26 +83,20 @@ void editor::draw_non_gui()
 			if (show_grid == true)
 			{
 				//draw the grid
-				if (tiles_size > 4)
-				{
-					for (y=0;y<8;y++)
-					{
+				if (tiles_size > 4){
+					for (y=0;y<8;y++){
 						for (x=0;x<8;x++)
-						{
 							fl_draw_box(FL_EMBOSSED_FRAME,(x*tiles_size)+tile_edit_offset_x,(y*tiles_size)+tile_edit_offset_y,tiles_size,tiles_size,0);
-						}
 					}
-					for (y=0;y<8;y++)
-					{
+					for (y=0;y<8;y++){
 						for (x=0;x<8;x++)
-						{
 							fl_draw_box(FL_EMBOSSED_FRAME,(x*tiles_size)+tile_edit_truecolor_off_x,(y*tiles_size)+tile_edit_truecolor_off_y,tiles_size,tiles_size,0);
-						}
 					}
 				}
 			}
 		break;
 		case tile_place:
+			tileMap_pal.updateSize();
 			tile_placer_tile_offset_y=(double)((double)h()/600.0)*(double)default_tile_placer_tile_offset_y;
 			tileMap_pal.draw_boxes();
 			//now draw the tile

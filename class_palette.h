@@ -4,6 +4,7 @@ class palette_bar
 {
 	uint8_t rows;//tells how many rows there are in the palette
 	uint16_t offx,offy;//the offset in which the palette selection boxes will appear
+	uint16_t offxx,offyy;//the offset in which the palette selection boxes will appear
 public:
 	Fl_Slider* pal_r;
 	Fl_Slider* pal_g;
@@ -18,5 +19,6 @@ public:
 	void changeRow(uint8_t);
 	void changeSystem();
 	void updateSlider();
+	void updateSize(void);
 }
 extern palEdit,tileEdit_pal,tileMap_pal;

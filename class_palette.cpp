@@ -11,8 +11,7 @@ uint8_t palette_bar::getEntry(void)
 }
 void palette_bar::more_init(uint8_t x,uint16_t offsetx,uint16_t offsety)
 {
-	switch (game_system)
-	{
+	switch (game_system){
 		case sega_genesis:
 			perRow=16;
 		break;
@@ -21,6 +20,8 @@ void palette_bar::more_init(uint8_t x,uint16_t offsetx,uint16_t offsety)
 		break;
 	}
 	rows=x;
+	offxx=offsetx;
+	offyy=offsety;
 	offx=offsetx;
 	offy=offsety;
 	pal_r = new Fl_Hor_Value_Slider(offx+32,offy+8+(rows*32),256,24,"Red");
@@ -43,6 +44,11 @@ void palette_bar::more_init(uint8_t x,uint16_t offsetx,uint16_t offsety)
 	pal_b->value(0);
 	pal_b->align(FL_ALIGN_LEFT);
 	pal_b->callback(update_palette, (void*)2);
+}
+void palette_bar::updateSize(void)
+{
+	offx=(double)((double)window->w()/800.0)*(double)offxx;
+	offy=(double)((double)window->h()/600.0)*(double)offyy;
 }
 void palette_bar::check_box(int16_t x,int16_t y)
 {

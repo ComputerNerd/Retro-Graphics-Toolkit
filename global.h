@@ -60,7 +60,6 @@ extern uint16_t tile_placer_tile_offset_y;
 #define default_palette_bar_offset_y 56
 #define palette_preview_box_x 408
 #define palette_preview_box_y 208
-//extern uint8_t palette_bar_offset_y;
 #define default_tile_edit_offset_x 344
 //#define tile_edit_offset_x 472
 #define default_tile_edit_offset_y 224
