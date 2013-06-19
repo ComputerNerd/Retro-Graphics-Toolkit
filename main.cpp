@@ -313,7 +313,7 @@ void load_tiles(Fl_Widget*,void* split)
 	//format row,append
 	uint32_t file_size;
 	uint8_t append=(uintptr_t)split&0xFF;
-		char * returned=(char *)fl_input("What row should these tiles use?\nEnter 0 to 3 to selected a row or -1 to -4 to auto determin based on tilemap\n The number after the negative symbol is the default row +1 if not tile is found","-1");
+		char * returned=(char *)fl_input("What row should these tiles use?\nEnter 0 to 3 to selected a row or -1 to -4 to auto determine based on tilemap\n The number after the negative symbol is the default row +1 if not tile is found","-1");
 	if (returned==0)
 		return;
 	if (verify_str_number_only(returned) == false)
@@ -452,7 +452,7 @@ void load_truecolor_tiles(Fl_Widget*,void*)
 		fseek(myfile, 0L, SEEK_END);
 		file_size = ftell(myfile);
 		if ((file_size/256)*256 != file_size) {
-			fl_alert("Error: this file is not a multiple of 256 it is not a valid truecolor tiles. The file size is: %d",file_size);
+			fl_alert("Error: this file is not a multiple of 256 so it is not a valid truecolor tiles. The file size is: %d",file_size);
 			fclose(myfile);
 			return;
 		}
@@ -487,7 +487,7 @@ void load_truecolor_tiles(Fl_Widget*,void*)
 void fill_tile_map_with_tile(Fl_Widget*,void*)
 {
 	if (mode_editor != tile_place) {
-		fl_alert("To prevent aciddental modifaction to the tile map be in plane editing mode");
+		fl_alert("To prevent accidental modification to the tile map be in plane editing mode");
 		return;
 	}
 	for (uint16_t y=0;y<currentProject->tileMapC->mapSizeH;y++) {
@@ -573,7 +573,7 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 	h=currentProject->tileMapC->mapSizeH*8;
 	uint32_t truecolor_tile_ptr=0;
 	uint32_t x_tile=0,y_tile=0;
-	uint8_t method=fl_choice("How would you like this tilemap dithered?","Dither each palette row seperatly","Dither entire image at once","cancel");
+	uint8_t method=fl_choice("How would you like this tilemap dithered?","Dither each palette row separately","Dither entire image at once","cancel");
 	if(method==2)
 		return;
 	image = (uint8_t *)malloc(w*h*4);
@@ -948,7 +948,7 @@ void tilemap_remove_callback(Fl_Widget*,void*)
 			return;
 		int32_t tile=atoi(str_ptr);
 		if (tile < 0) {
-			fl_alert("You must enter greater than or equal to 0 but you entered %d\n",tile);
+			fl_alert("You must enter a number greater than or equal to 0 however you entered %d\n",tile);
 			return;
 		}
 		if(tile)
@@ -985,7 +985,7 @@ void tileDPicker(Fl_Widget*,void*)
 }
 void showAbout(Fl_Widget*,void*)
 {
-	fl_alert("Retro Graphics Toolkit is written by sega16/nintendo8/sonic master or whatever you want to call me\nThis program was build on %s %s\nTechiclly speaking this date was the last time that main.cpp was updated.",__DATE__,__TIME__);
+	fl_alert("Retro Graphics Toolkit is written by sega16/nintendo8/sonic master or whatever you want to call me\nThis program was built on %s %s\nTechnically speaking this date was the last time that main.cpp was updated.",__DATE__,__TIME__);
 }
 void toggleRowSolo(Fl_Widget*,void*)
 {
@@ -1008,8 +1008,7 @@ const char * lockedDes="This sets the currently selected palette entry to locked
 const char * reservedDes="This sets the currently selected palette entry to reserved meaning that this color cannot be changed or used in tiles note that you may need make sure all tiles get re-dithered to ensure that this rule is enforced";
 void setPalType(Fl_Widget*,void* type)
 {
-	switch (mode_editor)
-	{
+	switch (mode_editor){
 		case pal_edit:
 			currentProject->palType[palEdit.getEntry()]=(uintptr_t)type;
 			palEdit.updateSlider();
@@ -1096,7 +1095,7 @@ void save_tilemap_as_image(Fl_Widget*,void*)
 }
 void pickNearAlg(Fl_Widget*,void*)
 {
-	nearestAlg=fl_choice("Which nearest color algorthim would you like to use?","ciede2000","Euclidean distance",0);
+	nearestAlg=fl_choice("Which nearest color algorithm would you like to use?","ciede2000","Euclidean distance",0);
 }
 void editor::_editor()
 {
