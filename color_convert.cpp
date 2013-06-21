@@ -3,6 +3,28 @@ uint8_t nespaltab_r[64];
 uint8_t nespaltab_g[64];
 uint8_t nespaltab_b[64];
 #define PI 3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282306647093844609550582231725359408128481117450284102701938521105559644622948954930381964428810975665933446128475648233786783165271201909145648
+void swapEntry(uint8_t one,uint8_t two)
+{
+	if(unlikely(one==two))
+		return;
+	switch(game_system){
+		case sega_genesis:
+			{uint8_t palOld[2];
+			memcpy(palOld,currentProject->palDat+two+two,2);
+			memcpy(currentProject->palDat+two+two,currentProject->palDat+one+one,2);
+			memcpy(currentProject->palDat+one+one,palOld,2);}
+		break;
+		case NES:
+			{uint8_t palOld=currentProject->palDat[two+two];
+			memcpy(currentProject->palDat+two,currentProject->palDat+one,1);
+			currentProject->palDat[one]=palOld;}
+		break;
+	}
+	uint8_t rgb[3];
+	memcpy(rgb,currentProject->rgbPal+(two*3),3);
+	memcpy(currentProject->rgbPal+(two*3),currentProject->rgbPal+(one*3),3);
+	memcpy(currentProject->rgbPal+(one*3),rgb,3);
+}
 inline double square(double x)
 {
 	return x*x;

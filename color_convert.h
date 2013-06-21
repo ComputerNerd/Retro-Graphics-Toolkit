@@ -3,6 +3,7 @@
 extern uint8_t nespaltab_r[];
 extern uint8_t nespaltab_g[];
 extern uint8_t nespaltab_b[];
+void swapEntry(uint8_t one,uint8_t two);
 uint8_t to_nes_color_rgb(uint8_t red,uint8_t green,uint8_t blue);
 uint8_t to_nes_color(uint8_t pal_index);
 uint16_t to_sega_genesis_color(uint16_t pal_index);

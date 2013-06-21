@@ -654,9 +654,40 @@ inline uint32_t sqri(int fun)
 {
 	return fun*fun;
 }
+inline double pickIt(double h,double l,double s,uint8_t type)
+{
+	switch(type){
+		case 0:
+			return h;
+		break;
+		case 1:
+			return l;
+		break;
+		case 2:
+			return s;
+		break;
+	}
+}
 void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress)
 {
 	uint8_t alg=fl_choice("Which method do you think works better for this image (try both)","ciede2000","Root mean squared error",0);
+	if(fl_ask("Would you like the palette to be ordered by hue or light or saturation")){
+		uint16_t x,y;
+		uint8_t type=fl_choice("What do you want it ordered by","Hue","Light","Saturation");
+		for(x=0;x<palEdit.perRow*12;x+=3){
+			double h,l,s,cmp,cmp2;
+			uint16_t best=x;
+			rgbToHls(currentProject->rgbPal[x],currentProject->rgbPal[x+1],currentProject->rgbPal[x+2],&h,&l,&s);
+			cmp=pickIt(h,l,s,type);
+			for(y=x+3;y<palEdit.perRow*12;y+=3){
+				rgbToHls(currentProject->rgbPal[y],currentProject->rgbPal[y+1],currentProject->rgbPal[y+2],&h,&l,&s);
+				cmp2=pickIt(h,l,s,type);
+				if(cmp2<=cmp)
+					best=y;
+			}
+			swapEntry(x/3,best/3);
+		}
+	}
 	uint8_t type_temp=palTypeGen;
 	uint8_t tempSet=0;
 	double d[4];
@@ -958,7 +989,6 @@ againNerd:
 			free(imageuse);
 	}
 }
-
 void generate_optimal_palette(Fl_Widget*,void*)
 {
 	uint8_t perRow[4];

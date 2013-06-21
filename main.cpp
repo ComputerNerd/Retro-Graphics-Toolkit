@@ -1467,18 +1467,15 @@ int main(int argc, char **argv)
 	////       no icons will be shown. However, this means you do not need to link in the
 	////       fltk_images library, potentially reducing the size of your executable.
 	//// Loading the system icons is not required by the OSX or Windows native file choosers.
-
 #if !defined(WIN32) && !defined(__APPLE__)
   Fl_File_Icon::load_system_icons();
 #endif
-
  /* int argn = 1;
 #ifdef __APPLE__
   // OS X may add the process number as the first argument - ignore
   if (argc>argn && strncmp(argv[1], "-psn_", 5)==0)
     argn++;
 #endif*/
-
  // window.end();
   window->show(argc,argv);
 	return Fl::run();
