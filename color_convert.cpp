@@ -252,17 +252,35 @@ uint8_t toNesChan(uint8_t ri,uint8_t gi,uint8_t bi,uint8_t chan)
 	}
 	return 0;
 }
+inline uint32_t doublethefun(uint32_t x)
+{
+	return x*x;
+}
 uint32_t toNesRgb(uint8_t ri,uint8_t gi,uint8_t bi)
 {
-	double min_error=9001.0;
 	uint8_t bestcolor=0;
-	for (uint8_t a=0;a<16;a++){//hue
-		for (uint8_t c=0;c<4;c++){//value
-			uint8_t temp=a|(c<<4);
-			double dist = ciede2000rgb(nespaltab_r[temp],nespaltab_g[temp],nespaltab_b[temp],ri,gi,bi);
-			if (dist < min_error){
-				min_error = dist;
-				bestcolor=a|(c<<4);
+	if(nearestAlg){
+		uint32_t min_error=(255*255)+(255*255)+(255*255)+1;
+		for (uint8_t a=0;a<16;a++){//hue
+			for (uint8_t c=0;c<4;c++){//value
+				uint8_t temp=a|(c<<4);
+				uint32_t dist = doublethefun(nespaltab_r[temp]-ri)+doublethefun(nespaltab_g[temp]-gi)+doublethefun(nespaltab_b[temp]-bi);
+				if (dist < min_error){
+					min_error = dist;
+					bestcolor=a|(c<<4);
+				}
+			}
+		}
+	}else{
+		double min_error=9001.0;
+		for (uint8_t a=0;a<16;a++){//hue
+			for (uint8_t c=0;c<4;c++){//value
+				uint8_t temp=a|(c<<4);
+				double dist = ciede2000rgb(nespaltab_r[temp],nespaltab_g[temp],nespaltab_b[temp],ri,gi,bi);
+				if (dist < min_error){
+					min_error = dist;
+					bestcolor=a|(c<<4);
+				}
 			}
 		}
 	}

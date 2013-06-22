@@ -85,7 +85,7 @@ bool tileMap::saveToFile()
 	if (load_file_generic("Save tilemap to",true) == true){
 		type=fl_choice("How would like this file saved?","Binary","C header",0);
 		compression=fl_choice("In what format would you like this tilemap saved","Uncompressed","Enigma Compression",0);
-		if (type == 1) {
+		if (type == 1){
 			char temp[2048];
 			myfile = fopen(the_file.c_str(),"w");
 			sprintf(temp,"//Width %d Height %d",mapSizeW,mapSizeH);
@@ -125,8 +125,7 @@ bool tileMap::saveToFile()
 				}//brackets used to prevent TheMap conflict
 				break;
 				case NES:
-				{
-					uint8_t * TheMap;
+				{uint8_t * TheMap;
 					fileSize=mapSizeW*mapSizeH;
 					TheMap = (uint8_t *)malloc(fileSize);
 					for (y=0;y<mapSizeH;y++){
@@ -140,8 +139,7 @@ bool tileMap::saveToFile()
 						}
 					}
 					TheMap-=mapSizeW*mapSizeH;//return to begining so it can be freeded and the file sized
-					mapptr=TheMap;
-				}
+					mapptr=TheMap;}
 				break;
 			}
 			if(compression==1){
@@ -218,8 +216,7 @@ bool tileMap::loadFromFile()
 	/*Only will return false when there is a malloc error or file error
 	the file saving user cancalation and not entering the number correctly return true*/
 	uint32_t file_size;
-	if (load_file_generic("Load tile map data") == true)
-	{
+	if (load_file_generic("Load tile map data") == true){
 		uint8_t compression=fl_choice("What kind of compression is this tilemap?","Uncompressed","Enigma Compressed",0);
 		//get width and height
 		string tilemap_file=the_file;
@@ -233,7 +230,7 @@ bool tileMap::loadFromFile()
 		if (verify_str_number_only(str_ptr) == false)
 			return true;
 		w=atoi(str_ptr);
-		if (w <= 0) {
+		if (w <= 0){
 			zero_error_tile_map(w);
 			return true;
 		}
@@ -268,7 +265,7 @@ bool tileMap::loadFromFile()
 		file_size = file.tellg();
 		file.seekg (0, ios::beg);//return to the beginning of the file
 		uint32_t size_temp;
-		switch (game_system) {
+		switch (game_system){
 			case sega_genesis:
 				size_temp=(w*h)*2;
 			break;
@@ -402,11 +399,10 @@ bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha)
 	the_image pointer to image must be able to hold the image using rgba 32bit
 	useRow what row to use or -1 for no row
 	*/
-	if (the_image == 0) {
+	if (the_image == 0){
 		fl_alert("Error malloc must be called before generating this image");
 		return false;
 	}
-	//puts("Truecolor to image starting");
 	uint32_t w,h;
 	w=currentProject->tileMapC->mapSizeW*8;
 	h=currentProject->tileMapC->mapSizeH*8;
@@ -443,16 +439,14 @@ bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha)
 						}
 						truecolor_tile_ptr+=32;
 					}
-				}
-				else
-				{
+				}else{
 					for (uint32_t y=0;y<w*pSize2;y+=w*pixelSize)//pixels y
 						memset(&the_image[a+b+y],0,pSize2);
 				}
-				x_tile++;
+				++x_tile;
 			}
 			x_tile=0;
-			y_tile++;
+			++y_tile;
 		}
 	}else{
 		for (uint64_t a=0;a<(h*w*pixelSize)-w*pixelSize;a+=w*pixelSize*8)//a tiles y
@@ -482,7 +476,6 @@ bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha)
 			y_tile++;
 		}
 	}
-	//puts("Done");
 	return true;
 }
 double max3(double a,double b,double c)
@@ -589,8 +582,6 @@ void tileMap::pickRow(uint8_t amount)
 	h=0.0;
 	uint16_t z;
 	uint32_t x,y;
-	uint32_t cnt[4];
-	double weightPal[4];
 	double maxPal=divide;
 	for (y=0;y<mapSizeH;++y){
 		for (x=0;x<mapSizeW;++x){
@@ -625,8 +616,8 @@ void tileMap::pickRow(uint8_t amount)
 void tileMap::allRowZero(void)
 {
 	uint32_t x,y;
-	for (y=0;y<mapSizeH;y++) {
-		for (x=0;x<mapSizeW;x++)
+	for (y=0;y<mapSizeH;++y){
+		for (x=0;x<mapSizeW;++x)
 			set_pal_row(x,y,0);
 	}
 }
@@ -670,7 +661,7 @@ inline double pickIt(double h,double l,double s,uint8_t type)
 }
 void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress)
 {
-	uint8_t alg=fl_choice("Which method do you think works better for this image (try both)","ciede2000","Root mean squared error",0);
+	uint8_t alg=fl_choice("Which method do you think works better for this image (try both)","ciede2000","Mean squared error",0);
 	if(fl_ask("Would you like the palette to be ordered by hue or light or saturation")){
 		uint16_t x,y;
 		uint8_t type=fl_choice("What do you want it ordered by","Hue","Light","Saturation");
@@ -694,7 +685,6 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress)
 	uint32_t di[4];
 	uint32_t x,y;
 	uint8_t t;
-	uint16_t p;
 	uint8_t temp[256];
 	uint32_t w,h;
 	w=mapSizeW*8;
@@ -758,11 +748,8 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress)
 							d[t]+=ciede2000rgb(imagein[a+b+y+x],imagein[a+b+y+x+1],imagein[a+b+y+x+2],imageout[t][a+b+y+x],imageout[t][a+b+y+x+1],imageout[t][a+b+y+x+2]);
 					}
 				}
-				//di[t]=sqrt(di[t]);//not needed only relative error matters in this case
 			}
-			
 			uint16_t truecolor_tile_ptr=0;
-			
 			uint8_t sillyrow;
 			if(alg)
 				sillyrow=pick4Deltai(di);
@@ -774,7 +761,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress)
 				truecolor_tile_ptr+=32;
 			}
 			currentProject->tileC->truecolor_to_tile_ptr(sillyrow,cur_tile,temp,false);
-			xtile++;
+			++xtile;
 		}
 		if(showProgress){
 			progress->value(ytile);
@@ -782,7 +769,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress)
 			Fl::check();
 		}
 		xtile=0;
-		ytile++;
+		++ytile;
 	}
 	free(imagein);
 	free(imageout[0]);

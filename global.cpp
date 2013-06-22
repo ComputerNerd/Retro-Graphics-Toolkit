@@ -77,7 +77,7 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * myfile)
 			if (fputc('\n',myfile)==0)
 				return false;
 		}
-		dat++;
+		++dat;
 	}
 	sprintf(str,"%d",*dat);
 	if (fputs(str,myfile)==0)
@@ -86,8 +86,7 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * myfile)
 }
 void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha)
 {
-	switch (game_system)
-	{
+	switch (game_system){
 		case sega_genesis:
 			row*=48;
 			for (uint8_t y=0;y<8;++y){
@@ -112,10 +111,8 @@ void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha)
 		break;
 		case NES:
 			row*=12;
-			for (uint8_t y=0;y<8;++y)
-			{
-				for (int8_t x=7;x>=0;--x)
-				{
+			for (uint8_t y=0;y<8;++y){
+				for (int8_t x=7;x>=0;--x){
 					uint8_t temp;
 					temp=(input[y]>>x)&1;
 					temp|=((input[y+8]>>x)&1)<<1;
@@ -138,17 +135,13 @@ this function address that issue by error checking the string and it also gives 
 this function returns true when the string contains only numbers 0-9 and false when there is other stuff
 it will also allow the use of the - symbol as negative
 */
-	while(*str++)
-	{
-		if (*str != 0 && *str != '-')
-		{
-			if (*str < '0')
-			{
+	while(*str++){
+		if (*str != 0 && *str != '-'){
+			if (*str < '0'){
 				fl_alert("Please enter only numbers in decimal format\nCharacter entered %c",*str);
 				return false;
 			}
-			if (*str > '9')
-			{
+			if (*str > '9'){
 				fl_alert("Please enter only numbers in decimal format\nCharacter entered %c",*str);
 				return false;
 			}
@@ -338,7 +331,6 @@ uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b)
 {
 	uint8_t i;
 	int bestIndex = 0;
-	
 	uint8_t max_rgb=palEdit.perRow*3;
 	row*=max_rgb;
 	if(nearestAlg){
