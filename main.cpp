@@ -1122,7 +1122,7 @@ void editor::_editor()
 	menu->add("&Tile Actions/&Remove duplicate tiles",0,remove_duplicate_tiles,0,0);
 	menu->add("&Tile Actions/&update dither all tiles",0,update_all_tiles,0,0);
 	menu->add("&Tile Actions/&Delete currently selected tile",0,delete_tile_at_location,(void *)0,(int)0);
-	menu->add("&TileMap Actions/&Remove tiles after x",0,tilemap_remove_callback,0,0);
+	menu->add("&TileMap Actions/&Remove tile from tilemap",0,tilemap_remove_callback,0,0);
 	menu->add("&TileMap Actions/&Toggle TrueColor Viewing (defaults to off)",0,trueColTileToggle,0,0);
 	menu->add("&TileMap Actions/&Pick Tile row based on delta",0,tileDPicker,0,0);
 	menu->add("&TileMap Actions/&Auto determine if use shadow highlight",0,shadow_highligh_findout,(void *)0,(int)0);
