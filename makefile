@@ -4,7 +4,7 @@ CC=g++
 CFLAGS=-march=native -I/usr/include/fltk-1/ -Ikens/ -c -Wall -Wextra -Wdouble-promotion -funroll-loops -funswitch-loops -O3 -pipe -march=native -fomit-frame-pointer
 LDFLAGS=
 SOURCES=project.cpp main.cpp callbacks_palette.cpp callback_tiles.cpp class_global.cpp global.cpp quant.cpp tilemap.cpp color_convert.cpp errorMsg.cpp class_palette.cpp dither.cpp \
-	class_tiles.cpp kens/nemesis.cpp kens/enigma.cpp kens/kosinski.cpp spatial_color_quant.cpp
+	class_tiles.cpp kens/nemesis.cpp kens/enigma.cpp kens/kosinski.cpp spatial_color_quant.cpp NEUQUANT.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 LINKER=-L/usr/lib/fltk-1/ -lfltk_images -lfltk -lpng -ljpeg -lXft -lXext -lXinerama -lX11
 EXECUTABLE=RetroGraphicsToolkit

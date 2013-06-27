@@ -5,6 +5,7 @@ Stuff related to tilemap operations goes here*/
 #include "color_convert.h"
 #include "dither.h"
 #include "spatial_color_quant.h"
+#include "NEUQUANT.H"
 tileMap::tileMap()
 {
 	mapSizeW=2;
@@ -886,7 +887,9 @@ againFun:
 		else
 			imageuse=image;
 try_again_color:
-		if(alg==1)
+		if(alg==2)
+			NEU_wrapper(w,h,imageuse,colorz,user_pal);
+		else if(alg==1)
 			scolorq_wrapper(imageuse,output,user_pal,w,h,colorz);
 		else
 			dl3quant(imageuse,w,h,colorz,user_pal,true,progress,yuv);/*this uses denesis lee's v3 color quant which is fonund at http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c*/
@@ -1039,7 +1042,7 @@ void generate_optimal_palette(Fl_Widget*,void*)
 	else
 		 rowAuto = fl_choice("How would you like the palette map to be handled","Don't change anythin","Pick based on hue","Generate contiguous palette then pick based on delta");
 	uint8_t fun_palette;
-	uint8_t alg=fl_choice("What color reduction algorithm would you like used","Densise Lee v3","scolorq",0);
+	uint8_t alg=fl_choice("What color reduction algorithm would you like used","Densise Lee v3","scolorq","Neuquant");
 	uint8_t yuv;
 	yuv=fl_ask("You you like the image to be calculated in YCbCr color space\nHint: No is the better option");
 	switch (game_system){
