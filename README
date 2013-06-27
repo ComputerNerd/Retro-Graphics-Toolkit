@@ -1,8 +1,0 @@
-Retro Graphics Toolkit is a program that makes editing palette based tiles easy.
-It can do.
-Duplicate tile removing with h-flip v-flip and vh-flip
-It can automaticly generate an optimal palette
-It can save to both NES and sega genesis format
-And much more
-To compile this make sure you have fltk installed (on binary based distro maybe use dev package) then type make and it should compile
-If you don't want to do that I will get binaries up evetuly but they won't be hosted on github
