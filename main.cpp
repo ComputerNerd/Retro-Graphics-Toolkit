@@ -101,18 +101,15 @@ void update_offset_tile_edit(Fl_Widget* o, void*)
 void set_mode_tabs(Fl_Widget* o, void*)
 {
 	intptr_t val=(intptr_t)(Fl_Tabs*)window->the_tabs->value();
-	if (val==pal_id)
-	{
+	if (val==pal_id){
 		mode_editor=pal_edit;
 		palEdit.updateSlider();
 	}
-	else if (val==tile_edit_id)
-	{
+	else if (val==tile_edit_id){
 		mode_editor=tile_edit;
 		tileEdit_pal.updateSlider();
 	}
-	else if (val==tile_place_id)
-	{
+	else if (val==tile_place_id){
 		mode_editor=tile_place;
 		tileMap_pal.updateSlider();
 	}
