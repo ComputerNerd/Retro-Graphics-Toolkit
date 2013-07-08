@@ -25,13 +25,11 @@
 void fill_tile(Fl_Widget* o, void*)
 {
 	//fills tile with currently selected color
-	if (mode_editor == tile_place)
-	{
+	if (mode_editor == tile_place){
 		uint8_t color;
 		color=tileMap_pal.box_sel;
 		uint8_t * tile_ptr_temp;
-		switch (game_system)
-		{
+		switch (game_system){
 			case sega_genesis:
 				tile_ptr_temp = &currentProject->tileC->tileDat[currentProject->tileC->current_tile*32];
 				color+=color<<4;
@@ -46,10 +44,8 @@ void fill_tile(Fl_Widget* o, void*)
 				col_2=(color>>1)&1;
 				uint32_t x;
 				memset(tile_ptr_temp,0,16);
-				for (uint8_t y=0;y<8;y++)
-				{
-					for (x=0;x<8;x++)
-					{
+				for (uint8_t y=0;y<8;++y){
+					for (x=0;x<8;++x){
 						tile_ptr_temp[y]|=col_1<<x;
 						tile_ptr_temp[y+8]|=col_2<<x;
 					}
@@ -57,10 +53,8 @@ void fill_tile(Fl_Widget* o, void*)
 			break;
 		}
 	}
-	else if (mode_editor == tile_edit)
-	{
-		for (uint32_t x=currentProject->tileC->current_tile*256;x<(currentProject->tileC->current_tile*256)+256;x+=4)
-		{
+	else if (mode_editor == tile_edit){
+		for (uint32_t x=currentProject->tileC->current_tile*256;x<(currentProject->tileC->current_tile*256)+256;x+=4){
 			currentProject->tileC->truetileDat[x]=truecolor_temp[0];//red
 			currentProject->tileC->truetileDat[x+1]=truecolor_temp[1];//green
 			currentProject->tileC->truetileDat[x+2]=truecolor_temp[2];//blue
@@ -161,7 +155,7 @@ void set_grid_placer(Fl_Widget*,void*)
 void set_prio_callback(Fl_Widget*,void*)
 {
 	G_highlow_p=G_highlow_p^true;
-	//window->redraw();
+	window->redraw();
 }
 void set_hflip(Fl_Widget*,void*)
 {
@@ -176,13 +170,11 @@ void set_vflip(Fl_Widget*,void*)
 void update_map_scroll_x(Fl_Widget*,void*)
 {
 	map_scroll_pos_x=window->map_x_scroll->value();
-	//cout << "map scroll pos x = " << (short)map_scroll_pos_x << endl;//chars needed to casted to something else
 	window->redraw();
 }
 void update_map_scroll_y(Fl_Widget*,void*)
 {
 	map_scroll_pos_y=window->map_y_scroll->value();
-	//cout << "map scroll pos x = " << (short)map_scroll_pos_x << endl;//chars needed to casted to something else
 	window->redraw();
 }
 void update_map_size(Fl_Widget*,void*)
@@ -430,7 +422,7 @@ void update_all_tiles(Fl_Widget*,void*)
 		sel_pal=tileEdit_pal.theRow;
 	if (currentProject->tileC->tiles_amount > 63)
 		putchar('\n');
-	for (uint32_t x=0;x<currentProject->tileC->tiles_amount+1;x++) {
+	for (uint32_t x=0;x<currentProject->tileC->tiles_amount+1;++x) {
 		currentProject->tileC->truecolor_to_tile(sel_pal,x);
 		if ((x % 64) == 0)
 			printf("Progress: %f\r",((float)x/(float)currentProject->tileC->tiles_amount)*100.0);
@@ -448,7 +440,7 @@ void load_truecolor_tiles(Fl_Widget*,void*)
 		myfile = fopen(the_file.c_str(),"rb");
 		fseek(myfile, 0L, SEEK_END);
 		file_size = ftell(myfile);
-		if ((file_size/256)*256 != file_size) {
+		if ((file_size/256)*256 != file_size){
 			fl_alert("Error: this file is not a multiple of 256 so it is not a valid truecolor tiles. The file size is: %d",file_size);
 			fclose(myfile);
 			return;
@@ -468,11 +460,8 @@ void load_truecolor_tiles(Fl_Widget*,void*)
 		}
 		if (currentProject->tileC->tileDat == 0)
 			show_malloc_error(file_size/6)
-		//file.seekg (0, ios::beg);//return to the beginning of the file
 		rewind(myfile);
-		//file.read ((char *)currentProject->tileC->truetileDat, file_size);
 		fread(currentProject->tileC->truetileDat,file_size,1,myfile);
-		//file.close();
 		fclose(myfile);
 		currentProject->tileC->tiles_amount=file_size/256;
 		currentProject->tileC->tiles_amount--;
@@ -487,11 +476,13 @@ void fill_tile_map_with_tile(Fl_Widget*,void*)
 		fl_alert("To prevent accidental modification to the tile map be in plane editing mode");
 		return;
 	}
-	for (uint16_t y=0;y<currentProject->tileMapC->mapSizeH;y++) {
-		for (uint16_t x=0;x<currentProject->tileMapC->mapSizeW;x++)
-			set_tile_full(currentProject->tileC->current_tile,x,y,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
+	if(fl_ask("This will erase the entire tilemap and fill it with the currently selected tile\nAre you sure you want to do this?")){
+		for (uint16_t y=0;y<currentProject->tileMapC->mapSizeH;++y) {
+			for (uint16_t x=0;x<currentProject->tileMapC->mapSizeW;++x)
+				set_tile_full(currentProject->tileC->current_tile,x,y,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
+		}
+		window->damage(FL_DAMAGE_USER1);
 	}
-	window->damage(FL_DAMAGE_USER1);
 }
 void load_tile_map(Fl_Widget*,void*)
 {
@@ -509,8 +500,8 @@ void shadow_highligh_findout(Fl_Widget*,void*)
 	uint16_t x,y;
 	uint32_t xx;
 	if (type==0) {
-		for (y=0;y<currentProject->tileMapC->mapSizeH;y++) {
-			for (x=0;x<currentProject->tileMapC->mapSizeW;x++) {
+		for (y=0;y<currentProject->tileMapC->mapSizeH;++y) {
+			for (x=0;x<currentProject->tileMapC->mapSizeW;++x) {
 				uint32_t cur_tile=currentProject->tileMapC->get_tile(x,y);
 				uint8_t over=0;
 				for (xx=cur_tile*256;xx<cur_tile*256+256;xx+=4) {
@@ -528,8 +519,8 @@ void shadow_highligh_findout(Fl_Widget*,void*)
 		uint8_t temp[256];
 		//uint8_t useHiL=palette_muliplier;
 		uint8_t type_temp=palTypeGen;
-		for (y=0;y<currentProject->tileMapC->mapSizeH;y++) {
-			for (x=0;x<currentProject->tileMapC->mapSizeW;x++) {
+		for (y=0;y<currentProject->tileMapC->mapSizeH;++y) {
+			for (x=0;x<currentProject->tileMapC->mapSizeW;++x) {
 				uint32_t cur_tile=currentProject->tileMapC->get_tile(x,y);
 				uint32_t errorSh=0,errorNorm=0;
 				uint8_t * ptrorgin=&currentProject->tileC->truetileDat[(cur_tile*256)];
@@ -691,7 +682,7 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 					{//handle borders
 						b+=24;
 						uint32_t yy=wt*3*8;
-						for (y=0;y<8;y++){
+						for (y=0;y<8;++y){
 							xx=0;
 							for (x=0;x<wr*4;x+=4){
 								memcpy(&currentProject->tileC->truetileDat[truecolor_tile_ptr+x],&img_ptr[a+b+yy+xx],3);
@@ -720,7 +711,7 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 					{//handle borders
 						b+=24;
 						uint32_t yy=wt*4*8;
-						for (y=0;y<8;y++)
+						for (y=0;y<8;++y)
 						{
 							memcpy(&currentProject->tileC->truetileDat[truecolor_tile_ptr],&img_ptr[a+b+y],wr*4);
 							memset(&currentProject->tileC->truetileDat[truecolor_tile_ptr+x+4],0,32-(wr*4)-4);
@@ -741,8 +732,8 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 		window->map_w->value(w8);
 		window->map_h->value(h8);
 		uint32_t tilecounter=0;
-		for (y=0;y<h8;y++){
-			for (x=0;x<w8;x++){
+		for (y=0;y<h8;++y){
+			for (x=0;x<w8;++x){
 				set_tile_full(tilecounter,x,y,0,false,false,false);
 				tilecounter++;
 			}
@@ -1050,7 +1041,7 @@ int savePNG(const char * fileName,uint32_t width,uint32_t height,void * ptr)
 	uint32_t y;
 	png_set_user_limits(png_ptr, width, height);
 	png_write_info(png_ptr, info_ptr);
-	for (y=0;y<height;y++)
+	for (y=0;y<height;++y)
 		png_write_row(png_ptr, &dat[(y*width*3)]);
 	png_write_end(png_ptr, info_ptr);
 	png_destroy_write_struct(&png_ptr, &info_ptr);
@@ -1131,12 +1122,13 @@ void editor::_editor()
 	true_color_box_y=default_true_color_box_y;
 	tile_edit_truecolor_off_x=default_tile_edit_truecolor_off_x;
 	tile_edit_truecolor_off_y=default_tile_edit_truecolor_off_y;
-	{ /*Fl_Tabs**/ the_tabs = new Fl_Tabs(0, 24, 800, 576);
-	the_tabs->callback(set_mode_tabs);
-	int rx,ry,rw,rh;
-	the_tabs->client_area(rx,ry,rw,rh);
-		{ Fl_Group* o = new Fl_Group(rx, ry, rw, rh, "palette editor");
-			//cout << "palette editor as group: " << o->as_group() << endl;
+	{
+		the_tabs = new Fl_Tabs(0, 24, 800, 576);
+		the_tabs->callback(set_mode_tabs);
+		int rx,ry,rw,rh;
+		the_tabs->client_area(rx,ry,rw,rh);
+		{
+			Fl_Group* o = new Fl_Group(rx, ry, rw, rh, "palette editor");
 			pal_id=(intptr_t)o->as_group();
 			//stuff realed to this group should go here
 			palEdit.more_init(4);
@@ -1152,25 +1144,29 @@ void editor::_editor()
 			ditherPower->step(1);
 			ditherPower->value(16);
 			ditherPower->align(FL_ALIGN_LEFT);
-	{ shadow_highlight_switch = new Fl_Group(112, 288, 800, 480);
-		{ Fl_Round_Button* o = new Fl_Round_Button(96, 280, 64, 32, "Normal");
-		o->type(FL_RADIO_BUTTON);
-		o->tooltip("This is the default sega genesis color.When shadow/highlight mode is disabled all tiles will look like this however when enabling shadow higligh mode and a tile is set to high prioraty you will the tile will use these set of colors");
-		o->callback((Fl_Callback*) set_palette_type_callback,(void *)0);
-		o->set();
-		} // Fl_Round_Button* o
-		{ Fl_Round_Button* o = new Fl_Round_Button(164, 280, 64, 32, "Shadow");
-		o->tooltip("This mode uses the color sets that the vdp uses when shadow highlight mode is enabled by setting bit 3 (the LSB being bit 0) to 1 in the vdp register 0C also for the tile to be shadowed the tile's priority must be set at 0 or low priority");
-		o->type(FL_RADIO_BUTTON);
-       o->callback((Fl_Callback*) set_palette_type_callback,(void *)8);
-      } // Fl_Round_Button* o
-      { Fl_Round_Button* o = new Fl_Round_Button(240, 280, 64, 32, "Highlight");
-	  o->tooltip("This mode uses the color sets that a highlighted sprite or tile uses to make a tile highlighted use a mask sprite");
-        o->type(FL_RADIO_BUTTON);
-        o->callback((Fl_Callback*) set_palette_type_callback,(void *)16);
-      } // Fl_Round_Button* o
-      shadow_highlight_switch->end();
-		} // Fl_Group* o
+			{
+				shadow_highlight_switch = new Fl_Group(112, 288, 800, 480);
+				{
+					Fl_Round_Button* o = new Fl_Round_Button(96, 280, 64, 32, "Normal");
+					o->type(FL_RADIO_BUTTON);
+					o->tooltip("This is the default sega genesis color.When shadow/highlight mode is disabled all tiles will look like this however when enabling shadow higligh mode and a tile is set to high prioraty you will the tile will use these set of colors");
+					o->callback((Fl_Callback*) set_palette_type_callback,(void *)0);
+					o->set();
+				} // Fl_Round_Button* o
+				{
+					Fl_Round_Button* o = new Fl_Round_Button(164, 280, 64, 32, "Shadow");
+					o->tooltip("This mode uses the color sets that the vdp uses when shadow highlight mode is enabled by setting bit 3 (the LSB being bit 0) to 1 in the vdp register 0C also for the tile to be shadowed the tile's priority must be set at 0 or low priority");
+					o->type(FL_RADIO_BUTTON);
+					o->callback((Fl_Callback*) set_palette_type_callback,(void *)8);
+				} // Fl_Round_Button* o
+				{
+					Fl_Round_Button* o = new Fl_Round_Button(240, 280, 64, 32, "Highlight");
+					o->tooltip("This mode uses the color sets that a highlighted sprite or tile uses to make a tile highlighted use a mask sprite");
+					o->type(FL_RADIO_BUTTON);
+					o->callback((Fl_Callback*) set_palette_type_callback,(void *)16);
+				} // Fl_Round_Button* o
+				shadow_highlight_switch->end();
+			}
 			{
 				Fl_Group *o = new Fl_Group(96, 312, 800, 480);
 				{
@@ -1227,35 +1223,35 @@ void editor::_editor()
 				} // End of buttons
 			}//end of group
       			o->end();
-			} // Fl_Group* o
-		{ Fl_Group* o = new Fl_Group(5, 48, 800, 567, "Tile Editor");
+		} // Fl_Group* o
+		{
+			Fl_Group* o = new Fl_Group(5, 48, 800, 567, "Tile Editor");
 			//stuff realed to this group should go here
 			tile_edit_id=(intptr_t)o->as_group();
-		//o->callback(set_mode_tabs);
 			{ Fl_Group* o = new Fl_Group(0, 0, 800, 567);
-				{ Fl_Round_Button* o = new Fl_Round_Button(384, default_palette_bar_offset_y+40, 56, 32, "Row 0");
-					//o->tooltip("Radio button, only one button is set at a time, in the corresponding group.");
+				{
+					Fl_Round_Button* o = new Fl_Round_Button(384, default_palette_bar_offset_y+40, 56, 32, "Row 0");
 					o->type(FL_RADIO_BUTTON);
 					o->set();
 					o->callback((Fl_Callback*) set_tile_row,(void *)0);
 				} // Fl_Round_Button* o
-				{ Fl_Round_Button* o = new Fl_Round_Button(448, default_palette_bar_offset_y+40, 56, 32, "Row 1");
-					//o->tooltip("Radio button, only one button is set at a time, in the corresponding group.");
+				{
+					Fl_Round_Button* o = new Fl_Round_Button(448, default_palette_bar_offset_y+40, 56, 32, "Row 1");
 					o->type(FL_RADIO_BUTTON);
 					o->callback((Fl_Callback*) set_tile_row,(void *)1);
 				} // Fl_Round_Button* o
-				{ Fl_Round_Button* o = new Fl_Round_Button(512, default_palette_bar_offset_y+40, 56, 32, "Row 2");
-					//o->tooltip("Radio button, only one button is set at a time, in the corresponding group.");
+				{
+					Fl_Round_Button* o = new Fl_Round_Button(512, default_palette_bar_offset_y+40, 56, 32, "Row 2");
 					o->type(FL_RADIO_BUTTON);
 					o->callback((Fl_Callback*) set_tile_row,(void *)2);
 				} // Fl_Round_Button* o
-				{ Fl_Round_Button* o = new Fl_Round_Button(576, default_palette_bar_offset_y+40, 56, 32, "Row 3");
-					//o->tooltip("Radio button, only one button is set at a time, in the corresponding group.");
+				{
+					Fl_Round_Button* o = new Fl_Round_Button(576, default_palette_bar_offset_y+40, 56, 32, "Row 3");
 					o->type(FL_RADIO_BUTTON);
 					o->callback((Fl_Callback*) set_tile_row,(void *)3);
 				} // Fl_Round_Button* o
 			o->end();
-		} // Fl_Group* o
+			} // Fl_Group* o
 			{ Fl_Check_Button* o = new Fl_Check_Button(640,default_palette_bar_offset_y+40,120,32,"Show grid?");
 				o->callback(set_grid);
 				o->tooltip("This button Toggles wheater or not you which to see a grid while editing your tiles. A grid can help you see the spacing betwen each pixel.");
