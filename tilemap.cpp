@@ -13,30 +13,24 @@ tileMap::tileMap()
 	selection=false;
 	tileMapDat=(uint8_t *)calloc(16,1);
 }
-tileMap::~tileMap()
-{
+tileMap::~tileMap(){
 	free(tileMapDat);
 }
-bool tileMap::get_hflip(uint16_t x,uint16_t y)
-{
+bool tileMap::get_hflip(uint16_t x,uint16_t y){
 	return (tileMapDat[((y*mapSizeW)+x)*4]>>3)&1;
 }
-bool tileMap::get_vflip(uint16_t x,uint16_t y)
-{
+bool tileMap::get_vflip(uint16_t x,uint16_t y){
 	return (tileMapDat[((y*mapSizeW)+x)*4]>>4)&1;
 }
-bool tileMap::get_prio(uint16_t x,uint16_t y)
-{
+bool tileMap::get_prio(uint16_t x,uint16_t y){
 	return (tileMapDat[((y*mapSizeW)+x)*4]>>7)&1;
 }
-uint8_t tileMap::get_palette_map(uint16_t x,uint16_t y)
-{
+uint8_t tileMap::get_palette_map(uint16_t x,uint16_t y){
 	return (tileMapDat[((y*mapSizeW)+x)*4]>>5)&3;
 }
-uint32_t tileMap::get_tile(uint16_t x,uint16_t y)
-{
+uint32_t tileMap::get_tile(uint16_t x,uint16_t y){
 	//first calulate which tile we want
-	if (mapSizeW < x || mapSizeH < y) {
+	if (mapSizeW < x || mapSizeH < y){
 		fl_alert("Error tried to get a non-existent tile on the map");
 		return 0;
 	}
@@ -48,8 +42,7 @@ uint32_t tileMap::get_tile(uint16_t x,uint16_t y)
 	temp_3=tileMapDat[selected_tile+3];//most sigficant
 	return (temp_1<<16)+(temp_2<<8)+temp_3;
 }
-int32_t tileMap::get_tileRow(uint16_t x,uint16_t y,uint8_t useRow)
-{
+int32_t tileMap::get_tileRow(uint16_t x,uint16_t y,uint8_t useRow){
 	//first calulate which tile we want
 	uint32_t selected_tile=((y*mapSizeW)+x)*4;
 	//get both bytes
@@ -72,8 +65,7 @@ inline uint16_t swap_word(uint16_t w)
 	return (a<<8)|b;
 }
 #endif
-bool tileMap::saveToFile()
-{
+bool tileMap::saveToFile(){
 	/*!
 	Saves tilemap to file returns true on success or cancelation
 	returns false if there was an error but remeber if the user cancles this it is not an error
@@ -207,12 +199,11 @@ bool tileMap::saveToFile()
 	}
 	return true;
 }
-void zero_error_tile_map(int32_t x)
-{/*! this is a long string I do not want it stored more than once*/
+void zero_error_tile_map(int32_t x){
+	/*! this is a long string I do not want it stored more than once*/
 	fl_alert("Please enter value greater than zero you on the other hand entered %d",x);
 }
-bool tileMap::loadFromFile()
-{
+bool tileMap::loadFromFile(){
 //start by loading the file
 	/*Only will return false when there is a malloc error or file error
 	the file saving user cancalation and not entering the number correctly return true*/
@@ -235,7 +226,7 @@ bool tileMap::loadFromFile()
 			zero_error_tile_map(w);
 			return true;
 		}
-		if (game_system == NES && (w & 1)) {
+		if (game_system == NES && (w & 1)){
 			fl_alert("Error unlike in sega genesis mode NES mode needs the width and height to be a multiple to 2");
 			return true;
 		}

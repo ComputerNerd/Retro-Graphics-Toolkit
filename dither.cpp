@@ -14,16 +14,14 @@ static bool USEofColGlob;
 static bool forcedfun;
 static uint8_t theforcedfun;
 static uint8_t *img_ptr_dither;
-uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row)
-{
+uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row){
 	//returns closest value
 	//palette_muliplier
 	uint8_t i;
     int32_t distanceSquared, minDistanceSquared, bestIndex = 0;
     minDistanceSquared = 255*255 + 1;
 	uint8_t max_rgb=0;
-	switch (useMode)
-	{
+	switch (useMode){
 		case sega_genesis:
 			if(USEofColGlob)
 				return palTab[nearest_color_index(val)];
@@ -39,15 +37,14 @@ uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row)
 			max_rgb=12;//4*3=12
 		break;
 		case 255://alpha
-			val=val/255*128;
-			return val;
+			return val&128;
 		break;
 	}
 	row*=max_rgb;
 	for (i=0; i<max_rgb; i+=3){
 		int32_t Rdiff = (int) val - (int)currentProject->rgbPal[i+row+chan];
 		distanceSquared = Rdiff*Rdiff;
-		if (distanceSquared < minDistanceSquared) {
+		if (distanceSquared < minDistanceSquared){
 			minDistanceSquared = distanceSquared;
 			bestIndex = i;
 		}
@@ -73,29 +70,27 @@ static int32_t weights[SIZE]; /* weights for
                            * of recent
                            * pixels */
     
-static void init_weights(int32_t a[],int32_t size,int32_t max) 
-{
+static void init_weights(int32_t a[],int32_t size,int32_t max) {
   double m = exp(log(max)/(size-1));
   double v;
   int32_t i;
     
-  for (i=0, v=1.0; i<size; i++) {
+  for (i=0, v=1.0; i<size;++i) {
     a[i]=(int)(v+0.5); /* store rounded
                         * value */ 
     v*=m;              /* next value */
   } /*for */
 }
     
-static void dither_pixel(uint8_t *pixel) 
-{
+static void dither_pixel(uint8_t *pixel) {
 static int32_t error[SIZE]; /* queue with error
                          * values of recent
                          * pixels */
-  int32_t i,pvalue,err;
+	int32_t i,pvalue,err;
     
-  for (i=0,err=0L; i<SIZE; i++)
-    err+=error[i]*weights[i];
-  //pvalue=*pixel + err/MAX;
+	for (i=0,err=0L; i<SIZE;++i)
+		err+=error[i]*weights[i];
+	//pvalue=*pixel + err/MAX;
 	if (*pixel+err/MAX > 255)
 		pvalue=255;
 	else if (*pixel+err/MAX < 0)
@@ -112,18 +107,15 @@ static int32_t error[SIZE]; /* queue with error
 	else
 		pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->tileMapC->get_palette_map(cur_x/8,cur_y/8));
   /* shift queue */ 
-  memmove(error, error+1,
-    (SIZE-1)*sizeof error[0]); 
-  error[SIZE-1] = *pixel - pvalue;
-  *pixel=(unsigned char)pvalue;
+	memmove(error, error+1,(SIZE-1)*sizeof error[0]); 
+	error[SIZE-1] = *pixel - pvalue;
+	*pixel=(uint8_t)pvalue;
 }
     
-static void move(int32_t direction)
-{
+static void move(int32_t direction){
   /* dither the current pixel */
-  if (cur_x >= 0 && cur_x < img_width &&
-      cur_y >= 0 && cur_y < img_height)
-    dither_pixel(img_ptr_dither);
+	if (cur_x >= 0 && cur_x < img_width && cur_y >= 0 && cur_y < img_height)
+		dither_pixel(img_ptr_dither);
     
   /* move to the next pixel */
   switch (direction) {
@@ -145,9 +137,7 @@ static void move(int32_t direction)
     break;
   } /* switch */
 }
-    
-void hilbert_level(int32_t level,int32_t direction)
-{
+void hilbert_level(int32_t level,int32_t direction){
   if (level==1) {
     switch (direction) {
     case LEFT:
@@ -212,38 +202,36 @@ void hilbert_level(int32_t level,int32_t direction)
     } /* switch */
   } /* if */
 }
-    
-int32_t log2(int32_t value)
-{
-  int32_t result=0;
-  while (value>1) {
-    value >>= 1;
-    result++;
-  } /*while */
-  return result;
+int32_t log2int(int32_t value){
+	int32_t result=0;
+	while (value>1) {
+		value >>= 1;
+		result++;
+	}
+	return result;
 }
-    
-void Riemersma(uint8_t *image, int32_t width,int32_t height,uint8_t rgb_sel)
-{
-  int32_t level,size;
+/*static inline int32_t log2int(int32_t x){
+	return __builtin_clz(x);
+}*/
+void Riemersma(uint8_t *image, int32_t width,int32_t height,uint8_t rgb_sel){
+	int32_t level,size;
 	rgb_select=rgb_sel;
-  /* determine the required order of the
-   * Hilbert curve */ 
-  size=max(width,height);
-  level=log2(size);
-  if ((1L << level) < size)
-    level++;
-    
-  init_weights(weights,SIZE,MAX);
-  img_ptr_dither=image;
+	/* determine the required order of the
+	 * Hilbert curve */ 
+	size=max(width,height);
+	level=log2int(size);
+	if ((1L << level) < size)
+		level++;
+	init_weights(weights,SIZE,MAX);
+	img_ptr_dither=image;
 	img_ptr_dither+=rgb_sel;
-  img_width=width;
-  img_height=height;
-  cur_x=0;
-  cur_y=0;
-  if (level>0)
-    hilbert_level(level,UP);
-  move(NONE);
+	img_width=width;
+	img_height=height;
+	cur_x=0;
+	cur_y=0;
+	if (level>0)
+		hilbert_level(level,UP);
+	move(NONE);
 }
 void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpace,bool forceRow,uint8_t forcedrow)
 {
