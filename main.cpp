@@ -22,8 +22,7 @@
 #include "dither.h"
 #include <zlib.h>
 #include <png.h>
-void fill_tile(Fl_Widget* o, void*)
-{
+void fill_tile(Fl_Widget* o, void*){
 	//fills tile with currently selected color
 	if (mode_editor == tile_place){
 		uint8_t color;
@@ -66,34 +65,29 @@ void fill_tile(Fl_Widget* o, void*)
 		fl_alert("To prevent accidental modification be in the Tile editor or Tile map editor to use this");
 	window->damage(FL_DAMAGE_USER1);
 }
-void update_truecolor(Fl_Widget* o, void* v)
-{
+void update_truecolor(Fl_Widget* o, void* v){
 	Fl_Slider* s = (Fl_Slider*)o;
 	truecolor_temp[fl_intptr_t(v)] = s->value();
 	window->redraw();
 }
-void blank_tile(Fl_Widget* o, void*)
-{
+void blank_tile(Fl_Widget* o, void*){
 	//this will fill the current tile with zeros
 	currentProject->tileC->blank_tile(currentProject->tileC->current_tile);
 	window->damage(FL_DAMAGE_USER1);
 }
-void callback_resize_map(Fl_Widget* o, void*)
-{
+void callback_resize_map(Fl_Widget* o, void*){
 	uint8_t w,h;
 	w=window->map_w->value();
 	h=window->map_h->value();
 	resize_tile_map(w,h);
 	window->redraw();
 }
-void update_offset_tile_edit(Fl_Widget* o, void*)
-{
+void update_offset_tile_edit(Fl_Widget* o, void*){
 	tile_zoom_edit=window->tile_size->value();
 	tile_edit_offset_x=16+(tile_zoom_edit*8);
 	window->redraw();
 }
-void set_mode_tabs(Fl_Widget* o, void*)
-{
+void set_mode_tabs(Fl_Widget* o, void*){
 	intptr_t val=(intptr_t)(Fl_Tabs*)window->the_tabs->value();
 	if (val==pal_id){
 		mode_editor=pal_edit;
@@ -108,16 +102,14 @@ void set_mode_tabs(Fl_Widget* o, void*)
 		tileMap_pal.updateSlider();
 	}
 }
-void set_ditherAlg(Fl_Widget*, void* typeset)
-{
-	if ((uintptr_t)typeset == 0)
+void set_ditherAlg(Fl_Widget*, void* typeset){
+	if (((uintptr_t)typeset==0)||((uintptr_t)typeset==4))
 		window->ditherPower->show();
 	else
 		window->ditherPower->hide();//imagine the user trying to change the power and nothing happening not fun at all
 	ditherAlg=(uintptr_t)typeset;
 }
-void set_tile_row(Fl_Widget*, void* row)
-{
+void set_tile_row(Fl_Widget*, void* row){
 	uint8_t selrow=(uintptr_t)row;
 	switch (mode_editor) {
 		case tile_edit:
@@ -130,55 +122,45 @@ void set_tile_row(Fl_Widget*, void* row)
 	}
 	window->redraw();//trigger a redraw so that the new row is displayed
 }
-void update_box_size(Fl_Widget*, void* )
-{
+void update_box_size(Fl_Widget*, void* ){
 	window->redraw();
 }
-void set_tile_current(Fl_Widget* o, void* )
-{
+void set_tile_current(Fl_Widget* o, void* ){
 	Fl_Slider* s = (Fl_Slider*)o;
 	currentProject->tileC->current_tile=s->value();
 	window->redraw();
 }
-void set_grid(Fl_Widget*,void*)
-{
+void set_grid(Fl_Widget*,void*){
 	//this function will only be trigger when the check button is pressed
 	//so we just need to invert the bool using xor to avoid if statments
 	show_grid=show_grid^true;
 	window->redraw();//redraw to reflect the updated statues of the grid
 }
-void set_grid_placer(Fl_Widget*,void*)
-{
+void set_grid_placer(Fl_Widget*,void*){
 	show_grid_placer=show_grid_placer^true;
 	window->redraw();//redraw to reflect the updated statues of the grid
 }
-void set_prio_callback(Fl_Widget*,void*)
-{
+void set_prio_callback(Fl_Widget*,void*){
 	G_highlow_p=G_highlow_p^true;
 	window->redraw();
 }
-void set_hflip(Fl_Widget*,void*)
-{
+void set_hflip(Fl_Widget*,void*){
 	G_hflip=G_hflip^true;
 	window->redraw();
 }
-void set_vflip(Fl_Widget*,void*)
-{
+void set_vflip(Fl_Widget*,void*){
 	G_vflip=G_vflip^true;
 	window->redraw();
 }
-void update_map_scroll_x(Fl_Widget*,void*)
-{
+void update_map_scroll_x(Fl_Widget*,void*){
 	map_scroll_pos_x=window->map_x_scroll->value();
 	window->redraw();
 }
-void update_map_scroll_y(Fl_Widget*,void*)
-{
+void update_map_scroll_y(Fl_Widget*,void*){
 	map_scroll_pos_y=window->map_y_scroll->value();
 	window->redraw();
 }
-void update_map_size(Fl_Widget*,void*)
-{
+void update_map_size(Fl_Widget*,void*){
 	uint16_t old_scroll=window->map_x_scroll->value();
 	uint8_t tile_size_placer=window->place_tile_size->value();
 	int32_t map_scroll=((tile_size_placer*8)*currentProject->tileMapC->mapSizeW)-map_off_x;//size of all offscreen tiles in pixels
@@ -207,8 +189,7 @@ void update_map_size(Fl_Widget*,void*)
 	window->map_y_scroll->value(old_scroll,(map_scroll/2),0,map_scroll+(map_scroll/2));
 	window->redraw();
 }
-void save_tiles_truecolor(Fl_Widget*,void*)
-{
+void save_tiles_truecolor(Fl_Widget*,void*){
 	if (load_file_generic("Save truecolor tiles",true) == true){
 		FILE * myfile;
 		myfile = fopen(the_file.c_str(),"wb");
@@ -221,8 +202,7 @@ void save_tiles_truecolor(Fl_Widget*,void*)
 			fl_alert("Error: can not save file %s",the_file.c_str());
 	}
 }
-void save_tiles(Fl_Widget*,void*)
-{
+void save_tiles(Fl_Widget*,void*){
 	if (load_file_generic("Pick a location to save tiles",true) == true){
 		uint8_t type=fl_choice("How would like this file saved?","Binary","C header",0);
 		uint8_t compression=fl_choice("What kind of compression do you want used?","Uncompressed","Nemesis","Kosinski");
@@ -291,13 +271,11 @@ void save_tiles(Fl_Widget*,void*)
 		fclose(myfile);
 	}
 }
-void save_map(Fl_Widget*,void*)
-{
+void save_map(Fl_Widget*,void*){
 	if (currentProject->tileMapC->saveToFile() == false)
 		fl_alert("Error: can not save file %s\nTry making sure that you have permission to save the file here",the_file.c_str());
 }
-void load_tiles(Fl_Widget*,void* split)
-{
+void load_tiles(Fl_Widget*,void* split){
 	//if append==1 then we will append data but if not it will erase over current tiles
 	//format row,append
 	uint32_t file_size;
@@ -413,8 +391,7 @@ doTile:
 			fl_alert("The file %s Cannot be loaded",the_file.c_str());
 	}
 }
-void update_all_tiles(Fl_Widget*,void*)
-{
+void update_all_tiles(Fl_Widget*,void*){
 	uint8_t sel_pal;
 	if (mode_editor == tile_place)
 		sel_pal=tileMap_pal.theRow;
@@ -429,12 +406,10 @@ void update_all_tiles(Fl_Widget*,void*)
 	}
 	window->redraw();
 }
-void load_truecolor_tiles(Fl_Widget*,void*)
-{
+void load_truecolor_tiles(Fl_Widget*,void*){
 	//start by loading the file
 	uint32_t file_size;
-	if (load_file_generic() == true)
-	{
+	if (load_file_generic() == true){
 		//ios::ifstream file (the_file.c_str(), ios::in|ios::binary|ios::ate);
 		FILE * myfile;
 		myfile = fopen(the_file.c_str(),"rb");
@@ -450,7 +425,7 @@ void load_truecolor_tiles(Fl_Widget*,void*)
 		currentProject->tileC->truetileDat = (uint8_t *)malloc(file_size);
 		if (currentProject->tileC->truetileDat == 0)
 			show_malloc_error(file_size)
-		switch (game_system) {
+		switch (game_system){
 			case sega_genesis:
 				currentProject->tileC->tileDat = (uint8_t *)malloc(file_size/6);
 			break;
@@ -470,9 +445,8 @@ void load_truecolor_tiles(Fl_Widget*,void*)
 		window->redraw();
 	}
 }
-void fill_tile_map_with_tile(Fl_Widget*,void*)
-{
-	if (mode_editor != tile_place) {
+void fill_tile_map_with_tile(Fl_Widget*,void*){
+	if (mode_editor != tile_place){
 		fl_alert("To prevent accidental modification to the tile map be in plane editing mode");
 		return;
 	}
@@ -484,14 +458,12 @@ void fill_tile_map_with_tile(Fl_Widget*,void*)
 		window->damage(FL_DAMAGE_USER1);
 	}
 }
-void load_tile_map(Fl_Widget*,void*)
-{
+void load_tile_map(Fl_Widget*,void*){
 	if (unlikely(currentProject->tileMapC->loadFromFile() == false))
 		fl_alert("Error: Cannot load file %s",the_file.c_str());
 }
-void shadow_highligh_findout(Fl_Widget*,void*)
-{
-	if (unlikely(game_system != sega_genesis)) {
+void shadow_highligh_findout(Fl_Widget*,void*){
+	if (unlikely(game_system != sega_genesis)){
 		fl_alert("Only the Sega Genesis/Mega Drive supports shadow highligh mode\n");
 		return;
 	}
@@ -499,12 +471,12 @@ void shadow_highligh_findout(Fl_Widget*,void*)
 	//this function will see if 3 or less pixels are above 125 and if so set prioity to low or set priority to high if bright tile
 	uint16_t x,y;
 	uint32_t xx;
-	if (type==0) {
-		for (y=0;y<currentProject->tileMapC->mapSizeH;++y) {
-			for (x=0;x<currentProject->tileMapC->mapSizeW;++x) {
+	if (type==0){
+		for (y=0;y<currentProject->tileMapC->mapSizeH;++y){
+			for (x=0;x<currentProject->tileMapC->mapSizeW;++x){
 				uint32_t cur_tile=currentProject->tileMapC->get_tile(x,y);
 				uint8_t over=0;
-				for (xx=cur_tile*256;xx<cur_tile*256+256;xx+=4) {
+				for (xx=cur_tile*256;xx<cur_tile*256+256;xx+=4){
 					if ((currentProject->tileC->truetileDat[xx] > 130) || (currentProject->tileC->truetileDat[xx+1] > 130) || (currentProject->tileC->truetileDat[xx+2] > 130))
 						over++;
 				}
@@ -514,20 +486,19 @@ void shadow_highligh_findout(Fl_Widget*,void*)
 					set_prio(x,y,false);//shadowed
 			}
 		}
-	}
-	else {
+	}else{
 		uint8_t temp[256];
 		//uint8_t useHiL=palette_muliplier;
 		uint8_t type_temp=palTypeGen;
-		for (y=0;y<currentProject->tileMapC->mapSizeH;++y) {
-			for (x=0;x<currentProject->tileMapC->mapSizeW;++x) {
+		for (y=0;y<currentProject->tileMapC->mapSizeH;++y){
+			for (x=0;x<currentProject->tileMapC->mapSizeW;++x){
 				uint32_t cur_tile=currentProject->tileMapC->get_tile(x,y);
 				uint32_t errorSh=0,errorNorm=0;
 				uint8_t * ptrorgin=&currentProject->tileC->truetileDat[(cur_tile*256)];
 				set_palette_type(0);//normal
 				currentProject->tileC->truecolor_to_tile(currentProject->tileMapC->get_palette_map(x,y),cur_tile);
 				tileToTrueCol(&currentProject->tileC->tileDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tileMapC->get_palette_map(x,y));
-				for (xx=0;xx<256;xx+=4) {
+				for (xx=0;xx<256;xx+=4){
 					errorNorm+=abs(temp[xx]-ptrorgin[xx]);
 					errorNorm+=abs(temp[xx+1]-ptrorgin[xx+1]);
 					errorNorm+=abs(temp[xx+2]-ptrorgin[xx+2]);
@@ -535,7 +506,7 @@ void shadow_highligh_findout(Fl_Widget*,void*)
 				set_palette_type(8);//shadow
 				currentProject->tileC->truecolor_to_tile(currentProject->tileMapC->get_palette_map(x,y),cur_tile);
 				tileToTrueCol(&currentProject->tileC->tileDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tileMapC->get_palette_map(x,y));
-				for (xx=0;xx<256;xx+=4) {
+				for (xx=0;xx<256;xx+=4){
 					errorSh+=abs(temp[xx]-ptrorgin[xx]);
 					errorSh+=abs(temp[xx+1]-ptrorgin[xx+1]);
 					errorSh+=abs(temp[xx+2]-ptrorgin[xx+2]);
@@ -550,8 +521,7 @@ void shadow_highligh_findout(Fl_Widget*,void*)
 	}
 	window->redraw();
 }
-void dither_tilemap_as_image(Fl_Widget*,void*)
-{
+void dither_tilemap_as_image(Fl_Widget*,void*){
 	//normally this program dithers all tiles individully this is not always desirable
 	//to fix this I created this function It convertes the tilemap to image and dithers all tiles
 	//so first create ram for image
@@ -589,8 +559,7 @@ void dither_tilemap_as_image(Fl_Widget*,void*)
 	free(image);
 	window->redraw();
 }
-void load_image_to_tilemap(Fl_Widget*,void*)
-{
+void load_image_to_tilemap(Fl_Widget*,void*){
 	Fl_Shared_Image * loaded_image;
 	if (load_file_generic("Load image") == true){
 		loaded_image=Fl_Shared_Image::get(the_file.c_str());
@@ -662,15 +631,11 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 		uint8_t xx;
 		switch (loaded_image->d()){
 			case 3:
-				for (a=0;a<(ht*wt*3)-wt*3;a+=w*3*8)//a tiles y
-				{
-					for (b=0;b<wt*3;b+=24)//b tiles x
-					{
-						for (y=0;y<wt*3*8;y+=w*3)//pixels y
-						{
+				for (a=0;a<(ht*wt*3)-wt*3;a+=w*3*8){//a tiles y
+					for (b=0;b<wt*3;b+=24){//b tiles x
+						for (y=0;y<wt*3*8;y+=w*3){//pixels y
 							xx=0;
-							for (x=0;x<32;x+=4)//pixels x
-							{
+							for (x=0;x<32;x+=4){//pixels x
 								memcpy(&currentProject->tileC->truetileDat[truecolor_tile_ptr+x],&img_ptr[a+b+y+xx],3);
 								currentProject->tileC->truetileDat[truecolor_tile_ptr+x+3]=255;//solid
 								xx+=3;
@@ -678,10 +643,9 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 							truecolor_tile_ptr+=32;
 						}
 					}
-					if (wr!=0)
-					{//handle borders
+					if (wr!=0){//handle borders
 						b+=24;
-						uint32_t yy=wt*3*8;
+						uint32_t yy=0;
 						for (y=0;y<8;++y){
 							xx=0;
 							for (x=0;x<wr*4;x+=4){
@@ -699,20 +663,16 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 			case 4:
 				for (a=0;a<(ht*wt*4)-wt*4;a+=w*4*8)//a tiles y
 				{
-					for (b=0;b<wt*4;b+=32)//b tiles x
-					{
-						for (y=0;y<wt*4*8;y+=w*4)//pixels y
-						{
+					for (b=0;b<wt*4;b+=32){//b tiles x
+						for (y=0;y<wt*4*8;y+=w*4){//pixels y
 							memcpy(&currentProject->tileC->truetileDat[truecolor_tile_ptr],&img_ptr[a+b+y],32);
 							truecolor_tile_ptr+=32;
 						}
 					}
-					if (wr!=0)
-					{//handle borders
-						b+=24;
+					if (wr!=0){//handle borders
+						b+=32;
 						uint32_t yy=wt*4*8;
-						for (y=0;y<8;++y)
-						{
+						for (y=0;y<8;++y){
 							memcpy(&currentProject->tileC->truetileDat[truecolor_tile_ptr],&img_ptr[a+b+y],wr*4);
 							memset(&currentProject->tileC->truetileDat[truecolor_tile_ptr+x+4],0,32-(wr*4)-4);
 							truecolor_tile_ptr+=32;
@@ -720,11 +680,6 @@ void load_image_to_tilemap(Fl_Widget*,void*)
 						}
 					}
 				}
-			break;
-			default:
-				fl_alert("HUGE ERROR ENDING FUNCTION\n");
-				loaded_image->release();
-				return;
 			break;
 		}
 		loaded_image->release();
@@ -950,8 +905,7 @@ void trueColTileToggle(Fl_Widget*,void*)
 	showTrueColor^=1;
 	window->damage(FL_DAMAGE_USER1);
 }
-void tileDPicker(Fl_Widget*,void*)
-{
+void tileDPicker(Fl_Widget*,void*){
 	Fl_Window *win;
 	Fl_Progress *progress;
 	win = new Fl_Window(250,45,"Progress");           // access parent window
@@ -971,12 +925,10 @@ void tileDPicker(Fl_Widget*,void*)
 	delete win;
 	window->damage(FL_DAMAGE_USER1);
 }
-void showAbout(Fl_Widget*,void*)
-{
+void showAbout(Fl_Widget*,void*){
 	fl_alert("Retro Graphics Toolkit is written by sega16/nintendo8/sonic master or whatever you want to call me\nThis program was built on %s %s\nTechnically speaking this date was the last time that main.cpp was updated.",__DATE__,__TIME__);
 }
-void toggleRowSolo(Fl_Widget*,void*)
-{
+void toggleRowSolo(Fl_Widget*,void*){
 	rowSolo^=true;
 	window->redraw();
 }
@@ -994,8 +946,7 @@ void clearPalette(Fl_Widget*,void*)
 const char * freeDes="This sets the currently selected palette entry to free meaning that this color can be changed";
 const char * lockedDes="This sets the currently selected palette entry to locked meaning that this color cannot be changed but tiles can still use it";
 const char * reservedDes="This sets the currently selected palette entry to reserved meaning that this color cannot be changed or used in tiles note that you may need make sure all tiles get re-dithered to ensure that this rule is enforced";
-void setPalType(Fl_Widget*,void* type)
-{
+void setPalType(Fl_Widget*,void* type){
 	switch (mode_editor){
 		case pal_edit:
 			currentProject->palType[palEdit.getEntry()]=(uintptr_t)type;
@@ -1015,8 +966,7 @@ void setPalType(Fl_Widget*,void* type)
 	}
 	window->redraw();
 }
-int savePNG(const char * fileName,uint32_t width,uint32_t height,void * ptr)
-{
+int savePNG(const char * fileName,uint32_t width,uint32_t height,void * ptr){
 	//saves a 24bit png with rgb byte order
 	png_byte * dat=(png_byte*)ptr;//convert to uint8_t
 	FILE * fp=fopen(fileName,"wb");
@@ -1048,8 +998,7 @@ int savePNG(const char * fileName,uint32_t width,uint32_t height,void * ptr)
 	fclose(fp);//done with file
 	return 0;//will return 0 on success non-zero in error
 }
-void save_tilemap_as_image(Fl_Widget*,void*)
-{
+void save_tilemap_as_image(Fl_Widget*,void*){
 	if(load_file_generic("Save png",true)==true){
 		uint32_t w=currentProject->tileMapC->mapSizeW*8;
 		uint32_t h=currentProject->tileMapC->mapSizeH*8;
@@ -1081,12 +1030,10 @@ void save_tilemap_as_image(Fl_Widget*,void*)
 		free(imageold);
 	}
 }
-void pickNearAlg(Fl_Widget*,void*)
-{
+void pickNearAlg(Fl_Widget*,void*){
 	nearestAlg=fl_choice("Which nearest color algorithm would you like to use?","ciede2000","Euclidean distance",0);
 }
-void editor::_editor()
-{
+void editor::_editor(){
 	//create the window
 	menu = new Fl_Menu_Bar(0,0,800,24);		// Create menubar, items..
 	menu->add("&File/&Open palette",(int)0, loadPalette,(void *)0,(int)0);
@@ -1187,20 +1134,35 @@ void editor::_editor()
 			{
 				Fl_Group *o = new Fl_Group(0, 0, 800, 500);
 				{
-					Fl_Round_Button* o = new Fl_Round_Button(128, 440, 96, 32, "Floyd Steinberg");
+					Fl_Round_Button* o = new Fl_Round_Button(64, 440, 128, 32, "Floyd Steinberg");
+					o->tooltip("Common algorithm. Very simple but effective\nSee: https://en.wikipedia.org/wiki/Floyd%E2%80%93Steinberg_dithering");
 					o->type(FL_RADIO_BUTTON);
 					o->set();
 					o->callback((Fl_Callback*) set_ditherAlg,(void *)0);
 				} // Fl_Round_Button* o
 				{
-					Fl_Round_Button* o = new Fl_Round_Button(256, 440, 64, 32, "Reimesha");
+					Fl_Round_Button* o = new Fl_Round_Button(196, 440, 104, 32, "Riemersma");
+					o->tooltip("A Balanced Dithering Technique\nBy Thiadmer Riemersma, December 01, 1998\nFrom: http://www.drdobbs.com/a-balanced-dithering-technique/184403590");
 					o->type(FL_RADIO_BUTTON);
 					o->callback((Fl_Callback*) set_ditherAlg,(void *)1);
 				} // Fl_Round_Button* o
 				{
-					Fl_Round_Button* o = new Fl_Round_Button(384, 440, 64, 32, "Nearest Color");
+					Fl_Round_Button* o = new Fl_Round_Button(296, 440, 120, 32, "Nearest Color");
+					o->tooltip("No error diffusion/dithering is used as the name says just picks the nearest color");
 					o->type(FL_RADIO_BUTTON);
 					o->callback((Fl_Callback*) set_ditherAlg,(void *)2);
+				} // Fl_Round_Button* o
+				{
+					Fl_Round_Button* o = new Fl_Round_Button(420, 440, 120, 32, "Yliluoma 3");
+					o->tooltip("Yliluoma's ordered dithering algorithm 3 credits go to:\nhttp://bisqwit.iki.fi/story/howto/dither/jy/");
+					o->type(FL_RADIO_BUTTON);
+					o->callback((Fl_Callback*) set_ditherAlg,(void *)3);
+				} // Fl_Round_Button* o
+				{
+					Fl_Round_Button* o = new Fl_Round_Button(548, 440, 120, 32, "Vertical dithering");
+					o->tooltip("As seen on the sega genesis a lot");
+					o->type(FL_RADIO_BUTTON);
+					o->callback((Fl_Callback*) set_ditherAlg,(void *)4);
 				} // Fl_Round_Button* o
 				o->end();
 			} // End of buttons

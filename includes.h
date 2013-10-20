@@ -32,10 +32,12 @@
 #include <algorithm>
 #include <sstream>
 #include <string>
+#include <vector>
+#include <map>
 #include <FL/Fl_Image.H>
 #include <FL/Fl_Progress.H>
 #include <inttypes.h>
 #include "project.h"
 #include "kens.h"
-//wow! look at all the inclueds
+//wow! look at all the includes
 using namespace std;
