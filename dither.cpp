@@ -136,7 +136,7 @@ static void move(int32_t direction){
     break;
   } /* switch */
 }
-void hilbert_level(int32_t level,int32_t direction){
+static void hilbert_level(int32_t level,int32_t direction){
   if (level==1) {
     switch (direction) {
     case LEFT:
@@ -209,7 +209,7 @@ static inline int32_t log2int(int32_t value){
 	}
 	return result;
 }
-void Riemersma(uint8_t *image, int32_t width,int32_t height,uint8_t rgb_sel){
+static void Riemersma(uint8_t *image, int32_t width,int32_t height,uint8_t rgb_sel){
 	int32_t level,size;
 	rgb_select=rgb_sel;
 	/* determine the required order of the
@@ -560,7 +560,7 @@ MixingPlan DeviseBestMixingPlanY3(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * 
     std::sort(result.begin(), result.end(), PaletteCompareLuma);
     return result;
 }
-inline uint8_t addCheck(uint16_t val,uint8_t add){
+static inline uint8_t addCheck(uint16_t val,uint8_t add){
 	val+=add;
 	return (val>255)?255:val;
 }

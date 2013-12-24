@@ -25,8 +25,7 @@ void swapEntry(uint8_t one,uint8_t two)
 	memcpy(currentProject->rgbPal+(two*3),currentProject->rgbPal+(one*3),3);
 	memcpy(currentProject->rgbPal+(one*3),rgb,3);
 }
-inline double square(double x)
-{
+static inline double square(double x){
 	return x*x;
 }
 double ciede2000(double L1,double a1,double b1,double L2,double a2,double b2,double Kl,double Kc,double Kh)

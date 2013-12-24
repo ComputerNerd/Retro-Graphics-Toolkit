@@ -365,7 +365,7 @@ ostream& operator<<(ostream& out, array3d<T>& a) {
     return out;
 }
 
-int compute_max_coarse_level(int width, int height) {
+static int compute_max_coarse_level(int width, int height) {
     // We want the coarsest layer to have at most MAX_PIXELS pixels
     const int MAX_PIXELS = 4000;
     int result = 0;
@@ -377,7 +377,7 @@ int compute_max_coarse_level(int width, int height) {
     return result;
 }
 
-void fill_random(array3d<double>& a) {
+static void fill_random(array3d<double>& a) {
     for(int i=0; i<a.get_width(); i++) {
 	for(int j=0; j<a.get_height(); j++) {
             for(int k=0; k<a.get_depth(); k++) {
@@ -387,15 +387,15 @@ void fill_random(array3d<double>& a) {
     }
 }
 
-double get_initial_temperature() {
+static inline double get_initial_temperature() {
     return 2.0; // TODO: Figure out what to make this
 }
 
-double get_final_temperature() {
+static inline double get_final_temperature() {
     return 0.02; // TODO: Figure out what to make this
 }
 
-void random_permutation(int count, vector<int>& result) {
+static void random_permutation(int count, vector<int>& result) {
     result.clear();
     for(int i=0; i<count; i++) {
         result.push_back(i);
@@ -403,7 +403,7 @@ void random_permutation(int count, vector<int>& result) {
     random_shuffle(result.begin(), result.end());
 }
 
-void random_permutation_2d(int width, int height, deque< pair<int, int> >& result) {
+static void random_permutation_2d(int width, int height, deque< pair<int, int> >& result) {
     vector<int> perm1d;
     random_permutation(width*height, perm1d);
     while(!perm1d.empty()) {
@@ -413,7 +413,7 @@ void random_permutation_2d(int width, int height, deque< pair<int, int> >& resul
     }
 }
 
-void compute_b_array(array2d< vector_fixed<double, 3> >& filter_weights,
+static void compute_b_array(array2d< vector_fixed<double, 3> >& filter_weights,
                      array2d< vector_fixed<double, 3> >& b)
 {
     // Assume that the pixel i is always located at the center of b,
@@ -439,7 +439,7 @@ void compute_b_array(array2d< vector_fixed<double, 3> >& filter_weights,
     }
 }
 
-vector_fixed<double, 3> b_value(array2d< vector_fixed<double, 3> >& b,
+static vector_fixed<double, 3> b_value(array2d< vector_fixed<double, 3> >& b,
 			 	 int i_x, int i_y, int j_x, int j_y)
 {
     int radius_width = (b.get_width() - 1)/2,
@@ -452,7 +452,7 @@ vector_fixed<double, 3> b_value(array2d< vector_fixed<double, 3> >& b,
 	return vector_fixed<double, 3>();
 }
 
-void compute_a_image(array2d< vector_fixed<double, 3> >& image,
+static void compute_a_image(array2d< vector_fixed<double, 3> >& image,
                      array2d< vector_fixed<double, 3> >& b,
                      array2d< vector_fixed<double, 3> >& a)
 {

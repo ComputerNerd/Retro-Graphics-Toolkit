@@ -171,8 +171,7 @@ void tiles::draw_truecolor(uint32_t tile_draw,uint16_t x,uint16_t y,bool usehfli
 			fl_rectf(x+(xx*zoom),y+(yy*zoom),zoom,zoom,grid[(((yy*8)+xx)*3)],grid[1+(((yy*8)+xx)*3)],grid[2+(((yy*8)+xx)*3)]);
 	}
 }
-inline unsigned int cal_offset_zoom_rgb(uint16_t x,uint16_t y,uint16_t zoom,uint8_t channel)
-{
+static inline uint32_t cal_offset_zoom_rgb(uint16_t x,uint16_t y,uint16_t zoom,uint8_t channel){
 	return (y*(zoom*24))+(x*3)+channel;
 }
 void tiles::draw_tile(uint16_t x_off,uint16_t y_off,uint32_t tile_draw,uint8_t zoom,uint8_t pal_row,bool Usehflip,bool Usevflip)
@@ -190,8 +189,7 @@ void tiles::draw_tile(uint16_t x_off,uint16_t y_off,uint32_t tile_draw,uint8_t z
 	//uint8_t a;
 	int8_t x,y;
 	uint8_t * temp_img_ptr = (uint8_t *)malloc(((8*zoom)*(8*zoom))*3);
-	if (temp_img_ptr == 0)
-	{
+	if (temp_img_ptr == 0){
 		show_malloc_error(((8*zoom)*(8*zoom))*3)
 	}
 	uint8_t c,d;//used for drawing pixels to buffer
@@ -303,11 +301,10 @@ void tiles::vflip_truecolor(uint32_t id,uint8_t * out)
 {
 	vflip_truecolor_ptr(&truetileDat[id*256],out);
 }
-inline uint8_t swap_4bit(uint8_t in)
-{
+static inline uint8_t swap_4bit(uint8_t in){
 	return ((in >> 4) & 0x0f) | ((in << 4) & 0xf0);
 }
-inline uint8_t reverse_bits(uint8_t b) {
+static inline uint8_t reverse_bits(uint8_t b) {
    b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
    b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
    b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
