@@ -323,12 +323,10 @@ void invert_prio(uint16_t x,uint16_t y)
     h = Horizontal flip
     n = Pattern name
 */
-inline uint32_t doublesilly(uint32_t silly)
-{
-	return silly*silly;
+static inline uint32_t sq(uint32_t x){
+	return x*x;
 }
-uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b)
-{
+uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b){
 	uint8_t i;
 	int bestIndex = 0;
 	uint8_t max_rgb=palEdit.perRow*3;
@@ -336,7 +334,7 @@ uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b)
 	if(nearestAlg){
 		uint32_t minerror=(255*255)+(255*255)+(255*255)+1;
 		for (i=row; i<max_rgb+row; i+=3) {
-			uint32_t distance=doublesilly(currentProject->rgbPal[i]-r)+doublesilly(currentProject->rgbPal[i+1]-g)+doublesilly(currentProject->rgbPal[i+2]-b);
+			uint32_t distance=sq(currentProject->rgbPal[i]-r)+sq(currentProject->rgbPal[i+1]-g)+sq(currentProject->rgbPal[i+2]-b);
 			if (distance <= minerror) {
 				if (currentProject->palType[i/3]!=2) {
 					minerror = distance;
@@ -345,7 +343,7 @@ uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b)
 			}
 		}
 	}else{
-		double minerror=10000;
+		double minerror=10000.0;
 		for (i=row; i<max_rgb+row; i+=3) {
 			double distance=ciede2000rgb(r,g,b,currentProject->rgbPal[i],currentProject->rgbPal[i+1],currentProject->rgbPal[i+2]);
 			if (distance <= minerror) {
@@ -358,12 +356,10 @@ uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b)
 	}
     return bestIndex;
 }
-uint8_t find_near_color_from_row(uint8_t row,uint8_t r,uint8_t g,uint8_t b)
-{
+uint8_t find_near_color_from_row(uint8_t row,uint8_t r,uint8_t g,uint8_t b){
 	return (find_near_color_from_row_rgb(row,r,g,b)/3)-(row*palEdit.perRow);
 }
-uint32_t cal_offset_truecolor(uint16_t x,uint16_t y,uint16_t rgb,uint32_t tile)
-{
+uint32_t cal_offset_truecolor(uint16_t x,uint16_t y,uint16_t rgb,uint32_t tile){
 	/*
 	cal_offset_truecolor is made to help when accesing a true color tile array
 	an example of it would be
@@ -373,22 +369,19 @@ uint32_t cal_offset_truecolor(uint16_t x,uint16_t y,uint16_t rgb,uint32_t tile)
 	*/
 	return (x*4)+(y*32)+rgb+(tile*256);
 }
-void set_hflip(uint16_t x,uint16_t y,bool hflip_set)
-{
+void set_hflip(uint16_t x,uint16_t y,bool hflip_set){
 	if (hflip_set == true)
 		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]|= 1 << 3;
 	else
 		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]&= ~(1 << 3);
 }
-void set_vflip(uint16_t x,uint16_t y,bool vflip_set)
-{
+void set_vflip(uint16_t x,uint16_t y,bool vflip_set){
 	if (vflip_set == true)
 		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]|= 1 << 4;
 	else
 		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]&= ~(1 << 4);
 }
-void set_prio(uint16_t x,uint16_t y,bool prio_set)
-{
+void set_prio(uint16_t x,uint16_t y,bool prio_set){
 	if (prio_set == true)
 		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4] |= 1 << 7;
 	else
