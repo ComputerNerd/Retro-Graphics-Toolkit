@@ -149,16 +149,13 @@ it will also allow the use of the - symbol as negative
 	}
 	return true;
 }
-inline int wave(int p,int color)
-{
+static inline int wave(int p,int color){
 	return (color+p+8)%12 < 6;
 }
-inline float gammafix(float f,float gamma)
-{
+static inline float gammafix(float f,float gamma){
 	return f < 0.f ? 0.f : std::pow(f, 2.2f / gamma);
 }
-inline int clamp(int v)
-{
+static inline int clamp(int v){
 	return v<0 ? 0 : v>255 ? 255 : v;
 }
 //uint32_t MakeRGBcolor(uint32_t pixel,float saturation = 1.1f, float hue_tweak = 0.0f,float contrast = 1.0f, float brightness = 1.0f,float gamma = 2.2f)

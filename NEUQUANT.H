@@ -40,30 +40,6 @@
 #define minpicturebytes	(3*prime4)		/* minimum size for input image */
 
 
-/* Initialise network in range (0,0,0) to (255,255,255) and set parameters
-   ----------------------------------------------------------------------- */
-void initnet(unsigned char *thepic, int len, int sample);
-		
-/* Unbias network to give byte values 0..255 and record position i to prepare for sort
-   ----------------------------------------------------------------------------------- */
-void unbiasnet(void);	/* can edit this function to do output of colour map */
-
-/* Output colour map
-   ----------------- */
-void writecolourmap(uint8_t user_pal[3][256]);
-
-/* Insertion sort of network and building of netindex[0..255] (to do after unbias)
-   ------------------------------------------------------------------------------- */
-void inxbuild(void);
-
-/* Search for BGR values 0..255 (after net is unbiased) and return colour index
-   ---------------------------------------------------------------------------- */
-int inxsearch(int b, int g, int r);
-
-/* Main Learning Loop
-   ------------------ */
-void learn(void);
-
 /* Program Skeleton
    ----------------
    	[select samplefac in range 1..30]

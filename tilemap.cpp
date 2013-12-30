@@ -57,8 +57,7 @@ int32_t tileMap::get_tileRow(uint16_t x,uint16_t y,uint8_t useRow){
 		return -1;
 }
 #if _WIN32
-inline uint16_t swap_word(uint16_t w)
-{
+static inline uint16_t swap_word(uint16_t w){
 	uint8_t a,b;
 	a=w&255;
 	b=w>>8;
@@ -199,7 +198,7 @@ bool tileMap::saveToFile(){
 	}
 	return true;
 }
-void zero_error_tile_map(int32_t x){
+static void zero_error_tile_map(int32_t x){
 	/*! this is a long string I do not want it stored more than once*/
 	fl_alert("Please enter value greater than zero you on the other hand entered %d",x);
 }
@@ -470,16 +469,14 @@ bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha)
 	}
 	return true;
 }
-double max3(double a,double b,double c)
-{
+static double max3(double a,double b,double c){
 	if ((a > b) && (a > c))
 		return a;
 	if (b > c)
 		return b;
 	return c;
 }
-double min3(double a,double b,double c)
-{
+static double min3(double a,double b,double c){
 	if ((a < b) && (a < c))
 		return a;
 	if (b < c)
@@ -613,8 +610,7 @@ void tileMap::allRowZero(void)
 			set_pal_row(x,y,0);
 	}
 }
-inline uint8_t pick4Delta(double * d)
-{
+static inline uint8_t pick4Delta(double * d){
 	if ((d[0] <= d[1]) && (d[0] <= d[2]) && (d[0] <= d[3]))
 		return 0;
 	if ((d[1] <= d[2]) && (d[1] <= d[3]))
@@ -623,8 +619,7 @@ inline uint8_t pick4Delta(double * d)
 		return 2;
 	return 3;
 }
-inline uint8_t pick4Deltai(uint32_t * d)
-{
+static inline uint8_t pick4Deltai(uint32_t * d){
 	if ((d[0] <= d[1]) && (d[0] <= d[2]) && (d[0] <= d[3]))
 		return 0;
 	if ((d[1] <= d[2]) && (d[1] <= d[3]))
@@ -633,12 +628,10 @@ inline uint8_t pick4Deltai(uint32_t * d)
 		return 2;
 	return 3;
 }
-inline uint32_t sqri(int fun)
-{
-	return fun*fun;
+static inline uint32_t sqri(int x){
+	return x*x;
 }
-inline double pickIt(double h,double l,double s,uint8_t type)
-{
+static inline double pickIt(double h,double l,double s,uint8_t type){
 	switch(type){
 		case 0:
 			return h;
@@ -772,13 +765,11 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress)
 	if (game_system == sega_genesis)
 		set_palette_type(type_temp);
 }
-inline uint8_t Clamp255(int n)
-{
+static inline uint8_t Clamp255(int n){
     n = n>255 ? 255 : n;
     return n<0 ? 0 : n;
 }
-void reduceImage(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t offsetPal,Fl_Progress *progress,uint8_t maxCol,uint8_t yuv,uint8_t alg)
-{
+static void reduceImage(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t offsetPal,Fl_Progress *progress,uint8_t maxCol,uint8_t yuv,uint8_t alg){
 	progress->maximum(1.0);
 	uint8_t off2=offsetPal*2;
 	uint8_t off3=offsetPal*3;

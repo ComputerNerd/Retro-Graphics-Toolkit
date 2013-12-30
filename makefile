@@ -1,8 +1,8 @@
 CC=g++
 #to disable debug remove -ggdb and replace it wil 03
 #gentoo fix needs include directory set to /usr/include/fltk-1 if you are using a different distro then this may not apply to you
-CFLAGS=-march=native -I/usr/include/fltk-1/ -s -Ikens/ -c -Wall -Wextra -Wdouble-promotion -funroll-loops -funswitch-loops -O3 -pipe -march=native -fomit-frame-pointer
-LDFLAGS=
+CFLAGS=-march=native -flto -fuse-linker-plugin -I/usr/include/fltk-1/ -s -Ikens/ -c -Wall -Wextra -Wdouble-promotion -O3 -pipe -march=native -fomit-frame-pointer
+LDFLAGS=-flto -fuse-linker-plugin -O3
 SOURCES=project.cpp main.cpp callbacks_palette.cpp callback_tiles.cpp class_global.cpp global.cpp quant.cpp tilemap.cpp color_convert.cpp errorMsg.cpp class_palette.cpp dither.cpp \
 	class_tiles.cpp kens/nemesis.cpp kens/enigma.cpp kens/kosinski.cpp spatial_color_quant.cpp NEUQUANT.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
