@@ -3,8 +3,7 @@ uint8_t nespaltab_r[64];
 uint8_t nespaltab_g[64];
 uint8_t nespaltab_b[64];
 #define PI 3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282306647093844609550582231725359408128481117450284102701938521105559644622948954930381964428810975665933446128475648233786783165271201909145648
-void swapEntry(uint8_t one,uint8_t two)
-{
+void swapEntry(uint8_t one,uint8_t two){
 	if(unlikely(one==two))
 		return;
 	switch(game_system){
@@ -28,8 +27,7 @@ void swapEntry(uint8_t one,uint8_t two)
 static inline double square(double x){
 	return x*x;
 }
-double ciede2000(double L1,double a1,double b1,double L2,double a2,double b2,double Kl,double Kc,double Kh)
-{
+double ciede2000(double L1,double a1,double b1,double L2,double a2,double b2,double Kl,double Kc,double Kh){
 	double C1,C2;
 	C1=sqrt(square(a1)+square(b1));
 	C2=sqrt(square(a2)+square(b2));
@@ -105,8 +103,7 @@ double ciede2000(double L1,double a1,double b1,double L2,double a2,double b2,dou
 #define LABF(t)	\
 	((t >= 8.85645167903563082e-3) ? \
 	pow(t,0.333333333333333) : (841.0/108.0)*(t) + (4.0/29.0))
-void rgbtociflab(uint8_t ri,uint8_t gi,uint8_t bi,double * L,double * a,double * b)
-{
+void rgbtociflab(uint8_t ri,uint8_t gi,uint8_t bi,double * L,double * a,double * b){
 /*		//conversion code from http://www.easyrgb.com/index.php?X=MATH
 	double var_R = R/255.0;        //R from 0 to 255
 	double var_G = G/255.0;        //G from 0 to 255
@@ -168,16 +165,14 @@ void rgbtociflab(uint8_t ri,uint8_t gi,uint8_t bi,double * L,double * a,double *
 	*a = 500*(X - Y);
 	*b = 200*(Y - Z);
 }
-double ciede2000rgb(uint8_t R1,uint8_t G1,uint8_t B1,uint8_t R2,uint8_t G2,uint8_t B2)
-{
+double ciede2000rgb(uint8_t R1,uint8_t G1,uint8_t B1,uint8_t R2,uint8_t G2,uint8_t B2){
 	double L1,a1,b1,L2,a2,b2;
 	rgbtociflab(R1,G1,B1,&L1,&a1,&b1);
 	rgbtociflab(R2,G2,B2,&L2,&a2,&b2);
 	return ciede2000(L1,a1,b1,L2,a2,b2,1.0,1.0,1.0);
 
 }
-uint8_t to_nes_color_rgb(uint8_t red,uint8_t green,uint8_t blue)
-{
+uint8_t to_nes_color_rgb(uint8_t red,uint8_t green,uint8_t blue){
 	//this function does not set any values to global palette it is done in other functions
 	int min_error =(255*255) +(255*255) +(255*255) +1;
 	uint8_t bestcolor=0;
@@ -196,14 +191,13 @@ uint8_t to_nes_color_rgb(uint8_t red,uint8_t green,uint8_t blue)
 	}
 	return bestcolor;
 }
-uint8_t to_nes_color(uint8_t pal_index)
-{
+uint8_t to_nes_color(uint8_t pal_index){
 	//this function does not set any values to global palette it is done in other functions
 	pal_index*=3;
 	int min_error =(255*255) +(255*255) +(255*255) +1;
 	uint8_t bestcolor=0;
-	for (uint8_t a=0;a<16;a++){
-		for (uint8_t c=0;c<4;c++){
+	for (uint8_t a=0;a<16;++a){
+		for (uint8_t c=0;c<4;++c){
 			uint8_t temp=a|(c<<4);
 			int rdiff= (int)nespaltab_r[temp] - (int)currentProject->rgbPal[pal_index];
 			int gdiff= (int)nespaltab_g[temp] - (int)currentProject->rgbPal[pal_index+1];
@@ -217,12 +211,11 @@ uint8_t to_nes_color(uint8_t pal_index)
 	}
 	return bestcolor;
 }
-uint8_t toNesChan(uint8_t ri,uint8_t gi,uint8_t bi,uint8_t chan)
-{
+uint8_t toNesChan(uint8_t ri,uint8_t gi,uint8_t bi,uint8_t chan){
 	int min_error =(255*255) +(255*255) +(255*255) +1;
 	uint8_t bestcolor=0;
-	for (uint8_t a=0;a<16;a++){
-		for (uint8_t c=0;c<4;c++){
+	for (uint8_t a=0;a<16;++a){
+		for (uint8_t c=0;c<4;++c){
 			uint8_t temp=a|(c<<4);
 			int rdiff=(int)nespaltab_r[temp]-(int)ri;
 			int gdiff=(int)nespaltab_g[temp]-(int)gi;
@@ -251,19 +244,14 @@ uint8_t toNesChan(uint8_t ri,uint8_t gi,uint8_t bi,uint8_t chan)
 	}
 	return 0;
 }
-inline uint32_t doublethefun(uint32_t x)
-{
-	return x*x;
-}
-uint32_t toNesRgb(uint8_t ri,uint8_t gi,uint8_t bi)
-{
+uint32_t toNesRgb(uint8_t ri,uint8_t gi,uint8_t bi){
 	uint8_t bestcolor=0;
 	if(nearestAlg){
 		uint32_t min_error=(255*255)+(255*255)+(255*255)+1;
 		for (uint8_t a=0;a<16;a++){//hue
 			for (uint8_t c=0;c<4;c++){//value
 				uint8_t temp=a|(c<<4);
-				uint32_t dist = doublethefun(nespaltab_r[temp]-ri)+doublethefun(nespaltab_g[temp]-gi)+doublethefun(nespaltab_b[temp]-bi);
+				uint32_t dist = square(nespaltab_r[temp]-ri)+square(nespaltab_g[temp]-gi)+square(nespaltab_b[temp]-bi);
 				if (dist < min_error){
 					min_error = dist;
 					bestcolor=a|(c<<4);
@@ -285,8 +273,7 @@ uint32_t toNesRgb(uint8_t ri,uint8_t gi,uint8_t bi)
 	}
 	return MakeRGBcolor(bestcolor);
 }
-uint16_t to_sega_genesis_color(uint16_t pal_index)
-{
+uint16_t to_sega_genesis_color(uint16_t pal_index){
 	//note this function only set the new rgb colors not the outputed sega genesis palette format
 	pal_index*=3;
 	uint8_t r,g,b;
@@ -299,8 +286,7 @@ uint16_t to_sega_genesis_color(uint16_t pal_index)
 	//bgr format
 	return ((r-palTypeGen)<<1)|((g-palTypeGen)<<5)|((b-palTypeGen)<<9);
 }
-uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_found,bool useAlpha=false)
-{
+uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_found,bool useAlpha=false){
 	/*!
 	Scans for colors in an image stops at over 256 as if there is an excess of 256 colors there is no reason to countinue
 	*/
@@ -359,11 +345,9 @@ void updateNesTab(uint8_t emps){
 		}
 	}
 }
-void update_emphesis(Fl_Widget*,void*)
-{
+void update_emphesis(Fl_Widget*,void*){
 	uint8_t emps;
-	switch (mode_editor)
-	{
+	switch (mode_editor){
 		case pal_edit:
 			emps=palEdit.pal_b->value();
 		break;
