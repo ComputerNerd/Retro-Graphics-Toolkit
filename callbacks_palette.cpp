@@ -2,8 +2,7 @@
 #include "global.h"
 #include "class_global.h"
 #include "color_convert.h"
-void save_palette(Fl_Widget*, void* start_end)
-{
+void save_palette(Fl_Widget*, void* start_end){
 	char temp[4];
 	switch (game_system){
 		case sega_genesis:
@@ -59,18 +58,15 @@ void save_palette(Fl_Widget*, void* start_end)
 			fl_alert("myfile.is_open() returned false that means there was an error in creating the file");
 	}
 }
-void update_palette(Fl_Widget* o, void* v)
-{
+void update_palette(Fl_Widget* o, void* v){
 	//first get the color and draw the box
 	Fl_Slider* s = (Fl_Slider*)o;
 	//now we need to update the entrie we are editing
-	if (game_system == sega_genesis)
-	{
+	if (game_system == sega_genesis){
 		uint8_t temp_var=0;
 		uint8_t temp2=(uint8_t)s->value();
 		uint8_t temp_entry=0;
-		switch (mode_editor)
-		{
+		switch (mode_editor){
 			case pal_edit:
 				temp_entry=palEdit.box_sel+(palEdit.theRow*16);
 			break;
@@ -81,8 +77,7 @@ void update_palette(Fl_Widget* o, void* v)
 				temp_entry=tileMap_pal.box_sel+(tileMap_pal.theRow*16);
 			break;
 		}
-		switch ((uintptr_t)v)
-		{
+		switch ((uintptr_t)v){
 			case 0://red
 				temp_var=currentProject->palDat[(temp_entry*2)+1];//get the green value we need to save it for later
 				//temp_var>>=4;
@@ -110,8 +105,7 @@ void update_palette(Fl_Widget* o, void* v)
 			break;
 		}
 	}
-	else if (game_system == NES)
-	{
+	else if (game_system == NES){
 		uint8_t pal;
 //		unsigned short temp;
 		unsigned int rgb_out;
@@ -128,8 +122,7 @@ void update_palette(Fl_Widget* o, void* v)
 				temp_entry=tileMap_pal.box_sel+(tileMap_pal.theRow*4);
 			break;
 		}
-		switch ((uintptr_t)v)
-		{
+		switch ((uintptr_t)v){
 			/*
 			76543210
 			||||||||
@@ -163,8 +156,7 @@ void update_palette(Fl_Widget* o, void* v)
 		currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);//update tile
 	window->redraw();//update the palette
 }
-void loadPalette(Fl_Widget*, void*)
-{
+void loadPalette(Fl_Widget*, void*){
 	uint32_t file_size;
 	uint8_t offset;
 	char * inputTemp=(char *)fl_input("Counting from zero enter the first entry that you want the palette to start at","0");
@@ -174,7 +166,7 @@ void loadPalette(Fl_Widget*, void*)
 			return;
 	offset=atoi(inputTemp);
 	uint8_t palSize;
-	switch (game_system) {
+	switch (game_system){
 		case sega_genesis:
 			offset*=2;
 			palSize=128;
@@ -183,11 +175,11 @@ void loadPalette(Fl_Widget*, void*)
 			palSize=16;
 		break;
 	}
-	if(load_file_generic("Load palette") == true) {
+	if(load_file_generic("Load palette") == true){
 		//cout << "offset=" << (uintptr_t)offset << endl;
 		//cout << "loading file" << the_file << endl;
 		ifstream file (the_file.c_str(), ios::in|ios::binary|ios::ate);
-		if (file.is_open()) {
+		if (file.is_open()){
 			//copy 32 bytes to the palette buffer
 			file_size = file.tellg();
 			if (file_size > palSize-offset) {
@@ -200,7 +192,7 @@ void loadPalette(Fl_Widget*, void*)
 			file.read ((char *)currentProject->palDat+offset, file_size);
 			file.close();
 			//now convert each value to rgb
-			switch (game_system) {
+			switch (game_system){
 				case sega_genesis:
 					set_palette_type(palTypeGen);
 				break;
