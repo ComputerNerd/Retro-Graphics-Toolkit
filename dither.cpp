@@ -564,6 +564,13 @@ static inline uint8_t addCheck(uint16_t val,uint8_t add){
 	val+=add;
 	return (val>255)?255:val;
 }
+#define plus_truncate_uchar(a, b) \
+	if (((int)(a)) + (b) < 0) \
+		(a) = 0; \
+	else if (((int)(a)) + (b) > 255) \
+		(a) = 255; \
+	else \
+		(a) += (b);
 void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpace,bool forceRow,uint8_t forcedrow){
 	/*!
 	this function will take an input with or without alpha and dither it

@@ -265,7 +265,7 @@ bool tileMap::loadFromFile(){
 			break;
 		}
 		std::ostringstream outDecomp;
-		if (compression==1) {
+		if (compression==1){
 			enigma decomp;
 			std::stringstream iss;
 			iss << file.rdbuf();
@@ -281,11 +281,10 @@ bool tileMap::loadFromFile(){
 		uint8_t * tempMap = (uint8_t *) malloc(size_temp);
 		if (unlikely(tileMapDat == 0))
 			show_malloc_error(size_temp)
-		if (compression==1) {
+		if (compression==1){
 			string output=outDecomp.str();
 			output.copy((char *)tempMap, file_size);
-		}
-		if (compression==0)
+		}else if (compression==0)
 			file.read ((char *)tempMap, size_temp);
 		file.close();
 		window->map_w->value(w);
@@ -293,7 +292,7 @@ bool tileMap::loadFromFile(){
 		mapSizeW=w;
 		mapSizeH=h;
 		uint16_t x,y;
-		switch (game_system) {
+		switch (game_system){
 			case sega_genesis:
 				for (y=0;y<h;y++) {
 					for (x=0;x<w;x++) {
@@ -309,16 +308,15 @@ bool tileMap::loadFromFile(){
 							else
 								set_tile(0,x,y);
 							printf("Tile value %d at %d %d\n",temp+offset,x,y);
-						}
-						else
+						}else
 							set_tile(0,x,y);
 					}
 				}
 			break;
 			case NES:
-				for (y=0;y<h;y++) {
-					for (x=0;x<w;x++) {
-						if ((x+(y*w)+1) <= file_size) {
+				for (y=0;y<h;++y){
+					for (x=0;x<w;++x){
+						if ((x+(y*w)+1) <= file_size){
 							uint8_t temp=*tempMap++;
 							if (temp+offset > 0)
 								set_tile((int32_t)temp+offset,x,y);
@@ -361,8 +359,7 @@ bool tileMap::loadFromFile(){
 		window->redraw();
 	}
 }
-void tileMap::sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vflip)
-{
+void tileMap::sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vflip){
 	uint16_t x,y;
 	int32_t temp;
 	for (y=0;y<mapSizeH;y++){
@@ -384,8 +381,7 @@ void tileMap::sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vfl
 		}
 	}
 }
-bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha)
-{
+bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha){
 	/*!
 	the_image pointer to image must be able to hold the image using rgba 32bit
 	useRow what row to use or -1 for no row
@@ -440,19 +436,15 @@ bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha)
 			++y_tile;
 		}
 	}else{
-		for (uint64_t a=0;a<(h*w*pixelSize)-w*pixelSize;a+=w*pixelSize*8)//a tiles y
-		{
-			for (uint32_t b=0;b<w*pixelSize;b+=pSize2)//b tiles x
-			{				
+		for (uint64_t a=0;a<(h*w*pixelSize)-w*pixelSize;a+=w*pixelSize*8){//a tiles y
+			for (uint32_t b=0;b<w*pixelSize;b+=pSize2){//b tiles x
 				truecolor_tile_ptr=currentProject->tileMapC->get_tile(x_tile,y_tile)*256;
-				for (uint32_t y=0;y<w*pixelSize*8;y+=w*pixelSize)//pixels y
-				{
+				for (uint32_t y=0;y<w*pixelSize*8;y+=w*pixelSize){//pixels y
 					if (useAlpha)
 						memcpy(&the_image[a+b+y],&currentProject->tileC->truetileDat[truecolor_tile_ptr],32);
 					else{
 						uint8_t xx=0;
-						for (uint8_t x=0;x<32;x+=4)//pixels x
-						{
+						for (uint8_t x=0;x<32;x+=4){//pixels x
 							the_image[a+b+y+xx]=currentProject->tileC->truetileDat[truecolor_tile_ptr+x];
 							the_image[a+b+y+xx+1]=currentProject->tileC->truetileDat[truecolor_tile_ptr+x+1];
 							the_image[a+b+y+xx+2]=currentProject->tileC->truetileDat[truecolor_tile_ptr+x+2];
@@ -494,8 +486,7 @@ static double min3(double a,double b,double c){
  * @param   Number  b       The blue color value
  * @return  Array           The HSL representation
  */
-void rgbToHls(double r,double g,double b,double * hh,double * ll,double * ss)
-{
+void rgbToHls(double r,double g,double b,double * hh,double * ll,double * ss){
     r /= 255.0;
     g /= 255.0;
     b /= 255.0;
@@ -521,24 +512,20 @@ void rgbToHls(double r,double g,double b,double * hh,double * ll,double * ss)
 	*ll=l;
 	*ss=s;
 }
-void rgbtohsv(uint8_t R,uint8_t G,uint8_t B,double * hh,double * ss,double * vv)
-{
-	double var_R =  R / 255.0;                     //RGB from 0 to 255
+void rgbtohsv(uint8_t R,uint8_t G,uint8_t B,double * hh,double * ss,double * vv){
+	double var_R =  R / 255.0;						//RGB from 0 to 255
 	double var_G =  G / 255.0;
 	double var_B =  B / 255.0;
 
-	double var_Min = min3( var_R, var_G, var_B );	//Min. value of RGB
-	double var_Max = max3( var_R, var_G, var_B );	//Max. value of RGB
+	double var_Min = min3(var_R, var_G, var_B);		//Min. value of RGB
+	double var_Max = max3(var_R, var_G, var_B);		//Max. value of RGB
 	double del_Max = var_Max - var_Min;				//Delta RGB value 
 	double V = var_Max;
 	double H,S;
-	if ( del_Max == 0.0)                     //This is a gray, no chroma...
-	{
-		H = 0.0;                                //HSV results from 0 to 1
+	if (del_Max == 0.0){							//This is a gray, no chroma...
+		H = 0.0;									//HSV results from 0 to 1
 		S = 0.0;
-	}
-	else                                    //Chromatic data...
-	{
+	}else{											//Chromatic data...
 		S = del_Max / var_Max;
 		double del_R = (((var_Max - var_R ) / 6.0 ) + (del_Max / 2.0 )) / del_Max;
 		double del_G = (((var_Max - var_G ) / 6.0 ) + (del_Max / 2.0 )) / del_Max;
@@ -558,13 +545,11 @@ void rgbtohsv(uint8_t R,uint8_t G,uint8_t B,double * hh,double * ss,double * vv)
 	*ss=S;
 	*vv=V;
 }
-void tileMap::set_pal_row(uint16_t x,uint16_t y,uint8_t row)
-{
+void tileMap::set_pal_row(uint16_t x,uint16_t y,uint8_t row){
 	tileMapDat[((y*mapSizeW)+x)*4]&= ~(3 << 5);
 	tileMapDat[((y*mapSizeW)+x)*4]|=row<<5;
 }
-void tileMap::pickRow(uint8_t amount)
-{
+void tileMap::pickRow(uint8_t amount){
 	uint8_t type=fl_choice("How would you describe this image","Varying hue","Varying brightness","Varying saturation");
 	double divide=(double)amount;//convert to double
 	double h,l,s;
@@ -602,8 +587,7 @@ void tileMap::pickRow(uint8_t amount)
 	}
 
 }
-void tileMap::allRowZero(void)
-{
+void tileMap::allRowZero(void){
 	uint32_t x,y;
 	for (y=0;y<mapSizeH;++y){
 		for (x=0;x<mapSizeW;++x)
@@ -644,8 +628,7 @@ static inline double pickIt(double h,double l,double s,uint8_t type){
 		break;
 	}
 }
-void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress)
-{
+void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	uint8_t alg=fl_choice("Which method do you think works better for this image (try both)","ciede2000","Mean squared error",0);
 	if(fl_ask("Would you like the palette to be ordered by hue or light or saturation")){
 		uint16_t x,y;
@@ -961,8 +944,7 @@ againNerd:
 			free(imageuse);
 	}
 }
-void generate_optimal_palette(Fl_Widget*,void*)
-{
+void generate_optimal_palette(Fl_Widget*,void*){
 	uint8_t perRow[4];
 	char temp[4];
 	uint8_t rowSize;
@@ -1072,8 +1054,7 @@ void generate_optimal_palette(Fl_Widget*,void*)
 	window->redraw();
 	Fl::check();
 }
-void truecolorimageToTiles(uint8_t * image,int8_t rowusage,bool useAlpha)
-{
+void truecolorimageToTiles(uint8_t * image,int8_t rowusage,bool useAlpha){
 	uint8_t type_temp=palTypeGen;
 	uint8_t tempSet=0;
 	uint8_t truecolor_tile[256];
