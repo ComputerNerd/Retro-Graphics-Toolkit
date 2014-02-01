@@ -10,6 +10,7 @@ public:
 	uint32_t get_tile(uint16_t x,uint16_t y);
 	int32_t get_tileRow(uint16_t x,uint16_t y,uint8_t useRow);
 	uint8_t get_palette_map(uint16_t x,uint16_t y);
+	void set_vflip(uint16_t x,uint16_t y,bool vflip_set);
 	void set_pal_row(uint16_t x,uint16_t y,uint8_t row);
 	bool saveToFile();
 	bool loadFromFile();

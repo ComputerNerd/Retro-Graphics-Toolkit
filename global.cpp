@@ -321,7 +321,7 @@ uint8_t find_near_color_from_row(uint8_t row,uint8_t r,uint8_t g,uint8_t b){
 	return (find_near_color_from_row_rgb(row,r,g,b)/3)-(row*palEdit.perRow);
 }
 uint32_t cal_offset_truecolor(uint16_t x,uint16_t y,uint16_t rgb,uint32_t tile){
-	/*
+	/*!<
 	cal_offset_truecolor is made to help when accesing a true color tile array
 	an example of it would be
 	red_temp=truecolor_data[cal_offset_truecolor(0,0,0,0)]//get the red pixel at pixel 0,0 at tile 0
@@ -335,12 +335,6 @@ void set_hflip(uint16_t x,uint16_t y,bool hflip_set){
 		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]|= 1 << 3;
 	else
 		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]&= ~(1 << 3);
-}
-void set_vflip(uint16_t x,uint16_t y,bool vflip_set){
-	if (vflip_set == true)
-		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]|= 1 << 4;
-	else
-		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]&= ~(1 << 4);
 }
 void set_prio(uint16_t x,uint16_t y,bool prio_set){
 	if (prio_set == true)

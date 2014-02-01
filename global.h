@@ -24,7 +24,6 @@ void set_tile_full(uint32_t tile,uint16_t x,uint16_t y,uint8_t palette_row,bool 
 void set_tile(uint32_t tile,uint16_t x,uint16_t y);
 void set_prio(uint16_t x,uint16_t y,bool prio_set);
 void set_hflip(uint16_t x,uint16_t y,bool hflip_set);
-void set_vflip(uint16_t x,uint16_t y,bool vflip_set);
 void set_palette_type(uint8_t type);
 uint32_t MakeRGBcolor(uint32_t pixel,float saturation = 1.1f, float hue_tweak = 0.0f,float contrast = 1.0f, float brightness = 1.0f,float gamma = 2.2f);
 //uint32_t MakeRGBcolor(uint32_t pixel,float saturation, float hue_tweak,float contrast, float brightness ,float gamma );

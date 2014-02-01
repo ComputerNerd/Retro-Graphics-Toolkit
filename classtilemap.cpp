@@ -48,6 +48,14 @@ int32_t tileMap::get_tileRow(uint16_t x,uint16_t y,uint8_t useRow){
 		return -1;
 }
 
+void tileMap::set_vflip(uint16_t x,uint16_t y,bool vflip_set){
+	if (vflip_set)
+		tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]|= 1 << 4;
+	else
+		tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]&= ~(1 << 4);
+}
+
+
 #if _WIN32
 static inline uint16_t swap_word(uint16_t w){
 	uint8_t a,b;
@@ -361,7 +369,7 @@ void tileMap::sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vfl
 				set_tile(newTile,x,y);
 				if (hflip == true)
 					set_hflip(x,y,true);
-				if (vflip == true)
+				if (vflip)
 					set_vflip(x,y,true);
 			}
 			else if (temp > oldTile){

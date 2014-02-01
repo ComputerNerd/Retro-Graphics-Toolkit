@@ -283,7 +283,9 @@ struct LabItem // CIE L*a*b* color value with C and h added.
 /* Gaurav Sharma, Wencheng Wu and Edul N. Dalal, */
 /* Color Res. Appl., vol. 30, no. 1, pp. 21-30, Feb. 2005. */
 /* Return the CIEDE2000 Delta E color difference measure squared, for two Lab values */
+#ifndef COMPARE_RGB
 static double ColorCompare(const LabItem& lab1, const LabItem& lab2){
+	//return ciede2000(lab1.L,lab1.a,lab1.b,lab2.L,lab2.a,lab2.b,1.0,1.0,1.0);
 	#define RAD2DEG(xx) (180.0/M_PI * (xx))
 	#define DEG2RAD(xx) (M_PI/180.0 * (xx))
 	/* Compute Cromanance and Hue angles */
@@ -314,7 +316,7 @@ static double ColorCompare(const LabItem& lab1, const LabItem& lab2){
 		}
 	}
 
-	/* Compute delta L, C and H */
+	// Compute delta L, C and H
 	double dL = lab2.L - lab1.L, dC = C2 - C1, dH;
 	{
 		double dh;
@@ -322,7 +324,7 @@ static double ColorCompare(const LabItem& lab1, const LabItem& lab2){
 			dh = 0.0;
 		} else {
 			dh = h2 - h1;
-			/**/ if (dh > 180.0)  dh -= 360.0;
+			if (dh > 180.0)  dh -= 360.0;
 			else if (dh < -180.0) dh += 360.0;
 		}
 
@@ -337,7 +339,7 @@ static double ColorCompare(const LabItem& lab1, const LabItem& lab2){
 	} else {
 		h = h1 + h2;
 		if (fabs(h1 - h2) > 180.0) {
-			/**/ if (h < 360.0)  h += 360.0;
+			if (h < 360.0)  h += 360.0;
 			else if (h >= 360.0) h -= 360.0;
 		}
 		h *= 0.5;
@@ -361,19 +363,18 @@ static double ColorCompare(const LabItem& lab1, const LabItem& lab2){
 #undef RAD2DEG
 #undef DEG2RAD
 }
-
+#endif
 static double ColorCompare(int r1,int g1,int b1, int r2,int g2,int b2){
-	double luma1 = (r1*299 + g1*587 + b1*114) / (255.0*1000);
-	double luma2 = (r2*299 + g2*587 + b2*114) / (255.0*1000);
+	double luma1 = (r1*299 + g1*587 + b1*114) / (255.0*1000.0);
+	double luma2 = (r2*299 + g2*587 + b2*114) / (255.0*1000.0);
 	double lumadiff = luma1-luma2;
 	double diffR = (r1-r2)/255.0, diffG = (g1-g2)/255.0, diffB = (b1-b2)/255.0;
 	return (diffR*diffR*0.299 + diffG*diffG*0.587 + diffB*diffB*0.114)*0.75
 		 + lumadiff*lumadiff;
 }
 
-
 /* Palette */
-static const unsigned maxpalettesize = 512;
+#define maxpalettesize 512
 static unsigned palettesize = 16;
 
 /* Luminance for each palette entry, to be initialized as soon as the program begins */
@@ -392,8 +393,9 @@ MixingPlan DeviseBestMixingPlanY2(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * 
 	pal+=offset*3;
 	offsetGloablY3=offset;
 	// Input color in CIE L*a*b*
-	LabItem input((double)rIn/255.0,(double)gIn/255.0,(double)bIn/255.0);
-
+	#ifndef COMPARE_RGB
+		LabItem input((double)rIn/255.0,(double)gIn/255.0,(double)bIn/255.0);
+	#endif
 	// Tally so far (gamma-corrected)
 	double so_far[3] = { 0,0,0 };
 	
@@ -449,8 +451,9 @@ MixingPlan DeviseBestMixingPlanY3(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * 
 	pal+=offset*3;
 	offsetGloablY3=offset;
 	// Input color in CIE L*a*b*
-	LabItem input((double)rIn/255.0,(double)gIn/255.0,(double)bIn/255.0);
-
+	#ifndef COMPARE_RGB
+		LabItem input((double)rIn/255.0,(double)gIn/255.0,(double)bIn/255.0);
+	#endif
 	std::map<unsigned, unsigned> Solution;
 
 	// The penalty of our currently "best" solution.
@@ -695,14 +698,14 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 				image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+1]=currentProject->rgbPal[tempPalOff+1];
 				image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2]=currentProject->rgbPal[tempPalOff+2];
 				//puts("x");
-				if(colSpace&&((x&31)==0)){
+				/*if(colSpace&&((x&31)==0)){
 					//this is slower
 					char txtbuf[128];
 					sprintf(txtbuf,"%d/%d,%d/%d",y,h,x,w);
 					progress->copy_label(txtbuf);
 					progress->value((double)y+((double)x/(double)w));
 					Fl::check();
-				}
+				}*/
 			}
 			char txtbuf[128];
 			sprintf(txtbuf,"%d/%d",y,h);
