@@ -364,13 +364,12 @@ static double ColorCompare(const LabItem& lab1, const LabItem& lab2){
 #undef DEG2RAD
 }
 #endif
-static double ColorCompare(int r1,int g1,int b1, int r2,int g2,int b2){
-	double luma1 = (r1*299 + g1*587 + b1*114) / (255.0*1000.0);
-	double luma2 = (r2*299 + g2*587 + b2*114) / (255.0*1000.0);
+static inline double ColorCompare(double r1,double g1,double b1,double r2,double g2,double b2){
+	double luma1 = (r1*(299.0/255000.0) + g1*(587.0/255000.0) + b1*(114.0/255000.0));
+	double luma2 = (r2*(299.0/255000.0) + g2*(587.0/255000.0) + b2*(114.0/255000.0));
 	double lumadiff = luma1-luma2;
-	double diffR = (r1-r2)/255.0, diffG = (g1-g2)/255.0, diffB = (b1-b2)/255.0;
-	return (diffR*diffR*0.299 + diffG*diffG*0.587 + diffB*diffB*0.114)*0.75
-		 + lumadiff*lumadiff;
+	double diffR = (r1-r2)/(255.0/.299/.75), diffG = (g1-g2)/(255.0/.587/.75), diffB = (b1-b2)/(255.0/.114/.75);
+	return (diffR*diffR + diffG*diffG + diffB*diffB) + lumadiff*lumadiff;
 }
 
 /* Palette */
