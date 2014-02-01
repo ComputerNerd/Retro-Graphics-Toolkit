@@ -284,37 +284,6 @@ void set_tile(uint32_t tile,uint16_t x,uint16_t y)
 	currentProject->tileMapC->tileMapDat[selected_tile+2]=(tile>>8)&255;
 	currentProject->tileMapC->tileMapDat[selected_tile+3]=tile&255;
 }
-void set_tile_clear_flags(uint32_t tile,uint16_t x,uint16_t y)
-{
-	uint32_t selected_tile=((y*currentProject->tileMapC->mapSizeW)+x)*4;
-	currentProject->tileMapC->tileMapDat[selected_tile]=0;
-	currentProject->tileMapC->tileMapDat[selected_tile+1]=(tile>>16)&255;
-	currentProject->tileMapC->tileMapDat[selected_tile+2]=(tile>>8)&255;
-	currentProject->tileMapC->tileMapDat[selected_tile+3]=tile&255;
-}
-void invert_vflip(uint16_t x,uint16_t y)
-{
-	currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]^=16;
-}
-void invert_hflip(uint16_t x,uint16_t y)
-{
-	currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]^=8;
-}
-void invert_prio(uint16_t x,uint16_t y)
-{
-	currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]^=128;
-}
-/*
-    7  6  5  4  3  2  1 0
-    15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
-    p  c   c  v  h  n n n n n n n n n n n
-
-    p = Priority flag
-    c = Palette select
-    v = Vertical flip
-    h = Horizontal flip
-    n = Pattern name
-*/
 static inline uint32_t sq(uint32_t x){
 	return x*x;
 }

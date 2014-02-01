@@ -243,22 +243,20 @@ static const unsigned char mapY3[8*8] = {
 
 static const double Gamma = 2.2; // Gamma correction we use.
 
-double GammaCorrect(double v)   { return pow(v, Gamma);				 }
-double GammaUncorrect(double v) { return pow(v, 1.0 / Gamma); }
+static double GammaCorrect(double v)   {return pow(v, Gamma);}
+static double GammaUncorrect(double v) {return pow(v, 1.0 / Gamma);}
 
 /* CIE C illuminant */
-static const double illum[3*3] =
-{ 0.488718, 0.176204, 0.000000,
-  0.310680, 0.812985, 0.0102048,
-  0.200602, 0.0108109, 0.989795 };
+static const double illum[3*3] ={0.488718, 0.176204, 0.000000,
+0.310680, 0.812985, 0.0102048,
+0.200602, 0.0108109, 0.989795};
 struct LabItem // CIE L*a*b* color value with C and h added.
 {
 	double L,a,b,C,h;
 
 	LabItem() { }
 	LabItem(double R,double G,double B) { Set(R,G,B); }
-	void Set(double R,double G,double B)
-	{
+	void Set(double R,double G,double B){
 		const double* const i = illum;
 		double X = i[0]*R + i[3]*G + i[6]*B, x = X / (i[0] + i[1] + i[2]);
 		double Y = i[1]*R + i[4]*G + i[7]*B, y = Y / (i[3] + i[4] + i[5]);
@@ -275,8 +273,7 @@ struct LabItem // CIE L*a*b* color value with C and h added.
 		h = atan2(b, a);
 	}
 	LabItem(unsigned rgb) { Set(rgb); }
-	void Set(unsigned rgb)
-	{
+	void Set(unsigned rgb){
 		Set( (rgb>>16)/255.0, ((rgb>>8)&0xFF)/255.0, (rgb&0xFF)/255.0 );
 	}
 };
@@ -310,7 +307,7 @@ static double ColorCompare(const LabItem& lab1, const LabItem& lab2){
 
 		if (C2 < 1e-9)
 			h2 = 0.0;
-		else {
+		else{
 			h2 = RAD2DEG(atan2(lab2.b, a2));
 			if (h2 < 0.0)
 				h2 += 360.0;
@@ -655,16 +652,16 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 		Fl_Window *win;
 		Fl_Progress *progress;
 		if(h>8){
-			win = new Fl_Window(400,45,"Progress");					 // access parent window
-			win->begin();								// add progress bar to it..
+			win = new Fl_Window(400,45,"Progress");	// access parent window
+			win->begin();							// add progress bar to it..
 			progress = new Fl_Progress(25,7,350,30);
-			progress->minimum(0.0);								// set progress range to be 0.0 ~ 1.0
+			progress->minimum(0.0);					// set progress range to be 0.0 ~ 1.0
 			progress->maximum((double)h);
-			progress->color(0x88888800);						 // background color
-			progress->selection_color(0x4444ff00);	 // progress bar color
+			progress->color(0x88888800);			// background color
+			progress->selection_color(0x4444ff00);	// progress bar color
 			progress->labelcolor(FL_WHITE);			// percent text color
 			progress->value(0);
-			win->end();											// end adding to window
+			win->end();								// end adding to window
 			win->show();
 			Fl::check();
 		}
