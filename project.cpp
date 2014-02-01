@@ -5,8 +5,7 @@ struct Project ** projects;
 uint32_t projects_count;//holds how many projects there are this is needed for realloc when adding or removing function
 struct Project * currentProject;
 Fl_Slider* curPrj;
-void initProject()
-{
+void initProject(void){
 	projects = (struct Project **) malloc(sizeof(void *));
 	projects[0] = new struct Project;
 	currentProject=projects[0];

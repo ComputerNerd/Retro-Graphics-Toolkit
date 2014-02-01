@@ -6,8 +6,7 @@ Stuff related to tilemap operations goes here*/
 #include "dither.h"
 #include "spatial_color_quant.h"
 #include "NEUQUANT.H"
-tileMap::tileMap()
-{
+tileMap::tileMap(){
 	mapSizeW=2;
 	mapSizeH=2;
 	selection=false;
@@ -52,8 +51,7 @@ int32_t tileMap::get_tileRow(uint16_t x,uint16_t y,uint8_t useRow){
 		temp_2=tileMapDat[selected_tile+2];
 		temp_3=tileMapDat[selected_tile+3];//most sigficant
 		return (temp_1<<16)+(temp_2<<8)+temp_3;
-	}
-	else
+	}else
 		return -1;
 }
 #if _WIN32
@@ -199,7 +197,7 @@ bool tileMap::saveToFile(){
 	return true;
 }
 static void zero_error_tile_map(int32_t x){
-	/*! this is a long string I do not want it stored more than once*/
+	//this is a long string I do not want it stored more than once
 	fl_alert("Please enter value greater than zero you on the other hand entered %d",x);
 }
 bool tileMap::loadFromFile(){
@@ -236,11 +234,11 @@ bool tileMap::loadFromFile(){
 		if (verify_str_number_only(str_ptr) == false)
 			return true;
 		h=atoi(str_ptr);
-		if (h <= 0) {
+		if (h <= 0){
 			zero_error_tile_map(h);
 			return true;
 		}
-		if (game_system == NES && (h & 1)) {
+		if (game_system == NES && (h & 1)){
 			fl_alert("Error unlike in sega genesis mode NES mode needs the width and height the be a multiple to 2");
 			return true;
 		}
@@ -396,16 +394,15 @@ bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha){
 	uint16_t x_tile=0,y_tile=0;
 	uint32_t truecolor_tile_ptr=0;
 	uint8_t pixelSize,pSize2;
-	if (useAlpha) {
+	if (useAlpha){
 		pixelSize=4;
 		pSize2=32;
 	}else{
 		pixelSize=3;
 		pSize2=24;
 	}
-	if (useRow != -1) {
-		for (uint64_t a=0;a<(h*w*pixelSize)-w*pixelSize;a+=w*pixelSize*8)//a tiles y
-		{
+	if (useRow != -1){
+		for (uint64_t a=0;a<(h*w*pixelSize)-w*pixelSize;a+=w*pixelSize*8){//a tiles y
 			for (uint32_t b=0;b<w*pixelSize;b+=pSize2)//b tiles x
 			{
 				truecolor_tile_ptr=currentProject->tileMapC->get_tileRow(x_tile,y_tile,useRow)*256;
@@ -562,7 +559,7 @@ void tileMap::pickRow(uint8_t amount){
 			uint32_t cur_tile=get_tile(x,y);
 			uint8_t * truePtr=&currentProject->tileC->truetileDat[cur_tile*256];
 			double hh=0.0;
-			for (z=0;z<256;z+=4) {
+			for (z=0;z<256;z+=4){
 				rgbToHls(truePtr[0],truePtr[1],truePtr[2],&h,&l,&s);
 				truePtr+=4;
 				switch(type){

@@ -38,18 +38,17 @@ uint8_t palTypeGen=0;
 bool showTrueColor=false;
 bool rowSolo=false;
 uint8_t nearestAlg=1;
-uint8_t nearest_color_index(uint8_t val)
-{
+uint8_t nearest_color_index(uint8_t val){
 	//returns closest value
 	//palette_muliplier
 	uint8_t i;
     int32_t distanceSquared, minDistanceSquared, bestIndex = 0;
     minDistanceSquared = 255*255 + 1;
-	if (game_system!=sega_genesis) {
+	if (game_system!=sega_genesis){
 		fl_alert("This function is for use with sega genesis/mega drive only");
 		return 0;
 	}
-    for (i=palTypeGen; i<8+palTypeGen; i++) {
+    for (i=palTypeGen; i<8+palTypeGen; i++){
         int32_t Rdiff = (int) val - (int)palTab[i];
         distanceSquared = Rdiff*Rdiff;
         if (distanceSquared < minDistanceSquared) {
@@ -59,19 +58,16 @@ uint8_t nearest_color_index(uint8_t val)
     }
     return bestIndex;
 }
-bool saveBinAsText(void * ptr,size_t sizeBin,FILE * myfile)
-{
+bool saveBinAsText(void * ptr,size_t sizeBin,FILE * myfile){
 	/*!
 	This function saves binary data as plain text useful for c headers each byte is seperated by a comma
 	Returns True on sucess false on error
 	*/
 	uint8_t * dat=(uint8_t *)ptr;
 	char str[16];
-	for (size_t x=0;x<sizeBin-1;x++){
-		sprintf(str,"%d",*dat);
+	for (size_t x=0;x<sizeBin-1;++x){
+		sprintf(str,"%d,",*dat);
 		if (fputs(str,myfile)==0)
-			return false;
-		if (fputc(',',myfile)==0)
 			return false;
 		if ((x&63)==63){
 			if (fputc('\n',myfile)==0)
@@ -84,8 +80,7 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * myfile)
 		return false;
 	return true;
 }
-void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha)
-{
+void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha){
 	switch (game_system){
 		case sega_genesis:
 			row*=48;

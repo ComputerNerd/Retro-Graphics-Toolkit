@@ -13,20 +13,20 @@ void save_palette(Fl_Widget*, void* start_end){
 		break;
 	}
 	char * returned=(char *)fl_input("Counting from zero enter the first entry that you want saved","0");
-	if (returned==0)
+	if(!returned)
 		return;
-	if (verify_str_number_only(returned) == false)
-			return;
+	if(!verify_str_number_only(returned))
+		return;
 	uint8_t start = atoi(returned);
 	returned=(char *)fl_input("Counting from zero enter the last entry that you want saved",temp);
-	if (returned==0)
+	if (!returned)
 		return;
-	if (verify_str_number_only(returned) == false)
-			return;
+	if (!verify_str_number_only(returned))
+		return;
 	uint8_t end = atoi(returned)+1;
 	if (game_system==sega_genesis){
 		start*=2;
-		end *=2;
+		end*=2;
 	}
 	uint8_t type=fl_choice("How would like this file saved?","Binary","C header",0);
 	if (load_file_generic("Save palette",true)==true){
@@ -34,8 +34,7 @@ void save_palette(Fl_Widget*, void* start_end){
 		if (type == 1){
 			myfile = fopen(the_file.c_str(),"w");
 			fputs("const uint8_t palDat[]={",myfile);
-		}
-		else
+		}else
 			myfile = fopen(the_file.c_str(),"wb");
 		if (likely(myfile!=0)){
 			//save the palette
@@ -52,16 +51,14 @@ void save_palette(Fl_Widget*, void* start_end){
 				}
 			}
 			fclose(myfile);
-			puts("Great Success! File saved!");
-		}
-		else
+		}else
 			fl_alert("myfile.is_open() returned false that means there was an error in creating the file");
 	}
 }
 void update_palette(Fl_Widget* o, void* v){
 	//first get the color and draw the box
 	Fl_Slider* s = (Fl_Slider*)o;
-	//now we need to update the entrie we are editing
+	//now we need to update the entry we are editing
 	if (game_system == sega_genesis){
 		uint8_t temp_var=0;
 		uint8_t temp2=(uint8_t)s->value();
@@ -107,11 +104,9 @@ void update_palette(Fl_Widget* o, void* v){
 	}
 	else if (game_system == NES){
 		uint8_t pal;
-//		unsigned short temp;
 		unsigned int rgb_out;
 		uint8_t temp_entry=0;
-		switch (mode_editor)
-		{
+		switch (mode_editor){
 			case pal_edit:
 				temp_entry=palEdit.box_sel+(palEdit.theRow*4);
 			break;
@@ -176,13 +171,11 @@ void loadPalette(Fl_Widget*, void*){
 		break;
 	}
 	if(load_file_generic("Load palette") == true){
-		//cout << "offset=" << (uintptr_t)offset << endl;
-		//cout << "loading file" << the_file << endl;
 		ifstream file (the_file.c_str(), ios::in|ios::binary|ios::ate);
 		if (file.is_open()){
 			//copy 32 bytes to the palette buffer
 			file_size = file.tellg();
-			if (file_size > palSize-offset) {
+			if (file_size > palSize-offset){
 				fl_alert("Error: The file size is bigger than %d (%d-%d) bytes it is not a valid palette",palSize-offset,palSize,offset);
 				file.close();
 				return;//end function due to errrors
@@ -201,8 +194,7 @@ void loadPalette(Fl_Widget*, void*){
 				break;
 			}
 			window->redraw();
-		}
-		else
+		}else
 			fl_alert("file.is_open() returned false meaning there was some trouble reading the file.");
 	}
 }
