@@ -241,10 +241,10 @@ static const unsigned char mapY3[8*8] = {
 	10,58, 6,54, 9,57, 5,53,
 	42,26,38,22,41,25,37,21 };
 
-static const double Gamma = 2.2; // Gamma correction we use.
+#define GammaAmt 2.2 // Gamma correction we use.
 
-static double GammaCorrect(double v)   {return pow(v, Gamma);}
-static double GammaUncorrect(double v) {return pow(v, 1.0 / Gamma);}
+static double GammaCorrect(double v)   {return pow(v, GammaAmt);}
+static double GammaUncorrect(double v) {return pow(v, 1.0 / GammaAmt);}
 
 /* CIE C illuminant */
 static const double illum[3*3] ={0.488718, 0.176204, 0.000000,
@@ -378,7 +378,7 @@ static unsigned palettesize = 16;
 
 /* Luminance for each palette entry, to be initialized as soon as the program begins */
 static unsigned luma[maxpalettesize];
-static LabItem  meta[maxpalettesize];
+//static LabItem  meta[maxpalettesize];
 static double   pal_g[maxpalettesize][3]; // Gamma-corrected palette entry
 static uint16_t offsetGloablY3=0;
 static inline bool PaletteCompareLuma(unsigned index1, unsigned index2){
@@ -483,7 +483,7 @@ MixingPlan DeviseBestMixingPlanY3(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * 
 	while(current_penalty != 0.0){
 		// Find out if there is a region in Solution that
 		// can be split in two for benefit.
-		double   best_penalty				= current_penalty;
+		double   best_penalty=current_penalty;
 		unsigned best_splitfrom	= ~0u;
 		unsigned best_split_to[2]  = { 0,0};
 
@@ -646,7 +646,7 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 			unsigned r=colPtr[c*3],g=colPtr[(c*3)+1],b=colPtr[(c*3)+2];
 			//gdImageColorAllocate(im, r,g,b);
 			luma[c] = r*299 + g*587 + b*114;
-			meta[c].Set((double)r/255.0,(double)g/255.0,(double)b/255.0);
+			//meta[c].Set((double)r/255.0,(double)g/255.0,(double)b/255.0);
 			pal_g[c][0] = GammaCorrect(r/255.0);
 			pal_g[c][1] = GammaCorrect(g/255.0);
 			pal_g[c][2] = GammaCorrect(b/255.0);
@@ -706,11 +706,13 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 					Fl::check();
 				}*/
 			}
-			char txtbuf[128];
-			sprintf(txtbuf,"%d/%d",y,h);
-			progress->copy_label(txtbuf);
-			progress->value(y);
-			Fl::check();
+			if((h>8)&&(y&1)){
+				char txtbuf[128];
+				sprintf(txtbuf,"%d/%d",y,h);
+				progress->copy_label(txtbuf);
+				progress->value(y);
+				Fl::check();
+			}
 		}
 		if(h>8){
 			win->remove(progress);// remove progress bar from window

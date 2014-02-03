@@ -330,14 +330,14 @@ bool tileMap::loadFromFile(){
 				}
 				//now load attributes
 				if (load_file_generic("Load Attribtues") == true){
-					FILE * fp=fopen(the_file.c_str(),"wb");
+					FILE * fp=fopen(the_file.c_str(),"rb");
 					fseek(fp, 0L, SEEK_END);
 					uint32_t sz=ftell(fp);
 					rewind(fp);
 					uint8_t* tempbuf=(uint8_t*)alloca(sz);
 					fread(tempbuf,1,sz,fp);
-					for (y=0;y<h;y+=4) {
-						for (x=0;x<w;x+=4) {
+					for (y=0;y<h;y+=4){
+						for (x=0;x<w;x+=4){
 							set_pal_row(x,y,*tempbuf&3);
 							set_pal_row(x,y+1,*tempbuf&3);
 							set_pal_row(x+1,y,*tempbuf&3);

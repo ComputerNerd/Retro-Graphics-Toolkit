@@ -373,10 +373,31 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	if (game_system == sega_genesis)
 		set_palette_type(type_temp);
 }
-static inline uint8_t Clamp255(int n){
-    n = n>255 ? 255 : n;
-    return n<0 ? 0 : n;
-}
+#define CLIP(X) ( (X) > 255 ? 255 : (X) < 0 ? 0 : X)
+
+// RGB -> YUV
+#define RGB2Y(R, G, B) CLIP(( (  66 * (R) + 129 * (G) +  25 * (B) + 128) >> 8) +  16)
+#define RGB2U(R, G, B) CLIP(( ( -38 * (R) -  74 * (G) + 112 * (B) + 128) >> 8) + 128)
+#define RGB2V(R, G, B) CLIP(( ( 112 * (R) -  94 * (G) -  18 * (B) + 128) >> 8) + 128)
+
+// YUV -> RGB
+#define C(Y) ( (Y) - 16  )
+#define D(U) ( (U) - 128 )
+#define E(V) ( (V) - 128 )
+
+#define YUV2R(Y, U, V) CLIP(( 298 * C(Y)              + 409 * E(V) + 128) >> 8)
+#define YUV2G(Y, U, V) CLIP(( 298 * C(Y) - 100 * D(U) - 208 * E(V) + 128) >> 8)
+#define YUV2B(Y, U, V) CLIP(( 298 * C(Y) + 516 * D(U)              + 128) >> 8)
+
+// RGB -> YCbCr
+#define CRGB2Y(R, G, B) CLIP((19595 * R + 38470 * G + 7471 * B ) >> 16)
+#define CRGB2Cb(R, G, B) CLIP((36962 * (B - CLIP((19595 * R + 38470 * G + 7471 * B ) >> 16) ) >> 16) + 128)
+#define CRGB2Cr(R, G, B) CLIP((46727 * (R - CLIP((19595 * R + 38470 * G + 7471 * B ) >> 16) ) >> 16) + 128)
+
+// YCbCr -> RGB
+#define CYCbCr2R(Y, Cb, Cr) CLIP( Y + ( 91881 * Cr >> 16 ) - 179 )
+#define CYCbCr2G(Y, Cb, Cr) CLIP( Y - (( 22544 * Cb + 46793 * Cr ) >> 16) + 135)
+#define CYCbCr2B(Y, Cb, Cr) CLIP( Y + (116129 * Cb >> 16 ) - 226 )
 static void reduceImage(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t offsetPal,Fl_Progress *progress,uint8_t maxCol,uint8_t yuv,uint8_t alg){
 	progress->maximum(1.0);
 	uint8_t off2=offsetPal*2;
@@ -465,10 +486,16 @@ againFun:
 			uint8_t*imageptr=image;
 			uint8_t*outptr=imageuse;
 			for(y=0;y<h;y++){
-				for(x=0;x<w;x++){//conversion formula from http://en.wikipedia.org/wiki/YCbCr
-					outptr[0]=Clamp255(16+((65.738*(double)imageptr[0]+129.057*(double)imageptr[1]+25.064*(double)imageptr[2])/256.0));
-					outptr[1]=Clamp255(128-((-37.945*(double)imageptr[0]-74.494*(double)imageptr[1]+112.439*(double)imageptr[2])/256.0));
-					outptr[2]=Clamp255(128+((112.439*(double)imageptr[0]-94.154*(double)imageptr[1]-18.285*(double)imageptr[2])/256.0));
+				for(x=0;x<w;x++){
+					if(yuv==2){
+						outptr[0]=CRGB2Y(imageptr[0],imageptr[1],imageptr[2]);
+						outptr[1]=CRGB2Cb(imageptr[0],imageptr[1],imageptr[2]);
+						outptr[2]=CRGB2Cr(imageptr[0],imageptr[1],imageptr[2]);
+					}else{
+						outptr[0]=RGB2Y(imageptr[0],imageptr[1],imageptr[2]);
+						outptr[1]=RGB2U(imageptr[0],imageptr[1],imageptr[2]);
+						outptr[2]=RGB2V(imageptr[0],imageptr[1],imageptr[2]);
+					}
 					imageptr+=3;
 					outptr+=3;
 				}
@@ -485,13 +512,20 @@ try_again_color:
 			dl3quant(imageuse,w,h,colorz,user_pal,true,progress,yuv);/*this uses denesis lee's v3 color quant which is fonund at http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c*/
 		for (uint16_t x=0;x<colorz;x++){
 			uint8_t r,g,b;
-			r=user_pal[0][x];
-			g=user_pal[1][x];
-			b=user_pal[2][x];
 			if(yuv){
-				r=((298.082*(double)r+408.583*(double)b)/256.0)-222.921;
-				g=((298.082*(double)r-100.291*(double)g-208.120*(double)b)/256.0)+135.576;
-				b=((298.082*(double)r-516.412*(double)g)/256.0)-276.836;
+				if(yuv==2){
+					r=CYCbCr2R(user_pal[0][x],user_pal[1][x],user_pal[2][x]);
+					g=CYCbCr2G(user_pal[0][x],user_pal[1][x],user_pal[2][x]);
+					b=CYCbCr2B(user_pal[0][x],user_pal[1][x],user_pal[2][x]);
+				}else{
+					r=YUV2R(user_pal[0][x],user_pal[1][x],user_pal[2][x]);
+					g=YUV2G(user_pal[0][x],user_pal[1][x],user_pal[2][x]);
+					b=YUV2B(user_pal[0][x],user_pal[1][x],user_pal[2][x]);
+				}
+			}else{
+				r=user_pal[0][x];
+				g=user_pal[1][x];
+				b=user_pal[2][x];
 			}
 			switch(game_system){
 				case sega_genesis:
@@ -629,11 +663,11 @@ void generate_optimal_palette(Fl_Widget*,void*){
 	if (rows==1)
 		rowAuto = fl_ask("Would you like all tiles on the tilemap to be set to row 0? (This is where all generated colors will apear)");
 	else
-		 rowAuto = fl_choice("How would you like the palette map to be handled","Don't change anythin","Pick based on hue","Generate contiguous palette then pick based on delta");
+		rowAuto = fl_choice("How would you like the palette map to be handled","Don't change anythin","Pick based on hue","Generate contiguous palette then pick based on delta");
 	uint8_t fun_palette;
 	uint8_t alg=fl_choice("What color reduction algorithm would you like used","Densise Lee v3","scolorq","Neuquant");
 	uint8_t yuv;
-	yuv=fl_ask("You you like the image to be calculated in YCbCr color space\nHint: No is the better option");
+	yuv=fl_choice("What color space would you like to use?","rgb","yuv","YCbCr");
 	switch (game_system){
 		case sega_genesis:
 			fun_palette=16;
@@ -666,7 +700,7 @@ void generate_optimal_palette(Fl_Widget*,void*){
 				window->damage(FL_DAMAGE_USER1);
 				Fl::check();
 			}
-		}		
+		}
 	}
 	free(image);
 	win->remove(progress);// remove progress bar from window
