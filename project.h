@@ -1,3 +1,19 @@
+/*
+ This file is part of Retro Graphics Toolkit
+
+    Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or any later version.
+
+    Retro Graphics Toolkit is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright Sega16 (or whatever you wish to call me (2012-2014)
+*/
 /*!
 This is where all "project" releated stuff goes
 For example the save project file function goes here
@@ -7,10 +23,11 @@ For example the save project file function goes here
 #include "tilemap.h"
 #include "class_tiles.h"
 #include "classtilemap.h"
+#define currentProjectVersionNUM 0
 struct Project/*!<Holds all data needed for a project based system for examaple tile screen and level 1 are 2 seperate projects*/
 {
 	std::string Name;
-	uint8_t gameSystem;
+	uint32_t gameSystem;
 	tileMap * tileMapC;
 	tiles * tileC;
 	uint8_t rgbPal[256];
@@ -22,6 +39,8 @@ extern struct Project ** projects;
 extern uint32_t projects_count;//holds how many projects there are this is needed for realloc when adding or removing function
 extern struct Project * currentProject;
 extern Fl_Slider* curPrj;
-void initProject(void);/*!< this needs to be called before using addProject*/
+void initProject(void) __attribute__((constructor(101)));/*!< this needs to be ran before class constructors*/
 bool appendProject();
 bool removeProject(uint32_t id);
+bool loadProject(uint32_t id);
+bool saveProject(uint32_t id);

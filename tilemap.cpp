@@ -1,4 +1,20 @@
 /*
+ This file is part of Retro Graphics Toolkit
+
+    Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or any later version.
+
+    Retro Graphics Toolkit is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright Sega16 (or whatever you wish to call me (2012-2014)
+*/
+/*
 Stuff related to tilemap operations goes here*/
 #include "global.h"
 #include "quant.h"
@@ -6,7 +22,7 @@ Stuff related to tilemap operations goes here*/
 #include "dither.h"
 #include "spatial_color_quant.h"
 #include "NEUQUANT.H"
-
+#include "palette.h"
 bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha){
 	/*!
 	the_image pointer to image must be able to hold the image using rgba 32bit
@@ -254,6 +270,7 @@ static inline double pickIt(double h,double l,double s,uint8_t type){
 	}
 }
 void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
+	//3rd choice is based on https://dspace.lboro.ac.uk/dspace-jspui/handle/2134/2127
 	uint8_t alg=fl_choice("Which method do you think works better for this image (try both)","ciede2000","Mean squared error",0);
 	if(fl_ask("Would you like the palette to be ordered by hue or light or saturation")){
 		uint16_t x,y;
@@ -327,7 +344,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 				for (t=0;t<4;t++)
 					d[t]=0.0;
 			}
-			if ((type_temp != 0) && (game_system == sega_genesis)){
+			if ((type_temp != 0) && (currentProject->gameSystem == sega_genesis)){
 				tempSet=(currentProject->tileMapC->get_prio(xtile,ytile)^1)*8;
 				set_palette_type(tempSet);
 			}
@@ -370,7 +387,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	free(imageout[2]);
 	free(imageout[3]);
 	free(imageout);
-	if (game_system == sega_genesis)
+	if (currentProject->gameSystem == sega_genesis)
 		set_palette_type(type_temp);
 }
 #define CLIP(X) ( (X) > 255 ? 255 : (X) < 0 ? 0 : X)
@@ -405,7 +422,7 @@ static void reduceImage(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_
 	uint32_t colors_found;
 	uint32_t w,h;
 	uint8_t maxPal;
-	switch(game_system){
+	switch(currentProject->gameSystem){
 		case sega_genesis:
 			maxPal=64;
 		break;
@@ -440,7 +457,7 @@ againFun:
 			r=found_colors[(x*3)];
 			g=found_colors[(x*3)+1];
 			b=found_colors[(x*3)+2];
-			switch(game_system){
+			switch(currentProject->gameSystem){
 				case sega_genesis:
 					printf("R=%d G=%d B=%d\n",r,g,b);
 					r=nearest_color_index(r);
@@ -466,7 +483,7 @@ againFun:
 				break;
 			}
 		}
-		if(game_system==NES)
+		if(currentProject->gameSystem==NES)
 			update_emphesis(0,0);
 		window->redraw();
 	}else{
@@ -527,7 +544,7 @@ try_again_color:
 				g=user_pal[1][x];
 				b=user_pal[2][x];
 			}
-			switch(game_system){
+			switch(currentProject->gameSystem){
 				case sega_genesis:
 					r=nearest_color_index(r);
 					g=nearest_color_index(g);
@@ -577,7 +594,7 @@ againNerd:
 				goto againNerd;
 			}
 			memcpy(currentProject->rgbPal+off3+(x*3),&rgb_pal3[off3o+(x*3)],3);
-			switch(game_system){
+			switch(currentProject->gameSystem){
 				case sega_genesis:
 					r=currentProject->rgbPal[(x*3)+off3];
 					g=currentProject->rgbPal[(x*3)+1+off3];
@@ -593,7 +610,7 @@ againNerd:
 				break;
 			}
 		}
-		if(game_system==NES)
+		if(currentProject->gameSystem==NES)
 			update_emphesis(0,0);
 		if(alg==1){
 			truecolorimageToTiles(output,row,false);
@@ -608,7 +625,7 @@ void generate_optimal_palette(Fl_Widget*,void*){
 	char temp[4];
 	uint8_t rowSize;
 	uint8_t rows;
-	switch (game_system){
+	switch (currentProject->gameSystem){
 		case sega_genesis:
 			strcpy(temp,"64");
 			rowSize=16;
@@ -668,7 +685,7 @@ void generate_optimal_palette(Fl_Widget*,void*){
 	uint8_t alg=fl_choice("What color reduction algorithm would you like used","Densise Lee v3","scolorq","Neuquant");
 	uint8_t yuv;
 	yuv=fl_choice("What color space would you like to use?","rgb","yuv","YCbCr");
-	switch (game_system){
+	switch (currentProject->gameSystem){
 		case sega_genesis:
 			fun_palette=16;
 		break;
@@ -752,7 +769,7 @@ void truecolorimageToTiles(uint8_t * image,int8_t rowusage,bool useAlpha){
 			}
 			//convert back to tile
 			uint8_t * TileTempPtr;
-			if ((type_temp != 0) && (game_system == sega_genesis)){
+			if ((type_temp != 0) && (currentProject->gameSystem == sega_genesis)){
 				tempSet=(currentProject->tileMapC->get_prio(x_tile,y_tile)^1)*8;
 				set_palette_type(tempSet);
 			}
@@ -763,6 +780,6 @@ dont_convert_tile:
 	x_tile=0;
 	y_tile++;
 	}
-	if (game_system == sega_genesis)
+	if (currentProject->gameSystem == sega_genesis)
 		set_palette_type(type_temp);
 }

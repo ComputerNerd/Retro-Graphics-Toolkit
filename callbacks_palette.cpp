@@ -1,10 +1,26 @@
+/*
+ This file is part of Retro Graphics Toolkit
+
+    Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or any later version.
+
+    Retro Graphics Toolkit is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright Sega16 (or whatever you wish to call me (2012-2014)
+*/
 //this is were all the callbacks for palette realted functions go
 #include "global.h"
 #include "class_global.h"
 #include "color_convert.h"
 void save_palette(Fl_Widget*, void* start_end){
 	char temp[4];
-	switch (game_system){
+	switch (currentProject->gameSystem){
 		case sega_genesis:
 			strcpy(temp,"63");
 		break;
@@ -24,7 +40,7 @@ void save_palette(Fl_Widget*, void* start_end){
 	if (!verify_str_number_only(returned))
 		return;
 	uint8_t end = atoi(returned)+1;
-	if (game_system==sega_genesis){
+	if (currentProject->gameSystem==sega_genesis){
 		start*=2;
 		end*=2;
 	}
@@ -59,7 +75,7 @@ void update_palette(Fl_Widget* o, void* v){
 	//first get the color and draw the box
 	Fl_Slider* s = (Fl_Slider*)o;
 	//now we need to update the entry we are editing
-	if (game_system == sega_genesis){
+	if (currentProject->gameSystem == sega_genesis){
 		uint8_t temp_var=0;
 		uint8_t temp2=(uint8_t)s->value();
 		uint8_t temp_entry=0;
@@ -96,15 +112,15 @@ void update_palette(Fl_Widget* o, void* v){
 				currentProject->rgbPal[(temp_entry*3)+1]=palTab[(temp2>>1)+palTypeGen];
 			break;
 			case 2:
-				//blue takes the least commands
+				//blue is the most trival conversion to do
 				currentProject->palDat[temp_entry*2]=temp2;
 				currentProject->rgbPal[(temp_entry*3)+2]=palTab[(temp2>>1)+palTypeGen];
 			break;
 		}
 	}
-	else if (game_system == NES){
+	else if (currentProject->gameSystem == NES){
 		uint8_t pal;
-		unsigned int rgb_out;
+		uint32_t rgb_out;
 		uint8_t temp_entry=0;
 		switch (mode_editor){
 			case pal_edit:
@@ -161,7 +177,7 @@ void loadPalette(Fl_Widget*, void*){
 			return;
 	offset=atoi(inputTemp);
 	uint8_t palSize;
-	switch (game_system){
+	switch (currentProject->gameSystem){
 		case sega_genesis:
 			offset*=2;
 			palSize=128;
@@ -171,21 +187,22 @@ void loadPalette(Fl_Widget*, void*){
 		break;
 	}
 	if(load_file_generic("Load palette") == true){
-		ifstream file (the_file.c_str(), ios::in|ios::binary|ios::ate);
-		if (file.is_open()){
+		FILE * fi=fopen(the_file.c_str(), "rb");
+		if(fi){
 			//copy 32 bytes to the palette buffer
-			file_size = file.tellg();
+			fseek(fi,0,SEEK_END);
+			file_size = ftell(fi);
 			if (file_size > palSize-offset){
 				fl_alert("Error: The file size is bigger than %d (%d-%d) bytes it is not a valid palette",palSize-offset,palSize,offset);
-				file.close();
+				fclose(fi);
 				return;//end function due to errrors
 			}
 			//read the palette to the buffer
-			file.seekg (0, ios::beg);
-			file.read ((char *)currentProject->palDat+offset, file_size);
-			file.close();
+			rewind(fi);
+			fread(currentProject->palDat+offset,1,file_size,fi);
+			fclose(fi);
 			//now convert each value to rgb
-			switch (game_system){
+			switch (currentProject->gameSystem){
 				case sega_genesis:
 					set_palette_type(palTypeGen);
 				break;
@@ -195,6 +212,6 @@ void loadPalette(Fl_Widget*, void*){
 			}
 			window->redraw();
 		}else
-			fl_alert("file.is_open() returned false meaning there was some trouble reading the file.");
+			fl_alert("Error opening file");
 	}
 }

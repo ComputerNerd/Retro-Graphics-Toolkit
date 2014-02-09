@@ -1,3 +1,19 @@
+/*
+ This file is part of Retro Graphics Toolkit
+
+    Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or any later version.
+
+    Retro Graphics Toolkit is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright Sega16 (or whatever you wish to call me (2012-2014)
+*/
 #include "project.h"
 tileMap::tileMap(){
 	mapSizeW=2;
@@ -50,9 +66,9 @@ int32_t tileMap::get_tileRow(uint16_t x,uint16_t y,uint8_t useRow){
 
 void tileMap::set_vflip(uint16_t x,uint16_t y,bool vflip_set){
 	if (vflip_set)
-		tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]|= 1 << 4;
+		tileMapDat[((y*mapSizeW)+x)*4]|= 1 << 4;
 	else
-		tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]&= ~(1 << 4);
+		tileMapDat[((y*mapSizeW)+x)*4]&= ~(1 << 4);
 }
 
 
@@ -89,8 +105,8 @@ bool tileMap::saveToFile(){
 		}
 		else
 			myfile = fopen(the_file.c_str(),"wb");
-		if (likely(myfile!=0)) {
-			switch (game_system) {
+		if (likely(myfile!=0)){
+			switch (currentProject->gameSystem){
 				case sega_genesis:
 					{
 					uint16_t * TheMap;
@@ -135,7 +151,7 @@ bool tileMap::saveToFile(){
 				break;
 			}
 			if(compression==1){
-				string input,output;
+				std::string input,output;
 				std::ostringstream outcomp;
 				enigma ecomp;
 				input.assign((const char*)mapptr,fileSize);
@@ -162,7 +178,7 @@ bool tileMap::saveToFile(){
 		else
 			return false;
 	}
-	if (game_system == NES){
+	if (currentProject->gameSystem == NES){
 		if (load_file_generic("Save attributes to",true) == true) {
 			if (type == 1){
 				myfile = fopen(the_file.c_str(),"w");
@@ -210,7 +226,7 @@ bool tileMap::loadFromFile(){
 	if (load_file_generic("Load tile map data") == true){
 		uint8_t compression=fl_choice("What kind of compression is this tilemap?","Uncompressed","Enigma Compressed",0);
 		//get width and height
-		string tilemap_file=the_file;
+		std::string tilemap_file=the_file;
 		int32_t w,h;
 		char str[16];
 		char * str_ptr;
@@ -225,7 +241,7 @@ bool tileMap::loadFromFile(){
 			zero_error_tile_map(w);
 			return true;
 		}
-		if (game_system == NES && (w & 1)){
+		if (currentProject->gameSystem == NES && (w & 1)){
 			fl_alert("Error unlike in sega genesis mode NES mode needs the width and height to be a multiple to 2");
 			return true;
 		}
@@ -240,7 +256,7 @@ bool tileMap::loadFromFile(){
 			zero_error_tile_map(h);
 			return true;
 		}
-		if (game_system == NES && (h & 1)){
+		if (currentProject->gameSystem == NES && (h & 1)){
 			fl_alert("Error unlike in sega genesis mode NES mode needs the width and height the be a multiple to 2");
 			return true;
 		}
@@ -252,11 +268,11 @@ bool tileMap::loadFromFile(){
 		if (verify_str_number_only(str_ptr) == false)
 			return true;
 		int32_t offset=atoi(str_ptr);
-		ifstream file (tilemap_file.c_str(), ios::in|ios::binary|ios::ate);
+		std::ifstream file (tilemap_file.c_str(), std::ios::in|std::ios::binary|std::ios::ate);
 		file_size = file.tellg();
-		file.seekg (0, ios::beg);//return to the beginning of the file
+		file.seekg (0, std::ios::beg);//return to the beginning of the file
 		uint32_t size_temp;
-		switch (game_system){
+		switch (currentProject->gameSystem){
 			case sega_genesis:
 				size_temp=(w*h)*2;
 			break;
@@ -282,7 +298,7 @@ bool tileMap::loadFromFile(){
 		if (unlikely(tileMapDat == 0))
 			show_malloc_error(size_temp)
 		if (compression==1){
-			string output=outDecomp.str();
+			std::string output=outDecomp.str();
 			output.copy((char *)tempMap, file_size);
 		}else if (compression==0)
 			file.read ((char *)tempMap, size_temp);
@@ -292,11 +308,11 @@ bool tileMap::loadFromFile(){
 		mapSizeW=w;
 		mapSizeH=h;
 		uint16_t x,y;
-		switch (game_system){
+		switch (currentProject->gameSystem){
 			case sega_genesis:
-				for (y=0;y<h;y++) {
-					for (x=0;x<w;x++) {
-						if (((x+(y*w)+1)*2) <= file_size) {
+				for (y=0;y<h;y++){
+					for (x=0;x<w;x++){
+						if (((x+(y*w)+1)*2) <= file_size){
 							uint16_t temp=*tempMap++;
 							//set attributes
 							tileMapDat[((y*mapSizeW)+x)*4]=(uint8_t)temp&0xF8;
@@ -380,4 +396,134 @@ void tileMap::sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vfl
 			}
 		}
 	}
+}
+void tileMap::set_tile_full(uint32_t tile,uint16_t x,uint16_t y,uint8_t palette_row,bool use_hflip,bool use_vflip,bool highorlow_prio){
+	if (mapSizeW < x || mapSizeH < y) {
+		fl_alert("Error tried to set a non existen tile on the map");
+		return;
+	}
+	uint32_t selected_tile=((y*mapSizeW)+x)*4;
+	uint8_t flags;
+	//uint8_t the_tiles;
+	/*
+	7  6  5  4  3  2  1 0
+	15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
+        p  c   c  v  h  n n n n n n n n n n n
+
+    p = Priority flag
+    c = Palette select
+    v = Vertical flip
+    h = Horizontal flip
+    n = Pattern name
+	*/
+	//the exteneded tile maping format is a generic format it goes like this
+	//The first byte stores attributes in sega genesis format except with no tile data
+	//the next two bytes store the tile number
+	//the_tiles=tile&0xFF; //get lower part in litle edian least signficant
+	//flags=tile>>8;   //get higher part of int16_t most signifactn in little endain
+	flags=0;
+	flags|=palette_row<<5;
+	flags|=use_hflip<<3;
+	flags|=use_vflip<<4;
+	flags|=highorlow_prio<<7;
+	tileMapDat[selected_tile]=flags;
+	//in little endain the least sigficant byte is stored in the lowest address
+	tileMapDat[selected_tile+1]=(tile>>16)&255;
+	tileMapDat[selected_tile+2]=(tile>>8)&255;
+	tileMapDat[selected_tile+3]=tile&255;
+}
+void tileMap::set_tile(uint32_t tile,uint16_t x,uint16_t y){
+	//we must split into two varibles
+	if (mapSizeW < x || mapSizeH < y) {
+		fl_alert("Error: Tried to set a non existent tile on the tile map");
+		return;
+	}
+	uint32_t selected_tile=((y*mapSizeW)+x)*4;
+	tileMapDat[selected_tile+1]=(tile>>16)&255;
+	tileMapDat[selected_tile+2]=(tile>>8)&255;
+	tileMapDat[selected_tile+3]=tile&255;
+}
+void tileMap::set_hflip(uint16_t x,uint16_t y,bool hflip_set){
+	if (hflip_set)
+		tileMapDat[((y*mapSizeW)+x)*4]|= 1 << 3;
+	else
+		tileMapDat[((y*mapSizeW)+x)*4]&= ~(1 << 3);
+}
+void tileMap::set_prio(uint16_t x,uint16_t y,bool prio_set){
+	if (prio_set)
+		tileMapDat[((y*mapSizeW)+x)*4] |= 1 << 7;
+	else
+		tileMapDat[((y*mapSizeW)+x)*4] &= ~(1 << 7);
+}
+void tileMap::resize_tile_map(uint16_t new_x,uint16_t new_y){
+	//mapSizeW and mapSizeH hold old map size
+	if (new_x == mapSizeW && new_y == mapSizeH)
+		return;
+	//now create a temp buffer to hold the old data
+	uint16_t x,y;//needed for loop varibles to copy data
+	//uint8_t * temp = new uint8_t [(new_x*new_y)*2];
+	uint8_t * temp=0;
+	temp=(uint8_t *)malloc((new_x*new_y)*4);
+	if (temp == 0){
+		//cout << "error" << endl;
+		show_malloc_error((new_x*new_y)*4)
+		return;
+	}
+	//now copy old data to temp
+	uint32_t sel_map;
+	for (y=0;y<new_y;y++){
+		for (x=0;x<new_x;x++){
+			sel_map=((y*new_x)+x)*4;
+			if (x < mapSizeW && y < mapSizeH){
+				uint32_t sel_map_old=((y*mapSizeW)+x)*4;
+				/*temp[sel_map]=tileMapDat[sel_map_old];
+				temp[sel_map+1]=tileMapDat[sel_map_old+1];
+				temp[sel_map+2]=tileMapDat[sel_map_old+2];
+				temp[sel_map+3]=tileMapDat[sel_map_old+3];*/
+				memcpy(&temp[sel_map],&tileMapDat[sel_map_old],4);
+			}else{
+				/*temp[sel_map]=0;
+				temp[sel_map+1]=0;
+				temp[sel_map+2]=0;
+				temp[sel_map+3]=0;*/
+				memset(&temp[sel_map],0,4);
+			}
+		}
+	}
+	tileMapDat = (uint8_t *)realloc(tileMapDat,(new_x*new_y)*4);
+	if (tileMapDat == 0){
+		show_realloc_error((new_x*new_y)*4)
+		return;
+	}
+	/*for (uint32_t c=0;c<(new_x*new_y)*4;c++)
+	{
+		tileMapDat[c]=temp[c];
+	}*/
+	memcpy(tileMapDat,temp,(new_x*new_y)*4);
+	free(temp);
+	mapSizeW=new_x;
+	//calulate new scroll size
+	uint16_t old_scroll=window->map_x_scroll->value();
+	uint8_t tile_size_placer=window->place_tile_size->value();
+	int32_t map_scroll=((tile_size_placer*8)*mapSizeW)-map_off_x;//size of all offscreen tiles in pixels
+	//map_scroll-=(tile_size_placer*8);
+	if (map_scroll < 0)
+		map_scroll=0;
+	map_scroll/=tile_size_placer*8;//now size of all tiles
+	//cout << "tiles off screen: " << map_scroll << endl;
+	if (old_scroll > map_scroll)
+		old_scroll=map_scroll;
+	window->map_x_scroll->value(old_scroll,(map_scroll/2),0,map_scroll+(map_scroll/2));//the reason for adding map_scroll/2 to map_scroll is because without it the user will not be able to scroll the tilemap all the way
+	mapSizeH=new_y;
+	old_scroll=window->map_y_scroll->value();
+	tile_size_placer=window->place_tile_size->value();
+	map_scroll=((tile_size_placer*8)*mapSizeH)-map_off_y;//size of all offscreen tiles in pixels
+	//map_scroll-=(tile_size_placer*8);
+	if (map_scroll < 0)
+		map_scroll=0;
+	map_scroll/=tile_size_placer*8;//now size of all tiles
+	//cout << "tiles off screen: " << map_scroll << endl;
+	if (old_scroll > map_scroll)
+		old_scroll=map_scroll;
+	window->map_y_scroll->value(old_scroll,(map_scroll/2),0,map_scroll+(map_scroll/2));
 }

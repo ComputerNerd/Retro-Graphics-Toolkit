@@ -3,7 +3,7 @@ CC=i686-pc-mingw32-g++
 CFLAGS= -Ifltk-1.3.2/ -Ikens/ -Ifltk-1.3.2/zlib -I fltk-1.3.2/png -c -Wall -O2 -s -ffunction-sections -fdata-sections -mwindows -fomit-frame-pointer -pipe
 LDFLAGS=
 SOURCES=project.cpp main.cpp callbacks_palette.cpp callback_tiles.cpp class_global.cpp global.cpp quant.cpp tilemap.cpp color_convert.cpp errorMsg.cpp class_palette.cpp dither.cpp \
-	class_tiles.cpp kens/nemesis.cpp kens/enigma.cpp kens/kosinski.cpp spatial_color_quant.cpp NEUQUANT.cpp classtilemap.cpp
+	class_tiles.cpp kens/nemesis.cpp kens/enigma.cpp kens/kosinski.cpp spatial_color_quant.cpp NEUQUANT.cpp classtilemap.cpp palette.cpp zlibwrapper.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 LINKER=-Lfltk-1.3.2/lib -Wl,--gc-sections -s -static-libgcc -static-libstdc++ -lfltk_images -lfltk -lfltk_jpeg -lfltk_png -lfltk_z -mwindows -lole32 -luuid -lcomctl32
 EXECUTABLE=RetroGraphicsToolkit.exe

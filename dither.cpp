@@ -97,7 +97,7 @@ static int32_t error[SIZE]; /* queue with error
 	else
 		pvalue=*pixel + err/MAX;
   //pvalue = (pvalue>=128) ? 255 : 0;
-	if ((game_system == sega_genesis) && (useHiL == 9)){
+	if ((currentProject->gameSystem == sega_genesis) && (useHiL == 9)){
 		bool tempSet=currentProject->tileMapC->get_prio(cur_x/8,cur_y/8)^true;
 		set_palette_type(tempSet);
 	}
@@ -212,7 +212,7 @@ static void Riemersma(uint8_t *image, int32_t width,int32_t height,uint8_t rgb_s
 	rgb_select=rgb_sel;
 	/* determine the required order of the
 	 * Hilbert curve */ 
-	size=max(width,height);
+	size=std::max(width,height);
 	level=log2int(size);
 	if ((1L << level) < size)
 		level++;
@@ -598,7 +598,7 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 		uint8_t * colPtr;
 		if(colSpace){
 			uint8_t rl,gl,bl;
-			switch(game_system){
+			switch(currentProject->gameSystem){
 				case sega_genesis:
 				{
 					tempPalSize=512;
@@ -630,7 +630,7 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 			}
 		}else{
 			colPtr=currentProject->rgbPal;
-			switch(game_system){
+			switch(currentProject->gameSystem){
 				case sega_genesis:
 					tempPalSize=64;
 					palettesize=16;
@@ -674,7 +674,7 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 				b_old=image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2];
 				if (useAlpha)
 					a_old=image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+3];
-				if (game_system == sega_genesis && type_temp != 0){
+				if (currentProject->gameSystem == sega_genesis && type_temp != 0){
 					uint8_t tempSet=(currentProject->tileMapC->get_prio(x/8,y/8)^1)*8;
 					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted
 				}
@@ -740,13 +740,13 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 				}
 				//find nearest color
 				uint8_t half=18;
-				if (game_system == sega_genesis && type_temp != 0){
+				if (currentProject->gameSystem == sega_genesis && type_temp != 0){
 					uint8_t tempSet=(currentProject->tileMapC->get_prio(x/rgbRowsize,y/8)^1)*8;
 					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted
 					half=(tempSet==0)?18:9;
 				}
 				if(colSpace){
-					switch (game_system){
+					switch (currentProject->gameSystem){
 						case sega_genesis:
 							r_new=palTab[nearest_color_index(r_old)];
 							g_new=palTab[nearest_color_index(g_old)];
@@ -785,7 +785,7 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 		}
 	break;
 	case 1:
-		useMode=game_system;
+		useMode=currentProject->gameSystem;
 		USEofColGlob=colSpace;
 		forcedfun=forceRow;
 		theforcedfun=forcedrow;
@@ -813,12 +813,12 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 						pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
 				}
 				//find nearest color
-				if (game_system == sega_genesis && type_temp != 0){
+				if (currentProject->gameSystem == sega_genesis && type_temp != 0){
 					uint8_t tempSet=(currentProject->tileMapC->get_prio(x/8,y/8)^1)*8;
 					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted
 				}
 				if(colSpace){
-					switch (game_system){
+					switch (currentProject->gameSystem){
 						case sega_genesis:
 							r_new=palTab[nearest_color_index(r_old)];
 							g_new=palTab[nearest_color_index(g_old)];
@@ -868,7 +868,7 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 		}
 	break;
 	}
-	if (game_system == sega_genesis)
+	if (currentProject->gameSystem == sega_genesis)
 		set_palette_type(type_temp);
 
 }

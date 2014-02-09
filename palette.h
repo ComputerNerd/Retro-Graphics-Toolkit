@@ -15,8 +15,7 @@
     Copyright Sega16 (or whatever you wish to call me (2012-2014)
 */
 #pragma once
-#include <inttypes.h>
-void sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip=false,bool vflip=false);
-bool truecolor_to_image(uint8_t * the_image,int8_t useRow=-1,bool useAlpha=true);
-void generate_optimal_palette(Fl_Widget*,void * row);
-void truecolorimageToTiles(uint8_t * image,int8_t rowusage,bool useAlpha=true);
+extern uint8_t palTypeGen;
+extern const uint8_t palTab[];
+void swapEntry(uint8_t one,uint8_t two);
+void set_palette_type(uint8_t type);

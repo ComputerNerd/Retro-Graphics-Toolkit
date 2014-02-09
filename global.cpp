@@ -1,3 +1,19 @@
+/*
+ This file is part of Retro Graphics Toolkit
+
+    Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or any later version.
+
+    Retro Graphics Toolkit is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+*/
 #include "includes.h"
 #include "class_global.h"
 #include "errorMsg.h"
@@ -7,7 +23,6 @@
 //fltk widget realted stuff
 Fl_Group * shadow_highlight_switch;
 //bools used to toggle stuff
-bool shadow_highlight;
 bool show_grid;
 bool G_hflip;
 bool G_vflip;
@@ -27,14 +42,12 @@ uint16_t tile_placer_tile_offset_y;
 uint16_t tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
 uint16_t true_color_box_x,true_color_box_y;
 uint8_t tile_zoom_edit;
-uint8_t game_system;
 uint8_t truecolor_temp[4];/*!< This stores the rgba data selected with the truecolor sliders*/
 std::string the_file;//this is for tempory use only
 uint8_t mode_editor;//this is used to determin which thing to draw
 uint8_t ditherAlg;
 #define PIf 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491298336733624406566430860213949463952247371907021798609437027705392171762931767523846748184676694051320005681271452635608277857713427577896091736371787214684409012249534301465495853710507922796892589235420199561121290219608640344181598136297747713099605187072113499999983729780499510597317328160963185950244594553469083026425223082533446850352619311881710100031378387528865875332083814206171776691473035982534904287554687311595628638823537875937519577818577805321712268066130019278766111959092164201989f
 #define PI 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491298336733624406566430860213949463952247371907021798609437027705392171762931767523846748184676694051320005681271452635608277857713427577896091736371787214684409012249534301465495853710507922796892589235420199561121290219608640344181598136297747713099605187072113499999983729780499510597317328160963185950244594553469083026425223082533446850352619311881710100031378387528865875332083814206171776691473035982534904287554687311595628638823537875937519577818577805321712268066130019278766111959092164201989
-uint8_t palTypeGen=0;
 bool showTrueColor=false;
 bool rowSolo=false;
 uint8_t nearestAlg=1;
@@ -44,7 +57,7 @@ uint8_t nearest_color_index(uint8_t val){
 	uint8_t i;
     int32_t distanceSquared, minDistanceSquared, bestIndex = 0;
     minDistanceSquared = 255*255 + 1;
-	if (game_system!=sega_genesis){
+	if (currentProject->gameSystem!=sega_genesis){
 		fl_alert("This function is for use with sega genesis/mega drive only");
 		return 0;
 	}
@@ -81,7 +94,7 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * myfile){
 	return true;
 }
 void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha){
-	switch (game_system){
+	switch (currentProject->gameSystem){
 		case sega_genesis:
 			row*=48;
 			for (uint8_t y=0;y<8;++y){
@@ -122,8 +135,7 @@ void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha){
 	}
 	
 }
-bool verify_str_number_only(char * str)
-{
+bool verify_str_number_only(char * str){
 /*!
 Fltk provides an input text box that makes it easy for the user to type text however as a side effect they can accidently enter non number characters that may be handled weird by atoi()
 this function address that issue by error checking the string and it also gives the user feedback so they are aware that the input box takes only numbers
@@ -154,8 +166,7 @@ static inline int clamp(int v){
 	return v<0 ? 0 : v>255 ? 255 : v;
 }
 //uint32_t MakeRGBcolor(uint32_t pixel,float saturation = 1.1f, float hue_tweak = 0.0f,float contrast = 1.0f, float brightness = 1.0f,float gamma = 2.2f)
-uint32_t MakeRGBcolor(uint32_t pixel,float saturation, float hue_tweak,float contrast, float brightness,float gamma)
-{
+uint32_t MakeRGBcolor(uint32_t pixel,float saturation, float hue_tweak,float contrast, float brightness,float gamma){
         /*!
 	 The input value is a NES color index (with de-emphasis bits).
          We need RGB values. Convert the index into RGB.
@@ -209,81 +220,6 @@ uint32_t MakeRGBcolor(uint32_t pixel,float saturation, float hue_tweak,float con
                      + 0x00001*clamp(255 * gammafix(y + -1.108545f*i +  1.709007f*q,gamma));
         return rgb;
 }
-const uint8_t palTab[]=   {0,49,87,119,146,174,206,255,0,27,49,71,87,103,119,130,130,146,157,174,190,206,228,255};//from http://gendev.spritesmind.net/forum/viewtopic.php?t=1389
-const uint8_t palTabEmu[]={0,36,72,108,144,180,216,252,0,18,36,54,72, 90,108,126,126,144,162,180,198,216,234,252};
-void set_palette_type(uint8_t type)
-{
-	palTypeGen=type;
-	//now reconvert all the colors
-	for (uint8_t pal=0; pal < 128;pal+=2){
-		//to convert to rgb first get value of color then multiply it by 16 to get rgb
-		//first get blue value
-		//the rgb array is in rgb format and the genesis palette is bgr format
-		uint8_t rgb_array = pal+(pal/2);//multiply pal by 1.5
-		uint8_t temp_var = currentProject->palDat[pal];
-		temp_var>>=1;
-		currentProject->rgbPal[rgb_array+2]=palTab[temp_var+type];
-		//seperating the gr values will require some bitwise operations
-		//to get g shift to the right by 4
-		temp_var = currentProject->palDat[pal+1];
-		temp_var>>=5;
-		currentProject->rgbPal[rgb_array+1]=palTab[temp_var+type];
-		//to get r value apply the and opperation by 0xF or 15
-		temp_var = currentProject->palDat[pal+1];
-		temp_var&=0xF;
-		temp_var>>=1;
-		currentProject->rgbPal[rgb_array]=palTab[temp_var+type];
-	}
-	//window->redraw();
-}
-void set_tile_full(uint32_t tile,uint16_t x,uint16_t y,uint8_t palette_row,bool use_hflip,bool use_vflip,bool highorlow_prio)
-{
-	if (currentProject->tileMapC->mapSizeW < x || currentProject->tileMapC->mapSizeH < y) {
-		fl_alert("Error tried to set a non existen tile on the map");
-		return;
-	}
-	uint32_t selected_tile=((y*currentProject->tileMapC->mapSizeW)+x)*4;
-	uint8_t flags;
-	//uint8_t the_tiles;
-	/*
-	7  6  5  4  3  2  1 0
-	15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
-        p  c   c  v  h  n n n n n n n n n n n
-
-    p = Priority flag
-    c = Palette select
-    v = Vertical flip
-    h = Horizontal flip
-    n = Pattern name
-	*/
-	//the exteneded tile maping format is a generic format it goes like this
-	//The first byte stores attributes in sega genesis format except with no tile data
-	//the next two bytes store the tile number
-	//the_tiles=tile&0xFF; //get lower part in litle edian least signficant
-	//flags=tile>>8;   //get higher part of int16_t most signifactn in little endain
-	flags=0;
-	flags|=palette_row<<5;
-	flags|=use_hflip<<3;
-	flags|=use_vflip<<4;
-	flags|=highorlow_prio<<7;
-	currentProject->tileMapC->tileMapDat[selected_tile]=flags;
-	//in little endain the least sigficant byte is stored in the lowest address
-	currentProject->tileMapC->tileMapDat[selected_tile+1]=(tile>>16)&255;
-	currentProject->tileMapC->tileMapDat[selected_tile+2]=(tile>>8)&255;
-	currentProject->tileMapC->tileMapDat[selected_tile+3]=tile&255;
-}
-void set_tile(uint32_t tile,uint16_t x,uint16_t y)
-{
-	//we must split into two varibles
-	if (currentProject->tileMapC->mapSizeW < x || currentProject->tileMapC->mapSizeH < y) {
-		fl_alert("Error: Tried to set a non existent tile on the tile map");
-		return;
-	}
-	uint32_t selected_tile=((y*currentProject->tileMapC->mapSizeW)+x)*4;
-	currentProject->tileMapC->tileMapDat[selected_tile+1]=(tile>>16)&255;
-	currentProject->tileMapC->tileMapDat[selected_tile+2]=(tile>>8)&255;
-	currentProject->tileMapC->tileMapDat[selected_tile+3]=tile&255;
-}
 static inline uint32_t sq(uint32_t x){
 	return x*x;
 }
@@ -330,94 +266,8 @@ uint32_t cal_offset_truecolor(uint16_t x,uint16_t y,uint16_t rgb,uint32_t tile){
 	*/
 	return (x*4)+(y*32)+rgb+(tile*256);
 }
-void set_hflip(uint16_t x,uint16_t y,bool hflip_set){
-	if (hflip_set == true)
-		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]|= 1 << 3;
-	else
-		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4]&= ~(1 << 3);
-}
-void set_prio(uint16_t x,uint16_t y,bool prio_set){
-	if (prio_set == true)
-		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4] |= 1 << 7;
-	else
-		currentProject->tileMapC->tileMapDat[((y*currentProject->tileMapC->mapSizeW)+x)*4] &= ~(1 << 7);
-}
-void resize_tile_map(uint16_t new_x,uint16_t new_y)
-{
-	//currentProject->tileMapC->mapSizeW and currentProject->tileMapC->mapSizeH hold old map size
-	if (new_x == currentProject->tileMapC->mapSizeW && new_y == currentProject->tileMapC->mapSizeH)
-		return;
-	//now create a temp buffer to hold the old data
-	uint16_t x,y;//needed for loop varibles to copy data
-	//uint8_t * temp = new uint8_t [(new_x*new_y)*2];
-	uint8_t * temp=0;
-	temp=(uint8_t *)malloc((new_x*new_y)*4);
-	if (temp == 0){
-		//cout << "error" << endl;
-		show_malloc_error((new_x*new_y)*4)
-		return;
-	}
-	//now copy old data to temp
-	uint32_t sel_map;
-	for (y=0;y<new_y;y++){
-		for (x=0;x<new_x;x++){
-			sel_map=((y*new_x)+x)*4;
-			if (x < currentProject->tileMapC->mapSizeW && y < currentProject->tileMapC->mapSizeH){
-				uint32_t sel_map_old=((y*currentProject->tileMapC->mapSizeW)+x)*4;
-				/*temp[sel_map]=currentProject->tileMapC->tileMapDat[sel_map_old];
-				temp[sel_map+1]=currentProject->tileMapC->tileMapDat[sel_map_old+1];
-				temp[sel_map+2]=currentProject->tileMapC->tileMapDat[sel_map_old+2];
-				temp[sel_map+3]=currentProject->tileMapC->tileMapDat[sel_map_old+3];*/
-				memcpy(&temp[sel_map],&currentProject->tileMapC->tileMapDat[sel_map_old],4);
-			}else{
-				/*temp[sel_map]=0;
-				temp[sel_map+1]=0;
-				temp[sel_map+2]=0;
-				temp[sel_map+3]=0;*/
-				memset(&temp[sel_map],0,4);
-			}
-		}
-	}
-	currentProject->tileMapC->tileMapDat = (uint8_t *)realloc(currentProject->tileMapC->tileMapDat,(new_x*new_y)*4);
-	if (currentProject->tileMapC->tileMapDat == 0){
-		show_realloc_error((new_x*new_y)*4)
-		return;
-	}
-	/*for (uint32_t c=0;c<(new_x*new_y)*4;c++)
-	{
-		currentProject->tileMapC->tileMapDat[c]=temp[c];
-	}*/
-	memcpy(currentProject->tileMapC->tileMapDat,temp,(new_x*new_y)*4);
-	free(temp);
-	currentProject->tileMapC->mapSizeW=new_x;
-	//calulate new scroll size
-	uint16_t old_scroll=window->map_x_scroll->value();
-	uint8_t tile_size_placer=window->place_tile_size->value();
-	int32_t map_scroll=((tile_size_placer*8)*currentProject->tileMapC->mapSizeW)-map_off_x;//size of all offscreen tiles in pixels
-	//map_scroll-=(tile_size_placer*8);
-	if (map_scroll < 0)
-		map_scroll=0;
-	map_scroll/=tile_size_placer*8;//now size of all tiles
-	//cout << "tiles off screen: " << map_scroll << endl;
-	if (old_scroll > map_scroll)
-		old_scroll=map_scroll;
-	window->map_x_scroll->value(old_scroll,(map_scroll/2),0,map_scroll+(map_scroll/2));//the reason for adding map_scroll/2 to map_scroll is because without it the user will not be able to scroll the tilemap all the way
-	currentProject->tileMapC->mapSizeH=new_y;
-	old_scroll=window->map_y_scroll->value();
-	tile_size_placer=window->place_tile_size->value();
-	map_scroll=((tile_size_placer*8)*currentProject->tileMapC->mapSizeH)-map_off_y;//size of all offscreen tiles in pixels
-	//map_scroll-=(tile_size_placer*8);
-	if (map_scroll < 0)
-		map_scroll=0;
-	map_scroll/=tile_size_placer*8;//now size of all tiles
-	//cout << "tiles off screen: " << map_scroll << endl;
-	if (old_scroll > map_scroll)
-		old_scroll=map_scroll;
-	window->map_y_scroll->value(old_scroll,(map_scroll/2),0,map_scroll+(map_scroll/2));
-}
 //bool load_file_generic(const char * the_tile="Pick a file",bool save_file=false)
-bool load_file_generic(const char * the_tile,bool save_file)
-{	
+bool load_file_generic(const char * the_tile,bool save_file){
 	// Create native chooser
 	Fl_Native_File_Chooser native;
 	native.title(the_tile);
@@ -426,7 +276,7 @@ bool load_file_generic(const char * the_tile,bool save_file)
 	else
 		native.type(Fl_Native_File_Chooser::BROWSE_SAVE_FILE);
 	// Show native chooser
-	switch ( native.show() )
+	switch (native.show())
 	{
 	case -1: fprintf(stderr, "ERROR: %s\n", native.errmsg()); break;	// ERROR
 	case  1: fprintf(stderr, "*** CANCEL\n"); fl_beep(); break;		// CANCEL

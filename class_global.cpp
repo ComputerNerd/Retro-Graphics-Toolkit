@@ -1,3 +1,19 @@
+/*
+ This file is part of Retro Graphics Toolkit
+
+    Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or any later version.
+
+    Retro Graphics Toolkit is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright Sega16 (or whatever you wish to call me (2012-2014)
+*/
 #include "global.h"
 #include "class_global.h"
 editor *window = new editor(800,600,"Retro Graphics Toolkit");//this creates the window
@@ -45,7 +61,7 @@ void editor::draw_non_gui(){
 	//When resizing the window things move around so we need to compensate for that
 	uint8_t per_row;
 	uint8_t per_row_rgb;
-	switch (game_system){
+	switch (currentProject->gameSystem){
 		case sega_genesis:
 			per_row=16;
 			per_row_rgb=48;
@@ -111,10 +127,10 @@ void editor::draw_non_gui(){
 			max_map_w=((placer_tile_size*8)+w()-map_off_x)/(placer_tile_size*8);//this will puroposly allow one tile to go partly off screen that is normal I added that on purpose
 			max_map_h=((placer_tile_size*8)+h()-map_off_y)/(placer_tile_size*8);
 			//see if shadow highlight is enabled
-			if ((palTypeGen==0) || (game_system != sega_genesis) || (showTrueColor==true)){
+			if ((palTypeGen==0) || (currentProject->gameSystem != sega_genesis) || (showTrueColor==true)){
 				//shadow highlight is disabled
-				for (y=0;y<min((int)currentProject->tileMapC->mapSizeH-map_scroll_pos_y,(int)max_map_h);++y){
-					for (x=0;x<min((int)currentProject->tileMapC->mapSizeW-map_scroll_pos_x,(int)max_map_w);++x){
+				for (y=0;y<std::min((int)currentProject->tileMapC->mapSizeH-map_scroll_pos_y,(int)max_map_h);++y){
+					for (x=0;x<std::min((int)currentProject->tileMapC->mapSizeW-map_scroll_pos_x,(int)max_map_w);++x){
 						uint32_t tempx,tempy;
 						tempx=x+map_scroll_pos_x;
 						tempy=y+map_scroll_pos_y;
@@ -137,8 +153,8 @@ void editor::draw_non_gui(){
 				}
 			}else{
 				uint8_t type_temp=palTypeGen;
-				for (y=0;y<min((int)currentProject->tileMapC->mapSizeH-map_scroll_pos_y,(int)max_map_h);++y){
-					for (x=0;x<min((int)currentProject->tileMapC->mapSizeW-map_scroll_pos_x,(int)max_map_w);++x){
+				for (y=0;y<std::min((int)currentProject->tileMapC->mapSizeH-map_scroll_pos_y,(int)max_map_h);++y){
+					for (x=0;x<std::min((int)currentProject->tileMapC->mapSizeW-map_scroll_pos_x,(int)max_map_w);++x){
 						uint32_t tempx,tempy;
 						tempx=x+map_scroll_pos_x;
 						tempy=y+map_scroll_pos_y;
@@ -165,8 +181,8 @@ void editor::draw_non_gui(){
 			}
 			if (show_grid_placer == true){
 				//draw box over tiles
-				for (y=0;y<min((int)currentProject->tileMapC->mapSizeH-map_scroll_pos_y,(int)max_map_h);++y){
-					for (x=0;x<min((int)currentProject->tileMapC->mapSizeW-map_scroll_pos_x,(int)max_map_w);x++)
+				for (y=0;y<std::min((int)currentProject->tileMapC->mapSizeH-map_scroll_pos_y,(int)max_map_h);++y){
+					for (x=0;x<std::min((int)currentProject->tileMapC->mapSizeW-map_scroll_pos_x,(int)max_map_w);x++)
 						fl_draw_box(FL_EMBOSSED_FRAME,map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),placer_tile_size*8,placer_tile_size*8,NULL);
 				}
 				
@@ -257,15 +273,11 @@ int editor::handle(int event){
 						temp_two=((Fl::event_y()-map_off_y)/tiles_size)/8;
 						temp_one+=+map_scroll_pos_x;
 						temp_two+=+map_scroll_pos_y;
-						if (Fl::event_button() == FL_LEFT_MOUSE)
-						{
-							set_tile_full(currentProject->tileC->current_tile,temp_one,temp_two,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
+						if (Fl::event_button() == FL_LEFT_MOUSE){
+							currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,temp_one,temp_two,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
 							damage(FL_DAMAGE_USER1);
-						}
-						else
-						{
+						}else
 							fl_alert("Tile attributes id: %d h-flip: %d v-flip %d priority: %d pal row: %d\nAt location x: %d y: %d",currentProject->tileMapC->get_tile(temp_one,temp_two),currentProject->tileMapC->get_hflip(temp_one,temp_two),currentProject->tileMapC->get_vflip(temp_one,temp_two),currentProject->tileMapC->get_prio(temp_one,temp_two),currentProject->tileMapC->get_palette_map(temp_one,temp_two),temp_one,temp_two);
-						}
 					}
 					if (Fl::event_x() > tile_placer_tile_offset_x && Fl::event_y() > tile_placer_tile_offset_y && Fl::event_x() < tile_placer_tile_offset_x+(tiles_size*8) && Fl::event_y() < tile_placer_tile_offset_y+(tiles_size*8)){
 						uint8_t temp_two,temp_one;

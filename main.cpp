@@ -12,6 +12,7 @@
 
     You should have received a copy of the GNU General Public License
     along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright Sega16 (or whatever you wish to call me (2012-2014)
 */
 #include "global.h"
 #include "callbacks_palette.h"
@@ -20,6 +21,7 @@
 #include "color_convert.h"
 #include "errorMsg.h"
 #include "dither.h"
+#include "project.h"
 #include <zlib.h>
 #include <png.h>
 void fill_tile(Fl_Widget* o, void*){
@@ -28,7 +30,7 @@ void fill_tile(Fl_Widget* o, void*){
 		uint8_t color;
 		color=tileMap_pal.box_sel;
 		uint8_t * tile_ptr_temp;
-		switch (game_system){
+		switch (currentProject->gameSystem){
 			case sega_genesis:
 				tile_ptr_temp = &currentProject->tileC->tileDat[currentProject->tileC->current_tile*32];
 				color+=color<<4;
@@ -79,7 +81,7 @@ void callback_resize_map(Fl_Widget* o, void*){
 	uint8_t w,h;
 	w=window->map_w->value();
 	h=window->map_h->value();
-	resize_tile_map(w,h);
+	currentProject->tileMapC->resize_tile_map(w,h);
 	window->redraw();
 }
 void update_offset_tile_edit(Fl_Widget* o, void*){
@@ -225,7 +227,7 @@ void save_tiles(Fl_Widget*,void*){
 				fputs("const uint8_t tileDat[]={",myfile);
 			}
 			if(compression){
-				string input;
+				std::string input;
 				input.assign((const char *)currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize);
 				std::istringstream iss(input);
 				std::ostringstream outfun;
@@ -240,7 +242,7 @@ void save_tiles(Fl_Widget*,void*){
 				compdat=(uint8_t*)malloc(compsize);
 				if (compdat==0)
 					show_malloc_error(compsize)
-				string output=outfun.str();
+				std::string output=outfun.str();
 				output.copy((char *)compdat,compsize);
 				printf("Compressed to %d uncompressed would be %d so therefore the file the ratio is %f\n",compsize,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize,(double)compsize/(double)((currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize)*100.0);
 			}
@@ -352,7 +354,7 @@ void load_tiles(Fl_Widget*,void* split){
 				offset_tiles_bytes=0;
 			}
 			if (compression) {
-				string output=outDecomp.str();
+				std::string output=outDecomp.str();
 				output.copy((char *)currentProject->tileC->tileDat+offset_tiles_bytes,file_size);
 			}else{
 				fread(currentProject->tileC->tileDat+offset_tiles_bytes,1,file_size,myfile);
@@ -425,7 +427,7 @@ void load_truecolor_tiles(Fl_Widget*,void*){
 		currentProject->tileC->truetileDat = (uint8_t *)malloc(file_size);
 		if (currentProject->tileC->truetileDat == 0)
 			show_malloc_error(file_size)
-		switch (game_system){
+		switch (currentProject->gameSystem){
 			case sega_genesis:
 				currentProject->tileC->tileDat = (uint8_t *)malloc(file_size/6);
 			break;
@@ -453,7 +455,7 @@ void fill_tile_map_with_tile(Fl_Widget*,void*){
 	if(fl_ask("This will erase the entire tilemap and fill it with the currently selected tile\nAre you sure you want to do this?")){
 		for (uint16_t y=0;y<currentProject->tileMapC->mapSizeH;++y) {
 			for (uint16_t x=0;x<currentProject->tileMapC->mapSizeW;++x)
-				set_tile_full(currentProject->tileC->current_tile,x,y,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
+				currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,x,y,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
 		}
 		window->damage(FL_DAMAGE_USER1);
 	}
@@ -463,7 +465,7 @@ void load_tile_map(Fl_Widget*,void*){
 		fl_alert("Error: Cannot load file %s",the_file.c_str());
 }
 void shadow_highligh_findout(Fl_Widget*,void*){
-	if (unlikely(game_system != sega_genesis)){
+	if (unlikely(currentProject->gameSystem != sega_genesis)){
 		fl_alert("Only the Sega Genesis/Mega Drive supports shadow highligh mode\n");
 		return;
 	}
@@ -481,9 +483,9 @@ void shadow_highligh_findout(Fl_Widget*,void*){
 						over++;
 				}
 				if (over > 4)
-					set_prio(x,y,true);//normal
+					currentProject->tileMapC->set_prio(x,y,true);//normal
 				else
-					set_prio(x,y,false);//shadowed
+					currentProject->tileMapC->set_prio(x,y,false);//shadowed
 			}
 		}
 	}else{
@@ -512,9 +514,9 @@ void shadow_highligh_findout(Fl_Widget*,void*){
 					errorSh+=abs(temp[xx+2]-ptrorgin[xx+2]);
 				}
 				if (errorSh < errorNorm)
-					set_prio(x,y,false);//shadowed
+					currentProject->tileMapC->set_prio(x,y,false);//shadowed
 				else
-					set_prio(x,y,true);//normal
+					currentProject->tileMapC->set_prio(x,y,true);//normal
 			}
 		}
 		set_palette_type(type_temp);//0 normal 8 shadow 16 highlight		
@@ -568,7 +570,7 @@ void load_image_to_tilemap(Fl_Widget*,void*){
 			return;
 		}
 		uint8_t tilebit;
-		switch(game_system){
+		switch(currentProject->gameSystem){
 			case sega_genesis:
 				tilebit=7;
 			break;
@@ -596,7 +598,7 @@ void load_image_to_tilemap(Fl_Widget*,void*){
 			w8++;
 		if (hr!=0)
 			h8++;
-		if(game_system==NES){
+		if(currentProject->gameSystem==NES){
 			if((wr-8)>0)
 				w8++;
 			if((hr-8)>0)
@@ -661,8 +663,7 @@ void load_image_to_tilemap(Fl_Widget*,void*){
 				}
 			break;
 			case 4:
-				for (a=0;a<(ht*wt*4)-wt*4;a+=w*4*8)//a tiles y
-				{
+				for (a=0;a<(ht*wt*4)-wt*4;a+=w*4*8){//a tiles y
 					for (b=0;b<wt*4;b+=32){//b tiles x
 						for (y=0;y<wt*4*8;y+=w*4){//pixels y
 							memcpy(&currentProject->tileC->truetileDat[truecolor_tile_ptr],&img_ptr[a+b+y],32);
@@ -683,38 +684,33 @@ void load_image_to_tilemap(Fl_Widget*,void*){
 			break;
 		}
 		loaded_image->release();
-		resize_tile_map(w8,h8);
+		currentProject->tileMapC->resize_tile_map(w8,h8);
 		window->map_w->value(w8);
 		window->map_h->value(h8);
 		uint32_t tilecounter=0;
 		for (y=0;y<h8;++y){
 			for (x=0;x<w8;++x){
-				set_tile_full(tilecounter,x,y,0,false,false,false);
+				currentProject->tileMapC->set_tile_full(tilecounter,x,y,0,false,false,false);
 				tilecounter++;
 			}
 		}
 		window->redraw();
 	}
 }
-void set_palette_type_callback(Fl_Widget*,void* type)
-{
+void set_palette_type_callback(Fl_Widget*,void* type){
 	set_palette_type((uintptr_t)type);
 	window->redraw();
 }
-void remove_duplicate_tiles(Fl_Widget*,void*)
-{
+void remove_duplicate_tiles(Fl_Widget*,void*){
 	currentProject->tileC->remove_duplicate_tiles();
 }
-void remove_duplicate_truecolor(Fl_Widget*,void*)
-{
+void remove_duplicate_truecolor(Fl_Widget*,void*){
 	//sub_tile_map
 	uint32_t tile_remove_c=0;
 	int32_t cur_tile,curT;
 	puts("Pass 1");
-	for (cur_tile=0;cur_tile<=currentProject->tileC->tiles_amount;cur_tile++)
-	{
-		for (curT=currentProject->tileC->tiles_amount;curT>=0;curT--)
-		{
+	for (cur_tile=0;cur_tile<=currentProject->tileC->tiles_amount;cur_tile++){
+		for (curT=currentProject->tileC->tiles_amount;curT>=0;curT--){
 			if (cur_tile == curT)//dont compare it's self
 				continue;
 			#if __LP64__
@@ -735,10 +731,8 @@ void remove_duplicate_truecolor(Fl_Widget*,void*)
 	tile_remove_c=0;
 	puts("Pass 2 h-flip");
 	uint8_t trueColTemp[256];
-	for (cur_tile=0;cur_tile<=currentProject->tileC->tiles_amount;cur_tile++)
-	{
-		for (curT=currentProject->tileC->tiles_amount;curT>=0;curT--)
-		{
+	for (cur_tile=0;cur_tile<=currentProject->tileC->tiles_amount;cur_tile++){
+		for (curT=currentProject->tileC->tiles_amount;curT>=0;curT--){
 			if (cur_tile == curT)//dont compare it's self
 				continue;
 			currentProject->tileC->hflip_truecolor(curT,(uint32_t *)trueColTemp);
@@ -759,10 +753,8 @@ void remove_duplicate_truecolor(Fl_Widget*,void*)
 	printf("Removed %d tiles\n",tile_remove_c);
 	tile_remove_c=0;
 	puts("Pass 3 v-flip");
-	for (cur_tile=0;cur_tile<=currentProject->tileC->tiles_amount;cur_tile++)
-	{
-		for (curT=currentProject->tileC->tiles_amount;curT>=0;curT--)
-		{
+	for (cur_tile=0;cur_tile<=currentProject->tileC->tiles_amount;cur_tile++){
+		for (curT=currentProject->tileC->tiles_amount;curT>=0;curT--){
 			if (cur_tile == curT)//dont compare it's self
 				continue;
 			currentProject->tileC->vflip_truecolor(curT,trueColTemp);
@@ -783,10 +775,8 @@ void remove_duplicate_truecolor(Fl_Widget*,void*)
 	printf("Removed %d tiles\n",tile_remove_c);
 	tile_remove_c=0;
 	puts("Pass 4 vh-flip");
-	for (cur_tile=0;cur_tile<=currentProject->tileC->tiles_amount;cur_tile++)
-	{
-		for (curT=currentProject->tileC->tiles_amount;curT>=0;curT--)
-		{
+	for (cur_tile=0;cur_tile<=currentProject->tileC->tiles_amount;cur_tile++){
+		for (curT=currentProject->tileC->tiles_amount;curT>=0;curT--){
 			if (cur_tile == curT)//dont compare it's self
 				continue;
 			currentProject->tileC->hflip_truecolor(curT,(uint32_t *)trueColTemp);
@@ -809,25 +799,23 @@ void remove_duplicate_truecolor(Fl_Widget*,void*)
 	tile_remove_c=0;
 	window->redraw();
 }
-void rgb_pal_to_entry(Fl_Widget*,void*)
-{
+void rgb_pal_to_entry(Fl_Widget*,void*){
 	//this function will convert a rgb value to the nearst palette entry
-	if (mode_editor != tile_edit) {
+	if (mode_editor != tile_edit){
 		fl_alert("Be in Tile editor to use this");
 		return;
 	}
 }
-void set_game_system(Fl_Widget*,void* selection)
-{
-	uint8_t sel8=(uintptr_t)selection;
-	if (unlikely(sel8 == game_system)){
+void set_game_system(Fl_Widget*,void* selection){
+	uint32_t sel8=(uintptr_t)selection;
+	if (unlikely(sel8 == currentProject->gameSystem)){
 		fl_alert("You are already in that mode");
 		return;
 	}
 	switch(sel8){
 		case sega_genesis:
 			//fl_alert("Sega genesis Mode");
-			game_system=sega_genesis;
+			currentProject->gameSystem=sega_genesis;
 			currentProject->tileC->tileSize=32;
 			//create_shadow_highlight_buttons();
 			shadow_highlight_switch->show();
@@ -849,7 +837,7 @@ void set_game_system(Fl_Widget*,void* selection)
 			window->map_h->step(1);
 		break;
 		case NES:
-			game_system=NES;
+			currentProject->gameSystem=NES;
 			currentProject->tileC->tileSize=16;
 			shadow_highlight_switch->hide();
 			updateNesTab(0);
@@ -862,11 +850,11 @@ void set_game_system(Fl_Widget*,void* selection)
 			currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*16);
 			//on the NES tilemaps need to be a multiple of 2
 			if(((currentProject->tileMapC->mapSizeW)&1) && ((currentProject->tileMapC->mapSizeH)&1))
-				resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeH+1);
+				currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeH+1);
 			if((currentProject->tileMapC->mapSizeW)&1)
-				resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeH);
+				currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeH);
 			if((currentProject->tileMapC->mapSizeH)&1)
-				resize_tile_map(currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeH+1);
+				currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeH+1);
 			window->map_w->value(currentProject->tileMapC->mapSizeW);
 			window->map_h->value(currentProject->tileMapC->mapSizeH);
 			window->map_w->step(2);
@@ -879,8 +867,7 @@ void set_game_system(Fl_Widget*,void* selection)
 	}
 	window->redraw();
 }
-void tilemap_remove_callback(Fl_Widget*,void*)
-{
+void tilemap_remove_callback(Fl_Widget*,void*){
 		char str[16];
 		char * str_ptr;
 		str_ptr=&str[0];
@@ -900,8 +887,7 @@ void tilemap_remove_callback(Fl_Widget*,void*)
 			currentProject->tileMapC->sub_tile_map(0,0,false,false);
 		window->damage(FL_DAMAGE_USER1);
 }
-void trueColTileToggle(Fl_Widget*,void*)
-{
+void trueColTileToggle(Fl_Widget*,void*){
 	showTrueColor^=1;
 	window->damage(FL_DAMAGE_USER1);
 }
@@ -926,14 +912,13 @@ void tileDPicker(Fl_Widget*,void*){
 	window->damage(FL_DAMAGE_USER1);
 }
 void showAbout(Fl_Widget*,void*){
-	fl_alert("Retro Graphics Toolkit is written by sega16/nintendo8/sonic master or whatever you want to call me\nThis program was built on %s %s\nTechnically speaking this date was the last time that main.cpp was updated.",__DATE__,__TIME__);
+	fl_alert("Retro Graphics Toolkit is written by sega16/nintendo8/sonic master or whatever you want to call me\nThis program was built on %s %s\nTechnically speaking this date was the last time that main.cpp was compiled\nI usally run make clean && make before release so this data should be right",__DATE__,__TIME__);
 }
 void toggleRowSolo(Fl_Widget*,void*){
 	rowSolo^=true;
 	window->redraw();
 }
-void clearPalette(Fl_Widget*,void*)
-{
+void clearPalette(Fl_Widget*,void*){
 	if (fl_ask("This will set all colors to 0 are you sure you want to do this?")){
 		memset(currentProject->palDat,0,128);
 		memset(currentProject->rgbPal,0,192);
@@ -943,9 +928,9 @@ void clearPalette(Fl_Widget*,void*)
 		tileMap_pal.updateSlider();
 	}
 }
-const char * freeDes="This sets the currently selected palette entry to free meaning that this color can be changed";
-const char * lockedDes="This sets the currently selected palette entry to locked meaning that this color cannot be changed but tiles can still use it";
-const char * reservedDes="This sets the currently selected palette entry to reserved meaning that this color cannot be changed or used in tiles note that you may need make sure all tiles get re-dithered to ensure that this rule is enforced";
+static const char * freeDes="This sets the currently selected palette entry to free meaning that this color can be changed";
+static const char * lockedDes="This sets the currently selected palette entry to locked meaning that this color cannot be changed but tiles can still use it";
+static const char * reservedDes="This sets the currently selected palette entry to reserved meaning that this color cannot be changed or used in tiles note that you may need make sure all tiles get re-dithered to ensure that this rule is enforced";
 void setPalType(Fl_Widget*,void* type){
 	switch (mode_editor){
 		case pal_edit:
@@ -1033,6 +1018,12 @@ void save_tilemap_as_image(Fl_Widget*,void*){
 void pickNearAlg(Fl_Widget*,void*){
 	nearestAlg=fl_choice("Which nearest color algorithm would you like to use?","ciede2000","Euclidean distance",0);
 }
+void loadProjectCB(Fl_Widget*,void*){
+	loadProject(0);
+}
+void saveProjectCB(Fl_Widget*,void*){
+	saveProject(0);
+}
 void editor::_editor(){
 	//create the window
 	menu = new Fl_Menu_Bar(0,0,800,24);		// Create menubar, items..
@@ -1047,6 +1038,8 @@ void editor::_editor(){
 	menu->add("&File/&Save tiles",0,save_tiles,0,0);
 	menu->add("&File/&Save truecolor tiles",0,save_tiles_truecolor,0,0);
 	menu->add("&File/&Save tile map and if nes attributes",0,save_map,0,0);
+	menu->add("&File/&Load project",0,loadProjectCB,0,0);
+	menu->add("&File/&Save project",0,saveProjectCB,0,0);
 	menu->add("&Palette Actions/&generate optimal palette with x amount of colors",0,generate_optimal_palette,(void *)0,(int)0);
 	menu->add("&Palette Actions/&Clear entire Palette",0,clearPalette,(void *)0,(int)0);
 	menu->add("&Palette Actions/&Pick nearest color algorithm",0,pickNearAlg,(void *)0,(int)0);
@@ -1117,17 +1110,17 @@ void editor::_editor(){
 			{
 				Fl_Group *o = new Fl_Group(96, 312, 800, 480);
 				{
-					Fl_Round_Button* o = new Fl_Round_Button(96, 312, 96, 32, "Sega Genesis");
-					o->tooltip("Sets the editing mode to Sega Genesis or Sega Mega Drive");
-					o->type(FL_RADIO_BUTTON);
-					o->callback((Fl_Callback*) set_game_system,(void *)sega_genesis);
-					o->set();
+					GameSys[sega_genesis] = new Fl_Round_Button(96, 312, 96, 32, "Sega Genesis");
+					GameSys[sega_genesis]->tooltip("Sets the editing mode to Sega Genesis or Sega Mega Drive");
+					GameSys[sega_genesis]->type(FL_RADIO_BUTTON);
+					GameSys[sega_genesis]->callback((Fl_Callback*) set_game_system,(void *)sega_genesis);
+					GameSys[sega_genesis]->set();
 				} // Fl_Round_Button* o
 				{
-					Fl_Round_Button* o = new Fl_Round_Button(224, 312, 64, 32, "NES");
-					o->tooltip("Sets the editing mode to Nintendo Entertamint System or Famicon");
-					o->type(FL_RADIO_BUTTON);
-					o->callback((Fl_Callback*) set_game_system,(void *)NES);
+					GameSys[NES] = new Fl_Round_Button(224, 312, 64, 32, "NES");
+					GameSys[NES]->tooltip("Sets the editing mode to Nintendo Entertamint System or Famicon");
+					GameSys[NES]->type(FL_RADIO_BUTTON);
+					GameSys[NES]->callback((Fl_Callback*) set_game_system,(void *)NES);
 				} // Fl_Round_Button* o
 				o->end();
 			} // End of buttons
@@ -1408,10 +1401,8 @@ void editor::_editor(){
 		}
 	}
 }
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv){
 	printf("Welcome to Retro graphics Toolkit\nWritten by sega16/nintendo8\nBuild %s %s\n",__DATE__,__TIME__);
-	initProject();
 	window->resizable(window);
 	Fl::scheme("plastic");
 	fl_register_images();

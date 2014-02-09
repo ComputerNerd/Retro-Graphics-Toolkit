@@ -1,47 +1,55 @@
+/*
+ This file is part of Retro Graphics Toolkit
+
+    Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or any later version.
+
+    Retro Graphics Toolkit is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright Sega16 (or whatever you wish to call me (2012-2014)
+*/
 #include "global.h"
 #include "class_tiles.h"
 #include "dither.h"
 #include "tilemap.h"
 //tiles tiles_main;
-tiles::tiles()
-{
+tiles::tiles(){
 	current_tile=0;
 	tiles_amount=0;
 	tileDat=(uint8_t *)calloc(32,1);
-	if (tileDat == 0)
-	{
-		puts("Error in init class");//I am using printf instead of fl_alert as the gui will not be created when this is called
+	if (!tileDat){
+		puts("Error in init class");//I am using puts instead of fl_alert as the gui will not be created when this is called
 		exit(1);//the program will not be able to function at all without this working
 	}
 	truetileDat=(uint8_t *)calloc(256,1);
-	if (truetileDat == 0)
-	{
+	if (!truetileDat){
 		puts("Error in init class");
 		exit(1);
 	}
 	tileSize=32;
 	//tileName="default";
 }
-tiles::~tiles()
-{
+tiles::~tiles(){
 	free(tileDat);
 	free(truetileDat);
 }
-void tiles::remove_tile_at(uint32_t tileDel)
-{
-	if (tiles_amount == 0)//a value of 0 for tiles_amount means 1 tile.
-	{
+void tiles::remove_tile_at(uint32_t tileDel){
+	if (!tiles_amount){//a value of 0 for tiles_amount means 1 tile.
 		fl_alert("You must have atleast one tile");
 		return;
 	}
-	if (tileDel < tiles_amount)
-	{
+	if (tileDel < tiles_amount){
 		memmove(&(tileDat[tileDel*tileSize]),&(tileDat[(tileDel*tileSize)+tileSize]),(tiles_amount*tileSize)-(tileDel*tileSize));
 		memmove(&(truetileDat[tileDel*256]),&(truetileDat[(tileDel*256)+256]),(tiles_amount*256)-(tileDel*256));
 	}
 	tileDat=(uint8_t *)realloc(tileDat,tiles_amount*tileSize);
-	if (tileDat == 0)
-	{
+	if (!tileDat){
 		show_realloc_error(tiles_amount*tileSize)
 		exit(1);
 	}
@@ -49,27 +57,24 @@ void tiles::remove_tile_at(uint32_t tileDel)
 	tiles_amount--;
 	window->tile_select->maximum(tiles_amount);
 	window->tile_select_2->maximum(tiles_amount);
-	if (current_tile > tiles_amount)
-	{
+	if (current_tile > tiles_amount){
 		current_tile=tiles_amount;
 		window->tile_select->value(current_tile);
 		window->tile_select_2->value(current_tile);
 	}
 	
 }
-void tiles::truecolor_to_tile(uint8_t palette_row,uint32_t cur_tile)
-{
+void tiles::truecolor_to_tile(uint8_t palette_row,uint32_t cur_tile){
 	truecolor_to_tile_ptr(palette_row,cur_tile,truetileDat+(cur_tile*256));
 }
-void tiles::truecolor_to_tile_ptr(uint8_t palette_row,uint32_t cur_tile,uint8_t * tileinput,bool Usedither)
-{
+void tiles::truecolor_to_tile_ptr(uint8_t palette_row,uint32_t cur_tile,uint8_t * tileinput,bool Usedither){
 	//dithers a truecolor tile to tile
 	uint32_t tile_256=cur_tile*256;
 	uint32_t tile_32=cur_tile*32;
 	uint32_t tile_16=cur_tile*16;
 	uint8_t true_color_temp[256];
 	memcpy(true_color_temp,tileinput,256);
-	if (game_system == NES)
+	if (currentProject->gameSystem == NES)
 		memset(tileDat+tile_16,0,16);
 	if(Usedither){
 		ditherImage(&true_color_temp[0],8,8,true,true);
@@ -85,7 +90,7 @@ void tiles::truecolor_to_tile_ptr(uint8_t palette_row,uint32_t cur_tile,uint8_t 
 			//get difference
 			//sega genesis tile format
 			//even pixel,odd pixel
-			switch (game_system){
+			switch (currentProject->gameSystem){
 				case sega_genesis:
 					if (x & 1){
 						//this is an odd (not a strange pixel but odd number) pixel
@@ -109,8 +114,7 @@ void tiles::truecolor_to_tile_ptr(uint8_t palette_row,uint32_t cur_tile,uint8_t 
 		}
 	}//end of loop
 }
-void tiles::draw_truecolor(uint32_t tile_draw,uint16_t x,uint16_t y,bool usehflip,bool usevflip,uint8_t zoom)
-{
+void tiles::draw_truecolor(uint32_t tile_draw,uint16_t x,uint16_t y,bool usehflip,bool usevflip,uint8_t zoom){
 	static uint8_t DontShow=0;
 	if (tiles_amount < tile_draw){
 		if (unlikely(DontShow==0)) {
@@ -174,11 +178,10 @@ void tiles::draw_truecolor(uint32_t tile_draw,uint16_t x,uint16_t y,bool usehfli
 static inline uint32_t cal_offset_zoom_rgb(uint16_t x,uint16_t y,uint16_t zoom,uint8_t channel){
 	return (y*(zoom*24))+(x*3)+channel;
 }
-void tiles::draw_tile(uint16_t x_off,uint16_t y_off,uint32_t tile_draw,uint8_t zoom,uint8_t pal_row,bool Usehflip,bool Usevflip)
-{
+void tiles::draw_tile(uint16_t x_off,uint16_t y_off,uint32_t tile_draw,uint8_t zoom,uint8_t pal_row,bool Usehflip,bool Usevflip){
 	static uint8_t DontShow=0;
-	if (tiles_amount < tile_draw) {
-		if (unlikely(DontShow==0)) {
+	if (tiles_amount < tile_draw){
+		if (unlikely(DontShow==0)){
 			fl_alert("Warning tried to draw tile # %d at X: %d y: %d\nBut there is only %d tiles (zero is first tile).\nNote that this message will not be shown again.\n Instead it will be outputed to stdout",tile_draw,x_off,y_off,tiles_amount);
 			DontShow=1;
 		}
@@ -207,7 +210,7 @@ void tiles::draw_tile(uint16_t x_off,uint16_t y_off,uint32_t tile_draw,uint8_t z
 	else
 		memcpy(tileTemp,&tileDat[tile_draw*tileSize],tileSize);
 	tile_draw*=tileSize;
-	switch (game_system){
+	switch (currentProject->gameSystem){
 		case sega_genesis:
 			for (y=0;y<8;y++){
 				for (x=0;x<4;x++){
@@ -289,16 +292,15 @@ void tiles::hflip_truecolor(uint32_t id,uint32_t * out)
 		trueColPtr+=16;//64/4 next line
 	}
 }
-void tiles::vflip_truecolor_ptr(uint8_t * in,uint8_t * out)
-{//this needs to be a seperate function as the out of hflip may be inputted here to form vhfliped tile
+void tiles::vflip_truecolor_ptr(uint8_t * in,uint8_t * out){
+/*!this needs to be a seperate function as the output of hflip may be inputted here to form vhfliped tile*/
 	uint16_t y;
 	uint8_t temp[256];
 	memcpy(temp,in,256);
 	for (y=0;y<256;y+=32)
 		memcpy(&out[224-y],&temp[y],32);
 }
-void tiles::vflip_truecolor(uint32_t id,uint8_t * out)
-{
+void tiles::vflip_truecolor(uint32_t id,uint8_t * out){
 	vflip_truecolor_ptr(&truetileDat[id*256],out);
 }
 static inline uint8_t swap_4bit(uint8_t in){
@@ -310,11 +312,10 @@ static inline uint8_t reverse_bits(uint8_t b) {
    b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
    return b;
 }
-void tiles::hflip_tile(uint32_t id,uint8_t * out)
-{
+void tiles::hflip_tile(uint32_t id,uint8_t * out){
 	uint8_t x,y;
 	uint8_t * tilePtr=&tileDat[id*tileSize];
-	switch (game_system){
+	switch (currentProject->gameSystem){
 		case sega_genesis:
 			memcpy(out,tilePtr,32);
 			for (y=0;y<8;y++){
@@ -344,10 +345,9 @@ void tiles::hflip_tile(uint32_t id,uint8_t * out)
 		break;
 	}
 }
-void tiles::vflip_tile_ptr(uint8_t * in,uint8_t * out)
-{
+void tiles::vflip_tile_ptr(uint8_t * in,uint8_t * out){
 	uint8_t y;
-	switch (game_system){
+	switch (currentProject->gameSystem){
 		case sega_genesis:
 		{//brackts are used so compiler knows how long they are in scope
 			uint8_t temp[32];
@@ -369,20 +369,17 @@ void tiles::vflip_tile_ptr(uint8_t * in,uint8_t * out)
 		break;
 	}
 }
-void tiles::vflip_tile(uint32_t id,uint8_t * out)
-{
+void tiles::vflip_tile(uint32_t id,uint8_t * out){
 	vflip_tile_ptr(&tileDat[id*tileSize],out);
 }
-void tiles::blank_tile(uint32_t tileUsage)
-{
+void tiles::blank_tile(uint32_t tileUsage){
 	if (mode_editor == tile_edit){
 		memset(&truetileDat[tileUsage*256],0,256);
 		truecolor_to_tile(tileEdit_pal.theRow,tileUsage);
 	}else
 		memset(&tileDat[tileUsage*tileSize],0,tileSize);
 }
-void tiles::remove_duplicate_tiles()
-{
+void tiles::remove_duplicate_tiles(){
 	char bufT[1024];
 	Fl_Window *win;
 	Fl_Progress *progress;
@@ -473,10 +470,8 @@ void tiles::remove_duplicate_tiles()
 	}
 	//tile_remove_c=0;
 	puts("Pass 4 vh-flip");
-	for (cur_tile=0;cur_tile<=tiles_amount;cur_tile++)
-	{
-		for (curT=tiles_amount;curT>=0;curT--)
-		{
+	for (cur_tile=0;cur_tile<=tiles_amount;cur_tile++){
+		for (curT=tiles_amount;curT>=0;curT--){
 			if (cur_tile == curT)//dont compare it's self
 				continue;
 			hflip_tile(curT,tileTemp);
@@ -509,8 +504,7 @@ void tiles::remove_duplicate_tiles()
 bool tiles::cmp_trueC(uint32_t one,uint64_t * two)
 {//this should be faster than memcmp as it returns as soon as there is a difference
 	uint64_t * onePtr =(uint64_t *)&truetileDat[one*256];
-	for (uint8_t x=0;x<32;x++)
-	{
+	for (int x=0;x<32;x++){
 		if (*onePtr++ != *two++)
 			return false;
 	}
@@ -520,8 +514,7 @@ bool tiles::cmp_trueC(uint32_t one,uint64_t * two)
 bool tiles::cmp_trueC(uint32_t one,uint32_t * two)
 {//this should be faster than memcmp as it returns as soon as there is a difference
 	uint32_t * onePtr =(uint32_t *)&truetileDat[one*256];
-	for (uint8_t x=0;x<64;x++)
-	{
+	for (int x=0;x<64;x++){
 		if (*onePtr++ != *two++)
 			return false;
 	}
@@ -529,32 +522,26 @@ bool tiles::cmp_trueC(uint32_t one,uint32_t * two)
 }
 #endif
 #if __LP64__
-bool tiles::cmp_tiles(uint32_t one,uint64_t * two)
-{
+bool tiles::cmp_tiles(uint32_t one,uint64_t * two){
 	uint64_t * onePtr =(uint64_t *)&tileDat[one*tileSize];
-	for (uint8_t x=0;x<tileSize;x+=8)
-	{
+	for (int x=0;x<tileSize;x+=8){
 		if (*onePtr++ != *two++)
 			return false;
 	}
 	return true;
 }
 #else
-bool tiles::cmp_tiles(uint32_t one,uint32_t * two)
-{
+bool tiles::cmp_tiles(uint32_t one,uint32_t * two){
 	uint32_t * onePtr =(uint32_t *)&tileDat[one*tileSize];
-	for (uint8_t x=0;x<tileSize;x+=4)
-	{
+	for (int x=0;x<tileSize;x+=4){
 		if (*onePtr++ != *two++)
 			return false;
 	}
 	return true;
 }
 #endif
-void tiles::get_tiles(uint8_t * fromTiles,uint8_t * fromTrueTiles,uint32_t theAmount)
-{
-	switch(game_system)
-	{
+void tiles::get_tiles(uint8_t * fromTiles,uint8_t * fromTrueTiles,uint32_t theAmount){
+	switch(currentProject->gameSystem){
 		case sega_genesis:
 			tileSize=32;
 		break;

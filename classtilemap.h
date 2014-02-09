@@ -1,9 +1,25 @@
+/*
+ This file is part of Retro Graphics Toolkit
+
+    Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or any later version.
+
+    Retro Graphics Toolkit is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright Sega16 (or whatever you wish to call me (2012-2014)
+*/
 class tileMap{
 public:
 	tileMap();
 	~tileMap();
 	uint8_t * tileMapDat;/*!< Holds tilemap data*/
-	uint16_t mapSizeW,mapSizeH;
+	uint32_t mapSizeW,mapSizeH;
 	bool get_hflip(uint16_t x,uint16_t y);
 	bool get_vflip(uint16_t x,uint16_t y);
 	bool get_prio(uint16_t x,uint16_t y);
@@ -18,6 +34,11 @@ public:
 	void pickRow(uint8_t amount);
 	void pickRowDelta(bool showProgress=false,Fl_Progress *progress=0);
 	void allRowZero(void);
+	void set_tile_full(uint32_t tile,uint16_t x,uint16_t y,uint8_t palette_row,bool use_hflip,bool use_vflip,bool highorlow_prio);
+	void set_tile(uint32_t tile,uint16_t x,uint16_t y);
+	void set_prio(uint16_t x,uint16_t y,bool prio_set);
+	void set_hflip(uint16_t x,uint16_t y,bool hflip_set);
+	void resize_tile_map(uint16_t new_x,uint16_t new_y);
 	bool selection;
 	uint16_t cur_x,cur_y;
 };
