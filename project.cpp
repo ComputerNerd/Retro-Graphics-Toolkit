@@ -214,7 +214,7 @@ bool saveProject(uint32_t id){
 		break;
 	}
 	fwrite(projects[id]->palDat,eSize,entries,fo);
-	fwrite(projects[id]->palType,1,64,fo);
+	fwrite(projects[id]->palType,1,entries,fo);
 	fwrite(&projects[id]->tileC->tiles_amount,1,sizeof(uint32_t),fo);
 	compressToFile(projects[id]->tileC->tileDat,tSize*(projects[id]->tileC->tiles_amount+1),fo);
 	compressToFile(projects[id]->tileC->truetileDat,256*(projects[id]->tileC->tiles_amount+1),fo);

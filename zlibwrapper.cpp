@@ -26,6 +26,7 @@ bool decompressFromFile(void * ptr,int size,FILE * fi){
 	if(!cDat)
 		return false;
 	fread(cDat,1,cSize,fi);
+	printf("Compresed size %d uncompressed size %d\n",cSize,size);
 	z_stream strm;
 	strm.zalloc = Z_NULL;
 	strm.zfree = Z_NULL;
