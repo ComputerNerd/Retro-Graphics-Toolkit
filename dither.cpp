@@ -30,7 +30,7 @@ uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row){
 		case NES:
 			if(USEofColGlob){
 				img_ptr_dither-=chan;
-				uint8_t returnme=toNesChan(*img_ptr_dither,*(img_ptr_dither+1),*(img_ptr_dither+2),chan);
+				uint8_t returnme=toNesChan(*img_ptr_dither,img_ptr_dither[1],img_ptr_dither[2],chan);
 				img_ptr_dither+=chan;
 				return returnme;
 			}

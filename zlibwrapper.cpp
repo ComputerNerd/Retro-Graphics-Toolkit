@@ -32,8 +32,10 @@ bool decompressFromFile(void * ptr,int size,FILE * fi){
 	strm.zfree = Z_NULL;
 	strm.opaque = Z_NULL;
 	int ret=inflateInit(&strm);
-	if (ret != Z_OK)
+	if (ret != Z_OK){
+		free(cDat);
 		return false;
+	}
 	strm.avail_in=cSize;
 	strm.avail_out=size;
 	strm.next_in=(Bytef*)cDat;

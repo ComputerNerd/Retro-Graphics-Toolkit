@@ -25,7 +25,7 @@ Stuff related to tilemap operations goes here*/
 #include "palette.h"
 bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha){
 	/*!
-	the_image pointer to image must be able to hold the image using rgba 32bit
+	the_image pointer to image must be able to hold the image using rgba 32bit or rgb 24bit if not using alpha
 	useRow what row to use or -1 for no row
 	*/
 	if (the_image == 0){
@@ -275,7 +275,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	if(fl_ask("Would you like the palette to be ordered by hue or light or saturation")){
 		uint16_t x,y;
 		uint8_t type=fl_choice("What do you want it ordered by","Hue","Light","Saturation");
-		for(x=0;x<palEdit.perRow*12;x+=3){
+		for(x=0;x<palEdit.perRow*3*4;x+=3){
 			double h,l,s,cmp,cmp2;
 			uint16_t best=x;
 			rgbToHls(currentProject->rgbPal[x],currentProject->rgbPal[x+1],currentProject->rgbPal[x+2],&h,&l,&s);

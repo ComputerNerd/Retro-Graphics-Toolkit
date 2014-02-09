@@ -367,6 +367,7 @@ bool tileMap::loadFromFile(){
 							++tempbuf;
 						}
 					}
+					fclose(fp);
 				}
 			break;
 		}

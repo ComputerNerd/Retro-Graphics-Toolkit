@@ -537,7 +537,7 @@ void dither_tilemap_as_image(Fl_Widget*,void*){
 	if(method==2)
 		return;
 	image = (uint8_t *)malloc(w*h*4);
-	if (image==0)
+	if (!image)
 		show_malloc_error(w*h*4)
 	if(method==1){
 		truecolor_to_image(image,-1);
@@ -955,11 +955,13 @@ int savePNG(const char * fileName,uint32_t width,uint32_t height,void * ptr){
 	//saves a 24bit png with rgb byte order
 	png_byte * dat=(png_byte*)ptr;//convert to uint8_t
 	FILE * fp=fopen(fileName,"wb");
-	if (fp==0)
+	if (!fp)
 		return 1;
 	png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, (png_voidp)0,0,0);
-	if (!png_ptr)
+	if (!png_ptr){
+		fclose(fp);
 		return 1;
+	}
 	png_infop info_ptr = png_create_info_struct(png_ptr);
 	if (!info_ptr){
 		png_destroy_write_struct(&png_ptr,(png_infopp)NULL);
@@ -984,7 +986,7 @@ int savePNG(const char * fileName,uint32_t width,uint32_t height,void * ptr){
 	return 0;//will return 0 on success non-zero in error
 }
 void save_tilemap_as_image(Fl_Widget*,void*){
-	if(load_file_generic("Save png",true)==true){
+	if(load_file_generic("Save png as",true)==true){
 		uint32_t w=currentProject->tileMapC->mapSizeW*8;
 		uint32_t h=currentProject->tileMapC->mapSizeH*8;
 		uint8_t * image=(uint8_t*)malloc(w*h*3);
@@ -1015,6 +1017,19 @@ void save_tilemap_as_image(Fl_Widget*,void*){
 		free(imageold);
 	}
 }
+
+void save_tilemap_as_colspace(Fl_Widget*,void*){
+	if(load_file_generic("Save png as",true)==true){
+		uint32_t w=currentProject->tileMapC->mapSizeW*8;
+		uint32_t h=currentProject->tileMapC->mapSizeH*8;
+		uint8_t * image=(uint8_t*)malloc(w*h*3);
+		truecolor_to_image(image,-1,false);
+		ditherImage(image,w,h,false,true);
+		savePNG(the_file.c_str(),w,h,(void*)image);
+		free(image);
+	}
+}
+
 void pickNearAlg(Fl_Widget*,void*){
 	nearestAlg=fl_choice("Which nearest color algorithm would you like to use?","ciede2000","Euclidean distance",0);
 }
@@ -1034,6 +1049,7 @@ void editor::_editor(){
 	menu->add("&File/&Open tile map and if NES attrabiuts",(int)0,load_tile_map,(void *)0,(int)0);
 	menu->add("&File/&import image to tilemap",(int)0,load_image_to_tilemap,(void *)0,(int)0);
 	menu->add("&File/&save tilemap as image",(int)0,save_tilemap_as_image,(void *)0,(int)0);
+	menu->add("&File/&save tilemap as with system color space",(int)0,save_tilemap_as_colspace,(void *)0,(int)0);
 	menu->add("&File/&Save Palette",  0, save_palette,(void*)0);
 	menu->add("&File/&Save tiles",0,save_tiles,0,0);
 	menu->add("&File/&Save truecolor tiles",0,save_tiles_truecolor,0,0);
