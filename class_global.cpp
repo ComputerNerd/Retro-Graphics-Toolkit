@@ -279,15 +279,21 @@ int editor::handle(int event){
 						temp_two=((Fl::event_y()-map_off_y)/tiles_size)/8;
 						temp_one+=+map_scroll_pos_x;
 						temp_two+=+map_scroll_pos_y;
-						if (Fl::event_button() == FL_LEFT_MOUSE){
-							tileEditModePlace_G=false;
-							currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,temp_one,temp_two,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
-							damage(FL_DAMAGE_USER1);
+						if (Fl::event_button()==FL_LEFT_MOUSE){
+							if((selTileE_G[0]==temp_one)&&(selTileE_G[1]==temp_two)&&tileEditModePlace_G){
+								tileEditModePlace_G=false;
+								damage(FL_DAMAGE_USER1);
+							}else{
+								tileEditModePlace_G=false;
+								currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,temp_one,temp_two,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
+								damage(FL_DAMAGE_USER1);
+							}
 						}else{
 							//fl_alert("Tile attributes id: %d h-flip: %d v-flip %d priority: %d pal row: %d\nAt location x: %d y: %d",currentProject->tileMapC->get_tile(temp_one,temp_two),currentProject->tileMapC->get_hflip(temp_one,temp_two),currentProject->tileMapC->get_vflip(temp_one,temp_two),currentProject->tileMapC->get_prio(temp_one,temp_two),currentProject->tileMapC->get_palette_map(temp_one,temp_two),temp_one,temp_two);
 							if(tileEditModePlace_G){
 								if((selTileE_G[0]==temp_one)&&(selTileE_G[1]==temp_two)){
 									tileEditModePlace_G=false;
+									damage(FL_DAMAGE_USER1);
 									goto skipEditMode;
 								}
 							}
@@ -297,8 +303,10 @@ int editor::handle(int event){
 							hflipCB->value(currentProject->tileMapC->get_hflip(temp_one,temp_two));
 							vflipCB->value(currentProject->tileMapC->get_vflip(temp_one,temp_two));
 							prioCB->value(currentProject->tileMapC->get_prio(temp_one,temp_two));
-							tile_select_2->value(currentProject->tileMapC->get_tile(temp_one,temp_two));
-							{uint8_t Rm=currentProject->tileMapC->get_palette_map(temp_one,temp_two);
+							{uint32_t cT=currentProject->tileMapC->get_tile(temp_one,temp_two);
+							tile_select_2->value(cT);
+							currentProject->tileC->current_tile=cT;
+							uint8_t Rm=currentProject->tileMapC->get_palette_map(temp_one,temp_two);
 							tileMap_pal.changeRow(Rm);
 							for(int as=0;as<4;++as)
 								palRTE[as]->value(as==Rm);}
