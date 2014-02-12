@@ -20,6 +20,7 @@
 #include "dither.h"
 #include "class_tiles.h"
 #include "color_convert.h"
+#include "color_compare.h"
 //fltk widget realted stuff
 Fl_Group * shadow_highlight_switch;
 //bools used to toggle stuff
@@ -47,9 +48,10 @@ std::string the_file;//this is for tempory use only
 uint8_t mode_editor;//this is used to determin which thing to draw
 uint8_t ditherAlg;
 #define PIf 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491298336733624406566430860213949463952247371907021798609437027705392171762931767523846748184676694051320005681271452635608277857713427577896091736371787214684409012249534301465495853710507922796892589235420199561121290219608640344181598136297747713099605187072113499999983729780499510597317328160963185950244594553469083026425223082533446850352619311881710100031378387528865875332083814206171776691473035982534904287554687311595628638823537875937519577818577805321712268066130019278766111959092164201989f
-#define PI 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491298336733624406566430860213949463952247371907021798609437027705392171762931767523846748184676694051320005681271452635608277857713427577896091736371787214684409012249534301465495853710507922796892589235420199561121290219608640344181598136297747713099605187072113499999983729780499510597317328160963185950244594553469083026425223082533446850352619311881710100031378387528865875332083814206171776691473035982534904287554687311595628638823537875937519577818577805321712268066130019278766111959092164201989
 bool showTrueColor=false;
 bool rowSolo=false;
+bool tileEditModePlace_G=false;
+uint32_t selTileE_G[2]={0,0};
 uint8_t nearestAlg=1;
 uint8_t nearest_color_index(uint8_t val){
 	//returns closest value
@@ -61,10 +63,10 @@ uint8_t nearest_color_index(uint8_t val){
 		fl_alert("This function is for use with sega genesis/mega drive only");
 		return 0;
 	}
-    for (i=palTypeGen; i<8+palTypeGen; i++){
+    for (i=palTypeGen; i<8+palTypeGen;++i){
         int32_t Rdiff = (int) val - (int)palTab[i];
         distanceSquared = Rdiff*Rdiff;
-        if (distanceSquared < minDistanceSquared) {
+        if (distanceSquared < minDistanceSquared){
             minDistanceSquared = distanceSquared;
             bestIndex = i;
         }
@@ -228,27 +230,36 @@ uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b){
 	int bestIndex = 0;
 	uint8_t max_rgb=palEdit.perRow*3;
 	row*=max_rgb;
-	if(nearestAlg){
-		uint32_t minerror=(255*255)+(255*255)+(255*255)+1;
-		for (i=row; i<max_rgb+row; i+=3) {
-			uint32_t distance=sq(currentProject->rgbPal[i]-r)+sq(currentProject->rgbPal[i+1]-g)+sq(currentProject->rgbPal[i+2]-b);
-			if (distance <= minerror) {
-				if (currentProject->palType[i/3]!=2) {
-					minerror = distance;
-					bestIndex = i;
-				}
-			}
-		}
-	}else{
-		double minerror=10000.0;
-		for (i=row; i<max_rgb+row; i+=3) {
-			double distance=ciede2000rgb(r,g,b,currentProject->rgbPal[i],currentProject->rgbPal[i+1],currentProject->rgbPal[i+2]);
-			if (distance <= minerror) {
-				if (currentProject->palType[i/3]!=2) {
-					minerror = distance;
-					bestIndex = i;
-				}
-			}
+	uint32_t minerrori=(255*255)+(255*255)+(255*255)+1;
+	double minerrord=100000.0;
+	for (i=row; i<max_rgb+row; i+=3){
+		switch(nearestAlg){
+			case 0:
+				{double distance=ciede2000rgb(r,g,b,currentProject->rgbPal[i],currentProject->rgbPal[i+1],currentProject->rgbPal[i+2]);
+				if (distance <= minerrord){
+					if (currentProject->palType[i/3]!=2){
+						minerrord = distance;
+						bestIndex = i;
+					}
+				}}
+			break;
+			case 1:
+				{double distance=ColourDistance(r,g,b,currentProject->rgbPal[i],currentProject->rgbPal[i+1],currentProject->rgbPal[i+2]);
+				if (distance <= minerrord){
+					if (currentProject->palType[i/3]!=2){
+						minerrord = distance;
+						bestIndex = i;
+					}
+				}}
+			break;
+			default:
+				{uint32_t distance=sq(currentProject->rgbPal[i]-r)+sq(currentProject->rgbPal[i+1]-g)+sq(currentProject->rgbPal[i+2]-b);
+				if (distance <= minerrori){
+					if (currentProject->palType[i/3]!=2){
+						minerrori = distance;
+						bestIndex = i;
+					}
+				}}
 		}
 	}
     return bestIndex;

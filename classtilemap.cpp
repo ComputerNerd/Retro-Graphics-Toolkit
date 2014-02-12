@@ -24,19 +24,23 @@ tileMap::tileMap(){
 tileMap::~tileMap(){
 	free(tileMapDat);
 }
-bool tileMap::get_hflip(uint16_t x,uint16_t y){
+bool tileMap::get_hflip(uint32_t x,uint32_t y){
 	return (tileMapDat[((y*mapSizeW)+x)*4]>>3)&1;
 }
-bool tileMap::get_vflip(uint16_t x,uint16_t y){
+bool tileMap::get_vflip(uint32_t x,uint32_t y){
 	return (tileMapDat[((y*mapSizeW)+x)*4]>>4)&1;
 }
-bool tileMap::get_prio(uint16_t x,uint16_t y){
+bool tileMap::get_prio(uint32_t x,uint32_t y){
 	return (tileMapDat[((y*mapSizeW)+x)*4]>>7)&1;
 }
-uint8_t tileMap::get_palette_map(uint16_t x,uint16_t y){
+uint8_t tileMap::get_palette_map(uint32_t x,uint32_t y){
 	return (tileMapDat[((y*mapSizeW)+x)*4]>>5)&3;
 }
-uint32_t tileMap::get_tile(uint16_t x,uint16_t y){
+void tileMap::set_pal_row(uint32_t x,uint32_t y,uint8_t row){
+	tileMapDat[((y*mapSizeW)+x)*4]&= ~(3 << 5);
+	tileMapDat[((y*mapSizeW)+x)*4]|=row<<5;
+}
+uint32_t tileMap::get_tile(uint32_t x,uint32_t y){
 	//first calulate which tile we want
 	if (mapSizeW < x || mapSizeH < y){
 		fl_alert("Error tried to get a non-existent tile on the map");
@@ -50,7 +54,7 @@ uint32_t tileMap::get_tile(uint16_t x,uint16_t y){
 	temp_3=tileMapDat[selected_tile+3];//most sigficant
 	return (temp_1<<16)+(temp_2<<8)+temp_3;
 }
-int32_t tileMap::get_tileRow(uint16_t x,uint16_t y,uint8_t useRow){
+int32_t tileMap::get_tileRow(uint32_t x,uint32_t y,uint8_t useRow){
 	//first calulate which tile we want
 	uint32_t selected_tile=((y*mapSizeW)+x)*4;
 	//get both bytes
@@ -64,7 +68,7 @@ int32_t tileMap::get_tileRow(uint16_t x,uint16_t y,uint8_t useRow){
 		return -1;
 }
 
-void tileMap::set_vflip(uint16_t x,uint16_t y,bool vflip_set){
+void tileMap::set_vflip(uint32_t x,uint32_t y,bool vflip_set){
 	if (vflip_set)
 		tileMapDat[((y*mapSizeW)+x)*4]|= 1 << 4;
 	else
@@ -398,7 +402,7 @@ void tileMap::sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vfl
 		}
 	}
 }
-void tileMap::set_tile_full(uint32_t tile,uint16_t x,uint16_t y,uint8_t palette_row,bool use_hflip,bool use_vflip,bool highorlow_prio){
+void tileMap::set_tile_full(uint32_t tile,uint32_t x,uint32_t y,uint8_t palette_row,bool use_hflip,bool use_vflip,bool highorlow_prio){
 	if (mapSizeW < x || mapSizeH < y) {
 		fl_alert("Error tried to set a non existen tile on the map");
 		return;
@@ -433,7 +437,7 @@ void tileMap::set_tile_full(uint32_t tile,uint16_t x,uint16_t y,uint8_t palette_
 	tileMapDat[selected_tile+2]=(tile>>8)&255;
 	tileMapDat[selected_tile+3]=tile&255;
 }
-void tileMap::set_tile(uint32_t tile,uint16_t x,uint16_t y){
+void tileMap::set_tile(uint32_t tile,uint32_t x,uint32_t y){
 	//we must split into two varibles
 	if (mapSizeW < x || mapSizeH < y) {
 		fl_alert("Error: Tried to set a non existent tile on the tile map");
@@ -444,19 +448,19 @@ void tileMap::set_tile(uint32_t tile,uint16_t x,uint16_t y){
 	tileMapDat[selected_tile+2]=(tile>>8)&255;
 	tileMapDat[selected_tile+3]=tile&255;
 }
-void tileMap::set_hflip(uint16_t x,uint16_t y,bool hflip_set){
+void tileMap::set_hflip(uint32_t x,uint32_t y,bool hflip_set){
 	if (hflip_set)
 		tileMapDat[((y*mapSizeW)+x)*4]|= 1 << 3;
 	else
 		tileMapDat[((y*mapSizeW)+x)*4]&= ~(1 << 3);
 }
-void tileMap::set_prio(uint16_t x,uint16_t y,bool prio_set){
+void tileMap::set_prio(uint32_t x,uint32_t y,bool prio_set){
 	if (prio_set)
 		tileMapDat[((y*mapSizeW)+x)*4] |= 1 << 7;
 	else
 		tileMapDat[((y*mapSizeW)+x)*4] &= ~(1 << 7);
 }
-void tileMap::resize_tile_map(uint16_t new_x,uint16_t new_y){
+void tileMap::resize_tile_map(uint32_t new_x,uint32_t new_y){
 	//mapSizeW and mapSizeH hold old map size
 	if (new_x == mapSizeW && new_y == mapSizeH)
 		return;

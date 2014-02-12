@@ -28,5 +28,4 @@ void update_emphesis(Fl_Widget*,void*);
 uint8_t toNesChan(uint8_t ri,uint8_t gi,uint8_t bi,uint8_t chan);
 uint32_t toNesRgb(uint8_t ri,uint8_t gi,uint8_t bi);
 void updateNesTab(uint8_t emps);
-double ciede2000(double L1,double a1,double b1,double L2,double a2,double b2,double Kl,double Kc,double Kh);
-double ciede2000rgb(uint8_t r1,uint8_t g1,uint8_t b1,uint8_t r2,uint8_t g2,uint8_t b2);
+

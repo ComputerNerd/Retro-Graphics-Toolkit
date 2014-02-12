@@ -98,7 +98,7 @@ void editor::draw_non_gui(){
 			//draw palette selection box
 			tileEdit_pal.draw_boxes();
 			currentProject->tileC->draw_tile(tile_edit_offset_x,tile_edit_offset_y,currentProject->tileC->current_tile,tiles_size,tileEdit_pal.theRow,false,false);
-			if (show_grid == true){
+			if (show_grid){
 				//draw the grid
 				if (tiles_size > 4){
 					for (y=0;y<8;y++){
@@ -177,15 +177,21 @@ void editor::draw_non_gui(){
 					}
 				}
 				set_palette_type(type_temp);
-
 			}
-			if (show_grid_placer == true){
+			if (show_grid_placer){
 				//draw box over tiles
 				for (y=0;y<std::min((int)currentProject->tileMapC->mapSizeH-map_scroll_pos_y,(int)max_map_h);++y){
 					for (x=0;x<std::min((int)currentProject->tileMapC->mapSizeW-map_scroll_pos_x,(int)max_map_w);x++)
 						fl_draw_box(FL_EMBOSSED_FRAME,map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),placer_tile_size*8,placer_tile_size*8,NULL);
 				}
 				
+			}
+			if(tileEditModePlace_G){
+				uint32_t xo,yo;
+				xo=((selTileE_G[0]-map_scroll_pos_x)*8*placer_tile_size)+map_off_x;
+				yo=((selTileE_G[1]-map_scroll_pos_y)*8*placer_tile_size)+map_off_y;
+				if((xo>=map_off_x)&&(yo>=map_off_y))
+					fl_rect(xo,yo,placer_tile_size*8+1,placer_tile_size*8+1,FL_BLUE);
 			}
 		break;
 	}//end of switch statment
@@ -268,24 +274,45 @@ int editor::handle(int event){
 					tiles_size=place_tile_size->value();
 					//see if the user placed a tile on the map
 					if (Fl::event_x() > map_off_x && Fl::event_y() > map_off_y && Fl::event_x() < map_off_x+((tiles_size*8)*currentProject->tileMapC->mapSizeW) && Fl::event_y() < map_off_y+((tiles_size*8)*currentProject->tileMapC->mapSizeH)){
-						uint16_t temp_two,temp_one;
+						uint32_t temp_two,temp_one;
 						temp_one=((Fl::event_x()-map_off_x)/tiles_size)/8;
 						temp_two=((Fl::event_y()-map_off_y)/tiles_size)/8;
 						temp_one+=+map_scroll_pos_x;
 						temp_two+=+map_scroll_pos_y;
 						if (Fl::event_button() == FL_LEFT_MOUSE){
+							tileEditModePlace_G=false;
 							currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,temp_one,temp_two,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
 							damage(FL_DAMAGE_USER1);
-						}else
-							fl_alert("Tile attributes id: %d h-flip: %d v-flip %d priority: %d pal row: %d\nAt location x: %d y: %d",currentProject->tileMapC->get_tile(temp_one,temp_two),currentProject->tileMapC->get_hflip(temp_one,temp_two),currentProject->tileMapC->get_vflip(temp_one,temp_two),currentProject->tileMapC->get_prio(temp_one,temp_two),currentProject->tileMapC->get_palette_map(temp_one,temp_two),temp_one,temp_two);
+						}else{
+							//fl_alert("Tile attributes id: %d h-flip: %d v-flip %d priority: %d pal row: %d\nAt location x: %d y: %d",currentProject->tileMapC->get_tile(temp_one,temp_two),currentProject->tileMapC->get_hflip(temp_one,temp_two),currentProject->tileMapC->get_vflip(temp_one,temp_two),currentProject->tileMapC->get_prio(temp_one,temp_two),currentProject->tileMapC->get_palette_map(temp_one,temp_two),temp_one,temp_two);
+							if(tileEditModePlace_G){
+								if((selTileE_G[0]==temp_one)&&(selTileE_G[1]==temp_two)){
+									tileEditModePlace_G=false;
+									goto skipEditMode;
+								}
+							}
+							tileEditModePlace_G=true;
+							selTileE_G[0]=temp_one;
+							selTileE_G[1]=temp_two;
+							hflipCB->value(currentProject->tileMapC->get_hflip(temp_one,temp_two));
+							vflipCB->value(currentProject->tileMapC->get_vflip(temp_one,temp_two));
+							prioCB->value(currentProject->tileMapC->get_prio(temp_one,temp_two));
+							tile_select_2->value(currentProject->tileMapC->get_tile(temp_one,temp_two));
+							{uint8_t Rm=currentProject->tileMapC->get_palette_map(temp_one,temp_two);
+							tileMap_pal.changeRow(Rm);
+							for(int as=0;as<4;++as)
+								palRTE[as]->value(as==Rm);}
+							redraw();
+				skipEditMode:;
+						}
 					}
 					if (Fl::event_x() > tile_placer_tile_offset_x && Fl::event_y() > tile_placer_tile_offset_y && Fl::event_x() < tile_placer_tile_offset_x+(tiles_size*8) && Fl::event_y() < tile_placer_tile_offset_y+(tiles_size*8)){
 						uint8_t temp_two,temp_one;
 						temp_one=(Fl::event_x()-tile_placer_tile_offset_x)/tiles_size;
 						temp_two=(Fl::event_y()-tile_placer_tile_offset_y)/tiles_size;
-						if (G_hflip == true)
+						if (G_hflip)
 							temp_one=7-temp_one;
-						if (G_vflip == true)
+						if (G_vflip)
 							temp_two=7-temp_two;
 						//now we know which pixel we are editing
 						//see if it is even or odd
@@ -299,7 +326,7 @@ int editor::handle(int event){
 							temp_2=temp&15;//second pixel
 							//put temp_1 back in proper place
 							temp_1<<=4;
-							temp_1+=tileMap_pal.box_sel;
+							temp_1|=tileMap_pal.box_sel;
 							currentProject->tileC->tileDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)]=temp_1;
 						}else{
 							//even
@@ -308,7 +335,7 @@ int editor::handle(int event){
 							//first,second pixel
 							temp_1=temp>>4;//first pixel
 							temp_2=temp&15;//second pixel
-							temp_2+=tileMap_pal.box_sel<<4;
+							temp_2|=tileMap_pal.box_sel<<4;
 							currentProject->tileC->tileDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)]=temp_2;
 						}
 						damage(FL_DAMAGE_USER1);//no need to redraw the gui

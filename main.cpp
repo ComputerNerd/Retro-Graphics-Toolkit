@@ -120,6 +120,8 @@ void set_tile_row(Fl_Widget*, void* row){
 		break;
 		case tile_place:
 			tileMap_pal.changeRow(selrow);
+			if(tileEditModePlace_G)
+				currentProject->tileMapC->set_pal_row(selTileE_G[0],selTileE_G[1],selrow);
 		break;
 	}
 	window->redraw();//trigger a redraw so that the new row is displayed
@@ -132,26 +134,39 @@ void set_tile_current(Fl_Widget* o, void* ){
 	currentProject->tileC->current_tile=s->value();
 	window->redraw();
 }
+void set_tile_currentTP(Fl_Widget* o, void* ){
+	Fl_Slider* s = (Fl_Slider*)o;
+	currentProject->tileC->current_tile=s->value();
+	if(tileEditModePlace_G)
+		currentProject->tileMapC->set_tile(currentProject->tileC->current_tile,selTileE_G[0],selTileE_G[1]);
+	window->redraw();
+}
 void set_grid(Fl_Widget*,void*){
 	//this function will only be trigger when the check button is pressed
 	//so we just need to invert the bool using xor to avoid if statments
-	show_grid=show_grid^true;
+	show_grid^=true;
 	window->redraw();//redraw to reflect the updated statues of the grid
 }
 void set_grid_placer(Fl_Widget*,void*){
-	show_grid_placer=show_grid_placer^true;
+	show_grid_placer^=true;
 	window->redraw();//redraw to reflect the updated statues of the grid
 }
 void set_prio_callback(Fl_Widget*,void*){
-	G_highlow_p=G_highlow_p^true;
+	G_highlow_p^=true;
+	if(tileEditModePlace_G)
+		currentProject->tileMapC->set_prio(selTileE_G[0],selTileE_G[1],G_highlow_p);
 	window->redraw();
 }
 void set_hflip(Fl_Widget*,void*){
-	G_hflip=G_hflip^true;
+	G_hflip^=true;
+	if(tileEditModePlace_G)
+		currentProject->tileMapC->set_hflip(selTileE_G[0],selTileE_G[1],G_hflip);
 	window->redraw();
 }
 void set_vflip(Fl_Widget*,void*){
-	G_vflip=G_vflip^true;
+	G_vflip^=true;
+	if(tileEditModePlace_G)
+		currentProject->tileMapC->set_vflip(selTileE_G[0],selTileE_G[1],G_vflip);
 	window->redraw();
 }
 void update_map_scroll_x(Fl_Widget*,void*){
@@ -868,11 +883,9 @@ void set_game_system(Fl_Widget*,void* selection){
 	window->redraw();
 }
 void tilemap_remove_callback(Fl_Widget*,void*){
-		char str[16];
 		char * str_ptr;
-		str_ptr=&str[0];
 		str_ptr=(char *)fl_input("Enter Tile");
-		if (str_ptr == 0)
+		if (!str_ptr)
 			return;
 		if (verify_str_number_only(str_ptr) == false)
 			return;
@@ -1031,7 +1044,7 @@ void save_tilemap_as_colspace(Fl_Widget*,void*){
 }
 
 void pickNearAlg(Fl_Widget*,void*){
-	nearestAlg=fl_choice("Which nearest color algorithm would you like to use?","ciede2000","Euclidean distance",0);
+	nearestAlg=fl_choice("Which nearest color algorithm would you like to use?","ciede2000","Weighted http://www.compuphase.com/cmetric.htm","Euclidean distance");
 }
 void loadProjectCB(Fl_Widget*,void*){
 	loadProject(0);
@@ -1309,26 +1322,25 @@ void editor::_editor(){
 			{
 				Fl_Group* o = new Fl_Group(tile_place_buttons_x_off, 208, 60, 128);
 				{
-					Fl_Round_Button* o = new Fl_Round_Button(tile_place_buttons_x_off, 208, 60, 32, "Row 0");
-					o->type(FL_RADIO_BUTTON);
-					o->set();
-					o->callback((Fl_Callback*) set_tile_row,(void *)0);
+					palRTE[0] = new Fl_Round_Button(tile_place_buttons_x_off, 208, 60, 32, "Row 0");
+					palRTE[0]->type(FL_RADIO_BUTTON);
+					palRTE[0]->set();
+					palRTE[0]->callback((Fl_Callback*) set_tile_row,(void *)0);
 				} // Fl_Round_Button* o
 				{
-					Fl_Round_Button* o = new Fl_Round_Button(tile_place_buttons_x_off, 240, 60, 32, "Row 1");
-					o->type(FL_RADIO_BUTTON);
-					o->callback((Fl_Callback*) set_tile_row,(void *)1);
+					palRTE[1] = new Fl_Round_Button(tile_place_buttons_x_off, 240, 60, 32, "Row 1");
+					palRTE[1]->type(FL_RADIO_BUTTON);
+					palRTE[1]->callback((Fl_Callback*) set_tile_row,(void *)1);
 				} // Fl_Round_Button* o
 				{
-					Fl_Round_Button* o = new Fl_Round_Button(tile_place_buttons_x_off, 272, 60, 32, "Row 2");
-					o->type(FL_RADIO_BUTTON);
-					o->callback((Fl_Callback*) set_tile_row,(void *)2);
+					palRTE[2] = new Fl_Round_Button(tile_place_buttons_x_off, 272, 60, 32, "Row 2");
+					palRTE[2]->type(FL_RADIO_BUTTON);
+					palRTE[2]->callback((Fl_Callback*) set_tile_row,(void *)2);
 				} // Fl_Round_Button* o
 				{
-					Fl_Round_Button* o = new Fl_Round_Button(tile_place_buttons_x_off, 304, 60, 32, "Row 3");
-					//o->tooltip("Radio button, only one button is set at a time, in the corresponding group.");
-					o->type(FL_RADIO_BUTTON);
-					o->callback((Fl_Callback*) set_tile_row,(void *)3);
+					palRTE[3] = new Fl_Round_Button(tile_place_buttons_x_off, 304, 60, 32, "Row 3");
+					palRTE[3]->type(FL_RADIO_BUTTON);
+					palRTE[3]->callback((Fl_Callback*) set_tile_row,(void *)3);
 				} // Fl_Round_Button* o
 				o->end();
 			} // Fl_Group* o
@@ -1364,7 +1376,7 @@ void editor::_editor(){
 			tile_select_2->step(1);
 			tile_select_2->value(0);
 			tile_select_2->align(FL_ALIGN_LEFT);
-			tile_select_2->callback(set_tile_current);
+			tile_select_2->callback(set_tile_currentTP);
 			tileMap_pal.more_init();
 			//buttons for tile settings
 			{ Fl_Group *o = new Fl_Group(304, 96, 88, 96);
@@ -1389,17 +1401,17 @@ void editor::_editor(){
 				o->callback(toggleRowSolo);
 				o->tooltip("When checked Tiles that do not use the selected row will not be drawn");
 			}
-			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,336,64,32,"hflip");
-				o->callback(set_hflip);
-				o->tooltip("This sets whether or not the tile is flipped horizontally");
+			{ hflipCB = new Fl_Check_Button(tile_place_buttons_x_off,336,64,32,"hflip");
+				hflipCB->callback(set_hflip);
+				hflipCB->tooltip("This sets whether or not the tile is flipped horizontally");
 			}
-			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,368,64,32,"vflip");
-				o->callback(set_vflip);
-				o->tooltip("This sets whether or not the tile is flipped vertically");
+			{ vflipCB = new Fl_Check_Button(tile_place_buttons_x_off,368,64,32,"vflip");
+				vflipCB->callback(set_vflip);
+				vflipCB->tooltip("This sets whether or not the tile is flipped vertically");
 			}
-			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,400,72,32,"priority");
-				o->callback(set_prio_callback);
-				o->tooltip("If checked tile is high priority");
+			{ prioCB = new Fl_Check_Button(tile_place_buttons_x_off,400,72,32,"priority");
+				prioCB->callback(set_prio_callback);
+				prioCB->tooltip("If checked tile is high priority");
 			}
 			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,432,96,32,"Show grid?");
 				o->callback(set_grid_placer);

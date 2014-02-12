@@ -18,6 +18,7 @@
 Stuff related to tilemap operations goes here*/
 #include "global.h"
 #include "quant.h"
+#include "color_compare.h"
 #include "color_convert.h"
 #include "dither.h"
 #include "spatial_color_quant.h"
@@ -186,10 +187,6 @@ void rgbtohsv(uint8_t R,uint8_t G,uint8_t B,double * hh,double * ss,double * vv)
 	*ss=S;
 	*vv=V;
 }
-void tileMap::set_pal_row(uint16_t x,uint16_t y,uint8_t row){
-	tileMapDat[((y*mapSizeW)+x)*4]&= ~(3 << 5);
-	tileMapDat[((y*mapSizeW)+x)*4]|=row<<5;
-}
 void tileMap::pickRow(uint8_t amount){
 	uint8_t type=fl_choice("How would you describe this image","Varying hue","Varying brightness","Varying saturation");
 	double divide=(double)amount;//convert to double
@@ -271,7 +268,7 @@ static inline double pickIt(double h,double l,double s,uint8_t type){
 }
 void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	//3rd choice is based on https://dspace.lboro.ac.uk/dspace-jspui/handle/2134/2127
-	uint8_t alg=fl_choice("Which method do you think works better for this image (try both)","ciede2000","Mean squared error",0);
+	uint8_t alg=fl_choice("Which method do you think works better for this image (try both)","Mean squared error","ciede2000","Weighted");
 	if(fl_ask("Would you like the palette to be ordered by hue or light or saturation")){
 		uint16_t x,y;
 		uint8_t type=fl_choice("What do you want it ordered by","Hue","Light","Saturation");
