@@ -267,8 +267,7 @@ static inline double pickIt(double h,double l,double s,uint8_t type){
 	}
 }
 void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
-	//3rd choice is based on https://dspace.lboro.ac.uk/dspace-jspui/handle/2134/2127
-	uint8_t alg=fl_choice("Which method do you think works better for this image (try both)","Mean squared error","ciede2000","Weighted");
+	uint8_t alg=fl_choice("Which method do you think works better for this image (try both)","ciede2000","Weighted","Mean squared error");
 	if(fl_ask("Would you like the palette to be ordered by hue or light or saturation")){
 		uint16_t x,y;
 		uint8_t type=fl_choice("What do you want it ordered by","Hue","Light","Saturation");
@@ -335,7 +334,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	for (uint32_t a=0;a<(h*w*4)-w*4;a+=w*4*8){//a tiles y
 		for (uint32_t b=0;b<w*4;b+=32){//b tiles x
 			uint32_t cur_tile=get_tile(xtile,ytile);
-			if(alg)
+			if(alg>=2)
 				memset(di,0,4*sizeof(uint32_t));
 			else{
 				for (t=0;t<4;t++)
@@ -347,18 +346,24 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 			}
 			for (t=0;t<4;t++){
 				for (uint32_t y=0;y<w*4*8;y+=w*4){//pixels y
-					if(alg){
-						for(x=0;x<32;x+=4)
-							di[t]+=sqri(imagein[a+b+y+x]-imageout[t][a+b+y+x])+sqri(imagein[a+b+y+x+1]-imageout[t][a+b+y+x+1])+sqri(imagein[a+b+y+x+2]-imageout[t][a+b+y+x+2]);
-					}else{
-						for(x=0;x<32;x+=4)
-							d[t]+=ciede2000rgb(imagein[a+b+y+x],imagein[a+b+y+x+1],imagein[a+b+y+x+2],imageout[t][a+b+y+x],imageout[t][a+b+y+x+1],imageout[t][a+b+y+x+2]);
+					switch(alg){
+						case 0:
+							for(x=0;x<32;x+=4)
+								d[t]+=ciede2000rgb(imagein[a+b+y+x],imagein[a+b+y+x+1],imagein[a+b+y+x+2],imageout[t][a+b+y+x],imageout[t][a+b+y+x+1],imageout[t][a+b+y+x+2]);
+						break;
+						case 1:
+							for(x=0;x<32;x+=4)
+								d[t]+=ColourDistance(imagein[a+b+y+x],imagein[a+b+y+x+1],imagein[a+b+y+x+2],imageout[t][a+b+y+x],imageout[t][a+b+y+x+1],imageout[t][a+b+y+x+2]);
+						break;
+						default:
+							for(x=0;x<32;x+=4)
+								di[t]+=sqri(imagein[a+b+y+x]-imageout[t][a+b+y+x])+sqri(imagein[a+b+y+x+1]-imageout[t][a+b+y+x+1])+sqri(imagein[a+b+y+x+2]-imageout[t][a+b+y+x+2]);
 					}
 				}
 			}
 			uint16_t truecolor_tile_ptr=0;
 			uint8_t sillyrow;
-			if(alg)
+			if(alg>=2)
 				sillyrow=pick4Deltai(di);
 			else
 				sillyrow=pick4Delta(d);
