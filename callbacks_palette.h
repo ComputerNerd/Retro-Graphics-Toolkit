@@ -22,3 +22,10 @@
 void save_palette(Fl_Widget*, void* start_end);
 void update_palette(Fl_Widget* o, void* v);
 void loadPalette(Fl_Widget*, void* offset);
+void set_ditherAlg(Fl_Widget*,void* typeset);
+void set_tile_row(Fl_Widget*,void* row);
+void setPalType(Fl_Widget*,void*type);
+void pickNearAlg(Fl_Widget*,void*);
+void set_palette_type_callback(Fl_Widget*,void* type);
+void rgb_pal_to_entry(Fl_Widget*,void*);
+void clearPalette(Fl_Widget*,void*);

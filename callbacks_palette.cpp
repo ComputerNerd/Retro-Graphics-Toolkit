@@ -215,3 +215,69 @@ void loadPalette(Fl_Widget*, void*){
 			fl_alert("Error opening file");
 	}
 }
+void set_ditherAlg(Fl_Widget*,void* typeset){
+	if (((uintptr_t)typeset==0)||((uintptr_t)typeset==4))
+		window->ditherPower->show();
+	else
+		window->ditherPower->hide();//imagine the user trying to change the power and nothing happening not fun at all
+	ditherAlg=(uintptr_t)typeset;
+}
+void set_tile_row(Fl_Widget*,void* row){
+	uint8_t selrow=(uintptr_t)row;
+	switch (mode_editor) {
+		case tile_edit:
+			tileEdit_pal.changeRow(selrow);
+			currentProject->tileC->truecolor_to_tile(selrow,currentProject->tileC->current_tile);
+		break;
+		case tile_place:
+			tileMap_pal.changeRow(selrow);
+			if(tileEditModePlace_G)
+				currentProject->tileMapC->set_pal_row(selTileE_G[0],selTileE_G[1],selrow);
+		break;
+	}
+	window->redraw();//trigger a redraw so that the new row is displayed
+}
+void setPalType(Fl_Widget*,void*type){
+	switch (mode_editor){
+		case pal_edit:
+			currentProject->palType[palEdit.getEntry()]=(uintptr_t)type;
+			palEdit.updateSlider();
+		break;
+		case tile_edit:
+			currentProject->palType[tileEdit_pal.getEntry()]=(uintptr_t)type;
+			tileEdit_pal.updateSlider();
+		break;
+		case tile_place:
+			currentProject->palType[tileMap_pal.getEntry()]=(uintptr_t)type;
+			tileMap_pal.updateSlider();
+		break;
+		default:
+			show_default_error
+		break;
+	}
+	window->redraw();
+}
+void pickNearAlg(Fl_Widget*,void*){
+	nearestAlg=fl_choice("Which nearest color algorithm would you like to use?","ciede2000","Weighted http://www.compuphase.com/cmetric.htm","Euclidean distance");
+}
+void set_palette_type_callback(Fl_Widget*,void* type){
+	set_palette_type((uintptr_t)type);
+	window->redraw();
+}
+void rgb_pal_to_entry(Fl_Widget*,void*){
+	//this function will convert a rgb value to the nearst palette entry
+	if (mode_editor != tile_edit){
+		fl_alert("Be in Tile editor to use this");
+		return;
+	}
+}
+void clearPalette(Fl_Widget*,void*){
+	if (fl_ask("This will set all colors to 0 are you sure you want to do this?")){
+		memset(currentProject->palDat,0,128);
+		memset(currentProject->rgbPal,0,192);
+		window->damage(FL_DAMAGE_USER1);
+		palEdit.updateSlider();
+		tileEdit_pal.updateSlider();
+		tileMap_pal.updateSlider();
+	}
+}
