@@ -576,10 +576,8 @@ void zoom_double(array3d<double>& small, array3d<double>& big)
 	}
 }
 
-void compute_initial_s(array2d< vector_fixed<double,3> >& s,
-			   array3d<double>& coarse_variables,
-					   array2d< vector_fixed<double, 3> >& b)
-{
+void compute_initial_s(array2d< vector_fixed<double,3> >& s,array3d<double>& coarse_variables,array2d< vector_fixed<double, 3> >& b){
+	//Profiling shows that most time is spent in this function
 	int palette_size  = s.get_width();
 	int coarse_width  = coarse_variables.get_width();
 	int coarse_height = coarse_variables.get_height();
@@ -1024,12 +1022,12 @@ int scolorq_wrapper(uint8_t*in255,uint8_t*out,uint8_t user_pal[3][256],uint32_t 
 	}
 	uint8_t*intemp=in255;
 	for(int y=0; y<height; y++) {
-	for (int x=0; x<width; x++) {
-		for(int ci=0; ci<3; ci++) {
-		image(x,y)(ci) = *intemp/((double)255.0);
-		++intemp;
+		for (int x=0; x<width; x++) {
+			for(int ci=0; ci<3; ci++) {
+				image(x,y)(ci) = *intemp/((double)255.0);
+				++intemp;
+			}
 		}
-	}
 	}
 	}
 

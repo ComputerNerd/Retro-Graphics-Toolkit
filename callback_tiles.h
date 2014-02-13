@@ -17,3 +17,14 @@
 #include "includes.h"
 void delete_tile_at_location(Fl_Widget*, void* row);
 void new_tile(Fl_Widget*,void*);
+void update_truecolor(Fl_Widget* o,void* v);
+void blank_tile(Fl_Widget*,void*);
+void update_offset_tile_edit(Fl_Widget*,void*);
+void set_tile_current(Fl_Widget* o,void*);
+void set_tile_currentTP(Fl_Widget* o,void*);
+void save_tiles(Fl_Widget*,void*);
+void load_tiles(Fl_Widget*,void* split);
+void load_truecolor_tiles(Fl_Widget*,void*);
+void update_all_tiles(Fl_Widget*,void*);
+void remove_duplicate_truecolor(Fl_Widget*,void*);
+void remove_duplicate_tiles(Fl_Widget*,void*);

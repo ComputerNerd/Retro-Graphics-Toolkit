@@ -46,9 +46,6 @@ extern Fl_Group * shadow_highlight_switch;
 extern uint16_t map_scroll_pos_x;
 extern uint16_t map_scroll_pos_y;
 //tabs group id
-extern  intptr_t pal_id;
-extern  intptr_t tile_edit_id;
-extern  intptr_t tile_place_id;
 extern bool show_grid_placer;
 extern uint8_t tile_zoom_edit;
 extern uint8_t truecolor_temp[4];

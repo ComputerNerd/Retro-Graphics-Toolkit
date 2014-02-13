@@ -29,10 +29,6 @@ bool G_hflip;
 bool G_vflip;
 bool G_highlow_p;
 bool show_grid_placer;
-//tabs group id
-intptr_t pal_id;
-intptr_t tile_edit_id;
-intptr_t tile_place_id;
 //moveable offsets
 uint16_t map_scroll_pos_x;
 uint16_t map_scroll_pos_y;
