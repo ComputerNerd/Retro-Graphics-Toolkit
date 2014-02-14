@@ -37,6 +37,7 @@ class editor : public Fl_Double_Window{
 	Fl_Slider* place_tile_size;
 	Fl_Slider* tile_select;
 	Fl_Slider* tile_select_2;
+	Fl_Slider* projectSelect;
 	Fl_Tabs* the_tabs;
 	Fl_Round_Button* palType[9];
 	Fl_Round_Button* GameSys[2];

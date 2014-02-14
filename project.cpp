@@ -24,6 +24,7 @@ uint32_t projects_count;//holds how many projects there are this is needed for r
 struct Project * currentProject;
 Fl_Slider* curPrj;
 static const char * defaultName="Add a description here";
+uint32_t curProjectID=0;
 void initProject(void){
 	projects = (struct Project **) malloc(sizeof(void *));
 	projects[0] = new struct Project;
@@ -37,7 +38,7 @@ void initProject(void){
 	memset(currentProject->palType,0,64);
 	currentProject->gameSystem=sega_genesis;
 }
-bool appendProject(){
+bool appendProject(void){
 	projects = (struct Project **) realloc(projects,(projects_count+1)*sizeof(void *));
 	if (!projects){
 		show_realloc_error((projects_count+1)*sizeof(void *))
@@ -69,6 +70,48 @@ bool removeProject(uint32_t id){
 }
 static void invaildProject(void){
 	fl_alert("This is not a vaild Retro Graphics Toolkit project");
+}
+void switchProject(uint32_t id){
+		//Now make sure buttons and rgb palette are up to date
+	window->GameSys[projects[id]->gameSystem]->setonly();
+	switch(projects[id]->gameSystem){
+		case sega_genesis:
+			projects[id]->tileC->tileSize=32;
+			shadow_highlight_switch->show();
+			palEdit.changeSystem();
+			tileEdit_pal.changeSystem();
+			tileMap_pal.changeSystem();
+			set_palette_type(0);
+			window->map_w->step(1);
+			window->map_h->step(1);
+		break;
+		case NES:
+			projects[id]->tileC->tileSize=16;
+			shadow_highlight_switch->hide();
+			updateNesTab(0);
+			for(int temp_entry=0;temp_entry<64;++temp_entry){
+				uint32_t rgb_out;
+				uint8_t pal;
+				pal=projects[id]->palDat[temp_entry];
+				rgb_out=MakeRGBcolor(pal);
+				projects[id]->rgbPal[temp_entry*3+2]=rgb_out&255;//blue
+				projects[id]->rgbPal[temp_entry*3+1]=(rgb_out>>8)&255;//green
+				projects[id]->rgbPal[temp_entry*3]=(rgb_out>>16)&255;//red
+			}
+			palEdit.changeSystem();
+			tileEdit_pal.changeSystem();
+			tileMap_pal.changeSystem();
+			update_emphesis(0,0);
+			window->map_w->step(2);
+			window->map_h->step(2);
+		break;
+	}
+	//Make sure sliders have correct values
+	window->map_w->value(projects[id]->tileMapC->mapSizeW);
+	window->map_h->value(projects[id]->tileMapC->mapSizeH);
+	window->tile_select->maximum(projects[id]->tileC->tiles_amount);
+	window->tile_select_2->maximum(projects[id]->tileC->tiles_amount);
+	window->redraw();
 }
 bool loadProject(uint32_t id){
 	if(!load_file_generic("Load project",false))
@@ -114,40 +157,6 @@ bool loadProject(uint32_t id){
 		break;
 	}
 	fread(projects[id]->palDat,eSize,entries,fi);
-	//Now make sure buttons and rgb palette are up to date
-	window->GameSys[projects[id]->gameSystem]->setonly();
-	switch(projects[id]->gameSystem){
-		case sega_genesis:
-			projects[id]->tileC->tileSize=32;
-			shadow_highlight_switch->show();
-			palEdit.changeSystem();
-			tileEdit_pal.changeSystem();
-			tileMap_pal.changeSystem();
-			set_palette_type(0);
-			window->map_w->step(1);
-			window->map_h->step(1);
-		break;
-		case NES:
-			projects[id]->tileC->tileSize=16;
-			shadow_highlight_switch->hide();
-			updateNesTab(0);
-			for(int temp_entry=0;temp_entry<64;++temp_entry){
-				uint32_t rgb_out;
-				uint8_t pal;
-				pal=projects[id]->palDat[temp_entry];
-				rgb_out=MakeRGBcolor(pal);
-				projects[id]->rgbPal[temp_entry*3+2]=rgb_out&255;//blue
-				projects[id]->rgbPal[temp_entry*3+1]=(rgb_out>>8)&255;//green
-				projects[id]->rgbPal[temp_entry*3]=(rgb_out>>16)&255;//red
-			}
-			palEdit.changeSystem();
-			tileEdit_pal.changeSystem();
-			tileMap_pal.changeSystem();
-			update_emphesis(0,0);
-			window->map_w->step(2);
-			window->map_h->step(2);
-		break;
-	}
 	fread(projects[id]->palType,1,entries,fi);
 	fread(&projects[id]->tileC->tiles_amount,1,sizeof(uint32_t),fi);
 	projects[id]->tileC->tileDat=(uint8_t*)realloc(projects[id]->tileC->tileDat,projects[id]->tileC->tileSize*(projects[id]->tileC->tiles_amount+1));
@@ -159,12 +168,6 @@ bool loadProject(uint32_t id){
 	projects[id]->tileMapC->tileMapDat=(uint8_t*)realloc(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeH);
 	decompressFromFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeH,fi);
 	fclose(fi);
-	//Make sure sliders have correct values
-	window->map_w->value(projects[id]->tileMapC->mapSizeW);
-	window->map_h->value(projects[id]->tileMapC->mapSizeH);
-	window->tile_select->maximum(projects[id]->tileC->tiles_amount);
-	window->tile_select_2->maximum(projects[id]->tileC->tiles_amount);
-	window->redraw();
 	return true;
 }
 

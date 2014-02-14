@@ -15,9 +15,22 @@
     Copyright Sega16 (or whatever you wish to call me (2012-2014)
 */
 #include "global.h"
+#include "project.h"
 void loadProjectCB(Fl_Widget*,void*){
-	loadProject(0);
+	loadProject(curProjectID);
+	switchProject(curProjectID);
 }
 void saveProjectCB(Fl_Widget*,void*){
-	saveProject(0);
+	saveProject(curProjectID);
+}
+void switchProjectCB(Fl_Widget*o,void*){
+	Fl_Slider* s=(Fl_Slider*)o;
+	curProjectID=s->value();
+	currentProject=projects[curProjectID];
+	switchProject(curProjectID);
+}
+void appendProjectCB(Fl_Widget*,void*){
+	appendProject();
+	window->projectSelect->maximum(projects_count-1);
+	window->redraw();
 }

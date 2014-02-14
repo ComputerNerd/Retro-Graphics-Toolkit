@@ -24,6 +24,7 @@ For example the save project file function goes here
 #include "class_tiles.h"
 #include "classtilemap.h"
 #define currentProjectVersionNUM 0
+extern uint32_t curProjectID;
 struct Project/*!<Holds all data needed for a project based system for examaple tile screen and level 1 are 2 seperate projects*/
 {
 	std::string Name;
@@ -42,5 +43,6 @@ extern Fl_Slider* curPrj;
 void initProject(void) __attribute__((constructor(101)));/*!< this needs to be ran before class constructors*/
 bool appendProject();
 bool removeProject(uint32_t id);
+void switchProject(uint32_t id);
 bool loadProject(uint32_t id);
 bool saveProject(uint32_t id);

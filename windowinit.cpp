@@ -420,6 +420,16 @@ void editor::_editor(){
 		}
 		{ Fl_Group* o = new Fl_Group(rx,ry,rw,rh,"Settings/projects");
 			tabs_ptr[3]=(intptr_t)o->as_group();
+			projectSelect=new Fl_Hor_Value_Slider(112,56,128,24,"Current project");
+			projectSelect->minimum(0);
+			projectSelect->maximum(0);
+			projectSelect->step(1);
+			projectSelect->value(0);
+			projectSelect->align(FL_ALIGN_LEFT);
+			projectSelect->callback(switchProjectCB);
+			{ Fl_Button *o = new Fl_Button(260, 56, 120, 32, "Append blank project");//these button should be inline with the palette bar
+				o->callback(appendProjectCB);
+			}
 			o->end();
 		}
 	}
