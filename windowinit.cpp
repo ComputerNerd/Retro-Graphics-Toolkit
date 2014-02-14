@@ -427,8 +427,11 @@ void editor::_editor(){
 			projectSelect->value(0);
 			projectSelect->align(FL_ALIGN_LEFT);
 			projectSelect->callback(switchProjectCB);
-			{ Fl_Button *o = new Fl_Button(260, 56, 120, 32, "Append blank project");//these button should be inline with the palette bar
+			{Fl_Button *o = new Fl_Button(260, 56, 144, 32, "Append blank project");
 				o->callback(appendProjectCB);
+			}
+			{Fl_Button *o = new Fl_Button(420, 56, 160, 32, "Delete selected project");
+				o->callback(deleteProjectCB);
 			}
 			o->end();
 		}

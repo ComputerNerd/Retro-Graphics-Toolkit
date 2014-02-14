@@ -34,3 +34,18 @@ void appendProjectCB(Fl_Widget*,void*){
 	window->projectSelect->maximum(projects_count-1);
 	window->redraw();
 }
+void deleteProjectCB(Fl_Widget*,void*){
+	if (projects_count<=1){
+		fl_alert("You must have atleast one project.");
+		return;
+	}
+	removeProject(curProjectID);
+	window->projectSelect->maximum(projects_count-1);
+	if(curProjectID){
+		curProjectID--;
+		window->projectSelect->value(curProjectID);
+	}
+	currentProject=projects[curProjectID];
+	switchProject(curProjectID);
+	window->redraw();
+}

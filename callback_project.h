@@ -18,3 +18,4 @@ void loadProjectCB(Fl_Widget*,void*);
 void saveProjectCB(Fl_Widget*,void*);
 void switchProjectCB(Fl_Widget*o,void*);
 void appendProjectCB(Fl_Widget*,void*);
+void deleteProjectCB(Fl_Widget*,void*);

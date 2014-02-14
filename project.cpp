@@ -59,13 +59,16 @@ bool appendProject(void){
 bool removeProject(uint32_t id){
 	//removes selected project
 	if (projects_count<=1){
-		fl_alert("You must have atleast one project did you think I could just let you have null pointers?");
+		fl_alert("You must have atleast one project.");
 		return false;
 	}
 	delete projects[id]->tileC;
 	delete projects[id]->tileMapC;
 	delete projects[id];
+	if((id+1)!=projects_count)//Are we not removing the project last on the list?
+		memmove(projects+id,projects+id+1,sizeof(void*)*(projects_count-id-1));
 	projects_count--;
+	projects = (struct Project **) realloc(projects,projects_count*sizeof(void *));
 	return true;
 }
 static void invaildProject(void){
@@ -170,31 +173,7 @@ bool loadProject(uint32_t id){
 	fclose(fi);
 	return true;
 }
-
-bool saveProject(uint32_t id){
-	/*!
-	File format
-	char R
-	char P
-	Null terminated project description or just 0 if default string
-	uint32_t version the reason this is stored is for backwards compability if I change the file format
-	uint32_t game system
-	palette data (128 bytes if sega genesis or 16 bytes if NES)
-	Free locked reserved data 64 bytes if sega genesis or 16 if NES
-	uint32_t tile count
-	uint32_t compressed size tiles
-	tile data will decompress to either 32 bytes * tile count if sega genesis or 16 bytes * tile count if NES and is compressed with zlib
-	uint32_t compressed size truecolor tiles
-	true color tile data always decompresses to 256 bytes * tile count and is compressed with zlib
-	uint32_t map size w
-	uint32_t map size h
-	uint32_t compressed size map
-	map data will decompress to map size w * map size h * 4 and is compressed with zlib
-	*/
-	//Start by creating a save file dialog
-	if(!load_file_generic("Save project as...",true))
-		return true;
-	FILE * fo=fopen(the_file.c_str(),"wb");
+static bool saveProjectFile(uint32_t id,FILE * fo){
 	fputc('R',fo);
 	fputc('P',fo);
 	if(strcmp(projects[id]->Name.c_str(),defaultName)!=0)
@@ -224,6 +203,51 @@ bool saveProject(uint32_t id){
 	fwrite(&projects[id]->tileMapC->mapSizeW,1,sizeof(uint32_t),fo);
 	fwrite(&projects[id]->tileMapC->mapSizeH,1,sizeof(uint32_t),fo);
 	compressToFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeH,fo);
+	return true;
+}
+bool saveProject(uint32_t id){
+	/*!
+	File format
+	char R
+	char P
+	Null terminated project description or just 0 if default string
+	uint32_t version the reason this is stored is for backwards compability if I change the file format
+	uint32_t game system
+	palette data (128 bytes if sega genesis or 16 bytes if NES)
+	Free locked reserved data 64 bytes if sega genesis or 16 if NES
+	uint32_t tile count
+	uint32_t compressed size tiles
+	tile data will decompress to either 32 bytes * tile count if sega genesis or 16 bytes * tile count if NES and is compressed with zlib
+	uint32_t compressed size truecolor tiles
+	true color tile data always decompresses to 256 bytes * tile count and is compressed with zlib
+	uint32_t map size w
+	uint32_t map size h
+	uint32_t compressed size map
+	map data will decompress to map size w * map size h * 4 and is compressed with zlib
+	*/
+	//Start by creating a save file dialog
+	if(!load_file_generic("Save project as...",true))
+		return true;
+	FILE * fo=fopen(the_file.c_str(),"wb");
+	saveProjectFile(id,fo);
+	fclose(fo);
+	return true;
+}
+bool saveAllProjects(void){
+	/*!The format is the same except it begins with
+	 char R
+	 char G
+	 uint32_t amount of projects stored
+	 (format described in saveProject is repeated n amount of times let n = amount of projects stored)
+	*/
+	if(!load_file_generic("Save projects grupt as...",true))
+		return true;
+	FILE * fo=fopen(the_file.c_str(),"wb");
+	fputc('R',fo);
+	fputc('G',fo);
+	fwrite(&projects_count,1,sizeof(uint32_t),fo);
+	for(int s=0;s<projects_count;++s)
+		saveProjectFile(s,fo);
 	fclose(fo);
 	return true;
 }

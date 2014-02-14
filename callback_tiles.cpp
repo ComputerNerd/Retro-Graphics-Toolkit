@@ -221,8 +221,7 @@ void fill_tile(Fl_Widget* o, void*){
 			currentProject->tileC->truetileDat[x+3]=truecolor_temp[3];//alpha
 		}
 		currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);
-	}
-	else
+	}else
 		fl_alert("To prevent accidental modification be in the Tile editor or Tile map editor to use this");
 	window->damage(FL_DAMAGE_USER1);
 }
