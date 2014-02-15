@@ -28,7 +28,7 @@ int main(int argc, char **argv){
 	////       fltk_images library, potentially reducing the size of your executable.
 	//// Loading the system icons is not required by the OSX or Windows native file choosers.
 #if !defined(WIN32) && !defined(__APPLE__)
-  Fl_File_Icon::load_system_icons();
+	Fl_File_Icon::load_system_icons();
 #endif
  /* int argn = 1;
 #ifdef __APPLE__

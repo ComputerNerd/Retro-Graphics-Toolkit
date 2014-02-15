@@ -36,6 +36,9 @@ void initProject(void){
 	memset(currentProject->palDat,0,128);
 	memset(currentProject->rgbPal,0,192);
 	memset(currentProject->palType,0,64);
+	currentProject->sharePalette=-1;//Note always check to see if less than 0 do not use == -1
+	currentProject->shareTiles=-1;
+	currentProject->shareTileMap=-1;
 	currentProject->gameSystem=sega_genesis;
 }
 bool appendProject(void){
@@ -45,15 +48,19 @@ bool appendProject(void){
 		return false;
 	}
 	projects[projects_count] = new struct Project;
-	currentProject=projects[projects_count];
-	currentProject->tileC = new tiles;
-	currentProject->tileMapC = new tileMap;
-	currentProject->Name.assign(defaultName);
+	projects[projects_count]->tileC = new tiles;
+	projects[projects_count]->tileMapC = new tileMap;
+	projects[projects_count]->Name.assign(defaultName);
+	memset(projects[projects_count]->palDat,0,128);
+	memset(projects[projects_count]->rgbPal,0,192);
+	memset(projects[projects_count]->palType,0,64);
+	projects[projects_count]->gameSystem=sega_genesis;
+	projects[projects_count]->sharePalette=-1;
+	projects[projects_count]->shareTiles=-1;
+	projects[projects_count]->shareTileMap=-1;
 	++projects_count;
-	memset(currentProject->palDat,0,128);
-	memset(currentProject->rgbPal,0,192);
-	memset(currentProject->palType,0,64);
-	currentProject->gameSystem=sega_genesis;
+	//Realloc could have changed address
+	currentProject=projects[curProjectID];
 	return true;
 }
 bool removeProject(uint32_t id){
@@ -142,7 +149,6 @@ bool loadProject(uint32_t id){
 		}
 	}else
 		projects[id]->Name.assign(defaultName);
-	
 	uint32_t version;
 	fread(&version,1,sizeof(uint32_t),fi);
 	fread(&projects[id]->gameSystem,1,sizeof(uint32_t),fi);
@@ -211,7 +217,12 @@ bool saveProject(uint32_t id){
 	char R
 	char P
 	Null terminated project description or just 0 if default string
-	uint32_t version the reason this is stored is for backwards compability if I change the file format
+	uint32_t version the reason this is stored is for backwards compability if I change the file format stats at version 0
+	if (version >= 1) uint32_t have mask
+	The format is
+	bit 0 have map
+	bit 1 have tiles
+	if these bits are zero skip it 
 	uint32_t game system
 	palette data (128 bytes if sega genesis or 16 bytes if NES)
 	Free locked reserved data 64 bytes if sega genesis or 16 if NES

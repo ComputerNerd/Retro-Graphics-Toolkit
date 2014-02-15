@@ -34,6 +34,9 @@ struct Project/*!<Holds all data needed for a project based system for examaple 
 	uint8_t rgbPal[256];
 	uint8_t palDat[128];
 	uint8_t palType[64];/*!<Sets 3 different types for each palette entry free locked and reserved*/
+	int32_t sharePalette;//Negative if not sharing or project id (which is always positive) if sharing
+	int32_t shareTiles;
+	int32_t shareTileMap;
 	
 };
 extern struct Project ** projects;

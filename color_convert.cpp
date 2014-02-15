@@ -151,7 +151,7 @@ uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_
 					break;//exit loop
 				}
 			}
-			if (new_col==true){
+			if (new_col){
 				colors_found[colors_amount]=r;
 				colors_found[colors_amount+1]=g;
 				colors_found[colors_amount+2]=b;

@@ -17,7 +17,16 @@
 #include "global.h"
 #include "savepng.h"
 #include "dither.h"
-void callback_resize_map(Fl_Widget* o, void*){
+void FixOutOfRangeCB(Fl_Widget*,void*){
+	//use current attributes
+	for(int y=0;y<currentProject->tileMapC->mapSizeH;++y){
+		for(int x=0;x<currentProject->tileMapC->mapSizeW;++x){
+			if(currentProject->tileMapC->get_tile(x,y)>currentProject->tileC->tiles_amount)
+				currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,x,y,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
+		}
+	}
+}
+void callback_resize_map(Fl_Widget* o,void*){
 	uint8_t w,h;
 	w=window->map_w->value();
 	h=window->map_h->value();
@@ -79,11 +88,11 @@ void save_tilemap_as_colspace(Fl_Widget*,void*){
 	}
 }
 void load_tile_map(Fl_Widget*,void*){
-	if (unlikely(currentProject->tileMapC->loadFromFile() == false))
+	if(unlikely(!currentProject->tileMapC->loadFromFile()))
 		fl_alert("Error: Cannot load file %s",the_file.c_str());
 }
 void save_map(Fl_Widget*,void*){
-	if (currentProject->tileMapC->saveToFile() == false)
+	if(unlikely(!currentProject->tileMapC->saveToFile()))
 		fl_alert("Error: can not save file %s\nTry making sure that you have permission to save the file here",the_file.c_str());
 }
 void fill_tile_map_with_tile(Fl_Widget*,void*){

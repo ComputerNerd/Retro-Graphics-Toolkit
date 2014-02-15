@@ -14,7 +14,8 @@
     along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
     Copyright Sega16 (or whatever you wish to call me (2012-2014)
 */
-void callback_resize_map(Fl_Widget* o, void*);
+void FixOutOfRangeCB(Fl_Widget*,void*);
+void callback_resize_map(Fl_Widget* o,void*);
 void set_grid(Fl_Widget*,void*);
 void set_grid_placer(Fl_Widget*,void*);
 void save_tilemap_as_image(Fl_Widget*,void*);

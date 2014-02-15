@@ -50,7 +50,7 @@ void editor::_editor(){
 	menu->add("&File/&Open tiles",(int)0,load_tiles,(void*)0,(int)0);
 	menu->add("&File/&Open Truecolor Tiles",(int)0,load_truecolor_tiles,0,(int)0);
 	menu->add("&File/&Append tiles",(int)0,load_tiles,(void*)1,(int)0);
-	menu->add("&File/&Open tile map and if NES attrabiuts",(int)0,load_tile_map,(void *)0,(int)0);
+	menu->add("&File/&Open tile map or blocks and if NES attrabiuts",(int)0,load_tile_map,(void *)0,(int)0);
 	menu->add("&File/&import image to tilemap",(int)0,load_image_to_tilemap,(void *)0,(int)0);
 	menu->add("&File/&save tilemap as image",(int)0,save_tilemap_as_image,(void *)0,(int)0);
 	menu->add("&File/&save tilemap as with system color space",(int)0,save_tilemap_as_colspace,(void *)0,(int)0);
@@ -76,6 +76,7 @@ void editor::_editor(){
 	menu->add("&TileMap Actions/&Auto determine if use shadow highlight",0,shadow_highligh_findout,(void *)0,(int)0);
 	menu->add("&TileMap Actions/&Dither tilemap as image",0,dither_tilemap_as_image,(void *)0,(int)0);
 	menu->add("&TileMap Actions/&File tile map with selection includeing attributes",0,fill_tile_map_with_tile,(void *)0,(int)0);
+	menu->add("&TileMap Actions/&Fix out of range tiles (replace with current attributes in plane editor)",0,FixOutOfRangeCB,0,0);
 	menu->add("&Help/&About",0,showAbout,0,0);
 	tile_placer_tile_offset_y=default_tile_placer_tile_offset_y;
 	true_color_box_x=default_true_color_box_x;

@@ -620,10 +620,13 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 					tempPalSize=64;
 					palettesize=64;
 					colPtr=(uint8_t *)malloc(64*3);
-					for(rl=0;rl<64;++rl){
-						*colPtr++=nespaltab_r[rl];
-						*colPtr++=nespaltab_r[gl];
-						*colPtr++=nespaltab_r[bl];
+					for (rl=0;rl<16;++rl){
+						for (gl=0;gl<4;++gl){
+							uint8_t temp=rl|(gl<<4);
+							*colPtr++=nespaltab_r[temp];
+							*colPtr++=nespaltab_g[temp];
+							*colPtr++=nespaltab_b[temp];
+						}
 					}
 					colPtr-=64*3;
 				break;
@@ -681,13 +684,13 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 				unsigned map_value = mapY3[(x & 7) + ((y & 7) << 3)];
 				MixingPlan plan;
 				if(colSpace){
-					plan = DeviseBestMixingPlanY3(r_old,g_old,b_old,colPtr,0, 16);
+					plan = DeviseBestMixingPlanY3(r_old,g_old,b_old,colPtr,0, 4);
 				}else{
 					if(forceRow)
 						pal_row=forcedrow;
 					else
 						pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
-					plan = DeviseBestMixingPlanY3(r_old,g_old,b_old,currentProject->rgbPal,pal_row*palettesize, 16);
+					plan = DeviseBestMixingPlanY3(r_old,g_old,b_old,currentProject->rgbPal,pal_row*palettesize, 4);
 				}
 				//unsigned color = gdImageGetTrueColorPixel(srcim, x, y);
 				map_value = map_value * plan.size() / 64;
@@ -706,7 +709,7 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 					Fl::check();
 				}*/
 			}
-			if((h>8)&&(y&1)){
+			if((h>8)&&((y&3)==0)){
 				char txtbuf[128];
 				sprintf(txtbuf,"%d/%d",y,h);
 				progress->copy_label(txtbuf);
