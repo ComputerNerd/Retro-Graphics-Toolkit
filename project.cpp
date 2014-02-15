@@ -82,7 +82,7 @@ static void invaildProject(void){
 	fl_alert("This is not a vaild Retro Graphics Toolkit project");
 }
 void switchProject(uint32_t id){
-		//Now make sure buttons and rgb palette are up to date
+	window->TxtBufProject->text(projects[id]->Name.c_str());//Make editor display new text
 	window->GameSys[projects[id]->gameSystem]->setonly();
 	switch(projects[id]->gameSystem){
 		case sega_genesis:

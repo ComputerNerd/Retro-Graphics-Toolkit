@@ -45,6 +45,8 @@ class editor : public Fl_Double_Window{
 	Fl_Check_Button* hflipCB;
 	Fl_Check_Button* vflipCB;
 	Fl_Check_Button* prioCB;
+	Fl_Text_Buffer* TxtBufProject;
+	Fl_Text_Editor* TxtEditProject;
 	void draw();
 	editor(int X, int Y, int W, int H, const char *L = 0);
 	editor(int W, int H, const char *L = 0);

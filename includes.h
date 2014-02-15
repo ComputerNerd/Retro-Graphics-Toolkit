@@ -42,6 +42,8 @@
 #include <FL/Fl_Check_Button.H>
 #include <FL/Fl_Scrollbar.H>
 #include <FL/Fl_Button.H>
+#include <FL/Fl_Text_Buffer.H>
+#include <FL/Fl_Text_Editor.H>
 #include <fstream>
 #include <iostream>
 #include <algorithm>

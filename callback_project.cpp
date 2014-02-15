@@ -21,10 +21,12 @@ void loadProjectCB(Fl_Widget*,void*){
 	switchProject(curProjectID);
 }
 void saveProjectCB(Fl_Widget*,void*){
+	currentProject->Name.assign(window->TxtBufProject->text());//Make sure text is up to date
 	saveProject(curProjectID);
 }
 void switchProjectCB(Fl_Widget*o,void*){
 	Fl_Slider* s=(Fl_Slider*)o;
+	currentProject->Name.assign(window->TxtBufProject->text());//Save text to old project
 	curProjectID=s->value();
 	currentProject=projects[curProjectID];
 	switchProject(curProjectID);

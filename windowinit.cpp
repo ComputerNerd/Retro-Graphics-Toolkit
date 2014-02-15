@@ -431,9 +431,14 @@ void editor::_editor(){
 			{Fl_Button *o = new Fl_Button(260, 56, 144, 32, "Append blank project");
 				o->callback(appendProjectCB);
 			}
-			{Fl_Button *o = new Fl_Button(420, 56, 160, 32, "Delete selected project");
+			{Fl_Button *o = new Fl_Button(420, 56, 168, 32, "Delete selected project");
 				o->callback(deleteProjectCB);
 			}
+			TxtBufProject = new Fl_Text_Buffer;
+			TxtEditProject = new Fl_Text_Editor(16, 104, 640, 370,"Description/Notes");
+			TxtEditProject->buffer(TxtBufProject);
+			TxtEditProject->textfont(FL_TIMES);
+			TxtBufProject->text(currentProject->Name.c_str());
 			o->end();
 		}
 	}
