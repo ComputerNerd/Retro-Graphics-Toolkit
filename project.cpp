@@ -30,6 +30,7 @@ void initProject(void){
 	projects[0] = new struct Project;
 	currentProject=projects[0];
 	projects_count=1;
+	currentProject->gameSystem=sega_genesis;
 	currentProject->tileC = new tiles;
 	currentProject->tileMapC = new tileMap;
 	currentProject->rgbPal=(uint8_t*)calloc(1,256);
@@ -40,7 +41,6 @@ void initProject(void){
 	currentProject->share[1]=-1;
 	currentProject->share[2]=-1;
 	currentProject->useMask=pjDefaultMask;
-	currentProject->gameSystem=sega_genesis;
 }
 void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable){
 	/*! share is the project that will now point to with's data
@@ -226,6 +226,7 @@ bool loadProject(uint32_t id){
 		projects[id]->Name.assign(defaultName);
 	uint32_t version;
 	fread(&version,1,sizeof(uint32_t),fi);
+	printf("Read as version %d\n",version);
 	if(version)
 		fread(&projects[id]->useMask,1,sizeof(uint32_t),fi);
 	else

@@ -32,35 +32,31 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <limits>
 #include <stdint.h>
 #include <FL/fl_ask.H>
+#include <string.h>
 using namespace std;
 
 template <typename T, int length>
 class vector_fixed
 {
 public:
-	vector_fixed()
-	{
-		for(int i=0; i<length; i++) {
-		data[i] = 0;
-	}
+	vector_fixed(){
+		for(int i=0; i<length; i++)
+			data[i] = 0;
 	}
 
-	vector_fixed(const vector_fixed<T, length>& rhs)
-	{
-		for(int i=0; i<length; i++) {
-			data[i] = rhs.data[i];
-	}
-	}
-
-	vector_fixed(const vector<T>& rhs)
-	{
-		for(int i=0; i<length; i++) {
-			data[i] = rhs[i];
-	}
+	vector_fixed(const vector_fixed<T, length>& rhs){
+		/*for(int i=0; i<length; i++)
+			data[i] = rhs.data[i];*/
+		memcpy(data,rhs.data,length*sizeof(T));
 	}
 
-	T& operator()(int i)
-	{
+	vector_fixed(const vector<T>& rhs){
+		/*for(int i=0; i<length; i++)
+			data[i] = rhs[i];*/
+		memcpy(data,rhs,length*sizeof(T));
+	}
+
+	T& operator()(int i){
 		return data[i];
 	}
 
@@ -76,9 +72,9 @@ public:
 
 	vector_fixed<T, length>& operator=(const vector_fixed<T, length> rhs)
 	{
-		for(int i=0; i<length; i++) {
-			data[i] = rhs.data[i];
-	}
+		/*for(int i=0; i<length; i++)
+			data[i] = rhs.data[i];*/
+		memcpy(data,rhs.data,length*sizeof(T));
 	return *this;
 	}
 
@@ -377,13 +373,13 @@ static int compute_max_coarse_level(int width, int height) {
 	return result;
 }
 
-static void fill_random(array3d<double>& a) {
-	for(int i=0; i<a.get_width(); i++) {
-	for(int j=0; j<a.get_height(); j++) {
-			for(int k=0; k<a.get_depth(); k++) {
+static void fill_random(array3d<double>& a){
+	for(int i=0; i<a.get_width(); i++){
+		for(int j=0; j<a.get_height(); j++){
+			for(int k=0; k<a.get_depth(); k++){
 				a(i,j,k) = ((double)rand())/RAND_MAX;
+			}
 		}
-	}
 	}
 }
 
@@ -477,7 +473,7 @@ static void compute_a_image(array2d< vector_fixed<double, 3> >& image,
 	}
 }
 
-void sum_coarsen(array2d< vector_fixed<double, 3> >& fine,
+static void sum_coarsen(array2d< vector_fixed<double, 3> >& fine,
 		 array2d< vector_fixed<double, 3> >& coarse)
 {
 	for(int y=0; y<coarse.get_height(); y++) {
@@ -521,7 +517,7 @@ vector<T> extract_vector_layer_1d(vector< vector_fixed<T, length> > s, int k)
 	return result;
 }
 
-int best_match_color(array3d<double>& vars, int i_x, int i_y,
+static int best_match_color(array3d<double>& vars, int i_x, int i_y,
 			 vector< vector_fixed<double, 3> >& palette)
 {
 	int max_v = 0;
@@ -535,8 +531,7 @@ int best_match_color(array3d<double>& vars, int i_x, int i_y,
 	return max_v;
 }
 
-void zoom_double(array3d<double>& small, array3d<double>& big)
-{
+static void zoom_double(array3d<double>& small, array3d<double>& big){
 	// Simple scaling of the weights array based on mixing the four
 	// pixels falling under each fine pixel, weighted by area.
 	// To mix the pixels a little, we assume each fine pixel
@@ -576,7 +571,7 @@ void zoom_double(array3d<double>& small, array3d<double>& big)
 	}
 }
 
-void compute_initial_s(array2d< vector_fixed<double,3> >& s,array3d<double>& coarse_variables,array2d< vector_fixed<double, 3> >& b){
+static void compute_initial_s(array2d< vector_fixed<double,3> >& s,array3d<double>& coarse_variables,array2d< vector_fixed<double, 3> >& b){
 	//Profiling shows that most time is spent in this function
 	int palette_size  = s.get_width();
 	int coarse_width  = coarse_variables.get_width();
@@ -584,38 +579,37 @@ void compute_initial_s(array2d< vector_fixed<double,3> >& s,array3d<double>& coa
 	int center_x = (b.get_width()-1)/2, center_y = (b.get_height()-1)/2;
 	vector_fixed<double,3> center_b = b_value(b,0,0,0,0);
 	vector_fixed<double,3> zero_vector;
-	for (int v=0; v<palette_size; v++) {
-	for (int alpha=v; alpha<palette_size; alpha++) {
-		s(v,alpha) = zero_vector;
-	}
-	}
-	for (int i_y=0; i_y<coarse_height; i_y++) {
-	for (int i_x=0; i_x<coarse_width; i_x++) {
-		int max_j_x = min(coarse_width,  i_x - center_x + b.get_width());
-		int max_j_y = min(coarse_height, i_y - center_y + b.get_height());
-		for (int j_y=max(0, i_y - center_y); j_y<max_j_y; j_y++) {
-		for (int j_x=max(0, i_x - center_x); j_x<max_j_x; j_x++) {
-			if (i_x == j_x && i_y == j_y) continue;
-			vector_fixed<double,3> b_ij = b_value(b,i_x,i_y,j_x,j_y);
-			for (int v=0; v<palette_size; v++) {
-			for (int alpha=v; alpha<palette_size; alpha++) {
-				double mult = coarse_variables(i_x,i_y,v)*
-						  coarse_variables(j_x,j_y,alpha);
-				s(v,alpha)(0) += mult * b_ij(0);
-				s(v,alpha)(1) += mult * b_ij(1);
-				s(v,alpha)(2) += mult * b_ij(2);
-			}
-			}
-		}
-		}		
-		for (int v=0; v<palette_size; v++) {
-		s(v,v) += coarse_variables(i_x,i_y,v)*center_b;
+	for (int v=0; v<palette_size;++v){
+		for (int alpha=v; alpha<palette_size;++alpha) {
+			s(v,alpha) = zero_vector;
 		}
 	}
+	for (int i_y=0; i_y<coarse_height; i_y++){
+		for (int i_x=0; i_x<coarse_width; i_x++){
+			int max_j_x = min(coarse_width,  i_x - center_x + b.get_width());
+			int max_j_y = min(coarse_height, i_y - center_y + b.get_height());
+			for (int j_y=max(0, i_y - center_y); j_y<max_j_y; j_y++){
+				for (int j_x=max(0, i_x - center_x); j_x<max_j_x; j_x++){
+					if (i_x == j_x && i_y == j_y) continue;
+					vector_fixed<double,3> b_ij = b_value(b,i_x,i_y,j_x,j_y);
+					for (int v=0; v<palette_size; v++){
+						for (int alpha=v; alpha<palette_size; alpha++){
+							double mult = coarse_variables(i_x,i_y,v)*coarse_variables(j_x,j_y,alpha);
+							s(v,alpha)(0) += mult * b_ij(0);
+							s(v,alpha)(1) += mult * b_ij(1);
+							s(v,alpha)(2) += mult * b_ij(2);
+						}
+					}
+				}
+			}		
+			for (int v=0; v<palette_size; v++){
+				s(v,v) += coarse_variables(i_x,i_y,v)*center_b;
+			}
+		}
 	}
 }
 
-void update_s(array2d< vector_fixed<double,3> >& s,
+static void update_s(array2d< vector_fixed<double,3> >& s,
 		  array3d<double>& coarse_variables,
 		  array2d< vector_fixed<double, 3> >& b,
 		  int j_x, int j_y, int alpha,
@@ -648,7 +642,7 @@ void update_s(array2d< vector_fixed<double,3> >& s,
 	s(alpha,alpha) += delta*b_value(b,0,0,0,0);
 }
 
-void refine_palette(array2d< vector_fixed<double,3> >& s,
+static void refine_palette(array2d< vector_fixed<double,3> >& s,
 			array3d<double>& coarse_variables,
 			array2d< vector_fixed<double, 3> >& a,
 			vector< vector_fixed<double, 3> >& palette)
@@ -688,7 +682,7 @@ void refine_palette(array2d< vector_fixed<double,3> >& s,
 #endif
 }
 
-void compute_initial_j_palette_sum(array2d< vector_fixed<double, 3> >& j_palette_sum,
+static void compute_initial_j_palette_sum(array2d< vector_fixed<double, 3> >& j_palette_sum,
 				   array3d<double>& coarse_variables,
 				   vector< vector_fixed<double, 3> >& palette)
 {
@@ -703,7 +697,7 @@ void compute_initial_j_palette_sum(array2d< vector_fixed<double, 3> >& j_palette
 	 }
 }
 
-void spatial_color_quant(array2d< vector_fixed<double, 3> >& image,
+static void spatial_color_quant(array2d< vector_fixed<double, 3> >& image,
 						 array2d< vector_fixed<double, 3> >& filter_weights,
 						 array2d< int >& quantized_image,
 						 vector< vector_fixed<double, 3> >& palette,
