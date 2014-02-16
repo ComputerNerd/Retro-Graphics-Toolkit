@@ -36,44 +36,46 @@ void initProject(void){
 	currentProject->palDat=(uint8_t*)calloc(1,128);
 	currentProject->palType=(uint8_t*)calloc(1,64);
 	currentProject->Name.assign(defaultName);
-	currentProject->sharePalette=-1;//Note always check to see if less than 0 do not use == -1
-	currentProject->shareTiles=-1;
-	currentProject->shareTileMap=-1;
+	currentProject->share[0]=-1;//Note always check to see if less than 0 do not use == -1
+	currentProject->share[1]=-1;
+	currentProject->share[2]=-1;
 	currentProject->useMask=pjDefaultMask;
 	currentProject->gameSystem=sega_genesis;
 }
 void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable){
 	/*! share is the project that will now point to with's data
 	what uses, use masks*/
-	if(share==with)
+	if(share==with){
+		fl_alert("One does not simply share with itself");
 		return;
+	}
 	if(enable){
 		if(what&pjHavePal){
-			if((projects[share]->sharePalette<0)&&(projects[share]->useMask&pjHavePal)){
+			if((projects[share]->share[0]<0)&&(projects[share]->useMask&pjHavePal)){
 				free(projects[share]->rgbPal);
 				free(projects[share]->palDat);
 				free(projects[share]->palType);
 			}
-			projects[share]->sharePalette=with;
+			projects[share]->share[0]=with;
 			projects[share]->rgbPal=projects[with]->rgbPal;
 			projects[share]->palDat=projects[with]->palDat;
 			projects[share]->palType=projects[with]->palType;
 		}
 		if(what&pjHaveTiles){
-			if((projects[share]->shareTiles<0)&&(projects[share]->useMask&pjHaveTiles))
+			if((projects[share]->share[1]<0)&&(projects[share]->useMask&pjHaveTiles))
 				delete projects[share]->tileC;
-			projects[share]->shareTiles=with;
+			projects[share]->share[1]=with;
 			projects[share]->tileC=projects[with]->tileC;
 		}
 		if(what&pjHaveMap){
-			if((projects[share]->shareTileMap<0)&&(projects[share]->useMask&pjHaveMap))
+			if((projects[share]->share[2]<0)&&(projects[share]->useMask&pjHaveMap))
 				delete projects[share]->tileMapC;
-			projects[share]->shareTileMap=with;
+			projects[share]->share[2]=with;
 			projects[share]->tileMapC=projects[with]->tileMapC;
 		}
 	}else{
 		if(what&pjHavePal){
-			if((projects[share]->sharePalette>=0)&&(projects[share]->useMask&pjHavePal)){
+			if((projects[share]->share[0]>=0)&&(projects[share]->useMask&pjHavePal)){
 				projects[share]->rgbPal=(uint8_t*)malloc(256);
 				projects[share]->palDat=(uint8_t*)malloc(128);
 				projects[share]->palType=(uint8_t*)malloc(64);
@@ -81,20 +83,20 @@ void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable){
 				memcpy(projects[share]->palDat,projects[with]->palDat,128);
 				memcpy(projects[share]->palType,projects[with]->palType,64);
 			}
-			projects[share]->sharePalette=-1;
+			projects[share]->share[0]=-1;
 		}
 		if(what&pjHaveTiles){
-			if((projects[share]->shareTiles>=0)&&(projects[share]->useMask&pjHaveTiles)){
+			if((projects[share]->share[1]>=0)&&(projects[share]->useMask&pjHaveTiles)){
 				//Create a copy of the shared data
 				projects[share]->tileC = new tiles(*projects[with]->tileC);
 			}
-			projects[share]->shareTiles=-1;
+			projects[share]->share[1]=-1;
 		}
 		if(what&pjHaveMap){
-			if((projects[share]->shareTileMap>=0)&&(projects[share]->useMask&pjHaveMap)){
+			if((projects[share]->share[2]>=0)&&(projects[share]->useMask&pjHaveMap)){
 				projects[share]->tileMapC = new tileMap(*projects[with]->tileMapC);
 			}
-			projects[share]->shareTileMap=-1;//Even if we don't have the data sharing can still be disabled
+			projects[share]->share[2]=-1;//Even if we don't have the data sharing can still be disabled
 		}
 	}
 }
@@ -112,9 +114,9 @@ bool appendProject(void){
 	projects[projects_count]->palDat=(uint8_t*)calloc(1,128);
 	projects[projects_count]->palType=(uint8_t*)calloc(1,64);
 	projects[projects_count]->gameSystem=sega_genesis;
-	projects[projects_count]->sharePalette=-1;
-	projects[projects_count]->shareTiles=-1;
-	projects[projects_count]->shareTileMap=-1;
+	projects[projects_count]->share[0]=-1;
+	projects[projects_count]->share[1]=-1;
+	projects[projects_count]->share[2]=-1;
 	projects[projects_count]->useMask=pjDefaultMask;
 	++projects_count;
 	//Realloc could have changed address
@@ -130,11 +132,11 @@ bool removeProject(uint32_t id){
 		fl_alert("You must have atleast one project.");
 		return false;
 	}
-	if(projects[id]->shareTiles<0)
+	if(projects[id]->share[1]<0)
 		delete projects[id]->tileC;
-	if(projects[id]->shareTileMap<0)
+	if(projects[id]->share[2]<0)
 		delete projects[id]->tileMapC;
-	if(projects[id]->sharePalette<0){
+	if(projects[id]->share[0]<0){
 		free(projects[id]->rgbPal);
 		free(projects[id]->palDat);
 		free(projects[id]->palType);
@@ -144,6 +146,9 @@ bool removeProject(uint32_t id){
 		memmove(projects+id,projects+id+1,sizeof(void*)*(projects_count-id-1));
 	projects_count--;
 	projects = (struct Project **) realloc(projects,projects_count*sizeof(void *));
+	window->projectSelect->maximum(projects_count-1);
+	for(int x=0;x<3;++x)
+		window->shareWith[x]->maximum(projects_count-1);
 	return true;
 }
 static void invaildProject(void){
@@ -189,9 +194,8 @@ void switchProject(uint32_t id){
 	window->map_h->value(projects[id]->tileMapC->mapSizeH);
 	window->tile_select->maximum(projects[id]->tileC->tiles_amount);
 	window->tile_select_2->maximum(projects[id]->tileC->tiles_amount);
-	window->sharePrj[0]->value(projects[id]->sharePalette<0?0:1);
-	window->sharePrj[1]->value(projects[id]->shareTiles<0?0:1);
-	window->sharePrj[2]->value(projects[id]->shareTileMap<0?0:1);
+	for(int x=0;x<3;++x)
+		window->sharePrj[x]->value(projects[id]->share[x]<0?0:1);
 	window->redraw();
 }
 bool loadProject(uint32_t id){
@@ -317,10 +321,12 @@ bool saveProject(uint32_t id){
 }
 bool saveAllProjects(void){
 	/*!The format is the same except it begins with
-	 char R
-	 char G
-	 uint32_t amount of projects stored
-	 (format described in saveProject is repeated n amount of times let n = amount of projects stored)
+	char R
+	char G
+	uint32_t amount of projects stored
+	Before each project header is
+	int32_t share[3]
+	(format described in saveProject is repeated n amount of times let n = amount of projects stored)
 	*/
 	if(!load_file_generic("Save projects grupt as...",true))
 		return true;
@@ -328,8 +334,10 @@ bool saveAllProjects(void){
 	fputc('R',fo);
 	fputc('G',fo);
 	fwrite(&projects_count,1,sizeof(uint32_t),fo);
-	for(int s=0;s<projects_count;++s)
+	for(int s=0;s<projects_count;++s){
+		fwrite(projects[s]->share,3,sizeof(uint32_t),fo);
 		saveProjectFile(s,fo);
+	}
 	fclose(fo);
 	return true;
 }

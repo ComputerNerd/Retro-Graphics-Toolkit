@@ -24,6 +24,14 @@ void shareProjectCB(Fl_Widget*o,void*mask){
 		window->redraw();
 		return;
 	}
+	uint32_t m=(uintptr_t)mask;
+	uint32_t with=window->shareWith[__builtin_ctz(m)]->value();
+	if(curProjectID==with){
+		fl_alert("One does not simply share with itself");
+		b->value(0);
+		window->redraw();
+		return;
+	}
 	if(b->value()){
 		if(!fl_ask("Warning this will delete this project's data\nDo you wish to countinue?")){
 			b->value(0);
@@ -31,9 +39,9 @@ void shareProjectCB(Fl_Widget*o,void*mask){
 			return;
 		}
 	}
-	uint32_t m=(uintptr_t)mask;
-	//printf("%d %d\n",m,__builtin_ctz(m));
-	shareProject(curProjectID,window->shareWith[__builtin_ctz(m)]->value(),m,b->value()?true:false);
+	printf("%d with %d %d %d\n",curProjectID,with,m,__builtin_ctz(m));
+	shareProject(curProjectID,with,m,b->value()?true:false);
+	window->redraw();
 }
 void loadProjectCB(Fl_Widget*,void*){
 	loadProject(curProjectID);
@@ -60,7 +68,6 @@ void deleteProjectCB(Fl_Widget*,void*){
 		return;
 	}
 	removeProject(curProjectID);
-	window->projectSelect->maximum(projects_count-1);
 	if(curProjectID){
 		curProjectID--;
 		window->projectSelect->value(curProjectID);
