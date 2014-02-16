@@ -16,6 +16,14 @@
 */
 #include "global.h"
 #include "project.h"
+void switchShareCB(Fl_Widget*o,void*mask){
+	Fl_Slider* s=(Fl_Slider*)o;
+	uint32_t m=(uintptr_t)mask;
+	bool share=window->sharePrj[__builtin_ctz(m)]->value()?true:false;
+	printf("Change mask %d %d\n",m,share);
+	if(share)
+		shareProject(curProjectID,s->value(),m,true);
+}
 void shareProjectCB(Fl_Widget*o,void*mask){
 	Fl_Check_Button* b=(Fl_Check_Button*)o;
 	if(projects_count<=1){

@@ -446,6 +446,9 @@ void editor::_editor(){
 			shareWith[0]=new Fl_Hor_Value_Slider(8,118,128,24,"Share Palette with:");
 			shareWith[1]=new Fl_Hor_Value_Slider(136,118,128,24,"Share tiles with:");
 			shareWith[2]=new Fl_Hor_Value_Slider(264,118,128,24,"Share TileMap with:");
+			shareWith[0]->callback(switchShareCB,(void*)pjHavePal);
+			shareWith[1]->callback(switchShareCB,(void*)pjHaveTiles);
+			shareWith[2]->callback(switchShareCB,(void*)pjHaveMap);
 			for(int x=0;x<3;++x){
 				shareWith[x]->minimum(0);
 				shareWith[x]->maximum(0);

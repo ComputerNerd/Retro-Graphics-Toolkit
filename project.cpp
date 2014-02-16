@@ -226,6 +226,10 @@ bool loadProject(uint32_t id){
 		projects[id]->Name.assign(defaultName);
 	uint32_t version;
 	fread(&version,1,sizeof(uint32_t),fi);
+	if(version)
+		fread(&projects[id]->useMask,1,sizeof(uint32_t),fi);
+	else
+		projects[id]->useMask=pjHavePal|pjHaveTiles|pjHaveMap;
 	fread(&projects[id]->gameSystem,1,sizeof(uint32_t),fi);
 	int entries,eSize,tSize;
 	switch(projects[id]->gameSystem){
@@ -254,49 +258,15 @@ bool loadProject(uint32_t id){
 	fclose(fi);
 	return true;
 }
-static bool saveProjectFile(uint32_t id,FILE * fo){
-	fputc('R',fo);
-	fputc('P',fo);
-	if(strcmp(projects[id]->Name.c_str(),defaultName)!=0)
-		fputs(projects[id]->Name.c_str(),fo);
-	fputc(0,fo);
-	uint32_t version=currentProjectVersionNUM;
-	fwrite(&version,sizeof(uint32_t),1,fo);
-	fwrite(&projects[id]->gameSystem,sizeof(uint32_t),1,fo);
-	int entries,eSize,tSize;
-	switch(projects[id]->gameSystem){
-		case sega_genesis:
-			entries=64;
-			eSize=2;
-			tSize=32;
-		break;
-		case NES:
-			entries=16;
-			eSize=1;
-			tSize=16;
-		break;
-	}
-	fwrite(projects[id]->palDat,eSize,entries,fo);
-	fwrite(projects[id]->palType,1,entries,fo);
-	fwrite(&projects[id]->tileC->tiles_amount,1,sizeof(uint32_t),fo);
-	compressToFile(projects[id]->tileC->tileDat,tSize*(projects[id]->tileC->tiles_amount+1),fo);
-	compressToFile(projects[id]->tileC->truetileDat,256*(projects[id]->tileC->tiles_amount+1),fo);
-	fwrite(&projects[id]->tileMapC->mapSizeW,1,sizeof(uint32_t),fo);
-	fwrite(&projects[id]->tileMapC->mapSizeH,1,sizeof(uint32_t),fo);
-	compressToFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeH,fo);
-	return true;
-}
-bool saveProject(uint32_t id){
+static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared){
 	/*!
 	File format
 	char R
 	char P
 	Null terminated project description or just 0 if default string
-	uint32_t version the reason this is stored is for backwards compability if I change the file format stats at version 0
+	uint32_t version the reason this is stored is for backwards compability if I change the file format starts at version 0
 	if (version >= 1) uint32_t have mask
-	The format is
-	bit 0 have map
-	bit 1 have tiles
+	You can find the format in project.h
 	if these bits are zero skip it 
 	uint32_t game system
 	palette data (128 bytes if sega genesis or 16 bytes if NES)
@@ -311,11 +281,52 @@ bool saveProject(uint32_t id){
 	uint32_t compressed size map
 	map data will decompress to map size w * map size h * 4 and is compressed with zlib
 	*/
+	fputc('R',fo);
+	fputc('P',fo);
+	if(strcmp(projects[id]->Name.c_str(),defaultName)!=0)
+		fputs(projects[id]->Name.c_str(),fo);
+	fputc(0,fo);
+	uint32_t version=currentProjectVersionNUM;
+	fwrite(&version,sizeof(uint32_t),1,fo);
+	fwrite(&projects[id]->useMask,sizeof(uint32_t),1,fo);
+	fwrite(&projects[id]->gameSystem,sizeof(uint32_t),1,fo);
+	int entries,eSize,tSize;
+	switch(projects[id]->gameSystem){
+		case sega_genesis:
+			entries=64;
+			eSize=2;
+			tSize=32;
+		break;
+		case NES:
+			entries=16;
+			eSize=1;
+			tSize=16;
+		break;
+	}
+	if(projects[id]->useMask&pjHavePal){
+		if(saveShared||(projects[id]->share[0]<0)){
+			fwrite(projects[id]->palDat,eSize,entries,fo);
+			fwrite(projects[id]->palType,1,entries,fo);
+		}
+	}
+	if(saveShared||(projects[id]->share[1]<0)){
+		fwrite(&projects[id]->tileC->tiles_amount,1,sizeof(uint32_t),fo);
+		compressToFile(projects[id]->tileC->tileDat,tSize*(projects[id]->tileC->tiles_amount+1),fo);
+		compressToFile(projects[id]->tileC->truetileDat,256*(projects[id]->tileC->tiles_amount+1),fo);
+	}
+	if(saveShared||(projects[id]->share[2]<0)){
+		fwrite(&projects[id]->tileMapC->mapSizeW,1,sizeof(uint32_t),fo);
+		fwrite(&projects[id]->tileMapC->mapSizeH,1,sizeof(uint32_t),fo);
+		compressToFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeH,fo);
+	}
+	return true;
+}
+bool saveProject(uint32_t id){
 	//Start by creating a save file dialog
 	if(!load_file_generic("Save project as...",true))
 		return true;
 	FILE * fo=fopen(the_file.c_str(),"wb");
-	saveProjectFile(id,fo);
+	saveProjectFile(id,fo,true);
 	fclose(fo);
 	return true;
 }
@@ -336,7 +347,7 @@ bool saveAllProjects(void){
 	fwrite(&projects_count,1,sizeof(uint32_t),fo);
 	for(int s=0;s<projects_count;++s){
 		fwrite(projects[s]->share,3,sizeof(uint32_t),fo);
-		saveProjectFile(s,fo);
+		saveProjectFile(s,fo,false);
 	}
 	fclose(fo);
 	return true;

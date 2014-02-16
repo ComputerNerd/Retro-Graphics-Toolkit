@@ -23,7 +23,7 @@ For example the save project file function goes here
 #include "tilemap.h"
 #include "class_tiles.h"
 #include "classtilemap.h"
-#define currentProjectVersionNUM 0
+#define currentProjectVersionNUM 1
 extern uint32_t curProjectID;
 struct Project{/*!<Holds all data needed for a project based system for examaple tile screen and level 1 are 2 seperate projects*/
 	std::string Name;
