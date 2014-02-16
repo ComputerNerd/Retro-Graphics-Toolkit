@@ -244,17 +244,23 @@ bool loadProject(uint32_t id){
 			tSize=16;
 		break;
 	}
-	fread(projects[id]->palDat,eSize,entries,fi);
-	fread(projects[id]->palType,1,entries,fi);
-	fread(&projects[id]->tileC->tiles_amount,1,sizeof(uint32_t),fi);
-	projects[id]->tileC->tileDat=(uint8_t*)realloc(projects[id]->tileC->tileDat,projects[id]->tileC->tileSize*(projects[id]->tileC->tiles_amount+1));
-	decompressFromFile(projects[id]->tileC->tileDat,projects[id]->tileC->tileSize*(projects[id]->tileC->tiles_amount+1),fi);
-	projects[id]->tileC->truetileDat=(uint8_t*)realloc(projects[id]->tileC->truetileDat,256*(projects[id]->tileC->tiles_amount+1));
-	decompressFromFile(projects[id]->tileC->truetileDat,256*(projects[id]->tileC->tiles_amount+1),fi);
-	fread(&projects[id]->tileMapC->mapSizeW,1,sizeof(uint32_t),fi);
-	fread(&projects[id]->tileMapC->mapSizeH,1,sizeof(uint32_t),fi);
-	projects[id]->tileMapC->tileMapDat=(uint8_t*)realloc(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeH);
-	decompressFromFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeH,fi);
+	if(projects[id]->useMask&pjHavePal){
+		fread(projects[id]->palDat,eSize,entries,fi);
+		fread(projects[id]->palType,1,entries,fi);
+	}
+	if(projects[id]->useMask&pjHaveTiles){
+		fread(&projects[id]->tileC->tiles_amount,1,sizeof(uint32_t),fi);
+		projects[id]->tileC->tileDat=(uint8_t*)realloc(projects[id]->tileC->tileDat,projects[id]->tileC->tileSize*(projects[id]->tileC->tiles_amount+1));
+		decompressFromFile(projects[id]->tileC->tileDat,projects[id]->tileC->tileSize*(projects[id]->tileC->tiles_amount+1),fi);
+		projects[id]->tileC->truetileDat=(uint8_t*)realloc(projects[id]->tileC->truetileDat,256*(projects[id]->tileC->tiles_amount+1));
+		decompressFromFile(projects[id]->tileC->truetileDat,256*(projects[id]->tileC->tiles_amount+1),fi);
+	}
+	if(projects[id]->useMask&pjHaveMap){
+		fread(&projects[id]->tileMapC->mapSizeW,1,sizeof(uint32_t),fi);
+		fread(&projects[id]->tileMapC->mapSizeH,1,sizeof(uint32_t),fi);
+		projects[id]->tileMapC->tileMapDat=(uint8_t*)realloc(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeH);
+		decompressFromFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeH,fi);
+	}
 	fclose(fi);
 	return true;
 }
