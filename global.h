@@ -55,7 +55,8 @@ extern uint8_t mode_editor;/*!< Importan varible is used to determin which "mode
 #define pal_edit 0
 #define tile_edit 1
 #define tile_place 2
-#define settingsTab 3
+#define chunckEditor 3
+#define settingsTab 4
 #define default_map_off_x 304
 extern uint16_t map_off_x,map_off_y;
 #define default_map_off_y 232

@@ -16,6 +16,25 @@
 */
 #include "global.h"
 #include "project.h"
+void shareProjectCB(Fl_Widget*o,void*mask){
+	Fl_Check_Button* b=(Fl_Check_Button*)o;
+	if(projects_count<=1){
+		fl_alert("Cannot share when there is only one project");
+		b->value(0);
+		window->redraw();
+		return;
+	}
+	if(b->value()){
+		if(!fl_ask("Warning this will delete this project's data\nDo you wish to countinue?")){
+			b->value(0);
+			window->redraw();
+			return;
+		}
+	}
+	uint32_t m=(uintptr_t)mask;
+	//printf("%d %d\n",m,__builtin_ctz(m));
+	shareProject(curProjectID,window->shareWith[__builtin_ctz(m)]->value(),m,b->value()?true:false);
+}
 void loadProjectCB(Fl_Widget*,void*){
 	loadProject(curProjectID);
 	switchProject(curProjectID);
@@ -33,7 +52,6 @@ void switchProjectCB(Fl_Widget*o,void*){
 }
 void appendProjectCB(Fl_Widget*,void*){
 	appendProject();
-	window->projectSelect->maximum(projects_count-1);
 	window->redraw();
 }
 void deleteProjectCB(Fl_Widget*,void*){
@@ -49,5 +67,4 @@ void deleteProjectCB(Fl_Widget*,void*){
 	}
 	currentProject=projects[curProjectID];
 	switchProject(curProjectID);
-	window->redraw();
 }

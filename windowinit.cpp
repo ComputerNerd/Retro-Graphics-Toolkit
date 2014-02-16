@@ -21,22 +21,21 @@
     along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
     Copyright Sega16 (or whatever you wish to call me (2012-2014)
 */
-static intptr_t tabs_ptr[4];
+static intptr_t tabs_ptr[5];
 void set_mode_tabs(Fl_Widget* o, void*){
 	intptr_t val=(intptr_t)(Fl_Tabs*)window->the_tabs->value();
 	if (val==tabs_ptr[0]){
 		mode_editor=pal_edit;
 		palEdit.updateSlider();
-	}
-	else if (val==tabs_ptr[1]){
+	}else if (val==tabs_ptr[1]){
 		mode_editor=tile_edit;
 		tileEdit_pal.updateSlider();
-	}
-	else if (val==tabs_ptr[2]){
+	}else if (val==tabs_ptr[2]){
 		mode_editor=tile_place;
 		tileMap_pal.updateSlider();
-	}
-	else if (val==tabs_ptr[3]){
+	}else if(val==tabs_ptr[3]){
+		mode_editor=chunckEditor;
+	}else if (val==tabs_ptr[4]){
 		mode_editor=settingsTab;
 	}
 }
@@ -308,7 +307,7 @@ void editor::_editor(){
 			tile_select->callback(set_tile_current);
 			o->end();
 		}
-		{ Fl_Group* o = new Fl_Group(rx,ry,rw,rh,"Plane Mapping Editor");
+		{ Fl_Group* o = new Fl_Group(rx,ry,rw,rh,"Plane Mapping/Block Editor");
 			//o->callback(set_mode_tabs);
 			tabs_ptr[2]=(intptr_t)o->as_group();
 			{
@@ -419,8 +418,12 @@ void editor::_editor(){
 			place_tile_size->tooltip("By changing this slider you are changing the magnification of the tile for example if this slider was set to 10 that would mean that the tile is magnified by a factor of 10");
 			o->end();
 		}
-		{ Fl_Group* o = new Fl_Group(rx,ry,rw,rh,"Settings/projects");
+		{Fl_Group* o = new Fl_Group(rx,ry,rw,rh,"Chuck editor");
 			tabs_ptr[3]=(intptr_t)o->as_group();
+			o->end();
+		}
+		{Fl_Group* o = new Fl_Group(rx,ry,rw,rh,"Settings/projects");
+			tabs_ptr[4]=(intptr_t)o->as_group();
 			projectSelect=new Fl_Hor_Value_Slider(112,56,128,24,"Current project");
 			projectSelect->minimum(0);
 			projectSelect->maximum(0);
@@ -428,14 +431,30 @@ void editor::_editor(){
 			projectSelect->value(0);
 			projectSelect->align(FL_ALIGN_LEFT);
 			projectSelect->callback(switchProjectCB);
-			{Fl_Button *o = new Fl_Button(260, 56, 144, 32, "Append blank project");
+			{Fl_Button *o = new Fl_Button(260, 52, 152, 32, "Append blank project");
 				o->callback(appendProjectCB);
 			}
-			{Fl_Button *o = new Fl_Button(420, 56, 168, 32, "Delete selected project");
+			{Fl_Button *o = new Fl_Button(428, 52, 168, 32, "Delete selected project");
 				o->callback(deleteProjectCB);
 			}
+			sharePrj[0]=new Fl_Check_Button(8,88,112,16,"Share palette");
+			sharePrj[0]->callback(shareProjectCB,(void*)pjHavePal);
+			sharePrj[1]=new Fl_Check_Button(120,88,96,16,"Share Tiles");
+			sharePrj[1]->callback(shareProjectCB,(void*)pjHaveTiles);
+			sharePrj[2]=new Fl_Check_Button(216,88,120,16,"Share TileMap");
+			sharePrj[2]->callback(shareProjectCB,(void*)pjHaveMap);
+			shareWith[0]=new Fl_Hor_Value_Slider(8,118,128,24,"Share Palette with:");
+			shareWith[1]=new Fl_Hor_Value_Slider(136,118,128,24,"Share tiles with:");
+			shareWith[2]=new Fl_Hor_Value_Slider(264,118,128,24,"Share TileMap with:");
+			for(int x=0;x<3;++x){
+				shareWith[x]->minimum(0);
+				shareWith[x]->maximum(0);
+				shareWith[x]->step(1);
+				shareWith[x]->value(0);
+				shareWith[x]->align(FL_ALIGN_TOP);
+			}
 			TxtBufProject = new Fl_Text_Buffer;
-			TxtEditProject = new Fl_Text_Editor(16, 104, 640, 370,"Description/Notes");
+			TxtEditProject = new Fl_Text_Editor(8, 160, 640, 370,"Description/Notes");
 			TxtEditProject->buffer(TxtBufProject);
 			TxtEditProject->textfont(FL_TIMES);
 			TxtBufProject->text(currentProject->Name.c_str());

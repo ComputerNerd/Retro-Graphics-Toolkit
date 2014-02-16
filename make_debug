@@ -13,9 +13,9 @@ EXECUTABLE=RetroGraphicsToolkit
 all: $(SOURCES) $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
-$(CC) $(LDFLAGS) $(OBJECTS) $(LINKER) -o $@
+	$(CC) $(LDFLAGS) $(OBJECTS) $(LINKER) -o $@
 
 .cpp.o:
-$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 clean:
-rm $(OBJECTS) $(EXECUTABLE)
+	rm $(OBJECTS) $(EXECUTABLE)

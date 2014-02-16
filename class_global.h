@@ -45,6 +45,9 @@ class editor : public Fl_Double_Window{
 	Fl_Check_Button* hflipCB;
 	Fl_Check_Button* vflipCB;
 	Fl_Check_Button* prioCB;
+	Fl_Check_Button* sharePrj[3];
+	Fl_Slider* shareWith[3];
+	Fl_Check_Button* havePrj[3];
 	Fl_Text_Buffer* TxtBufProject;
 	Fl_Text_Editor* TxtEditProject;
 	void draw();

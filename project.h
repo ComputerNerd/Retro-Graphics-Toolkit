@@ -25,27 +25,31 @@ For example the save project file function goes here
 #include "classtilemap.h"
 #define currentProjectVersionNUM 0
 extern uint32_t curProjectID;
-struct Project/*!<Holds all data needed for a project based system for examaple tile screen and level 1 are 2 seperate projects*/
-{
+struct Project{/*!<Holds all data needed for a project based system for examaple tile screen and level 1 are 2 seperate projects*/
 	std::string Name;
 	uint32_t gameSystem;
-	tileMap * tileMapC;
-	tiles * tileC;
-	uint8_t rgbPal[256];
-	uint8_t palDat[128];
-	uint8_t palType[64];/*!<Sets 3 different types for each palette entry free locked and reserved*/
-	int32_t sharePalette;//Negative if not sharing or project id (which is always positive) if sharing
+	uint32_t useMask;/*!<Sharing can be used regardless of use mask*/
+	tileMap* tileMapC;
+	tiles* tileC;
+	uint8_t* rgbPal;
+	uint8_t* palDat;
+	uint8_t* palType;/*!<Sets 3 different types for each palette entry free locked and reserved*/
+	int32_t sharePalette;/*!<Negative if not sharing or project id (which is always positive) if sharing*/
 	int32_t shareTiles;
 	int32_t shareTileMap;
-	
 };
 extern struct Project ** projects;
 extern uint32_t projects_count;//holds how many projects there are this is needed for realloc when adding or removing function
 extern struct Project * currentProject;
 extern Fl_Slider* curPrj;
 void initProject(void) __attribute__((constructor(101)));/*!< this needs to be ran before class constructors*/
+void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable);
 bool appendProject();
 bool removeProject(uint32_t id);
 void switchProject(uint32_t id);
 bool loadProject(uint32_t id);
 bool saveProject(uint32_t id);
+#define pjHavePal 1
+#define pjHaveTiles 2
+#define pjHaveMap 4
+#define pjDefaultMask (pjHavePal|pjHaveTiles|pjHaveMap)

@@ -22,7 +22,15 @@
 tiles::tiles(){
 	current_tile=0;
 	tiles_amount=0;
-	tileDat=(uint8_t *)calloc(32,1);
+	switch(currentProject->gameSystem){
+		case sega_genesis:
+			tileSize=32;
+		break;
+		case NES:
+			tileSize=16;
+		break;
+	}
+	tileDat=(uint8_t *)calloc(tileSize,1);
 	if (!tileDat){
 		puts("Error in init class");//I am using puts instead of fl_alert as the gui will not be created when this is called
 		exit(1);//the program will not be able to function at all without this working
@@ -32,8 +40,16 @@ tiles::tiles(){
 		puts("Error in init class");
 		exit(1);
 	}
-	tileSize=32;
-	//tileName="default";
+}
+tiles::tiles(const tiles& other){
+	current_tile=other.current_tile;
+	tiles_amount=other.tiles_amount;
+	tileSize=other.tileSize;
+	tileDat=(uint8_t*)malloc((tiles_amount+1)*tileSize);
+	truetileDat=(uint8_t*)malloc((tiles_amount+1)*256);
+	memcpy(tileDat,other.tileDat,(tiles_amount+1)*tileSize);
+	memcpy(truetileDat,other.truetileDat,256*(tiles_amount+1));
+	printf("Copied %d tiles that are %d bytes each\n",tiles_amount+1,tileSize);
 }
 tiles::~tiles(){
 	free(tileDat);
@@ -225,8 +241,7 @@ void tiles::draw_tile(uint16_t x_off,uint16_t y_off,uint32_t tile_draw,uint8_t z
 					red_temp=currentProject->rgbPal[(pal_row*48)+(temp_1*3)];
 					green_temp=currentProject->rgbPal[(pal_row*48)+(temp_1*3)+1];
 					blue_temp=currentProject->rgbPal[(pal_row*48)+(temp_1*3)+2];
-					for (c=0;c<zoom;c++)//ha ha c++ bad programming pun
-					{
+					for (c=0;c<zoom;c++){//ha ha c++ bad programming pun
 						for (d=0;d<zoom;d++){
 							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d,(y*zoom)+c,zoom,0)]=red_temp;
 							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d,(y*zoom)+c,zoom,1)]=green_temp;
@@ -236,8 +251,7 @@ void tiles::draw_tile(uint16_t x_off,uint16_t y_off,uint32_t tile_draw,uint8_t z
 					red_temp=currentProject->rgbPal[(pal_row*48)+(temp_2*3)];
 					green_temp=currentProject->rgbPal[(pal_row*48)+(temp_2*3)+1];
 					blue_temp=currentProject->rgbPal[(pal_row*48)+(temp_2*3)+2];
-					for (c=0;c<zoom;c++)//ha ha c++ bad programming pun
-					{
+					for (c=0;c<zoom;c++){//ha ha c++ bad programming pun
 						for (d=0;d<zoom;d++){
 							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d+zoom,(y*zoom)+c,zoom,0)]=red_temp;
 							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d+zoom,(y*zoom)+c,zoom,1)]=green_temp;
@@ -248,18 +262,15 @@ void tiles::draw_tile(uint16_t x_off,uint16_t y_off,uint32_t tile_draw,uint8_t z
 			}
 		break;
 			case NES:
-				for (y=0;y<8;y++)
-				{
-					for (x=0;x<8;x++)
-					{
+				for (y=0;y<8;++y){
+					for (x=0;x<8;++x){
 						uint8_t temp;
 						temp=(tileTemp[y]>>(7-x))&1;
 						temp|=((tileTemp[y+8]>>(7-x))&1)<<1;
 						red_temp=currentProject->rgbPal[(pal_row*12)+(temp*3)];
 						green_temp=currentProject->rgbPal[(pal_row*12)+(temp*3)+1];
 						blue_temp=currentProject->rgbPal[(pal_row*12)+(temp*3)+2];
-						for (c=0;c<zoom;c++)//yes the same old c++ joke I wonder how many program have it
-						{
+						for (c=0;c<zoom;c++){//yes the same old c++ joke I wonder how many program have it
 							for (d=0;d<zoom;d++){
 								temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+d,(y*zoom)+c,zoom,0)]=red_temp;
 								temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+d,(y*zoom)+c,zoom,1)]=green_temp;
@@ -273,9 +284,7 @@ void tiles::draw_tile(uint16_t x_off,uint16_t y_off,uint32_t tile_draw,uint8_t z
 	fl_draw_image(temp_img_ptr,x_off,y_off,8*zoom,8*zoom,3);
 	free(temp_img_ptr);
 }
-
-void tiles::hflip_truecolor(uint32_t id,uint32_t * out)
-{
+void tiles::hflip_truecolor(uint32_t id,uint32_t * out){
 	//out must contaian at least 256 bytes
 	uint8_t y;
 	uint32_t * trueColPtr=(uint32_t *)&truetileDat[id*256];
@@ -444,10 +453,8 @@ void tiles::remove_duplicate_tiles(){
 	}
 	//tile_remove_c=0;
 	puts("Pass 3 v-flip");
-	for (cur_tile=0;cur_tile<=tiles_amount;cur_tile++)
-	{
-		for (curT=tiles_amount;curT>=0;curT--)
-		{
+	for (cur_tile=0;cur_tile<=tiles_amount;cur_tile++){
+		for (curT=tiles_amount;curT>=0;curT--){
 			if (cur_tile == curT)//dont compare it's self
 				continue;
 			vflip_tile(curT,tileTemp);
@@ -501,8 +508,8 @@ void tiles::remove_duplicate_tiles(){
 	Fl::check();
 }
 #if __LP64__
-bool tiles::cmp_trueC(uint32_t one,uint64_t * two)
-{//this should be faster than memcmp as it returns as soon as there is a difference
+bool tiles::cmp_trueC(uint32_t one,uint64_t * two){
+//this should be faster than memcmp as it returns as soon as there is a difference
 	uint64_t * onePtr =(uint64_t *)&truetileDat[one*256];
 	for (int x=0;x<32;x++){
 		if (*onePtr++ != *two++)
@@ -511,8 +518,8 @@ bool tiles::cmp_trueC(uint32_t one,uint64_t * two)
 	return true;
 }
 #else
-bool tiles::cmp_trueC(uint32_t one,uint32_t * two)
-{//this should be faster than memcmp as it returns as soon as there is a difference
+bool tiles::cmp_trueC(uint32_t one,uint32_t * two){
+//this should be faster than memcmp as it returns as soon as there is a difference
 	uint32_t * onePtr =(uint32_t *)&truetileDat[one*256];
 	for (int x=0;x<64;x++){
 		if (*onePtr++ != *two++)

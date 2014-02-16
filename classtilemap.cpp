@@ -18,8 +18,14 @@
 tileMap::tileMap(){
 	mapSizeW=2;
 	mapSizeH=2;
-	selection=false;
 	tileMapDat=(uint8_t *)calloc(16,1);
+}
+tileMap::tileMap(const tileMap& other){
+	mapSizeW=other.mapSizeW;
+	mapSizeH=other.mapSizeH;
+	tileMapDat=(uint8_t*)malloc(mapSizeW*mapSizeH*4);
+	memcpy(tileMapDat,other.tileMapDat,mapSizeW*mapSizeH*4);
+	printf("Copied map of size %dx%d\n",mapSizeW,mapSizeH);
 }
 tileMap::~tileMap(){
 	free(tileMapDat);

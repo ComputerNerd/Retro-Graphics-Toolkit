@@ -15,9 +15,10 @@
     Copyright Sega16 (or whatever you wish to call me (2012-2014)
 */
 #pragma once
-class tiles{	
+class tiles{
 public:
 	tiles();
+	tiles(const tiles& other);
 	~tiles();
 	uint8_t tileSize;/*!< Sets the size on one tile in bytes 16 or 32 depends of if NES or genesis*/
 	uint32_t tiles_amount;/*!< Amount of tiles couting from 0 that means that a value of 0 is one tile*/

@@ -23,7 +23,7 @@ struct Project ** projects;
 uint32_t projects_count;//holds how many projects there are this is needed for realloc when adding or removing function
 struct Project * currentProject;
 Fl_Slider* curPrj;
-static const char * defaultName="Add a description here";
+static const char * defaultName="Add a description here.";
 uint32_t curProjectID=0;
 void initProject(void){
 	projects = (struct Project **) malloc(sizeof(void *));
@@ -32,14 +32,71 @@ void initProject(void){
 	projects_count=1;
 	currentProject->tileC = new tiles;
 	currentProject->tileMapC = new tileMap;
+	currentProject->rgbPal=(uint8_t*)calloc(1,256);
+	currentProject->palDat=(uint8_t*)calloc(1,128);
+	currentProject->palType=(uint8_t*)calloc(1,64);
 	currentProject->Name.assign(defaultName);
-	memset(currentProject->palDat,0,128);
-	memset(currentProject->rgbPal,0,192);
-	memset(currentProject->palType,0,64);
 	currentProject->sharePalette=-1;//Note always check to see if less than 0 do not use == -1
 	currentProject->shareTiles=-1;
 	currentProject->shareTileMap=-1;
+	currentProject->useMask=pjDefaultMask;
 	currentProject->gameSystem=sega_genesis;
+}
+void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable){
+	/*! share is the project that will now point to with's data
+	what uses, use masks*/
+	if(share==with)
+		return;
+	if(enable){
+		if(what&pjHavePal){
+			if((projects[share]->sharePalette<0)&&(projects[share]->useMask&pjHavePal)){
+				free(projects[share]->rgbPal);
+				free(projects[share]->palDat);
+				free(projects[share]->palType);
+			}
+			projects[share]->sharePalette=with;
+			projects[share]->rgbPal=projects[with]->rgbPal;
+			projects[share]->palDat=projects[with]->palDat;
+			projects[share]->palType=projects[with]->palType;
+		}
+		if(what&pjHaveTiles){
+			if((projects[share]->shareTiles<0)&&(projects[share]->useMask&pjHaveTiles))
+				delete projects[share]->tileC;
+			projects[share]->shareTiles=with;
+			projects[share]->tileC=projects[with]->tileC;
+		}
+		if(what&pjHaveMap){
+			if((projects[share]->shareTileMap<0)&&(projects[share]->useMask&pjHaveMap))
+				delete projects[share]->tileMapC;
+			projects[share]->shareTileMap=with;
+			projects[share]->tileMapC=projects[with]->tileMapC;
+		}
+	}else{
+		if(what&pjHavePal){
+			if((projects[share]->sharePalette>=0)&&(projects[share]->useMask&pjHavePal)){
+				projects[share]->rgbPal=(uint8_t*)malloc(256);
+				projects[share]->palDat=(uint8_t*)malloc(128);
+				projects[share]->palType=(uint8_t*)malloc(64);
+				memcpy(projects[share]->rgbPal,projects[with]->rgbPal,256);
+				memcpy(projects[share]->palDat,projects[with]->palDat,128);
+				memcpy(projects[share]->palType,projects[with]->palType,64);
+			}
+			projects[share]->sharePalette=-1;
+		}
+		if(what&pjHaveTiles){
+			if((projects[share]->shareTiles>=0)&&(projects[share]->useMask&pjHaveTiles)){
+				//Create a copy of the shared data
+				projects[share]->tileC = new tiles(*projects[with]->tileC);
+			}
+			projects[share]->shareTiles=-1;
+		}
+		if(what&pjHaveMap){
+			if((projects[share]->shareTileMap>=0)&&(projects[share]->useMask&pjHaveMap)){
+				projects[share]->tileMapC = new tileMap(*projects[with]->tileMapC);
+			}
+			projects[share]->shareTileMap=-1;//Even if we don't have the data sharing can still be disabled
+		}
+	}
 }
 bool appendProject(void){
 	projects = (struct Project **) realloc(projects,(projects_count+1)*sizeof(void *));
@@ -47,20 +104,24 @@ bool appendProject(void){
 		show_realloc_error((projects_count+1)*sizeof(void *))
 		return false;
 	}
-	projects[projects_count] = new struct Project;
+	projects[projects_count]= new struct Project;
 	projects[projects_count]->tileC = new tiles;
 	projects[projects_count]->tileMapC = new tileMap;
 	projects[projects_count]->Name.assign(defaultName);
-	memset(projects[projects_count]->palDat,0,128);
-	memset(projects[projects_count]->rgbPal,0,192);
-	memset(projects[projects_count]->palType,0,64);
+	projects[projects_count]->rgbPal=(uint8_t*)calloc(1,256);
+	projects[projects_count]->palDat=(uint8_t*)calloc(1,128);
+	projects[projects_count]->palType=(uint8_t*)calloc(1,64);
 	projects[projects_count]->gameSystem=sega_genesis;
 	projects[projects_count]->sharePalette=-1;
 	projects[projects_count]->shareTiles=-1;
 	projects[projects_count]->shareTileMap=-1;
+	projects[projects_count]->useMask=pjDefaultMask;
 	++projects_count;
 	//Realloc could have changed address
 	currentProject=projects[curProjectID];
+	window->projectSelect->maximum(projects_count-1);
+	for(int x=0;x<3;++x)
+		window->shareWith[x]->maximum(projects_count-1);
 	return true;
 }
 bool removeProject(uint32_t id){
@@ -69,8 +130,15 @@ bool removeProject(uint32_t id){
 		fl_alert("You must have atleast one project.");
 		return false;
 	}
-	delete projects[id]->tileC;
-	delete projects[id]->tileMapC;
+	if(projects[id]->shareTiles<0)
+		delete projects[id]->tileC;
+	if(projects[id]->shareTileMap<0)
+		delete projects[id]->tileMapC;
+	if(projects[id]->sharePalette<0){
+		free(projects[id]->rgbPal);
+		free(projects[id]->palDat);
+		free(projects[id]->palType);
+	}
 	delete projects[id];
 	if((id+1)!=projects_count)//Are we not removing the project last on the list?
 		memmove(projects+id,projects+id+1,sizeof(void*)*(projects_count-id-1));
@@ -121,6 +189,9 @@ void switchProject(uint32_t id){
 	window->map_h->value(projects[id]->tileMapC->mapSizeH);
 	window->tile_select->maximum(projects[id]->tileC->tiles_amount);
 	window->tile_select_2->maximum(projects[id]->tileC->tiles_amount);
+	window->sharePrj[0]->value(projects[id]->sharePalette<0?0:1);
+	window->sharePrj[1]->value(projects[id]->shareTiles<0?0:1);
+	window->sharePrj[2]->value(projects[id]->shareTileMap<0?0:1);
 	window->redraw();
 }
 bool loadProject(uint32_t id){

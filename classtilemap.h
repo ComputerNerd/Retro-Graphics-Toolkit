@@ -17,6 +17,7 @@
 class tileMap{
 public:
 	tileMap();
+	tileMap(const tileMap& other);
 	~tileMap();
 	uint8_t * tileMapDat;/*!< Holds tilemap data*/
 	uint32_t mapSizeW,mapSizeH;
@@ -39,6 +40,4 @@ public:
 	void set_prio(uint32_t x,uint32_t y,bool prio_set);
 	void set_hflip(uint32_t x,uint32_t y,bool hflip_set);
 	void resize_tile_map(uint32_t new_x,uint32_t new_y);
-	bool selection;
-	uint16_t cur_x,cur_y;
 };
