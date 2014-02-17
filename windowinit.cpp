@@ -41,41 +41,55 @@ void set_mode_tabs(Fl_Widget* o, void*){
 static const char * freeDes="This sets the currently selected palette entry to free meaning that this color can be changed";
 static const char * lockedDes="This sets the currently selected palette entry to locked meaning that this color cannot be changed but tiles can still use it";
 static const char * reservedDes="This sets the currently selected palette entry to reserved meaning that this color cannot be changed or used in tiles note that you may need make sure all tiles get re-dithered to ensure that this rule is enforced";
+static const Fl_Menu_Item menuEditor[]={
+	{"File",0, 0, 0, FL_SUBMENU},
+		{"Open palette",0,loadPalette,0},
+		{"Open tiles",0,load_tiles,0},
+		{"Open Truecolor Tiles",0,load_truecolor_tiles,0},
+		{"Append tiles",0,load_tiles,(void*)1},
+		{"Open tile map or blocks and if NES attributes",0,load_tile_map,0},
+		{"Import image to tilemap",0,load_image_to_tilemap,0},
+		{"Save tilemap as image",0,save_tilemap_as_image,0},
+		{"Save tilemap as with system color space",0,save_tilemap_as_colspace,0},
+		{"Save Palette",0, save_palette,0},
+		{"Save tiles",0,save_tiles,0},
+		{"Save truecolor tiles",0,save_tiles_truecolor,0},
+		{"Save tile map and if nes attributes",0,save_map,0},
+		{"Load project",0,loadProjectCB,0},
+		{"Save project",0,saveProjectCB,0},
+		{0},
+	{"Palette Actions",0, 0, 0, FL_SUBMENU},
+		{"Generate optimal palette with x amount of colors",0,generate_optimal_palette,0},
+		{"Clear entire Palette",0,clearPalette,0},
+		{"Pick nearest color algorithm",0,pickNearAlg,0},
+		{0},
+	{"Tile Actions",0, 0, 0, FL_SUBMENU},
+		{"Append blank tile to end of buffer",0,new_tile,0},
+		{"Fill tile with selected color",0,fill_tile,0},
+		{"Fill tile with color 0",0,blank_tile,0},
+		{"Remove duplicate truecolor tiles",0,remove_duplicate_truecolor,0},
+		{"Remove duplicate tiles",0,remove_duplicate_tiles,0},
+		{"Update dither all tiles",0,update_all_tiles,0},
+		{"Delete currently selected tile",0,delete_tile_at_location,0},
+		{0},
+	{"TileMap Actions",0, 0, 0, FL_SUBMENU},
+		{"Remove tile from tilemap",0,tilemap_remove_callback,0},
+		{"Toggle TrueColor Viewing (defaults to off)",0,trueColTileToggle,0},
+		{"Pick Tile row based on delta",0,tileDPicker,0},
+		{"Auto determine if use shadow highlight",0,shadow_highligh_findout,0},
+		{"Dither tilemap as image",0,dither_tilemap_as_image,0},
+		{"File tile map with selection includeing attributes",0,fill_tile_map_with_tile,(void *)0},
+		{"Fix out of range tiles (replace with current attributes in plane editor)",0,FixOutOfRangeCB,0},
+		{0},
+	{"Help",0, 0, 0, FL_SUBMENU},
+		{"About",0,showAbout},
+		{0},
+	{0}
+};
 void editor::_editor(){
 	//create the window
 	menu = new Fl_Menu_Bar(0,0,800,24);		// Create menubar, items..
-	menu->add("&File/&Open palette",(int)0, loadPalette,(void *)0,(int)0);
-	menu->add("&File/&Open tiles",(int)0,load_tiles,(void*)0,(int)0);
-	menu->add("&File/&Open Truecolor Tiles",(int)0,load_truecolor_tiles,0,(int)0);
-	menu->add("&File/&Append tiles",(int)0,load_tiles,(void*)1,(int)0);
-	menu->add("&File/&Open tile map or blocks and if NES attrabiuts",(int)0,load_tile_map,(void *)0,(int)0);
-	menu->add("&File/&import image to tilemap",(int)0,load_image_to_tilemap,(void *)0,(int)0);
-	menu->add("&File/&save tilemap as image",(int)0,save_tilemap_as_image,(void *)0,(int)0);
-	menu->add("&File/&save tilemap as with system color space",(int)0,save_tilemap_as_colspace,(void *)0,(int)0);
-	menu->add("&File/&Save Palette",  0, save_palette,(void*)0);
-	menu->add("&File/&Save tiles",0,save_tiles,0,0);
-	menu->add("&File/&Save truecolor tiles",0,save_tiles_truecolor,0,0);
-	menu->add("&File/&Save tile map and if nes attributes",0,save_map,0,0);
-	menu->add("&File/&Load project",0,loadProjectCB,0,0);
-	menu->add("&File/&Save project",0,saveProjectCB,0,0);
-	menu->add("&Palette Actions/&generate optimal palette with x amount of colors",0,generate_optimal_palette,(void *)0,(int)0);
-	menu->add("&Palette Actions/&Clear entire Palette",0,clearPalette,(void *)0,(int)0);
-	menu->add("&Palette Actions/&Pick nearest color algorithm",0,pickNearAlg,(void *)0,(int)0);
-	menu->add("&Tile Actions/&Append blank tile to end of buffer",0,new_tile,0,0);
-	menu->add("&Tile Actions/&Fill tile with selected color",0,fill_tile,(void *)0,(int)0);
-	menu->add("&Tile Actions/&Fill tile with color 0",0,blank_tile,0,0);
-	menu->add("&Tile Actions/&Remove duplicate truecolor tiles",0,remove_duplicate_truecolor,0,0);
-	menu->add("&Tile Actions/&Remove duplicate tiles",0,remove_duplicate_tiles,0,0);
-	menu->add("&Tile Actions/&update dither all tiles",0,update_all_tiles,0,0);
-	menu->add("&Tile Actions/&Delete currently selected tile",0,delete_tile_at_location,(void *)0,(int)0);
-	menu->add("&TileMap Actions/&Remove tile from tilemap",0,tilemap_remove_callback,0,0);
-	menu->add("&TileMap Actions/&Toggle TrueColor Viewing (defaults to off)",0,trueColTileToggle,0,0);
-	menu->add("&TileMap Actions/&Pick Tile row based on delta",0,tileDPicker,0,0);
-	menu->add("&TileMap Actions/&Auto determine if use shadow highlight",0,shadow_highligh_findout,(void *)0,(int)0);
-	menu->add("&TileMap Actions/&Dither tilemap as image",0,dither_tilemap_as_image,(void *)0,(int)0);
-	menu->add("&TileMap Actions/&File tile map with selection includeing attributes",0,fill_tile_map_with_tile,(void *)0,(int)0);
-	menu->add("&TileMap Actions/&Fix out of range tiles (replace with current attributes in plane editor)",0,FixOutOfRangeCB,0,0);
-	menu->add("&Help/&About",0,showAbout,0,0);
+	menu->copy(menuEditor);
 	tile_placer_tile_offset_y=default_tile_placer_tile_offset_y;
 	true_color_box_x=default_true_color_box_x;
 	true_color_box_y=default_true_color_box_y;
