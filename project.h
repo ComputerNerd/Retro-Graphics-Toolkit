@@ -25,6 +25,7 @@ For example the save project file function goes here
 #include "classtilemap.h"
 #define currentProjectVersionNUM 1
 extern uint32_t curProjectID;
+#define shareAmtPj 3
 struct Project{/*!<Holds all data needed for a project based system for examaple tile screen and level 1 are 2 seperate projects*/
 	std::string Name;
 	uint32_t gameSystem;
@@ -34,7 +35,7 @@ struct Project{/*!<Holds all data needed for a project based system for examaple
 	uint8_t* rgbPal;
 	uint8_t* palDat;
 	uint8_t* palType;/*!<Sets 3 different types for each palette entry free locked and reserved*/
-	int32_t share[3];/*!<Negative if not sharing or project id (which is always positive) if sharing*/
+	int32_t share[shareAmtPj];/*!<Negative if not sharing or project id (which is always positive) if sharing*/
 };
 extern struct Project ** projects;
 extern uint32_t projects_count;//holds how many projects there are this is needed for realloc when adding or removing function
@@ -48,6 +49,8 @@ bool removeProject(uint32_t id);
 void switchProject(uint32_t id);
 bool loadProject(uint32_t id);
 bool saveProject(uint32_t id);
+bool saveAllProjects(void);
+bool loadAllProjects(void);
 #define pjHavePal 1
 #define pjHaveTiles 2
 #define pjHaveMap 4

@@ -57,6 +57,8 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Save tile map and if nes attributes",0,save_map,0},
 		{"Load project",0,loadProjectCB,0},
 		{"Save project",0,saveProjectCB,0},
+		{"Load project group",0,loadAllProjectsCB,0},
+		{"Save project group",0,saveAllProjectsCB,0},
 		{0},
 	{"Palette Actions",0, 0, 0, FL_SUBMENU},
 		{"Generate optimal palette with x amount of colors",0,generate_optimal_palette,0},
@@ -88,7 +90,7 @@ static const Fl_Menu_Item menuEditor[]={
 };
 void editor::_editor(){
 	//create the window
-	menu = new Fl_Menu_Bar(0,0,800,24);		// Create menubar, items..
+	menu = new Fl_Menu_Bar(0,0,800,24);//Create menubar, items..
 	menu->copy(menuEditor);
 	tile_placer_tile_offset_y=default_tile_placer_tile_offset_y;
 	true_color_box_x=default_true_color_box_x;

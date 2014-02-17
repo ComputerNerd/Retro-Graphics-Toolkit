@@ -17,6 +17,13 @@
 #include "global.h"
 #include "project.h"
 static const char * warningDelete="Warning this will delete this project's data\nDo you wish to countinue?";
+void saveAllProjectsCB(Fl_Widget*,void*){
+	saveAllProjects();
+}
+void loadAllProjectsCB(Fl_Widget*,void*){
+	loadAllProjects();
+	switchProject(curProjectID);
+}
 void haveCB(Fl_Widget*o,void*mask){
 	Fl_Check_Button* b=(Fl_Check_Button*)o;
 	uint32_t m=(uintptr_t)mask;

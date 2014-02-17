@@ -266,10 +266,7 @@ void switchProject(uint32_t id){
 	}
 	window->redraw();
 }
-bool loadProject(uint32_t id){
-	if(!load_file_generic("Load project",false))
-		return true;
-	FILE * fi=fopen(the_file.c_str(),"rb");
+static bool loadProjectFile(uint32_t id,FILE * fi){
 	if(fgetc(fi)!='R'){
 		invaildProject();
 		fclose(fi);
@@ -314,22 +311,35 @@ bool loadProject(uint32_t id){
 		break;
 	}
 	if(projects[id]->useMask&pjHavePal){
-		fread(projects[id]->palDat,eSize,entries,fi);
-		fread(projects[id]->palType,1,entries,fi);
+		if(projects[id]->share[0]<0){
+			fread(projects[id]->palDat,eSize,entries,fi);
+			fread(projects[id]->palType,1,entries,fi);
+		}
 	}
 	if(projects[id]->useMask&pjHaveTiles){
-		fread(&projects[id]->tileC->tiles_amount,1,sizeof(uint32_t),fi);
-		projects[id]->tileC->tileDat=(uint8_t*)realloc(projects[id]->tileC->tileDat,projects[id]->tileC->tileSize*(projects[id]->tileC->tiles_amount+1));
-		decompressFromFile(projects[id]->tileC->tileDat,projects[id]->tileC->tileSize*(projects[id]->tileC->tiles_amount+1),fi);
-		projects[id]->tileC->truetileDat=(uint8_t*)realloc(projects[id]->tileC->truetileDat,256*(projects[id]->tileC->tiles_amount+1));
-		decompressFromFile(projects[id]->tileC->truetileDat,256*(projects[id]->tileC->tiles_amount+1),fi);
+		if(projects[id]->share[1]<0){
+			fread(&projects[id]->tileC->tiles_amount,1,sizeof(uint32_t),fi);
+			projects[id]->tileC->tileDat=(uint8_t*)realloc(projects[id]->tileC->tileDat,projects[id]->tileC->tileSize*(projects[id]->tileC->tiles_amount+1));
+			decompressFromFile(projects[id]->tileC->tileDat,projects[id]->tileC->tileSize*(projects[id]->tileC->tiles_amount+1),fi);
+			projects[id]->tileC->truetileDat=(uint8_t*)realloc(projects[id]->tileC->truetileDat,256*(projects[id]->tileC->tiles_amount+1));
+			decompressFromFile(projects[id]->tileC->truetileDat,256*(projects[id]->tileC->tiles_amount+1),fi);
+		}
 	}
 	if(projects[id]->useMask&pjHaveMap){
-		fread(&projects[id]->tileMapC->mapSizeW,1,sizeof(uint32_t),fi);
-		fread(&projects[id]->tileMapC->mapSizeH,1,sizeof(uint32_t),fi);
-		projects[id]->tileMapC->tileMapDat=(uint8_t*)realloc(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeH);
-		decompressFromFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeH,fi);
+		if(projects[id]->share[2]<0){
+			fread(&projects[id]->tileMapC->mapSizeW,1,sizeof(uint32_t),fi);
+			fread(&projects[id]->tileMapC->mapSizeH,1,sizeof(uint32_t),fi);
+			projects[id]->tileMapC->tileMapDat=(uint8_t*)realloc(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeH);
+			decompressFromFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeH,fi);
+		}
 	}
+}
+bool loadProject(uint32_t id){
+	if(!load_file_generic("Load project",false))
+		return true;
+	FILE * fi=fopen(the_file.c_str(),"rb");
+	std::fill(projects[id]->share,&projects[id]->share[shareAmtPj],-1);//One file projects do not support sharing
+	loadProjectFile(id,fi);
 	fclose(fi);
 	return true;
 }
@@ -367,7 +377,7 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared){
 	if(saveShared){
 		haveTemp=projects[id]->useMask;
 		for(unsigned x=0;x<3;++x)
-			haveTemp|=(projects[id]->share[x])<<x;
+			haveTemp|=(projects[id]->share[x]>=0?1:0)<<x;
 	}else
 		haveTemp=projects[id]->useMask;
 	fwrite(&haveTemp,sizeof(uint32_t),1,fo);
@@ -422,19 +432,55 @@ bool saveAllProjects(void){
 	char G
 	uint32_t amount of projects stored
 	Before each project header is
-	int32_t share[3]
+	int32_t share[shareAmtPj]
 	(format described in saveProject is repeated n amount of times let n = amount of projects stored)
 	*/
-	if(!load_file_generic("Save projects grupt as...",true))
+	if(!load_file_generic("Save projects group as...",true))
 		return true;
 	FILE * fo=fopen(the_file.c_str(),"wb");
 	fputc('R',fo);
 	fputc('G',fo);
 	fwrite(&projects_count,1,sizeof(uint32_t),fo);
 	for(uint32_t s=0;s<projects_count;++s){
-		fwrite(projects[s]->share,3,sizeof(uint32_t),fo);
+		fwrite(projects[s]->share,shareAmtPj,sizeof(uint32_t),fo);
 		saveProjectFile(s,fo,false);
 	}
 	fclose(fo);
+	return true;
+}
+static void invaildGroup(void){
+	fl_alert("This is not a valid project group");
+}
+bool loadAllProjects(void){
+	if(!load_file_generic("Load projects group"))
+		return true;
+	FILE * fi=fopen(the_file.c_str(),"rb");
+	if(fgetc(fi)!='R'){
+		invaildGroup();
+		fclose(fi);
+		return false;
+	}
+	if(fgetc(fi)!='G'){
+		invaildGroup();
+		fclose(fi);
+		return false;
+	}
+	uint32_t PC;
+	fread(&PC,1,sizeof(uint32_t),fi);
+	while(PC>projects_count)
+		appendProject();
+	for(unsigned x=0;x<projects_count;++x){
+		fread(projects[x]->share,shareAmtPj,sizeof(uint32_t),fi);
+		loadProjectFile(x,fi);
+	}
+	for(unsigned x=0;x<projects_count;++x){
+		if(projects[x]->share[0]>=0)
+			shareProject(x,projects[x]->share[0],pjHavePal,true);
+		if(projects[x]->share[1]>=0)
+			shareProject(x,projects[x]->share[1],pjHaveTiles,true);
+		if(projects[x]->share[2]>=0)
+			shareProject(x,projects[x]->share[2],pjHaveMap,true);
+	}
+	fclose(fi);
 	return true;
 }
