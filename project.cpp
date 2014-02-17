@@ -363,7 +363,14 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared){
 	fputc(0,fo);
 	uint32_t version=currentProjectVersionNUM;
 	fwrite(&version,sizeof(uint32_t),1,fo);
-	fwrite(&projects[id]->useMask,sizeof(uint32_t),1,fo);
+	uint32_t haveTemp;
+	if(saveShared){
+		haveTemp=projects[id]->useMask;
+		for(unsigned x=0;x<3;++x)
+			haveTemp|=(projects[id]->share[x])<<x;
+	}else
+		haveTemp=projects[id]->useMask;
+	fwrite(&haveTemp,sizeof(uint32_t),1,fo);
 	fwrite(&projects[id]->gameSystem,sizeof(uint32_t),1,fo);
 	int entries,eSize,tSize;
 	switch(projects[id]->gameSystem){
@@ -378,21 +385,25 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared){
 			tSize=16;
 		break;
 	}
-	if(projects[id]->useMask&pjHavePal){
+	if(haveTemp&pjHavePal){
 		if(saveShared||(projects[id]->share[0]<0)){
 			fwrite(projects[id]->palDat,eSize,entries,fo);
 			fwrite(projects[id]->palType,1,entries,fo);
 		}
 	}
-	if(saveShared||(projects[id]->share[1]<0)){
-		fwrite(&projects[id]->tileC->tiles_amount,1,sizeof(uint32_t),fo);
-		compressToFile(projects[id]->tileC->tileDat,tSize*(projects[id]->tileC->tiles_amount+1),fo);
-		compressToFile(projects[id]->tileC->truetileDat,256*(projects[id]->tileC->tiles_amount+1),fo);
+	if(haveTemp&pjHaveTiles){
+		if(saveShared||(projects[id]->share[1]<0)){
+			fwrite(&projects[id]->tileC->tiles_amount,1,sizeof(uint32_t),fo);
+			compressToFile(projects[id]->tileC->tileDat,tSize*(projects[id]->tileC->tiles_amount+1),fo);
+			compressToFile(projects[id]->tileC->truetileDat,256*(projects[id]->tileC->tiles_amount+1),fo);
+		}
 	}
-	if(saveShared||(projects[id]->share[2]<0)){
-		fwrite(&projects[id]->tileMapC->mapSizeW,1,sizeof(uint32_t),fo);
-		fwrite(&projects[id]->tileMapC->mapSizeH,1,sizeof(uint32_t),fo);
-		compressToFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeH,fo);
+	if(haveTemp&pjHaveMap){
+		if(saveShared||(projects[id]->share[2]<0)){
+			fwrite(&projects[id]->tileMapC->mapSizeW,1,sizeof(uint32_t),fo);
+			fwrite(&projects[id]->tileMapC->mapSizeH,1,sizeof(uint32_t),fo);
+			compressToFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeH,fo);
+		}
 	}
 	return true;
 }
