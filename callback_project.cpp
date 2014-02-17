@@ -16,10 +16,18 @@
 */
 #include "global.h"
 #include "project.h"
+static const char * warningDelete="Warning this will delete this project's data\nDo you wish to countinue?";
 void haveCB(Fl_Widget*o,void*mask){
 	Fl_Check_Button* b=(Fl_Check_Button*)o;
 	uint32_t m=(uintptr_t)mask;
 	bool set=b->value()?true:false;
+	if(!set){
+		if(!fl_ask(warningDelete)){
+			b->value(1);
+			window->redraw();
+			return;
+		}
+	}
 	if((m&pjHavePal)&&(!set)){//cannot have tiles without a palette
 		if(((currentProject->useMask&pjAllMask)&(~pjHavePal))){
 			/*the (above) if statment is based on the observation that all other have settings involve tiles
@@ -104,7 +112,7 @@ void shareProjectCB(Fl_Widget*o,void*mask){
 		return;
 	}
 	if(b->value()){
-		if(!fl_ask("Warning this will delete this project's data\nDo you wish to countinue?")){
+		if(!fl_ask(warningDelete)){
 			b->value(0);
 			window->redraw();
 			return;
