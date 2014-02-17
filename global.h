@@ -43,8 +43,8 @@ uint32_t MakeRGBcolor(uint32_t pixel,float saturation = 1.1f, float hue_tweak = 
 #define sega_genesis 0
 #define NES 1
 extern Fl_Group * shadow_highlight_switch;
-extern uint16_t map_scroll_pos_x;
-extern uint16_t map_scroll_pos_y;
+extern uint32_t map_scroll_pos_x;
+extern uint32_t map_scroll_pos_y;
 //tabs group id
 extern bool show_grid_placer;
 extern uint8_t tile_zoom_edit;
@@ -58,7 +58,7 @@ extern uint8_t mode_editor;/*!< Importan varible is used to determin which "mode
 #define chunckEditor 3
 #define settingsTab 4
 #define default_map_off_x 304
-extern uint16_t map_off_x,map_off_y;
+extern uint32_t map_off_x,map_off_y;
 #define default_map_off_y 232
 #define tile_placer_tile_offset_x 120
 #define default_tile_placer_tile_offset_y 208

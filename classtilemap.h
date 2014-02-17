@@ -39,5 +39,6 @@ public:
 	void set_tile(uint32_t tile,uint32_t x,uint32_t y);
 	void set_prio(uint32_t x,uint32_t y,bool prio_set);
 	void set_hflip(uint32_t x,uint32_t y,bool hflip_set);
+	void ScrollUpdate(void);
 	void resize_tile_map(uint32_t new_x,uint32_t new_y);
 };

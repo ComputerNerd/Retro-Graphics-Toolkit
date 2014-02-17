@@ -30,9 +30,9 @@ bool G_vflip;
 bool G_highlow_p;
 bool show_grid_placer;
 //moveable offsets
-uint16_t map_scroll_pos_x;
-uint16_t map_scroll_pos_y;
-uint16_t map_off_x,map_off_y;
+uint32_t map_scroll_pos_x;
+uint32_t map_scroll_pos_y;
+uint32_t map_off_x,map_off_y;
 uint16_t tile_edit_offset_x;
 uint16_t tile_edit_offset_y;
 uint16_t tile_placer_tile_offset_y;

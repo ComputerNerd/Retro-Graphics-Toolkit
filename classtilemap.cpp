@@ -473,16 +473,56 @@ void tileMap::set_prio(uint32_t x,uint32_t y,bool prio_set){
 	else
 		tileMapDat[((y*mapSizeW)+x)*4] &= ~(1 << 7);
 }
+void tileMap::ScrollUpdate(void){
+	uint32_t old_scroll=window->map_x_scroll->value();
+	uint32_t tile_size_placer=window->place_tile_size->value();
+	int32_t map_scroll=((tile_size_placer*8)*mapSizeW)-map_off_x;//size of all offscreen tiles in pixels
+	//map_scroll-=(tile_size_placer*8);
+	if (map_scroll < 0)
+		map_scroll=0;
+	map_scroll/=tile_size_placer*8;//now size of all tiles
+	//cout << "tiles off screen: " << map_scroll << endl;
+	if (old_scroll > map_scroll){
+		old_scroll=map_scroll;
+		map_scroll_pos_x=map_scroll;
+	}
+	if(map_scroll){
+		window->map_x_scroll->show();
+		window->map_x_scroll->value(old_scroll,(map_scroll/2),0,map_scroll+(map_scroll/2));//the reason for adding map_scroll/2 to map_scroll is because without it the user will not be able to scroll the tilemap all the way
+	}else
+		window->map_x_scroll->hide();
+	old_scroll=window->map_y_scroll->value();
+	tile_size_placer=window->place_tile_size->value();
+	map_scroll=((tile_size_placer*8)*mapSizeH)-map_off_y;//size of all offscreen tiles in pixels
+	//map_scroll-=(tile_size_placer*8);
+	if (map_scroll < 0)
+		map_scroll=0;
+	map_scroll/=tile_size_placer*8;//now size of all tiles
+	//cout << "tiles off screen: " << map_scroll << endl;
+	if (old_scroll > map_scroll){
+		old_scroll=map_scroll;
+		map_scroll_pos_y=map_scroll;
+	}
+	if(map_scroll){
+		window->map_y_scroll->show();
+		window->map_y_scroll->value(old_scroll,(map_scroll/2),0,map_scroll+(map_scroll/2));
+	}else
+		window->map_y_scroll->hide();
+}
 void tileMap::resize_tile_map(uint32_t new_x,uint32_t new_y){
 	//mapSizeW and mapSizeH hold old map size
-	if (new_x == mapSizeW && new_y == mapSizeH)
+	if ((new_x==mapSizeW) && (new_y==mapSizeH))
 		return;
+	if(new_x==0||new_y==0){
+		fl_alert("Cannot have a map of size 0");
+		return;
+	}
 	//now create a temp buffer to hold the old data
-	uint16_t x,y;//needed for loop varibles to copy data
+	uint32_t x,y;//needed for loop varibles to copy data
 	//uint8_t * temp = new uint8_t [(new_x*new_y)*2];
 	uint8_t * temp=0;
 	temp=(uint8_t *)malloc((new_x*new_y)*4);
-	if (temp == 0){
+	if (!temp){
 		//cout << "error" << endl;
 		show_malloc_error((new_x*new_y)*4)
 		return;
@@ -509,7 +549,7 @@ void tileMap::resize_tile_map(uint32_t new_x,uint32_t new_y){
 		}
 	}
 	tileMapDat = (uint8_t *)realloc(tileMapDat,(new_x*new_y)*4);
-	if (tileMapDat == 0){
+	if (!tileMapDat){
 		show_realloc_error((new_x*new_y)*4)
 		return;
 	}
@@ -520,28 +560,10 @@ void tileMap::resize_tile_map(uint32_t new_x,uint32_t new_y){
 	memcpy(tileMapDat,temp,(new_x*new_y)*4);
 	free(temp);
 	mapSizeW=new_x;
-	//calulate new scroll size
-	uint16_t old_scroll=window->map_x_scroll->value();
-	uint8_t tile_size_placer=window->place_tile_size->value();
-	int32_t map_scroll=((tile_size_placer*8)*mapSizeW)-map_off_x;//size of all offscreen tiles in pixels
-	//map_scroll-=(tile_size_placer*8);
-	if (map_scroll < 0)
-		map_scroll=0;
-	map_scroll/=tile_size_placer*8;//now size of all tiles
-	//cout << "tiles off screen: " << map_scroll << endl;
-	if (old_scroll > map_scroll)
-		old_scroll=map_scroll;
-	window->map_x_scroll->value(old_scroll,(map_scroll/2),0,map_scroll+(map_scroll/2));//the reason for adding map_scroll/2 to map_scroll is because without it the user will not be able to scroll the tilemap all the way
 	mapSizeH=new_y;
-	old_scroll=window->map_y_scroll->value();
-	tile_size_placer=window->place_tile_size->value();
-	map_scroll=((tile_size_placer*8)*mapSizeH)-map_off_y;//size of all offscreen tiles in pixels
-	//map_scroll-=(tile_size_placer*8);
-	if (map_scroll < 0)
-		map_scroll=0;
-	map_scroll/=tile_size_placer*8;//now size of all tiles
-	//cout << "tiles off screen: " << map_scroll << endl;
-	if (old_scroll > map_scroll)
-		old_scroll=map_scroll;
-	window->map_y_scroll->value(old_scroll,(map_scroll/2),0,map_scroll+(map_scroll/2));
+	if(selTileE_G[0]>=new_x)
+		selTileE_G[0]=new_x-1;
+	if(selTileE_G[1]>=new_y)
+		selTileE_G[1]=new_y-1;
+	ScrollUpdate();
 }

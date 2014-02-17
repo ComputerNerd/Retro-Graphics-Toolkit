@@ -123,14 +123,14 @@ void editor::draw_non_gui(){
 			map_off_y=(double)((double)h()/600.0)*(double)default_map_off_y;
 			map_off_x=(double)((double)w()/800.0)*(double)default_map_off_x;
 			//draw tile map
-			unsigned char max_map_w,max_map_h;//used to calulate the displayable tiles
+			uint32_t max_map_w,max_map_h;//used to calulate the displayable tiles
 			max_map_w=((placer_tile_size*8)+w()-map_off_x)/(placer_tile_size*8);//this will puroposly allow one tile to go partly off screen that is normal I added that on purpose
 			max_map_h=((placer_tile_size*8)+h()-map_off_y)/(placer_tile_size*8);
 			//see if shadow highlight is enabled
 			if ((palTypeGen==0) || (currentProject->gameSystem != sega_genesis) || (showTrueColor==true)){
 				//shadow highlight is disabled
-				for (y=0;y<std::min((int)currentProject->tileMapC->mapSizeH-map_scroll_pos_y,(int)max_map_h);++y){
-					for (x=0;x<std::min((int)currentProject->tileMapC->mapSizeW-map_scroll_pos_x,(int)max_map_w);++x){
+				for (y=0;y<std::min(currentProject->tileMapC->mapSizeH-map_scroll_pos_y,max_map_h);++y){
+					for (x=0;x<std::min(currentProject->tileMapC->mapSizeW-map_scroll_pos_x,max_map_w);++x){
 						uint32_t tempx,tempy;
 						tempx=x+map_scroll_pos_x;
 						tempy=y+map_scroll_pos_y;
@@ -153,8 +153,8 @@ void editor::draw_non_gui(){
 				}
 			}else{
 				uint8_t type_temp=palTypeGen;
-				for (y=0;y<std::min((int)currentProject->tileMapC->mapSizeH-map_scroll_pos_y,(int)max_map_h);++y){
-					for (x=0;x<std::min((int)currentProject->tileMapC->mapSizeW-map_scroll_pos_x,(int)max_map_w);++x){
+				for (y=0;y<std::min(currentProject->tileMapC->mapSizeH-map_scroll_pos_y,max_map_h);++y){
+					for (x=0;x<std::min(currentProject->tileMapC->mapSizeW-map_scroll_pos_x,max_map_w);++x){
 						uint32_t tempx,tempy;
 						tempx=x+map_scroll_pos_x;
 						tempy=y+map_scroll_pos_y;
@@ -180,8 +180,8 @@ void editor::draw_non_gui(){
 			}
 			if (show_grid_placer){
 				//draw box over tiles
-				for (y=0;y<std::min((int)currentProject->tileMapC->mapSizeH-map_scroll_pos_y,(int)max_map_h);++y){
-					for (x=0;x<std::min((int)currentProject->tileMapC->mapSizeW-map_scroll_pos_x,(int)max_map_w);x++)
+				for (y=0;y<std::min(currentProject->tileMapC->mapSizeH-map_scroll_pos_y,max_map_h);++y){
+					for (x=0;x<std::min(currentProject->tileMapC->mapSizeW-map_scroll_pos_x,max_map_w);++x)
 						fl_draw_box(FL_EMBOSSED_FRAME,map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),placer_tile_size*8,placer_tile_size*8,NULL);
 				}
 				

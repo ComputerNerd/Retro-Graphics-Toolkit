@@ -28,7 +28,7 @@ void FixOutOfRangeCB(Fl_Widget*,void*){
 	window->damage(FL_DAMAGE_USER1);
 }
 void callback_resize_map(Fl_Widget* o,void*){
-	uint8_t w,h;
+	uint32_t w,h;
 	w=window->map_w->value();
 	h=window->map_h->value();
 	currentProject->tileMapC->resize_tile_map(w,h);
@@ -169,7 +169,7 @@ void load_image_to_tilemap(Fl_Widget*,void*){
 		w=loaded_image->w();
 		h=loaded_image->h();
 		printf("image width: %d image height: %d\n",w,h);
-		uint16_t w8,h8;
+		uint32_t w8,h8;
 		uint32_t wt,ht;
 		uint8_t wr,hr;
 		wt=w&(~(uint32_t)tilebit);
@@ -308,32 +308,7 @@ void update_map_scroll_y(Fl_Widget*,void*){
 	window->redraw();
 }
 void update_map_size(Fl_Widget*,void*){
-	uint16_t old_scroll=window->map_x_scroll->value();
-	uint8_t tile_size_placer=window->place_tile_size->value();
-	int32_t map_scroll=((tile_size_placer*8)*currentProject->tileMapC->mapSizeW)-map_off_x;//size of all offscreen tiles in pixels
-	//map_scroll-=(tile_size_placer*8);
-	if (map_scroll < 0)
-		map_scroll=0;
-	map_scroll/=tile_size_placer*8;//now size of all tiles
-	//cout << "tiles off screen: " << map_scroll << endl;
-	if (old_scroll > map_scroll){
-		old_scroll=map_scroll;
-		map_scroll_pos_x=map_scroll;
-	}
-	window->map_x_scroll->value(old_scroll,(map_scroll/2),0,map_scroll+(map_scroll/2));//the reason for adding map_scroll/2 to map_scroll is because without it the user will not be able to scroll the tilemap all the way
-	old_scroll=window->map_y_scroll->value();
-	tile_size_placer=window->place_tile_size->value();
-	map_scroll=((tile_size_placer*8)*currentProject->tileMapC->mapSizeH)-map_off_y;//size of all offscreen tiles in pixels
-	//map_scroll-=(tile_size_placer*8);
-	if (map_scroll < 0)
-		map_scroll=0;
-	map_scroll/=tile_size_placer*8;//now size of all tiles
-	//cout << "tiles off screen: " << map_scroll << endl;
-	if (old_scroll > map_scroll){
-		old_scroll=map_scroll;
-		map_scroll_pos_y=map_scroll;
-	}
-	window->map_y_scroll->value(old_scroll,(map_scroll/2),0,map_scroll+(map_scroll/2));
+	currentProject->tileMapC->ScrollUpdate();
 	window->redraw();
 }
 void tilemap_remove_callback(Fl_Widget*,void*){

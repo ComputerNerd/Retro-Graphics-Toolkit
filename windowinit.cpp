@@ -300,7 +300,7 @@ void editor::_editor(){
 			}//end of group
 			tile_edit_offset_x=default_tile_edit_offset_x;
 			tile_edit_offset_y=default_tile_edit_offset_y;
-			tile_size = new Fl_Hor_Value_Slider(496,default_palette_bar_offset_y+72,304,24,"Tile Zoom Factor");
+			tile_size = new Fl_Hor_Value_Slider(496,default_palette_bar_offset_y+72,304,24,"Tile Zoom Factor:");
 			tile_size->tooltip("This slider sets magnification a value of 10 would mean the image is being displayed 10 times larger");
 			tile_size->minimum(1);
 			tile_size->maximum(64);
@@ -364,11 +364,15 @@ void editor::_editor(){
 			map_x_scroll->type(FL_HORIZONTAL);
 			map_x_scroll->tooltip("Use this scroll bar to move around the tile map if you are zoomed in and there is not enough room to display the entire tilemap at once. This scroll bar will move the map left and right.");
 			map_x_scroll->callback(update_map_scroll_x);
+			map_x_scroll->hide();
+			
 			map_y_scroll = new Fl_Scrollbar(default_map_off_x-32, default_map_off_y, 24, 600-8-default_map_off_y);
 			map_y_scroll->value(0,0,0,0);
 			//map_x_scroll->type(FL_HORIZONTAL);
 			map_y_scroll->tooltip("Use this scroll bar to move around the tile map if you are zoomed in and there is not enough room to display the entire tilemap at once. This scroll bar will move the map up and down.");
 			map_y_scroll->callback(update_map_scroll_y);
+			map_y_scroll->hide();
+			
 			//now for the tile select slider
 			tile_select_2 = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+40,312,24,"Tile Select");
 			tile_select_2->tooltip("This slider allows you to choice which tile you would like to place on the map remember you can both horizontally and vertically flip the tile once placed on the map and select which row the tile uses");
@@ -418,12 +422,12 @@ void editor::_editor(){
 				o->callback(set_grid_placer);
 				o->tooltip("This button Toggles whether or not a grid is visible over the tilemap this will allow you to easily see were each tile is");
 			}
-			place_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off+120,496,128,24,"Tile Zoom Factor");
+			place_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,496,160,24,"Tile Zoom Factor:");
 			place_tile_size->minimum(1);
 			place_tile_size->maximum(16);
 			place_tile_size->step(1);
 			place_tile_size->value(12);
-			place_tile_size->align(FL_ALIGN_LEFT);
+			place_tile_size->align(FL_ALIGN_TOP);
 			place_tile_size->callback(update_map_size);
 			place_tile_size->tooltip("By changing this slider you are changing the magnification of the tile for example if this slider was set to 10 that would mean that the tile is magnified by a factor of 10");
 			TabsMain[2]->end();
