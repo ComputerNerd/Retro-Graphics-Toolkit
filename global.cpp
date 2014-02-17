@@ -91,7 +91,7 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * myfile){
 		return false;
 	return true;
 }
-void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha){
+void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha,bool alphaZero){
 	switch (currentProject->gameSystem){
 		case sega_genesis:
 			row*=48;
@@ -105,13 +105,27 @@ void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha){
 					*output++=currentProject->rgbPal[row+(temp_1*3)];
 					*output++=currentProject->rgbPal[row+(temp_1*3)+1];
 					*output++=currentProject->rgbPal[row+(temp_1*3)+2];
-					if(useAlpha)
-						*output++=255;
+					if(useAlpha){
+						if(alphaZero){
+							if(temp_1)
+								*output++=255;
+							else
+								*output++=0;
+						}else
+							*output++=255;
+					}
 					*output++=currentProject->rgbPal[row+(temp_2*3)];
 					*output++=currentProject->rgbPal[row+(temp_2*3)+1];
 					*output++=currentProject->rgbPal[row+(temp_2*3)+2];
-					if(useAlpha)
-						*output++=255;
+					if(useAlpha){
+						if(alphaZero){
+							if(temp_2)
+								*output++=255;
+							else
+								*output++=0;
+						}else
+							*output++=255;
+					}
 				}
 			}
 		break;
@@ -125,8 +139,15 @@ void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha){
 					*output++=currentProject->rgbPal[row+(temp*3)];
 					*output++=currentProject->rgbPal[row+(temp*3)+1];
 					*output++=currentProject->rgbPal[row+(temp*3)+2];
-					if(useAlpha)
-						*output++=255;
+					if(useAlpha){
+						if(alphaZero){
+							if(temp)
+								*output++=255;
+							else
+								*output++=0;
+						}else
+							*output++=255;
+					}
 				}
 			}
 		break;

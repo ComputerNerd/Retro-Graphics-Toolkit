@@ -100,8 +100,8 @@ void load_tiles(Fl_Widget*,void* split){
 		return;
 	}
 	uint8_t defaultRow=row >= 0 ? row:abs(row)-1;
-	uint8_t compression = fl_choice("What format is the tile?","Uncompressed","Nemesis Compressed","Kosinski");
-	uint8_t trans=fl_ask("Set color #0 to alpha 0 instead of 255");
+	int compression = fl_choice("What format is the tile?","Uncompressed","Nemesis Compressed","Kosinski");
+	bool alphaZero=fl_ask("Set color #0 to alpha 0 instead of 255")?true:false;
 	if (load_file_generic() == true) {
 		FILE * myfile;
 		std::stringstream outDecomp;
@@ -114,7 +114,7 @@ void load_tiles(Fl_Widget*,void* split){
 			truecolor_multiplier=256/currentProject->tileC->tileSize;
 			if(compression){
 				uint8_t * datcmp=(uint8_t *)malloc(file_size);
-				if (unlikely(datcmp==0))
+				if (unlikely(!datcmp))
 					show_malloc_error(file_size)
 				fread(datcmp,1,file_size,myfile);
 				fclose(myfile);
@@ -171,11 +171,11 @@ void load_tiles(Fl_Widget*,void* split){
 			if (currentProject->tileC->truetileDat == 0)
 				show_malloc_error(file_size*truecolor_multiplier)
 			for (uint32_t c=offset_tiles;c<(file_size/currentProject->tileC->tileSize)+offset_tiles;c++) {
-				if (row < 0) {
+				if (row < 0){
 					uint32_t x,y;
 					uint8_t foundRow=defaultRow;
-					for (y=0;y<currentProject->tileMapC->mapSizeH;++y) {
-						for (x=0;x<currentProject->tileMapC->mapSizeW;++x) {
+					for (y=0;y<currentProject->tileMapC->mapSizeH;++y){
+						for (x=0;x<currentProject->tileMapC->mapSizeW;++x){
 							if (currentProject->tileMapC->get_tile(x,y) == c) {
 								foundRow=currentProject->tileMapC->get_palette_map(x,y);
 								goto doTile;
@@ -183,10 +183,9 @@ void load_tiles(Fl_Widget*,void* split){
 						}
 					}
 doTile:
-					tileToTrueCol(&currentProject->tileC->tileDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetileDat[(c*256)],foundRow);
-				}
-				else
-					tileToTrueCol(&currentProject->tileC->tileDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetileDat[(c*256)],defaultRow);
+					tileToTrueCol(&currentProject->tileC->tileDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetileDat[(c*256)],foundRow,true,alphaZero);
+				}else
+					tileToTrueCol(&currentProject->tileC->tileDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetileDat[(c*256)],defaultRow,true,alphaZero);
 			}
 			currentProject->tileC->tiles_amount=(file_size/currentProject->tileC->tileSize)-1;
 			currentProject->tileC->tiles_amount+=offset_tiles;
@@ -209,7 +208,7 @@ void load_truecolor_tiles(Fl_Widget*,void*){
 		myfile = fopen(the_file.c_str(),"rb");
 		fseek(myfile, 0L, SEEK_END);
 		file_size = ftell(myfile);
-		if ((file_size/256)*256 != file_size){
+		if (file_size&255){
 			fl_alert("Error: this file is not a multiple of 256 so it is not a valid truecolor tiles. The file size is: %d",file_size);
 			fclose(myfile);
 			return;
