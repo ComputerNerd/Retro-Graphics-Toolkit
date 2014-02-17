@@ -42,9 +42,58 @@ void initProject(void){
 	currentProject->share[2]=-1;
 	currentProject->useMask=pjDefaultMask;
 }
+void setHaveProject(uint32_t id,uint32_t mask,bool set){
+	/*This function will allocate/free data if and only if it is not being shared
+	if have is already enabled no new data will be allocated
+	if have was enabled data will be freeded*/
+	if((mask&pjHavePal)&&(projects[id]->share[0]<0)){
+		if(set){
+			if(!(projects[id]->useMask&pjHavePal)){
+				projects[id]->rgbPal=(uint8_t*)calloc(1,256);
+				projects[id]->palDat=(uint8_t*)calloc(1,128);
+				projects[id]->palType=(uint8_t*)calloc(1,64);
+				projects[id]->useMask|=pjHavePal;
+			}
+		}else{
+			if(projects[id]->useMask&pjHavePal){
+				free(projects[id]->rgbPal);
+				free(projects[id]->palDat);
+				free(projects[id]->palType);
+				projects[id]->useMask&=~pjHavePal;
+			}
+		}
+	}
+	if((mask&pjHaveTiles)&&(projects[id]->share[1]<0)){
+		if(set){
+			if(!(projects[id]->useMask&pjHaveTiles)){
+				projects[id]->tileC = new tiles;
+				projects[id]->useMask|=pjHaveTiles;
+			}
+		}else{
+			if(projects[id]->useMask&pjHaveTiles){
+				delete projects[id]->tileC;
+				projects[id]->useMask&=~pjHaveTiles;
+			}
+		}
+	}
+	if((mask&pjHaveMap)&&(projects[id]->share[2]<0)){
+		if(set){
+			if(!(projects[id]->useMask&pjHaveMap)){
+				projects[id]->tileMapC = new tileMap;
+				projects[id]->useMask|=pjHaveMap;
+			}
+		}else{
+			if(projects[id]->useMask&pjHaveMap){
+				delete projects[id]->tileMapC;
+				projects[id]->useMask&=~pjHaveMap;
+			}
+		}
+	}
+}
 void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable){
 	/*! share is the project that will now point to with's data
-	what uses, use masks*/
+	what uses, use masks
+	This function will not alter gui*/
 	if(share==with){
 		fl_alert("One does not simply share with itself");
 		return;
@@ -132,11 +181,11 @@ bool removeProject(uint32_t id){
 		fl_alert("You must have atleast one project.");
 		return false;
 	}
-	if(projects[id]->share[1]<0)
+	if((projects[id]->share[1]<0)&&(projects[id]->useMask&pjHaveTiles))
 		delete projects[id]->tileC;
-	if(projects[id]->share[2]<0)
+	if((projects[id]->share[2]<0)&&(projects[id]->useMask&pjHaveMap))
 		delete projects[id]->tileMapC;
-	if(projects[id]->share[0]<0){
+	if((projects[id]->share[0]<0)&&(projects[id]->useMask&pjHavePal)){
 		free(projects[id]->rgbPal);
 		free(projects[id]->palDat);
 		free(projects[id]->palType);
@@ -194,8 +243,27 @@ void switchProject(uint32_t id){
 	window->map_h->value(projects[id]->tileMapC->mapSizeH);
 	window->tile_select->maximum(projects[id]->tileC->tiles_amount);
 	window->tile_select_2->maximum(projects[id]->tileC->tiles_amount);
-	for(int x=0;x<3;++x)
+	for(int x=0;x<3;++x){
 		window->sharePrj[x]->value(projects[id]->share[x]<0?0:1);
+		window->havePrj[x]->value(projects[id]->useMask>>x&1);
+		if(projects[id]->share[x]<0)
+			window->havePrj[x]->show();
+		else
+			window->havePrj[x]->hide();
+		if(projects[id]->useMask>>x&1){
+			if(window->tabsHidden[x]){
+				window->the_tabs->insert(*window->TabsMain[x],x);
+				window->tabsHidden[x]=false;
+			}
+		}else{
+			if(!window->tabsHidden[x]){
+				if(projects[id]->share[x]<0){
+					window->the_tabs->remove(window->TabsMain[x]);
+					window->tabsHidden[x]=true;
+				}
+			}
+		}
+	}
 	window->redraw();
 }
 bool loadProject(uint32_t id){
@@ -232,17 +300,17 @@ bool loadProject(uint32_t id){
 	else
 		projects[id]->useMask=pjHavePal|pjHaveTiles|pjHaveMap;
 	fread(&projects[id]->gameSystem,1,sizeof(uint32_t),fi);
-	int entries,eSize,tSize;
+	int entries,eSize;
 	switch(projects[id]->gameSystem){
 		case sega_genesis:
 			entries=64;
 			eSize=2;
-			tSize=32;
+			projects[id]->tileC->tileSize=32;
 		break;
 		case NES:
 			entries=16;
 			eSize=1;
-			tSize=16;
+			projects[id]->tileC->tileSize=16;
 		break;
 	}
 	if(projects[id]->useMask&pjHavePal){
@@ -352,7 +420,7 @@ bool saveAllProjects(void){
 	fputc('R',fo);
 	fputc('G',fo);
 	fwrite(&projects_count,1,sizeof(uint32_t),fo);
-	for(int s=0;s<projects_count;++s){
+	for(uint32_t s=0;s<projects_count;++s){
 		fwrite(projects[s]->share,3,sizeof(uint32_t),fo);
 		saveProjectFile(s,fo,false);
 	}

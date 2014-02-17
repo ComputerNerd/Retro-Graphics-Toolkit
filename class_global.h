@@ -23,6 +23,8 @@ class editor : public Fl_Double_Window{
 	void draw_non_gui();
 	public:
 	uint8_t mouse_x,mouse_y;
+	bool tabsHidden[5];
+	Fl_Group* TabsMain[5];
 	Fl_Scrollbar * map_x_scroll;
 	Fl_Scrollbar * map_y_scroll;
 	Fl_Slider* map_w;

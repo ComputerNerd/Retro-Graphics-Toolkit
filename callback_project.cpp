@@ -16,6 +16,68 @@
 */
 #include "global.h"
 #include "project.h"
+void haveCB(Fl_Widget*o,void*mask){
+	Fl_Check_Button* b=(Fl_Check_Button*)o;
+	uint32_t m=(uintptr_t)mask;
+	bool set=b->value()?true:false;
+	if((m&pjHavePal)&&(!set)){//cannot have tiles without a palette
+		if(((currentProject->useMask&pjAllMask)&(~pjHavePal))){
+			/*the (above) if statment is based on the observation that all other have settings involve tiles
+			be sure to change this if another function not involving tiles arries*/
+			if((currentProject->share[1]<0)&&(currentProject->share[2]<0)){
+				fl_alert("You cannot have tiles without a palette");
+				b->value(1);
+				window->redraw();
+				return;
+			}
+		}
+	}
+	//Can not have tilemap without tiles
+	if((m&pjHaveTiles)&&(!set)){
+		if(currentProject->useMask&pjHaveMap){
+			if(currentProject->share[1]<0){
+				fl_alert("You cannot have tile map without tiles.");
+				b->value(1);
+				window->redraw();
+				return;
+			}
+		}
+	}
+	if((m&pjHaveMap)&&set){//Are we trying to enable tilemap?
+		if(!(currentProject->useMask&pjHaveTiles)){
+			if(currentProject->share[1]<0){
+				fl_alert("You cannot have tile map without tiles.");
+				b->value(1);
+				window->redraw();
+				return;
+			}
+		}
+	}
+	setHaveProject(curProjectID,m,set);
+	unsigned off=__builtin_ctz(m);
+	if(set){
+		if(window->tabsHidden[off]){
+			window->the_tabs->insert(*window->TabsMain[off],off);
+			window->tabsHidden[off]=false;
+		}
+	}else{
+		if(!window->tabsHidden[off]){
+			if(currentProject->share[off]<0){
+				window->the_tabs->remove(window->TabsMain[off]);
+				window->tabsHidden[off]=true;
+			}
+		}
+	}
+	window->redraw();
+}
+static void updateShareHave(void){
+	for(int x=0;x<3;++x){
+		if(currentProject->share[x]<0)
+			window->havePrj[x]->show();
+		else
+			window->havePrj[x]->hide();
+	}
+}
 void switchShareCB(Fl_Widget*o,void*mask){
 	Fl_Slider* s=(Fl_Slider*)o;
 	uint32_t m=(uintptr_t)mask;
@@ -23,6 +85,7 @@ void switchShareCB(Fl_Widget*o,void*mask){
 	printf("Change mask %d %d\n",m,share);
 	if(share)
 		shareProject(curProjectID,s->value(),m,true);
+	updateShareHave();
 }
 void shareProjectCB(Fl_Widget*o,void*mask){
 	Fl_Check_Button* b=(Fl_Check_Button*)o;
@@ -49,6 +112,7 @@ void shareProjectCB(Fl_Widget*o,void*mask){
 	}
 	printf("%d with %d %d %d\n",curProjectID,with,m,__builtin_ctz(m));
 	shareProject(curProjectID,with,m,b->value()?true:false);
+	updateShareHave();
 	window->redraw();
 }
 void loadProjectCB(Fl_Widget*,void*){

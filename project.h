@@ -41,6 +41,7 @@ extern uint32_t projects_count;//holds how many projects there are this is neede
 extern struct Project * currentProject;
 extern Fl_Slider* curPrj;
 void initProject(void) __attribute__((constructor(101)));/*!< this needs to be ran before class constructors*/
+void setHaveProject(uint32_t id,uint32_t mask,bool set);
 void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable);
 bool appendProject();
 bool removeProject(uint32_t id);
@@ -51,3 +52,4 @@ bool saveProject(uint32_t id);
 #define pjHaveTiles 2
 #define pjHaveMap 4
 #define pjDefaultMask (pjHavePal|pjHaveTiles|pjHaveMap)
+#define pjAllMask pjDefaultMask

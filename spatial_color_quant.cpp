@@ -36,24 +36,26 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 using namespace std;
 
 template <typename T, int length>
-class vector_fixed
-{
+class vector_fixed{
 public:
 	vector_fixed(){
-		for(int i=0; i<length; i++)
-			data[i] = 0;
+		/*for(int i=0; i<length; i++)
+			data[i] = 0;*/
+		std::fill(data,&data[length],0);
 	}
 
 	vector_fixed(const vector_fixed<T, length>& rhs){
 		/*for(int i=0; i<length; i++)
 			data[i] = rhs.data[i];*/
-		memcpy(data,rhs.data,length*sizeof(T));
+		//memcpy(data,rhs.data,length*sizeof(T));
+		std::copy(rhs.data,&rhs.data[length],data);
 	}
 
 	vector_fixed(const vector<T>& rhs){
 		/*for(int i=0; i<length; i++)
 			data[i] = rhs[i];*/
-		memcpy(data,rhs,length*sizeof(T));
+		//memcpy(data,rhs,length*sizeof(T));
+		std::copy(rhs,&rhs[length],data);
 	}
 
 	T& operator()(int i){
@@ -62,20 +64,22 @@ public:
 
 	int get_length() { return length; }
 
-	T norm_squared() {
-	T result = 0;
-		for(int i=0; i<length; i++) {
-			result += (*this)(i) * (*this)(i);
-	}
-	return result;
+	T norm_squared(){
+		T result = 0;
+		T*ptr=data;
+		for(int i=0; i<length; i++){
+			result += (*ptr)*(*ptr);
+			++ptr;
+		}
+		return result;
 	}
 
-	vector_fixed<T, length>& operator=(const vector_fixed<T, length> rhs)
-	{
+	vector_fixed<T, length>& operator=(const vector_fixed<T, length> rhs){
 		/*for(int i=0; i<length; i++)
 			data[i] = rhs.data[i];*/
-		memcpy(data,rhs.data,length*sizeof(T));
-	return *this;
+		//memcpy(data,rhs.data,length*sizeof(T));
+		std::copy(rhs.data,&rhs.data[length],data);
+		return *this;
 	}
 
 	vector_fixed<T, length> direct_product(vector_fixed<T, length>& rhs) {
@@ -88,8 +92,10 @@ public:
 
 	double dot_product(vector_fixed<T, length> rhs) {
 		T result = 0;
-		for(int i=0; i<length; i++) {
-			result += (*this)(i) * rhs(i);
+		T*ptr1=data;
+		T*ptr2=rhs.data;
+		for(int i=0; i<length; i++){
+			result += (*ptr1++) * (*ptr2++);
 		}
 		return result;
 	}
@@ -133,7 +139,7 @@ public:
 	return result;
 	}
 
-private:
+//private:
 	T data[length];
 };
 
@@ -165,16 +171,16 @@ public:
 		data = new T[width * height];
 	}
 
-	array2d(const array2d<T>& rhs)
-	{
+	array2d(const array2d<T>& rhs){
 		width = rhs.width;
 		height = rhs.height;
 		data = new T[width * height];
-		for(int i=0; i<width; i++) {
-		for(int j=0; j<height; j++) {
-		(*this)(i,j) = rhs.data[j*width + i];
-		}
-	}
+		/*for(int i=0; i<width; i++){
+			for(int j=0; j<height; j++){
+				(*this)(i,j) = rhs.data[j*width + i];
+			}
+		}*/
+		std::copy(rhs.data,&rhs.data[width*height],data);
 	}
 
 	~array2d()
@@ -190,13 +196,14 @@ public:
 	int get_width() { return width; }
 	int get_height() { return height; }
 
-	array2d<T>& operator*=(T scalar) {
-		for(int i=0; i<width; i++) {
-		for(int j=0; j<height; j++) {
-		(*this)(i,j) *= scalar;
+	array2d<T>& operator*=(T scalar){
+		T*ptr=data;
+		for(int i=0; i<width;++i){
+			for(int j=0; j<height;++j){
+				*(ptr++)*=scalar;
+			}
 		}
-	}
-	return *this;
+		return *this;
 	}
 
 	array2d<T> operator*(T scalar) {
@@ -304,19 +311,19 @@ public:
 		data = new T[width * height * depth];
 	}
 
-	array3d(const array3d<T>& rhs)
-	{
+	array3d(const array3d<T>& rhs){
 		width = rhs.width;
 		height = rhs.height;
 		depth = rhs.depth;
 		data = new T[width * height * depth];
-		for(int i=0; i<width; i++) {
-		for(int j=0; j<height; j++) {
-		for(int k=0; k<depth; k++) {
-			(*this)(i,j,k) = rhs.data[j*width*depth + i*depth + k];
-		}
-		}
-	}
+		/*for(int i=0; i<width; i++){
+			for(int j=0; j<height; j++){
+				for(int k=0; k<depth; k++){
+					(*this)(i,j,k) = rhs.data[j*width*depth + i*depth + k];
+				}
+			}
+		}*/
+		std::copy(rhs.data,&rhs.data[width*height*depth],data);
 	}
 
 	~array3d()
@@ -450,48 +457,48 @@ static vector_fixed<double, 3> b_value(array2d< vector_fixed<double, 3> >& b,
 
 static void compute_a_image(array2d< vector_fixed<double, 3> >& image,
 					 array2d< vector_fixed<double, 3> >& b,
-					 array2d< vector_fixed<double, 3> >& a)
-{
-	int radius_width = (b.get_width() - 1)/2,
-		radius_height = (b.get_height() - 1)/2;
-	for(int i_y = 0; i_y < a.get_height(); i_y++) {
-	for(int i_x = 0; i_x < a.get_width(); i_x++) {
-		for(int j_y = i_y - radius_height; j_y <= i_y + radius_height; j_y++) {
-		if (j_y < 0) j_y = 0;
-		if (j_y >= a.get_height()) break;
+					 array2d< vector_fixed<double, 3> >& a){
+	int radius_width = (b.get_width() - 1)/2;
+	int radius_height = (b.get_height() - 1)/2;
+	for(int i_y = 0; i_y < a.get_height(); i_y++){
+		for(int i_x = 0; i_x < a.get_width(); i_x++){
+			for(int j_y = i_y - radius_height; j_y <= i_y + radius_height; j_y++){
+				if (j_y < 0) j_y = 0;
+				if (j_y >= a.get_height()) break;
 
-		for(int j_x = i_x - radius_width; j_x <= i_x + radius_width; j_x++) {
-			if (j_x < 0) j_x = 0;
-			if (j_x >= a.get_width()) break;
+				for(int j_x = i_x - radius_width; j_x <= i_x + radius_width; j_x++){
+					if (j_x < 0) j_x = 0;
+					if (j_x >= a.get_width()) break;
 
-			a(i_x,i_y) += b_value(b, i_x, i_y, j_x, j_y).
-						  direct_product(image(j_x,j_y));
+					a(i_x,i_y) += b_value(b, i_x, i_y, j_x, j_y).
+								  direct_product(image(j_x,j_y));
+				}
+			}
+			a(i_x, i_y) *= -2.0;
 		}
-		}
-		a(i_x, i_y) *= -2.0;
-	}
 	}
 }
 
 static void sum_coarsen(array2d< vector_fixed<double, 3> >& fine,
-		 array2d< vector_fixed<double, 3> >& coarse)
-{
-	for(int y=0; y<coarse.get_height(); y++) {
-	for(int x=0; x<coarse.get_width(); x++) {
-		double divisor = 1.0;
-		vector_fixed<double, 3> val = fine(x*2, y*2);
-		if (x*2 + 1 < fine.get_width())  {
-		divisor += 1; val += fine(x*2 + 1, y*2);
+		 array2d< vector_fixed<double, 3> >& coarse){
+	for(int y=0; y<coarse.get_height(); y++){
+		for(int x=0; x<coarse.get_width(); x++){
+			//double divisor = 1.0;
+			vector_fixed<double, 3> val = fine(x*2, y*2);
+			if (x*2 + 1 < fine.get_width()){
+				//divisor += 1;
+				val += fine(x*2 + 1, y*2);
+			}
+			if (y*2 + 1 < fine.get_height()){
+				//divisor += 1;
+				val += fine(x*2, y*2 + 1);
+			}
+			if (x*2 + 1 < fine.get_width() && y*2 + 1 < fine.get_height()){
+				//divisor += 1;
+				val += fine(x*2 + 1, y*2 + 1);
+			}
+			coarse(x, y) = /*(1/divisor)**/val;
 		}
-		if (y*2 + 1 < fine.get_height()) {
-		divisor += 1; val += fine(x*2, y*2 + 1);
-		}
-		if (x*2 + 1 < fine.get_width() &&
-		y*2 + 1 < fine.get_height()) {
-		divisor += 1; val += fine(x*2 + 1, y*2 + 1);
-		}
-		coarse(x, y) = /*(1/divisor)**/val;
-	}
 	}
 }
 
@@ -537,37 +544,37 @@ static void zoom_double(array3d<double>& small, array3d<double>& big){
 	// To mix the pixels a little, we assume each fine pixel
 	// is 1.2 fine pixels wide and high.
 	for(int y=0; y<big.get_height()/2*2; y++) {
-	for(int x=0; x<big.get_width()/2*2; x++) {
-		double left = max(0.0, (x-0.1)/2.0), right  = min(small.get_width()-0.001, (x+1.1)/2.0);
-		double top  = max(0.0, (y-0.1)/2.0), bottom = min(small.get_height()-0.001, (y+1.1)/2.0);
-		int x_left = (int)floor(left), x_right  = (int)floor(right);
-		int y_top  = (int)floor(top),  y_bottom = (int)floor(bottom);
-		double area = (right-left)*(bottom-top);
-		double top_left_weight  = (ceil(left) - left)*(ceil(top) - top)/area;
-		double top_right_weight = (right - floor(right))*(ceil(top) - top)/area;
-		double bottom_left_weight  = (ceil(left) - left)*(bottom - floor(bottom))/area;
-		double bottom_right_weight = (right - floor(right))*(bottom - floor(bottom))/area;
-		double top_weight	 = (right-left)*(ceil(top) - top)/area;
-		double bottom_weight  = (right-left)*(bottom - floor(bottom))/area;
-		double left_weight	= (bottom-top)*(ceil(left) - left)/area;
-		double right_weight   = (bottom-top)*(right - floor(right))/area;
-		for(int z=0; z<big.get_depth(); z++) {
-		if (x_left == x_right && y_top == y_bottom) {
-			big(x, y, z) = small(x_left, y_top, z);
-		} else if (x_left == x_right) {
-			big(x, y, z) = top_weight*small(x_left, y_top, z) +
-					   bottom_weight*small(x_left, y_bottom, z);
-		} else if (y_top == y_bottom) {
-			big(x, y, z) = left_weight*small(x_left, y_top, z) +
-					   right_weight*small(x_right, y_top, z);
-		} else {
-			big(x, y, z) = top_left_weight*small(x_left, y_top, z) +
-					   top_right_weight*small(x_right, y_top, z) +
-					   bottom_left_weight*small(x_left, y_bottom, z) +
-					   bottom_right_weight*small(x_right, y_bottom, z);
+		for(int x=0; x<big.get_width()/2*2; x++) {
+			double left = max(0.0, (x-0.1)/2.0), right  = min(small.get_width()-0.001, (x+1.1)/2.0);
+			double top  = max(0.0, (y-0.1)/2.0), bottom = min(small.get_height()-0.001, (y+1.1)/2.0);
+			int x_left = (int)floor(left), x_right  = (int)floor(right);
+			int y_top  = (int)floor(top),  y_bottom = (int)floor(bottom);
+			double area = (right-left)*(bottom-top);
+			double top_left_weight  = (ceil(left) - left)*(ceil(top) - top)/area;
+			double top_right_weight = (right - floor(right))*(ceil(top) - top)/area;
+			double bottom_left_weight  = (ceil(left) - left)*(bottom - floor(bottom))/area;
+			double bottom_right_weight = (right - floor(right))*(bottom - floor(bottom))/area;
+			double top_weight	 = (right-left)*(ceil(top) - top)/area;
+			double bottom_weight  = (right-left)*(bottom - floor(bottom))/area;
+			double left_weight	= (bottom-top)*(ceil(left) - left)/area;
+			double right_weight   = (bottom-top)*(right - floor(right))/area;
+			for(int z=0; z<big.get_depth(); z++){
+				if (x_left == x_right && y_top == y_bottom) {
+					big(x, y, z) = small(x_left, y_top, z);
+				} else if (x_left == x_right) {
+					big(x, y, z) = top_weight*small(x_left, y_top, z) +
+							   bottom_weight*small(x_left, y_bottom, z);
+				} else if (y_top == y_bottom) {
+					big(x, y, z) = left_weight*small(x_left, y_top, z) +
+							   right_weight*small(x_right, y_top, z);
+				} else {
+					big(x, y, z) = top_left_weight*small(x_left, y_top, z) +
+							   top_right_weight*small(x_right, y_top, z) +
+							   bottom_left_weight*small(x_left, y_bottom, z) +
+							   bottom_right_weight*small(x_right, y_bottom, z);
+				}
+			}
 		}
-		}
-	}
 	}
 }
 
@@ -621,23 +628,23 @@ static void update_s(array2d< vector_fixed<double,3> >& s,
 	int center_x = (b.get_width()-1)/2, center_y = (b.get_height()-1)/2;
 	int max_i_x = min(coarse_width,  j_x + center_x + 1);
 	int max_i_y = min(coarse_height, j_y + center_y + 1);
-	for (int i_y=max(0, j_y - center_y); i_y<max_i_y; i_y++) {
-	for (int i_x=max(0, j_x - center_x); i_x<max_i_x; i_x++) {
-		vector_fixed<double,3> delta_b_ij = delta*b_value(b,i_x,i_y,j_x,j_y);
-		if (i_x == j_x && i_y == j_y) continue;
-		for (int v=0; v <= alpha; v++) {
-		double mult = coarse_variables(i_x,i_y,v);
-		s(v,alpha)(0) += mult * delta_b_ij(0);
-		s(v,alpha)(1) += mult * delta_b_ij(1);
-		s(v,alpha)(2) += mult * delta_b_ij(2);
+	for (int i_y=max(0, j_y - center_y); i_y<max_i_y; i_y++){
+		for (int i_x=max(0, j_x - center_x); i_x<max_i_x; i_x++){
+			vector_fixed<double,3> delta_b_ij = delta*b_value(b,i_x,i_y,j_x,j_y);
+			if (i_x == j_x && i_y == j_y) continue;
+			for (int v=0; v <= alpha; v++){
+				double mult = coarse_variables(i_x,i_y,v);
+				s(v,alpha)(0) += mult * delta_b_ij(0);
+				s(v,alpha)(1) += mult * delta_b_ij(1);
+				s(v,alpha)(2) += mult * delta_b_ij(2);
+			}
+			for (int v=alpha; v<palette_size; v++){
+				double mult = coarse_variables(i_x,i_y,v);
+				s(alpha,v)(0) += mult * delta_b_ij(0);
+				s(alpha,v)(1) += mult * delta_b_ij(1);
+				s(alpha,v)(2) += mult * delta_b_ij(2);
+			}
 		}
-		for (int v=alpha; v<palette_size; v++) {
-		double mult = coarse_variables(i_x,i_y,v);
-		s(alpha,v)(0) += mult * delta_b_ij(0);
-		s(alpha,v)(1) += mult * delta_b_ij(1);
-		s(alpha,v)(2) += mult * delta_b_ij(2);
-		}
-	}
 	}
 	s(alpha,alpha) += delta*b_value(b,0,0,0,0);
 }
@@ -672,7 +679,7 @@ static void refine_palette(array2d< vector_fixed<double,3> >& s,
 		if (val < 0) val = 0;
 		if (val > 1) val = 1;
 		palette[v](k) = val;
-	}		
+	}
 	}
 
 #if TRACE
@@ -971,8 +978,7 @@ static void spatial_color_quant(array2d< vector_fixed<double, 3> >& image,
 	}
 }
 
-int scolorq_wrapper(uint8_t*in255,uint8_t*out,uint8_t user_pal[3][256],uint32_t width,uint32_t height,uint8_t num_colors,double dithering_level,uint8_t filter_size)
-{
+int scolorq_wrapper(uint8_t*in255,uint8_t*out,uint8_t user_pal[3][256],uint32_t width,uint32_t height,uint8_t num_colors,double dithering_level,uint8_t filter_size){
 	//Usage: spatial_color_quant <source image.rgb> <width> <height> <desired palette size> <output image.rgb> [dithering level] [filter size (1/3/5)]
 	srand(time(NULL));
 	if (width <= 0 || height <= 0) {

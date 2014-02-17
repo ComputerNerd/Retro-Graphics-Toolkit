@@ -25,6 +25,7 @@ void FixOutOfRangeCB(Fl_Widget*,void*){
 				currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,x,y,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
 		}
 	}
+	window->damage(FL_DAMAGE_USER1);
 }
 void callback_resize_map(Fl_Widget* o,void*){
 	uint8_t w,h;
@@ -116,8 +117,6 @@ void dither_tilemap_as_image(Fl_Widget*,void*){
 	uint32_t w,h;
 	w=currentProject->tileMapC->mapSizeW*8;
 	h=currentProject->tileMapC->mapSizeH*8;
-	uint32_t truecolor_tile_ptr=0;
-	uint32_t x_tile=0,y_tile=0;
 	uint8_t method=fl_choice("How would you like this tilemap dithered?","Dither each palette row separately","Dither entire image at once","cancel");
 	if(method==2)
 		return;
@@ -214,7 +213,7 @@ void load_image_to_tilemap(Fl_Widget*,void*){
 		window->tile_select_2->maximum(currentProject->tileC->tiles_amount);
 		//uint8_t sizeTemp,sizeTemp2;
 		uint64_t a;
-		uint32_t b,y,x;
+		uint32_t b,y,x=0;
 		uint8_t xx;
 		switch (loaded_image->d()){
 			case 3:

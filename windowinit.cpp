@@ -21,21 +21,20 @@
     along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
     Copyright Sega16 (or whatever you wish to call me (2012-2014)
 */
-static intptr_t tabs_ptr[5];
 void set_mode_tabs(Fl_Widget* o, void*){
-	intptr_t val=(intptr_t)(Fl_Tabs*)window->the_tabs->value();
-	if (val==tabs_ptr[0]){
+	Fl_Group * val=(Fl_Group*)(Fl_Tabs*)window->the_tabs->value();
+	if (val==window->TabsMain[0]){
 		mode_editor=pal_edit;
 		palEdit.updateSlider();
-	}else if (val==tabs_ptr[1]){
+	}else if (val==window->TabsMain[1]){
 		mode_editor=tile_edit;
 		tileEdit_pal.updateSlider();
-	}else if (val==tabs_ptr[2]){
+	}else if (val==window->TabsMain[2]){
 		mode_editor=tile_place;
 		tileMap_pal.updateSlider();
-	}else if(val==tabs_ptr[3]){
+	}else if(val==window->TabsMain[3]){
 		mode_editor=chunckEditor;
-	}else if (val==tabs_ptr[4]){
+	}else if (val==window->TabsMain[4]){
 		mode_editor=settingsTab;
 	}
 }
@@ -88,8 +87,7 @@ void editor::_editor(){
 		int rx,ry,rw,rh;
 		the_tabs->client_area(rx,ry,rw,rh);
 		{
-			Fl_Group* o = new Fl_Group(rx, ry, rw, rh, "palette editor");
-			tabs_ptr[0]=(intptr_t)o->as_group();
+			TabsMain[0] = new Fl_Group(rx, ry, rw, rh, "palette editor");
 			//stuff realed to this group should go here
 			palEdit.more_init(4);
 			pal_size = new Fl_Hor_Value_Slider(128,384,320,24,"Palette box size");
@@ -197,12 +195,10 @@ void editor::_editor(){
 					o->end();
 				} // End of buttons
 			}//end of group
-      			o->end();
+      			TabsMain[0]->end();
 		} // Fl_Group* o
-		{
-			Fl_Group* o = new Fl_Group(rx, ry, rw, rh, "Tile Editor");
+		{TabsMain[1] = new Fl_Group(rx, ry, rw, rh, "Tile Editor");
 			//stuff realed to this group should go here
-			tabs_ptr[1]=(intptr_t)o->as_group();
 			{ Fl_Group* o = new Fl_Group(0, 0, 800, 567);
 				{
 					Fl_Round_Button* o = new Fl_Round_Button(384, default_palette_bar_offset_y+40, 56, 32, "Row 0");
@@ -305,11 +301,9 @@ void editor::_editor(){
 			tile_select->value(0);
 			tile_select->align(FL_ALIGN_LEFT);
 			tile_select->callback(set_tile_current);
-			o->end();
+			TabsMain[1]->end();
 		}
-		{ Fl_Group* o = new Fl_Group(rx,ry,rw,rh,"Plane Mapping/Block Editor");
-			//o->callback(set_mode_tabs);
-			tabs_ptr[2]=(intptr_t)o->as_group();
+		{TabsMain[2] = new Fl_Group(rx,ry,rw,rh,"Plane Mapping/Block Editor");
 			{
 				Fl_Group* o = new Fl_Group(tile_place_buttons_x_off, 208, 60, 128);
 				{
@@ -416,14 +410,12 @@ void editor::_editor(){
 			place_tile_size->align(FL_ALIGN_LEFT);
 			place_tile_size->callback(update_map_size);
 			place_tile_size->tooltip("By changing this slider you are changing the magnification of the tile for example if this slider was set to 10 that would mean that the tile is magnified by a factor of 10");
-			o->end();
+			TabsMain[2]->end();
 		}
-		{Fl_Group* o = new Fl_Group(rx,ry,rw,rh,"Chuck editor");
-			tabs_ptr[3]=(intptr_t)o->as_group();
-			o->end();
+		{TabsMain[3] = new Fl_Group(rx,ry,rw,rh,"Chuck editor");
+			TabsMain[3]->end();
 		}
-		{Fl_Group* o = new Fl_Group(rx,ry,rw,rh,"Settings/projects");
-			tabs_ptr[4]=(intptr_t)o->as_group();
+		{TabsMain[4] = new Fl_Group(rx,ry,rw,rh,"Settings/projects");
 			projectSelect=new Fl_Hor_Value_Slider(112,56,128,24,"Current project");
 			projectSelect->minimum(0);
 			projectSelect->maximum(0);
@@ -437,12 +429,21 @@ void editor::_editor(){
 			{Fl_Button *o = new Fl_Button(428, 52, 168, 32, "Delete selected project");
 				o->callback(deleteProjectCB);
 			}
+			
 			sharePrj[0]=new Fl_Check_Button(8,88,112,16,"Share palette");
 			sharePrj[0]->callback(shareProjectCB,(void*)pjHavePal);
 			sharePrj[1]=new Fl_Check_Button(120,88,96,16,"Share Tiles");
 			sharePrj[1]->callback(shareProjectCB,(void*)pjHaveTiles);
 			sharePrj[2]=new Fl_Check_Button(216,88,120,16,"Share TileMap");
 			sharePrj[2]->callback(shareProjectCB,(void*)pjHaveMap);
+			
+			havePrj[0]=new Fl_Check_Button(344,88,112,16,"Have palette");
+			havePrj[0]->callback(haveCB,(void*)pjHavePal);
+			havePrj[1]=new Fl_Check_Button(456,88,96,16,"Have Tiles");
+			havePrj[1]->callback(haveCB,(void*)pjHaveTiles);
+			havePrj[2]=new Fl_Check_Button(552,88,120,16,"Have TileMap");
+			havePrj[2]->callback(haveCB,(void*)pjHaveMap);
+			
 			shareWith[0]=new Fl_Hor_Value_Slider(8,118,128,24,"Share Palette with:");
 			shareWith[1]=new Fl_Hor_Value_Slider(136,118,128,24,"Share tiles with:");
 			shareWith[2]=new Fl_Hor_Value_Slider(264,118,128,24,"Share TileMap with:");
@@ -450,18 +451,21 @@ void editor::_editor(){
 			shareWith[1]->callback(switchShareCB,(void*)pjHaveTiles);
 			shareWith[2]->callback(switchShareCB,(void*)pjHaveMap);
 			for(int x=0;x<3;++x){
+				havePrj[x]->value(1);
 				shareWith[x]->minimum(0);
 				shareWith[x]->maximum(0);
 				shareWith[x]->step(1);
 				shareWith[x]->value(0);
 				shareWith[x]->align(FL_ALIGN_TOP);
 			}
+			
 			TxtBufProject = new Fl_Text_Buffer;
 			TxtEditProject = new Fl_Text_Editor(8, 160, 640, 370,"Description/Notes");
 			TxtEditProject->buffer(TxtBufProject);
 			TxtEditProject->textfont(FL_TIMES);
 			TxtBufProject->text(currentProject->Name.c_str());
-			o->end();
+			std::fill(tabsHidden,&tabsHidden[4],false);
+			TabsMain[4]->end();
 		}
 	}
 }
