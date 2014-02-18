@@ -15,6 +15,7 @@
     Copyright Sega16 (or whatever you wish to call me (2012-2014)
 */
 #pragma once
+#include "project.h"
 #include <inttypes.h>
 class editor : public Fl_Double_Window{
 	private:
@@ -47,9 +48,9 @@ class editor : public Fl_Double_Window{
 	Fl_Check_Button* hflipCB;
 	Fl_Check_Button* vflipCB;
 	Fl_Check_Button* prioCB;
-	Fl_Check_Button* sharePrj[3];
-	Fl_Slider* shareWith[3];
-	Fl_Check_Button* havePrj[3];
+	Fl_Check_Button* sharePrj[shareAmtPj];
+	Fl_Slider* shareWith[shareAmtPj];
+	Fl_Check_Button* havePrj[shareAmtPj];
 	Fl_Text_Buffer* TxtBufProject;
 	Fl_Text_Editor* TxtEditProject;
 	void draw();

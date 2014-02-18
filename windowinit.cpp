@@ -89,6 +89,14 @@ static const Fl_Menu_Item menuEditor[]={
 		{0},
 	{0}
 };
+static const Fl_Menu_Item ditherChoices[]={
+	{"Floyd Steinberg",0,set_ditherAlg,(void *)0},
+	{"Riemersma",0,set_ditherAlg,(void *)1},
+	{"Nearest Color",0,set_ditherAlg,(void *)2},
+	{"Yliluoma 3",0,set_ditherAlg,(void *)3},
+	{"Vertical dithering",0, set_ditherAlg,(void *)4},
+	{0}
+};
 void editor::_editor(){
 	//create the window
 	menu = new Fl_Menu_Bar(0,0,800,24);//Create menubar, items..
@@ -159,41 +167,8 @@ void editor::_editor(){
 				} // Fl_Round_Button* o
 				o->end();
 			} // End of buttons
-			{
-				Fl_Group *o = new Fl_Group(0, 0, 800, 500);
-				{
-					Fl_Round_Button* o = new Fl_Round_Button(64, 440, 128, 32, "Floyd Steinberg");
-					o->tooltip("Common algorithm. Very simple but effective\nSee: https://en.wikipedia.org/wiki/Floyd%E2%80%93Steinberg_dithering");
-					o->type(FL_RADIO_BUTTON);
-					o->set();
-					o->callback((Fl_Callback*) set_ditherAlg,(void *)0);
-				} // Fl_Round_Button* o
-				{
-					Fl_Round_Button* o = new Fl_Round_Button(196, 440, 104, 32, "Riemersma");
-					o->tooltip("A Balanced Dithering Technique\nBy Thiadmer Riemersma, December 01, 1998\nFrom: http://www.drdobbs.com/a-balanced-dithering-technique/184403590");
-					o->type(FL_RADIO_BUTTON);
-					o->callback((Fl_Callback*) set_ditherAlg,(void *)1);
-				} // Fl_Round_Button* o
-				{
-					Fl_Round_Button* o = new Fl_Round_Button(296, 440, 120, 32, "Nearest Color");
-					o->tooltip("No error diffusion/dithering is used as the name says just picks the nearest color");
-					o->type(FL_RADIO_BUTTON);
-					o->callback((Fl_Callback*) set_ditherAlg,(void *)2);
-				} // Fl_Round_Button* o
-				{
-					Fl_Round_Button* o = new Fl_Round_Button(420, 440, 120, 32, "Yliluoma 3");
-					o->tooltip("Yliluoma's ordered dithering algorithm 3 credits go to:\nhttp://bisqwit.iki.fi/story/howto/dither/jy/");
-					o->type(FL_RADIO_BUTTON);
-					o->callback((Fl_Callback*) set_ditherAlg,(void *)3);
-				} // Fl_Round_Button* o
-				{
-					Fl_Round_Button* o = new Fl_Round_Button(548, 440, 120, 32, "Vertical dithering");
-					o->tooltip("As seen on the sega genesis a lot");
-					o->type(FL_RADIO_BUTTON);
-					o->callback((Fl_Callback*) set_ditherAlg,(void *)4);
-				} // Fl_Round_Button* o
-				o->end();
-			} // End of buttons
+			{Fl_Choice *o = new Fl_Choice(64, 464, 128, 24);
+			o->copy(ditherChoices);}
 			{ Fl_Group *o = new Fl_Group(304, 192, 88, 96);
 				{
 					palType[0] = new Fl_Round_Button(304, 192, 64, 32, "Free");

@@ -86,7 +86,7 @@ void haveCB(Fl_Widget*o,void*mask){
 	window->redraw();
 }
 static void updateShareHave(void){
-	for(int x=0;x<3;++x){
+	for(int x=0;x<shareAmtPj;++x){
 		if(currentProject->share[x]<0)
 			window->havePrj[x]->show();
 		else

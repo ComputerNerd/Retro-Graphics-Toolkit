@@ -37,9 +37,7 @@ void initProject(void){
 	currentProject->palDat=(uint8_t*)calloc(1,128);
 	currentProject->palType=(uint8_t*)calloc(1,64);
 	currentProject->Name.assign(defaultName);
-	currentProject->share[0]=-1;//Note always check to see if less than 0 do not use == -1
-	currentProject->share[1]=-1;
-	currentProject->share[2]=-1;
+	std::fill(currentProject->share,&currentProject->share[shareAmtPj],-1);//Note always check to see if less than 0 do not use == -1
 	currentProject->useMask=pjDefaultMask;
 }
 void setHaveProject(uint32_t id,uint32_t mask,bool set){
@@ -163,15 +161,13 @@ bool appendProject(void){
 	projects[projects_count]->palDat=(uint8_t*)calloc(1,128);
 	projects[projects_count]->palType=(uint8_t*)calloc(1,64);
 	projects[projects_count]->gameSystem=sega_genesis;
-	projects[projects_count]->share[0]=-1;
-	projects[projects_count]->share[1]=-1;
-	projects[projects_count]->share[2]=-1;
+	std::fill(currentProject->share,&currentProject->share[shareAmtPj],-1);
 	projects[projects_count]->useMask=pjDefaultMask;
 	++projects_count;
 	//Realloc could have changed address
 	currentProject=projects[curProjectID];
 	window->projectSelect->maximum(projects_count-1);
-	for(int x=0;x<3;++x)
+	for(int x=0;x<shareAmtPj;++x)
 		window->shareWith[x]->maximum(projects_count-1);
 	return true;
 }
@@ -196,7 +192,7 @@ bool removeProject(uint32_t id){
 	projects_count--;
 	projects = (struct Project **) realloc(projects,projects_count*sizeof(void *));
 	window->projectSelect->maximum(projects_count-1);
-	for(int x=0;x<3;++x)
+	for(int x=0;x<shareAmtPj;++x)
 		window->shareWith[x]->maximum(projects_count-1);
 	return true;
 }
@@ -243,7 +239,7 @@ void switchProject(uint32_t id){
 	window->map_h->value(projects[id]->tileMapC->mapSizeH);
 	window->tile_select->maximum(projects[id]->tileC->tiles_amount);
 	window->tile_select_2->maximum(projects[id]->tileC->tiles_amount);
-	for(int x=0;x<3;++x){
+	for(int x=0;x<shareAmtPj;++x){
 		window->sharePrj[x]->value(projects[id]->share[x]<0?0:1);
 		window->havePrj[x]->value(projects[id]->useMask>>x&1);
 		if(projects[id]->share[x]<0)
