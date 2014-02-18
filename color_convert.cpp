@@ -20,21 +20,39 @@
 uint8_t nespaltab_r[64];
 uint8_t nespaltab_g[64];
 uint8_t nespaltab_b[64];
+static inline uint32_t sq(uint32_t x){
+	return x*x;
+}
 uint8_t to_nes_color_rgb(uint8_t red,uint8_t green,uint8_t blue){
 	//this function does not set any values to global palette it is done in other functions
-	int min_error =(255*255) +(255*255) +(255*255) +1;
+	uint32_t minerrori =(255*255) +(255*255) +(255*255) +1;
+	double minerrord=100000.0;
 	uint8_t bestcolor=0;
-	for (uint8_t a=0;a<16;a++){
-		for (uint8_t c=0;c<4;c++){
+	for (uint8_t a=0;a<16;++a){
+		for (uint8_t c=0;c<4;++c){
 			uint8_t temp=a|(c<<4);
-			int rdiff= (int)nespaltab_r[temp] - (int)red;
-			int gdiff= (int)nespaltab_g[temp] - (int)green;
-			int bdiff= (int)nespaltab_b[temp] - (int)blue;
-			int dist = (rdiff*rdiff) + (gdiff*gdiff) + (bdiff*bdiff);
-			if (dist <= min_error){
-				min_error = dist;
-				bestcolor=a|(c<<4);
-			}
+			switch(nearestAlg){
+			case 0:
+				{double distance=ciede2000rgb(red,green,blue,nespaltab_r[temp],nespaltab_g[temp],nespaltab_b[temp]);
+				if (distance <= minerrord){
+					minerrord = distance;
+					bestcolor = temp;
+				}}
+			break;
+			case 1:
+				{double distance=ColourDistance(red,green,blue,nespaltab_r[temp],nespaltab_g[temp],nespaltab_b[temp]);
+				if (distance <= minerrord){
+					minerrord = distance;
+					bestcolor = temp;
+				}}
+			break;
+			default:
+				{uint32_t distance=sq(nespaltab_r[temp]-red)+sq(nespaltab_g[temp]-green)+sq(nespaltab_b[temp]-blue);
+				if (distance <= minerrori){
+					minerrori = distance;
+					bestcolor = temp;
+				}}
+		}
 		}
 	}
 	return bestcolor;
@@ -42,54 +60,10 @@ uint8_t to_nes_color_rgb(uint8_t red,uint8_t green,uint8_t blue){
 uint8_t to_nes_color(uint8_t pal_index){
 	//this function does not set any values to global palette it is done in other functions
 	pal_index*=3;
-	int min_error =(255*255) +(255*255) +(255*255) +1;
-	uint8_t bestcolor=0;
-	for (uint8_t a=0;a<16;++a){
-		for (uint8_t c=0;c<4;++c){
-			uint8_t temp=a|(c<<4);
-			int rdiff= (int)nespaltab_r[temp] - (int)currentProject->rgbPal[pal_index];
-			int gdiff= (int)nespaltab_g[temp] - (int)currentProject->rgbPal[pal_index+1];
-			int bdiff= (int)nespaltab_b[temp] - (int)currentProject->rgbPal[pal_index+2];
-			int dist = (rdiff*rdiff) + (gdiff*gdiff) + (bdiff*bdiff);
-			if (dist <= min_error){
-				min_error = dist;
-				bestcolor=a|(c<<4);
-			}
-		}
-	}
-	return bestcolor;
-}
-static inline int squarei(int x){
-	return x*x;
+	return to_nes_color_rgb(currentProject->rgbPal[pal_index],currentProject->rgbPal[pal_index+1],currentProject->rgbPal[pal_index+2]);
 }
 uint32_t toNesRgb(uint8_t ri,uint8_t gi,uint8_t bi){
-	uint8_t bestcolor=0;
-	if(nearestAlg){
-		uint32_t min_error=(255*255)+(255*255)+(255*255)+1;
-		for (uint8_t a=0;a<16;a++){//hue
-			for (uint8_t c=0;c<4;c++){//value
-				uint8_t temp=a|(c<<4);
-				uint32_t dist = squarei(nespaltab_r[temp]-ri)+squarei(nespaltab_g[temp]-gi)+squarei(nespaltab_b[temp]-bi);
-				if (dist < min_error){
-					min_error = dist;
-					bestcolor=a|(c<<4);
-				}
-			}
-		}
-	}else{
-		double min_error=9001.0;
-		for (uint8_t a=0;a<16;a++){//hue
-			for (uint8_t c=0;c<4;c++){//value
-				uint8_t temp=a|(c<<4);
-				double dist = ciede2000rgb(nespaltab_r[temp],nespaltab_g[temp],nespaltab_b[temp],ri,gi,bi);
-				if (dist < min_error){
-					min_error = dist;
-					bestcolor=a|(c<<4);
-				}
-			}
-		}
-	}
-	return MakeRGBcolor(bestcolor);
+	return MakeRGBcolor(to_nes_color_rgb(ri,gi,bi));
 }
 uint8_t toNesChan(uint8_t ri,uint8_t gi,uint8_t bi,uint8_t chan){
 	uint32_t rgb_out=toNesRgb(ri,gi,bi);
@@ -108,6 +82,18 @@ uint8_t toNesChan(uint8_t ri,uint8_t gi,uint8_t bi,uint8_t chan){
 		break;
 	}
 	return 0;
+}
+uint16_t to_sega_genesis_colorRGB(uint8_t r,uint8_t g,uint8_t b,uint16_t pal_index){
+	//note this function only set the new rgb colors not the outputed sega genesis palette format
+	pal_index*=3;
+	r=nearest_color_index(r);
+	g=nearest_color_index(g);
+	b=nearest_color_index(b);
+	currentProject->rgbPal[pal_index]=palTab[r];
+	currentProject->rgbPal[pal_index+1]=palTab[g];
+	currentProject->rgbPal[pal_index+2]=palTab[b];
+	//bgr format
+	return ((r-palTypeGen)<<1)|((g-palTypeGen)<<5)|((b-palTypeGen)<<9);
 }
 uint16_t to_sega_genesis_color(uint16_t pal_index){
 	//note this function only set the new rgb colors not the outputed sega genesis palette format

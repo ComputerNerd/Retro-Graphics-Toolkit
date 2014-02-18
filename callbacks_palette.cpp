@@ -224,7 +224,7 @@ void set_ditherAlg(Fl_Widget*,void* typeset){
 }
 void set_tile_row(Fl_Widget*,void* row){
 	uint8_t selrow=(uintptr_t)row;
-	switch (mode_editor) {
+	switch (mode_editor){
 		case tile_edit:
 			tileEdit_pal.changeRow(selrow);
 			currentProject->tileC->truecolor_to_tile(selrow,currentProject->tileC->current_tile);
@@ -270,6 +270,32 @@ void rgb_pal_to_entry(Fl_Widget*,void*){
 		fl_alert("Be in Tile editor to use this");
 		return;
 	}
+	uint8_t rgb[3];
+	rgb[0]=window->rgb_red->value();
+	rgb[1]=window->rgb_green->value();
+	rgb[2]=window->rgb_blue->value();
+	switch(currentProject->gameSystem){
+		case sega_genesis:
+			{unsigned en=tileEdit_pal.getEntry();
+			uint16_t temp=to_sega_genesis_colorRGB(rgb[0],rgb[1],rgb[2],en);
+			en*=2;
+			currentProject->palDat[en]=temp>>8;
+			currentProject->palDat[en+1]=temp&255;}
+		break;
+		case NES:
+			{uint8_t bestCol=to_nes_color_rgb(rgb[0],rgb[1],rgb[2]);
+			unsigned en=tileEdit_pal.getEntry();
+			currentProject->palDat[en]=bestCol;
+			en*=3;
+			uint32_t rgb_out=MakeRGBcolor(bestCol);
+			currentProject->rgbPal[en+2]=rgb_out&255;
+			currentProject->rgbPal[en+1]=(rgb_out>>8)&255;
+			currentProject->rgbPal[en]=(rgb_out>>16)&255;}
+		break;
+	}
+	tileEdit_pal.updateSlider();
+	currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);
+	window->redraw();
 }
 void clearPalette(Fl_Widget*,void*){
 	if (fl_ask("This will set all colors to 0 are you sure you want to do this?")){

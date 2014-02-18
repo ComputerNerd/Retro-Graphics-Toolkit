@@ -264,6 +264,7 @@ void switchProject(uint32_t id){
 			}
 		}
 	}
+	projects[id]->tileMapC->ScrollUpdate();
 	window->redraw();
 }
 static bool loadProjectFile(uint32_t id,FILE * fi){

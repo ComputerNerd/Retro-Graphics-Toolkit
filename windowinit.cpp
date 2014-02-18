@@ -64,6 +64,7 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Generate optimal palette with x amount of colors",0,generate_optimal_palette,0},
 		{"Clear entire Palette",0,clearPalette,0},
 		{"Pick nearest color algorithm",0,pickNearAlg,0},
+		{"RGB color to entry",0,rgb_pal_to_entry,0},
 		{0},
 	{"Tile Actions",0, 0, 0, FL_SUBMENU},
 		{"Append blank tile to end of buffer",0,new_tile,0},
