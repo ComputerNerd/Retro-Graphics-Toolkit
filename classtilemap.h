@@ -21,6 +21,11 @@ public:
 	~tileMap();
 	uint8_t * tileMapDat;/*!< Holds tilemap data*/
 	uint32_t mapSizeW,mapSizeH;
+	bool isBlock;
+	uint32_t amt;
+	void blockAmt(uint32_t newAmt);
+	void resizeBlocks(uint32_t wn,uint32_t hn);
+	void toggleBlocks(bool set);
 	bool get_hflip(uint32_t x,uint32_t y);
 	bool get_vflip(uint32_t x,uint32_t y);
 	bool get_prio(uint32_t x,uint32_t y);

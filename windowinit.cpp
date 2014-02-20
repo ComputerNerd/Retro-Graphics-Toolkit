@@ -297,25 +297,25 @@ void editor::_editor(){
 		}
 		{TabsMain[2] = new Fl_Group(rx,ry,rw,rh,"Plane Mapping/Block Editor");
 			{
-				Fl_Group* o = new Fl_Group(tile_place_buttons_x_off, 208, 60, 128);
+				Fl_Group* o = new Fl_Group(tile_place_buttons_x_off, 192, 60, 128);
 				{
-					palRTE[0] = new Fl_Round_Button(tile_place_buttons_x_off, 208, 60, 32, "Row 0");
+					palRTE[0] = new Fl_Round_Button(tile_place_buttons_x_off, 192, 60, 28, "Row 0");
 					palRTE[0]->type(FL_RADIO_BUTTON);
 					palRTE[0]->set();
 					palRTE[0]->callback((Fl_Callback*) set_tile_row,(void *)0);
 				} // Fl_Round_Button* o
 				{
-					palRTE[1] = new Fl_Round_Button(tile_place_buttons_x_off, 240, 60, 32, "Row 1");
+					palRTE[1] = new Fl_Round_Button(tile_place_buttons_x_off, 220, 60, 28, "Row 1");
 					palRTE[1]->type(FL_RADIO_BUTTON);
 					palRTE[1]->callback((Fl_Callback*) set_tile_row,(void *)1);
 				} // Fl_Round_Button* o
 				{
-					palRTE[2] = new Fl_Round_Button(tile_place_buttons_x_off, 272, 60, 32, "Row 2");
+					palRTE[2] = new Fl_Round_Button(tile_place_buttons_x_off, 248, 60, 28, "Row 2");
 					palRTE[2]->type(FL_RADIO_BUTTON);
 					palRTE[2]->callback((Fl_Callback*) set_tile_row,(void *)2);
 				} // Fl_Round_Button* o
 				{
-					palRTE[3] = new Fl_Round_Button(tile_place_buttons_x_off, 304, 60, 32, "Row 3");
+					palRTE[3] = new Fl_Round_Button(tile_place_buttons_x_off, 276, 60, 28, "Row 3");
 					palRTE[3]->type(FL_RADIO_BUTTON);
 					palRTE[3]->callback((Fl_Callback*) set_tile_row,(void *)3);
 				} // Fl_Round_Button* o
@@ -378,27 +378,32 @@ void editor::_editor(){
 					o->end();
 				} // End of buttons
 			}//end of group
-			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,184,64,32,"Show only selected row");
-				o->callback(toggleRowSolo);
-				o->tooltip("When checked Tiles that do not use the selected row will not be drawn");
-			}
-			{ hflipCB = new Fl_Check_Button(tile_place_buttons_x_off,336,64,32,"hflip");
+			
+			{ hflipCB = new Fl_Check_Button(tile_place_buttons_x_off,304,64,32,"hflip");
 				hflipCB->callback(set_hflipCB);
 				hflipCB->tooltip("This sets whether or not the tile is flipped horizontally");
 			}
-			{ vflipCB = new Fl_Check_Button(tile_place_buttons_x_off,368,64,32,"vflip");
+			{ vflipCB = new Fl_Check_Button(tile_place_buttons_x_off,336,64,32,"vflip");
 				vflipCB->callback(set_vflipCB);
 				vflipCB->tooltip("This sets whether or not the tile is flipped vertically");
 			}
-			{ prioCB = new Fl_Check_Button(tile_place_buttons_x_off,400,72,32,"priority");
+			{ prioCB = new Fl_Check_Button(tile_place_buttons_x_off,368,72,32,"priority");
 				prioCB->callback(set_prioCB);
 				prioCB->tooltip("If checked tile is high priority");
 			}
-			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,432,96,32,"Show grid?");
+			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,400,96,32,"Show grid?");
 				o->callback(set_grid_placer);
 				o->tooltip("This button Toggles whether or not a grid is visible over the tilemap this will allow you to easily see were each tile is");
 			}
-			place_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,496,160,24,"Tile Zoom Factor:");
+			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,432,96,32,"Blocks?");
+				o->callback(toggleBlocksCB);
+				o->tooltip("Toggles if tilemap is treated as blocks");
+			}
+			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,464,192,32,"Show only selected row");
+				o->callback(toggleRowSolo);
+				o->tooltip("When checked Tiles that do not use the selected row will not be drawn");
+			}
+			place_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,512,160,24,"Tile Zoom Factor:");
 			place_tile_size->minimum(1);
 			place_tile_size->maximum(16);
 			place_tile_size->step(1);
@@ -446,7 +451,7 @@ void editor::_editor(){
 			shareWith[0]->callback(switchShareCB,(void*)pjHavePal);
 			shareWith[1]->callback(switchShareCB,(void*)pjHaveTiles);
 			shareWith[2]->callback(switchShareCB,(void*)pjHaveMap);
-			for(int x=0;x<3;++x){
+			for(int x=0;x<shareAmtPj;++x){
 				havePrj[x]->value(1);
 				shareWith[x]->minimum(0);
 				shareWith[x]->maximum(0);

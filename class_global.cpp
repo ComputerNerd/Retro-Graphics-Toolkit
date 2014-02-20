@@ -52,7 +52,6 @@ static void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y){
 			uint8_t gridNerd=*ptr_grid;
 			*ptr_grid++=((double)rgba[e]*percent)+((double)gridNerd*(1.0-percent));
 		}
-			
 	}
 	fl_draw_image(grid,x,y,32,32,3);
 	

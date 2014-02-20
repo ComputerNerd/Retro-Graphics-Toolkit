@@ -817,16 +817,16 @@ static void spatial_color_quant(array2d< vector_fixed<double, 3> >& image,
 
 		// Compute (25)
 		vector_fixed<double,3> p_i;
-		for (int y=0; y<b.get_height(); y++) {
-			for (int x=0; x<b.get_width(); x++) {
-			int j_x = x - center_x + i_x, j_y = y - center_y + i_y;
-			if (i_x == j_x && i_y == j_y) continue;
-			if (j_x < 0 || j_y < 0 || j_x >= coarse_variables.get_width() || j_y >= coarse_variables.get_height()) continue;
-			vector_fixed<double,3> b_ij = b_value(b, i_x, i_y, j_x, j_y);
-			vector_fixed<double,3> j_pal = (*j_palette_sum)(j_x,j_y);
-			p_i(0) += b_ij(0)*j_pal(0);
-			p_i(1) += b_ij(1)*j_pal(1);
-			p_i(2) += b_ij(2)*j_pal(2);
+		for (int y=0; y<b.get_height(); y++){
+			for (int x=0; x<b.get_width(); x++){
+				int j_x = x - center_x + i_x, j_y = y - center_y + i_y;
+				if (i_x == j_x && i_y == j_y) continue;
+				if (j_x < 0 || j_y < 0 || j_x >= coarse_variables.get_width() || j_y >= coarse_variables.get_height()) continue;
+				vector_fixed<double,3> b_ij = b_value(b, i_x, i_y, j_x, j_y);
+				vector_fixed<double,3> j_pal = (*j_palette_sum)(j_x,j_y);
+				p_i(0) += b_ij(0)*j_pal(0);
+				p_i(1) += b_ij(1)*j_pal(1);
+				p_i(2) += b_ij(2)*j_pal(2);
 			}
 		}
 		p_i *= 2.0;

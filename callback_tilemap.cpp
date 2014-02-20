@@ -17,6 +17,11 @@
 #include "global.h"
 #include "savepng.h"
 #include "dither.h"
+void toggleBlocksCB(Fl_Widget*o,void*){
+	Fl_Check_Button* b=(Fl_Check_Button*)o;
+	currentProject->tileMapC->toggleBlocks(b->value()?true:false);
+	window->redraw();
+}
 void FixOutOfRangeCB(Fl_Widget*,void*){
 	//use current attributes
 	for(int y=0;y<currentProject->tileMapC->mapSizeH;++y){

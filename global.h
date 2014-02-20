@@ -57,10 +57,10 @@ extern uint8_t mode_editor;/*!< Importan varible is used to determin which "mode
 #define tile_place 2
 #define chunckEditor 3
 #define settingsTab 4
-#define default_map_off_x 304
+#define default_map_off_x 256
 extern uint32_t map_off_x,map_off_y;
 #define default_map_off_y 232
-#define tile_placer_tile_offset_x 120
+#define tile_placer_tile_offset_x 88
 #define default_tile_placer_tile_offset_y 208
 #define tile_place_buttons_x_off 8
 extern uint16_t tile_placer_tile_offset_y;
