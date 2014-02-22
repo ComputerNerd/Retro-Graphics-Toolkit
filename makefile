@@ -6,7 +6,7 @@ LDFLAGS=-flto -O3 -march=native -fuse-linker-plugin -s
 SOURCES=project.cpp main.cpp callbacks_palette.cpp callback_tiles.cpp class_global.cpp global.cpp quant.cpp tilemap.cpp color_convert.cpp errorMsg.cpp class_palette.cpp dither.cpp \
 	class_tiles.cpp kens/nemesis.cpp kens/enigma.cpp kens/kosinski.cpp spatial_color_quant.cpp NEUQUANT.cpp \
 	classtilemap.cpp palette.cpp zlibwrapper.cpp color_compare.cpp windowinit.cpp tiles_io.cpp savepng.cpp \
-	callback_project.cpp callback_tilemap.cpp callback_gui.cpp
+	callback_project.cpp callback_tilemap.cpp callback_gui.cpp classChuncks.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 LINKER=-L/usr/lib/fltk-1/ -lfltk_images -lfltk -lpng -ljpeg -lXft -lXext -lXinerama -lX11 -lz -s
 EXECUTABLE=RetroGraphicsToolkit

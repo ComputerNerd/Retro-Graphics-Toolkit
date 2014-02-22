@@ -29,7 +29,7 @@ public:
 	void truecolor_to_tile_ptr(uint8_t palette_row,uint32_t cur_tile,uint8_t * tileinput,bool Usedither=true);
 	void truecolor_to_tile(uint8_t,uint32_t);/*!< truecolor_to_tile will update/dither the selected tile*/
 	void draw_truecolor(uint32_t,uint16_t x,uint16_t y,bool usehflip,bool usevflip,uint8_t zoom);
-	void draw_tile(uint16_t,uint16_t,uint32_t,uint8_t,uint8_t,bool,bool);
+	void draw_tile(int,int,uint32_t,int,uint8_t,bool,bool);
 	void hflip_truecolor(uint32_t,uint32_t *);
 	void vflip_truecolor(uint32_t,uint8_t *);
 	void vflip_truecolor_ptr(uint8_t *,uint8_t *);

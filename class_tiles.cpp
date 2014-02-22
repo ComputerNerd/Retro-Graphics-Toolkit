@@ -194,7 +194,7 @@ void tiles::draw_truecolor(uint32_t tile_draw,uint16_t x,uint16_t y,bool usehfli
 static inline uint32_t cal_offset_zoom_rgb(uint16_t x,uint16_t y,uint16_t zoom,uint8_t channel){
 	return (y*(zoom*24))+(x*3)+channel;
 }
-void tiles::draw_tile(uint16_t x_off,uint16_t y_off,uint32_t tile_draw,uint8_t zoom,uint8_t pal_row,bool Usehflip,bool Usevflip){
+void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,int zoom,uint8_t pal_row,bool Usehflip,bool Usevflip){
 	static uint8_t DontShow=0;
 	if (tiles_amount < tile_draw){
 		if (unlikely(DontShow==0)){

@@ -1,0 +1,22 @@
+#define default_map_off_x 256
+#define default_map_off_y 256
+#define tile_placer_tile_offset_x 88
+#define default_tile_placer_tile_offset_y 208
+#define tile_place_buttons_x_off 8
+#define palette_bar_offset_x 16
+#define default_palette_bar_offset_y 56
+#define palette_preview_box_x 408
+#define palette_preview_box_y 208
+#define default_tile_edit_offset_x 344
+#define default_tile_edit_truecolor_off_x 8
+#define default_tile_edit_truecolor_off_y 224
+#define default_tile_edit_offset_y 224
+#define true_color_box_size 48
+#define default_true_color_box_y 188
+#define default_true_color_box_x 732
+
+#define pal_edit 0
+#define tile_edit 1
+#define tile_place 2
+#define chunckEditor 3
+#define settingsTab 4

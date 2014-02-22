@@ -31,8 +31,9 @@ void initProject(void){
 	currentProject=projects[0];
 	projects_count=1;
 	currentProject->gameSystem=sega_genesis;
-	currentProject->tileC = new tiles;
-	currentProject->tileMapC = new tileMap;
+	currentProject->tileC=new tiles;
+	currentProject->tileMapC=new tileMap;
+	currentProject->Chunck=new ChunckClass;
 	currentProject->rgbPal=(uint8_t*)calloc(1,256);
 	currentProject->palDat=(uint8_t*)calloc(1,128);
 	currentProject->palType=(uint8_t*)calloc(1,64);
@@ -154,8 +155,9 @@ bool appendProject(void){
 		return false;
 	}
 	projects[projects_count]= new struct Project;
-	projects[projects_count]->tileC = new tiles;
-	projects[projects_count]->tileMapC = new tileMap;
+	projects[projects_count]->tileC=new tiles;
+	projects[projects_count]->tileMapC=new tileMap;
+	projects[projects_count]->Chunck=new ChunckClass;
 	projects[projects_count]->Name.assign(defaultName);
 	projects[projects_count]->rgbPal=(uint8_t*)calloc(1,256);
 	projects[projects_count]->palDat=(uint8_t*)calloc(1,128);
@@ -328,14 +330,17 @@ static bool loadProjectFile(uint32_t id,FILE * fi){
 		if(projects[id]->share[2]<0){
 			fread(&projects[id]->tileMapC->mapSizeW,1,sizeof(uint32_t),fi);
 			fread(&projects[id]->tileMapC->mapSizeH,1,sizeof(uint32_t),fi);
-			uint8_t isBlockTemp;
-			fread(&isBlockTemp,1,sizeof(uint8_t),fi);
-			projects[id]->tileMapC->isBlock=isBlockTemp?true:false;
-			if(isBlockTemp)
-				fread(&projects[id]->tileMapC->amt,1,sizeof(uint32_t),fi);
-			else
-				projects[id]->tileMapC->amt=1;
-			projects[id]->tileMapC->mapSizeHA=projects[id]->tileMapC->mapSizeH*projects[id]->tileMapC->amt;
+			if(version>=2){
+				uint8_t isBlockTemp;
+				fread(&isBlockTemp,1,sizeof(uint8_t),fi);
+				projects[id]->tileMapC->isBlock=isBlockTemp?true:false;
+				if(isBlockTemp)
+					fread(&projects[id]->tileMapC->amt,1,sizeof(uint32_t),fi);
+				else
+					projects[id]->tileMapC->amt=1;
+				projects[id]->tileMapC->mapSizeHA=projects[id]->tileMapC->mapSizeH*projects[id]->tileMapC->amt;
+			}else
+				projects[id]->tileMapC->mapSizeHA=projects[id]->tileMapC->mapSizeH;
 			projects[id]->tileMapC->tileMapDat=(uint8_t*)realloc(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeHA);
 			decompressFromFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeHA,fi);
 		}

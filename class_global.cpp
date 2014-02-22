@@ -16,7 +16,7 @@
 */
 #include "global.h"
 #include "class_global.h"
-editor *window = new editor(800,600,"Retro Graphics Toolkit");//this creates the window
+editor *window = new editor(800,600,"Retro Graphics Toolkit v0.5");//this creates the window
 static void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y){
 	uint8_t grid[32*32*3];
 	//first generate grid
@@ -340,6 +340,9 @@ int editor::handle(int event){
 						}
 						damage(FL_DAMAGE_USER1);//no need to redraw the gui
 					}
+				break;
+				case chunckEditor:
+					puts("Chunck");
 				break;
 			}
 		break;

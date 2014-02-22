@@ -26,7 +26,7 @@ Header for globals included with all other files.
 #include "errorMsg.h"
 #include "class_tiles.h"
 #include "palette.h"
-
+#include "gui.h"
 //functions
 uint8_t nearest_color_index(uint8_t val);
 void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha=true,bool alphaZero=false);
@@ -52,33 +52,12 @@ extern uint8_t truecolor_temp[4];
 //extern uint8_t * truecolor_tiles;
 extern std::string the_file;//this is for tempory use only
 extern uint8_t mode_editor;/*!< Importan varible is used to determin which "mode" the user is in for example palette editing or map editing*/
-#define pal_edit 0
-#define tile_edit 1
-#define tile_place 2
-#define chunckEditor 3
-#define settingsTab 4
-#define default_map_off_x 256
 extern uint32_t map_off_x,map_off_y;
-#define default_map_off_y 256
-#define tile_placer_tile_offset_x 88
-#define default_tile_placer_tile_offset_y 208
-#define tile_place_buttons_x_off 8
 extern uint16_t tile_placer_tile_offset_y;
-#define palette_bar_offset_x 16
-#define default_palette_bar_offset_y 56
-#define palette_preview_box_x 408
-#define palette_preview_box_y 208
-#define default_tile_edit_offset_x 344
 //#define tile_edit_offset_x 472
-#define default_tile_edit_offset_y 224
 extern uint16_t tile_edit_offset_y;
 extern uint16_t tile_edit_offset_x;
-#define default_tile_edit_truecolor_off_x 8;
-#define default_tile_edit_truecolor_off_y 224;
 extern uint16_t tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
-#define true_color_box_size 48
-#define default_true_color_box_y 188
-#define default_true_color_box_x 732
 extern uint16_t true_color_box_x,true_color_box_y;
 extern bool show_grid;
 //extern uint8_t palette_muliplier;
