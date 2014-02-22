@@ -216,7 +216,7 @@ void tileMap::pickRow(uint8_t amount){
 				}
 			}
 			hh/=64.0/divide;
-			if (hh >= maxPal) {
+			if (hh >= maxPal){
 				printf("hh >= %f %f %d\n",maxPal,hh,(int)hh);
 				hh=divide-0.5;
 			}

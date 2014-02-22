@@ -128,7 +128,7 @@ void editor::draw_non_gui(){
 			//see if shadow highlight is enabled
 			if ((palTypeGen==0) || (currentProject->gameSystem != sega_genesis) || (showTrueColor==true)){
 				//shadow highlight is disabled
-				for (y=0;y<std::min(currentProject->tileMapC->mapSizeH-map_scroll_pos_y,max_map_h);++y){
+				for (y=0;y<std::min((currentProject->tileMapC->mapSizeH*currentProject->tileMapC->amt)-map_scroll_pos_y,max_map_h);++y){
 					for (x=0;x<std::min(currentProject->tileMapC->mapSizeW-map_scroll_pos_x,max_map_w);++x){
 						uint32_t tempx,tempy;
 						tempx=x+map_scroll_pos_x;
@@ -152,7 +152,7 @@ void editor::draw_non_gui(){
 				}
 			}else{
 				uint8_t type_temp=palTypeGen;
-				for (y=0;y<std::min(currentProject->tileMapC->mapSizeH-map_scroll_pos_y,max_map_h);++y){
+				for (y=0;y<std::min((currentProject->tileMapC->mapSizeH*currentProject->tileMapC->amt)-map_scroll_pos_y,max_map_h);++y){
 					for (x=0;x<std::min(currentProject->tileMapC->mapSizeW-map_scroll_pos_x,max_map_w);++x){
 						uint32_t tempx,tempy;
 						tempx=x+map_scroll_pos_x;
@@ -179,11 +179,10 @@ void editor::draw_non_gui(){
 			}
 			if (show_grid_placer){
 				//draw box over tiles
-				for (y=0;y<std::min(currentProject->tileMapC->mapSizeH-map_scroll_pos_y,max_map_h);++y){
+				for (y=0;y<std::min((currentProject->tileMapC->mapSizeH*currentProject->tileMapC->amt)-map_scroll_pos_y,max_map_h);++y){
 					for (x=0;x<std::min(currentProject->tileMapC->mapSizeW-map_scroll_pos_x,max_map_w);++x)
 						fl_draw_box(FL_EMBOSSED_FRAME,map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),placer_tile_size*8,placer_tile_size*8,NULL);
 				}
-				
 			}
 			if(tileEditModePlace_G){
 				uint32_t xo,yo;
@@ -233,13 +232,6 @@ int editor::handle(int event){
 				break;
 				case tile_edit:
 					tileEdit_pal.check_box(Fl::event_x(),Fl::event_y());
-				break;
-				case tile_place:
-					tileMap_pal.check_box(Fl::event_x(),Fl::event_y());
-				break;
-			}
-			switch (mode_editor){
-				case tile_edit:
 					//first see if we are in a "valid" range
 					tiles_size=tile_size->value();
 					//start by handiling true color
@@ -270,9 +262,10 @@ int editor::handle(int event){
 					}
 				break;
 				case tile_place:
+					tileMap_pal.check_box(Fl::event_x(),Fl::event_y());
 					tiles_size=place_tile_size->value();
 					//see if the user placed a tile on the map
-					if (Fl::event_x() > map_off_x && Fl::event_y() > map_off_y && Fl::event_x() < map_off_x+((tiles_size*8)*currentProject->tileMapC->mapSizeW) && Fl::event_y() < map_off_y+((tiles_size*8)*currentProject->tileMapC->mapSizeH)){
+					if ((Fl::event_x() > map_off_x)&&(Fl::event_y()>map_off_y)&&(Fl::event_x() < map_off_x+((tiles_size*8)*(currentProject->tileMapC->mapSizeW-map_scroll_pos_x)))&&(Fl::event_y() < map_off_y+((tiles_size*8)*((currentProject->tileMapC->mapSizeH*currentProject->tileMapC->amt)-map_scroll_pos_y)))){
 						uint32_t temp_two,temp_one;
 						temp_one=((Fl::event_x()-map_off_x)/tiles_size)/8;
 						temp_two=((Fl::event_y()-map_off_y)/tiles_size)/8;

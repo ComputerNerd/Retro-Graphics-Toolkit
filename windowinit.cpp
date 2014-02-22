@@ -97,6 +97,8 @@ static const Fl_Menu_Item ditherChoices[]={
 	{"Vertical dithering",0, set_ditherAlg,(void *)4},
 	{0}
 };
+extern const char * MapWidthTxt;
+extern const char * MapHeightTxt;
 void editor::_editor(){
 	//create the window
 	menu = new Fl_Menu_Bar(0,0,800,24);//Create menubar, items..
@@ -321,21 +323,29 @@ void editor::_editor(){
 				} // Fl_Round_Button* o
 				o->end();
 			} // Fl_Group* o
-			map_w = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+72,312,24,"Map width");
+			map_w = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+72,312,24,MapWidthTxt);
 			map_w->minimum(1);
 			map_w->maximum(8192);
 			map_w->step(1);
 			map_w->value(2);
 			map_w->align(FL_ALIGN_LEFT);
 			map_w->callback(callback_resize_map);
-			map_h = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+104,312,24,"Map height");
+			map_h = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+104,312,24,MapHeightTxt);
 			map_h->minimum(1);
 			map_h->maximum(8192);
 			map_h->step(1);
 			map_h->value(2);
 			map_h->align(FL_ALIGN_LEFT);
 			map_h->callback(callback_resize_map);
-			map_x_scroll = new Fl_Scrollbar(default_map_off_x-32, default_map_off_y-42, 800-8-default_map_off_x, 24);
+			map_amt = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+136,312,24,"Blocks");
+			map_amt->minimum(1);
+			map_amt->maximum(8192);
+			map_amt->step(1);
+			map_amt->value(1);
+			map_amt->align(FL_ALIGN_LEFT);
+			map_amt->callback(blocksAmtCB);
+			map_amt->hide();
+			map_x_scroll = new Fl_Scrollbar(default_map_off_x-32, default_map_off_y-32, 800-8-default_map_off_x, 24);
 			map_x_scroll->value(0,0,0,0);
 			map_x_scroll->type(FL_HORIZONTAL);
 			map_x_scroll->tooltip("Use this scroll bar to move around the tile map if you are zoomed in and there is not enough room to display the entire tilemap at once. This scroll bar will move the map left and right.");
@@ -395,10 +405,9 @@ void editor::_editor(){
 				o->callback(set_grid_placer);
 				o->tooltip("This button Toggles whether or not a grid is visible over the tilemap this will allow you to easily see were each tile is");
 			}
-			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,432,96,32,"Blocks?");
-				o->callback(toggleBlocksCB);
-				o->tooltip("Toggles if tilemap is treated as blocks");
-			}
+			BlocksCBtn = new Fl_Check_Button(tile_place_buttons_x_off,432,96,32,"Blocks?");
+			BlocksCBtn->callback(toggleBlocksCB);
+			BlocksCBtn->tooltip("Toggles if tilemap is treated as blocks");
 			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,464,192,32,"Show only selected row");
 				o->callback(toggleRowSolo);
 				o->tooltip("When checked Tiles that do not use the selected row will not be drawn");

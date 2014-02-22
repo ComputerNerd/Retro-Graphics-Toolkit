@@ -59,7 +59,7 @@ extern uint8_t mode_editor;/*!< Importan varible is used to determin which "mode
 #define settingsTab 4
 #define default_map_off_x 256
 extern uint32_t map_off_x,map_off_y;
-#define default_map_off_y 232
+#define default_map_off_y 256
 #define tile_placer_tile_offset_x 88
 #define default_tile_placer_tile_offset_y 208
 #define tile_place_buttons_x_off 8

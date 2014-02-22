@@ -30,6 +30,7 @@ class editor : public Fl_Double_Window{
 	Fl_Scrollbar * map_y_scroll;
 	Fl_Slider* map_w;
 	Fl_Slider* map_h;
+	Fl_Slider* map_amt;
 	Fl_Slider* rgb_red;
 	Fl_Slider* rgb_green;
 	Fl_Slider* rgb_blue;
@@ -49,6 +50,7 @@ class editor : public Fl_Double_Window{
 	Fl_Check_Button* vflipCB;
 	Fl_Check_Button* prioCB;
 	Fl_Check_Button* sharePrj[shareAmtPj];
+	Fl_Check_Button* BlocksCBtn;
 	Fl_Slider* shareWith[shareAmtPj];
 	Fl_Check_Button* havePrj[shareAmtPj];
 	Fl_Text_Buffer* TxtBufProject;

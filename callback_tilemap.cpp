@@ -17,6 +17,15 @@
 #include "global.h"
 #include "savepng.h"
 #include "dither.h"
+void resizeBlocksCB(Fl_Widget*o,void*){
+	currentProject->tileMapC->resizeBlocks(window->map_w->value(),window->map_h->value());
+	window->redraw();
+}
+void blocksAmtCB(Fl_Widget*o,void*){
+	Fl_Slider*s=(Fl_Slider*)o;
+	currentProject->tileMapC->blockAmt(s->value());
+	window->redraw();
+}
 void toggleBlocksCB(Fl_Widget*o,void*){
 	Fl_Check_Button* b=(Fl_Check_Button*)o;
 	currentProject->tileMapC->toggleBlocks(b->value()?true:false);
@@ -61,7 +70,6 @@ void save_tilemap_as_image(Fl_Widget*,void*){
 		uint8_t temptile[192];
 		uint32_t x,y;
 		uint32_t w3=w*3;//do this once instead of thousands of times in the loop
-		uint32_t h3=h*3;
 		uint32_t w21=w*21;
 		uint32_t w24_24=(w*24)-24;
 		uint8_t * tempptr,yy;

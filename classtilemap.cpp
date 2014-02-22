@@ -15,7 +15,9 @@
     Copyright Sega16 (or whatever you wish to call me (2012-2014)
 */
 #include "project.h"
+#include "callback_tilemap.h"
 tileMap::tileMap(){
+	amt=1;
 	mapSizeW=mapSizeH=2;
 	isBlock=false;
 	tileMapDat=(uint8_t *)calloc(16,1);
@@ -32,32 +34,58 @@ tileMap::tileMap(const tileMap& other){
 	}else{
 		tileMapDat=(uint8_t*)malloc(mapSizeW*mapSizeH*4);
 		memcpy(tileMapDat,other.tileMapDat,mapSizeW*mapSizeH*4);
-		printf("Copied map of size %d\n",mapSizeW*mapSizeH*4*amt);
+		printf("Copied map of size %d\n",mapSizeW*mapSizeH*4);
 	}
 }
 tileMap::~tileMap(){
 	free(tileMapDat);
 }
 void tileMap::resizeBlocks(uint32_t wn,uint32_t hn){
-	amt=mapSizeW*mapSizeH*amt;
-	amt/=(wn*hn);
-	mapSizeW=wn;
-	mapSizeH=hn;
+	uint32_t amtTemp=mapSizeW*mapSizeH*amt;
+	amtTemp/=(wn*hn);
+	if(amtTemp){
+		amt=amtTemp;
+		mapSizeW=wn;
+		mapSizeH=hn;
+		window->map_amt->value(amt);
+	}else{
+		window->map_w->value(mapSizeW);
+		window->map_h->value(mapSizeH);
+	}
 }
 void tileMap::blockAmt(uint32_t newAmt){
 	amt=newAmt;
 	resize_tile_map(mapSizeW,mapSizeH*amt);
 }
+const char * MapWidthTxt="Map width";
+const char * MapHeightTxt="Map height";
 void tileMap::toggleBlocks(bool set){
-	if(set==isBlock)
-		return;
+	if(set!=isBlock){
+		if(set){
+			isBlock=true;
+			amt=mapSizeH;
+			mapSizeH=1;
+		}else{
+			isBlock=false;
+			amt=1;//amt must = 1 when blocks are not in use
+			mapSizeH*=amt;
+		}
+	}
 	if(set){
-		isBlock=true;
-		amt=mapSizeH;
-		mapSizeH=1;
+		window->map_w->label("Block width");
+		window->map_w->callback(resizeBlocksCB);
+		window->map_h->label("Block height");
+		window->map_h->callback(resizeBlocksCB);
+		window->map_h->value(mapSizeH);
+		window->map_amt->show();
+		window->map_amt->value(amt);
 	}else{
-		isBlock=false;
-		mapSizeH*=amt;
+		window->map_w->callback(callback_resize_map);
+		window->map_w->label(MapWidthTxt);
+		window->map_h->callback(callback_resize_map);
+		window->map_h->label(MapHeightTxt);
+		window->map_h->value(mapSizeH);
+		window->map_amt->hide();
 	}
 }
 bool tileMap::get_hflip(uint32_t x,uint32_t y){
@@ -78,8 +106,8 @@ void tileMap::set_pal_row(uint32_t x,uint32_t y,uint8_t row){
 }
 uint32_t tileMap::get_tile(uint32_t x,uint32_t y){
 	//first calulate which tile we want
-	if (mapSizeW < x || mapSizeH < y){
-		fl_alert("Error tried to get a non-existent tile on the map");
+	if ((mapSizeW <= x) || (mapSizeH*amt) <= y){
+		printf("Error tile (%d,%d) does not exist on this map\n",x,y);
 		return 0;
 	}
 	uint32_t selected_tile=((y*mapSizeW)+x)*4;
@@ -130,13 +158,13 @@ bool tileMap::saveToFile(){
 	FILE * myfile;
 	uint32_t fileSize;
 	uint8_t type,compression, * mapptr;
-	if (load_file_generic("Save tilemap to",true) == true){
+	if (load_file_generic("Save tilemap to",true)){
 		type=fl_choice("How would like this file saved?","Binary","C header",0);
 		compression=fl_choice("In what format would you like this tilemap saved","Uncompressed","Enigma Compression",0);
 		if (type == 1){
 			char temp[2048];
 			myfile = fopen(the_file.c_str(),"w");
-			sprintf(temp,"//Width %d Height %d",mapSizeW,mapSizeH);
+			sprintf(temp,"//Width %d Height %d",mapSizeW,mapSizeH*amt);
 			fputs((const char *)temp,myfile);
 			if(compression==1)
 				fputs(" Enigma compressed",myfile);
@@ -150,10 +178,10 @@ bool tileMap::saveToFile(){
 				case sega_genesis:
 					{
 					uint16_t * TheMap;
-					fileSize=(mapSizeW*mapSizeH)*2;
+					fileSize=(mapSizeW*mapSizeH*amt)*2;
 					TheMap = (uint16_t*)malloc(fileSize);
-					for (y=0;y<mapSizeH;y++){
-						for (x=0;x<mapSizeW;x++){
+					for (y=0;y<mapSizeH*amt;++y){
+						for (x=0;x<mapSizeW;++x){
 							uint32_t tile=get_tile(x,y);
 							if (tile > 2047){
 								printf("Warning tile value %d exceeded 2047 at x: %d y: %d\n",tile,x,y);
@@ -168,16 +196,16 @@ bool tileMap::saveToFile(){
 							*TheMap++|=(uint16_t)tile;//add tile
 						}
 					}
-					TheMap-=mapSizeW*mapSizeH;//return to begining so it can be freeded and the file saved
+					TheMap-=mapSizeW*mapSizeH*amt;//return to begining so it can be freeded and the file saved
 					mapptr=(uint8_t*)TheMap;
 				}//brackets used to prevent TheMap conflict
 				break;
 				case NES:
 				{uint8_t * TheMap;
-					fileSize=mapSizeW*mapSizeH;
+					fileSize=mapSizeW*mapSizeH*amt;
 					TheMap = (uint8_t *)malloc(fileSize);
-					for (y=0;y<mapSizeH;y++){
-						for (x=0;x<mapSizeW;x++){
+					for (y=0;y<mapSizeH*amt;++y){
+						for (x=0;x<mapSizeW;++x){
 							uint32_t tile=get_tile(x,y);
 							if (tile > 255) {
 								printf("Warning tile value %d exceeded 255 at x: %d y: %d\n",tile,x,y);
@@ -186,7 +214,7 @@ bool tileMap::saveToFile(){
 							*TheMap++=tile;
 						}
 					}
-					TheMap-=mapSizeW*mapSizeH;//return to begining so it can be freeded and the file sized
+					TheMap-=mapSizeW*mapSizeH*amt;//return to begining so it can be freeded and the file sized
 					mapptr=TheMap;}
 				break;
 			}
@@ -227,9 +255,9 @@ bool tileMap::saveToFile(){
 			else
 				myfile = fopen(the_file.c_str(),"wb");
 			if (likely(myfile!=0)) {
-				uint8_t * AttrMap = (uint8_t *)malloc((mapSizeW/4)*(mapSizeH/4));
+				uint8_t * AttrMap = (uint8_t *)malloc((mapSizeW/4)*(mapSizeH*amt/4));
 				uint8_t * freeAttrMap=AttrMap;
-				for (y=0;y<mapSizeH;y+=4) {
+				for (y=0;y<mapSizeH*amt;y+=4) {
 					for (x=0;x<mapSizeW;x+=4) {
 						*AttrMap++ = get_palette_map(x,y) | (get_palette_map(x+2,y)<<2) | (get_palette_map(x,y+2) << 4) | (get_palette_map(x+2,y+2) << 6);
 						printf("x: %d y: %d\n",x,y);
@@ -238,12 +266,12 @@ bool tileMap::saveToFile(){
 				//AttrMap-=(mapSizeW/4)*(mapSizeH/4);
 				printf("%d %d\n",AttrMap,freeAttrMap);
 				if (type == 1){
-					if (saveBinAsText(freeAttrMap,(mapSizeW/4)*(mapSizeH/4),myfile)==false)
+					if (saveBinAsText(freeAttrMap,(mapSizeW/4)*(mapSizeH*amt/4),myfile)==false)
 							return false;
 						fputs("};",myfile);
 				}
 				else
-					fwrite(freeAttrMap,1,(mapSizeW/4)*(mapSizeH/4),myfile);		
+					fwrite(freeAttrMap,1,(mapSizeW/4)*(mapSizeH*amt/4),myfile);		
 				free(freeAttrMap);
 				fclose(myfile);
 				puts("File Saved");
@@ -271,9 +299,9 @@ bool tileMap::loadFromFile(){
 		int32_t w,h;
 		char * str_ptr;
 		if(blocksLoad)
-			char * str_ptr=(char *)fl_input("Enter block width");
+			str_ptr=(char *)fl_input("Enter block width");
 		else
-			char * str_ptr=(char *)fl_input("Enter block width");
+			str_ptr=(char *)fl_input("Enter width");
 		if (!str_ptr)
 			return true;
 		if (!verify_str_number_only(str_ptr))
@@ -312,6 +340,7 @@ bool tileMap::loadFromFile(){
 		if (!verify_str_number_only(str_ptr))
 			return true;
 		offset=atoi(str_ptr);
+		window->BlocksCBtn->value(blocksLoad?1:0);
 		std::ifstream file (tilemap_file.c_str(), std::ios::in|std::ios::binary|std::ios::ate);
 		file_size = file.tellg();
 		file.seekg (0, std::ios::beg);//return to the beginning of the file
@@ -329,7 +358,7 @@ bool tileMap::loadFromFile(){
 		switch (currentProject->gameSystem){
 			case sega_genesis:
 				if(blocksLoad)
-					size_temp=blocksLoaded*w*h*2;
+					size_temp=blocksLoaded*w*h;
 				else
 					size_temp=w*h*2;//Size of data that is to be loaded
 				blocksLoaded/=2;
@@ -341,6 +370,7 @@ bool tileMap::loadFromFile(){
 					size_temp=w*h;
 			break;
 		}
+		printf("W %d H %d blocks loaded %d\n",w,h,blocksLoaded);
 		window->map_w->value(w);
 		window->map_h->value(h);
 		mapSizeW=w;
@@ -353,7 +383,7 @@ bool tileMap::loadFromFile(){
 			fl_alert("Warning: The Tile map that you are attempting to load is smaller than a tile map that has the width and height that you specified\nThis missing data will be padded with tile zero");
 		//start converting to tile
 		//free(tile_map);
-		tileMapDat = (uint8_t *) realloc(tileMapDat,(w*h)*4);
+		tileMapDat = (uint8_t *) realloc(tileMapDat,(w*h)*4*amt);
 		uint8_t * tempMap = (uint8_t *) malloc(size_temp);
 		if (unlikely(!tileMapDat))
 			show_malloc_error(size_temp)
@@ -428,6 +458,8 @@ bool tileMap::loadFromFile(){
 		}
 		tempMap-=file_size;
 		free(tempMap);
+		isBlock=blocksLoad;
+		toggleBlocks(blocksLoad);
 		window->redraw();
 	}
 }
@@ -454,8 +486,8 @@ void tileMap::sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vfl
 	}
 }
 void tileMap::set_tile_full(uint32_t tile,uint32_t x,uint32_t y,uint8_t palette_row,bool use_hflip,bool use_vflip,bool highorlow_prio){
-	if (mapSizeW < x || mapSizeH < y) {
-		fl_alert("Error tried to set a non existen tile on the map");
+	if (mapSizeW < x || (mapSizeH*amt) < y) {
+		printf("Error (%d,%d) cannot be set to a tile as it is not on the map",x,y);
 		return;
 	}
 	uint32_t selected_tile=((y*mapSizeW)+x)*4;
@@ -490,8 +522,8 @@ void tileMap::set_tile_full(uint32_t tile,uint32_t x,uint32_t y,uint8_t palette_
 }
 void tileMap::set_tile(uint32_t tile,uint32_t x,uint32_t y){
 	//we must split into two varibles
-	if (mapSizeW < x || mapSizeH < y) {
-		fl_alert("Error: Tried to set a non existent tile on the tile map");
+	if (mapSizeW < x || (mapSizeH*amt) < y) {
+		printf("Error (%d,%d) cannot be set to a tile as it is not on the map",x,y);
 		return;
 	}
 	uint32_t selected_tile=((y*mapSizeW)+x)*4;
@@ -514,11 +546,10 @@ void tileMap::set_prio(uint32_t x,uint32_t y,bool prio_set){
 void tileMap::ScrollUpdate(void){
 	uint32_t old_scroll=window->map_x_scroll->value();
 	uint32_t tile_size_placer=window->place_tile_size->value();
-	int32_t map_scroll=((tile_size_placer*8)*mapSizeW)-map_off_x;//size of all offscreen tiles in pixels
-	//map_scroll-=(tile_size_placer*8);
+	int32_t map_scroll=mapSizeW-((window->w()-map_off_x)/tile_size_placer/8);
+	printf("x: %d\n",map_scroll);
 	if (map_scroll < 0)
 		map_scroll=0;
-	map_scroll/=tile_size_placer*8;//now size of all tiles
 	//cout << "tiles off screen: " << map_scroll << endl;
 	if (old_scroll > map_scroll){
 		old_scroll=map_scroll;
@@ -526,16 +557,14 @@ void tileMap::ScrollUpdate(void){
 	}
 	if(map_scroll){
 		window->map_x_scroll->show();
-		window->map_x_scroll->value(old_scroll,(map_scroll/2),0,map_scroll+(map_scroll/2));//the reason for adding map_scroll/2 to map_scroll is because without it the user will not be able to scroll the tilemap all the way
+		window->map_x_scroll->value(old_scroll,1,0,map_scroll+2);//the reason for adding map_scroll/2 to map_scroll is because without it the user will not be able to scroll the tilemap all the way
 	}else
 		window->map_x_scroll->hide();
 	old_scroll=window->map_y_scroll->value();
-	tile_size_placer=window->place_tile_size->value();
-	map_scroll=((tile_size_placer*8)*mapSizeH)-map_off_y;//size of all offscreen tiles in pixels
-	//map_scroll-=(tile_size_placer*8);
+	map_scroll=(mapSizeH*amt)-((window->h()-map_off_y)/tile_size_placer/8);//size of all offscreen tiles in pixels
+	printf("y: %d\n",map_scroll);
 	if (map_scroll < 0)
 		map_scroll=0;
-	map_scroll/=tile_size_placer*8;//now size of all tiles
 	//cout << "tiles off screen: " << map_scroll << endl;
 	if (old_scroll > map_scroll){
 		old_scroll=map_scroll;
@@ -543,7 +572,7 @@ void tileMap::ScrollUpdate(void){
 	}
 	if(map_scroll){
 		window->map_y_scroll->show();
-		window->map_y_scroll->value(old_scroll,(map_scroll/2),0,map_scroll+(map_scroll/2));
+		window->map_y_scroll->value(old_scroll,1,0,map_scroll+2);
 	}else
 		window->map_y_scroll->hide();
 }
@@ -603,5 +632,7 @@ void tileMap::resize_tile_map(uint32_t new_x,uint32_t new_y){
 		selTileE_G[0]=new_x-1;
 	if(selTileE_G[1]>=new_y)
 		selTileE_G[1]=new_y-1;
+	if(isBlock)
+		mapSizeH/=amt;
 	ScrollUpdate();
 }
