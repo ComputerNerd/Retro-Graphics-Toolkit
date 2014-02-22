@@ -174,7 +174,7 @@ void load_tiles(Fl_Widget*,void* split){
 				if (row < 0){
 					uint32_t x,y;
 					uint8_t foundRow=defaultRow;
-					for (y=0;y<currentProject->tileMapC->mapSizeH;++y){
+					for (y=0;y<currentProject->tileMapC->mapSizeHA;++y){
 						for (x=0;x<currentProject->tileMapC->mapSizeW;++x){
 							if (currentProject->tileMapC->get_tile(x,y) == c) {
 								foundRow=currentProject->tileMapC->get_palette_map(x,y);

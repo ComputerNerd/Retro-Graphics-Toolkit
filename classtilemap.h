@@ -15,12 +15,13 @@
     Copyright Sega16 (or whatever you wish to call me (2012-2014)
 */
 class tileMap{
+private:
 public:
 	tileMap();
 	tileMap(const tileMap& other);
 	~tileMap();
 	uint8_t * tileMapDat;/*!< Holds tilemap data*/
-	uint32_t mapSizeW,mapSizeH;
+	uint32_t mapSizeW,mapSizeH,mapSizeHA;
 	bool isBlock;
 	uint32_t amt;
 	void blockAmt(uint32_t newAmt);

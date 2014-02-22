@@ -83,6 +83,7 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Dither tilemap as image",0,dither_tilemap_as_image,0},
 		{"File tile map with selection includeing attributes",0,fill_tile_map_with_tile,(void *)0},
 		{"Fix out of range tiles (replace with current attributes in plane editor)",0,FixOutOfRangeCB,0},
+		{"Set map width",0,setMapW},
 		{0},
 	{"Help",0, 0, 0, FL_SUBMENU},
 		{"About",0,showAbout},

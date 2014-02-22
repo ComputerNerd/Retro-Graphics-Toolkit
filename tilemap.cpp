@@ -35,7 +35,7 @@ bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha){
 	}
 	uint32_t w,h;
 	w=currentProject->tileMapC->mapSizeW*8;
-	h=currentProject->tileMapC->mapSizeH*8;
+	h=currentProject->tileMapC->mapSizeHA*8;
 	uint16_t x_tile=0,y_tile=0;
 	uint32_t truecolor_tile_ptr=0;
 	uint8_t pixelSize,pSize2;
@@ -195,7 +195,7 @@ void tileMap::pickRow(uint8_t amount){
 	uint16_t z;
 	uint32_t x,y;
 	double maxPal=divide;
-	for (y=0;y<mapSizeH;++y){
+	for (y=0;y<mapSizeHA;++y){
 		for (x=0;x<mapSizeW;++x){
 			uint32_t cur_tile=get_tile(x,y);
 			uint8_t * truePtr=&currentProject->tileC->truetileDat[cur_tile*256];
@@ -227,7 +227,7 @@ void tileMap::pickRow(uint8_t amount){
 }
 void tileMap::allRowZero(void){
 	uint32_t x,y;
-	for (y=0;y<mapSizeH;++y){
+	for (y=0;y<mapSizeHA;++y){
 		for (x=0;x<mapSizeW;++x)
 			set_pal_row(x,y,0);
 	}
@@ -294,7 +294,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	uint8_t temp[256];
 	uint32_t w,h;
 	w=mapSizeW*8;
-	h=mapSizeH*8;
+	h=mapSizeHA*8;
 	uint8_t * imagein=(uint8_t*)malloc(w*h*4);
 	truecolor_to_image(imagein,-1);
 	uint8_t **imageout=(uint8_t**)malloc(4*sizeof(void*));
@@ -328,7 +328,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 		}
 	}
 	if(showProgress){
-		progress->maximum(mapSizeH);
+		progress->maximum(mapSizeHA);
 		progress->label("Picking tiles based on delta");
 	}
 	for (uint32_t a=0;a<(h*w*4)-w*4;a+=w*4*8){//a tiles y
@@ -433,7 +433,7 @@ static void reduceImage(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_
 		break;
 	}
 	w=currentProject->tileMapC->mapSizeW*8;
-	h=currentProject->tileMapC->mapSizeH*8;
+	h=currentProject->tileMapC->mapSizeHA*8;
 	truecolor_to_image(image,row,false);
 	progress->label("Dithering to colorspace");
 	Fl::check();
@@ -674,7 +674,7 @@ void generate_optimal_palette(Fl_Widget*,void*){
 	//uint8_t * colors;
 	uint32_t w,h;
 	w=currentProject->tileMapC->mapSizeW*8;
-	h=currentProject->tileMapC->mapSizeH*8;
+	h=currentProject->tileMapC->mapSizeHA*8;
 	uint32_t colors_found;
 	//uint8_t * found_colors;
 	uint8_t found_colors[768];
@@ -741,7 +741,7 @@ void truecolorimageToTiles(uint8_t * image,int8_t rowusage,bool useAlpha){
 	uint8_t pSize=useAlpha ? 4:3;
 	uint8_t pTile=useAlpha ? 32:24;
 	uint32_t w=currentProject->tileMapC->mapSizeW*8;
-	uint32_t h=currentProject->tileMapC->mapSizeH*8;
+	uint32_t h=currentProject->tileMapC->mapSizeHA*8;
 	uint16_t truecolor_tile_ptr;
 	for (uint32_t a=0;a<(h*w*pSize)-w*pSize;a+=w*pSize*8){//a tiles y
 		for (uint32_t b=0;b<w*pSize;b+=pTile){//b tiles x

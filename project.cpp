@@ -161,7 +161,7 @@ bool appendProject(void){
 	projects[projects_count]->palDat=(uint8_t*)calloc(1,128);
 	projects[projects_count]->palType=(uint8_t*)calloc(1,64);
 	projects[projects_count]->gameSystem=sega_genesis;
-	std::fill(currentProject->share,&currentProject->share[shareAmtPj],-1);
+	std::fill(projects[projects_count]->share,&projects[projects_count]->share[shareAmtPj],-1);
 	projects[projects_count]->useMask=pjDefaultMask;
 	++projects_count;
 	//Realloc could have changed address
@@ -237,6 +237,7 @@ void switchProject(uint32_t id){
 	//Make sure sliders have correct values
 	window->map_w->value(projects[id]->tileMapC->mapSizeW);
 	window->map_h->value(projects[id]->tileMapC->mapSizeH);
+	window->map_amt->value(projects[id]->tileMapC->amt);
 	window->tile_select->maximum(projects[id]->tileC->tiles_amount);
 	window->tile_select_2->maximum(projects[id]->tileC->tiles_amount);
 	for(int x=0;x<shareAmtPj;++x){
@@ -260,7 +261,8 @@ void switchProject(uint32_t id){
 			}
 		}
 	}
-	projects[id]->tileMapC->ScrollUpdate();
+	projects[id]->tileMapC->toggleBlocks(projects[id]->tileMapC->isBlock);
+	//projects[id]->tileMapC->ScrollUpdate();//toggleBlocks calls this funciton
 	window->redraw();
 }
 static bool loadProjectFile(uint32_t id,FILE * fi){
@@ -326,8 +328,16 @@ static bool loadProjectFile(uint32_t id,FILE * fi){
 		if(projects[id]->share[2]<0){
 			fread(&projects[id]->tileMapC->mapSizeW,1,sizeof(uint32_t),fi);
 			fread(&projects[id]->tileMapC->mapSizeH,1,sizeof(uint32_t),fi);
-			projects[id]->tileMapC->tileMapDat=(uint8_t*)realloc(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeH);
-			decompressFromFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeH,fi);
+			uint8_t isBlockTemp;
+			fread(&isBlockTemp,1,sizeof(uint8_t),fi);
+			projects[id]->tileMapC->isBlock=isBlockTemp?true:false;
+			if(isBlockTemp)
+				fread(&projects[id]->tileMapC->amt,1,sizeof(uint32_t),fi);
+			else
+				projects[id]->tileMapC->amt=1;
+			projects[id]->tileMapC->mapSizeHA=projects[id]->tileMapC->mapSizeH*projects[id]->tileMapC->amt;
+			projects[id]->tileMapC->tileMapDat=(uint8_t*)realloc(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeHA);
+			decompressFromFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeHA,fi);
 		}
 	}
 }
@@ -360,6 +370,11 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared){
 	true color tile data always decompresses to 256 bytes * tile count and is compressed with zlib
 	uint32_t map size w
 	uint32_t map size h
+	if(version>=2){
+	uint8_t isBlocks 0 if not blocks non-zero if so
+	if(isBlocks)
+		uint32_t blocks amount also treat w and h as width and height per block
+	}
 	uint32_t compressed size map
 	map data will decompress to map size w * map size h * 4 and is compressed with zlib
 	*/
@@ -409,7 +424,11 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared){
 		if(saveShared||(projects[id]->share[2]<0)){
 			fwrite(&projects[id]->tileMapC->mapSizeW,1,sizeof(uint32_t),fo);
 			fwrite(&projects[id]->tileMapC->mapSizeH,1,sizeof(uint32_t),fo);
-			compressToFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeH,fo);
+			uint8_t isBlockTemp=projects[id]->tileMapC->isBlock?1:0;
+			fwrite(&isBlockTemp,1,sizeof(uint8_t),fo);
+			if(isBlockTemp)
+				fwrite(&projects[id]->tileMapC->amt,1,sizeof(uint32_t),fo);
+			compressToFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeHA,fo);
 		}
 	}
 	return true;

@@ -17,6 +17,21 @@
 #include "global.h"
 #include "savepng.h"
 #include "dither.h"
+void setMapW(Fl_Widget*,void*){
+	char * str_ptr;
+	str_ptr=(char *)fl_input("Enter Width");
+	if (!str_ptr)
+		return;
+	if (!verify_str_number_only(str_ptr))
+		return;
+	uint32_t wTemp=atoi(str_ptr);
+	if(currentProject->tileMapC->isBlock)
+		currentProject->tileMapC->resizeBlocks(wTemp,window->map_h->value());
+	else
+		currentProject->tileMapC->resize_tile_map(wTemp,window->map_h->value());
+	window->map_w->value(wTemp);
+	window->redraw();
+}
 void resizeBlocksCB(Fl_Widget*o,void*){
 	currentProject->tileMapC->resizeBlocks(window->map_w->value(),window->map_h->value());
 	window->redraw();
@@ -33,7 +48,7 @@ void toggleBlocksCB(Fl_Widget*o,void*){
 }
 void FixOutOfRangeCB(Fl_Widget*,void*){
 	//use current attributes
-	for(int y=0;y<currentProject->tileMapC->mapSizeH;++y){
+	for(int y=0;y<currentProject->tileMapC->mapSizeHA;++y){
 		for(int x=0;x<currentProject->tileMapC->mapSizeW;++x){
 			if(currentProject->tileMapC->get_tile(x,y)>currentProject->tileC->tiles_amount)
 				currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,x,y,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
@@ -62,7 +77,7 @@ void set_grid_placer(Fl_Widget*,void*){
 void save_tilemap_as_image(Fl_Widget*,void*){
 	if(load_file_generic("Save png as",true)==true){
 		uint32_t w=currentProject->tileMapC->mapSizeW*8;
-		uint32_t h=currentProject->tileMapC->mapSizeH*8;
+		uint32_t h=currentProject->tileMapC->mapSizeHA*8;
 		uint8_t * image=(uint8_t*)malloc(w*h*3);
 		uint8_t * imageold=image;
 		if(image==0)
@@ -93,7 +108,7 @@ void save_tilemap_as_image(Fl_Widget*,void*){
 void save_tilemap_as_colspace(Fl_Widget*,void*){
 	if(load_file_generic("Save png as",true)==true){
 		uint32_t w=currentProject->tileMapC->mapSizeW*8;
-		uint32_t h=currentProject->tileMapC->mapSizeH*8;
+		uint32_t h=currentProject->tileMapC->mapSizeHA*8;
 		uint8_t * image=(uint8_t*)malloc(w*h*3);
 		truecolor_to_image(image,-1,false);
 		ditherImage(image,w,h,false,true);
@@ -115,7 +130,7 @@ void fill_tile_map_with_tile(Fl_Widget*,void*){
 		return;
 	}
 	if(fl_ask("This will erase the entire tilemap and fill it with the currently selected tile\nAre you sure you want to do this?")){
-		for (uint16_t y=0;y<currentProject->tileMapC->mapSizeH;++y) {
+		for (uint16_t y=0;y<currentProject->tileMapC->mapSizeHA;++y) {
 			for (uint16_t x=0;x<currentProject->tileMapC->mapSizeW;++x)
 				currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,x,y,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
 		}
@@ -129,7 +144,7 @@ void dither_tilemap_as_image(Fl_Widget*,void*){
 	uint8_t * image;
 	uint32_t w,h;
 	w=currentProject->tileMapC->mapSizeW*8;
-	h=currentProject->tileMapC->mapSizeH*8;
+	h=currentProject->tileMapC->mapSizeHA*8;
 	uint8_t method=fl_choice("How would you like this tilemap dithered?","Dither each palette row separately","Dither entire image at once","cancel");
 	if(method==2)
 		return;
@@ -352,7 +367,7 @@ void shadow_highligh_findout(Fl_Widget*,void*){
 	uint16_t x,y;
 	uint32_t xx;
 	if (type==0){
-		for (y=0;y<currentProject->tileMapC->mapSizeH;++y){
+		for (y=0;y<currentProject->tileMapC->mapSizeHA;++y){
 			for (x=0;x<currentProject->tileMapC->mapSizeW;++x){
 				uint32_t cur_tile=currentProject->tileMapC->get_tile(x,y);
 				uint8_t over=0;
@@ -370,7 +385,7 @@ void shadow_highligh_findout(Fl_Widget*,void*){
 		uint8_t temp[256];
 		//uint8_t useHiL=palette_muliplier;
 		uint8_t type_temp=palTypeGen;
-		for (y=0;y<currentProject->tileMapC->mapSizeH;++y){
+		for (y=0;y<currentProject->tileMapC->mapSizeHA;++y){
 			for (x=0;x<currentProject->tileMapC->mapSizeW;++x){
 				uint32_t cur_tile=currentProject->tileMapC->get_tile(x,y);
 				uint32_t errorSh=0,errorNorm=0;

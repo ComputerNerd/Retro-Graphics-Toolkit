@@ -14,6 +14,7 @@
     along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
     Copyright Sega16 (or whatever you wish to call me (2012-2014)
 */
+void setMapW(Fl_Widget*,void*);
 void resizeBlocksCB(Fl_Widget*o,void*);
 void blocksAmtCB(Fl_Widget*o,void*);
 void toggleBlocksCB(Fl_Widget*o,void*);

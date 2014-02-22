@@ -66,14 +66,14 @@ void set_game_system(Fl_Widget*,void* selection){
 			update_emphesis(0,0);
 			currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*16);
 			//on the NES tilemaps need to be a multiple of 2
-			if(((currentProject->tileMapC->mapSizeW)&1) && ((currentProject->tileMapC->mapSizeH)&1))
-				currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeH+1);
+			if(((currentProject->tileMapC->mapSizeW)&1) && ((currentProject->tileMapC->mapSizeHA)&1))
+				currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeHA+1);
 			if((currentProject->tileMapC->mapSizeW)&1)
-				currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeH);
-			if((currentProject->tileMapC->mapSizeH)&1)
-				currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeH+1);
+				currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeHA);
+			if((currentProject->tileMapC->mapSizeHA)&1)
+				currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeHA+1);
 			window->map_w->value(currentProject->tileMapC->mapSizeW);
-			window->map_h->value(currentProject->tileMapC->mapSizeH);
+			window->map_h->value(currentProject->tileMapC->mapSizeHA);
 			window->map_w->step(2);
 			window->map_h->step(2);
 		break;
