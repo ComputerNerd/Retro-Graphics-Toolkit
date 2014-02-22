@@ -380,12 +380,91 @@ static unsigned palettesize = 16;
 static unsigned luma[maxpalettesize];
 //static LabItem  meta[maxpalettesize];
 static double   pal_g[maxpalettesize][3]; // Gamma-corrected palette entry
-static uint16_t offsetGloablY3=0;
+static unsigned offsetGloablY3=0;
 static inline bool PaletteCompareLuma(unsigned index1, unsigned index2){
 	return luma[index1+offsetGloablY3] < luma[index2+offsetGloablY3];
 }
 
 typedef std::vector<unsigned> MixingPlan;
+
+
+
+/* 8x8 threshold map */
+#define d(x) x/64.0
+static const double mapY1[8*8] = {
+d( 0), d(48), d(12), d(60), d( 3), d(51), d(15), d(63),
+d(32), d(16), d(44), d(28), d(35), d(19), d(47), d(31),
+d( 8), d(56), d( 4), d(52), d(11), d(59), d( 7), d(55),
+d(40), d(24), d(36), d(20), d(43), d(27), d(39), d(23),
+d( 2), d(50), d(14), d(62), d( 1), d(49), d(13), d(61),
+d(34), d(18), d(46), d(30), d(33), d(17), d(45), d(29),
+d(10), d(58), d( 6), d(54), d( 9), d(57), d( 5), d(53),
+d(42), d(26), d(38), d(22), d(41), d(25), d(37), d(21) };
+#undef d
+
+
+
+// Compare the difference of two RGB values
+static double EvaluateMixingError(int r,int g,int b,
+						   int r0,int g0,int b0,
+						   int r1,int g1,int b1,
+						   int r2,int g2,int b2,
+						   double ratio){
+	return ColorCompare(r,g,b, r0,g0,b0) 
+		 + ColorCompare(r1,g1,b1, r2,g2,b2) * 0.1 * (fabs(ratio-0.5)+0.5);
+}
+
+struct MixingPlanY1{
+	unsigned colors[2];
+	double ratio; /* 0 = always index1, 1 = always index2, 0.5 = 50% of both */
+};
+MixingPlanY1 DeviseBestMixingPlanY1(const unsigned r,const unsigned g,const unsigned b,uint8_t * pal,uint16_t offset){
+	//const unsigned r = color>>16, g = (color>>8)&0xFF, b = color&0xFF;
+	pal+=offset*3;
+	offsetGloablY3=offset;
+	MixingPlanY1 result = { {0,0}, 0.5 };
+	double least_penalty = 1e99;
+	for(unsigned index1 = 0; index1 < palettesize; ++index1)
+	for(unsigned index2 = index1; index2 < palettesize; ++index2)
+	{
+		// Determine the two component colors
+		//unsigned color1 = pal[index1], color2 = pal[index2];
+		//unsigned r1 = color1>>16, g1 = (color1>>8)&0xFF, b1 = color1&0xFF;
+		//unsigned r2 = color2>>16, g2 = (color2>>8)&0xFF, b2 = color2&0xFF;
+		unsigned r1=pal[index1*3],g1=pal[index1*3+1],b1=pal[index1*3+2];
+		unsigned r2=pal[index2*3],g2=pal[index2*3+1],b2=pal[index2*3+2];
+		int ratio = 32;
+		if((r1!=r2)||(g1!=g2)||(b1!=b2)){
+			// Determine the ratio of mixing for each channel.
+			//   solve(r1 + ratio*(r2-r1)/64 = r, ratio)
+			// Take a weighed average of these three ratios according to the
+			// perceived luminosity of each channel (according to CCIR 601).
+			ratio = ((r2 != r1 ? 299*64 * int(r - r1) / int(r2-r1) : 0)
+				  +  (g2 != g1 ? 587*64 * int(g - g1) / int(g2-g1) : 0)
+				  +  (b1 != b2 ? 114*64 * int(b - b1) / int(b2-b1) : 0))
+				  / ((r2 != r1 ? 299 : 0)
+				   + (g2 != g1 ? 587 : 0)
+				   + (b2 != b1 ? 114 : 0));
+			if(ratio < 0) ratio = 0; else if(ratio > 63) ratio = 63;   
+		}
+		// Determine what mixing them in this proportion will produce
+		unsigned r0 = r1 + ratio * int(r2-r1) / 64;
+		unsigned g0 = g1 + ratio * int(g2-g1) / 64;
+		unsigned b0 = b1 + ratio * int(b2-b1) / 64;
+		double penalty = EvaluateMixingError(
+			r,g,b, r0,g0,b0, r1,g1,b1, r2,g2,b2,
+			ratio / double(64));
+		if(penalty < least_penalty)
+		{
+			least_penalty = penalty;
+			result.colors[0] = index1;
+			result.colors[1] = index2;
+			result.ratio = ratio / double(64);
+		}
+	}
+	return result;
+}
+
 MixingPlan DeviseBestMixingPlanY2(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * pal,uint16_t offset,size_t limit){
 	// Input color in RGB
 	int input_rgb[3] = {rIn,gIn,bIn};
@@ -588,7 +667,9 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 	uint8_t pal_row;
 	int16_t error_rgb[4];
 	switch (ditherAlg){
-	case 3://Yliluoma's ordered dithering algorithm 1
+	case 6:
+	case 5://Yliluoma's ordered dithering algorithm
+	case 4:
 	{
 		if(colSpace){
 			if(!fl_ask("Dither to colorspace? WARNING SLOW!"))
@@ -681,24 +762,53 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 					uint8_t tempSet=(currentProject->tileMapC->get_prio(x/8,y/8)^1)*8;
 					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted
 				}
-				unsigned map_value = mapY3[(x & 7) + ((y & 7) << 3)];
-				MixingPlan plan;
-				if(colSpace){
-					plan = DeviseBestMixingPlanY3(r_old,g_old,b_old,colPtr,0, 4);
+				unsigned tempPalOff;
+				if(ditherAlg==4){
+					double map_value = mapY1[(x & 7) + ((y & 7) << 3)];
+					MixingPlanY1 plan;
+					if(colSpace){
+						plan = DeviseBestMixingPlanY1(r_old,g_old,b_old,colPtr,0);
+						tempPalOff=(plan.colors[map_value < plan.ratio ? 1 : 0])*3;
+					}else{
+						plan = DeviseBestMixingPlanY1(r_old,g_old,b_old,currentProject->rgbPal,pal_row*palettesize);
+						tempPalOff=(plan.colors[map_value < plan.ratio ? 1 : 0]+(pal_row*palettesize))*3;
+					}
 				}else{
-					if(forceRow)
-						pal_row=forcedrow;
-					else
-						pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
-					plan = DeviseBestMixingPlanY3(r_old,g_old,b_old,currentProject->rgbPal,pal_row*palettesize, 4);
+					unsigned map_value = mapY3[(x & 7) + ((y & 7) << 3)];
+					MixingPlan plan;
+					if(colSpace){
+						if(ditherAlg==5)
+							plan = DeviseBestMixingPlanY2(r_old,g_old,b_old,colPtr,0, 16);
+						else
+							plan = DeviseBestMixingPlanY3(r_old,g_old,b_old,colPtr,0, 16);
+						map_value = map_value * plan.size() / 64;
+						//gdImageSetPixel(im, x,y, plan[ map_value ]);
+						tempPalOff=plan[map_value]*3;
+					}else{
+						if(forceRow)
+							pal_row=forcedrow;
+						else
+							pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
+						if(ditherAlg==5)
+							plan = DeviseBestMixingPlanY2(r_old,g_old,b_old,currentProject->rgbPal,pal_row*palettesize, 16);
+						else
+							plan = DeviseBestMixingPlanY3(r_old,g_old,b_old,currentProject->rgbPal,pal_row*palettesize, 16);
+						
+						//unsigned color = gdImageGetTrueColorPixel(srcim, x, y);
+						map_value = map_value * plan.size() / 64;
+						//gdImageSetPixel(im, x,y, plan[ map_value ]);
+						tempPalOff=(plan[ map_value ]+(pal_row*palettesize))*3;
+					}
 				}
-				//unsigned color = gdImageGetTrueColorPixel(srcim, x, y);
-				map_value = map_value * plan.size() / 64;
-				//gdImageSetPixel(im, x,y, plan[ map_value ]);
-				uint8_t tempPalOff=(plan[ map_value ]+(pal_row*palettesize))*3;
-				image[(x*rgbPixelsize)+(y*w*rgbPixelsize)]=currentProject->rgbPal[tempPalOff];
-				image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+1]=currentProject->rgbPal[tempPalOff+1];
-				image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2]=currentProject->rgbPal[tempPalOff+2];
+				if(colSpace){
+					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)]=colPtr[tempPalOff];
+					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+1]=colPtr[tempPalOff+1];
+					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2]=colPtr[tempPalOff+2];
+				}else{
+					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)]=currentProject->rgbPal[tempPalOff];
+					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+1]=currentProject->rgbPal[tempPalOff+1];
+					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2]=currentProject->rgbPal[tempPalOff+2];
+				}
 				//puts("x");
 				/*if(colSpace&&((x&31)==0)){
 					//this is slower
@@ -727,7 +837,7 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 	}
 	break;
 	case 2://nearest color
-	case 4://vertical dithering
+	case 3://vertical dithering
 		for (y=0;y<h;++y){
 			for (x=0;x<w*rgbPixelsize;x+=rgbPixelsize){
 				r_old=image[x+(y*w*rgbPixelsize)];
@@ -763,7 +873,7 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 						break;
 					}
 				}else{
-					if(ditherAlg==4){
+					if(ditherAlg==3){
 						if((x/rgbPixelsize)&1){
 							r_old=addCheck(r_old,half);
 							g_old=addCheck(g_old,half);

@@ -216,7 +216,7 @@ void loadPalette(Fl_Widget*, void*){
 	}
 }
 void set_ditherAlg(Fl_Widget*,void* typeset){
-	if (((uintptr_t)typeset==0)||((uintptr_t)typeset==4))
+	if ((uintptr_t)typeset==0)
 		window->ditherPower->show();
 	else
 		window->ditherPower->hide();//imagine the user trying to change the power and nothing happening not fun at all

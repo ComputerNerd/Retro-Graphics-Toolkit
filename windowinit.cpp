@@ -94,8 +94,10 @@ static const Fl_Menu_Item ditherChoices[]={
 	{"Floyd Steinberg",0,set_ditherAlg,(void *)0},
 	{"Riemersma",0,set_ditherAlg,(void *)1},
 	{"Nearest Color",0,set_ditherAlg,(void *)2},
-	{"Yliluoma 3",0,set_ditherAlg,(void *)3},
-	{"Vertical dithering",0, set_ditherAlg,(void *)4},
+	{"Vertical dithering",0, set_ditherAlg,(void *)3},
+	{"Yliluoma 1",0,set_ditherAlg,(void *)4},
+	{"Yliluoma 2",0,set_ditherAlg,(void *)5},
+	{"Yliluoma 3",0,set_ditherAlg,(void *)6},
 	{0}
 };
 extern const char * MapWidthTxt;
