@@ -5,6 +5,7 @@
 #include "callback_tilemap.h"
 #include "callback_gui.h"
 #include "callback_project.h"
+#include "callback_chunck.h"
 /*
  This file is part of Retro Graphics Toolkit
 
@@ -59,6 +60,8 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Save project",0,saveProjectCB,0},
 		{"Load project group",0,loadAllProjectsCB,0},
 		{"Save project group",0,saveAllProjectsCB,0},
+		{"Import sonic 1 chuncks",0,ImportS1CBChuncks,0},
+		{"Import sonic 1 chuncks (append)",0,ImportS1CBChuncks,(void*)1},
 		{0},
 	{"Palette Actions",0, 0, 0, FL_SUBMENU},
 		{"Generate optimal palette with x amount of colors",0,generate_optimal_palette,0},
@@ -102,6 +105,7 @@ static const Fl_Menu_Item ditherChoices[]={
 };
 extern const char * MapWidthTxt;
 extern const char * MapHeightTxt;
+static const char * TooltipZoom="By changing this slider you are changing the magnification of the tile for example if this slider was set to 10 that would mean that the tile is magnified by a factor of 10";
 void editor::_editor(){
 	//create the window
 	menu = new Fl_Menu_Bar(0,0,800,24);//Create menubar, items..
@@ -282,7 +286,7 @@ void editor::_editor(){
 			tile_edit_offset_x=default_tile_edit_offset_x;
 			tile_edit_offset_y=default_tile_edit_offset_y;
 			tile_size = new Fl_Hor_Value_Slider(496,default_palette_bar_offset_y+72,304,24,"Tile Zoom Factor:");
-			tile_size->tooltip("This slider sets magnification a value of 10 would mean the image is being displayed 10 times larger");
+			tile_size->tooltip(TooltipZoom);
 			tile_size->minimum(1);
 			tile_size->maximum(64);
 			tile_size->step(1);
@@ -422,10 +426,43 @@ void editor::_editor(){
 			place_tile_size->value(12);
 			place_tile_size->align(FL_ALIGN_TOP);
 			place_tile_size->callback(update_map_size);
-			place_tile_size->tooltip("By changing this slider you are changing the magnification of the tile for example if this slider was set to 10 that would mean that the tile is magnified by a factor of 10");
+			place_tile_size->tooltip(TooltipZoom);
 			TabsMain[2]->end();
 		}
 		{TabsMain[3] = new Fl_Group(rx,ry,rw,rh,"Chuck editor");
+			{Fl_Check_Button *o = new Fl_Check_Button(8, 48, 152, 24, "Use blocks");
+				o->callback(useBlocksCB);
+			}
+			chunck_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,512,160,24,"Tile Zoom Factor:");
+			chunck_tile_size->minimum(1);
+			chunck_tile_size->maximum(16);
+			chunck_tile_size->step(1);
+			chunck_tile_size->value(2);
+			chunck_tile_size->align(FL_ALIGN_TOP);
+			chunck_tile_size->callback(scrollChunckCB);
+			chunck_tile_size->tooltip(TooltipZoom);
+			
+			chunckX = new Fl_Scrollbar(DefaultChunckX-32, DefaultChunckY-32, 800-DefaultChunckX+24, 24);
+			chunckX->value(0,0,0,0);
+			chunckX->type(FL_HORIZONTAL);
+			chunckX->callback(scrollChunckX);
+			chunckX->hide();
+			
+			chunckY = new Fl_Scrollbar(DefaultChunckX-32, DefaultChunckY, 24, 600-8-DefaultChunckY);
+			chunckY->value(0,0,0,0);
+			chunckY->callback(scrollChunckY);
+			chunckY->hide();
+			
+			
+			chunck_select = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,128,160,24,"Chunck Select");
+			chunck_select->tooltip("This slider allows you to choice which tile you would like to place on the map remember you can both horizontally and vertically flip the tile once placed on the map and select which row the tile uses");
+			chunck_select->minimum(0);
+			chunck_select->maximum(0);
+			chunck_select->step(1);
+			chunck_select->value(0);
+			chunck_select->align(FL_ALIGN_TOP);
+			chunck_select->callback(currentChunckCB);
+			
 			TabsMain[3]->end();
 		}
 		{TabsMain[4] = new Fl_Group(rx,ry,rw,rh,"Settings/projects");

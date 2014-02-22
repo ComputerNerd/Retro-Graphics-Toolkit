@@ -15,6 +15,7 @@
     Copyright Sega16 (or whatever you wish to call me (2012-2014)
 */
 #include "global.h"
+#include "kens.h"
 void save_tiles(Fl_Widget*,void*){
 	if (load_file_generic("Pick a location to save tiles",true) == true){
 		uint8_t type=fl_choice("How would like this file saved?","Binary","C header",0);
@@ -106,7 +107,7 @@ void load_tiles(Fl_Widget*,void* split){
 		FILE * myfile;
 		std::stringstream outDecomp;
 		myfile = fopen(the_file.c_str(),"rb");
-		if (likely(myfile!=0)) {
+		if (likely(myfile!=0)){
 			fseek(myfile, 0L, SEEK_END);
 			file_size = ftell(myfile);//file.tellg();
 			rewind(myfile);

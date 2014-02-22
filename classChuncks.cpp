@@ -44,35 +44,76 @@ void ChunckClass::setFlag(uint32_t id,uint32_t x,uint32_t y,uint32_t flag){
 	bit 2,3 solidity 00 means not solid, 01 means top solid, 10 means left/right/bottom solid, and 11 means all solid.
 	*/
 }
-void ChunckClass::drawChunck(uint32_t id,int xo,int yo,int zoom){
+void ChunckClass::drawChunck(uint32_t id,int xo,int yo,int zoom,int scrollX,int scrollY){
 	struct ChunckAttrs * cptr=chuncks;
-	cptr+=id*wi*hi;
-	int xoo=xo;
-	for(uint32_t y=0;y<hi;++y){
-		for(uint32_t x=0;x<wi;++x){
+	for(uint32_t y=scrollY;y<hi;++y){
+		cptr=&chuncks[(id*wi*hi)+(y*wi)+scrollX];
+		int xoo=xo;
+		for(uint32_t x=scrollX;x<wi;++x){
 			if(useBlocks){
-				uint32_t Ty;
-				Ty=cptr->block*currentProject->tileMapC->mapSizeH;
+				uint32_t Ty=cptr->block*currentProject->tileMapC->mapSizeH;
+				int yoo=yo;
+				int xooo;
 				for(uint32_t yb=0;yb<currentProject->tileMapC->mapSizeH;++yb){
-					for(uint32_t xb=0;xb<currentProject->tileMapC->mapSizeW;++xb)
-						currentProject->tileC->draw_tile(xoo,yo,currentProject->tileMapC->get_tile(xb,Ty),zoom,currentProject->tileMapC->get_palette_map(xb,Ty),currentProject->tileMapC->get_hflip(xb,Ty),currentProject->tileMapC->get_vflip(xb,Ty));
+					xooo=xoo;
+					for(uint32_t xb=0;xb<currentProject->tileMapC->mapSizeW;++xb){
+						currentProject->tileC->draw_tile(xooo,yoo,currentProject->tileMapC->get_tile(xb,Ty),zoom,currentProject->tileMapC->get_palette_map(xb,Ty),currentProject->tileMapC->get_hflip(xb,Ty),currentProject->tileMapC->get_vflip(xb,Ty));
+						xooo+=8*zoom;
+					}
+					yoo+=8*zoom;
 					++Ty;
 				}
-			}else
+				xoo=xooo;
+			}else{
 				currentProject->tileC->draw_tile(xoo,yo,cptr->block,zoom,(cptr->flags>>3)&3,cptr->flags&1,(cptr->flags>>1)&1);
+				xoo+=8*zoom;
+			}
 			cptr++;
-			xoo+=8*zoom;
+			if((xoo)>(window->w()))
+				break;
 		}
-		xoo=xo;
-		yo+=8*zoom;
+		if(useBlocks)
+			yo+=8*zoom*currentProject->tileMapC->mapSizeH;
+		else
+			yo+=8*zoom;
+		if(yo>(window->h()))
+			break;
 	}
 }
+void ChunckClass::scrollChuncks(void){
+	unsigned oldS=window->chunckX->value();
+	int zoom=window->chunck_tile_size->value();
+	int off;
+	if(useBlocks)
+		off=(wi*currentProject->tileMapC->mapSizeW)-((window->w()-ChunckOff[0])/(zoom*8));
+	else
+		off=wi-((window->w()-ChunckOff[0])/(zoom*8));
+	if(oldS>off)
+		scrollChunks[0]=oldS=off;
+	if(off>0){
+		window->chunckX->show();
+		window->chunckX->value(oldS,1,0,off+2);
+	}else
+		window->chunckX->hide();
+	oldS=window->chunckY->value();
+	if(useBlocks)
+		off=(hi*currentProject->tileMapC->mapSizeH)-((window->h()-ChunckOff[1])/(zoom*8));
+	else
+		off=hi-((window->h()-ChunckOff[1])/(zoom*8));
+	if(oldS>off)
+		scrollChunks[1]=oldS=off;
+	if(off>0){
+		window->chunckY->show();
+		window->chunckY->value(oldS,1,0,off+2);
+	}else
+		window->chunckY->hide();
+}
 void ChunckClass::importSonic1(const char * filename,bool append){
-	int compression=fl_choice("Compression?","Uncompressed","Enigma",0);
+	int compression=fl_choice("Compression?","Uncompressed","Kosinski",0);
 	uint16_t* Dat;
 	uint32_t fileSize;
 	if(compression==1)
-		Dat=(uint16_t*)decodeEnigma(filename,fileSize);
+		Dat=(uint16_t*)decodeKosinski(filename,fileSize);
 	else{
 		FILE * fi=fopen(filename,"rb");
 		fseek(fi,0,SEEK_END);
@@ -89,12 +130,13 @@ void ChunckClass::importSonic1(const char * filename,bool append){
 	wi=hi=16;
 	amt=(fileSize/512)+off;
 	chuncks=(struct ChunckAttrs*)realloc(chuncks,amt*sizeof(struct ChunckAttrs)*wi*hi);
-	struct ChunckAttrs*cptr;
+	struct ChunckAttrs*cptr=chuncks;
 	cptr+=off*wi*hi;
 	uint16_t * DatC=Dat;
 	for(uint32_t l=0;l<(fileSize/512);++l){
 		for(uint32_t y=0;y<16;++y){
 			for(uint32_t x=0;x<16;++x){
+				*DatC=be16toh(*DatC);
 				cptr->block=*DatC&1023;
 				cptr->flags=(*DatC>>10)&15;
 				++cptr;
@@ -102,5 +144,6 @@ void ChunckClass::importSonic1(const char * filename,bool append){
 			}
 		}
 	}
+	window->chunck_select->maximum(amt);
 	free(Dat);
 }

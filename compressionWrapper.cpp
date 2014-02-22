@@ -16,6 +16,37 @@
 */
 #include "includes.h"
 #include "kens.h"
+void * decodeNemKos(const char * filename,uint32_t &fileSize,bool kos){
+	std::stringstream outDecomp;
+	FILE * fi=fopen(filename,"rb");
+	fileSize=fseek(fi,0,SEEK_END);
+	fileSize=ftell(fi);
+	rewind(fi);
+	uint8_t * datcmp=(uint8_t *)malloc(fileSize);
+	fread(datcmp,1,fileSize,fi);
+	fclose(fi);
+	std::string input;
+	input.assign((const char *)datcmp,fileSize);
+	free(datcmp);
+	std::istringstream iss(input);
+	if (kos){
+		kosinski decomp;
+		decomp.decode(iss,outDecomp);
+	}else{
+		nemesis decomp;
+		decomp.decode(iss,outDecomp);
+	}
+	fileSize=outDecomp.str().length();
+	printf("Decompressed to %d bytes\n",fileSize);
+	char * outDat=(char*)malloc(fileSize);
+	std::string output=outDecomp.str();
+	output.copy(outDat,fileSize);
+	return (void*)outDat;
+}
+void * decodeKosinski(const char * filename,uint32_t &fileSize){
+	return decodeNemKos(filename,fileSize,true);
+}
+
 void * decodeEnigma(const char * filename,uint32_t &fileSize){
 	//This data must be free'd that it returns
 	std::ifstream file (filename, std::ios::in|std::ios::binary|std::ios::ate);

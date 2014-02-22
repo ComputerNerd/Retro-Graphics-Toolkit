@@ -14,6 +14,15 @@
     along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
     Copyright Sega16 (or whatever you wish to call me (2012-2014)
 */
-#pragma once
-void * decodeKosinski(const char * filename,uint32_t &fileSize);
-void * decodeEnigma(const char * filename,uint32_t &fileSize);
+#include <stdint.h>
+#include "gui.h"
+uint32_t map_scroll_pos_x;
+uint32_t map_scroll_pos_y;
+uint32_t map_off_x,map_off_y;
+uint16_t tile_edit_offset_x;
+uint16_t tile_edit_offset_y;
+uint16_t tile_placer_tile_offset_y;
+uint16_t tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
+uint16_t true_color_box_x,true_color_box_y;
+unsigned ChunckOff[2]={DefaultChunckX,DefaultChunckY};
+unsigned scrollChunks[2]={0,0};

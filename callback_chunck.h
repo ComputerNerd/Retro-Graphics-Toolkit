@@ -14,6 +14,11 @@
     along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
     Copyright Sega16 (or whatever you wish to call me (2012-2014)
 */
-#pragma once
-void * decodeKosinski(const char * filename,uint32_t &fileSize);
-void * decodeEnigma(const char * filename,uint32_t &fileSize);
+#include "includes.h"
+extern uint32_t currentChunck;
+void ImportS1CBChuncks(Fl_Widget*,void*a);
+void currentChunckCB(Fl_Widget*,void*);
+void useBlocksCB(Fl_Widget*o,void*);
+void scrollChunckCB(Fl_Widget*,void*);
+void scrollChunckX(Fl_Widget*,void*);
+void scrollChunckY(Fl_Widget*,void*);

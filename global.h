@@ -43,8 +43,6 @@ uint32_t MakeRGBcolor(uint32_t pixel,float saturation = 1.1f, float hue_tweak = 
 #define sega_genesis 0
 #define NES 1
 extern Fl_Group * shadow_highlight_switch;
-extern uint32_t map_scroll_pos_x;
-extern uint32_t map_scroll_pos_y;
 //tabs group id
 extern bool show_grid_placer;
 extern uint8_t tile_zoom_edit;
@@ -52,13 +50,6 @@ extern uint8_t truecolor_temp[4];
 //extern uint8_t * truecolor_tiles;
 extern std::string the_file;//this is for tempory use only
 extern uint8_t mode_editor;/*!< Importan varible is used to determin which "mode" the user is in for example palette editing or map editing*/
-extern uint32_t map_off_x,map_off_y;
-extern uint16_t tile_placer_tile_offset_y;
-//#define tile_edit_offset_x 472
-extern uint16_t tile_edit_offset_y;
-extern uint16_t tile_edit_offset_x;
-extern uint16_t tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
-extern uint16_t true_color_box_x,true_color_box_y;
 extern bool show_grid;
 //extern uint8_t palette_muliplier;
 extern bool G_hflip;

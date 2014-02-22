@@ -16,6 +16,7 @@
 */
 #include "global.h"
 #include "class_global.h"
+#include "callback_chunck.h"
 editor *window = new editor(800,600,"Retro Graphics Toolkit v0.5");//this creates the window
 static void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y){
 	uint8_t grid[32*32*3];
@@ -192,6 +193,11 @@ void editor::draw_non_gui(){
 					fl_rect(xo,yo,placer_tile_size*8+1,placer_tile_size*8+1,FL_BLUE);
 			}
 		break;
+		case chunckEditor:
+			ChunckOff[0]=(double)((double)w()/800.0)*(double)DefaultChunckX;
+			ChunckOff[1]=(double)((double)h()/600.0)*(double)DefaultChunckY;
+			currentProject->Chunck->drawChunck(currentChunck,ChunckOff[0],ChunckOff[1],chunck_tile_size->value(),scrollChunks[0],scrollChunks[1]);
+		break;
 	}//end of switch statment
 }
 
@@ -342,7 +348,7 @@ int editor::handle(int event){
 					}
 				break;
 				case chunckEditor:
-					puts("Chunck");
+					
 				break;
 			}
 		break;

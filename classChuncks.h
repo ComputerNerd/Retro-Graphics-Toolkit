@@ -31,6 +31,7 @@ public:
 	~ChunckClass();
 	void setBlock(uint32_t id,uint32_t x,uint32_t y,uint32_t block);//Which chunck,offset x,offset y (offsets relative to chunck)
 	void setFlag(uint32_t id,uint32_t x,uint32_t y,uint32_t flag);
-	void drawChunck(uint32_t id,int xo,int yo,int zoom);
+	void drawChunck(uint32_t id,int xo,int yo,int zoom,int scrollX=0,int scrollY=0);
+	void scrollChuncks(void);
 	void importSonic1(const char * filename,bool append);
 };

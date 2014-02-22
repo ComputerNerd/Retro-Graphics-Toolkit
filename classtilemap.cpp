@@ -16,6 +16,7 @@
 */
 #include "project.h"
 #include "callback_tilemap.h"
+#include "kens.h"
 tileMap::tileMap(){
 	amt=1;
 	mapSizeHA=mapSizeW=mapSizeH=2;

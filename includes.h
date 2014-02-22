@@ -55,6 +55,4 @@
 #include <FL/Fl_Image.H>
 #include <FL/Fl_Progress.H>
 #include <inttypes.h>
-#include "project.h"
-#include "kens.h"
 //using namespace std;
