@@ -93,14 +93,14 @@ void tiles::truecolor_to_tile_ptr(uint8_t palette_row,uint32_t cur_tile,uint8_t 
 	if (currentProject->gameSystem == NES)
 		memset(tileDat+tile_16,0,16);
 	if(Usedither){
-		ditherImage(&true_color_temp[0],8,8,true,true);
-		ditherImage(&true_color_temp[0],8,8,true,false);
+		ditherImage(&true_color_temp[0],8,8,true,true, true,palette_row);
+		ditherImage(&true_color_temp[0],8,8,true,false,true,palette_row);
 	}
 	//now image needs to be checked for alpha
 	uint8_t * truePtr=true_color_temp;
 	truePtr=true_color_temp;
-	for (uint8_t y=0;y<8;y++){
-		for (uint8_t x=0;x<8;x++){
+	for (uint8_t y=0;y<8;++y){
+		for (uint8_t x=0;x<8;++x){
 			uint8_t temp=find_near_color_from_row(palette_row,truePtr[0],truePtr[1],truePtr[2]);
 			truePtr+=3;
 			//get difference

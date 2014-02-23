@@ -57,7 +57,14 @@ void ChunckClass::drawChunck(uint32_t id,int xo,int yo,int zoom,int scrollX,int 
 				for(uint32_t yb=0;yb<currentProject->tileMapC->mapSizeH;++yb){
 					xooo=xoo;
 					for(uint32_t xb=0;xb<currentProject->tileMapC->mapSizeW;++xb){
-						currentProject->tileC->draw_tile(xooo,yoo,currentProject->tileMapC->get_tile(xb,Ty),zoom,currentProject->tileMapC->get_palette_map(xb,Ty),currentProject->tileMapC->get_hflip(xb,Ty),currentProject->tileMapC->get_vflip(xb,Ty));
+						/*if((cptr->flags&3)==3)//Both
+							currentProject->tileC->draw_tile(xooo,yoo,currentProject->tileMapC->get_tile(currentProject->tileMapC->mapSizeW-xb,currentProject->tileMapC->mapSizeH-Ty),zoom,currentProject->tileMapC->get_palette_map(currentProject->tileMapC->mapSizeW-xb,currentProject->tileMapC->mapSizeH-Ty),currentProject->tileMapC->get_hflip(currentProject->tileMapC->mapSizeW-xb,currentProject->tileMapC->mapSizeH-Ty)^true,currentProject->tileMapC->get_vflip(currentProject->tileMapC->mapSizeW-xb,currentProject->tileMapC->mapSizeH-Ty)^true);
+						else if(cptr->flags&2)//Y-flip
+							currentProject->tileC->draw_tile(xooo,yoo,currentProject->tileMapC->get_tile(xb,currentProject->tileMapC->mapSizeH-Ty),zoom,currentProject->tileMapC->get_palette_map(xb,currentProject->tileMapC->mapSizeH-Ty),currentProject->tileMapC->get_hflip(xb,currentProject->tileMapC->mapSizeH-Ty)^true,currentProject->tileMapC->get_vflip(xb,currentProject->tileMapC->mapSizeH-Ty));
+						else if (cptr->flags&1)//X-flip
+							currentProject->tileC->draw_tile(xooo,yoo,currentProject->tileMapC->get_tile(currentProject->tileMapC->mapSizeW-xb,Ty),zoom,currentProject->tileMapC->get_palette_map(currentProject->tileMapC->mapSizeW-xb,Ty),currentProject->tileMapC->get_hflip(currentProject->tileMapC->mapSizeW-xb,Ty),currentProject->tileMapC->get_vflip(currentProject->tileMapC->mapSizeW-xb,Ty)^true);
+						else//No flip*/
+							currentProject->tileC->draw_tile(xooo,yoo,currentProject->tileMapC->get_tile(xb,Ty),zoom,currentProject->tileMapC->get_palette_map(xb,Ty),currentProject->tileMapC->get_hflip(xb,Ty),currentProject->tileMapC->get_vflip(xb,Ty));
 						xooo+=8*zoom;
 					}
 					yoo+=8*zoom;
