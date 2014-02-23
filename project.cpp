@@ -263,6 +263,7 @@ void switchProject(uint32_t id){
 			}
 		}
 	}
+	window->BlocksCBtn->value(projects[id]->tileMapC->isBlock?1:0);
 	projects[id]->tileMapC->toggleBlocks(projects[id]->tileMapC->isBlock);
 	//projects[id]->tileMapC->ScrollUpdate();//toggleBlocks calls this funciton
 	window->redraw();

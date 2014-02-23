@@ -53,24 +53,37 @@ void ChunckClass::drawChunck(uint32_t id,int xo,int yo,int zoom,int scrollX,int 
 			if(useBlocks){
 				uint32_t Ty=cptr->block*currentProject->tileMapC->mapSizeH;
 				int yoo=yo;
+				if(cptr->flags&2)
+					yoo+=(currentProject->tileMapC->mapSizeH-1)*8*zoom;
 				int xooo;
 				for(uint32_t yb=0;yb<currentProject->tileMapC->mapSizeH;++yb){
 					xooo=xoo;
+					if(cptr->flags&1)
+						xooo+=(currentProject->tileMapC->mapSizeW-1)*8*zoom;
 					for(uint32_t xb=0;xb<currentProject->tileMapC->mapSizeW;++xb){
-						/*if((cptr->flags&3)==3)//Both
-							currentProject->tileC->draw_tile(xooo,yoo,currentProject->tileMapC->get_tile(currentProject->tileMapC->mapSizeW-xb,currentProject->tileMapC->mapSizeH-Ty),zoom,currentProject->tileMapC->get_palette_map(currentProject->tileMapC->mapSizeW-xb,currentProject->tileMapC->mapSizeH-Ty),currentProject->tileMapC->get_hflip(currentProject->tileMapC->mapSizeW-xb,currentProject->tileMapC->mapSizeH-Ty)^true,currentProject->tileMapC->get_vflip(currentProject->tileMapC->mapSizeW-xb,currentProject->tileMapC->mapSizeH-Ty)^true);
+						if((cptr->flags&3)==3)//Both
+							currentProject->tileC->draw_tile(xooo,yoo,currentProject->tileMapC->get_tile(xb,Ty),zoom,currentProject->tileMapC->get_palette_map(xb,Ty),currentProject->tileMapC->get_hflip(xb,Ty)^true,currentProject->tileMapC->get_vflip(xb,Ty)^true);
 						else if(cptr->flags&2)//Y-flip
-							currentProject->tileC->draw_tile(xooo,yoo,currentProject->tileMapC->get_tile(xb,currentProject->tileMapC->mapSizeH-Ty),zoom,currentProject->tileMapC->get_palette_map(xb,currentProject->tileMapC->mapSizeH-Ty),currentProject->tileMapC->get_hflip(xb,currentProject->tileMapC->mapSizeH-Ty)^true,currentProject->tileMapC->get_vflip(xb,currentProject->tileMapC->mapSizeH-Ty));
-						else if (cptr->flags&1)//X-flip
-							currentProject->tileC->draw_tile(xooo,yoo,currentProject->tileMapC->get_tile(currentProject->tileMapC->mapSizeW-xb,Ty),zoom,currentProject->tileMapC->get_palette_map(currentProject->tileMapC->mapSizeW-xb,Ty),currentProject->tileMapC->get_hflip(currentProject->tileMapC->mapSizeW-xb,Ty),currentProject->tileMapC->get_vflip(currentProject->tileMapC->mapSizeW-xb,Ty)^true);
-						else//No flip*/
+							currentProject->tileC->draw_tile(xooo,yoo,currentProject->tileMapC->get_tile(xb,Ty),zoom,currentProject->tileMapC->get_palette_map(xb,Ty),currentProject->tileMapC->get_hflip(xb,Ty),currentProject->tileMapC->get_vflip(xb,Ty)^true);
+						else if(cptr->flags&1)//X-flip
+							currentProject->tileC->draw_tile(xooo,yoo,currentProject->tileMapC->get_tile(xb,Ty),zoom,currentProject->tileMapC->get_palette_map(xb,Ty),currentProject->tileMapC->get_hflip(xb,Ty)^true,currentProject->tileMapC->get_vflip(xb,Ty));
+						else//No flip
 							currentProject->tileC->draw_tile(xooo,yoo,currentProject->tileMapC->get_tile(xb,Ty),zoom,currentProject->tileMapC->get_palette_map(xb,Ty),currentProject->tileMapC->get_hflip(xb,Ty),currentProject->tileMapC->get_vflip(xb,Ty));
-						xooo+=8*zoom;
+						if(cptr->flags&1)
+							xooo-=8*zoom;
+						else
+							xooo+=8*zoom;
 					}
-					yoo+=8*zoom;
+					if(cptr->flags&2)
+						yoo-=8*zoom;
+					else
+						yoo+=8*zoom;
 					++Ty;
 				}
-				xoo=xooo;
+				if(cptr->flags&2)
+					yoo+=currentProject->tileMapC->mapSizeW*8*zoom;
+				xoo+=currentProject->tileMapC->mapSizeH*8*zoom;
+
 			}else{
 				currentProject->tileC->draw_tile(xoo,yo,cptr->block,zoom,(cptr->flags>>3)&3,cptr->flags&1,(cptr->flags>>1)&1);
 				xoo+=8*zoom;
@@ -145,12 +158,12 @@ void ChunckClass::importSonic1(const char * filename,bool append){
 			for(uint32_t x=0;x<16;++x){
 				*DatC=be16toh(*DatC);
 				cptr->block=*DatC&1023;
-				cptr->flags=(*DatC>>10)&15;
+				cptr->flags=(*DatC>>11)&15;
 				++cptr;
 				++DatC;
 			}
 		}
 	}
-	window->chunck_select->maximum(amt);
+	window->chunck_select->maximum(amt-1);
 	free(Dat);
 }
