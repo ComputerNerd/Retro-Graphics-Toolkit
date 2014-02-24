@@ -21,6 +21,7 @@ void ImportS1CBChuncks(Fl_Widget*,void*a){
 	bool append=(uintptr_t)a?true:false;
 	if(load_file_generic("Pick chunck data from sonic 1")){
 		currentProject->Chunck->importSonic1(the_file.c_str(),append);
+		window->chunck_select->maximum(currentProject->Chunck->amt-1);
 		window->redraw();
 	}
 }

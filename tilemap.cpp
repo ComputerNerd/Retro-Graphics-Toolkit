@@ -346,18 +346,20 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 			}
 			for (t=0;t<4;t++){
 				for (uint32_t y=0;y<w*4*8;y+=w*4){//pixels y
-					switch(alg){
-						case 0:
-							for(x=0;x<32;x+=4)
-								d[t]+=ciede2000rgb(imagein[a+b+y+x],imagein[a+b+y+x+1],imagein[a+b+y+x+2],imageout[t][a+b+y+x],imageout[t][a+b+y+x+1],imageout[t][a+b+y+x+2]);
-						break;
-						case 1:
-							for(x=0;x<32;x+=4)
-								d[t]+=ColourDistance(imagein[a+b+y+x],imagein[a+b+y+x+1],imagein[a+b+y+x+2],imageout[t][a+b+y+x],imageout[t][a+b+y+x+1],imageout[t][a+b+y+x+2]);
-						break;
-						default:
-							for(x=0;x<32;x+=4)
-								di[t]+=sqri(imagein[a+b+y+x]-imageout[t][a+b+y+x])+sqri(imagein[a+b+y+x+1]-imageout[t][a+b+y+x+1])+sqri(imagein[a+b+y+x+2]-imageout[t][a+b+y+x+2]);
+					if(imagein[a+b+y+x+3]!=0){//Avoid checking transperency
+						switch(alg){
+							case 0:
+								for(x=0;x<32;x+=4)
+									d[t]+=ciede2000rgb(imagein[a+b+y+x],imagein[a+b+y+x+1],imagein[a+b+y+x+2],imageout[t][a+b+y+x],imageout[t][a+b+y+x+1],imageout[t][a+b+y+x+2]);
+							break;
+							case 1:
+								for(x=0;x<32;x+=4)
+									d[t]+=ColourDistance(imagein[a+b+y+x],imagein[a+b+y+x+1],imagein[a+b+y+x+2],imageout[t][a+b+y+x],imageout[t][a+b+y+x+1],imageout[t][a+b+y+x+2]);
+							break;
+							default:
+								for(x=0;x<32;x+=4)
+									di[t]+=sqri(imagein[a+b+y+x]-imageout[t][a+b+y+x])+sqri(imagein[a+b+y+x+1]-imageout[t][a+b+y+x+1])+sqri(imagein[a+b+y+x+2]-imageout[t][a+b+y+x+2]);
+						}
 					}
 				}
 			}
@@ -376,9 +378,11 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 			++xtile;
 		}
 		if(showProgress){
-			progress->value(ytile);
-			window->redraw();
-			Fl::check();
+			if((a%(w*4*8*16))==0){
+				progress->value(ytile);
+				window->redraw();
+				Fl::check();
+			}
 		}
 		xtile=0;
 		++ytile;

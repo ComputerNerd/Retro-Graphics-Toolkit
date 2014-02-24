@@ -55,6 +55,7 @@ class editor : public Fl_Double_Window{
 	Fl_Check_Button* prioCB;
 	Fl_Check_Button* sharePrj[shareAmtPj];
 	Fl_Check_Button* BlocksCBtn;
+	Fl_Check_Button* useBlocksChunckCBtn;
 	Fl_Slider* shareWith[shareAmtPj];
 	Fl_Check_Button* havePrj[shareAmtPj];
 	Fl_Text_Buffer* TxtBufProject;

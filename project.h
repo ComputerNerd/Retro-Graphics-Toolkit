@@ -18,7 +18,7 @@
 This is where all "project" releated stuff goes
 For example the save project file function goes here
 */
-#define shareAmtPj 3
+#define shareAmtPj 4
 #ifndef _PROJECT_H
 #define _PROJECT_H 1
 #include "global.h"
@@ -27,7 +27,7 @@ For example the save project file function goes here
 #include "classtilemap.h"
 #include "classChuncks.h"
 
-#define currentProjectVersionNUM 2
+#define currentProjectVersionNUM 3
 extern uint32_t curProjectID;
 struct Project{/*!<Holds all data needed for a project based system for examaple tile screen and level 1 are 2 seperate projects*/
 	std::string Name;
@@ -54,10 +54,11 @@ void switchProject(uint32_t id);
 bool loadProject(uint32_t id);
 bool saveProject(uint32_t id);
 bool saveAllProjects(void);
-bool loadAllProjects(void);
+bool loadAllProjects(bool Old);
 #define pjHavePal 1
 #define pjHaveTiles 2
 #define pjHaveMap 4
-#define pjDefaultMask (pjHavePal|pjHaveTiles|pjHaveMap)
+#define pjHaveChuncks 8
+#define pjDefaultMask (pjHavePal|pjHaveTiles|pjHaveMap|pjHaveChuncks)
 #define pjAllMask pjDefaultMask
 #endif

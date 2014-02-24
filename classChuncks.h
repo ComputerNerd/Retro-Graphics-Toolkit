@@ -28,6 +28,7 @@ public:
 	bool useBlocks;
 	struct ChunckAttrs * chuncks;
 	ChunckClass();
+	ChunckClass(const ChunckClass& other);
 	~ChunckClass();
 	void setBlock(uint32_t id,uint32_t x,uint32_t y,uint32_t block);//Which chunck,offset x,offset y (offsets relative to chunck)
 	void setFlag(uint32_t id,uint32_t x,uint32_t y,uint32_t flag);

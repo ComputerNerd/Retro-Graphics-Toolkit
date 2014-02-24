@@ -22,6 +22,15 @@ ChunckClass::ChunckClass(void){
 	wi=hi=16;//16*16=256
 	useBlocks=false;
 }
+ChunckClass::ChunckClass(const ChunckClass& other){
+	wi=other.wi;
+	hi=other.hi;
+	amt=other.amt;
+	useBlocks=other.useBlocks;
+	chuncks=(struct ChunckAttrs*)malloc(sizeof(struct ChunckAttrs)*wi*hi*amt);
+	memcpy(chuncks,other.chuncks,sizeof(struct ChunckAttrs)*wi*hi*amt);
+	printf("Copied %d bytes\n",sizeof(struct ChunckAttrs)*wi*hi*amt);
+}
 ChunckClass::~ChunckClass(void){
 	free(chuncks);
 }
@@ -164,6 +173,5 @@ void ChunckClass::importSonic1(const char * filename,bool append){
 			}
 		}
 	}
-	window->chunck_select->maximum(amt-1);
 	free(Dat);
 }

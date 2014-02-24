@@ -20,8 +20,8 @@ static const char * warningDelete="Warning this will delete this project's data\
 void saveAllProjectsCB(Fl_Widget*,void*){
 	saveAllProjects();
 }
-void loadAllProjectsCB(Fl_Widget*,void*){
-	loadAllProjects();
+void loadAllProjectsCB(Fl_Widget*,void*o){
+	loadAllProjects((uintptr_t)o?true:false);
 	switchProject(curProjectID);
 }
 void haveCB(Fl_Widget*o,void*mask){

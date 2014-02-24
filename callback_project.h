@@ -15,7 +15,7 @@
     Copyright Sega16 (or whatever you wish to call me (2012-2014)
 */
 void saveAllProjectsCB(Fl_Widget*,void*);
-void loadAllProjectsCB(Fl_Widget*,void*);
+void loadAllProjectsCB(Fl_Widget*,void*o);
 void haveCB(Fl_Widget*o,void*mask);
 void switchShareCB(Fl_Widget*o,void*mask);
 void shareProjectCB(Fl_Widget*o,void*mask);

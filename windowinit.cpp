@@ -59,6 +59,7 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Load project",0,loadProjectCB,0},
 		{"Save project",0,saveProjectCB,0},
 		{"Load project group",0,loadAllProjectsCB,0},
+		{"Load project group (File creatd before 2014-02-23)",0,loadAllProjectsCB,(void*)1},
 		{"Save project group",0,saveAllProjectsCB,0},
 		{"Import sonic 1 chuncks",0,ImportS1CBChuncks,0},
 		{"Import sonic 1 chuncks (append)",0,ImportS1CBChuncks,(void*)1},
@@ -430,9 +431,8 @@ void editor::_editor(){
 			TabsMain[2]->end();
 		}
 		{TabsMain[3] = new Fl_Group(rx,ry,rw,rh,"Chuck editor");
-			{Fl_Check_Button *o = new Fl_Check_Button(8, 48, 152, 24, "Use blocks");
-				o->callback(useBlocksCB);
-			}
+			useBlocksChunckCBtn=new Fl_Check_Button(8, 48, 152, 24, "Use blocks");
+			useBlocksChunckCBtn->callback(useBlocksCB);
 			chunck_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,512,160,24,"Tile Zoom Factor:");
 			chunck_tile_size->minimum(1);
 			chunck_tile_size->maximum(16);
@@ -480,26 +480,32 @@ void editor::_editor(){
 				o->callback(deleteProjectCB);
 			}
 			
-			sharePrj[0]=new Fl_Check_Button(8,88,112,16,"Share palette");
+			sharePrj[0]=new Fl_Check_Button(8,112,112,16,"Share palette");
 			sharePrj[0]->callback(shareProjectCB,(void*)pjHavePal);
-			sharePrj[1]=new Fl_Check_Button(120,88,96,16,"Share Tiles");
+			sharePrj[1]=new Fl_Check_Button(120,112,96,16,"Share Tiles");
 			sharePrj[1]->callback(shareProjectCB,(void*)pjHaveTiles);
-			sharePrj[2]=new Fl_Check_Button(216,88,120,16,"Share TileMap");
+			sharePrj[2]=new Fl_Check_Button(216,112,120,16,"Share TileMap");
 			sharePrj[2]->callback(shareProjectCB,(void*)pjHaveMap);
+			sharePrj[3]=new Fl_Check_Button(336,112,120,16,"Share chuncks");
+			sharePrj[3]->callback(shareProjectCB,(void*)pjHaveChuncks);
 			
-			havePrj[0]=new Fl_Check_Button(344,88,112,16,"Have palette");
+			havePrj[0]=new Fl_Check_Button(8,88,112,16,"Have palette");
 			havePrj[0]->callback(haveCB,(void*)pjHavePal);
-			havePrj[1]=new Fl_Check_Button(456,88,96,16,"Have Tiles");
+			havePrj[1]=new Fl_Check_Button(120,88,96,16,"Have Tiles");
 			havePrj[1]->callback(haveCB,(void*)pjHaveTiles);
-			havePrj[2]=new Fl_Check_Button(552,88,120,16,"Have TileMap");
+			havePrj[2]=new Fl_Check_Button(232,88,120,16,"Have TileMap");
 			havePrj[2]->callback(haveCB,(void*)pjHaveMap);
+			havePrj[3]=new Fl_Check_Button(344,88,120,16,"Have Chuncks");
+			havePrj[3]->callback(haveCB,(void*)pjHaveChuncks);
 			
-			shareWith[0]=new Fl_Hor_Value_Slider(8,118,128,24,"Share Palette with:");
-			shareWith[1]=new Fl_Hor_Value_Slider(136,118,128,24,"Share tiles with:");
-			shareWith[2]=new Fl_Hor_Value_Slider(264,118,128,24,"Share TileMap with:");
+			shareWith[0]=new Fl_Hor_Value_Slider(8,142,128,24,"Share Palette with:");
 			shareWith[0]->callback(switchShareCB,(void*)pjHavePal);
+			shareWith[1]=new Fl_Hor_Value_Slider(136,142,128,24,"Share tiles with:");
 			shareWith[1]->callback(switchShareCB,(void*)pjHaveTiles);
+			shareWith[2]=new Fl_Hor_Value_Slider(264,142,128,24,"Share TileMap with:");
 			shareWith[2]->callback(switchShareCB,(void*)pjHaveMap);
+			shareWith[3]=new Fl_Hor_Value_Slider(400,142,128,24,"Share Chuncks with:");
+			shareWith[3]->callback(switchShareCB,(void*)pjHaveChuncks);
 			for(int x=0;x<shareAmtPj;++x){
 				havePrj[x]->value(1);
 				shareWith[x]->minimum(0);
@@ -510,7 +516,7 @@ void editor::_editor(){
 			}
 			
 			TxtBufProject = new Fl_Text_Buffer;
-			TxtEditProject = new Fl_Text_Editor(8, 160, 640, 370,"Description/Notes");
+			TxtEditProject = new Fl_Text_Editor(8, 184, 640, 370,"Description/Notes");
 			TxtEditProject->buffer(TxtBufProject);
 			TxtEditProject->textfont(FL_TIMES);
 			TxtBufProject->text(currentProject->Name.c_str());
