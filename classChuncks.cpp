@@ -137,6 +137,14 @@ void ChunckClass::scrollChuncks(void){
 	}else
 		window->chunckY->hide();
 }
+#if _WIN32
+static inline uint16_t swap_word(uint16_t w){
+	uint8_t a,b;
+	a=w&255;
+	b=w>>8;
+	return (a<<8)|b;
+}
+#endif
 void ChunckClass::importSonic1(const char * filename,bool append){
 	int compression=fl_choice("Compression?","Uncompressed","Kosinski",0);
 	uint16_t* Dat;
@@ -165,7 +173,11 @@ void ChunckClass::importSonic1(const char * filename,bool append){
 	for(uint32_t l=0;l<(fileSize/512);++l){
 		for(uint32_t y=0;y<16;++y){
 			for(uint32_t x=0;x<16;++x){
+				#if _WIN32
+				*DatC=swap_word(*DatC);
+				#else
 				*DatC=be16toh(*DatC);
+				#endif
 				cptr->block=*DatC&1023;
 				cptr->flags=(*DatC>>11)&15;
 				++cptr;
