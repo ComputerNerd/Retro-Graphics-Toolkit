@@ -50,6 +50,7 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Append tiles",0,load_tiles,(void*)1},
 		{"Open tile map or blocks and if NES attributes",0,load_tile_map,0},
 		{"Import image to tilemap",0,load_image_to_tilemap,0},
+		{"Import image over current tilemap",0,load_image_to_tilemap,(void*)1},
 		{"Save tilemap as image",0,save_tilemap_as_image,0},
 		{"Save tilemap as with system color space",0,save_tilemap_as_colspace,0},
 		{"Save Palette",0, save_palette,0},

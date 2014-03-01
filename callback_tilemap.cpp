@@ -194,11 +194,12 @@ void dither_tilemap_as_image(Fl_Widget*,void*){
 	free(image);
 	window->redraw();
 }
-void load_image_to_tilemap(Fl_Widget*,void*){
+void load_image_to_tilemap(Fl_Widget*,void*o){
 	Fl_Shared_Image * loaded_image;
-	if (load_file_generic("Load image") == true){
+	bool over=(uintptr_t)o?1:0;
+	if (load_file_generic("Load image")){
 		loaded_image=Fl_Shared_Image::get(the_file.c_str());
-		if (loaded_image == 0){
+		if(!loaded_image){
 			fl_alert("Error loading image");
 			return;
 		}
@@ -255,19 +256,25 @@ void load_image_to_tilemap(Fl_Widget*,void*){
 		}else
 			printf("Image depth %d\n",loaded_image->d());
 		uint64_t truecolor_tile_ptr=0;
-		currentProject->tileC->truetileDat = (uint8_t *)realloc(currentProject->tileC->truetileDat,w8*h8*256);
-		currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,w8*h8*currentProject->tileC->tileSize);
-		currentProject->tileC->tiles_amount=(w8*h8)-1;
-		window->tile_select->maximum(currentProject->tileC->tiles_amount);
-		window->tile_select_2->maximum(currentProject->tileC->tiles_amount);
+		if(!over){
+			currentProject->tileC->truetileDat = (uint8_t *)realloc(currentProject->tileC->truetileDat,w8*h8*256);
+			currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,w8*h8*currentProject->tileC->tileSize);
+			currentProject->tileC->tiles_amount=(w8*h8)-1;
+			window->tile_select->maximum(currentProject->tileC->tiles_amount);
+			window->tile_select_2->maximum(currentProject->tileC->tiles_amount);
+		}
 		//uint8_t sizeTemp,sizeTemp2;
 		uint64_t a;
 		uint32_t b,y,x=0;
 		uint8_t xx;
+		uint32_t tx,ty=0;
 		switch (loaded_image->d()){
 			case 3:
 				for (a=0;a<(ht*wt*3)-wt*3;a+=w*3*8){//a tiles y
+					tx=0;
 					for (b=0;b<wt*3;b+=24){//b tiles x
+						if(over)
+							truecolor_tile_ptr=currentProject->tileMapC->get_tile(tx,ty)*256;
 						for (y=0;y<wt*3*8;y+=w*3){//pixels y
 							xx=0;
 							for (x=0;x<32;x+=4){//pixels x
@@ -277,6 +284,7 @@ void load_image_to_tilemap(Fl_Widget*,void*){
 							}
 							truecolor_tile_ptr+=32;
 						}
+						++tx;
 					}
 					if (wr!=0){//handle borders
 						b+=24;
@@ -293,15 +301,20 @@ void load_image_to_tilemap(Fl_Widget*,void*){
 							yy+=w*3;
 						}
 					}
+					++ty;
 				}
 			break;
 			case 4:
 				for (a=0;a<(ht*wt*4)-wt*4;a+=w*4*8){//a tiles y
+					tx=0;
 					for (b=0;b<wt*4;b+=32){//b tiles x
+						if(over)
+							truecolor_tile_ptr=currentProject->tileMapC->get_tile(tx,ty)*256;
 						for (y=0;y<wt*4*8;y+=w*4){//pixels y
 							memcpy(&currentProject->tileC->truetileDat[truecolor_tile_ptr],&img_ptr[a+b+y],32);
 							truecolor_tile_ptr+=32;
 						}
+						++tx;
 					}
 					if (wr!=0){//handle borders
 						b+=32;
@@ -313,18 +326,21 @@ void load_image_to_tilemap(Fl_Widget*,void*){
 							yy+=w*3;
 						}
 					}
+					++ty;
 				}
 			break;
 		}
 		loaded_image->release();
-		currentProject->tileMapC->resize_tile_map(w8,h8);
-		window->map_w->value(w8);
-		window->map_h->value(h8);
-		uint32_t tilecounter=0;
-		for (y=0;y<h8;++y){
-			for (x=0;x<w8;++x){
-				currentProject->tileMapC->set_tile_full(tilecounter,x,y,0,false,false,false);
-				tilecounter++;
+		if(!over){
+			currentProject->tileMapC->resize_tile_map(w8,h8);
+			window->map_w->value(w8);
+			window->map_h->value(h8);
+			uint32_t tilecounter=0;
+			for (y=0;y<h8;++y){
+				for (x=0;x<w8;++x){
+					currentProject->tileMapC->set_tile_full(tilecounter,x,y,0,false,false,false);
+					tilecounter++;
+				}
 			}
 		}
 		window->redraw();

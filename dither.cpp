@@ -14,6 +14,8 @@ static bool USEofColGlob;
 static bool forcedfun;
 static uint8_t theforcedfun;
 static uint8_t *img_ptr_dither;
+static bool isChunckD_G;
+static uint32_t idChunck_G;
 uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row){
 	//returns closest value
 	//palette_muliplier
@@ -98,13 +100,21 @@ static int32_t error[SIZE]; /* queue with error
 		pvalue=*pixel + err/MAX;
   //pvalue = (pvalue>=128) ? 255 : 0;
 	if ((currentProject->gameSystem == sega_genesis) && (useHiL == 9)){
-		bool tempSet=currentProject->tileMapC->get_prio(cur_x/8,cur_y/8)^true;
+		uint8_t tempSet;
+		if(isChunckD_G)
+			tempSet=(currentProject->Chunck->getPrio(idChunck_G,cur_x/8,cur_y/8)^1)*8;
+		else
+			tempSet=(currentProject->tileMapC->get_prio(cur_x/8,cur_y/8)^1)*8;
 		set_palette_type(tempSet);
 	}
 	if(forcedfun)
 		pvalue=nearest_color_chan(pvalue,rgb_select,theforcedfun);
-	else
-		pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->tileMapC->get_palette_map(cur_x/8,cur_y/8));
+	else{
+		if(isChunckD_G)
+			pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->Chunck->getTileRow(idChunck_G,cur_x/8,cur_y/8));
+		else
+			pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->tileMapC->get_palette_map(cur_x/8,cur_y/8));
+	}
   /* shift queue */ 
 	memmove(error, error+1,(SIZE-1)*sizeof error[0]); 
 	error[SIZE-1] = *pixel - pvalue;
@@ -201,7 +211,7 @@ static void hilbert_level(int32_t level,int32_t direction){
 }
 static inline int32_t log2int(int32_t value){
 	int32_t result=0;
-	while (value>1) {
+	while (value>1){
 		value >>= 1;
 		result++;
 	}
@@ -231,7 +241,7 @@ static void Riemersma(uint8_t *image, int32_t width,int32_t height,uint8_t rgb_s
 #define COMPARE_RGB 1
 
 /* 8x8 threshold map */
-static const unsigned char mapY3[8*8] = {
+static const uint8_t mapY3[8*8] = {
 	 0,48,12,60, 3,51,15,63,
 	32,16,44,28,35,19,47,31,
 	 8,56, 4,52,11,59, 7,55,
@@ -411,7 +421,7 @@ static double EvaluateMixingError(int r,int g,int b,
 						   int r2,int g2,int b2,
 						   double ratio){
 	return ColorCompare(r,g,b, r0,g0,b0) 
-		 + ColorCompare(r1,g1,b1, r2,g2,b2) * 0.1 * (fabs(ratio-0.5)+0.5);
+		 + (ColorCompare(r1,g1,b1, r2,g2,b2) * 0.1 * (fabs(ratio-0.5)+0.5));
 }
 
 struct MixingPlanY1{
@@ -454,12 +464,13 @@ MixingPlanY1 DeviseBestMixingPlanY1(const unsigned r,const unsigned g,const unsi
 		double penalty = EvaluateMixingError(
 			r,g,b, r0,g0,b0, r1,g1,b1, r2,g2,b2,
 			ratio / double(64));
-		if(penalty < least_penalty)
-		{
+		if(penalty < least_penalty){
 			least_penalty = penalty;
 			result.colors[0] = index1;
 			result.colors[1] = index2;
 			result.ratio = ratio / double(64);
+			if(penalty==0.0)
+				return result;
 		}
 	}
 	return result;
@@ -644,7 +655,7 @@ static inline uint8_t addCheck(uint16_t val,uint8_t add){
 		(a) = 255; \
 	else \
 		(a) += (b);
-void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpace,bool forceRow,uint8_t forcedrow){
+void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpace,bool forceRow,uint8_t forcedrow,bool isChunck,uint32_t idChunck){
 	/*!
 	this function will take an input with or without alpha and dither it
 	Also note that this function now has the option to first dither to color space
@@ -653,7 +664,7 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 	uint8_t type_temp=palTypeGen;
 	uint8_t temp=0;
 	uint8_t rgbRowsize;
-	uint16_t x,y;
+	uint32_t x,y;
 	if (useAlpha){
 		rgbPixelsize=4;
 		rgbRowsize=32;
@@ -671,7 +682,7 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 	case 5://Yliluoma's ordered dithering algorithm
 	case 4:
 	{
-		if(colSpace){
+		if(colSpace&&(h>8)){
 			if(!fl_ask("Dither to colorspace? WARNING SLOW!"))
 				return;
 		}
@@ -759,7 +770,11 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 				if (useAlpha)
 					a_old=image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+3];
 				if (currentProject->gameSystem == sega_genesis && type_temp != 0){
-					uint8_t tempSet=(currentProject->tileMapC->get_prio(x/8,y/8)^1)*8;
+					uint8_t tempSet;
+					if(isChunck)
+						tempSet=(currentProject->Chunck->getPrio(idChunck,x/8,y/8)^1)*8;
+					else
+						tempSet=(currentProject->tileMapC->get_prio(x/8,y/8)^1)*8;
 					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted
 				}
 				unsigned tempPalOff;
@@ -787,8 +802,12 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 					}else{
 						if(forceRow)
 							pal_row=forcedrow;
-						else
-							pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
+						else{
+							if(isChunck)
+								pal_row=currentProject->Chunck->getTileRow(idChunck,x/8,y/8);
+							else
+								pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
+						}
 						if(ditherAlg==5)
 							plan = DeviseBestMixingPlanY2(r_old,g_old,b_old,currentProject->rgbPal,pal_row*palettesize, 16);
 						else
@@ -819,7 +838,7 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 					Fl::check();
 				}*/
 			}
-			if((h>8)&&((y&3)==0)){
+			if((h>8)&&((y&7)==0)){
 				char txtbuf[128];
 				sprintf(txtbuf,"%d/%d",y,h);
 				progress->copy_label(txtbuf);
@@ -848,13 +867,21 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 				if(!colSpace){
 					if(forceRow)
 						pal_row=forcedrow;
-					else
-						pal_row=currentProject->tileMapC->get_palette_map(x/rgbRowsize,y/8);
+					else{
+						if(isChunck)
+							pal_row=currentProject->Chunck->getTileRow(idChunck,x/rgbRowsize,y/8);
+						else
+							pal_row=currentProject->tileMapC->get_palette_map(x/rgbRowsize,y/8);
+					}
 				}
 				//find nearest color
 				uint8_t half=18;
-				if (currentProject->gameSystem == sega_genesis && type_temp != 0){
-					uint8_t tempSet=(currentProject->tileMapC->get_prio(x/rgbRowsize,y/8)^1)*8;
+				if(currentProject->gameSystem == sega_genesis && type_temp != 0){
+					uint8_t tempSet;
+					if(isChunck)
+						tempSet=(currentProject->Chunck->getPrio(idChunck,x/rgbRowsize,y/8)^1)*8;
+					else
+						tempSet=(currentProject->tileMapC->get_prio(x/rgbRowsize,y/8)^1)*8;
 					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted
 					half=(tempSet==0)?18:9;
 				}
@@ -902,6 +929,8 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 		USEofColGlob=colSpace;
 		forcedfun=forceRow;
 		theforcedfun=forcedrow;
+		isChunckD_G=isChunck;
+		idChunck_G=idChunck;
 		Riemersma(image,w,h,0);
 		Riemersma(image,w,h,1);
 		Riemersma(image,w,h,2);
@@ -922,12 +951,20 @@ void ditherImage(uint8_t * image,uint16_t w,uint16_t h,bool useAlpha,bool colSpa
 				if(!colSpace){
 					if(forceRow)
 						pal_row=forcedrow;
-					else
-						pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
+					else{
+						if(isChunck)
+							pal_row=currentProject->Chunck->getTileRow(idChunck,x/8,y/8);
+						else
+							pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
+					}
 				}
 				//find nearest color
 				if (currentProject->gameSystem == sega_genesis && type_temp != 0){
-					uint8_t tempSet=(currentProject->tileMapC->get_prio(x/8,y/8)^1)*8;
+					uint8_t tempSet;
+					if(isChunck)
+						tempSet=(currentProject->Chunck->getPrio(idChunck,x/8,y/8)^1)*8;
+					else
+						tempSet=(currentProject->tileMapC->get_prio(x/8,y/8)^1)*8;
 					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted
 				}
 				if(colSpace){

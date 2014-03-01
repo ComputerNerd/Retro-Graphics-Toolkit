@@ -31,6 +31,7 @@ void initProject(void){
 	currentProject=projects[0];
 	projects_count=1;
 	currentProject->gameSystem=sega_genesis;
+	currentProject->subSystem=0;
 	currentProject->tileC=new tiles;
 	currentProject->tileMapC=new tileMap;
 	currentProject->Chunck=new ChunckClass;
@@ -188,6 +189,7 @@ bool appendProject(void){
 	projects[projects_count]->palDat=(uint8_t*)calloc(1,128);
 	projects[projects_count]->palType=(uint8_t*)calloc(1,64);
 	projects[projects_count]->gameSystem=sega_genesis;
+	projects[projects_count]->subSystem=0;
 	std::fill(projects[projects_count]->share,&projects[projects_count]->share[shareAmtPj],-1);
 	projects[projects_count]->useMask=pjDefaultMask;
 	++projects_count;
@@ -326,6 +328,10 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 	else
 		projects[id]->useMask=pjHavePal|pjHaveTiles|pjHaveMap;
 	fread(&projects[id]->gameSystem,1,sizeof(uint32_t),fi);
+	if(version>=4)
+		fread(&projects[id]->subSystem,1,sizeof(uint32_t),fi);
+	else
+		projects[id]->subSystem=0;
 	int entries,eSize;
 	switch(projects[id]->gameSystem){
 		case sega_genesis:
@@ -409,6 +415,7 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 	You can find the format in project.h
 	if these bits are zero skip it 
 	uint32_t game system
+	if(version >= 4) uint32_t sub System
 	palette data (128 bytes if sega genesis or 16 bytes if NES)
 	Free locked reserved data 64 bytes if sega genesis or 16 if NES
 	uint32_t tile count
@@ -452,6 +459,7 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 		haveTemp=projects[id]->useMask;
 	fwrite(&haveTemp,sizeof(uint32_t),1,fo);
 	fwrite(&projects[id]->gameSystem,sizeof(uint32_t),1,fo);
+	fwrite(&projects[id]->subSystem,sizeof(uint32_t),1,fo);
 	int entries,eSize,tSize;
 	switch(projects[id]->gameSystem){
 		case sega_genesis:

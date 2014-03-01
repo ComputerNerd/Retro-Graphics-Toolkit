@@ -28,7 +28,7 @@ void load_tile_map(Fl_Widget*,void*);
 void save_map(Fl_Widget*,void*);
 void fill_tile_map_with_tile(Fl_Widget*,void*);
 void dither_tilemap_as_image(Fl_Widget*,void*);
-void load_image_to_tilemap(Fl_Widget*,void*);
+void load_image_to_tilemap(Fl_Widget*,void*o);
 void set_prioCB(Fl_Widget*,void*);
 void set_hflipCB(Fl_Widget*,void*);
 void set_vflipCB(Fl_Widget*,void*);

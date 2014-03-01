@@ -27,11 +27,12 @@ For example the save project file function goes here
 #include "classtilemap.h"
 #include "classChuncks.h"
 
-#define currentProjectVersionNUM 3
+#define currentProjectVersionNUM 4
 extern uint32_t curProjectID;
 struct Project{/*!<Holds all data needed for a project based system for examaple tile screen and level 1 are 2 seperate projects*/
 	std::string Name;
 	uint32_t gameSystem;
+	uint32_t subSystem;
 	uint32_t useMask;/*!<Sharing can be used regardless of use mask*/
 	tileMap* tileMapC;
 	tiles* tileC;

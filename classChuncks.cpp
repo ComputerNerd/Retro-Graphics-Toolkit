@@ -34,6 +34,26 @@ ChunckClass::ChunckClass(const ChunckClass& other){
 ChunckClass::~ChunckClass(void){
 	free(chuncks);
 }
+bool ChunckClass::getPrio(uint32_t id,uint32_t x,uint32_t y){
+	if(useBlocks){
+		return currentProject->tileMapC->get_prio(
+		x%currentProject->tileMapC->mapSizeW,
+		(chuncks[(id*wi*hi)+(y*wi/currentProject->tileMapC->mapSizeH)+(x/currentProject->tileMapC->mapSizeW)].block
+		*currentProject->tileMapC->mapSizeH)
+		+(y%currentProject->tileMapC->mapSizeH));
+	}else
+		return ((chuncks[(id*wi*hi)+(y*wi)+x].flags>>2)&1)?true:false;
+}
+uint8_t ChunckClass::getTileRow(uint32_t id,uint32_t x,uint32_t y){
+	if(useBlocks){
+		return currentProject->tileMapC->get_palette_map(
+		x%currentProject->tileMapC->mapSizeW,
+		(chuncks[(id*wi*hi)+(y*wi/currentProject->tileMapC->mapSizeH)+(x/currentProject->tileMapC->mapSizeW)].block
+		*currentProject->tileMapC->mapSizeH)
+		+(y%currentProject->tileMapC->mapSizeH));
+	}else
+		return (chuncks[(id*wi*hi)+(y*wi)+x].flags>>3)&3;
+}
 void ChunckClass::setBlock(uint32_t id,uint32_t x,uint32_t y,uint32_t block){
 	chuncks[(id*wi*hi)+(y*wi)+x].block=block;
 	/*This contains which block/tile to use*/

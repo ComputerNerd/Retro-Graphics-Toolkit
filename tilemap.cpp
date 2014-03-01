@@ -253,7 +253,7 @@ static inline uint8_t pick4Deltai(uint32_t * d){
 static inline uint32_t sqri(int x){
 	return x*x;
 }
-static inline double pickIt(double h,double l,double s,uint8_t type){
+static inline double pickIt(double h,double l,double s,unsigned type){
 	switch(type){
 		case 0:
 			return h;
@@ -266,24 +266,43 @@ static inline double pickIt(double h,double l,double s,uint8_t type){
 		break;
 	}
 }
+typedef std::pair<double,int> HLSpair;
+bool comparatorHLS ( const HLSpair& l, const HLSpair& r)
+   { return l.first < r.first; }
 void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	uint8_t alg=fl_choice("Which method do you think works better for this image (try both)","ciede2000","Weighted","Mean squared error");
 	if(fl_ask("Would you like the palette to be ordered by hue or light or saturation")){
-		uint16_t x,y;
-		uint8_t type=fl_choice("What do you want it ordered by","Hue","Light","Saturation");
-		for(x=0;x<palEdit.perRow*3*4;x+=3){
+		unsigned type=fl_choice("What do you want it ordered by","Hue","Light","Saturation");
+		HLSpair* MapHLS=new HLSpair[palEdit.perRow*4];//Remember to change if there is a palete with a different amount than 4 rows
+		for(unsigned x=0;x<palEdit.perRow*3*4;x+=3){
 			double h,l,s,cmp,cmp2;
-			uint16_t best=x;
 			rgbToHls(currentProject->rgbPal[x],currentProject->rgbPal[x+1],currentProject->rgbPal[x+2],&h,&l,&s);
-			cmp=pickIt(h,l,s,type);
-			for(y=x+3;y<palEdit.perRow*12;y+=3){
-				rgbToHls(currentProject->rgbPal[y],currentProject->rgbPal[y+1],currentProject->rgbPal[y+2],&h,&l,&s);
-				cmp2=pickIt(h,l,s,type);
-				if(cmp2<=cmp)
-					best=y;
-			}
-			swapEntry(x/3,best/3);
+			MapHLS[x/3].first=pickIt(h,l,s,type);
+			MapHLS[x/3].second=x/3;
 		}
+		std::sort(MapHLS,MapHLS+(palEdit.perRow*4),comparatorHLS);
+		unsigned eSize;
+		switch(currentProject->gameSystem){
+			case sega_genesis:
+				eSize=2;
+			break;
+			case NES:
+				eSize=1;
+			break;
+		}
+		uint8_t* newPal=(uint8_t*)alloca(palEdit.perRow*4*eSize);
+		uint8_t* newPalRgb=(uint8_t*)alloca(palEdit.perRow*4*eSize*3);
+		uint8_t* newPalType=(uint8_t*)alloca(palEdit.perRow*4);
+		for(unsigned x=0;x<palEdit.perRow*4;++x){
+			printf("%d with %d\n",MapHLS[x].second,x);
+			memcpy(newPal+(x*eSize),currentProject->palDat+(MapHLS[x].second*eSize),eSize);
+			memcpy(newPalRgb+(x*3),currentProject->rgbPal+(MapHLS[x].second*3),3);
+			newPalType[x]=currentProject->palType[MapHLS[x].second];
+		}
+		memcpy(currentProject->palDat,newPal,palEdit.perRow*4*eSize);
+		memcpy(currentProject->rgbPal,newPalRgb,palEdit.perRow*4*3);
+		memcpy(currentProject->palType,newPalType,palEdit.perRow*4);
+		delete[] MapHLS;
 	}
 	uint8_t type_temp=palTypeGen;
 	uint8_t tempSet=0;

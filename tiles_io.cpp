@@ -85,25 +85,25 @@ void save_tiles(Fl_Widget*,void*){
 		fclose(myfile);
 	}
 }
-void load_tiles(Fl_Widget*,void* split){
-	//if append==1 then we will append data but if not it will erase over current tiles
+void load_tiles(Fl_Widget*,void*o){
+	//if o=0 load if o=1 append if o=2 load at
 	//format row,append
 	uint32_t file_size;
-	uint8_t append=(uintptr_t)split&0xFF;
-		char * returned=(char *)fl_input("What row should these tiles use?\nEnter 0 to 3 to selected a row or -1 to -4 to auto determine based on tilemap\n The number after the negative symbol is the default row +1 if not tile is found","-1");
-	if (returned==0)
+	int mode=(uintptr_t)o;
+	char * returned=(char*)fl_input("What row should these tiles use?\nEnter 0 to 3 to selected a row or -1 to -4 to auto determine based on tilemap\n The number after the negative symbol is the default row +1 if not tile is found","-1");
+	if (!returned)
 		return;
-	if (verify_str_number_only(returned) == false)
-			return;
-	int8_t row=atoi(returned);
+	if (!verify_str_number_only(returned))
+		return;
+	int row=atoi(returned);
 	if (unlikely((row > 3) || (row < -4))){
 		fl_alert("You entered %d which is out of range it must be in range of -4 to 3",row);
 		return;
 	}
 	uint8_t defaultRow=row >= 0 ? row:abs(row)-1;
-	int compression = fl_choice("What format is the tile?","Uncompressed","Nemesis Compressed","Kosinski");
+	int compression=fl_choice("What format is the tile?","Uncompressed","Nemesis Compressed","Kosinski");
 	bool alphaZero=fl_ask("Set color #0 to alpha 0 instead of 255")?true:false;
-	if (load_file_generic() == true) {
+	if (load_file_generic()){
 		FILE * myfile;
 		std::stringstream outDecomp;
 		myfile = fopen(the_file.c_str(),"rb");
@@ -133,7 +133,7 @@ void load_tiles(Fl_Widget*,void* split){
 				file_size=outDecomp.str().length();
 				printf("Decompressed to %d bytes\n",file_size);
 			}else{
-				if ((file_size/currentProject->tileC->tileSize)*currentProject->tileC->tileSize != file_size) {
+				if ((file_size/currentProject->tileC->tileSize)*currentProject->tileC->tileSize != file_size){
 					fl_alert("Error: This is not a valid tile file each tile is %d bytes and this file is not a multiple of %d so it is not a valid tile file",currentProject->tileC->tileSize,currentProject->tileC->tileSize);
 					fclose(myfile);
 					return;//return so that the file does not get loaded
@@ -141,27 +141,47 @@ void load_tiles(Fl_Widget*,void* split){
 			}
 			uint32_t offset_tiles;
 			uint32_t offset_tiles_bytes;
-			if (append == 1) {
+			if(mode==2){
+				const char * str=fl_input("Counting from zero which tile should this start at?");
+				if(!str){
+					return;
+					fclose(myfile);
+				}
+				if(!verify_str_number_only((char*)str)){
+					return;
+					fclose(myfile);
+				}
+				int off=atoi(str);
+				if(off>=0){
+					offset_tiles=off;
+					offset_tiles_bytes=offset_tiles*currentProject->tileC->tileSize;
+					//if(
+					//currentProject->tileC->tileDat=(uint8_t*)realloc(currentProject->tileC->tileDat,(file_size+((currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize)));
+				}else{
+					fl_alert("You must enter a number greater than or equal to zero");
+					fclose(myfile);
+					return;
+				}
+			}else if(mode==1){
 				offset_tiles=currentProject->tileC->tiles_amount+1;
 				offset_tiles_bytes=offset_tiles*currentProject->tileC->tileSize;
 				currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,file_size+((currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize));
-				if (currentProject->tileC->tileDat == 0) {
+				if(!currentProject->tileC->tileDat){
 					if (compression==0)
 						fclose(myfile);
-					show_realloc_error(file_size)
+					show_realloc_error(file_size+((currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize))
 				}
 			}else{
-				free(currentProject->tileC->tileDat);
-				currentProject->tileC->tileDat = (uint8_t *)malloc(file_size);
-				if (currentProject->tileC->tileDat == 0) {
-					if (compression==0)
+				currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,file_size);
+				if(!currentProject->tileC->tileDat){
+					if (!compression)
 						fclose(myfile);
-					show_malloc_error(file_size)
+					show_realloc_error(file_size)
 				}
 				offset_tiles=0;
 				offset_tiles_bytes=0;
 			}
-			if (compression) {
+			if(compression){
 				std::string output=outDecomp.str();
 				output.copy((char *)currentProject->tileC->tileDat+offset_tiles_bytes,file_size);
 			}else{
@@ -169,15 +189,15 @@ void load_tiles(Fl_Widget*,void* split){
 				fclose(myfile);
 			}
 			currentProject->tileC->truetileDat = (uint8_t *)realloc(currentProject->tileC->truetileDat,(file_size*truecolor_multiplier)+(offset_tiles_bytes*truecolor_multiplier));
-			if (currentProject->tileC->truetileDat == 0)
+			if(!currentProject->tileC->truetileDat)
 				show_malloc_error(file_size*truecolor_multiplier)
-			for (uint32_t c=offset_tiles;c<(file_size/currentProject->tileC->tileSize)+offset_tiles;c++) {
-				if (row < 0){
+			for(uint32_t c=offset_tiles;c<(file_size/currentProject->tileC->tileSize)+offset_tiles;c++) {
+				if(row < 0){
 					uint32_t x,y;
 					uint8_t foundRow=defaultRow;
-					for (y=0;y<currentProject->tileMapC->mapSizeHA;++y){
-						for (x=0;x<currentProject->tileMapC->mapSizeW;++x){
-							if (currentProject->tileMapC->get_tile(x,y) == c) {
+					for(y=0;y<currentProject->tileMapC->mapSizeHA;++y){
+						for(x=0;x<currentProject->tileMapC->mapSizeW;++x){
+							if(currentProject->tileMapC->get_tile(x,y) == c) {
 								foundRow=currentProject->tileMapC->get_palette_map(x,y);
 								goto doTile;
 							}
@@ -195,8 +215,7 @@ doTile:
 			window->tile_select_2->maximum(currentProject->tileC->tiles_amount);
 			window->tile_select_2->value(0);
 			window->redraw();
-		}
-		else
+		}else
 			fl_alert("The file %s Cannot be loaded",the_file.c_str());
 	}
 }
