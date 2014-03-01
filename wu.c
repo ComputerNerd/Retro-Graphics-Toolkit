@@ -383,18 +383,26 @@ int wu_quant(unsigned char *inbuf, int width, int height, int quant_to, uint8_t 
 	K = quant_to;
 	size = width*height;
 
-	mem = multialloc(MA_ALIGN_DOUBLE,
+	/*mem = multialloc(MA_ALIGN_DOUBLE,
 		&m2, 33*33*33 * sizeof(double),
 		&wt, 33*33*33 * sizeof(int),
 		&mr, 33*33*33 * sizeof(int),
 		&mg, 33*33*33 * sizeof(int),
 		&mb, 33*33*33 * sizeof(int),
-		&tag, 33*33*33, NULL);
+		&tag, 33*33*33, NULL);*/
+	mem=calloc(1,(33*33*33 * sizeof(double))+(4*33*33*33 * sizeof(int))+(33*33*33));
+	m2=mem;
+	wt=mem+(33*33*33 * sizeof(double));
+	mr=mem+(33*33*33 * sizeof(int))+(33*33*33 * sizeof(double));
+	mg=mem+(2*33*33*33 * sizeof(int))+(33*33*33 * sizeof(double));
+	mb=mem+(3*33*33*33 * sizeof(int))+(33*33*33 * sizeof(double));
+	tag=mem+(4*33*33*33 * sizeof(int))+(33*33*33 * sizeof(double));
 	if (!mem) return (-1);
 
 	Hist3d(inbuf, wt, mr, mg, mb);
+	puts("Hist3d done");
 	M3d(wt, mr, mg, mb);
-
+	puts("M3d done");
 	cube[0].r0 = cube[0].g0 = cube[0].b0 = 0;
 	cube[0].r1 = cube[0].g1 = cube[0].b1 = 32;
 	next = 0;
@@ -438,7 +446,7 @@ int wu_quant(unsigned char *inbuf, int width, int height, int quant_to, uint8_t 
 		}
 		else pal[0][k] = pal[1][k] = pal[2][k] = 0;	// Bogus box
 	}
-
-	free(mem);
+	free(mem);//Crashes
+	puts("Wu done");
 	return (0);
 }
