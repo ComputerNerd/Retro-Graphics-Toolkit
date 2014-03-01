@@ -188,7 +188,7 @@ void rgbtohsv(uint8_t R,uint8_t G,uint8_t B,double * hh,double * ss,double * vv)
 	*vv=V;
 }
 void tileMap::pickRow(uint8_t amount){
-	uint8_t type=fl_choice("How would you describe this image","Varying hue","Varying brightness","Varying saturation");
+	int type=MenuPopup("Pick tile row based on...","Please pick what most defines the image",6,"Hue","Brightness","Saturation","Hue*satuaration","Hue*Brightness","Brightness*saturation");
 	double divide=(double)amount;//convert to double
 	double h,l,s;
 	h=0.0;
@@ -212,6 +212,15 @@ void tileMap::pickRow(uint8_t amount){
 					break;
 					case 2:
 						hh+=s;
+					break;
+					case 3:
+						hh+=h*s;
+					break;
+					case 4:
+						hh+=h*l;
+					break;
+					case 5:
+						hh+=s*l;
 					break;
 				}
 			}
@@ -661,10 +670,10 @@ void generate_optimal_palette(Fl_Widget*,void*){
 		break;
 	}
 	char * returned=(char *)fl_input("How many colors would you like?",temp);
-	if (returned==0)
+	if(!returned)
 		return;
-	if (verify_str_number_only(returned) == false)
-			return;
+	if(!verify_str_number_only(returned))
+		return;
 	int8_t colors=atoi(returned);
 	int8_t colorstotal=colors;
 	uint8_t asdf;
@@ -677,18 +686,6 @@ void generate_optimal_palette(Fl_Widget*,void*){
 	}
 	rows=asdf+1;
 	printf("Using %d rows\n",rows);
-	Fl_Window *win;
-	Fl_Progress *progress;
-	win = new Fl_Window(250,45,"Progress");           // access parent window
-	win->begin();                                // add progress bar to it..
-	progress = new Fl_Progress(25,7,200,30);
-	progress->minimum(0.0);                      // set progress range to be 0.0 ~ 1.0
-	progress->maximum(1.0);
-	progress->color(0x88888800);               // background color
-	progress->selection_color(0x4444ff00);     // progress bar color
-	progress->labelcolor(FL_WHITE);            // percent text color
-	win->end();                                  // end adding to window
-	win->show();
 	/*
 	This function is one of the more importan features of the program
 	This will look at the tile map and based on that find an optimal palette
@@ -701,15 +698,34 @@ void generate_optimal_palette(Fl_Widget*,void*){
 	uint32_t colors_found;
 	//uint8_t * found_colors;
 	uint8_t found_colors[768];
-	uint8_t rowAuto;
+	int rowAuto;
 	if (rows==1)
 		rowAuto = fl_ask("Would you like all tiles on the tilemap to be set to row 0? (This is where all generated colors will apear)");
-	else
-		rowAuto = fl_choice("How would you like the palette map to be handled","Don't change anythin","Pick based on hue","Generate contiguous palette then pick based on delta");
+	else{
+		rowAuto = MenuPopup("Palette setting","How would you like the palette map to be handled",3,"Don't change anythin","Pick based on hue","Generate contiguous palette then pick based on delta");
+		if(rowAuto<0)
+			return;
+	}
 	uint8_t fun_palette;
-	uint8_t alg=fl_choice("What color reduction algorithm would you like used","Densise Lee v3","scolorq","Neuquant");
-	uint8_t yuv;
-	yuv=fl_choice("What color space would you like to use?","rgb","yuv","YCbCr");
+	int alg=MenuPopup("Pick an algorithm","What color reduction algorithm would you like used?",3,"Densise Lee v3","scolorq","Neuquant");
+	if(alg<0)
+		return;
+	int yuv;
+	yuv=MenuPopup("Color space selection","What color space would you like to use?",3,"rgb","yuv","YCbCr");
+	if(yuv<0)
+		return;
+	Fl_Window *win;
+	Fl_Progress *progress;
+	win = new Fl_Window(250,45,"Progress");           // access parent window
+	win->begin();                                // add progress bar to it..
+	progress = new Fl_Progress(25,7,200,30);
+	progress->minimum(0.0);                      // set progress range to be 0.0 ~ 1.0
+	progress->maximum(1.0);
+	progress->color(0x88888800);               // background color
+	progress->selection_color(0x4444ff00);     // progress bar color
+	progress->labelcolor(FL_WHITE);            // percent text color
+	win->end();                                  // end adding to window
+	win->show();
 	switch (currentProject->gameSystem){
 		case sega_genesis:
 			fun_palette=16;

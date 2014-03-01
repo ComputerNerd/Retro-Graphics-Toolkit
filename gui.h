@@ -47,3 +47,5 @@ extern unsigned scrollChunks[2];
 #define tile_place 2
 #define chunckEditor 3
 #define settingsTab 4
+
+int MenuPopup(const char * title,const char * text,unsigned num,...);

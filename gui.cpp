@@ -16,6 +16,8 @@
 */
 #include <stdint.h>
 #include "gui.h"
+#include "includes.h"
+#include <cstdarg>
 uint32_t map_scroll_pos_x;
 uint32_t map_scroll_pos_y;
 uint32_t map_off_x,map_off_y;
@@ -26,3 +28,42 @@ uint16_t tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
 uint16_t true_color_box_x,true_color_box_y;
 unsigned ChunckOff[2]={DefaultChunckX,DefaultChunckY};
 unsigned scrollChunks[2]={0,0};
+
+static int returnVal=0;
+static Fl_Choice*PopC;
+static Fl_Window * winP;
+void setRet(Fl_Widget*,void*r){
+	bool Cancel=(uintptr_t)r?true:false;
+	if(Cancel)
+		returnVal=-1;
+	else{
+		returnVal=PopC->value();
+	}
+	winP->hide();
+}
+int MenuPopup(const char * title,const char * text,unsigned num,...){
+	if(num){
+		winP=new Fl_Window(480,128,title);
+		winP->begin();
+		Fl_Box * txt=new Fl_Box(FL_NO_BOX,8,8,464,88,text);
+		PopC=new Fl_Choice(8,96,192,24);
+		va_list arguments;
+		va_start(arguments,num);		// Initializing arguments to store all values after num
+		for(unsigned x=0;x<num;++x)	// Loop until all numbers are added
+			PopC->add(va_arg(arguments, const char*),0,0,0,0);
+		PopC->value(0);
+		Fl_Button * Ok=new Fl_Button(200,96,64,24,"Okay");
+		Ok->callback(setRet,0);
+		Fl_Button * Cancel=new Fl_Button(264,96,64,24,"Cancel");
+		Cancel->callback(setRet,(void*)1);
+		winP->end();
+		winP->set_modal();
+		winP->show();
+		va_end(arguments);				// Cleans up the list
+		while(winP->shown())
+			Fl::wait();
+		delete winP;
+		return returnVal;
+	}
+	return -1;
+}
