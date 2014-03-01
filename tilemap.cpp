@@ -24,6 +24,7 @@ Stuff related to tilemap operations goes here*/
 #include "spatial_color_quant.h"
 #include "NEUQUANT.H"
 #include "palette.h"
+#include "wu.h"
 bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha){
 	/*!
 	the_image pointer to image must be able to hold the image using rgba 32bit or rgb 24bit if not using alpha
@@ -555,12 +556,19 @@ againFun:
 		else
 			imageuse=image;
 try_again_color:
-		if(alg==2)
-			NEU_wrapper(w,h,imageuse,colorz,user_pal);
-		else if(alg==1)
-			scolorq_wrapper(imageuse,output,user_pal,w,h,colorz);
-		else
-			dl3quant(imageuse,w,h,colorz,user_pal,true,progress,yuv);/*this uses denesis lee's v3 color quant which is fonund at http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c*/
+		switch(alg){
+			case 3:
+				wu_quant(imageuse,w,h,colorz,user_pal);
+			break;
+			case 2:
+				NEU_wrapper(w,h,imageuse,colorz,user_pal);
+			break;
+			case 1:
+				scolorq_wrapper(imageuse,output,user_pal,w,h,colorz);
+			break;
+			default:
+				dl3quant(imageuse,w,h,colorz,user_pal,true,progress,yuv);/*this uses denesis lee's v3 color quant which is fonund at http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c*/
+		}
 		for (uint16_t x=0;x<colorz;x++){
 			uint8_t r,g,b;
 			if(yuv){
@@ -707,7 +715,7 @@ void generate_optimal_palette(Fl_Widget*,void*){
 			return;
 	}
 	uint8_t fun_palette;
-	int alg=MenuPopup("Pick an algorithm","What color reduction algorithm would you like used?",3,"Densise Lee v3","scolorq","Neuquant");
+	int alg=MenuPopup("Pick an algorithm","What color reduction algorithm would you like used?",4,"Densise Lee v3","scolorq","Neuquant","Wu");
 	if(alg<0)
 		return;
 	int yuv;
