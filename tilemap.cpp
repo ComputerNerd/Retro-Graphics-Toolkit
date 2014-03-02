@@ -189,7 +189,7 @@ void rgbtohsv(uint8_t R,uint8_t G,uint8_t B,double * hh,double * ss,double * vv)
 	*vv=V;
 }
 void tileMap::pickRow(uint8_t amount){
-	int type=MenuPopup("Pick tile row based on...","Please pick what most defines the image",6,"Hue","Brightness","Saturation","Hue*satuaration","Hue*Brightness","Brightness*saturation");
+	int type=MenuPopup("Pick tile row based on...","Please pick what most defines the image",9,"Hue","Brightness","Saturation","Hue*satuaration","Hue*Brightness","Brightness*saturation","Hue+satuaration","Hue+Brightness","Brightness+saturation");
 	double divide=(double)amount;//convert to double
 	double h,l,s;
 	h=0.0;
@@ -222,6 +222,15 @@ void tileMap::pickRow(uint8_t amount){
 					break;
 					case 5:
 						hh+=s*l;
+					break;
+					case 6:
+						hh+=h+s;
+					break;
+					case 7:
+						hh+=h+l;
+					break;
+					case 8:
+						hh+=s+l;
 					break;
 				}
 			}
@@ -280,7 +289,9 @@ typedef std::pair<double,int> HLSpair;
 bool comparatorHLS ( const HLSpair& l, const HLSpair& r)
    { return l.first < r.first; }
 void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
-	uint8_t alg=fl_choice("Which method do you think works better for this image (try both)","ciede2000","Weighted","Mean squared error");
+	int alg=MenuPopup("Select picking algorithm","Pick which method you think works better for this image.",6,"ciede2000","Weighted","Mean squared error","Hue difference","Saturation difference","Lightness difference");
+	if(alg<0)
+		return;
 	if(fl_ask("Would you like the palette to be ordered by hue or light or saturation")){
 		unsigned type=fl_choice("What do you want it ordered by","Hue","Light","Saturation");
 		HLSpair* MapHLS=new HLSpair[palEdit.perRow*4];//Remember to change if there is a palete with a different amount than 4 rows
@@ -379,13 +390,24 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 						switch(alg){
 							case 0:
 								for(x=0;x<32;x+=4)
-									d[t]+=ciede2000rgb(imagein[a+b+y+x],imagein[a+b+y+x+1],imagein[a+b+y+x+2],imageout[t][a+b+y+x],imageout[t][a+b+y+x+1],imageout[t][a+b+y+x+2]);
+									d[t]+=std::abs(ciede2000rgb(imagein[a+b+y+x],imagein[a+b+y+x+1],imagein[a+b+y+x+2],imageout[t][a+b+y+x],imageout[t][a+b+y+x+1],imageout[t][a+b+y+x+2]));
 							break;
 							case 1:
 								for(x=0;x<32;x+=4)
-									d[t]+=ColourDistance(imagein[a+b+y+x],imagein[a+b+y+x+1],imagein[a+b+y+x+2],imageout[t][a+b+y+x],imageout[t][a+b+y+x+1],imageout[t][a+b+y+x+2]);
+									d[t]+=std::abs(ColourDistance(imagein[a+b+y+x],imagein[a+b+y+x+1],imagein[a+b+y+x+2],imageout[t][a+b+y+x],imageout[t][a+b+y+x+1],imageout[t][a+b+y+x+2]));
 							break;
-							default:
+							case 3:
+							case 4:
+							case 5:
+								for(x=0;x<32;x+=4){
+									double h[2],l[2],s[2];
+									rgbToHls(imagein[a+b+y+x],imagein[a+b+y+x+1],imagein[a+b+y+x+2],h,l,s);
+									rgbToHls(imageout[t][a+b+y+x],imageout[t][a+b+y+x+1],imageout[t][a+b+y+x+2],h+1,l+1,s+1);
+									d[t]+=std::abs(pickIt(h[0],l[0],s[0],alg-3)-pickIt(h[1],l[1],s[1],alg-3));
+								}
+								//printf("d[%d]=%f\n",t,d[t]);
+							break;
+							default://Usally case 2
 								for(x=0;x<32;x+=4)
 									di[t]+=sqri(imagein[a+b+y+x]-imageout[t][a+b+y+x])+sqri(imagein[a+b+y+x+1]-imageout[t][a+b+y+x+1])+sqri(imagein[a+b+y+x+2]-imageout[t][a+b+y+x+2]);
 						}
@@ -394,7 +416,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 			}
 			uint16_t truecolor_tile_ptr=0;
 			uint8_t sillyrow;
-			if(alg>=2)
+			if(alg==2)
 				sillyrow=pick4Deltai(di);
 			else
 				sillyrow=pick4Delta(d);

@@ -446,7 +446,7 @@ int wu_quant(unsigned char *inbuf, int width, int height, int quant_to, uint8_t 
 		}
 		else pal[0][k] = pal[1][k] = pal[2][k] = 0;	// Bogus box
 	}
-	free(mem);//Crashes
+	free(mem);
 	puts("Wu done");
 	return (0);
 }
