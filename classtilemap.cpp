@@ -488,9 +488,9 @@ bool tileMap::loadFromFile(){
 	}
 }
 void tileMap::sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vflip){
-	uint32_t x,y;
-	int32_t temp;
-	for (y=0;y<mapSizeH;y++){
+	uint_fast32_t x,y;
+	int_fast32_t temp;
+	for (y=0;y<mapSizeHA;y++){
 		for (x=0;x<mapSizeW;x++){
 			temp=get_tile(x,y);
 			if (temp == oldTile){

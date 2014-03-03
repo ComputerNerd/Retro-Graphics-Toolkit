@@ -111,7 +111,7 @@ void ChunckClass::drawChunck(uint32_t id,int xo,int yo,int zoom,int scrollX,int 
 				}
 				if(cptr->flags&2)
 					yoo+=currentProject->tileMapC->mapSizeW*8*zoom;
-				xoo+=currentProject->tileMapC->mapSizeH*8*zoom;
+				xoo+=currentProject->tileMapC->mapSizeW*8*zoom;
 
 			}else{
 				currentProject->tileC->draw_tile(xoo,yo,cptr->block,zoom,(cptr->flags>>3)&3,cptr->flags&1,(cptr->flags>>1)&1);
