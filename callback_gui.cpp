@@ -82,6 +82,11 @@ void set_game_system(Fl_Widget*,void* selection){
 			return;
 		break;
 	}
+	if(currentProject->gameSystem==NES){
+		window->subSysC->show();
+		window->subSysC->value(currentProject->subSystem);
+	}else
+		window->subSysC->hide();
 	window->redraw();
 }
 void trueColTileToggle(Fl_Widget*,void*){

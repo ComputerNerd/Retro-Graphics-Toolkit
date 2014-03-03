@@ -295,6 +295,10 @@ void switchProject(uint32_t id){
 	window->chunck_select->maximum(projects[id]->Chunck->amt-1);
 	projects[id]->tileMapC->toggleBlocks(projects[id]->tileMapC->isBlock);
 	//projects[id]->tileMapC->ScrollUpdate();//toggleBlocks calls this funciton
+	if(projects[id]->gameSystem==NES)
+		window->subSysC->show();
+	else
+		window->subSysC->hide();
 	window->redraw();
 }
 static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t version=currentProjectVersionNUM){

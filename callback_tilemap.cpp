@@ -64,7 +64,12 @@ void blocksAmtCB(Fl_Widget*o,void*){
 }
 void toggleBlocksCB(Fl_Widget*o,void*){
 	Fl_Check_Button* b=(Fl_Check_Button*)o;
-	currentProject->tileMapC->toggleBlocks(b->value()?true:false);
+	bool Toggle=b->value()?true:false;
+	currentProject->tileMapC->toggleBlocks(Toggle);
+	if(!Toggle){
+		currentProject->Chunck->useBlocks=false;
+		window->useBlocksChunckCBtn->value(0);
+	}
 	window->redraw();
 }
 void FixOutOfRangeCB(Fl_Widget*,void*){

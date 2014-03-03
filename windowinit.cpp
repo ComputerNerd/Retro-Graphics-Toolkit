@@ -105,6 +105,11 @@ static const Fl_Menu_Item ditherChoices[]={
 	{"Yliluoma 3",0,set_ditherAlg,(void *)6},
 	{0}
 };
+static Fl_Menu_Item subSysNES[]={
+		{"2x2 tile palette",0,setSubSysCB},
+		{"1x1 tile palette",0,setSubSysCB},
+		{0}
+};
 extern const char * MapWidthTxt;
 extern const char * MapHeightTxt;
 static const char * TooltipZoom="By changing this slider you are changing the magnification of the tile for example if this slider was set to 10 that would mean that the tile is magnified by a factor of 10";
@@ -134,7 +139,8 @@ void editor::_editor(){
 			pal_size->callback(update_box_size);
 			ditherPower = new Fl_Hor_Value_Slider(128,416,320,24,"Dither Power");
 			ditherPower->tooltip("A lower value resualts in more dithering artifacts a higer value resualts in less artifacts");
-			ditherPower->minimum(1); ditherPower->maximum(255);
+			ditherPower->minimum(1);
+			ditherPower->maximum(255);
 			ditherPower->step(1);
 			ditherPower->value(16);
 			ditherPower->align(FL_ALIGN_LEFT);
@@ -180,6 +186,9 @@ void editor::_editor(){
 			} // End of buttons
 			{Fl_Choice *o = new Fl_Choice(64, 464, 128, 24);
 			o->copy(ditherChoices);}
+			subSysC=new Fl_Choice(208, 464, 128, 24);
+			subSysC->copy(subSysNES);
+			subSysC->hide();
 			{ Fl_Group *o = new Fl_Group(304, 192, 88, 96);
 				{
 					palType[0] = new Fl_Round_Button(304, 192, 64, 32, "Free");
@@ -360,14 +369,14 @@ void editor::_editor(){
 			map_x_scroll->tooltip("Use this scroll bar to move around the tile map if you are zoomed in and there is not enough room to display the entire tilemap at once. This scroll bar will move the map left and right.");
 			map_x_scroll->callback(update_map_scroll_x);
 			map_x_scroll->hide();
-			
+			map_x_scroll->linesize(1);
 			map_y_scroll = new Fl_Scrollbar(default_map_off_x-32, default_map_off_y, 24, 600-8-default_map_off_y);
 			map_y_scroll->value(0,0,0,0);
 			//map_x_scroll->type(FL_HORIZONTAL);
 			map_y_scroll->tooltip("Use this scroll bar to move around the tile map if you are zoomed in and there is not enough room to display the entire tilemap at once. This scroll bar will move the map up and down.");
 			map_y_scroll->callback(update_map_scroll_y);
 			map_y_scroll->hide();
-			
+			map_y_scroll->linesize(1);
 			//now for the tile select slider
 			tile_select_2 = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+40,312,24,"Tile Select");
 			tile_select_2->tooltip("This slider allows you to choice which tile you would like to place on the map remember you can both horizontally and vertically flip the tile once placed on the map and select which row the tile uses");

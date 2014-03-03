@@ -17,6 +17,10 @@
 #include "global.h"
 #include "project.h"
 static const char * warningDelete="Warning this will delete this project's data\nDo you wish to countinue?";
+void setSubSysCB(Fl_Widget*o,void*){
+	Fl_Choice *c=(Fl_Choice*)o;
+	currentProject->subSystem=c->value();
+}
 void saveAllProjectsCB(Fl_Widget*,void*){
 	saveAllProjects();
 }

@@ -108,8 +108,24 @@ uint8_t tileMap::get_palette_map(uint32_t x,uint32_t y){
 	return (tileMapDat[((y*mapSizeW)+x)*4]>>5)&3;
 }
 void tileMap::set_pal_row(uint32_t x,uint32_t y,uint8_t row){
-	tileMapDat[((y*mapSizeW)+x)*4]&= ~(3 << 5);
-	tileMapDat[((y*mapSizeW)+x)*4]|=row<<5;
+	if((currentProject->gameSystem==NES)&&(currentProject->subSystem==0)){
+		//printf("%d %d %d %d\n",x&(~1),x|1,y&(~1),y|1);
+		tileMapDat[((y*mapSizeW)+(x&(~1)))*4]&= ~(3 << 5);
+		tileMapDat[((y*mapSizeW)+(x&(~1)))*4]|=row<<5;
+		tileMapDat[((y*mapSizeW)+(x|1))*4]&= ~(3 << 5);
+		tileMapDat[((y*mapSizeW)+(x|1))*4]|=row<<5;
+		tileMapDat[(((y&(~1))*mapSizeW)+(x&(~1)))*4]&= ~(3 << 5);
+		tileMapDat[(((y&(~1))*mapSizeW)+(x&(~1)))*4]|=row<<5;
+		tileMapDat[(((y&(~1))*mapSizeW)+(x|1))*4]&= ~(3 << 5);
+		tileMapDat[(((y&(~1))*mapSizeW)+(x|1))*4]|=row<<5;;
+		tileMapDat[(((y|1)*mapSizeW)+(x&(~1)))*4]&= ~(3 << 5);
+		tileMapDat[(((y|1)*mapSizeW)+(x&(~1)))*4]|=row<<5;;
+		tileMapDat[(((y|1)*mapSizeW)+(x|1))*4]&= ~(3 << 5);
+		tileMapDat[(((y|1)*mapSizeW)+(x|1))*4]|=row<<5;;
+	}else{
+		tileMapDat[((y*mapSizeW)+x)*4]&= ~(3 << 5);
+		tileMapDat[((y*mapSizeW)+x)*4]|=row<<5;
+	}
 }
 uint32_t tileMap::get_tile(uint32_t x,uint32_t y){
 	//first calulate which tile we want
