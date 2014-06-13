@@ -28,7 +28,7 @@ uint16_t tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
 uint16_t true_color_box_x,true_color_box_y;
 unsigned ChunckOff[2]={DefaultChunckX,DefaultChunckY};
 unsigned scrollChunks[2]={0,0};
-
+uint_fast32_t editChunck_G[3];//Id,x,y
 static int returnVal=0;
 static Fl_Choice*PopC;
 static Fl_Window * winP;

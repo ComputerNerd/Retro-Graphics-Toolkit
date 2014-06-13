@@ -348,7 +348,12 @@ int editor::handle(int event){
 					}
 				break;
 				case chunckEditor:
-					
+					//ChunckOff[0] ChunckOff[1]
+					uint_fast32_t maxx,maxy;
+					tiles_size=chunck_tile_size->value();
+					/*if(currentProject->Chunck->useBlocks){
+						maxx=
+					}*/
 				break;
 			}
 		break;

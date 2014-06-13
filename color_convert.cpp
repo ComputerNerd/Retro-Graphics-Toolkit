@@ -52,7 +52,7 @@ uint8_t to_nes_color_rgb(uint8_t red,uint8_t green,uint8_t blue){
 					minerrori = distance;
 					bestcolor = temp;
 				}}
-		}
+			}
 		}
 	}
 	return bestcolor;

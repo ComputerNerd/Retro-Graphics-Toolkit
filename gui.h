@@ -41,7 +41,7 @@ extern uint16_t tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
 extern uint16_t true_color_box_x,true_color_box_y;
 extern unsigned ChunckOff[2];
 extern unsigned scrollChunks[2];
-
+extern uint_fast32_t editChunck_G[3];
 #define pal_edit 0
 #define tile_edit 1
 #define tile_place 2
