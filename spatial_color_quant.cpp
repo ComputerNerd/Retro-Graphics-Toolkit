@@ -368,7 +368,7 @@ ostream& operator<<(ostream& out, array3d<T>& a) {
 	return out;
 }
 
-static int compute_max_coarse_level(int width, int height) {
+static int compute_max_coarse_level(int width, int height){
 	// We want the coarsest layer to have at most MAX_PIXELS pixels
 	const int MAX_PIXELS = 4000;
 	int result = 0;
@@ -796,8 +796,7 @@ static void spatial_color_quant(array2d< vector_fixed<double, 3> >& image,
 #endif
 		int center_x = (b.get_width()-1)/2, center_y = (b.get_height()-1)/2;
 		int step_counter = 0;
-		for(int repeat=0; repeat<repeats_per_temp; repeat++)
-		{
+		for(int repeat=0; repeat<repeats_per_temp;++repeat){
 			int pixels_changed = 0, pixels_visited = 0;
 			deque< pair<int, int> > visit_queue;
 			random_permutation_2d(coarse_variables.get_width(), coarse_variables.get_height(), visit_queue);
@@ -978,136 +977,136 @@ static void spatial_color_quant(array2d< vector_fixed<double, 3> >& image,
 			}
 		}
 
-		int scolorq_wrapper(uint8_t*in255,uint8_t*out,uint8_t user_pal[3][256],uint32_t width,uint32_t height,uint8_t num_colors,double dithering_level,uint8_t filter_size){
+int scolorq_wrapper(uint8_t*in255,uint8_t*out,uint8_t user_pal[3][256],uint32_t width,uint32_t height,uint8_t num_colors,double dithering_level,uint8_t filter_size){
 			//Usage: spatial_color_quant <source image.rgb> <width> <height> <desired palette size> <output image.rgb> [dithering level] [filter size (1/3/5)]
-			srand(time(NULL));
-			if (width <= 0 || height <= 0) {
-				fl_alert("Must specify a valid positive image width and height.");
-				return -1;
-			}
-			if (num_colors <= 1 || num_colors > 256) {
-				fl_alert("Number of colors must be at least 2 and no more than 256.\n");
-				return -1;
-			}
-			array2d< vector_fixed<double, 3> > image(width, height);
-			array2d< vector_fixed<double, 3> > filter1_weights(1, 1);
-			array2d< vector_fixed<double, 3> > filter3_weights(3, 3);
-			array2d< vector_fixed<double, 3> > filter5_weights(5, 5);
-			array2d< int > quantized_image(width, height);
-			vector< vector_fixed<double, 3> > palette;
+	srand(time(NULL));
+	if (width <= 0 || height <= 0) {
+		fl_alert("Must specify a valid positive image width and height.");
+		return -1;
+	}
+	if (num_colors <= 1 || num_colors > 256) {
+		fl_alert("Number of colors must be at least 2 and no more than 256.\n");
+		return -1;
+	}
+	array2d< vector_fixed<double, 3> > image(width, height);
+	array2d< vector_fixed<double, 3> > filter1_weights(1, 1);
+	array2d< vector_fixed<double, 3> > filter3_weights(3, 3);
+	array2d< vector_fixed<double, 3> > filter5_weights(5, 5);
+	array2d< int > quantized_image(width, height);
+	vector< vector_fixed<double, 3> > palette;
 
-			for(int k=0; k<3; k++) {
-				filter1_weights(0,0)(k) = 1.0;
-			}
+	for(int k=0; k<3; k++) {
+		filter1_weights(0,0)(k) = 1.0;
+	}
 
 
-			for (int i=0; i<num_colors; i++) {
-				vector_fixed<double, 3> v;
-				v(0) = ((double)rand())/RAND_MAX;
-				v(1) = ((double)rand())/RAND_MAX;
-				v(2) = ((double)rand())/RAND_MAX;
-				palette.push_back(v);
-			}
+	for (int i=0; i<num_colors; i++) {
+		vector_fixed<double, 3> v;
+		v(0) = ((double)rand())/RAND_MAX;
+		v(1) = ((double)rand())/RAND_MAX;
+		v(2) = ((double)rand())/RAND_MAX;
+		palette.push_back(v);
+	}
 
 #if TRACE
-			for (unsigned int v=0; v<palette.size(); v++) {
-				cout << palette[v] << endl;
-			}
+	for (unsigned int v=0; v<palette.size(); v++) {
+		cout << palette[v] << endl;
+	}
 #endif
 
-			{
-				if (in255 == NULL) {
-					fl_alert("Why is this function called without allocated memory?");//sega16: just keeping in old error checking but with different messages
-					return -1;
-				}
-				uint8_t*intemp=in255;
-				for(int y=0; y<height; y++) {
-					for (int x=0; x<width; x++) {
-						for(int ci=0; ci<3; ci++) {
-							image(x,y)(ci) = *intemp/((double)255.0);
-							++intemp;
-						}
-					}
-				}
-			}
-
-			// Check the output file before we begin the long part
-			if (out == NULL) {
-				fl_alert("What happened to allocating memory before function call?");
-				return -1;
-			}
-
-
-			array3d<double>* coarse_variables;
-			if(dithering_level<0.0)//sega16: a dithering level less than 0 means automatic dithering level
-				dithering_level = 0.09*log((double)image.get_width()*image.get_height()) - 0.04*log((double)palette.size()) + 0.001;
-			if (filter_size != 1 && filter_size != 3 && filter_size != 5){
-				fl_alert("Filter size must be one of 1, 3, or 5.\n");
-				return -1;
-			}
-
-			double stddev = dithering_level;
-			double sum = 0.0;
-			for(int i=0; i<3; i++) {
-				for(int j=0; j<3; j++) {
-					for(int k=0; k<3; k++) {
-						sum += filter3_weights(i,j)(k) =
-							exp(-sqrt((double)((i-1)*(i-1) + (j-1)*(j-1)))/(stddev*stddev));
-					}
-				}
-			}
-			sum /= 3.0;
-			for(int i=0; i<3; i++) {
-				for(int j=0; j<3; j++) {
-					for(int k=0; k<3; k++) {
-						filter3_weights(i,j)(k) /= sum;
-					}
-				}
-			}
-			sum = 0.0;
-			for(int i=0; i<5; i++) {
-				for(int j=0; j<5; j++) {
-					for(int k=0; k<3; k++) {
-						sum += filter5_weights(i,j)(k) =
-							exp(-sqrt((double)((i-2)*(i-2) + (j-2)*(j-2)))/(stddev*stddev));
-					}
-				}
-			}
-			sum /= 3;
-			for(int i=0; i<5; i++) {
-				for(int j=0; j<5; j++) {
-					for(int k=0; k<3; k++) {
-						filter5_weights(i,j)(k) /= sum;
-					}
-				}
-			}
-			array2d< vector_fixed<double, 3> >* filters[] =
-			{NULL, &filter1_weights, NULL, &filter3_weights,
-				NULL, &filter5_weights};
-			spatial_color_quant(image, *filters[filter_size], quantized_image, palette, coarse_variables, 1.0, 0.001, 3, 1);
-			//spatial_color_quant(image, filter3_weights, quantized_image, palette, coarse_variables, 0.05, 0.02);
-
-			cout << endl;
-
-			{
-				unsigned char c[3] = {0,0,0};
-				for(int y=0; y<height; y++) {
-					for (int x=0; x<width; x++) {
-						c[0] = (unsigned char)(255*palette[quantized_image(x,y)](0));
-						c[1] = (unsigned char)(255*palette[quantized_image(x,y)](1));
-						c[2] = (unsigned char)(255*palette[quantized_image(x,y)](2));
-						//fwrite(c, 3, 1, out);
-						*out++=c[0];
-						*out++=c[1];
-						*out++=c[2];
-					}
-				}
-			}
-			printf("Palette size %d\n",palette.size());
-			for(uint8_t x=0;x<palette.size();++x){//sega16: coppy palette
-				user_pal[0][x]=palette[x](0)*255.0;
-				user_pal[1][x]=palette[x](1)*255.0;
-				user_pal[2][x]=palette[x](2)*255.0;
-			}
-			return 0;
+	{
+		if (in255 == NULL) {
+			fl_alert("Why is this function called without allocated memory?");//sega16: just keeping in old error checking but with different messages
+			return -1;
 		}
+		uint8_t*intemp=in255;
+		for(int y=0; y<height; y++) {
+			for (int x=0; x<width; x++) {
+				for(int ci=0; ci<3; ci++) {
+					image(x,y)(ci) = *intemp/((double)255.0);
+					++intemp;
+				}
+			}
+		}
+	}
+
+	// Check the output file before we begin the long part
+	if (out == NULL) {
+		fl_alert("What happened to allocating memory before function call?");
+		return -1;
+	}
+
+
+	array3d<double>* coarse_variables;
+	if(dithering_level<0.0)//sega16: a dithering level less than 0 means automatic dithering level
+		dithering_level = 0.09*log((double)image.get_width()*image.get_height()) - 0.04*log((double)palette.size()) + 0.001;
+	if (filter_size != 1 && filter_size != 3 && filter_size != 5){
+		fl_alert("Filter size must be one of 1, 3, or 5.\n");
+		return -1;
+	}
+
+	double stddev = dithering_level;
+	double sum = 0.0;
+	for(int i=0; i<3; i++) {
+		for(int j=0; j<3; j++) {
+			for(int k=0; k<3; k++) {
+				sum += filter3_weights(i,j)(k) =
+					exp(-sqrt((double)((i-1)*(i-1) + (j-1)*(j-1)))/(stddev*stddev));
+			}
+		}
+	}
+	sum /= 3.0;
+	for(int i=0; i<3; i++) {
+		for(int j=0; j<3; j++) {
+			for(int k=0; k<3; k++) {
+				filter3_weights(i,j)(k) /= sum;
+			}
+		}
+	}
+	sum = 0.0;
+	for(int i=0; i<5; i++) {
+		for(int j=0; j<5; j++) {
+			for(int k=0; k<3; k++) {
+				sum += filter5_weights(i,j)(k) =
+					exp(-sqrt((double)((i-2)*(i-2) + (j-2)*(j-2)))/(stddev*stddev));
+			}
+		}
+	}
+	sum /= 3;
+	for(int i=0; i<5; i++) {
+		for(int j=0; j<5; j++) {
+			for(int k=0; k<3; k++) {
+				filter5_weights(i,j)(k) /= sum;
+			}
+		}
+	}
+	array2d< vector_fixed<double, 3> >* filters[] =
+	{NULL, &filter1_weights, NULL, &filter3_weights,
+		NULL, &filter5_weights};
+	spatial_color_quant(image, *filters[filter_size], quantized_image, palette, coarse_variables, 1.0, 0.001, 3, 1);
+	//spatial_color_quant(image, filter3_weights, quantized_image, palette, coarse_variables, 0.05, 0.02);
+
+	putchar('\n');
+
+	{
+		unsigned char c[3] = {0,0,0};
+		for(int y=0; y<height; y++) {
+			for (int x=0; x<width; x++) {
+				c[0] = (unsigned char)(255*palette[quantized_image(x,y)](0));
+				c[1] = (unsigned char)(255*palette[quantized_image(x,y)](1));
+				c[2] = (unsigned char)(255*palette[quantized_image(x,y)](2));
+				//fwrite(c, 3, 1, out);
+				*out++=c[0];
+				*out++=c[1];
+				*out++=c[2];
+			}
+		}
+	}
+	printf("Palette size %d\n",palette.size());
+	for(uint8_t x=0;x<palette.size();++x){//sega16: coppy palette
+		user_pal[0][x]=palette[x](0)*255.0;
+		user_pal[1][x]=palette[x](1)*255.0;
+		user_pal[2][x]=palette[x](2)*255.0;
+	}
+	return 0;
+}
