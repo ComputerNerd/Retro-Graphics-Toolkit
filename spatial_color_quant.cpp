@@ -656,70 +656,70 @@ static void refine_palette(array2d< vector_fixed<double,3> >& s,
 {
 	// We only computed the half of S above the diagonal - reflect it
 	for (int v=0; v<s.get_width(); v++) {
-	for (int alpha=0; alpha<v; alpha++) {
-		s(v,alpha) = s(alpha,v);
-	}
+		for (int alpha=0; alpha<v; alpha++) {
+			s(v,alpha) = s(alpha,v);
+		}
 	}
 
 	vector< vector_fixed<double,3> > r(palette.size());
 	for (unsigned int v=0; v<palette.size(); v++) {
-	for (int i_y=0; i_y<coarse_variables.get_height(); i_y++) {
-		for (int i_x=0; i_x<coarse_variables.get_width(); i_x++) {
-		r[v] += coarse_variables(i_x,i_y,v)*a(i_x,i_y);
+		for (int i_y=0; i_y<coarse_variables.get_height(); i_y++) {
+			for (int i_x=0; i_x<coarse_variables.get_width(); i_x++) {
+				r[v] += coarse_variables(i_x,i_y,v)*a(i_x,i_y);
+			}
 		}
-	}
 	}
 
 	for (unsigned int k=0; k<3; k++) {
-	array2d<double> S_k = extract_vector_layer_2d(s, k);
-	vector<double> R_k = extract_vector_layer_1d(r, k);
-	vector<double> palette_channel = -1.0*((2.0*S_k).matrix_inverse())*R_k;
-	for (unsigned int v=0; v<palette.size(); v++) {
-		double val = palette_channel[v];
-		if (val < 0) val = 0;
-		if (val > 1) val = 1;
-		palette[v](k) = val;
-	}
+		array2d<double> S_k = extract_vector_layer_2d(s, k);
+		vector<double> R_k = extract_vector_layer_1d(r, k);
+		vector<double> palette_channel = -1.0*((2.0*S_k).matrix_inverse())*R_k;
+		for (unsigned int v=0; v<palette.size(); v++) {
+			double val = palette_channel[v];
+			if (val < 0) val = 0;
+			if (val > 1) val = 1;
+			palette[v](k) = val;
+		}
 	}
 
 #if TRACE
 	for (unsigned int v=0; v<palette.size(); v++) {
-	cout << palette[v] << endl;
+		cout << palette[v] << endl;
 	}
 #endif
 }
 
 static void compute_initial_j_palette_sum(array2d< vector_fixed<double, 3> >& j_palette_sum,
-				   array3d<double>& coarse_variables,
-				   vector< vector_fixed<double, 3> >& palette)
+		array3d<double>& coarse_variables,
+		vector< vector_fixed<double, 3> >& palette)
 {
-	 for (int j_y=0; j_y<coarse_variables.get_height(); j_y++) {
-	 for (int j_x=0; j_x<coarse_variables.get_width(); j_x++) {
-		 vector_fixed<double, 3> palette_sum = vector_fixed<double, 3>();
-		 for (unsigned int alpha=0; alpha < palette.size(); alpha++) {
-		 palette_sum += coarse_variables(j_x,j_y,alpha)*palette[alpha];
-		 }
-		 j_palette_sum(j_x, j_y) = palette_sum;
-	 }
-	 }
+	for (int j_y=0; j_y<coarse_variables.get_height(); j_y++) {
+		for (int j_x=0; j_x<coarse_variables.get_width(); j_x++) {
+			vector_fixed<double, 3> palette_sum = vector_fixed<double, 3>();
+			for (unsigned int alpha=0; alpha < palette.size(); alpha++) {
+				palette_sum += coarse_variables(j_x,j_y,alpha)*palette[alpha];
+			}
+			j_palette_sum(j_x, j_y) = palette_sum;
+		}
+	}
 }
 
 static void spatial_color_quant(array2d< vector_fixed<double, 3> >& image,
-						 array2d< vector_fixed<double, 3> >& filter_weights,
-						 array2d< int >& quantized_image,
-						 vector< vector_fixed<double, 3> >& palette,
-			 array3d<double>*& p_coarse_variables,
-			 double initial_temperature,
-			 double final_temperature,
-			 int temps_per_level,
-			 int repeats_per_temp)
+		array2d< vector_fixed<double, 3> >& filter_weights,
+		array2d< int >& quantized_image,
+		vector< vector_fixed<double, 3> >& palette,
+		array3d<double>*& p_coarse_variables,
+		double initial_temperature,
+		double final_temperature,
+		int temps_per_level,
+		int repeats_per_temp)
 {
 	int max_coarse_level = //1;
-		compute_max_coarse_level(image.get_width(), image.get_height());
+	compute_max_coarse_level(image.get_width(), image.get_height());
 	p_coarse_variables = new array3d<double>(
-	image.get_width()  >> max_coarse_level,
-	image.get_height() >> max_coarse_level,
-	palette.size());
+			image.get_width()  >> max_coarse_level,
+			image.get_height() >> max_coarse_level,
+			palette.size());
 	// For syntactic convenience
 	array3d<double>& coarse_variables = *p_coarse_variables;
 	fill_random(coarse_variables);
@@ -730,7 +730,7 @@ static void spatial_color_quant(array2d< vector_fixed<double, 3> >& image,
 	int extended_neighborhood_width = filter_weights.get_width()*2 - 1;
 	int extended_neighborhood_height = filter_weights.get_height()*2 - 1;
 	array2d< vector_fixed<double, 3> > b0(extended_neighborhood_width,
-										  extended_neighborhood_height);
+			extended_neighborhood_height);
 	compute_b_array(filter_weights, b0);
 
 	array2d< vector_fixed<double, 3> > a0(image.get_width(), image.get_height());
@@ -744,31 +744,31 @@ static void spatial_color_quant(array2d< vector_fixed<double, 3> >& image,
 	int coarse_level;
 	for(coarse_level=1; coarse_level <= max_coarse_level; coarse_level++)
 	{
-	int radius_width  = (filter_weights.get_width() - 1)/2,
-		radius_height = (filter_weights.get_height() - 1)/2;
-	array2d< vector_fixed<double, 3> >
-		bi(max(3, b_vec.back().get_width()-2),
-		   max(3, b_vec.back().get_height()-2));
-	for(int J_y=0; J_y<bi.get_height(); J_y++) {
-		for(int J_x=0; J_x<bi.get_width(); J_x++) {
-		for(int i_y=radius_height*2; i_y<radius_height*2+2; i_y++) {
-			for(int i_x=radius_width*2; i_x<radius_width*2+2; i_x++) {
-			for(int j_y=J_y*2; j_y<J_y*2+2; j_y++) {
-				for(int j_x=J_x*2; j_x<J_x*2+2; j_x++) {
-				bi(J_x,J_y) += b_value(b_vec.back(), i_x, i_y, j_x, j_y);
+		int radius_width  = (filter_weights.get_width() - 1)/2,
+		    radius_height = (filter_weights.get_height() - 1)/2;
+		array2d< vector_fixed<double, 3> >
+			bi(max(3, b_vec.back().get_width()-2),
+					max(3, b_vec.back().get_height()-2));
+		for(int J_y=0; J_y<bi.get_height(); J_y++) {
+			for(int J_x=0; J_x<bi.get_width(); J_x++) {
+				for(int i_y=radius_height*2; i_y<radius_height*2+2; i_y++) {
+					for(int i_x=radius_width*2; i_x<radius_width*2+2; i_x++) {
+						for(int j_y=J_y*2; j_y<J_y*2+2; j_y++) {
+							for(int j_x=J_x*2; j_x<J_x*2+2; j_x++) {
+								bi(J_x,J_y) += b_value(b_vec.back(), i_x, i_y, j_x, j_y);
+							}
+						}
+					}
 				}
 			}
-			}
 		}
-		}
-	}
-	b_vec.push_back(bi);
+		b_vec.push_back(bi);
 
-	array2d< vector_fixed<double, 3> >
-		ai(image.get_width() >> coarse_level,
-		   image.get_height() >> coarse_level);
-	sum_coarsen(a_vec.back(), ai);
-	a_vec.push_back(ai);
+		array2d< vector_fixed<double, 3> >
+			ai(image.get_width() >> coarse_level,
+					image.get_height() >> coarse_level);
+		sum_coarsen(a_vec.back(), ai);
+		a_vec.push_back(ai);
 	}
 
 	// Multiscale annealing
@@ -783,331 +783,331 @@ static void spatial_color_quant(array2d< vector_fixed<double, 3> >& image,
 	array2d< vector_fixed<double,3> > s(palette.size(), palette.size());
 	compute_initial_s(s, coarse_variables, b_vec[coarse_level]);
 	array2d< vector_fixed<double, 3> >* j_palette_sum =
-	new array2d< vector_fixed<double, 3> >(coarse_variables.get_width(), coarse_variables.get_height());
+		new array2d< vector_fixed<double, 3> >(coarse_variables.get_width(), coarse_variables.get_height());
 	compute_initial_j_palette_sum(*j_palette_sum, coarse_variables, palette);
 	while (coarse_level >= 0 || temperature > final_temperature) {
-	// Need to reseat this reference in case we changed p_coarse_variables
-	array3d<double>& coarse_variables = *p_coarse_variables;
-	array2d< vector_fixed<double, 3> >& a = a_vec[coarse_level];
-	array2d< vector_fixed<double, 3> >& b = b_vec[coarse_level];
-	vector_fixed<double,3> middle_b = b_value(b,0,0,0,0);
+		// Need to reseat this reference in case we changed p_coarse_variables
+		array3d<double>& coarse_variables = *p_coarse_variables;
+		array2d< vector_fixed<double, 3> >& a = a_vec[coarse_level];
+		array2d< vector_fixed<double, 3> >& b = b_vec[coarse_level];
+		vector_fixed<double,3> middle_b = b_value(b,0,0,0,0);
 #if TRACE
-	cout << "Temperature: " << temperature << endl;
+		cout << "Temperature: " << temperature << endl;
 #endif
-	int center_x = (b.get_width()-1)/2, center_y = (b.get_height()-1)/2;
-	int step_counter = 0;
-	for(int repeat=0; repeat<repeats_per_temp; repeat++)
-	{
-		int pixels_changed = 0, pixels_visited = 0;
-		deque< pair<int, int> > visit_queue;
-		random_permutation_2d(coarse_variables.get_width(), coarse_variables.get_height(), visit_queue);
-
-		// Compute 2*sum(j in extended neighborhood of i, j != i) b_ij
-
-		while(!visit_queue.empty())
+		int center_x = (b.get_width()-1)/2, center_y = (b.get_height()-1)/2;
+		int step_counter = 0;
+		for(int repeat=0; repeat<repeats_per_temp; repeat++)
 		{
-		// If we get to 10% above initial size, just revisit them all
-		if ((int)visit_queue.size() > coarse_variables.get_width()*coarse_variables.get_height()*11/10) {
-			visit_queue.clear();
+			int pixels_changed = 0, pixels_visited = 0;
+			deque< pair<int, int> > visit_queue;
 			random_permutation_2d(coarse_variables.get_width(), coarse_variables.get_height(), visit_queue);
-		}
 
-		int i_x = visit_queue.front().first, i_y = visit_queue.front().second;
-		visit_queue.pop_front();
+			// Compute 2*sum(j in extended neighborhood of i, j != i) b_ij
 
-		// Compute (25)
-		vector_fixed<double,3> p_i;
-		for (int y=0; y<b.get_height(); y++){
-			for (int x=0; x<b.get_width(); x++){
-				int j_x = x - center_x + i_x, j_y = y - center_y + i_y;
-				if (i_x == j_x && i_y == j_y) continue;
-				if (j_x < 0 || j_y < 0 || j_x >= coarse_variables.get_width() || j_y >= coarse_variables.get_height()) continue;
-				vector_fixed<double,3> b_ij = b_value(b, i_x, i_y, j_x, j_y);
-				vector_fixed<double,3> j_pal = (*j_palette_sum)(j_x,j_y);
-				p_i(0) += b_ij(0)*j_pal(0);
-				p_i(1) += b_ij(1)*j_pal(1);
-				p_i(2) += b_ij(2)*j_pal(2);
-			}
-		}
-		p_i *= 2.0;
-		p_i += a(i_x, i_y);
+			while(!visit_queue.empty())
+			{
+				// If we get to 10% above initial size, just revisit them all
+				if ((int)visit_queue.size() > coarse_variables.get_width()*coarse_variables.get_height()*11/10) {
+					visit_queue.clear();
+					random_permutation_2d(coarse_variables.get_width(), coarse_variables.get_height(), visit_queue);
+				}
 
-		vector<double> meanfield_logs, meanfields;
-		double max_meanfield_log = -numeric_limits<double>::infinity();
-		double meanfield_sum = 0.0;
-		for (unsigned int v=0; v < palette.size(); v++) {
-			// Update m_{pi(i)v}^I according to (23)
-			// We can subtract an arbitrary factor to prevent overflow,
-			// since only the weight relative to the sum matters, so we
-			// will choose a value that makes the maximum e^100.
-			meanfield_logs.push_back(-(palette[v].dot_product(
-			p_i + middle_b.direct_product(
-				palette[v])))/temperature);
-			if (meanfield_logs.back() > max_meanfield_log) {
-			max_meanfield_log = meanfield_logs.back();
-			}
-		}
-		for (unsigned int v=0; v < palette.size(); v++) {
-			meanfields.push_back(exp(meanfield_logs[v]-max_meanfield_log+100));
-			meanfield_sum += meanfields.back();
-		}
-		if (meanfield_sum == 0) {
-		   fl_alert("Fatal error: Meanfield sum underflowed. Please contact developer.");
-			exit(-1);
-		}
-		int old_max_v = best_match_color(coarse_variables, i_x, i_y, palette);
-		vector_fixed<double,3> & j_pal = (*j_palette_sum)(i_x,i_y);
-		for (unsigned int v=0; v < palette.size(); v++) {
-			double new_val = meanfields[v]/meanfield_sum;
-			// Prevent the matrix S from becoming singular
-			if (new_val <= 0) new_val = 1e-10;
-			if (new_val >= 1) new_val = 1 - 1e-10;
-			double delta_m_iv = new_val - coarse_variables(i_x,i_y,v);
-			coarse_variables(i_x,i_y,v) = new_val;
-			j_pal(0) += delta_m_iv*palette[v](0);
-			j_pal(1) += delta_m_iv*palette[v](1);
-			j_pal(2) += delta_m_iv*palette[v](2);
-			if (abs(delta_m_iv) > 0.001 && !skip_palette_maintenance) {
-			update_s(s, coarse_variables, b, i_x, i_y, v, delta_m_iv);
-			}
-		}
-		int max_v = best_match_color(coarse_variables, i_x, i_y, palette);
-		// Only consider it a change if the colors are different enough
-		if ((palette[max_v]-palette[old_max_v]).norm_squared() >= 1.0/(255.0*255.0)) {
-			pixels_changed++;
-			// We don't add the outer layer of pixels , because
-			// there isn't much weight there, and if it does need
-			// to be visited, it'll probably be added when we visit
-			// neighboring pixels.
-			// The commented out loops are faster but cause a little bit of distortion
-			//for (int y=center_y-1; y<center_y+1; y++) {
-			//   for (int x=center_x-1; x<center_x+1; x++) {
-			for (int y=min(1,center_y-1); y<max(b.get_height()-1,center_y+1); y++) {
-			for (int x=min(1,center_x-1); x<max(b.get_width()-1,center_x+1); x++) {
-				int j_x = x - center_x + i_x, j_y = y - center_y + i_y;
-				if (j_x < 0 || j_y < 0 || j_x >= coarse_variables.get_width() || j_y >= coarse_variables.get_height()) continue;
-				visit_queue.push_back(pair<int,int>(j_x,j_y));
-			}
-			}
-		}
-		pixels_visited++;
+				int i_x = visit_queue.front().first, i_y = visit_queue.front().second;
+				visit_queue.pop_front();
 
-		// Show progress with dots - in a graphical interface,
-		// we'd show progressive refinements of the image instead,
-		// and maybe a palette preview.
-		step_counter++;
-		if ((step_counter % 10000) == 0) {
-			/*cout << "."; sega16: too much overhead
-			cout.flush();*/
-			putchar('.');
-			fflush(stdout);
+				// Compute (25)
+				vector_fixed<double,3> p_i;
+				for (int y=0; y<b.get_height(); y++){
+					for (int x=0; x<b.get_width(); x++){
+						int j_x = x - center_x + i_x, j_y = y - center_y + i_y;
+						if (i_x == j_x && i_y == j_y) continue;
+						if (j_x < 0 || j_y < 0 || j_x >= coarse_variables.get_width() || j_y >= coarse_variables.get_height()) continue;
+						vector_fixed<double,3> b_ij = b_value(b, i_x, i_y, j_x, j_y);
+						vector_fixed<double,3> j_pal = (*j_palette_sum)(j_x,j_y);
+						p_i(0) += b_ij(0)*j_pal(0);
+						p_i(1) += b_ij(1)*j_pal(1);
+						p_i(2) += b_ij(2)*j_pal(2);
+					}
+				}
+				p_i *= 2.0;
+				p_i += a(i_x, i_y);
+
+				vector<double> meanfield_logs, meanfields;
+				double max_meanfield_log = -numeric_limits<double>::infinity();
+				double meanfield_sum = 0.0;
+				for (unsigned int v=0; v < palette.size(); v++) {
+					// Update m_{pi(i)v}^I according to (23)
+					// We can subtract an arbitrary factor to prevent overflow,
+					// since only the weight relative to the sum matters, so we
+					// will choose a value that makes the maximum e^100.
+					meanfield_logs.push_back(-(palette[v].dot_product(
+									p_i + middle_b.direct_product(
+										palette[v])))/temperature);
+					if (meanfield_logs.back() > max_meanfield_log) {
+						max_meanfield_log = meanfield_logs.back();
+					}
+				}
+				for (unsigned int v=0; v < palette.size(); v++) {
+					meanfields.push_back(exp(meanfield_logs[v]-max_meanfield_log+100));
+					meanfield_sum += meanfields.back();
+				}
+				if (meanfield_sum == 0) {
+					fl_alert("Fatal error: Meanfield sum underflowed. Please contact developer.");
+					exit(-1);
+				}
+				int old_max_v = best_match_color(coarse_variables, i_x, i_y, palette);
+				vector_fixed<double,3> & j_pal = (*j_palette_sum)(i_x,i_y);
+				for (unsigned int v=0; v < palette.size(); v++) {
+					double new_val = meanfields[v]/meanfield_sum;
+					// Prevent the matrix S from becoming singular
+					if (new_val <= 0) new_val = 1e-10;
+					if (new_val >= 1) new_val = 1 - 1e-10;
+					double delta_m_iv = new_val - coarse_variables(i_x,i_y,v);
+					coarse_variables(i_x,i_y,v) = new_val;
+					j_pal(0) += delta_m_iv*palette[v](0);
+					j_pal(1) += delta_m_iv*palette[v](1);
+					j_pal(2) += delta_m_iv*palette[v](2);
+					if (abs(delta_m_iv) > 0.001 && !skip_palette_maintenance) {
+						update_s(s, coarse_variables, b, i_x, i_y, v, delta_m_iv);
+					}
+				}
+				int max_v = best_match_color(coarse_variables, i_x, i_y, palette);
+				// Only consider it a change if the colors are different enough
+				if ((palette[max_v]-palette[old_max_v]).norm_squared() >= 1.0/(255.0*255.0)) {
+					pixels_changed++;
+					// We don't add the outer layer of pixels , because
+					// there isn't much weight there, and if it does need
+					// to be visited, it'll probably be added when we visit
+					// neighboring pixels.
+					// The commented out loops are faster but cause a little bit of distortion
+					//for (int y=center_y-1; y<center_y+1; y++) {
+					//   for (int x=center_x-1; x<center_x+1; x++) {
+					for (int y=min(1,center_y-1); y<max(b.get_height()-1,center_y+1); y++) {
+						for (int x=min(1,center_x-1); x<max(b.get_width()-1,center_x+1); x++) {
+							int j_x = x - center_x + i_x, j_y = y - center_y + i_y;
+							if (j_x < 0 || j_y < 0 || j_x >= coarse_variables.get_width() || j_y >= coarse_variables.get_height()) continue;
+							visit_queue.push_back(pair<int,int>(j_x,j_y));
+						}
+					}
+				}
+				pixels_visited++;
+
+				// Show progress with dots - in a graphical interface,
+				// we'd show progressive refinements of the image instead,
+				// and maybe a palette preview.
+				step_counter++;
+				if ((step_counter % 10000) == 0) {
+					/*cout << "."; sega16: too much overhead
+					  cout.flush();*/
+					putchar('.');
+					fflush(stdout);
 #if TRACE
-			cout << visit_queue.size();
+					cout << visit_queue.size();
 #endif
-		}
-		}
+				}
+				}
 #if TRACE
-		cout << "Pixels changed: " << pixels_changed << endl;
+				cout << "Pixels changed: " << pixels_changed << endl;
 #endif
-		if (skip_palette_maintenance) {
-		compute_initial_s(s, *p_coarse_variables, b_vec[coarse_level]);
-		}
-		refine_palette(s, coarse_variables, a, palette);
-		compute_initial_j_palette_sum(*j_palette_sum, coarse_variables, palette);
-		}
+				if (skip_palette_maintenance) {
+					compute_initial_s(s, *p_coarse_variables, b_vec[coarse_level]);
+				}
+				refine_palette(s, coarse_variables, a, palette);
+				compute_initial_j_palette_sum(*j_palette_sum, coarse_variables, palette);
+				}
 
-	iters_at_current_level++;
-	skip_palette_maintenance = false;
-	if ((temperature <= final_temperature || coarse_level > 0) &&
-		iters_at_current_level >= iters_per_level)
-	{
-		coarse_level--;
-		if (coarse_level < 0) break;
-		array3d<double>* p_new_coarse_variables = new array3d<double>(
-		image.get_width()  >> coarse_level,
-		image.get_height() >> coarse_level,
-		palette.size());
-		zoom_double(coarse_variables, *p_new_coarse_variables);
-		delete p_coarse_variables;
-		p_coarse_variables = p_new_coarse_variables;
-		iters_at_current_level = 0;
-		delete j_palette_sum;
-		j_palette_sum = new array2d< vector_fixed<double, 3> >((*p_coarse_variables).get_width(), (*p_coarse_variables).get_height());
-		compute_initial_j_palette_sum(*j_palette_sum, *p_coarse_variables, palette);
-		skip_palette_maintenance = true;
+				iters_at_current_level++;
+				skip_palette_maintenance = false;
+				if ((temperature <= final_temperature || coarse_level > 0) &&
+						iters_at_current_level >= iters_per_level)
+				{
+					coarse_level--;
+					if (coarse_level < 0) break;
+					array3d<double>* p_new_coarse_variables = new array3d<double>(
+							image.get_width()  >> coarse_level,
+							image.get_height() >> coarse_level,
+							palette.size());
+					zoom_double(coarse_variables, *p_new_coarse_variables);
+					delete p_coarse_variables;
+					p_coarse_variables = p_new_coarse_variables;
+					iters_at_current_level = 0;
+					delete j_palette_sum;
+					j_palette_sum = new array2d< vector_fixed<double, 3> >((*p_coarse_variables).get_width(), (*p_coarse_variables).get_height());
+					compute_initial_j_palette_sum(*j_palette_sum, *p_coarse_variables, palette);
+					skip_palette_maintenance = true;
 #ifdef TRACE
-		cout << "Image size: " << p_coarse_variables->get_width() << " " << p_coarse_variables->get_height() << endl;
+					cout << "Image size: " << p_coarse_variables->get_width() << " " << p_coarse_variables->get_height() << endl;
 #endif
-	}
-	if (temperature > final_temperature) {
-		temperature *= temperature_multiplier;
-	}
-	}
+				}
+				if (temperature > final_temperature) {
+					temperature *= temperature_multiplier;
+				}
+			}
 
-	// This is normally not used, but is handy sometimes for debugging
-	while (coarse_level > 0) {
-	coarse_level--;
-	array3d<double>* p_new_coarse_variables = new array3d<double>(
-		image.get_width()  >> coarse_level,
-		image.get_height() >> coarse_level,
-		palette.size());
-	zoom_double(*p_coarse_variables, *p_new_coarse_variables);
-	delete p_coarse_variables;
-	p_coarse_variables = p_new_coarse_variables;
-	}
+			// This is normally not used, but is handy sometimes for debugging
+			while (coarse_level > 0) {
+				coarse_level--;
+				array3d<double>* p_new_coarse_variables = new array3d<double>(
+						image.get_width()  >> coarse_level,
+						image.get_height() >> coarse_level,
+						palette.size());
+				zoom_double(*p_coarse_variables, *p_new_coarse_variables);
+				delete p_coarse_variables;
+				p_coarse_variables = p_new_coarse_variables;
+			}
 
-	{
-	// Need to reseat this reference in case we changed p_coarse_variables
-	array3d<double>& coarse_variables = *p_coarse_variables;
+			{
+				// Need to reseat this reference in case we changed p_coarse_variables
+				array3d<double>& coarse_variables = *p_coarse_variables;
 
-	for(int i_x = 0; i_x < image.get_width(); i_x++) {
-	for(int i_y = 0; i_y < image.get_height(); i_y++) {
-		quantized_image(i_x,i_y) =
-		best_match_color(coarse_variables, i_x, i_y, palette);
-	}
-	}
-	for (unsigned int v=0; v<palette.size(); v++) {
-	for (unsigned int k=0; k<3; k++) {
-		if (palette[v](k) > 1.0) palette[v](k) = 1.0;
-		if (palette[v](k) < 0.0) palette[v](k) = 0.0;
-	}
+				for(int i_x = 0; i_x < image.get_width(); i_x++) {
+					for(int i_y = 0; i_y < image.get_height(); i_y++) {
+						quantized_image(i_x,i_y) =
+							best_match_color(coarse_variables, i_x, i_y, palette);
+					}
+				}
+				for (unsigned int v=0; v<palette.size(); v++) {
+					for (unsigned int k=0; k<3; k++) {
+						if (palette[v](k) > 1.0) palette[v](k) = 1.0;
+						if (palette[v](k) < 0.0) palette[v](k) = 0.0;
+					}
 #ifdef TRACE
-	cout << palette[v] << endl;
+					cout << palette[v] << endl;
 #endif
-	}
-	}
-}
-
-int scolorq_wrapper(uint8_t*in255,uint8_t*out,uint8_t user_pal[3][256],uint32_t width,uint32_t height,uint8_t num_colors,double dithering_level,uint8_t filter_size){
-	//Usage: spatial_color_quant <source image.rgb> <width> <height> <desired palette size> <output image.rgb> [dithering level] [filter size (1/3/5)]
-	srand(time(NULL));
-	if (width <= 0 || height <= 0) {
-		fl_alert("Must specify a valid positive image width and height.");
-		return -1;
-	}
-	if (num_colors <= 1 || num_colors > 256) {
-		fl_alert("Number of colors must be at least 2 and no more than 256.\n");
-		return -1;
-	}
-	array2d< vector_fixed<double, 3> > image(width, height);
-	array2d< vector_fixed<double, 3> > filter1_weights(1, 1);
-	array2d< vector_fixed<double, 3> > filter3_weights(3, 3);
-	array2d< vector_fixed<double, 3> > filter5_weights(5, 5);
-	array2d< int > quantized_image(width, height);
-	vector< vector_fixed<double, 3> > palette;
-
-	for(int k=0; k<3; k++) {
-	filter1_weights(0,0)(k) = 1.0;
-	}
-
-
-	for (int i=0; i<num_colors; i++) {
-	vector_fixed<double, 3> v;
-	v(0) = ((double)rand())/RAND_MAX;
-	v(1) = ((double)rand())/RAND_MAX;
-	v(2) = ((double)rand())/RAND_MAX;
-	palette.push_back(v);
-	}
-
-#if TRACE
-	for (unsigned int v=0; v<palette.size(); v++) {
-	cout << palette[v] << endl;
-	}
-#endif
-
-	{
-	if (in255 == NULL) {
-		fl_alert("Why is this function called without allocated memory?");//sega16: just keeping in old error checking but with different messages
-		return -1;
-	}
-	uint8_t*intemp=in255;
-	for(int y=0; y<height; y++) {
-		for (int x=0; x<width; x++) {
-			for(int ci=0; ci<3; ci++) {
-				image(x,y)(ci) = *intemp/((double)255.0);
-				++intemp;
+				}
 			}
 		}
-	}
-	}
 
-	// Check the output file before we begin the long part
-	if (out == NULL) {
-		fl_alert("What happened to allocating memory before function call?");
-	return -1;
-	}
-	
+		int scolorq_wrapper(uint8_t*in255,uint8_t*out,uint8_t user_pal[3][256],uint32_t width,uint32_t height,uint8_t num_colors,double dithering_level,uint8_t filter_size){
+			//Usage: spatial_color_quant <source image.rgb> <width> <height> <desired palette size> <output image.rgb> [dithering level] [filter size (1/3/5)]
+			srand(time(NULL));
+			if (width <= 0 || height <= 0) {
+				fl_alert("Must specify a valid positive image width and height.");
+				return -1;
+			}
+			if (num_colors <= 1 || num_colors > 256) {
+				fl_alert("Number of colors must be at least 2 and no more than 256.\n");
+				return -1;
+			}
+			array2d< vector_fixed<double, 3> > image(width, height);
+			array2d< vector_fixed<double, 3> > filter1_weights(1, 1);
+			array2d< vector_fixed<double, 3> > filter3_weights(3, 3);
+			array2d< vector_fixed<double, 3> > filter5_weights(5, 5);
+			array2d< int > quantized_image(width, height);
+			vector< vector_fixed<double, 3> > palette;
 
-	array3d<double>* coarse_variables;
-	if(dithering_level<0.0)//sega16: a dithering level less than 0 means automatic dithering level
-		dithering_level = 0.09*log((double)image.get_width()*image.get_height()) - 0.04*log((double)palette.size()) + 0.001;
-	if (filter_size != 1 && filter_size != 3 && filter_size != 5){
-		fl_alert("Filter size must be one of 1, 3, or 5.\n");
-		return -1;
-	}
+			for(int k=0; k<3; k++) {
+				filter1_weights(0,0)(k) = 1.0;
+			}
 
-	double stddev = dithering_level;
-	double sum = 0.0;
-	for(int i=0; i<3; i++) {
-	for(int j=0; j<3; j++) {
-		for(int k=0; k<3; k++) {
-		sum += filter3_weights(i,j)(k) =
-			exp(-sqrt((double)((i-1)*(i-1) + (j-1)*(j-1)))/(stddev*stddev));
+
+			for (int i=0; i<num_colors; i++) {
+				vector_fixed<double, 3> v;
+				v(0) = ((double)rand())/RAND_MAX;
+				v(1) = ((double)rand())/RAND_MAX;
+				v(2) = ((double)rand())/RAND_MAX;
+				palette.push_back(v);
+			}
+
+#if TRACE
+			for (unsigned int v=0; v<palette.size(); v++) {
+				cout << palette[v] << endl;
+			}
+#endif
+
+			{
+				if (in255 == NULL) {
+					fl_alert("Why is this function called without allocated memory?");//sega16: just keeping in old error checking but with different messages
+					return -1;
+				}
+				uint8_t*intemp=in255;
+				for(int y=0; y<height; y++) {
+					for (int x=0; x<width; x++) {
+						for(int ci=0; ci<3; ci++) {
+							image(x,y)(ci) = *intemp/((double)255.0);
+							++intemp;
+						}
+					}
+				}
+			}
+
+			// Check the output file before we begin the long part
+			if (out == NULL) {
+				fl_alert("What happened to allocating memory before function call?");
+				return -1;
+			}
+
+
+			array3d<double>* coarse_variables;
+			if(dithering_level<0.0)//sega16: a dithering level less than 0 means automatic dithering level
+				dithering_level = 0.09*log((double)image.get_width()*image.get_height()) - 0.04*log((double)palette.size()) + 0.001;
+			if (filter_size != 1 && filter_size != 3 && filter_size != 5){
+				fl_alert("Filter size must be one of 1, 3, or 5.\n");
+				return -1;
+			}
+
+			double stddev = dithering_level;
+			double sum = 0.0;
+			for(int i=0; i<3; i++) {
+				for(int j=0; j<3; j++) {
+					for(int k=0; k<3; k++) {
+						sum += filter3_weights(i,j)(k) =
+							exp(-sqrt((double)((i-1)*(i-1) + (j-1)*(j-1)))/(stddev*stddev));
+					}
+				}
+			}
+			sum /= 3.0;
+			for(int i=0; i<3; i++) {
+				for(int j=0; j<3; j++) {
+					for(int k=0; k<3; k++) {
+						filter3_weights(i,j)(k) /= sum;
+					}
+				}
+			}
+			sum = 0.0;
+			for(int i=0; i<5; i++) {
+				for(int j=0; j<5; j++) {
+					for(int k=0; k<3; k++) {
+						sum += filter5_weights(i,j)(k) =
+							exp(-sqrt((double)((i-2)*(i-2) + (j-2)*(j-2)))/(stddev*stddev));
+					}
+				}
+			}
+			sum /= 3;
+			for(int i=0; i<5; i++) {
+				for(int j=0; j<5; j++) {
+					for(int k=0; k<3; k++) {
+						filter5_weights(i,j)(k) /= sum;
+					}
+				}
+			}
+			array2d< vector_fixed<double, 3> >* filters[] =
+			{NULL, &filter1_weights, NULL, &filter3_weights,
+				NULL, &filter5_weights};
+			spatial_color_quant(image, *filters[filter_size], quantized_image, palette, coarse_variables, 1.0, 0.001, 3, 1);
+			//spatial_color_quant(image, filter3_weights, quantized_image, palette, coarse_variables, 0.05, 0.02);
+
+			cout << endl;
+
+			{
+				unsigned char c[3] = {0,0,0};
+				for(int y=0; y<height; y++) {
+					for (int x=0; x<width; x++) {
+						c[0] = (unsigned char)(255*palette[quantized_image(x,y)](0));
+						c[1] = (unsigned char)(255*palette[quantized_image(x,y)](1));
+						c[2] = (unsigned char)(255*palette[quantized_image(x,y)](2));
+						//fwrite(c, 3, 1, out);
+						*out++=c[0];
+						*out++=c[1];
+						*out++=c[2];
+					}
+				}
+			}
+			printf("Palette size %d\n",palette.size());
+			for(uint8_t x=0;x<palette.size();++x){//sega16: coppy palette
+				user_pal[0][x]=palette[x](0)*255.0;
+				user_pal[1][x]=palette[x](1)*255.0;
+				user_pal[2][x]=palette[x](2)*255.0;
+			}
+			return 0;
 		}
-	}
-	}
-	sum /= 3.0;
-	for(int i=0; i<3; i++) {
-	for(int j=0; j<3; j++) {
-		for(int k=0; k<3; k++) {
-		filter3_weights(i,j)(k) /= sum;
-		}
-	}
-	}
-	sum = 0.0;
-	for(int i=0; i<5; i++) {
-	for(int j=0; j<5; j++) {
-		for(int k=0; k<3; k++) {
-		sum += filter5_weights(i,j)(k) =
-			exp(-sqrt((double)((i-2)*(i-2) + (j-2)*(j-2)))/(stddev*stddev));
-		}
-	}
-	}
-	sum /= 3;
-	for(int i=0; i<5; i++) {
-	for(int j=0; j<5; j++) {
-		for(int k=0; k<3; k++) {
-		filter5_weights(i,j)(k) /= sum;
-		}
-	}
-	}
-	array2d< vector_fixed<double, 3> >* filters[] =
-	{NULL, &filter1_weights, NULL, &filter3_weights,
-	 NULL, &filter5_weights};
-	spatial_color_quant(image, *filters[filter_size], quantized_image, palette, coarse_variables, 1.0, 0.001, 3, 1);
-	//spatial_color_quant(image, filter3_weights, quantized_image, palette, coarse_variables, 0.05, 0.02);
-
-	cout << endl;
-
-	{
-	unsigned char c[3] = {0,0,0};
-	for(int y=0; y<height; y++) {
-	for (int x=0; x<width; x++) {
-		c[0] = (unsigned char)(255*palette[quantized_image(x,y)](0));
-		c[1] = (unsigned char)(255*palette[quantized_image(x,y)](1));
-		c[2] = (unsigned char)(255*palette[quantized_image(x,y)](2));
-		//fwrite(c, 3, 1, out);
-		*out++=c[0];
-		*out++=c[1];
-		*out++=c[2];
-	}
-	}
-	}
-	printf("Palette size %d\n",palette.size());
-	for(uint8_t x=0;x<palette.size();++x){//sega16: coppy palette
-		user_pal[0][x]=palette[x](0)*255.0;
-		user_pal[1][x]=palette[x](1)*255.0;
-		user_pal[2][x]=palette[x](2)*255.0;
-	}
-	return 0;
-}
