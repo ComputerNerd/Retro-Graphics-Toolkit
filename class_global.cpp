@@ -191,8 +191,10 @@ void editor::draw_non_gui(void){
 					tsx*=currentProject->tileMapC->mapSizeW;
 					tsy*=currentProject->tileMapC->mapSizeH;
 				}
-				xo=((editChunk_G[0]-ChunkOff[0])*tsx);
-				yo=((editChunk_G[1]-ChunkOff[1])*tsy);
+				xo=((editChunk_G[0]-scrollChunks_G[0])*tsx);
+				yo=((editChunk_G[1]-scrollChunks_G[1])*tsy);
+				xo+=ChunkOff[0];
+				yo+=ChunkOff[1];
 				if((xo>=ChunkOff[0])&&(yo>=ChunkOff[1]))
 					fl_rect(xo,yo,tsx+1,tsy+1,FL_BLUE);
 			}
@@ -365,10 +367,11 @@ int editor::handle(int event){
 							printf("%d %d\n",tx,ty);
 							if(Fl::event_button()==FL_LEFT_MOUSE){
 								if(!((tileEditModeChunk_G)&&(tx==editChunk_G[0])&&(ty==editChunk_G[1]))){
-									currentProject->Chunk->setSolid(currentChunk,editChunk_G[0],editChunk_G[1],solidBits_G);
-									currentProject->Chunk->setHflip(currentChunk,editChunk_G[0],editChunk_G[1],G_hflip[1]);
-									currentProject->Chunk->setVflip(currentChunk,editChunk_G[0],editChunk_G[1],G_vflip[1]);
-									currentProject->Chunk->setBlock(currentChunk,editChunk_G[0],editChunk_G[1],selBlock);
+									currentProject->Chunk->setSolid(currentChunk,tx,ty,solidBits_G);
+									currentProject->Chunk->setHflip(currentChunk,tx,ty,G_hflip[1]);
+									currentProject->Chunk->setVflip(currentChunk,tx,ty,G_vflip[1]);
+									currentProject->Chunk->setBlock(currentChunk,tx,ty,selBlock);
+									puts("Tile");
 								}
 								tileEditModeChunk_G=false;
 								damage(FL_DAMAGE_USER1);
@@ -385,6 +388,8 @@ int editor::handle(int event){
 									hflipCB[1]->value(G_hflip[1]);
 									vflipCB[1]->value(G_vflip[1]);
 									tile_select_3->value(currentProject->Chunk->getBlock(currentChunk,tx,ty));
+									solidBits_G=currentProject->Chunk->getSolid(currentChunk,tx,ty);
+									solidChunkMenu->value(solidBits_G);
 									redraw();
 								}
 							}

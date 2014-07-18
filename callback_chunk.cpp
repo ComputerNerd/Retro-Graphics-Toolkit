@@ -23,15 +23,17 @@ unsigned ChunkOff[2]={DefaultChunkX,DefaultChunkY};
 unsigned scrollChunks_G[2];
 uint_fast32_t editChunk_G[2];//x,y
 uint32_t selBlock;
-void selBlockCB(Fl_Widget*,void*b){
-	selBlock=(uintptr_t)b;
+void selBlockCB(Fl_Widget*o,void*){
+	Fl_Slider*s=(Fl_Slider*)o;
+	selBlock=(uintptr_t)s->value();
 	if(tileEditModeChunk_G){
 		currentProject->Chunk->setBlock(currentChunk,editChunk_G[0],editChunk_G[1],selBlock);
 		window->redraw();
 	}
 }
-void solidCB(Fl_Widget*,void*s){
-	solidBits_G=(uintptr_t)s;
+void solidCB(Fl_Widget*o,void*){
+	Fl_Choice*s=(Fl_Choice*)o;
+	solidBits_G=(uintptr_t)s->value();
 	if(tileEditModeChunk_G){
 		currentProject->Chunk->setSolid(currentChunk,editChunk_G[0],editChunk_G[1],solidBits_G);
 		window->redraw();
