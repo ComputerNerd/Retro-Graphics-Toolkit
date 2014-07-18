@@ -422,10 +422,9 @@ int dl3floste(unsigned char *inbuf, unsigned char *outbuf, int width, int height
 	return 0;
 }
 
-static uint8_t useageYUV;
-int dl3quant(unsigned char *inbuf, int width, int height, int quant_to, unsigned char userpal[3][256],bool showProgress,Fl_Progress *progress,uint8_t yuv)
-{
-	useageYUV=yuv;
+//static uint8_t useageYUV;
+int dl3quant(unsigned char *inbuf, int width, int height, int quant_to, unsigned char userpal[3][256],bool showProgress,Fl_Progress *progress){
+	//useageYUV=yuv;
 	if (init_table() == 0) return 1;
 	build_table3(inbuf, width * height);
 	if ( reduce_table3(quant_to,showProgress,progress)) return 0;	// Return if stop button pressed

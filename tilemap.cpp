@@ -497,7 +497,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 #define CYCbCr2R(Y, Cb, Cr) CLIP( Y + ( 91881 * Cr >> 16 ) - 179 )
 #define CYCbCr2G(Y, Cb, Cr) CLIP( Y - (( 22544 * Cb + 46793 * Cr ) >> 16) + 135)
 #define CYCbCr2B(Y, Cb, Cr) CLIP( Y + (116129 * Cb >> 16 ) - 226 )
-static void reduceImage(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t offsetPal,Fl_Progress *progress,uint8_t maxCol,uint8_t yuv,uint8_t alg){
+static void reduceImage(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t offsetPal,Fl_Progress *progress,uint8_t maxCol,unsigned yuv,unsigned alg){
 	progress->maximum(1.0);
 	uint8_t off2=offsetPal*2;
 	uint8_t off3=offsetPal*3;
@@ -604,6 +604,9 @@ againFun:
 			imageuse=image;
 try_again_color:
 		switch(alg){
+			case 4:
+				dl1quant(imageuse,w,h,colorz,user_pal);
+			break;
 			case 3:
 				wu_quant(imageuse,w,h,colorz,user_pal);
 			break;
@@ -614,7 +617,7 @@ try_again_color:
 				scolorq_wrapper(imageuse,output,user_pal,w,h,colorz);
 			break;
 			default:
-				dl3quant(imageuse,w,h,colorz,user_pal,true,progress,yuv);/*this uses denesis lee's v3 color quant which is fonund at http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c*/
+				dl3quant(imageuse,w,h,colorz,user_pal,true,progress);/*this uses denesis lee's v3 color quant which is fonund at http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c*/
 		}
 		for (uint16_t x=0;x<colorz;x++){
 			uint8_t r,g,b;
@@ -762,7 +765,7 @@ void generate_optimal_palette(Fl_Widget*,void*){
 			return;
 	}
 	uint8_t fun_palette;
-	int alg=MenuPopup("Pick an algorithm","What color reduction algorithm would you like used?",4,"Densise Lee v3","scolorq","Neuquant","Wu");
+	int alg=MenuPopup("Pick an algorithm","What color reduction algorithm would you like used?",5,"Dennis Lee v3","scolorq","Neuquant","Wu","Dennis Lee v1");
 	if(alg<0)
 		return;
 	int yuv;
@@ -771,15 +774,15 @@ void generate_optimal_palette(Fl_Widget*,void*){
 		return;
 	Fl_Window *win;
 	Fl_Progress *progress;
-	win = new Fl_Window(250,45,"Progress");           // access parent window
-	win->begin();                                // add progress bar to it..
+	win = new Fl_Window(250,45,"Progress");		// access parent window
+	win->begin();					// add progress bar to it..
 	progress = new Fl_Progress(25,7,200,30);
-	progress->minimum(0.0);                      // set progress range to be 0.0 ~ 1.0
+	progress->minimum(0.0);				// set progress range to be 0.0 ~ 1.0
 	progress->maximum(1.0);
-	progress->color(0x88888800);               // background color
-	progress->selection_color(0x4444ff00);     // progress bar color
-	progress->labelcolor(FL_WHITE);            // percent text color
-	win->end();                                  // end adding to window
+	progress->color(0x88888800);			// background color
+	progress->selection_color(0x4444ff00);		// progress bar color
+	progress->labelcolor(FL_WHITE);			// percent text color
+	win->end();					// end adding to window
 	win->show();
 	switch (currentProject->gameSystem){
 		case sega_genesis:
