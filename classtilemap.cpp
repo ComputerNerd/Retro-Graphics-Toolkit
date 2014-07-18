@@ -105,10 +105,14 @@ bool tileMap::get_prio(uint32_t x,uint32_t y){
 	return (tileMapDat[((y*mapSizeW)+x)*4]>>7)&1;
 }
 uint8_t tileMap::get_palette_map(uint32_t x,uint32_t y){
+	if((currentProject->gameSystem==NES)&&(currentProject->subSystem==NES2x2)){
+		x&=~1;
+		y&=~1;
+	}
 	return (tileMapDat[((y*mapSizeW)+x)*4]>>5)&3;
 }
 void tileMap::set_pal_row(uint32_t x,uint32_t y,uint8_t row){
-	if((currentProject->gameSystem==NES)&&(currentProject->subSystem==0)){
+	if((currentProject->gameSystem==NES)&&(currentProject->subSystem==NES2x2)){
 		//printf("%d %d %d %d\n",x&(~1),x|1,y&(~1),y|1);
 		tileMapDat[((y*mapSizeW)+(x&(~1)))*4]&= ~(3 << 5);
 		tileMapDat[((y*mapSizeW)+(x&(~1)))*4]|=row<<5;

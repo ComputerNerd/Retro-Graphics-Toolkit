@@ -208,13 +208,16 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 			fl_alert("Error loading image");
 			return;
 		}
-		uint8_t tilebit;
+		unsigned tilebit;
 		switch(currentProject->gameSystem){
 			case sega_genesis:
 				tilebit=7;
 			break;
 			case NES:
-				tilebit=15;
+				if(currentProject->subSystem==NES2x2)
+					tilebit=15;
+				else
+					tilebit=7;
 			break;
 			default:
 				show_default_error
@@ -226,7 +229,7 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		printf("image width: %d image height: %d\n",w,h);
 		uint32_t w8,h8;
 		uint32_t wt,ht;
-		uint8_t wr,hr;
+		unsigned wr,hr;
 		wt=w&(~(uint32_t)tilebit);
 		ht=h&(~(uint32_t)tilebit);
 		wr=w&tilebit;
@@ -234,21 +237,21 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		w8=w/8;
 		h8=h/8;
 		if (wr!=0)
-			w8++;
+			++w8;
 		if (hr!=0)
-			h8++;
-		if(currentProject->gameSystem==NES){
+			++h8;
+		if((currentProject->gameSystem==NES)&&(currentProject->subSystem=NES2x2)){
 			if((wr-8)>0)
-				w8++;
+				++w8;
 			if((hr-8)>0)
-				h8++;
+				++h8;
 		}
 		if ((wr != 0) && (hr != 0))
-			fl_alert("Warning both width and height are not a multiple of 8");
+			fl_alert("Warning both width and height are not a multiple of %d",tilebit+1);
 		else if (wr != 0)
-			fl_alert("Warning width is not a multiple of 8");
+			fl_alert("Warning width is not a multiple of %d",tilebit+1);
 		else if (hr != 0)
-			fl_alert("Warning height is not a multiple of 8");
+			fl_alert("Warning height is not a multiple of %d",tilebit+1);
 		printf("w %d h %d wt %d ht %d wr %d hr %d w8 %d h8 %d\n",w,h,wt,ht,wr,hr,w8,h8);
 		//start by copying the data
 		uint8_t * img_ptr=(uint8_t *)loaded_image->data()[0];

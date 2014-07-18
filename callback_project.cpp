@@ -62,11 +62,21 @@ void haveCB(Fl_Widget*o,void*mask){
 			}
 		}
 	}
+	if((m&(~pjHavePal))&&set){//Ensure that a palette exists before enabling anything else
+		if(!(currentProject->useMask&pjHavePal)){
+			if(currentProject->share[0]<0){
+				fl_alert("You need a palette to do this");
+				b->value(0);
+				window->redraw();
+				return;
+			}
+		}
+	}
 	if((m&pjHaveMap)&&set){//Are we trying to enable tilemap?
 		if(!(currentProject->useMask&pjHaveTiles)){
 			if(currentProject->share[1]<0){
 				fl_alert("You cannot have tile map without tiles.");
-				b->value(1);
+				b->value(0);
 				window->redraw();
 				return;
 			}

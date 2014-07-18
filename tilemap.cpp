@@ -49,17 +49,15 @@ bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha){
 	}
 	if (useRow != -1){
 		for (uint64_t a=0;a<(h*w*pixelSize)-w*pixelSize;a+=w*pixelSize*8){//a tiles y
-			for (uint32_t b=0;b<w*pixelSize;b+=pSize2)//b tiles x
-			{
+			for (uint_fast32_t b=0;b<w*pixelSize;b+=pSize2){//b tiles x
 				truecolor_tile_ptr=currentProject->tileMapC->get_tileRow(x_tile,y_tile,useRow)*256;
 				if (truecolor_tile_ptr != -256){
-					for (uint32_t y=0;y<w*pSize2;y+=w*pixelSize)//pixels y
-					{
+					for (uint_fast32_t y=0;y<w*pSize2;y+=w*pixelSize){//pixels y
 						if (useAlpha)
 							memcpy(&the_image[a+b+y],&currentProject->tileC->truetileDat[truecolor_tile_ptr],32);
 						else{
-							uint8_t xx=0;
-							for (uint8_t x=0;x<32;x+=4)//pixels x
+							unsigned xx=0;
+							for (unsigned x=0;x<32;x+=4)//pixels x
 							{
 								the_image[a+b+y+xx]=currentProject->tileC->truetileDat[truecolor_tile_ptr+x];
 								the_image[a+b+y+xx+1]=currentProject->tileC->truetileDat[truecolor_tile_ptr+x+1];
@@ -86,8 +84,8 @@ bool truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha){
 					if (useAlpha)
 						memcpy(&the_image[a+b+y],&currentProject->tileC->truetileDat[truecolor_tile_ptr],32);
 					else{
-						uint8_t xx=0;
-						for (uint8_t x=0;x<32;x+=4){//pixels x
+						unsigned xx=0;
+						for (unsigned x=0;x<32;x+=4){//pixels x
 							the_image[a+b+y+xx]=currentProject->tileC->truetileDat[truecolor_tile_ptr+x];
 							the_image[a+b+y+xx+1]=currentProject->tileC->truetileDat[truecolor_tile_ptr+x+1];
 							the_image[a+b+y+xx+2]=currentProject->tileC->truetileDat[truecolor_tile_ptr+x+2];
@@ -130,45 +128,45 @@ static double min3(double a,double b,double c){
  * @return  Array           The HSL representation
  */
 void rgbToHls(double r,double g,double b,double * hh,double * ll,double * ss){
-    r /= 255.0;
-    g /= 255.0;
-    b /= 255.0;
-    double max = max3(r, g, b);
-    double min = min3(r, g, b);
-    double h, s, l = (max + min) / 2.0;
+	r /= 255.0;
+	g /= 255.0;
+	b /= 255.0;
+	double max = max3(r, g, b);
+	double min = min3(r, g, b);
+	double h, s, l = (max + min) / 2.0;
 
-    if(max == min){
-        h = s = 0.0; // achromatic
-    }else{
-        double d = max - min;
-        s = l > 0.5 ? d / (2.0 - max - min) : d / (max + min);
-        if (max == r)
+	if(max == min){
+		h = s = 0.0; // achromatic
+	}else{
+		double d = max - min;
+		s = l > 0.5 ? d / (2.0 - max - min) : d / (max + min);
+		if (max == r)
 			h = (g - b) / d + (g < b ? 6 : 0);
 		else if (max == g)
 			h = (b - r) / d + 2.0;
 		else
 			h = (r - g) / d + 4.0;
-        
-        h /= 6.0;
-    }
+
+		h /= 6.0;
+	}
 	*hh=h;
 	*ll=l;
 	*ss=s;
 }
 void rgbtohsv(uint8_t R,uint8_t G,uint8_t B,double * hh,double * ss,double * vv){
-	double var_R =  R / 255.0;						//RGB from 0 to 255
+	double var_R =  R / 255.0;				//RGB from 0 to 255
 	double var_G =  G / 255.0;
 	double var_B =  B / 255.0;
 
 	double var_Min = min3(var_R, var_G, var_B);		//Min. value of RGB
 	double var_Max = max3(var_R, var_G, var_B);		//Max. value of RGB
-	double del_Max = var_Max - var_Min;				//Delta RGB value 
+	double del_Max = var_Max - var_Min;			//Delta RGB value 
 	double V = var_Max;
 	double H,S;
-	if (del_Max == 0.0){							//This is a gray, no chroma...
-		H = 0.0;									//HSV results from 0 to 1
+	if (del_Max == 0.0){					//This is a gray, no chroma...
+		H = 0.0;					//HSV results from 0 to 1
 		S = 0.0;
-	}else{											//Chromatic data...
+	}else{							//Chromatic data...
 		S = del_Max / var_Max;
 		double del_R = (((var_Max - var_R ) / 6.0 ) + (del_Max / 2.0 )) / del_Max;
 		double del_G = (((var_Max - var_G ) / 6.0 ) + (del_Max / 2.0 )) / del_Max;
@@ -188,53 +186,70 @@ void rgbtohsv(uint8_t R,uint8_t G,uint8_t B,double * hh,double * ss,double * vv)
 	*ss=S;
 	*vv=V;
 }
+static double getHH(uint32_t cur_tile,int type){
+	double hh=0.0;
+	uint8_t * truePtr=&currentProject->tileC->truetileDat[cur_tile*256];
+	double h,l,s;
+	for(unsigned z=0;z<256;z+=4){
+		rgbToHls(truePtr[0],truePtr[1],truePtr[2],&h,&l,&s);
+		truePtr+=4;
+		switch(type){
+			case 0:
+				hh+=h;
+				break;
+			case 1:
+				hh+=l;
+				break;
+			case 2:
+				hh+=s;
+				break;
+			case 3:
+				hh+=h*s;
+				break;
+			case 4:
+				hh+=h*l;
+				break;
+			case 5:
+				hh+=s*l;
+				break;
+			case 6:
+				hh+=h+s;
+				break;
+			case 7:
+				hh+=h+l;
+				break;
+			case 8:
+				hh+=s+l;
+				break;
+		}
+	}
+	return hh;
+}
 void tileMap::pickRow(uint8_t amount){
 	int type=MenuPopup("Pick tile row based on...","Please pick what most defines the image",9,"Hue","Brightness","Saturation","Hue*satuaration","Hue*Brightness","Brightness*saturation","Hue+satuaration","Hue+Brightness","Brightness+saturation");
 	double divide=(double)amount;//convert to double
-	double h,l,s;
-	h=0.0;
-	uint16_t z;
 	uint32_t x,y;
 	double maxPal=divide;
-	for (y=0;y<mapSizeHA;++y){
-		for (x=0;x<mapSizeW;++x){
-			uint32_t cur_tile=get_tile(x,y);
-			uint8_t * truePtr=&currentProject->tileC->truetileDat[cur_tile*256];
-			double hh=0.0;
-			for (z=0;z<256;z+=4){
-				rgbToHls(truePtr[0],truePtr[1],truePtr[2],&h,&l,&s);
-				truePtr+=4;
-				switch(type){
-					case 0:
-						hh+=h;
-					break;
-					case 1:
-						hh+=l;
-					break;
-					case 2:
-						hh+=s;
-					break;
-					case 3:
-						hh+=h*s;
-					break;
-					case 4:
-						hh+=h*l;
-					break;
-					case 5:
-						hh+=s*l;
-					break;
-					case 6:
-						hh+=h+s;
-					break;
-					case 7:
-						hh+=h+l;
-					break;
-					case 8:
-						hh+=s+l;
-					break;
-				}
-			}
-			hh/=64.0/divide;
+	double divBy;
+	unsigned addBy;
+	if((currentProject->gameSystem==NES)&&(currentProject->subSystem==NES2x2)){
+		divBy=256.0;//8*8*4
+		addBy=2;
+	}else{
+		divBy=64.0;//8*8
+		addBy=1;
+	}
+	for (y=0;y<mapSizeHA;y+=addBy){
+		for (x=0;x<mapSizeW;x+=addBy){
+			double hh;
+			if((currentProject->gameSystem==NES)&&(currentProject->subSystem==NES2x2)){
+				hh=getHH(get_tile(x,y),type);
+				hh+=getHH(get_tile(x+1,y),type);
+				hh+=getHH(get_tile(x,y+1),type);
+				hh+=getHH(get_tile(x+1,y+1),type);
+			}else
+				hh=getHH(get_tile(x,y),type);
+			hh/=divBy/divide;
 			if (hh >= maxPal){
 				printf("hh >= %f %f %d\n",maxPal,hh,(int)hh);
 				hh=divide-0.5;
@@ -242,7 +257,6 @@ void tileMap::pickRow(uint8_t amount){
 			set_pal_row(x,y,hh);
 		}
 	}
-
 }
 void tileMap::allRowZero(void){
 	uint32_t x,y;
@@ -327,24 +341,23 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	}
 	uint8_t type_temp=palTypeGen;
 	uint8_t tempSet=0;
-	double d[4];
-	uint32_t di[4];
+	double d[4];//Delta
+	uint32_t di[4];//Delta integer
 	uint32_t x,y;
 	uint8_t t;
-	uint8_t temp[256];
+	uint8_t temp[256];//Just as a word of caution this is used for both sprintf temporary buffer and temporary truecolor tile buffer
 	uint32_t w,h;
 	w=mapSizeW*8;
 	h=mapSizeHA*8;
 	uint8_t * imagein=(uint8_t*)malloc(w*h*4);
 	truecolor_to_image(imagein,-1);
 	uint8_t **imageout=(uint8_t**)malloc(4*sizeof(void*));
-	uint32_t xtile,ytile;
-	xtile=ytile=0;
+	uint32_t xtile=0,ytile=0;
 	if(showProgress){
 		progress->maximum(12);
 		progress->value(0);
 	}
-	for(x=0;x<4;x++){
+	for(x=0;x<4;++x){//This function has too many hard coded values The four should be a variable with the amount of palette rows
 		if(showProgress){
 			sprintf((char*)temp,"Dithering %d",x);
 			progress->label((char*)temp);
@@ -371,9 +384,13 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 		progress->maximum(mapSizeHA);
 		progress->label("Picking tiles based on delta");
 	}
-	for (uint32_t a=0;a<(h*w*4)-w*4;a+=w*4*8){//a tiles y
-		for (uint32_t b=0;b<w*4;b+=32){//b tiles x
-			uint32_t cur_tile=get_tile(xtile,ytile);
+	unsigned per;
+	if((currentProject->gameSystem==NES)&&(currentProject->subSystem==NES2x2))
+		per=2;
+	else
+		per=1;
+	for (uint_fast32_t a=0;a<(h*w*4)-(w*4*per);a+=w*4*8*per){//a tiles y
+		for (uint_fast32_t b=0;b<w*4;b+=32*per){//b tiles x
 			if(alg>=2)
 				memset(di,0,4*sizeof(uint32_t));
 			else{
@@ -384,49 +401,57 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 				tempSet=(currentProject->tileMapC->get_prio(xtile,ytile)^1)*8;
 				set_palette_type(tempSet);
 			}
-			for (t=0;t<4;t++){
-				for (uint32_t y=0;y<w*4*8;y+=w*4){//pixels y
-					if(imagein[a+b+y+x+3]!=0){//Avoid checking transperency
-						switch(alg){
-							case 0:
-								for(x=0;x<32;x+=4)
-									d[t]+=std::abs(ciede2000rgb(imagein[a+b+y+x],imagein[a+b+y+x+1],imagein[a+b+y+x+2],imageout[t][a+b+y+x],imageout[t][a+b+y+x+1],imageout[t][a+b+y+x+2]));
-							break;
-							case 1:
-								for(x=0;x<32;x+=4)
-									d[t]+=std::abs(ColourDistance(imagein[a+b+y+x],imagein[a+b+y+x+1],imagein[a+b+y+x+2],imageout[t][a+b+y+x],imageout[t][a+b+y+x+1],imageout[t][a+b+y+x+2]));
-							break;
-							case 3:
-							case 4:
-							case 5:
-								for(x=0;x<32;x+=4){
-									double h[2],l[2],s[2];
-									rgbToHls(imagein[a+b+y+x],imagein[a+b+y+x+1],imagein[a+b+y+x+2],h,l,s);
-									rgbToHls(imageout[t][a+b+y+x],imageout[t][a+b+y+x+1],imageout[t][a+b+y+x+2],h+1,l+1,s+1);
-									d[t]+=std::abs(pickIt(h[0],l[0],s[0],alg-3)-pickIt(h[1],l[1],s[1],alg-3));
+			for(t=0;t<4;++t){
+				for(unsigned c=0;c<per*w*4*8;c+=w*4*8){
+					for(uint32_t y=0;y<w*4*8;y+=w*4){//pixels y
+						for(unsigned e=0;e<per*32;e+=32){
+							if(imagein[a+b+y+x+3]!=0){//Avoid checking transperency
+								switch(alg){
+									case 0:
+										for(x=0;x<32;x+=4)
+											d[t]+=std::abs(ciede2000rgb(imagein[a+b+y+x+c+e],imagein[a+b+y+x+1+c+e],imagein[a+b+y+x+2+c+e],imageout[t][a+b+y+x+c+e],imageout[t][a+b+y+x+1+c+e],imageout[t][a+b+y+x+2+c+e]));
+										break;
+									case 1:
+										for(x=0;x<32;x+=4)
+											d[t]+=std::abs(ColourDistance(imagein[a+b+y+x+c+e],imagein[a+b+y+x+1+c+e],imagein[a+b+y+x+2+c+e],imageout[t][a+b+y+x+c+e],imageout[t][a+b+y+x+1+c+e],imageout[t][a+b+y+x+2+c+e]));
+										break;
+									case 3:
+									case 4:
+									case 5:
+										for(x=0;x<32;x+=4){
+											double h[2],l[2],s[2];
+											rgbToHls(imagein[a+b+y+x+c+e],imagein[a+b+y+x+1+c+e],imagein[a+b+y+x+2+c+e],h,l,s);
+											rgbToHls(imageout[t][a+b+y+x+c+e],imageout[t][a+b+y+x+1+c+e],imageout[t][a+b+y+x+2+c+e],h+1,l+1,s+1);
+											d[t]+=std::abs(pickIt(h[0],l[0],s[0],alg-3)-pickIt(h[1],l[1],s[1],alg-3));
+										}
+										//printf("d[%d]=%f\n",t,d[t]);
+										break;
+									default://Usally case 2
+										for(x=0;x<32;x+=4)
+											di[t]+=sqri(imagein[a+b+y+x+c+e]-imageout[t][a+b+y+x+c+e])+sqri(imagein[a+b+y+x+1+c+e]-imageout[t][a+b+y+x+1+c+e])+sqri(imagein[a+b+y+x+2+c+e]-imageout[t][a+b+y+x+2+c+e]);
 								}
-								//printf("d[%d]=%f\n",t,d[t]);
-							break;
-							default://Usally case 2
-								for(x=0;x<32;x+=4)
-									di[t]+=sqri(imagein[a+b+y+x]-imageout[t][a+b+y+x])+sqri(imagein[a+b+y+x+1]-imageout[t][a+b+y+x+1])+sqri(imagein[a+b+y+x+2]-imageout[t][a+b+y+x+2]);
+							}
 						}
 					}
 				}
 			}
-			uint16_t truecolor_tile_ptr=0;
 			uint8_t sillyrow;
 			if(alg==2)
 				sillyrow=pick4Deltai(di);
 			else
 				sillyrow=pick4Delta(d);
 			set_pal_row(xtile,ytile,sillyrow);
-			for (uint32_t y=0;y<w*4*8;y+=w*4){//pixels y
-				memcpy(&temp[truecolor_tile_ptr],&imageout[sillyrow][a+b+y],32);
-				truecolor_tile_ptr+=32;
+			for(unsigned c=0,i=0;c<per*w*4*8;c+=w*4*8,++i){
+				for(unsigned e=0,j=0;e<per*32;e+=32,++j){
+					uint_fast32_t truecolor_tile_ptr=0;
+					for (uint_fast32_t y=0;y<w*4*8;y+=w*4){//pixels y
+						memcpy(&temp[truecolor_tile_ptr],&imageout[sillyrow][a+b+y+c+e],32);
+						truecolor_tile_ptr+=32;
+					}
+					currentProject->tileC->truecolor_to_tile_ptr(sillyrow,get_tile(xtile+j,ytile+i),temp,false);
+				}
 			}
-			currentProject->tileC->truecolor_to_tile_ptr(sillyrow,cur_tile,temp,false);
-			++xtile;
+			xtile+=per;
 		}
 		if(showProgress){
 			if((a%(w*4*8*16))==0){
@@ -436,7 +461,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 			}
 		}
 		xtile=0;
-		++ytile;
+		ytile+=per;
 	}
 	free(imagein);
 	free(imageout[0]);
@@ -801,19 +826,19 @@ void generate_optimal_palette(Fl_Widget*,void*){
 	window->redraw();
 	Fl::check();
 }
-void truecolorimageToTiles(uint8_t * image,int8_t rowusage,bool useAlpha){
+void truecolorimageToTiles(uint8_t * image,int rowusage,bool useAlpha){
 	uint8_t type_temp=palTypeGen;
 	uint8_t tempSet=0;
 	uint8_t truecolor_tile[256];
-	uint32_t x_tile=0;
-	uint32_t y_tile=0;
-	uint8_t pSize=useAlpha ? 4:3;
-	uint8_t pTile=useAlpha ? 32:24;
+	uint_fast32_t x_tile=0;
+	uint_fast32_t y_tile=0;
+	uint_fast8_t pSize=useAlpha ? 4:3;
+	uint_fast8_t pTile=useAlpha ? 32:24;
 	uint32_t w=currentProject->tileMapC->mapSizeW*8;
 	uint32_t h=currentProject->tileMapC->mapSizeHA*8;
-	uint16_t truecolor_tile_ptr;
-	for (uint32_t a=0;a<(h*w*pSize)-w*pSize;a+=w*pSize*8){//a tiles y
-		for (uint32_t b=0;b<w*pSize;b+=pTile){//b tiles x
+	uint_fast32_t truecolor_tile_ptr;
+	for (uint_fast32_t a=0;a<(h*w*pSize)-w*pSize;a+=w*pSize*8){//a tiles y
+		for (uint_fast32_t b=0;b<w*pSize;b+=pTile){//b tiles x
 			uint8_t temp;
 			int32_t current_tile;
 			if(rowusage==-1){

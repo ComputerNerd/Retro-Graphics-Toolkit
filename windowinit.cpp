@@ -70,6 +70,7 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Clear entire Palette",0,clearPalette,0},
 		{"Pick nearest color algorithm",0,pickNearAlg,0},
 		{"RGB color to entry",0,rgb_pal_to_entry,0},
+		{"Entry to RGB color",0,entryToRgb,0},
 		{0},
 	{"Tile Actions",0, 0, 0, FL_SUBMENU},
 		{"Append blank tile to end of buffer",0,new_tile,0},
@@ -105,9 +106,9 @@ static const Fl_Menu_Item ditherChoices[]={
 	{"Yliluoma 3",0,set_ditherAlg,(void *)6},
 	{0}
 };
-static Fl_Menu_Item subSysNES[]={
-		{"2x2 tile palette",0,setSubSysCB},
-		{"1x1 tile palette",0,setSubSysCB},
+static const Fl_Menu_Item subSysNES[]={
+		{"2x2 tile palette",0,setSubSysCB,(void*)NES2x2},
+		{"1x1 tile palette",0,setSubSysCB,(void*)NES1x1},
 		{0}
 };
 extern const char * MapWidthTxt;

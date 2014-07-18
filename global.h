@@ -42,6 +42,8 @@ uint32_t MakeRGBcolor(uint32_t pixel,float saturation = 1.1f, float hue_tweak = 
 //varibles and defines
 #define sega_genesis 0
 #define NES 1
+#define NES2x2 0
+#define NES1x1 1
 extern Fl_Group * shadow_highlight_switch;
 //tabs group id
 extern bool show_grid_placer;

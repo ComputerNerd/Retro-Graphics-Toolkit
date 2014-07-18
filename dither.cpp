@@ -75,12 +75,12 @@ static int32_t weights[SIZE];	/* weights for
 static void init_weights(int32_t a[],int32_t size,int32_t max){
 	double m = exp(log(max)/(size-1));
 	double v;
-	int32_t i;
+	int_fast32_t i;
 	for (i=0, v=1.0; i<size;++i){
 		a[i]=(int)(v+0.5);	/* store rounded
-							 * value */ 
-		v*=m;				/* next value */
-	} /*for */
+					 * value */ 
+		v*=m;			/* next value */
+	}
 }
 
 static void dither_pixel(uint8_t *pixel){
@@ -251,10 +251,10 @@ static const uint8_t mapY3[8*8] = {
 	10,58, 6,54, 9,57, 5,53,
 	42,26,38,22,41,25,37,21 };
 
-#define GammaAmt 2.2 // Gamma correction we use.
+#define GammaAmt 2.2f // Gamma correction we use.
 
-static double GammaCorrect(double v)   {return pow(v, GammaAmt);}
-static double GammaUncorrect(double v) {return pow(v, 1.0 / GammaAmt);}
+static float GammaCorrect(float v)   {return powf(v, GammaAmt);}
+static float GammaUncorrect(float v) {return powf(v, 1.0f / GammaAmt);}
 
 /* CIE C illuminant */
 static const double illum[3*3] ={0.488718, 0.176204, 0.000000,
@@ -374,11 +374,11 @@ static double ColorCompare(const LabItem& lab1, const LabItem& lab2){
 #undef DEG2RAD
 }
 #endif
-static inline double ColorCompare(double r1,double g1,double b1,double r2,double g2,double b2){
-	double luma1 = (r1*(299.0/255000.0) + g1*(587.0/255000.0) + b1*(114.0/255000.0));
-	double luma2 = (r2*(299.0/255000.0) + g2*(587.0/255000.0) + b2*(114.0/255000.0));
-	double lumadiff = luma1-luma2;
-	double diffR = (r1-r2)/(255.0/.299/.75), diffG = (g1-g2)/(255.0/.587/.75), diffB = (b1-b2)/(255.0/.114/.75);
+static inline float ColorCompare(float r1,float g1,float b1,float r2,float g2,float b2){
+	float luma1 = (r1*(299.0f/255000.0f) + g1*(587.0f/255000.0f) + b1*(114.0f/255000.0f));
+	float luma2 = (r2*(299.0f/255000.0f) + g2*(587.0f/255000.0f) + b2*(114.0f/255000.0f));
+	float lumadiff = luma1-luma2;
+	float diffR = (r1-r2)/(255.0f/.299f/.75f), diffG = (g1-g2)/(255.0f/.587f/.75f), diffB = (b1-b2)/(255.0f/.114f/.75f);
 	return (diffR*diffR + diffG*diffG + diffB*diffB) + lumadiff*lumadiff;
 }
 
@@ -389,7 +389,7 @@ static unsigned palettesize = 16;
 /* Luminance for each palette entry, to be initialized as soon as the program begins */
 static unsigned luma[maxpalettesize];
 //static LabItem  meta[maxpalettesize];
-static double   pal_g[maxpalettesize][3]; // Gamma-corrected palette entry
+static float   pal_g[maxpalettesize][3]; // Gamma-corrected palette entry
 static unsigned offsetGloablY3=0;
 static inline bool PaletteCompareLuma(unsigned index1, unsigned index2){
 	return luma[index1+offsetGloablY3] < luma[index2+offsetGloablY3];
@@ -400,8 +400,8 @@ typedef std::vector<unsigned> MixingPlan;
 
 
 /* 8x8 threshold map */
-#define d(x) x/64.0
-static const double mapY1[8*8] = {
+#define d(x) (float)x/64.0f
+static const float mapY1[8*8] = {
 d( 0), d(48), d(12), d(60), d( 3), d(51), d(15), d(63),
 d(32), d(16), d(44), d(28), d(35), d(19), d(47), d(31),
 d( 8), d(56), d( 4), d(52), d(11), d(59), d( 7), d(55),
@@ -415,25 +415,25 @@ d(42), d(26), d(38), d(22), d(41), d(25), d(37), d(21) };
 
 
 // Compare the difference of two RGB values
-static double EvaluateMixingError(int r,int g,int b,
+static inline float EvaluateMixingError(int r,int g,int b,
 						   int r0,int g0,int b0,
 						   int r1,int g1,int b1,
 						   int r2,int g2,int b2,
-						   double ratio){
+						   float ratio){
 	return ColorCompare(r,g,b, r0,g0,b0) 
-		 + (ColorCompare(r1,g1,b1, r2,g2,b2) * 0.1 * (fabs(ratio-0.5)+0.5));
+		 + (ColorCompare(r1,g1,b1, r2,g2,b2) * 0.1f * (fabsf(ratio-0.5f)+0.5f));
 }
 
 struct MixingPlanY1{
 	unsigned colors[2];
-	double ratio; /* 0 = always index1, 1 = always index2, 0.5 = 50% of both */
+	float ratio; /* 0 = always index1, 1 = always index2, 0.5 = 50% of both */
 };
 MixingPlanY1 DeviseBestMixingPlanY1(const unsigned r,const unsigned g,const unsigned b,uint8_t * pal,uint16_t offset){
 	//const unsigned r = color>>16, g = (color>>8)&0xFF, b = color&0xFF;
 	pal+=offset*3;
 	offsetGloablY3=offset;
 	MixingPlanY1 result = { {0,0}, 0.5 };
-	double least_penalty = 1e99;
+	float least_penalty = 1e99;
 	for(unsigned index1 = 0; index1 < palettesize; ++index1)
 	for(unsigned index2 = index1; index2 < palettesize; ++index2)
 	{
@@ -461,15 +461,15 @@ MixingPlanY1 DeviseBestMixingPlanY1(const unsigned r,const unsigned g,const unsi
 		unsigned r0 = r1 + ratio * int(r2-r1) / 64;
 		unsigned g0 = g1 + ratio * int(g2-g1) / 64;
 		unsigned b0 = b1 + ratio * int(b2-b1) / 64;
-		double penalty = EvaluateMixingError(
+		float penalty = EvaluateMixingError(
 			r,g,b, r0,g0,b0, r1,g1,b1, r2,g2,b2,
-			ratio / double(64));
+			ratio / float(64.0f));
 		if(penalty < least_penalty){
 			least_penalty = penalty;
 			result.colors[0] = index1;
 			result.colors[1] = index2;
-			result.ratio = ratio / double(64);
-			if(penalty==0.0)
+			result.ratio = ratio / float(64.0);
+			if(penalty==0.0f)
 				return result;
 		}
 	}
@@ -483,10 +483,10 @@ MixingPlan DeviseBestMixingPlanY2(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * 
 	offsetGloablY3=offset;
 	// Input color in CIE L*a*b*
 	#ifndef COMPARE_RGB
-		LabItem input((double)rIn/255.0,(double)gIn/255.0,(double)bIn/255.0);
+		LabItem input((float)rIn/255.0f,(float)gIn/255.0f,(float)bIn/255.0f);
 	#endif
 	// Tally so far (gamma-corrected)
-	double so_far[3] = { 0,0,0 };
+	float so_far[3] = { 0,0,0 };
 	
 	MixingPlan result;
 	while(result.size() < limit){
@@ -495,26 +495,26 @@ MixingPlan DeviseBestMixingPlanY2(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * 
 
 		const unsigned max_test_count = result.empty() ? 1 : result.size();
 
-		double least_penalty = -1;
+		float least_penalty = -1.0f;
 		for(unsigned index=0; index<palettesize; ++index){
 			//const unsigned color = pal[index];
-			double sum[3] = { so_far[0], so_far[1], so_far[2] };
-			double add[3] = { pal_g[index+offset][0], pal_g[index+offset][1], pal_g[index+offset][2] };
+			float sum[3] = { so_far[0], so_far[1], so_far[2] };
+			float add[3] = { pal_g[index+offset][0], pal_g[index+offset][1], pal_g[index+offset][2] };
 
 			for(unsigned p=1; p<=max_test_count; p*=2){
 				for(unsigned c=0; c<3; ++c) sum[c] += add[c];
 				for(unsigned c=0; c<3; ++c) add[c] += add[c];
-				double t = result.size() + p;
+				float t = result.size() + p;
 
-				double test[3] = { GammaUncorrect(sum[0]/t),
+				float test[3] = { GammaUncorrect(sum[0]/t),
 											 GammaUncorrect(sum[1]/t),
 											 GammaUncorrect(sum[2]/t) };
 									 
 #if COMPARE_RGB
-				double penalty = ColorCompare(input_rgb[0],input_rgb[1],input_rgb[2],test[0]*255, test[1]*255, test[2]*255);
+				float penalty = ColorCompare(input_rgb[0],input_rgb[1],input_rgb[2],test[0]*255.0f, test[1]*255.0f, test[2]*255.0f);
 #else
-				LabItem test_lab( test[0], test[1], test[2] );
-				double penalty = ColorCompare(test_lab, input);
+				LabItem test_lab(test[0], test[1], test[2]);
+				float penalty = ColorCompare(test_lab, input);
 #endif
 				if(penalty < least_penalty || least_penalty < 0){
 					least_penalty = penalty;
@@ -536,17 +536,17 @@ MixingPlan DeviseBestMixingPlanY2(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * 
 }
 MixingPlan DeviseBestMixingPlanY3(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * pal,uint16_t offset,size_t limit){
 	// Input color in RGB
-	int input_rgb[3] = {rIn,gIn,bIn};
+	float input_rgb[3] = {rIn,gIn,bIn};
 	pal+=offset*3;
 	offsetGloablY3=offset;
 	// Input color in CIE L*a*b*
 	#ifndef COMPARE_RGB
-		LabItem input((double)rIn/255.0,(double)gIn/255.0,(double)bIn/255.0);
+		LabItem input((float)rIn/255.0f,(float)gIn/255.0f,(float)bIn/255.0f);
 	#endif
 	std::map<unsigned, unsigned> Solution;
 
 	// The penalty of our currently "best" solution.
-	double current_penalty = -1;
+	float current_penalty = -1;
 
 	// First, find the closest color to the input color.
 	// It is our seed.
@@ -557,10 +557,10 @@ MixingPlan DeviseBestMixingPlanY3(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * 
 			unsigned r=pal[index*3],g=pal[(index*3)+1],b=pal[(index*3)+2];
 	#if COMPARE_RGB
 			//unsigned r = color>>16, g = (color>>8)&0xFF, b = color&0xFF;
-			double penalty = ColorCompare(input_rgb[0],input_rgb[1],input_rgb[2],r,g,b);
+			float penalty = ColorCompare(input_rgb[0],input_rgb[1],input_rgb[2],r,g,b);
 	#else
 			LabItem test_lab(color);
-			double penalty = ColorCompare(input, test_lab);
+			float penalty = ColorCompare(input, test_lab);
 	#endif
 			if(penalty < current_penalty || current_penalty < 0)
 				{ current_penalty = penalty; chosen = index; }
@@ -569,11 +569,11 @@ MixingPlan DeviseBestMixingPlanY3(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * 
 		Solution[chosen] = limit;
 	}
 
-	double dbllimit = 1.0 / limit;
-	while(current_penalty != 0.0){
+	float dbllimit = 1.0f / limit;
+	while(current_penalty != 0.0f){
 		// Find out if there is a region in Solution that
 		// can be split in two for benefit.
-		double   best_penalty=current_penalty;
+		float   best_penalty=current_penalty;
 		unsigned best_splitfrom	= ~0u;
 		unsigned best_split_to[2]  = { 0,0};
 
@@ -582,15 +582,15 @@ MixingPlan DeviseBestMixingPlanY3(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * 
 			unsigned split_color = i->first;
 			unsigned split_count = i->second;
 			// Tally the other colors
-			double sum[3] = {0,0,0};
+			float sum[3] = {0.0f,0.0f,0.0f};
 			for(std::map<unsigned,unsigned>::iterator j = Solution.begin(); j != Solution.end(); ++j){
 				if(j->first == split_color) continue;
 				sum[0] += pal_g[offset+j->first ][0] * j->second * dbllimit;
 				sum[1] += pal_g[offset+j->first ][1] * j->second * dbllimit;
 				sum[2] += pal_g[offset+j->first ][2] * j->second * dbllimit;
 			}
-			double portion1 = (split_count / 2			) * dbllimit;
-			double portion2 = (split_count - split_count/2) * dbllimit;
+			float portion1 = (split_count / 2.0f) * dbllimit;
+			float portion2 = (split_count - split_count/2.0f) * dbllimit;
 			for(unsigned a=0; a<palettesize; ++a){
 				//if(a != split_color && Solution.find(a) != Solution.end()) continue;
 				unsigned firstb = 0;
@@ -602,16 +602,16 @@ MixingPlan DeviseBestMixingPlanY3(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * 
 					if(lumadiff < 0) lumadiff = -lumadiff;
 					if(lumadiff > 80000) continue;
 
-					double test[3] =
-						{ GammaUncorrect(sum[0] + pal_g[offset+a][0] * portion1 + pal_g[offset+b][0] * portion2),
+					float test[3] =
+						{GammaUncorrect(sum[0] + pal_g[offset+a][0] * portion1 + pal_g[offset+b][0] * portion2),
 									GammaUncorrect(sum[1] + pal_g[offset+a][1] * portion1 + pal_g[offset+b][1] * portion2),
 									GammaUncorrect(sum[2] + pal_g[offset+a][2] * portion1 + pal_g[offset+b][2] * portion2) };
 					// Figure out if this split is better than what we had
 #if COMPARE_RGB
-					double penalty = ColorCompare(input_rgb[0],input_rgb[1],input_rgb[2],test[0]*255, test[1]*255, test[2]*255);
+					float penalty = ColorCompare(input_rgb[0],input_rgb[1],input_rgb[2],test[0]*255, test[1]*255, test[2]*255);
 #else
 					LabItem test_lab( test[0], test[1], test[2] );
-					double penalty = ColorCompare(input, test_lab);
+					float penalty = ColorCompare(input, test_lab);
 #endif
 					if(penalty < best_penalty){
 						best_penalty   = penalty;
@@ -636,8 +636,7 @@ MixingPlan DeviseBestMixingPlanY3(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * 
 	// Sequence the solution.
 	MixingPlan result;
 	for(std::map<unsigned,unsigned>::iterator
-		i = Solution.begin(); i != Solution.end(); ++i)
-	{
+		i = Solution.begin(); i != Solution.end(); ++i){
 		result.resize(result.size() + i->second, i->first);
 	}
 	// Sort the colors according to luminance
@@ -779,7 +778,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				}
 				unsigned tempPalOff;
 				if(ditherAlg==4){
-					double map_value = mapY1[(x & 7) + ((y & 7) << 3)];
+					float map_value = mapY1[(x & 7) + ((y & 7) << 3)];
 					MixingPlanY1 plan;
 					if(colSpace){
 						plan = DeviseBestMixingPlanY1(r_old,g_old,b_old,colPtr,0);

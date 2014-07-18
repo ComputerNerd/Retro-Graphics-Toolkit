@@ -1,19 +1,19 @@
 /*
- This file is part of Retro Graphics Toolkit
+   This file is part of Retro Graphics Toolkit
 
-    Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or any later version.
+   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or any later version.
 
-    Retro Graphics Toolkit is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+   Retro Graphics Toolkit is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-    Copyright Sega16 (or whatever you wish to call me (2012-2014)
-*/
+   You should have received a copy of the GNU General Public License
+   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   */
 //this is were all the callbacks for palette realted functions go
 #include "global.h"
 #include "class_global.h"
@@ -296,6 +296,12 @@ void rgb_pal_to_entry(Fl_Widget*,void*){
 	tileEdit_pal.updateSlider();
 	currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);
 	window->redraw();
+}
+void entryToRgb(Fl_Widget*,void*){
+	unsigned en=tileEdit_pal.getEntry()*3;
+	window->rgb_red->value(currentProject->rgbPal[en++]);
+	window->rgb_green->value(currentProject->rgbPal[en++]);
+	window->rgb_blue->value(currentProject->rgbPal[en]);
 }
 void clearPalette(Fl_Widget*,void*){
 	if (fl_ask("This will set all colors to 0 are you sure you want to do this?")){

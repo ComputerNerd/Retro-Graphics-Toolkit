@@ -25,10 +25,12 @@ public:
 	uint32_t current_tile;/*!< The current tile that is being edited*/
 	uint8_t * tileDat;/*!< Pointer to the tile data*/
 	uint8_t * truetileDat;/*< Pointer to Truecolor tile data*/
+	unsigned sizex,sizey;
+	unsigned tcSize;
 	void remove_tile_at(uint32_t);
 	void truecolor_to_tile_ptr(uint8_t palette_row,uint32_t cur_tile,uint8_t * tileinput,bool Usedither=true);
 	void truecolor_to_tile(uint8_t,uint32_t);/*!< truecolor_to_tile will update/dither the selected tile*/
-	void draw_truecolor(uint32_t,uint16_t x,uint16_t y,bool usehflip,bool usevflip,uint8_t zoom);
+	void draw_truecolor(uint32_t,unsigned x,unsigned y,bool usehflip,bool usevflip,unsigned zoom);
 	void draw_tile(int,int,uint32_t,int,uint8_t,bool,bool);
 	void hflip_truecolor(uint32_t,uint32_t *);
 	void vflip_truecolor(uint32_t,uint8_t *);

@@ -229,7 +229,7 @@ static void invaildProject(void){
 	fl_alert("This is not a vaild Retro Graphics Toolkit project");
 }
 void switchProject(uint32_t id){
-	window->TxtBufProject->text(projects[id]->Name.c_str());//Make editor display new text
+	window->TxtBufProject->text(projects[id]->Name.c_str());//Make editor displys new text
 	window->GameSys[projects[id]->gameSystem]->setonly();
 	switch(projects[id]->gameSystem){
 		case sega_genesis:
@@ -259,8 +259,13 @@ void switchProject(uint32_t id){
 			tileEdit_pal.changeSystem();
 			tileMap_pal.changeSystem();
 			update_emphesis(0,0);
-			window->map_w->step(2);
-			window->map_h->step(2);
+			if(projects[id]->subSystem==NES2x2){
+				window->map_w->step(2);
+				window->map_h->step(2);
+			}else{
+				window->map_w->step(1);
+				window->map_h->step(1);
+			}
 		break;
 	}
 	//Make sure sliders have correct values
@@ -404,8 +409,8 @@ bool loadProject(uint32_t id){
 		return true;
 	FILE * fi=fopen(the_file.c_str(),"rb");
 	std::fill(projects[id]->share,&projects[id]->share[shareAmtPj],-1);//One file projects do not support sharing
-	loadProjectFile(id,fi);
-	fclose(fi);
+	if(loadProjectFile(id,fi))
+		fclose(fi);
 	return true;
 }
 static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersion=true){
@@ -421,6 +426,7 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 	uint32_t game system
 	if(version >= 4) uint32_t sub System
 	palette data (128 bytes if sega genesis or 16 bytes if NES)
+	if((version>=5)&&(gameSystem==NES)) 16 bytes for sprite specific palette
 	Free locked reserved data 64 bytes if sega genesis or 16 if NES
 	uint32_t tile count
 	uint32_t compressed size tiles
@@ -430,9 +436,9 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 	uint32_t map size w
 	uint32_t map size h
 	if(version>=2){
-	uint8_t isBlocks 0 if not blocks non-zero if so
-	if(isBlocks)
-		uint32_t blocks amount also treat w and h as width and height per block
+		uint8_t isBlocks 0 if not blocks non-zero if so
+		if(isBlocks)
+			uint32_t blocks amount also treat w and h as width and height per block
 	}
 	uint32_t compressed size map
 	map data will decompress to map size w * map size h * 4 and is compressed with zlib
@@ -457,7 +463,7 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 	uint32_t haveTemp;
 	if(saveShared){
 		haveTemp=projects[id]->useMask;
-		for(unsigned x=0;x<currentProjectVersionNUM;++x)
+		for(unsigned x=0;x<shareAmtPj;++x)
 			haveTemp|=(projects[id]->share[x]>=0?1:0)<<x;
 	}else
 		haveTemp=projects[id]->useMask;
@@ -529,7 +535,7 @@ bool saveAllProjects(void){
 	uint32_t amount of projects stored
 	uint32_t version
 	Before each project header is
-	int32_t share[shareAmtPj]
+	int32_t share[shareAmtPj] For version 4 the value of shareAmtPj is 4 however in version 5 the value will be 7 to accomidate for spirtes and animation
 	(format described in saveProject is repeated n amount of times let n = amount of projects stored) The only difference is version is not stored
 	*/
 	if(!load_file_generic("Save projects group as...",true))
@@ -576,13 +582,16 @@ bool loadAllProjects(bool Old){
 	for(unsigned x=0;x<projects_count;++x){
 		if(Old){
 			fread(projects[x]->share,3,sizeof(uint32_t),fi);
-			std::fill(&projects[x]->share[3],&projects[x]->share[3+shareAmtPj],-1);
+			std::fill(&projects[x]->share[3],&projects[x]->share[shareAmtPj],-1);
 		}else
 			fread(projects[x]->share,shareAmtPj,sizeof(uint32_t),fi);
-		if(Old)
-			loadProjectFile(x,fi);
-		else
-			loadProjectFile(x,fi,false,version);
+		if(Old){
+			if(!(loadProjectFile(x,fi,true,3)))
+				return false;
+		}else{
+			if(!(loadProjectFile(x,fi,false,version)))
+				return false;
+		}
 	}
 	for(unsigned x=0;x<projects_count;++x){
 		if(projects[x]->share[0]>=0)
@@ -591,6 +600,10 @@ bool loadAllProjects(bool Old){
 			shareProject(x,projects[x]->share[1],pjHaveTiles,true);
 		if(projects[x]->share[2]>=0)
 			shareProject(x,projects[x]->share[2],pjHaveMap,true);
+		if(version>=3){
+			if(projects[x]->share[3]>=0)
+				shareProject(x,projects[x]->share[3],pjHaveChuncks,true);
+		}
 	}
 	fclose(fi);
 	return true;

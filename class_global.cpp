@@ -57,10 +57,10 @@ static void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y){
 	fl_draw_image(grid,x,y,32,32,3);
 	
 }
-void editor::draw_non_gui(){
+void editor::draw_non_gui(void){
 	//When resizing the window things move around so we need to compensate for that
-	uint8_t per_row;
-	uint8_t per_row_rgb;
+	uint_fast8_t per_row;
+	uint_fast8_t per_row_rgb;
 	switch (currentProject->gameSystem){
 		case sega_genesis:
 			per_row=16;
@@ -74,10 +74,10 @@ void editor::draw_non_gui(){
 			show_default_error
 		break;
 	}
-	int16_t x,y;//we will need to reuse these later
-	uint8_t box_size=pal_size->value();
-	uint8_t tiles_size=tile_size->value();
-	uint8_t placer_tile_size=place_tile_size->value();
+	int_fast16_t x,y;//we will need to reuse these later
+	uint_fast8_t box_size=pal_size->value();
+	uint_fast8_t tiles_size=tile_size->value();
+	uint_fast8_t placer_tile_size=place_tile_size->value();
 	switch (mode_editor){
 		case pal_edit:
 			palEdit.updateSize();
@@ -243,7 +243,7 @@ int editor::handle(int event){
 					//start by handiling true color
 					if ((Fl::event_x() > tile_edit_truecolor_off_x) && (Fl::event_y() > tile_edit_truecolor_off_y) && (Fl::event_x() < tile_edit_truecolor_off_x+(tiles_size*8))  && (Fl::event_y() < tile_edit_truecolor_off_y+(tiles_size*8))){
 						//if all conditions have been met that means we are able to edit the truecolor tile
-						uint8_t temp_two,temp_one;//geting the mouse posision is the same as with tile editing just different varibles that happens alot in c++ the same thing just slightly different
+						unsigned temp_two,temp_one;//geting the mouse posision is the same as with tile editing just different varibles that happens alot in c++ the same thing just slightly different
 						temp_one=(Fl::event_x()-tile_edit_truecolor_off_x)/tiles_size;
 						temp_two=(Fl::event_y()-tile_edit_truecolor_off_y)/tiles_size;
 						//true color tiles are slightly easier to edit
@@ -288,28 +288,25 @@ int editor::handle(int event){
 							}
 						}else{
 							//fl_alert("Tile attributes id: %d h-flip: %d v-flip %d priority: %d pal row: %d\nAt location x: %d y: %d",currentProject->tileMapC->get_tile(temp_one,temp_two),currentProject->tileMapC->get_hflip(temp_one,temp_two),currentProject->tileMapC->get_vflip(temp_one,temp_two),currentProject->tileMapC->get_prio(temp_one,temp_two),currentProject->tileMapC->get_palette_map(temp_one,temp_two),temp_one,temp_two);
-							if(tileEditModePlace_G){
-								if((selTileE_G[0]==temp_one)&&(selTileE_G[1]==temp_two)){
+							if(((tileEditModePlace_G)&&(selTileE_G[0]==temp_one)&&(selTileE_G[1]==temp_two))){
 									tileEditModePlace_G=false;
 									damage(FL_DAMAGE_USER1);
-									goto skipEditMode;
-								}
+							}else{
+								tileEditModePlace_G=true;
+								selTileE_G[0]=temp_one;
+								selTileE_G[1]=temp_two;
+								hflipCB->value(currentProject->tileMapC->get_hflip(temp_one,temp_two));
+								vflipCB->value(currentProject->tileMapC->get_vflip(temp_one,temp_two));
+								prioCB->value(currentProject->tileMapC->get_prio(temp_one,temp_two));
+								uint32_t cT=currentProject->tileMapC->get_tile(temp_one,temp_two);
+								tile_select_2->value(cT);
+								currentProject->tileC->current_tile=cT;
+								uint8_t Rm=currentProject->tileMapC->get_palette_map(temp_one,temp_two);
+								tileMap_pal.changeRow(Rm);
+								for(int as=0;as<4;++as)
+									palRTE[as]->value(as==Rm);
+								redraw();
 							}
-							tileEditModePlace_G=true;
-							selTileE_G[0]=temp_one;
-							selTileE_G[1]=temp_two;
-							hflipCB->value(currentProject->tileMapC->get_hflip(temp_one,temp_two));
-							vflipCB->value(currentProject->tileMapC->get_vflip(temp_one,temp_two));
-							prioCB->value(currentProject->tileMapC->get_prio(temp_one,temp_two));
-							{uint32_t cT=currentProject->tileMapC->get_tile(temp_one,temp_two);
-							tile_select_2->value(cT);
-							currentProject->tileC->current_tile=cT;
-							uint8_t Rm=currentProject->tileMapC->get_palette_map(temp_one,temp_two);
-							tileMap_pal.changeRow(Rm);
-							for(int as=0;as<4;++as)
-								palRTE[as]->value(as==Rm);}
-							redraw();
-				skipEditMode:;
 						}
 					}
 					if (Fl::event_x() > tile_placer_tile_offset_x && Fl::event_y() > tile_placer_tile_offset_y && Fl::event_x() < tile_placer_tile_offset_x+(tiles_size*8) && Fl::event_y() < tile_placer_tile_offset_y+(tiles_size*8)){
@@ -353,6 +350,10 @@ int editor::handle(int event){
 					tiles_size=chunck_tile_size->value();
 					/*if(currentProject->Chunck->useBlocks){
 						maxx=
+						maxy=
+					}else{
+						maxx=
+						maxy=
 					}*/
 				break;
 			}

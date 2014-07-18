@@ -355,8 +355,8 @@ ostream& operator<<(ostream& out, array3d<T>& a) {
 	for (i=0; i<=a.get_width() - 1; i++) {
 		out << "(";
 		for (k=0; k<=a.get_depth() - 1; k++) {
-		out << a(i, j, k);
-		if (k < a.get_depth() - 1) out << ", ";
+			out << a(i, j, k);
+			if (k < a.get_depth() - 1) out << ", ";
 		}
 		out << ")";
 		if (i < a.get_height() - 1) out << ",";
@@ -417,8 +417,7 @@ static void random_permutation_2d(int width, int height, deque< pair<int, int> >
 }
 
 static void compute_b_array(array2d< vector_fixed<double, 3> >& filter_weights,
-					 array2d< vector_fixed<double, 3> >& b)
-{
+					 array2d< vector_fixed<double, 3> >& b){
 	// Assume that the pixel i is always located at the center of b,
 	// and vary pixel j's location through each location in b.
 	int radius_width = (filter_weights.get_width() - 1)/2,
@@ -426,25 +425,23 @@ static void compute_b_array(array2d< vector_fixed<double, 3> >& filter_weights,
 	int offset_x = (b.get_width() - 1)/2 - radius_width;
 	int offset_y = (b.get_height() - 1)/2 - radius_height;
 	for(int j_y = 0; j_y < b.get_height(); j_y++) {
-	for(int j_x = 0; j_x < b.get_width(); j_x++) {
-		for(int k_y = 0; k_y < filter_weights.get_height(); k_y++) {
-		for(int k_x = 0; k_x < filter_weights.get_width(); k_x++) {
-			if (k_x+offset_x >= j_x - radius_width &&
-			k_x+offset_x <= j_x + radius_width &&
-				k_y+offset_y >= j_y - radius_width &&
-			k_y+offset_y <= j_y + radius_width)
-			{
-			b(j_x,j_y) += filter_weights(k_x,k_y).direct_product(filter_weights(k_x+offset_x-j_x+radius_width,k_y+offset_y-j_y+radius_height));
+		for(int j_x = 0; j_x < b.get_width(); j_x++) {
+			for(int k_y = 0; k_y < filter_weights.get_height(); k_y++) {
+				for(int k_x = 0; k_x < filter_weights.get_width(); k_x++) {
+					if (k_x+offset_x >= j_x - radius_width &&
+							k_x+offset_x <= j_x + radius_width &&
+							k_y+offset_y >= j_y - radius_width &&
+							k_y+offset_y <= j_y + radius_width){
+						b(j_x,j_y) += filter_weights(k_x,k_y).direct_product(filter_weights(k_x+offset_x-j_x+radius_width,k_y+offset_y-j_y+radius_height));
+					}
+				}
 			}
 		}
-		}		
-	}
 	}
 }
 
 static vector_fixed<double, 3> b_value(array2d< vector_fixed<double, 3> >& b,
-			 	 int i_x, int i_y, int j_x, int j_y)
-{
+			 	 int i_x, int i_y, int j_x, int j_y){
 	int radius_width = (b.get_width() - 1)/2,
 		radius_height = (b.get_height() - 1)/2;
 	int k_x = j_x - i_x + radius_width;
@@ -691,8 +688,7 @@ static void refine_palette(array2d< vector_fixed<double,3> >& s,
 
 static void compute_initial_j_palette_sum(array2d< vector_fixed<double, 3> >& j_palette_sum,
 		array3d<double>& coarse_variables,
-		vector< vector_fixed<double, 3> >& palette)
-{
+		vector< vector_fixed<double, 3> >& palette){
 	for (int j_y=0; j_y<coarse_variables.get_height(); j_y++) {
 		for (int j_x=0; j_x<coarse_variables.get_width(); j_x++) {
 			vector_fixed<double, 3> palette_sum = vector_fixed<double, 3>();
