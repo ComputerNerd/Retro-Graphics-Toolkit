@@ -26,6 +26,7 @@ class editor : public Fl_Double_Window{
 	uint8_t mouse_x,mouse_y;
 	bool tabsHidden[shareAmtPj+1];
 	Fl_Choice* subSysC;
+	Fl_Choice* solidChunkMenu;
 	Fl_Group* TabsMain[shareAmtPj+1];
 	Fl_Scrollbar * map_x_scroll;
 	Fl_Scrollbar * map_y_scroll;
@@ -46,14 +47,15 @@ class editor : public Fl_Double_Window{
 	Fl_Slider* tile_select;
 	Fl_Slider* tile_select_2;
 	Fl_Slider* chunk_select;
+	Fl_Slider* tile_select_3;
 	Fl_Slider* projectSelect;
 	Fl_Tabs* the_tabs;
 	Fl_Round_Button* palType[9];
 	Fl_Round_Button* GameSys[2];
 	Fl_Round_Button* palRTE[4];
-	Fl_Check_Button* hflipCB;
-	Fl_Check_Button* vflipCB;
-	Fl_Check_Button* prioCB;
+	Fl_Check_Button* hflipCB[2];
+	Fl_Check_Button* vflipCB[2];
+	Fl_Check_Button* prioCB[2];
 	Fl_Check_Button* sharePrj[shareAmtPj];
 	Fl_Check_Button* BlocksCBtn;
 	Fl_Check_Button* useBlocksChunkCBtn;

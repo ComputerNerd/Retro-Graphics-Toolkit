@@ -38,8 +38,7 @@ void new_tile(Fl_Widget*,void*){
 	memset(&currentProject->tileC->tileDat[currentProject->tileC->tiles_amount*currentProject->tileC->tileSize],0,currentProject->tileC->tileSize);
 	memset(&currentProject->tileC->truetileDat[currentProject->tileC->tiles_amount*256],0,256);
 	//set the new maximum for slider
-	window->tile_select->maximum(currentProject->tileC->tiles_amount);
-	window->tile_select_2->maximum(currentProject->tileC->tiles_amount);
+	updateTileSelectAmt();
 	//redraw so the user knows that there is another tile
 	window->redraw();
 }

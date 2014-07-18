@@ -21,7 +21,7 @@ void update_box_size(Fl_Widget*, void*){
 	window->redraw();
 }
 void showAbout(Fl_Widget*,void*){
-	fl_alert("Retro Graphics Toolkit is written by sega16/nintendo8/sonic master or whatever you want to call me\nThis program was built on %s %s\nTechnically speaking this date was the last time that main.cpp was compiled\nI usally run make clean && make before release so this data should be right",__DATE__,__TIME__);
+	fl_alert("Retro Graphics Toolkit is written by sega16/nintendo8/sonic master or whatever username you know me as\nThis program was built on %s %s\n",__DATE__,__TIME__);
 }
 void set_game_system(Fl_Widget*,void* selection){
 	uint32_t sel8=(uintptr_t)selection;
@@ -66,12 +66,14 @@ void set_game_system(Fl_Widget*,void* selection){
 			update_emphesis(0,0);
 			currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*16);
 			//on the NES tilemaps need to be a multiple of 2
-			if(((currentProject->tileMapC->mapSizeW)&1) && ((currentProject->tileMapC->mapSizeHA)&1))
-				currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeHA+1);
-			if((currentProject->tileMapC->mapSizeW)&1)
-				currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeHA);
-			if((currentProject->tileMapC->mapSizeHA)&1)
-				currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeHA+1);
+			if(currentProject->subSystem==NES2x2){
+				if(((currentProject->tileMapC->mapSizeW)&1) && ((currentProject->tileMapC->mapSizeHA)&1))
+					currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeHA+1);
+				if((currentProject->tileMapC->mapSizeW)&1)
+					currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeHA);
+				if((currentProject->tileMapC->mapSizeHA)&1)
+					currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeHA+1);
+			}
 			window->map_w->value(currentProject->tileMapC->mapSizeW);
 			window->map_h->value(currentProject->tileMapC->mapSizeHA);
 			window->map_w->step(2);

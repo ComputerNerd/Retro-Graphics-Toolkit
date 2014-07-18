@@ -272,8 +272,7 @@ void switchProject(uint32_t id){
 	window->map_w->value(projects[id]->tileMapC->mapSizeW);
 	window->map_h->value(projects[id]->tileMapC->mapSizeH);
 	window->map_amt->value(projects[id]->tileMapC->amt);
-	window->tile_select->maximum(projects[id]->tileC->tiles_amount);
-	window->tile_select_2->maximum(projects[id]->tileC->tiles_amount);
+	updateTileSelectAmt();
 	for(int x=0;x<shareAmtPj;++x){
 		window->sharePrj[x]->value(projects[id]->share[x]<0?0:1);
 		window->havePrj[x]->value(projects[id]->useMask>>x&1);

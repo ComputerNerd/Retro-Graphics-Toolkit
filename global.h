@@ -54,9 +54,9 @@ extern std::string the_file;//this is for tempory use only
 extern uint8_t mode_editor;/*!< Importan varible is used to determin which "mode" the user is in for example palette editing or map editing*/
 extern bool show_grid;
 //extern uint8_t palette_muliplier;
-extern bool G_hflip;
-extern bool G_vflip;
-extern bool G_highlow_p;
+extern bool G_hflip[2];
+extern bool G_vflip[2];
+extern bool G_highlow_p[2];
 //extern uint8_t palette_adder;
 extern uint8_t ditherAlg;
 

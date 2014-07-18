@@ -39,13 +39,11 @@ extern uint16_t tile_edit_offset_x,tile_edit_offset_y;
 extern uint16_t tile_placer_tile_offset_y;
 extern uint16_t tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
 extern uint16_t true_color_box_x,true_color_box_y;
-extern unsigned ChunkOff[2];
-extern unsigned scrollChunks_G[2];
-extern uint_fast32_t editChunk_G[3];
 #define pal_edit 0
 #define tile_edit 1
 #define tile_place 2
 #define chunkEditor 3
 #define settingsTab 4
 
+void updateTileSelectAmt(void);
 int MenuPopup(const char * title,const char * text,unsigned num,...);

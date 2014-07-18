@@ -59,21 +59,6 @@ static void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y){
 }
 void editor::draw_non_gui(void){
 	//When resizing the window things move around so we need to compensate for that
-	uint_fast8_t per_row;
-	uint_fast8_t per_row_rgb;
-	switch (currentProject->gameSystem){
-		case sega_genesis:
-			per_row=16;
-			per_row_rgb=48;
-		break;
-		case NES:
-			per_row=4;
-			per_row_rgb=12;
-		break;
-		default:
-			show_default_error
-		break;
-	}
 	int x,y;//we will need to reuse these later
 	unsigned box_size=pal_size->value();
 	unsigned tiles_size=tile_size->value();
@@ -117,8 +102,7 @@ void editor::draw_non_gui(void){
 			tile_placer_tile_offset_y=(double)((double)h()/600.0)*(double)default_tile_placer_tile_offset_y;
 			tileMap_pal.draw_boxes();
 			//now draw the tile
-			currentProject->tileC->draw_tile(tile_placer_tile_offset_x,tile_placer_tile_offset_y,currentProject->tileC->current_tile,placer_tile_size,tileMap_pal.theRow,G_hflip,G_vflip);
-			//currentProject->tileC->draw_truecolor(currentProject->tileC->current_tile,tile_placer_tile_offset_x,tile_placer_tile_offset_y,G_hflip,G_vflip,placer_tile_size);
+			currentProject->tileC->draw_tile(tile_placer_tile_offset_x,tile_placer_tile_offset_y,currentProject->tileC->current_tile,placer_tile_size,tileMap_pal.theRow,G_hflip[0],G_vflip[0]);
 			//convert posistion
 			map_off_y=(double)((double)h()/600.0)*(double)default_map_off_y;
 			map_off_x=(double)((double)w()/800.0)*(double)default_map_off_x;
@@ -182,21 +166,36 @@ void editor::draw_non_gui(void){
 				//draw box over tiles
 				for (y=0;y<std::min((currentProject->tileMapC->mapSizeHA)-map_scroll_pos_y,max_map_h);++y){
 					for (x=0;x<std::min(currentProject->tileMapC->mapSizeW-map_scroll_pos_x,max_map_w);++x)
-						fl_draw_box(FL_EMBOSSED_FRAME,map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),placer_tile_size*8,placer_tile_size*8,NULL);
+						fl_draw_box(FL_EMBOSSED_FRAME,map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),placer_tile_size*8,placer_tile_size*8,0);
 				}
 			}
 			if(tileEditModePlace_G){
-				uint32_t xo,yo;
-				xo=((selTileE_G[0]-map_scroll_pos_x)*8*placer_tile_size)+map_off_x;
-				yo=((selTileE_G[1]-map_scroll_pos_y)*8*placer_tile_size)+map_off_y;
+				int32_t xo,yo;
+				xo=((selTileE_G[0]-map_scroll_pos_x)*currentProject->tileC->sizex*placer_tile_size)+map_off_x;
+				yo=((selTileE_G[1]-map_scroll_pos_y)*currentProject->tileC->sizey*placer_tile_size)+map_off_y;
 				if((xo>=map_off_x)&&(yo>=map_off_y))
 					fl_rect(xo,yo,placer_tile_size*8+1,placer_tile_size*8+1,FL_BLUE);
 			}
 		break;
 		case chunkEditor:
+			tiles_size=chunk_tile_size->value();
 			ChunkOff[0]=(double)((double)w()/800.0)*(double)DefaultChunkX;
 			ChunkOff[1]=(double)((double)h()/600.0)*(double)DefaultChunkY;
-			currentProject->Chunk->drawChunk(currentChunk,ChunkOff[0],ChunkOff[1],chunk_tile_size->value(),scrollChunks_G[0],scrollChunks_G[1]);
+			currentProject->Chunk->drawChunk(currentChunk,ChunkOff[0],ChunkOff[1],tiles_size,scrollChunks_G[0],scrollChunks_G[1]);
+			if(tileEditModeChunk_G){
+				int32_t xo,yo;
+				unsigned tsx,tsy;
+				tsx=currentProject->tileC->sizex*tiles_size;
+				tsy=currentProject->tileC->sizey*tiles_size;
+				if(currentProject->Chunk->useBlocks){
+					tsx*=currentProject->tileMapC->mapSizeW;
+					tsy*=currentProject->tileMapC->mapSizeH;
+				}
+				xo=((editChunk_G[0]-ChunkOff[0])*tsx);
+				yo=((editChunk_G[1]-ChunkOff[1])*tsy);
+				if((xo>=ChunkOff[0])&&(yo>=ChunkOff[1]))
+					fl_rect(xo,yo,tsx+1,tsy+1,FL_BLUE);
+			}
 		break;
 	}//end of switch statment
 }
@@ -278,14 +277,11 @@ int editor::handle(int event){
 						temp_one+=+map_scroll_pos_x;
 						temp_two+=+map_scroll_pos_y;
 						if (Fl::event_button()==FL_LEFT_MOUSE){
-							if((selTileE_G[0]==temp_one)&&(selTileE_G[1]==temp_two)&&tileEditModePlace_G){
-								tileEditModePlace_G=false;
-								damage(FL_DAMAGE_USER1);
-							}else{
-								tileEditModePlace_G=false;
-								currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,temp_one,temp_two,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
-								damage(FL_DAMAGE_USER1);
+							if(!((selTileE_G[0]==temp_one)&&(selTileE_G[1]==temp_two)&&tileEditModePlace_G)){
+								currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,temp_one,temp_two,tileMap_pal.theRow,G_hflip[0],G_vflip[0],G_highlow_p[0]);
 							}
+							tileEditModePlace_G=false;
+							damage(FL_DAMAGE_USER1);
 						}else{
 							//fl_alert("Tile attributes id: %d h-flip: %d v-flip %d priority: %d pal row: %d\nAt location x: %d y: %d",currentProject->tileMapC->get_tile(temp_one,temp_two),currentProject->tileMapC->get_hflip(temp_one,temp_two),currentProject->tileMapC->get_vflip(temp_one,temp_two),currentProject->tileMapC->get_prio(temp_one,temp_two),currentProject->tileMapC->get_palette_map(temp_one,temp_two),temp_one,temp_two);
 							if(((tileEditModePlace_G)&&(selTileE_G[0]==temp_one)&&(selTileE_G[1]==temp_two))){
@@ -295,9 +291,9 @@ int editor::handle(int event){
 								tileEditModePlace_G=true;
 								selTileE_G[0]=temp_one;
 								selTileE_G[1]=temp_two;
-								hflipCB->value(currentProject->tileMapC->get_hflip(temp_one,temp_two));
-								vflipCB->value(currentProject->tileMapC->get_vflip(temp_one,temp_two));
-								prioCB->value(currentProject->tileMapC->get_prio(temp_one,temp_two));
+								hflipCB[0]->value(currentProject->tileMapC->get_hflip(temp_one,temp_two));
+								vflipCB[0]->value(currentProject->tileMapC->get_vflip(temp_one,temp_two));
+								prioCB[0]->value(currentProject->tileMapC->get_prio(temp_one,temp_two));
 								uint32_t cT=currentProject->tileMapC->get_tile(temp_one,temp_two);
 								tile_select_2->value(cT);
 								currentProject->tileC->current_tile=cT;
@@ -313,9 +309,9 @@ int editor::handle(int event){
 						uint8_t temp_two,temp_one;
 						temp_one=(Fl::event_x()-tile_placer_tile_offset_x)/tiles_size;
 						temp_two=(Fl::event_y()-tile_placer_tile_offset_y)/tiles_size;
-						if (G_hflip)
+						if (G_hflip[0])
 							temp_one=7-temp_one;
-						if (G_vflip)
+						if (G_vflip[0])
 							temp_two=7-temp_two;
 						//now we know which pixel we are editing
 						//see if it is even or odd
@@ -345,11 +341,54 @@ int editor::handle(int event){
 					}
 				break;
 				case chunkEditor:
-					//ChunkOff[0] ChunkOff[1]
 					if((Fl::event_x()>=ChunkOff[0])&&(Fl::event_y()>=ChunkOff[1])){
 						uint_fast32_t maxx,maxy;
 						tiles_size=chunk_tile_size->value();
-						//maxx=currentProject->
+						maxx=currentProject->Chunk->wi*currentProject->tileC->sizex*tiles_size;
+						maxy=currentProject->Chunk->hi*currentProject->tileC->sizey*tiles_size;
+						if(currentProject->Chunk->useBlocks){
+							maxx*=currentProject->tileMapC->mapSizeW;
+							maxy*=currentProject->tileMapC->mapSizeH;
+						}
+						maxx+=ChunkOff[0];
+						maxy+=ChunkOff[1];
+						if((Fl::event_x()<=maxx)&&(Fl::event_y()<=maxy)){
+							unsigned tx,ty;
+							tx=(Fl::event_x()-ChunkOff[0])/(currentProject->tileC->sizex*tiles_size);
+							ty=(Fl::event_y()-ChunkOff[1])/(currentProject->tileC->sizey*tiles_size);
+							if(currentProject->Chunk->useBlocks){
+								tx/=currentProject->tileMapC->mapSizeW;
+								ty/=currentProject->tileMapC->mapSizeH;
+							}
+							tx+=scrollChunks_G[0];
+							ty+=scrollChunks_G[1];
+							printf("%d %d\n",tx,ty);
+							if(Fl::event_button()==FL_LEFT_MOUSE){
+								if(!((tileEditModeChunk_G)&&(tx==editChunk_G[0])&&(ty==editChunk_G[1]))){
+									currentProject->Chunk->setSolid(currentChunk,editChunk_G[0],editChunk_G[1],solidBits_G);
+									currentProject->Chunk->setHflip(currentChunk,editChunk_G[0],editChunk_G[1],G_hflip[1]);
+									currentProject->Chunk->setVflip(currentChunk,editChunk_G[0],editChunk_G[1],G_vflip[1]);
+									currentProject->Chunk->setBlock(currentChunk,editChunk_G[0],editChunk_G[1],selBlock);
+								}
+								tileEditModeChunk_G=false;
+								damage(FL_DAMAGE_USER1);
+							}else{
+								if((tileEditModeChunk_G)&&(tx==editChunk_G[0])&&(ty==editChunk_G[1])){
+									tileEditModeChunk_G=false;
+									damage(FL_DAMAGE_USER1);
+								}else{
+									tileEditModeChunk_G=true;
+									editChunk_G[0]=tx;
+									editChunk_G[1]=ty;
+									G_hflip[1]=currentProject->Chunk->getHflip(currentChunk,tx,ty);
+									G_vflip[1]=currentProject->Chunk->getVflip(currentChunk,tx,ty);
+									hflipCB[1]->value(G_hflip[1]);
+									vflipCB[1]->value(G_vflip[1]);
+									tile_select_3->value(currentProject->Chunk->getBlock(currentChunk,tx,ty));
+									redraw();
+								}
+							}
+						}
 					}
 				break;
 			}

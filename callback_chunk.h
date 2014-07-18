@@ -16,6 +16,14 @@
 */
 #include "includes.h"
 extern uint32_t currentChunk;
+extern unsigned solidBits_G;
+extern bool tileEditModeChunk_G;
+extern unsigned ChunkOff[2];
+extern unsigned scrollChunks_G[2];
+extern uint_fast32_t editChunk_G[2];
+extern uint32_t selBlock;
+void selBlockCB(Fl_Widget*,void*b);
+void solidCB(Fl_Widget*,void*s);
 void ImportS1CBChunks(Fl_Widget*,void*a);
 void currentChunkCB(Fl_Widget*,void*);
 void useBlocksCB(Fl_Widget*o,void*);

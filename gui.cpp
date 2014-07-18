@@ -13,11 +13,12 @@
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
-   */
+*/
 #include <stdint.h>
+#include <cstdarg>
 #include "gui.h"
 #include "includes.h"
-#include <cstdarg>
+#include "project.h"
 uint32_t map_scroll_pos_x;
 uint32_t map_scroll_pos_y;
 uint32_t map_off_x,map_off_y;
@@ -26,12 +27,17 @@ uint16_t tile_edit_offset_y;
 uint16_t tile_placer_tile_offset_y;
 uint16_t tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
 uint16_t true_color_box_x,true_color_box_y;
-unsigned ChunkOff[2]={DefaultChunkX,DefaultChunkY};
-unsigned scrollChunks_G[2];
-uint_fast32_t editChunk_G[3];//Id,x,y
 static int returnVal=0;
 static Fl_Choice*PopC;
 static Fl_Window * winP;
+void updateTileSelectAmt(void){
+	window->tile_select->maximum(currentProject->tileC->tiles_amount);
+	window->tile_select_2->maximum(currentProject->tileC->tiles_amount);
+	if(currentProject->Chunk->useBlocks)
+		window->tile_select_3->maximum(currentProject->tileMapC->amt);
+	else
+		window->tile_select_3->maximum(currentProject->tileC->tiles_amount);
+}
 void setRet(Fl_Widget*,void*r){
 	bool Cancel=(uintptr_t)r?true:false;
 	if(Cancel)

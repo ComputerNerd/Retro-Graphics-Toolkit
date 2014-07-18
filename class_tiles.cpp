@@ -76,8 +76,7 @@ void tiles::remove_tile_at(uint32_t tileDel){
 	}
 	truetileDat=(uint8_t *)realloc(truetileDat,tiles_amount*256);
 	tiles_amount--;
-	window->tile_select->maximum(tiles_amount);
-	window->tile_select_2->maximum(tiles_amount);
+	updateTileSelectAmt();
 	if (current_tile > tiles_amount){
 		current_tile=tiles_amount;
 		window->tile_select->value(current_tile);

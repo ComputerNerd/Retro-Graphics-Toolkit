@@ -44,26 +44,36 @@ static const char * lockedDes="This sets the currently selected palette entry to
 static const char * reservedDes="This sets the currently selected palette entry to reserved meaning that this color cannot be changed or used in tiles note that you may need make sure all tiles get re-dithered to ensure that this rule is enforced";
 static const Fl_Menu_Item menuEditor[]={
 	{"File",0, 0, 0, FL_SUBMENU},
-		{"Open palette",0,loadPalette,0},
-		{"Open tiles",0,load_tiles,0},
-		{"Open Truecolor Tiles",0,load_truecolor_tiles,0},
-		{"Append tiles",0,load_tiles,(void*)1},
-		{"Open tile map or blocks and if NES attributes",0,load_tile_map,0},
-		{"Import image to tilemap",0,load_image_to_tilemap,0},
-		{"Import image over current tilemap",0,load_image_to_tilemap,(void*)1},
-		{"Save tilemap as image",0,save_tilemap_as_image,0},
-		{"Save tilemap as with system color space",0,save_tilemap_as_colspace,0},
-		{"Save Palette",0, save_palette,0},
-		{"Save tiles",0,save_tiles,0},
-		{"Save truecolor tiles",0,save_tiles_truecolor,0},
-		{"Save tile map and if nes attributes",0,save_map,0},
-		{"Load project",0,loadProjectCB,0},
-		{"Save project",0,saveProjectCB,0},
-		{"Load project group",0,loadAllProjectsCB,0},
-		{"Load project group (File creatd before 2014-02-23)",0,loadAllProjectsCB,(void*)1},
-		{"Save project group",0,saveAllProjectsCB,0},
-		{"Import sonic 1 chunks",0,ImportS1CBChunks,0},
-		{"Import sonic 1 chunks (append)",0,ImportS1CBChunks,(void*)1},
+		{"Tiles",0, 0, 0, FL_SUBMENU},
+			{"Open tiles",0,load_tiles,0},
+			{"Open Truecolor Tiles",0,load_truecolor_tiles,0},
+			{"Append tiles",0,load_tiles,(void*)1},
+			{"Save tiles",0,save_tiles,0},
+			{"Save truecolor tiles",0,save_tiles_truecolor,0},
+			{0},
+		{"Paletes",0, 0, 0, FL_SUBMENU},
+			{"Open palette",0,loadPalette,0},
+			{"Save Palette",0, save_palette,0},
+			{0},
+		{"Tilemaps",0, 0, 0, FL_SUBMENU},
+			{"Open tile map or blocks and if NES attributes",0,load_tile_map,0},
+			{"Import image to tilemap",0,load_image_to_tilemap,0},
+			{"Import image over current tilemap",0,load_image_to_tilemap,(void*)1},
+			{"Save tilemap as image",0,save_tilemap_as_image,0},
+			{"Save tilemap as with system color space",0,save_tilemap_as_colspace,0},
+			{"Save tile map and if nes attributes",0,save_map,0},
+			{0},
+		{"Projects",0, 0, 0, FL_SUBMENU},
+			{"Load project",0,loadProjectCB,0},
+			{"Save project",0,saveProjectCB,0},
+			{"Load project group",0,loadAllProjectsCB,0},
+			{"Load project group (File creatd before 2014-02-23)",0,loadAllProjectsCB,(void*)1},
+			{"Save project group",0,saveAllProjectsCB,0},
+			{0},
+		{"Chunks",0, 0, 0, FL_SUBMENU},
+			{"Import sonic 1 chunks",0,ImportS1CBChunks,0},
+			{"Import sonic 1 chunks (append)",0,ImportS1CBChunks,(void*)1},
+			{0},
 		{0},
 	{"Palette Actions",0, 0, 0, FL_SUBMENU},
 		{"Generate optimal palette with x amount of colors",0,generate_optimal_palette,0},
@@ -109,6 +119,13 @@ static const Fl_Menu_Item ditherChoices[]={
 static const Fl_Menu_Item subSysNES[]={
 		{"2x2 tile palette",0,setSubSysCB,(void*)NES2x2},
 		{"1x1 tile palette",0,setSubSysCB,(void*)NES1x1},
+		{0}
+};
+static const Fl_Menu_Item SolidMenu[]={
+		{"Not solid",0,solidCB,(void*)0},
+		{"Top solid",0,solidCB,(void*)1},
+		{"Left/Right/Bottom solid",0,solidCB,(void*)2},
+		{"All solid",0,solidCB,(void*)3},
 		{0}
 };
 extern const char * MapWidthTxt;
@@ -306,7 +323,7 @@ void editor::_editor(){
 			tile_size->align(FL_ALIGN_LEFT);
 			tile_size->callback(update_offset_tile_edit);
 			//now for the tile select slider
-			tile_select = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+104,320,24,"Tile Select");
+			tile_select = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+104,320,24,"Tile select");
 			tile_select->tooltip("This slider selects which tile that you are editing the first tile is zero");
 			tile_select->minimum(0);
 			tile_select->maximum(0);
@@ -379,7 +396,7 @@ void editor::_editor(){
 			map_y_scroll->hide();
 			map_y_scroll->linesize(1);
 			//now for the tile select slider
-			tile_select_2 = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+40,312,24,"Tile Select");
+			tile_select_2 = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+40,312,24,"Tile select");
 			tile_select_2->tooltip("This slider allows you to choice which tile you would like to place on the map remember you can both horizontally and vertically flip the tile once placed on the map and select which row the tile uses");
 			tile_select_2->minimum(0);
 			tile_select_2->maximum(0);
@@ -408,18 +425,15 @@ void editor::_editor(){
 				} // End of buttons
 			}//end of group
 			
-			{ hflipCB = new Fl_Check_Button(tile_place_buttons_x_off,304,64,32,"hflip");
-				hflipCB->callback(set_hflipCB);
-				hflipCB->tooltip("This sets whether or not the tile is flipped horizontally");
-			}
-			{ vflipCB = new Fl_Check_Button(tile_place_buttons_x_off,336,64,32,"vflip");
-				vflipCB->callback(set_vflipCB);
-				vflipCB->tooltip("This sets whether or not the tile is flipped vertically");
-			}
-			{ prioCB = new Fl_Check_Button(tile_place_buttons_x_off,368,72,32,"priority");
-				prioCB->callback(set_prioCB);
-				prioCB->tooltip("If checked tile is high priority");
-			}
+			hflipCB[0] = new Fl_Check_Button(tile_place_buttons_x_off,304,64,32,"hflip");
+			hflipCB[0]->callback(set_hflipCB,(void*)0);
+			hflipCB[0]->tooltip("This sets whether or not the tile is flipped horizontally");
+			vflipCB[0] = new Fl_Check_Button(tile_place_buttons_x_off,336,64,32,"vflip");
+			vflipCB[0]->callback(set_vflipCB,(void*)0);
+			vflipCB[0]->tooltip("This sets whether or not the tile is flipped vertically");
+			prioCB[0] = new Fl_Check_Button(tile_place_buttons_x_off,368,72,32,"priority");
+			prioCB[0]->callback(set_prioCB,(void*)0);
+			prioCB[0]->tooltip("If checked tile is high priority");
 			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,400,96,32,"Show grid?");
 				o->callback(set_grid_placer);
 				o->tooltip("This button Toggles whether or not a grid is visible over the tilemap this will allow you to easily see were each tile is");
@@ -441,7 +455,7 @@ void editor::_editor(){
 			place_tile_size->tooltip(TooltipZoom);
 			TabsMain[2]->end();
 		}
-		{TabsMain[3] = new Fl_Group(rx,ry,rw,rh,"Chuck editor");
+		{TabsMain[3] = new Fl_Group(rx,ry,rw,rh,"Chunk editor");
 			useBlocksChunkCBtn=new Fl_Check_Button(8, 48, 152, 24, "Use blocks");
 			useBlocksChunkCBtn->callback(useBlocksCB);
 			chunk_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,512,160,24,"Tile Zoom Factor:");
@@ -464,9 +478,7 @@ void editor::_editor(){
 			chunkY->callback(scrollChunkY);
 			chunkY->hide();
 			
-			
-			chunk_select = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,128,160,24,"Chunk Select");
-			chunk_select->tooltip("This slider allows you to choice which tile you would like to place on the map remember you can both horizontally and vertically flip the tile once placed on the map and select which row the tile uses");
+			chunk_select = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,88,160,24,"Chunk Select");
 			chunk_select->minimum(0);
 			chunk_select->maximum(0);
 			chunk_select->step(1);
@@ -474,6 +486,26 @@ void editor::_editor(){
 			chunk_select->align(FL_ALIGN_TOP);
 			chunk_select->callback(currentChunkCB);
 			
+			tile_select_3 = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,136,160,24,"Tile select");
+			tile_select_3->minimum(0);
+			tile_select_3->maximum(0);
+			tile_select_3->step(1);
+			tile_select_3->value(0);
+			tile_select_3->align(FL_ALIGN_TOP);
+			tile_select_3->callback(selBlockCB);
+
+
+			hflipCB[1] = new Fl_Check_Button(tile_place_buttons_x_off,160,64,32,"hflip");
+			hflipCB[1]->callback(set_hflipCB,(void*)1);
+			vflipCB[1] = new Fl_Check_Button(tile_place_buttons_x_off,192,64,32,"vflip");
+			vflipCB[1]->callback(set_vflipCB,(void*)1);
+			prioCB[1] = new Fl_Check_Button(tile_place_buttons_x_off,224,72,32,"priority");
+			prioCB[1]->callback(set_prioCB,(void*)1);
+
+
+			solidChunkMenu=new Fl_Choice(tile_place_buttons_x_off,256,128,24);
+			solidChunkMenu->copy(SolidMenu);
+
 			TabsMain[3]->end();
 		}
 		{TabsMain[4] = new Fl_Group(rx,ry,rw,rh,"Settings/projects");

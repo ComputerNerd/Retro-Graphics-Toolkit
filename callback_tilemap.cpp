@@ -17,6 +17,7 @@
 #include "global.h"
 #include "savepng.h"
 #include "dither.h"
+#include "callback_chunk.h"
 void tileDPicker(Fl_Widget*,void*){
 	Fl_Window *win;
 	Fl_Progress *progress;
@@ -77,7 +78,7 @@ void FixOutOfRangeCB(Fl_Widget*,void*){
 	for(int y=0;y<currentProject->tileMapC->mapSizeHA;++y){
 		for(int x=0;x<currentProject->tileMapC->mapSizeW;++x){
 			if(currentProject->tileMapC->get_tile(x,y)>currentProject->tileC->tiles_amount)
-				currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,x,y,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
+				currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,x,y,tileMap_pal.theRow,G_hflip[0],G_vflip[0],G_highlow_p[0]);
 		}
 	}
 	window->damage(FL_DAMAGE_USER1);
@@ -158,7 +159,7 @@ void fill_tile_map_with_tile(Fl_Widget*,void*){
 	if(fl_ask("This will erase the entire tilemap and fill it with the currently selected tile\nAre you sure you want to do this?")){
 		for (uint16_t y=0;y<currentProject->tileMapC->mapSizeHA;++y) {
 			for (uint16_t x=0;x<currentProject->tileMapC->mapSizeW;++x)
-				currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,x,y,tileMap_pal.theRow,G_hflip,G_vflip,G_highlow_p);
+				currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,x,y,tileMap_pal.theRow,G_hflip[0],G_vflip[0],G_highlow_p[0]);
 		}
 		window->damage(FL_DAMAGE_USER1);
 	}
@@ -268,8 +269,7 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 			currentProject->tileC->truetileDat = (uint8_t *)realloc(currentProject->tileC->truetileDat,w8*h8*256);
 			currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,w8*h8*currentProject->tileC->tileSize);
 			currentProject->tileC->tiles_amount=(w8*h8)-1;
-			window->tile_select->maximum(currentProject->tileC->tiles_amount);
-			window->tile_select_2->maximum(currentProject->tileC->tiles_amount);
+			updateTileSelectAmt();
 		}
 		//uint8_t sizeTemp,sizeTemp2;
 		uint64_t a;
@@ -354,22 +354,29 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		window->redraw();
 	}
 }
-void set_prioCB(Fl_Widget*,void*){
-	G_highlow_p^=true;
+void set_prioCB(Fl_Widget*,void*o){
+	unsigned off=(uintptr_t)o;
+	G_highlow_p[off]^=true;
 	if(tileEditModePlace_G)
-		currentProject->tileMapC->set_prio(selTileE_G[0],selTileE_G[1],G_highlow_p);
+		currentProject->tileMapC->set_prio(selTileE_G[0],selTileE_G[1],G_highlow_p[off]);
 	window->redraw();
 }
-void set_hflipCB(Fl_Widget*,void*){
-	G_hflip^=true;
-	if(tileEditModePlace_G)
-		currentProject->tileMapC->set_hflip(selTileE_G[0],selTileE_G[1],G_hflip);
+void set_hflipCB(Fl_Widget*,void*o){
+	unsigned off=(uintptr_t)o;
+	G_hflip[off]^=true;
+	if(tileEditModeChunk_G&&(off==1))
+		currentProject->Chunk->setHflip(currentChunk,editChunk_G[0],editChunk_G[0],G_hflip[off]);
+	else if(tileEditModePlace_G&&(off==0))
+		currentProject->tileMapC->set_hflip(selTileE_G[0],selTileE_G[1],G_hflip[off]);
 	window->redraw();
 }
-void set_vflipCB(Fl_Widget*,void*){
-	G_vflip^=true;
-	if(tileEditModePlace_G)
-		currentProject->tileMapC->set_vflip(selTileE_G[0],selTileE_G[1],G_vflip);
+void set_vflipCB(Fl_Widget*,void*o){
+	unsigned off=(uintptr_t)o;
+	G_vflip[off]^=true;
+	if(tileEditModeChunk_G&&(off==1))
+		currentProject->Chunk->setVflip(currentChunk,editChunk_G[0],editChunk_G[1],G_vflip[off]);
+	else if(tileEditModePlace_G&&(off==0))
+		currentProject->tileMapC->set_vflip(selTileE_G[0],selTileE_G[1],G_vflip[off]);
 	window->redraw();
 }
 void update_map_scroll_x(Fl_Widget*,void*){

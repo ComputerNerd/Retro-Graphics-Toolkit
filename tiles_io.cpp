@@ -210,9 +210,8 @@ doTile:
 			}
 			currentProject->tileC->tiles_amount=(file_size/currentProject->tileC->tileSize)-1;
 			currentProject->tileC->tiles_amount+=offset_tiles;
-			window->tile_select->maximum(currentProject->tileC->tiles_amount);
+			updateTileSelectAmt();
 			window->tile_select->value(0);
-			window->tile_select_2->maximum(currentProject->tileC->tiles_amount);
 			window->tile_select_2->value(0);
 			window->redraw();
 		}else
@@ -253,8 +252,7 @@ void load_truecolor_tiles(Fl_Widget*,void*){
 		fclose(myfile);
 		currentProject->tileC->tiles_amount=file_size/256;
 		currentProject->tileC->tiles_amount--;
-		window->tile_select->maximum(currentProject->tileC->tiles_amount);
-		window->tile_select_2->maximum(currentProject->tileC->tiles_amount);
+		updateTileSelectAmt();
 		window->redraw();
 	}
 }
