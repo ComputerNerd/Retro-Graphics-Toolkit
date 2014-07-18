@@ -8,7 +8,7 @@ OBJECTS=project.o main.o callbacks_palette.o callback_tiles.o class_global.o glo
 	errorMsg.o class_palette.o dither.o \
 	class_tiles.o kens/nemesis.o kens/enigma.o kens/kosinski.o spatial_color_quant.o NEUQUANT.o \
 	classtilemap.o palette.o zlibwrapper.o color_compare.o windowinit.o tiles_io.o savepng.o \
-	callback_project.o callback_tilemap.o callback_gui.o classChuncks.o compressionWrapper.o callback_chunck.o gui.o \
+	callback_project.o callback_tilemap.o callback_gui.o classChunks.o compressionWrapper.o callback_chunk.o gui.o \
 	wu.o
 LINKER=-L/usr/lib/fltk-1/ -lfltk_images -lfltk -lpng -ljpeg -lXft -lXext -lXinerama -lX11 -lz -s
 EXECUTABLE=RetroGraphicsToolkit

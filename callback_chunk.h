@@ -15,10 +15,10 @@
     Copyright Sega16 (or whatever you wish to call me (2012-2014)
 */
 #include "includes.h"
-extern uint32_t currentChunck;
-void ImportS1CBChuncks(Fl_Widget*,void*a);
-void currentChunckCB(Fl_Widget*,void*);
+extern uint32_t currentChunk;
+void ImportS1CBChunks(Fl_Widget*,void*a);
+void currentChunkCB(Fl_Widget*,void*);
 void useBlocksCB(Fl_Widget*o,void*);
-void scrollChunckCB(Fl_Widget*,void*);
-void scrollChunckX(Fl_Widget*,void*);
-void scrollChunckY(Fl_Widget*,void*);
+void scrollChunkCB(Fl_Widget*,void*);
+void scrollChunkX(Fl_Widget*,void*);
+void scrollChunkY(Fl_Widget*,void*);

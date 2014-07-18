@@ -30,8 +30,8 @@
 #define true_color_box_size 48
 #define default_true_color_box_y 188
 #define default_true_color_box_x 732
-#define DefaultChunckX 208
-#define DefaultChunckY 80
+#define DefaultChunkX 208
+#define DefaultChunkY 80
 
 extern uint32_t map_scroll_pos_x,map_scroll_pos_y;
 extern uint32_t map_off_x,map_off_y;
@@ -39,13 +39,13 @@ extern uint16_t tile_edit_offset_x,tile_edit_offset_y;
 extern uint16_t tile_placer_tile_offset_y;
 extern uint16_t tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
 extern uint16_t true_color_box_x,true_color_box_y;
-extern unsigned ChunckOff[2];
-extern unsigned scrollChunks[2];
-extern uint_fast32_t editChunck_G[3];
+extern unsigned ChunkOff[2];
+extern unsigned scrollChunks_G[2];
+extern uint_fast32_t editChunk_G[3];
 #define pal_edit 0
 #define tile_edit 1
 #define tile_place 2
-#define chunckEditor 3
+#define chunkEditor 3
 #define settingsTab 4
 
 int MenuPopup(const char * title,const char * text,unsigned num,...);

@@ -16,17 +16,17 @@
 */
 #include "project.h"
 #include "includes.h"
-uint32_t currentChunck=0;
-void ImportS1CBChuncks(Fl_Widget*,void*a){
+uint32_t currentChunk=0;
+void ImportS1CBChunks(Fl_Widget*,void*a){
 	bool append=(uintptr_t)a?true:false;
-	if(load_file_generic("Pick chunck data from sonic 1")){
-		currentProject->Chunck->importSonic1(the_file.c_str(),append);
-		window->chunck_select->maximum(currentProject->Chunck->amt-1);
+	if(load_file_generic("Pick chunk data from sonic 1")){
+		currentProject->Chunk->importSonic1(the_file.c_str(),append);
+		window->chunk_select->maximum(currentProject->Chunk->amt-1);
 		window->redraw();
 	}
 }
-void currentChunckCB(Fl_Widget*,void*){
-	currentChunck=window->chunck_select->value();
+void currentChunkCB(Fl_Widget*,void*){
+	currentChunk=window->chunk_select->value();
 	window->redraw();
 }
 void useBlocksCB(Fl_Widget*o,void*){
@@ -38,18 +38,18 @@ void useBlocksCB(Fl_Widget*o,void*){
 		window->redraw();
 		return;
 	}
-	currentProject->Chunck->useBlocks=use;
+	currentProject->Chunk->useBlocks=use;
 	window->redraw();
 }
-void scrollChunckCB(Fl_Widget*,void*){
-	currentProject->Chunck->scrollChuncks();
+void scrollChunkCB(Fl_Widget*,void*){
+	currentProject->Chunk->scrollChunks();
 	window->redraw();
 }
-void scrollChunckX(Fl_Widget*,void*){
-	scrollChunks[0]=window->chunckX->value();
+void scrollChunkX(Fl_Widget*,void*){
+	scrollChunks_G[0]=window->chunkX->value();
 	window->redraw();
 }
-void scrollChunckY(Fl_Widget*,void*){
-	scrollChunks[1]=window->chunckY->value();
+void scrollChunkY(Fl_Widget*,void*){
+	scrollChunks_G[1]=window->chunkY->value();
 	window->redraw();
 }

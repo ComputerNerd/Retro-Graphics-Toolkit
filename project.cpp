@@ -34,7 +34,7 @@ void initProject(void){
 	currentProject->subSystem=0;
 	currentProject->tileC=new tiles;
 	currentProject->tileMapC=new tileMap;
-	currentProject->Chunck=new ChunckClass;
+	currentProject->Chunk=new ChunkClass;
 	currentProject->rgbPal=(uint8_t*)calloc(1,256);
 	currentProject->palDat=(uint8_t*)calloc(1,128);
 	currentProject->palType=(uint8_t*)calloc(1,64);
@@ -89,16 +89,16 @@ void setHaveProject(uint32_t id,uint32_t mask,bool set){
 			}
 		}
 	}
-	if((mask&pjHaveChuncks)&&(projects[id]->share[3]<0)){
+	if((mask&pjHaveChunks)&&(projects[id]->share[3]<0)){
 		if(set){
-			if(!(projects[id]->useMask&pjHaveChuncks)){
-				projects[id]->Chunck=new ChunckClass;
-				projects[id]->useMask|=pjHaveChuncks;
+			if(!(projects[id]->useMask&pjHaveChunks)){
+				projects[id]->Chunk=new ChunkClass;
+				projects[id]->useMask|=pjHaveChunks;
 			}
 		}else{
-			if(projects[id]->useMask&pjHaveChuncks){
-				delete projects[id]->Chunck;
-				projects[id]->useMask&=~pjHaveChuncks;
+			if(projects[id]->useMask&pjHaveChunks){
+				delete projects[id]->Chunk;
+				projects[id]->useMask&=~pjHaveChunks;
 			}
 		}
 	}
@@ -135,11 +135,11 @@ void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable){
 			projects[share]->share[2]=with;
 			projects[share]->tileMapC=projects[with]->tileMapC;
 		}
-		if(what&pjHaveChuncks){
+		if(what&pjHaveChunks){
 			if((projects[share]->share[3]<0)&&(projects[share]->useMask&pjHaveMap))
-				delete projects[share]->Chunck;
+				delete projects[share]->Chunk;
 			projects[share]->share[3]=with;
-			projects[share]->Chunck=projects[with]->Chunck;
+			projects[share]->Chunk=projects[with]->Chunk;
 		}
 	}else{
 		if(what&pjHavePal){
@@ -166,9 +166,9 @@ void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable){
 			}
 			projects[share]->share[2]=-1;//Even if we don't have the data sharing can still be disabled
 		}
-		if(what&pjHaveChuncks){
+		if(what&pjHaveChunks){
 			if((projects[share]->share[3]>=0)&&(projects[share]->useMask&pjHaveMap)){
-				projects[share]->Chunck = new ChunckClass(*projects[with]->Chunck);
+				projects[share]->Chunk = new ChunkClass(*projects[with]->Chunk);
 			}
 			projects[share]->share[3]=-1;//Even if we don't have the data sharing can still be disabled
 		}
@@ -183,7 +183,7 @@ bool appendProject(void){
 	projects[projects_count]= new struct Project;
 	projects[projects_count]->tileC=new tiles;
 	projects[projects_count]->tileMapC=new tileMap;
-	projects[projects_count]->Chunck=new ChunckClass;
+	projects[projects_count]->Chunk=new ChunkClass;
 	projects[projects_count]->Name.assign(defaultName);
 	projects[projects_count]->rgbPal=(uint8_t*)calloc(1,256);
 	projects[projects_count]->palDat=(uint8_t*)calloc(1,128);
@@ -295,9 +295,9 @@ void switchProject(uint32_t id){
 			}
 		}
 	}
-	window->useBlocksChunckCBtn->value(projects[id]->Chunck->useBlocks?1:0);
+	window->useBlocksChunkCBtn->value(projects[id]->Chunk->useBlocks?1:0);
 	window->BlocksCBtn->value(projects[id]->tileMapC->isBlock?1:0);
-	window->chunck_select->maximum(projects[id]->Chunck->amt-1);
+	window->chunk_select->maximum(projects[id]->Chunk->amt-1);
 	projects[id]->tileMapC->toggleBlocks(projects[id]->tileMapC->isBlock);
 	//projects[id]->tileMapC->ScrollUpdate();//toggleBlocks calls this funciton
 	if(projects[id]->gameSystem==NES)
@@ -388,17 +388,17 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 			decompressFromFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeHA,fi);
 		}
 	}
-	if(projects[id]->useMask&pjHaveChuncks){
+	if(projects[id]->useMask&pjHaveChunks){
 		if(projects[id]->share[3]<0){
 			if(version>=3){
 			uint8_t useBlockTemp;
 			fread(&useBlockTemp,1,sizeof(uint8_t),fi);
-			projects[id]->Chunck->useBlocks=useBlockTemp?true:false;
-			fread(&projects[id]->Chunck->wi,1,sizeof(uint32_t),fi);
-			fread(&projects[id]->Chunck->hi,1,sizeof(uint32_t),fi);
-			fread(&projects[id]->Chunck->amt,1,sizeof(uint32_t),fi);
-			projects[id]->Chunck->chuncks=(struct ChunckAttrs*)realloc(projects[id]->Chunck->chuncks,projects[id]->Chunck->wi*projects[id]->Chunck->hi*sizeof(struct ChunckAttrs)*projects[id]->Chunck->amt);
-			decompressFromFile(projects[id]->Chunck->chuncks,projects[id]->Chunck->wi*projects[id]->Chunck->hi*sizeof(struct ChunckAttrs)*projects[id]->Chunck->amt,fi);
+			projects[id]->Chunk->useBlocks=useBlockTemp?true:false;
+			fread(&projects[id]->Chunk->wi,1,sizeof(uint32_t),fi);
+			fread(&projects[id]->Chunk->hi,1,sizeof(uint32_t),fi);
+			fread(&projects[id]->Chunk->amt,1,sizeof(uint32_t),fi);
+			projects[id]->Chunk->chunks=(struct ChunkAttrs*)realloc(projects[id]->Chunk->chunks,projects[id]->Chunk->wi*projects[id]->Chunk->hi*sizeof(struct ChunkAttrs)*projects[id]->Chunk->amt);
+			decompressFromFile(projects[id]->Chunk->chunks,projects[id]->Chunk->wi*projects[id]->Chunk->hi*sizeof(struct ChunkAttrs)*projects[id]->Chunk->amt,fi);
 			}
 		}
 	}
@@ -443,12 +443,12 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 	uint32_t compressed size map
 	map data will decompress to map size w * map size h * 4 and is compressed with zlib
 	if(version>=3){
-		uint8_t use blocks for chuncks non zero if so 0 if not
-		uint32_t width per chunck
-		uint32_t height per chunck
-		uint32_t amount of chuncks
-		uint32_t compresssed Chunck map size
-		Chunck data (zlib compressed)
+		uint8_t use blocks for chunks non zero if so 0 if not
+		uint32_t width per chunk
+		uint32_t height per chunk
+		uint32_t amount of chunks
+		uint32_t compresssed Chunk map size
+		Chunk data (zlib compressed)
 	}
 	*/
 	fputc('R',fo);
@@ -507,14 +507,14 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 			compressToFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeHA,fo);
 		}
 	}
-	if(haveTemp&pjHaveChuncks){
+	if(haveTemp&pjHaveChunks){
 		if(saveShared||(projects[id]->share[3]<0)){
-			uint8_t useBlockTemp=projects[id]->Chunck->useBlocks?1:0;
+			uint8_t useBlockTemp=projects[id]->Chunk->useBlocks?1:0;
 			fwrite(&useBlockTemp,1,sizeof(uint8_t),fo);
-			fwrite(&projects[id]->Chunck->wi,1,sizeof(uint32_t),fo);
-			fwrite(&projects[id]->Chunck->hi,1,sizeof(uint32_t),fo);
-			fwrite(&projects[id]->Chunck->amt,1,sizeof(uint32_t),fo);
-			compressToFile(projects[id]->Chunck->chuncks,projects[id]->Chunck->wi*projects[id]->Chunck->hi*sizeof(struct ChunckAttrs)*projects[id]->Chunck->amt,fo);
+			fwrite(&projects[id]->Chunk->wi,1,sizeof(uint32_t),fo);
+			fwrite(&projects[id]->Chunk->hi,1,sizeof(uint32_t),fo);
+			fwrite(&projects[id]->Chunk->amt,1,sizeof(uint32_t),fo);
+			compressToFile(projects[id]->Chunk->chunks,projects[id]->Chunk->wi*projects[id]->Chunk->hi*sizeof(struct ChunkAttrs)*projects[id]->Chunk->amt,fo);
 		}
 	}
 	return true;
@@ -602,7 +602,7 @@ bool loadAllProjects(bool Old){
 			shareProject(x,projects[x]->share[2],pjHaveMap,true);
 		if(version>=3){
 			if(projects[x]->share[3]>=0)
-				shareProject(x,projects[x]->share[3],pjHaveChuncks,true);
+				shareProject(x,projects[x]->share[3],pjHaveChunks,true);
 		}
 	}
 	fclose(fi);

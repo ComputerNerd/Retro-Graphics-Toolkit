@@ -29,8 +29,8 @@ class editor : public Fl_Double_Window{
 	Fl_Group* TabsMain[shareAmtPj+1];
 	Fl_Scrollbar * map_x_scroll;
 	Fl_Scrollbar * map_y_scroll;
-	Fl_Scrollbar* chunckX;
-	Fl_Scrollbar* chunckY;
+	Fl_Scrollbar* chunkX;
+	Fl_Scrollbar* chunkY;
 	Fl_Slider* map_w;
 	Fl_Slider* map_h;
 	Fl_Slider* map_amt;
@@ -42,10 +42,10 @@ class editor : public Fl_Double_Window{
 	Fl_Slider* pal_size;
 	Fl_Slider* tile_size;
 	Fl_Slider* place_tile_size;
-	Fl_Slider* chunck_tile_size;
+	Fl_Slider* chunk_tile_size;
 	Fl_Slider* tile_select;
 	Fl_Slider* tile_select_2;
-	Fl_Slider* chunck_select;
+	Fl_Slider* chunk_select;
 	Fl_Slider* projectSelect;
 	Fl_Tabs* the_tabs;
 	Fl_Round_Button* palType[9];
@@ -56,7 +56,7 @@ class editor : public Fl_Double_Window{
 	Fl_Check_Button* prioCB;
 	Fl_Check_Button* sharePrj[shareAmtPj];
 	Fl_Check_Button* BlocksCBtn;
-	Fl_Check_Button* useBlocksChunckCBtn;
+	Fl_Check_Button* useBlocksChunkCBtn;
 	Fl_Slider* shareWith[shareAmtPj];
 	Fl_Check_Button* havePrj[shareAmtPj];
 	Fl_Text_Buffer* TxtBufProject;

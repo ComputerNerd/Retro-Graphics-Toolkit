@@ -67,8 +67,8 @@ void toggleBlocksCB(Fl_Widget*o,void*){
 	bool Toggle=b->value()?true:false;
 	currentProject->tileMapC->toggleBlocks(Toggle);
 	if(!Toggle){
-		currentProject->Chunck->useBlocks=false;
-		window->useBlocksChunckCBtn->value(0);
+		currentProject->Chunk->useBlocks=false;
+		window->useBlocksChunkCBtn->value(0);
 	}
 	window->redraw();
 }

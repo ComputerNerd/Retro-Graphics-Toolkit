@@ -17,4 +17,4 @@
 //here is dithering function for images
 #pragma once
 #include <inttypes.h>
-void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha=false,bool colSpace=false,bool forceRow=false,uint8_t forcedrow=0,bool isChunck=false,uint32_t idChunck=0);
+void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha=false,bool colSpace=false,bool forceRow=false,uint8_t forcedrow=0,bool isChunk=false,uint32_t idChunk=0);

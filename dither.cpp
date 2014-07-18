@@ -14,8 +14,8 @@ static bool USEofColGlob;
 static bool forcedfun;
 static uint8_t theforcedfun;
 static uint8_t *img_ptr_dither;
-static bool isChunckD_G;
-static uint32_t idChunck_G;
+static bool isChunkD_G;
+static uint32_t idChunk_G;
 uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row){
 	//returns closest value
 	//palette_muliplier
@@ -101,8 +101,8 @@ static int32_t error[SIZE]; /* queue with error
   //pvalue = (pvalue>=128) ? 255 : 0;
 	if ((currentProject->gameSystem == sega_genesis) && (useHiL == 9)){
 		uint8_t tempSet;
-		if(isChunckD_G)
-			tempSet=(currentProject->Chunck->getPrio(idChunck_G,cur_x/8,cur_y/8)^1)*8;
+		if(isChunkD_G)
+			tempSet=(currentProject->Chunk->getPrio(idChunk_G,cur_x/8,cur_y/8)^1)*8;
 		else
 			tempSet=(currentProject->tileMapC->get_prio(cur_x/8,cur_y/8)^1)*8;
 		set_palette_type(tempSet);
@@ -110,8 +110,8 @@ static int32_t error[SIZE]; /* queue with error
 	if(forcedfun)
 		pvalue=nearest_color_chan(pvalue,rgb_select,theforcedfun);
 	else{
-		if(isChunckD_G)
-			pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->Chunck->getTileRow(idChunck_G,cur_x/8,cur_y/8));
+		if(isChunkD_G)
+			pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->Chunk->getTileRow(idChunk_G,cur_x/8,cur_y/8));
 		else
 			pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->tileMapC->get_palette_map(cur_x/8,cur_y/8));
 	}
@@ -654,7 +654,7 @@ static inline uint8_t addCheck(uint16_t val,uint8_t add){
 		(a) = 255; \
 	else \
 		(a) += (b);
-void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpace,bool forceRow,uint8_t forcedrow,bool isChunck,uint32_t idChunck){
+void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpace,bool forceRow,uint8_t forcedrow,bool isChunk,uint32_t idChunk){
 	/*!
 	this function will take an input with or without alpha and dither it
 	Also note that this function now has the option to first dither to color space
@@ -770,8 +770,8 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					a_old=image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+3];
 				if (currentProject->gameSystem == sega_genesis && type_temp != 0){
 					uint8_t tempSet;
-					if(isChunck)
-						tempSet=(currentProject->Chunck->getPrio(idChunck,x/8,y/8)^1)*8;
+					if(isChunk)
+						tempSet=(currentProject->Chunk->getPrio(idChunk,x/8,y/8)^1)*8;
 					else
 						tempSet=(currentProject->tileMapC->get_prio(x/8,y/8)^1)*8;
 					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted
@@ -802,8 +802,8 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 						if(forceRow)
 							pal_row=forcedrow;
 						else{
-							if(isChunck)
-								pal_row=currentProject->Chunck->getTileRow(idChunck,x/8,y/8);
+							if(isChunk)
+								pal_row=currentProject->Chunk->getTileRow(idChunk,x/8,y/8);
 							else
 								pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
 						}
@@ -867,8 +867,8 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					if(forceRow)
 						pal_row=forcedrow;
 					else{
-						if(isChunck)
-							pal_row=currentProject->Chunck->getTileRow(idChunck,x/rgbRowsize,y/8);
+						if(isChunk)
+							pal_row=currentProject->Chunk->getTileRow(idChunk,x/rgbRowsize,y/8);
 						else
 							pal_row=currentProject->tileMapC->get_palette_map(x/rgbRowsize,y/8);
 					}
@@ -877,8 +877,8 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				uint8_t half=18;
 				if(currentProject->gameSystem == sega_genesis && type_temp != 0){
 					uint8_t tempSet;
-					if(isChunck)
-						tempSet=(currentProject->Chunck->getPrio(idChunck,x/rgbRowsize,y/8)^1)*8;
+					if(isChunk)
+						tempSet=(currentProject->Chunk->getPrio(idChunk,x/rgbRowsize,y/8)^1)*8;
 					else
 						tempSet=(currentProject->tileMapC->get_prio(x/rgbRowsize,y/8)^1)*8;
 					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted
@@ -928,8 +928,8 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 		USEofColGlob=colSpace;
 		forcedfun=forceRow;
 		theforcedfun=forcedrow;
-		isChunckD_G=isChunck;
-		idChunck_G=idChunck;
+		isChunkD_G=isChunk;
+		idChunk_G=idChunk;
 		Riemersma(image,w,h,0);
 		Riemersma(image,w,h,1);
 		Riemersma(image,w,h,2);
@@ -951,8 +951,8 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					if(forceRow)
 						pal_row=forcedrow;
 					else{
-						if(isChunck)
-							pal_row=currentProject->Chunck->getTileRow(idChunck,x/8,y/8);
+						if(isChunk)
+							pal_row=currentProject->Chunk->getTileRow(idChunk,x/8,y/8);
 						else
 							pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
 					}
@@ -960,8 +960,8 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				//find nearest color
 				if (currentProject->gameSystem == sega_genesis && type_temp != 0){
 					uint8_t tempSet;
-					if(isChunck)
-						tempSet=(currentProject->Chunck->getPrio(idChunck,x/8,y/8)^1)*8;
+					if(isChunk)
+						tempSet=(currentProject->Chunk->getPrio(idChunk,x/8,y/8)^1)*8;
 					else
 						tempSet=(currentProject->tileMapC->get_prio(x/8,y/8)^1)*8;
 					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted

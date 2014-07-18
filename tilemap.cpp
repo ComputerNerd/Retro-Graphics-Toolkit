@@ -1,19 +1,19 @@
 /*
- This file is part of Retro Graphics Toolkit
+   This file is part of Retro Graphics Toolkit
 
-    Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or any later version.
+   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or any later version.
 
-    Retro Graphics Toolkit is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+   Retro Graphics Toolkit is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-    Copyright Sega16 (or whatever you wish to call me (2012-2014)
-*/
+   You should have received a copy of the GNU General Public License
+   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   */
 /*
 Stuff related to tilemap operations goes here*/
 #include "global.h"
@@ -300,7 +300,7 @@ static inline double pickIt(double h,double l,double s,unsigned type){
 	}
 }
 typedef std::pair<double,int> HLSpair;
-bool comparatorHLS ( const HLSpair& l, const HLSpair& r)
+bool comparatorHLS(const HLSpair& l,const HLSpair& r)
    { return l.first < r.first; }
 void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	int alg=MenuPopup("Select picking algorithm","Pick which method you think works better for this image.",6,"ciede2000","Weighted","Mean squared error","Hue difference","Saturation difference","Lightness difference");
@@ -405,7 +405,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 				for(unsigned c=0;c<per*w*4*8;c+=w*4*8){
 					for(uint32_t y=0;y<w*4*8;y+=w*4){//pixels y
 						for(unsigned e=0;e<per*32;e+=32){
-							if(imagein[a+b+y+x+3]!=0){//Avoid checking transperency
+							if(imagein[a+b+y+x+3+c+e]!=0){//Avoid checking transperency
 								switch(alg){
 									case 0:
 										for(x=0;x<32;x+=4)
@@ -599,8 +599,7 @@ againFun:
 					outptr+=3;
 				}
 			}
-		}
-		else
+		}else
 			imageuse=image;
 try_again_color:
 		switch(alg){

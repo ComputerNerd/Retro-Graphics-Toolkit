@@ -1,18 +1,18 @@
 /*
- This file is part of Retro Graphics Toolkit
+   This file is part of Retro Graphics Toolkit
 
-    Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or any later version.
+   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or any later version.
 
-    Retro Graphics Toolkit is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+   Retro Graphics Toolkit is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-    Copyright Sega16 (or whatever you wish to call me (2012-2014)
+   You should have received a copy of the GNU General Public License
+   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
 /*!
 This is where all "project" releated stuff goes
@@ -25,7 +25,7 @@ For example the save project file function goes here
 #include "tilemap.h"
 #include "class_tiles.h"
 #include "classtilemap.h"
-#include "classChuncks.h"
+#include "classChunks.h"
 
 #define currentProjectVersionNUM 4
 extern uint32_t curProjectID;
@@ -36,7 +36,7 @@ struct Project{/*!<Holds all data needed for a project based system for examaple
 	uint32_t useMask;/*!<Sharing can be used regardless of use mask*/
 	tileMap* tileMapC;
 	tiles* tileC;
-	ChunckClass*Chunck;
+	ChunkClass*Chunk;
 	uint8_t* rgbPal;
 	uint8_t* palDat;
 	uint8_t* palType;/*!<Sets 3 different types for each palette entry free locked and reserved*/
@@ -59,7 +59,7 @@ bool loadAllProjects(bool Old);
 #define pjHavePal 1
 #define pjHaveTiles 2
 #define pjHaveMap 4
-#define pjHaveChuncks 8
-#define pjDefaultMask (pjHavePal|pjHaveTiles|pjHaveMap|pjHaveChuncks)
+#define pjHaveChunks 8
+#define pjDefaultMask (pjHavePal|pjHaveTiles|pjHaveMap|pjHaveChunks)
 #define pjAllMask pjDefaultMask
 #endif

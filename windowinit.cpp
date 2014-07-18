@@ -5,7 +5,7 @@
 #include "callback_tilemap.h"
 #include "callback_gui.h"
 #include "callback_project.h"
-#include "callback_chunck.h"
+#include "callback_chunk.h"
 /*
  This file is part of Retro Graphics Toolkit
 
@@ -34,7 +34,7 @@ void set_mode_tabs(Fl_Widget* o, void*){
 		mode_editor=tile_place;
 		tileMap_pal.updateSlider();
 	}else if(val==window->TabsMain[3]){
-		mode_editor=chunckEditor;
+		mode_editor=chunkEditor;
 	}else if (val==window->TabsMain[4]){
 		mode_editor=settingsTab;
 	}
@@ -62,8 +62,8 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Load project group",0,loadAllProjectsCB,0},
 		{"Load project group (File creatd before 2014-02-23)",0,loadAllProjectsCB,(void*)1},
 		{"Save project group",0,saveAllProjectsCB,0},
-		{"Import sonic 1 chuncks",0,ImportS1CBChuncks,0},
-		{"Import sonic 1 chuncks (append)",0,ImportS1CBChuncks,(void*)1},
+		{"Import sonic 1 chunks",0,ImportS1CBChunks,0},
+		{"Import sonic 1 chunks (append)",0,ImportS1CBChunks,(void*)1},
 		{0},
 	{"Palette Actions",0, 0, 0, FL_SUBMENU},
 		{"Generate optimal palette with x amount of colors",0,generate_optimal_palette,0},
@@ -442,37 +442,37 @@ void editor::_editor(){
 			TabsMain[2]->end();
 		}
 		{TabsMain[3] = new Fl_Group(rx,ry,rw,rh,"Chuck editor");
-			useBlocksChunckCBtn=new Fl_Check_Button(8, 48, 152, 24, "Use blocks");
-			useBlocksChunckCBtn->callback(useBlocksCB);
-			chunck_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,512,160,24,"Tile Zoom Factor:");
-			chunck_tile_size->minimum(1);
-			chunck_tile_size->maximum(16);
-			chunck_tile_size->step(1);
-			chunck_tile_size->value(2);
-			chunck_tile_size->align(FL_ALIGN_TOP);
-			chunck_tile_size->callback(scrollChunckCB);
-			chunck_tile_size->tooltip(TooltipZoom);
+			useBlocksChunkCBtn=new Fl_Check_Button(8, 48, 152, 24, "Use blocks");
+			useBlocksChunkCBtn->callback(useBlocksCB);
+			chunk_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,512,160,24,"Tile Zoom Factor:");
+			chunk_tile_size->minimum(1);
+			chunk_tile_size->maximum(16);
+			chunk_tile_size->step(1);
+			chunk_tile_size->value(2);
+			chunk_tile_size->align(FL_ALIGN_TOP);
+			chunk_tile_size->callback(scrollChunkCB);
+			chunk_tile_size->tooltip(TooltipZoom);
 			
-			chunckX = new Fl_Scrollbar(DefaultChunckX-32, DefaultChunckY-32, 800-DefaultChunckX+24, 24);
-			chunckX->value(0,0,0,0);
-			chunckX->type(FL_HORIZONTAL);
-			chunckX->callback(scrollChunckX);
-			chunckX->hide();
+			chunkX = new Fl_Scrollbar(DefaultChunkX-32, DefaultChunkY-32, 800-DefaultChunkX+24, 24);
+			chunkX->value(0,0,0,0);
+			chunkX->type(FL_HORIZONTAL);
+			chunkX->callback(scrollChunkX);
+			chunkX->hide();
 			
-			chunckY = new Fl_Scrollbar(DefaultChunckX-32, DefaultChunckY, 24, 600-8-DefaultChunckY);
-			chunckY->value(0,0,0,0);
-			chunckY->callback(scrollChunckY);
-			chunckY->hide();
+			chunkY = new Fl_Scrollbar(DefaultChunkX-32, DefaultChunkY, 24, 600-8-DefaultChunkY);
+			chunkY->value(0,0,0,0);
+			chunkY->callback(scrollChunkY);
+			chunkY->hide();
 			
 			
-			chunck_select = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,128,160,24,"Chunck Select");
-			chunck_select->tooltip("This slider allows you to choice which tile you would like to place on the map remember you can both horizontally and vertically flip the tile once placed on the map and select which row the tile uses");
-			chunck_select->minimum(0);
-			chunck_select->maximum(0);
-			chunck_select->step(1);
-			chunck_select->value(0);
-			chunck_select->align(FL_ALIGN_TOP);
-			chunck_select->callback(currentChunckCB);
+			chunk_select = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,128,160,24,"Chunk Select");
+			chunk_select->tooltip("This slider allows you to choice which tile you would like to place on the map remember you can both horizontally and vertically flip the tile once placed on the map and select which row the tile uses");
+			chunk_select->minimum(0);
+			chunk_select->maximum(0);
+			chunk_select->step(1);
+			chunk_select->value(0);
+			chunk_select->align(FL_ALIGN_TOP);
+			chunk_select->callback(currentChunkCB);
 			
 			TabsMain[3]->end();
 		}
@@ -497,8 +497,8 @@ void editor::_editor(){
 			sharePrj[1]->callback(shareProjectCB,(void*)pjHaveTiles);
 			sharePrj[2]=new Fl_Check_Button(216,112,120,16,"Share TileMap");
 			sharePrj[2]->callback(shareProjectCB,(void*)pjHaveMap);
-			sharePrj[3]=new Fl_Check_Button(336,112,120,16,"Share chuncks");
-			sharePrj[3]->callback(shareProjectCB,(void*)pjHaveChuncks);
+			sharePrj[3]=new Fl_Check_Button(336,112,120,16,"Share chunks");
+			sharePrj[3]->callback(shareProjectCB,(void*)pjHaveChunks);
 			
 			havePrj[0]=new Fl_Check_Button(8,88,112,16,"Have palette");
 			havePrj[0]->callback(haveCB,(void*)pjHavePal);
@@ -506,8 +506,8 @@ void editor::_editor(){
 			havePrj[1]->callback(haveCB,(void*)pjHaveTiles);
 			havePrj[2]=new Fl_Check_Button(232,88,120,16,"Have TileMap");
 			havePrj[2]->callback(haveCB,(void*)pjHaveMap);
-			havePrj[3]=new Fl_Check_Button(344,88,120,16,"Have Chuncks");
-			havePrj[3]->callback(haveCB,(void*)pjHaveChuncks);
+			havePrj[3]=new Fl_Check_Button(344,88,120,16,"Have Chunks");
+			havePrj[3]->callback(haveCB,(void*)pjHaveChunks);
 			
 			shareWith[0]=new Fl_Hor_Value_Slider(8,142,128,24,"Share Palette with:");
 			shareWith[0]->callback(switchShareCB,(void*)pjHavePal);
@@ -515,8 +515,8 @@ void editor::_editor(){
 			shareWith[1]->callback(switchShareCB,(void*)pjHaveTiles);
 			shareWith[2]=new Fl_Hor_Value_Slider(264,142,128,24,"Share TileMap with:");
 			shareWith[2]->callback(switchShareCB,(void*)pjHaveMap);
-			shareWith[3]=new Fl_Hor_Value_Slider(400,142,128,24,"Share Chuncks with:");
-			shareWith[3]->callback(switchShareCB,(void*)pjHaveChuncks);
+			shareWith[3]=new Fl_Hor_Value_Slider(400,142,128,24,"Share Chunks with:");
+			shareWith[3]->callback(switchShareCB,(void*)pjHaveChunks);
 			for(int x=0;x<shareAmtPj;++x){
 				havePrj[x]->value(1);
 				shareWith[x]->minimum(0);

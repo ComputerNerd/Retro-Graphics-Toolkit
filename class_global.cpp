@@ -16,7 +16,7 @@
 */
 #include "global.h"
 #include "class_global.h"
-#include "callback_chunck.h"
+#include "callback_chunk.h"
 editor *window = new editor(800,600,"Retro Graphics Toolkit v0.5");//this creates the window
 static void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y){
 	uint8_t grid[32*32*3];
@@ -74,10 +74,10 @@ void editor::draw_non_gui(void){
 			show_default_error
 		break;
 	}
-	int_fast16_t x,y;//we will need to reuse these later
-	uint_fast8_t box_size=pal_size->value();
-	uint_fast8_t tiles_size=tile_size->value();
-	uint_fast8_t placer_tile_size=place_tile_size->value();
+	int x,y;//we will need to reuse these later
+	unsigned box_size=pal_size->value();
+	unsigned tiles_size=tile_size->value();
+	unsigned placer_tile_size=place_tile_size->value();
 	switch (mode_editor){
 		case pal_edit:
 			palEdit.updateSize();
@@ -193,10 +193,10 @@ void editor::draw_non_gui(void){
 					fl_rect(xo,yo,placer_tile_size*8+1,placer_tile_size*8+1,FL_BLUE);
 			}
 		break;
-		case chunckEditor:
-			ChunckOff[0]=(double)((double)w()/800.0)*(double)DefaultChunckX;
-			ChunckOff[1]=(double)((double)h()/600.0)*(double)DefaultChunckY;
-			currentProject->Chunck->drawChunck(currentChunck,ChunckOff[0],ChunckOff[1],chunck_tile_size->value(),scrollChunks[0],scrollChunks[1]);
+		case chunkEditor:
+			ChunkOff[0]=(double)((double)w()/800.0)*(double)DefaultChunkX;
+			ChunkOff[1]=(double)((double)h()/600.0)*(double)DefaultChunkY;
+			currentProject->Chunk->drawChunk(currentChunk,ChunkOff[0],ChunkOff[1],chunk_tile_size->value(),scrollChunks_G[0],scrollChunks_G[1]);
 		break;
 	}//end of switch statment
 }
@@ -229,7 +229,7 @@ int editor::handle(int event){
 	//printf("Event was %s (%d)\n", fl_eventnames[event], event);     // e.g. "Event was FL_PUSH (1)"
 	if (Fl_Double_Window::handle(event)) return (1);
 	//printf("Event was %s (%d)\n", fl_eventnames[event], event);     // e.g. "Event was FL_PUSH (1)"
-	uint8_t tiles_size;
+	unsigned tiles_size;
 	switch(event){
 		case FL_PUSH:
 			switch (mode_editor){
@@ -344,17 +344,13 @@ int editor::handle(int event){
 						damage(FL_DAMAGE_USER1);//no need to redraw the gui
 					}
 				break;
-				case chunckEditor:
-					//ChunckOff[0] ChunckOff[1]
-					uint_fast32_t maxx,maxy;
-					tiles_size=chunck_tile_size->value();
-					/*if(currentProject->Chunck->useBlocks){
-						maxx=
-						maxy=
-					}else{
-						maxx=
-						maxy=
-					}*/
+				case chunkEditor:
+					//ChunkOff[0] ChunkOff[1]
+					if((Fl::event_x()>=ChunkOff[0])&&(Fl::event_y()>=ChunkOff[1])){
+						uint_fast32_t maxx,maxy;
+						tiles_size=chunk_tile_size->value();
+						//maxx=currentProject->
+					}
 				break;
 			}
 		break;
