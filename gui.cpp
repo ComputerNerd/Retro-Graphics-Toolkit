@@ -38,6 +38,14 @@ void updateTileSelectAmt(void){
 	else
 		window->tile_select_3->maximum(currentProject->tileC->tiles_amount);
 }
+void updateTileSelectAmt(uint32_t newMax){
+	window->tile_select->maximum(newMax);
+	window->tile_select_2->maximum(newMax);
+	if(currentProject->Chunk->useBlocks)
+		window->tile_select_3->maximum(currentProject->tileMapC->amt);
+	else
+		window->tile_select_3->maximum(newMax);
+}
 void setRet(Fl_Widget*,void*r){
 	bool Cancel=(uintptr_t)r?true:false;
 	if(Cancel)

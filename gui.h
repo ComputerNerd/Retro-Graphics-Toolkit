@@ -46,4 +46,5 @@ extern uint16_t true_color_box_x,true_color_box_y;
 #define settingsTab 4
 
 void updateTileSelectAmt(void);
+void updateTileSelectAmt(uint32_t newMax);
 int MenuPopup(const char * title,const char * text,unsigned num,...);
