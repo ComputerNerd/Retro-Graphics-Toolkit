@@ -102,10 +102,8 @@ void tileMap::toggleBlocks(bool set){
 				//The tiles will need to be rearagned
 				uint8_t*tmp=(uint8_t*)malloc(mapSizeW*mapSizeH*TileMapSizePerEntry);
 				uint8_t*out=tmp;
-				printf("w: %d h: %d %d %d\n",w,h,mapSizeW,mapSizeH);
 				for(uint_fast32_t y=0;y<mapSizeH;y+=h){
 					for(uint_fast32_t x=0;x<mapSizeW;x+=w){
-						printf("%d %d\n",x,y);
 						rect2rect(tileMapDat,out,x*TileMapSizePerEntry,y,mapSizeW*TileMapSizePerEntry,w*TileMapSizePerEntry,h);
 						out+=w*h*TileMapSizePerEntry;
 					}
@@ -120,8 +118,8 @@ void tileMap::toggleBlocks(bool set){
 			mapSizeHA=mapSizeH*amt;
 		}else{
 			isBlock=false;
-			amt=1;//amt must = 1 when blocks are not in use
 			mapSizeH*=amt;
+			amt=1;//amt must = 1 when blocks are not in use
 			mapSizeHA=mapSizeH;
 		}
 	}

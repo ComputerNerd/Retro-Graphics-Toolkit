@@ -364,14 +364,12 @@ int editor::handle(int event){
 							}
 							tx+=scrollChunks_G[0];
 							ty+=scrollChunks_G[1];
-							printf("%d %d\n",tx,ty);
 							if(Fl::event_button()==FL_LEFT_MOUSE){
 								if(!((tileEditModeChunk_G)&&(tx==editChunk_G[0])&&(ty==editChunk_G[1]))){
 									currentProject->Chunk->setSolid(currentChunk,tx,ty,solidBits_G);
 									currentProject->Chunk->setHflip(currentChunk,tx,ty,G_hflip[1]);
 									currentProject->Chunk->setVflip(currentChunk,tx,ty,G_vflip[1]);
 									currentProject->Chunk->setBlock(currentChunk,tx,ty,selBlock);
-									puts("Tile");
 								}
 								tileEditModeChunk_G=false;
 								damage(FL_DAMAGE_USER1);
