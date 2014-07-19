@@ -453,6 +453,10 @@ void editor::_editor(){
 			place_tile_size->align(FL_ALIGN_TOP);
 			place_tile_size->callback(update_map_size);
 			place_tile_size->tooltip(TooltipZoom);
+
+			cordDisp[0]=new Fl_Box(tile_place_buttons_x_off,556,128,64);
+			cordDisp[0]->labelsize(12);
+
 			TabsMain[2]->end();
 		}
 		{TabsMain[3] = new Fl_Group(rx,ry,rw,rh,"Chunk editor");
@@ -505,6 +509,9 @@ void editor::_editor(){
 
 			solidChunkMenu=new Fl_Choice(tile_place_buttons_x_off,256,128,24);
 			solidChunkMenu->copy(SolidMenu);
+
+			cordDisp[1]=new Fl_Box(tile_place_buttons_x_off,556,128,64);
+			cordDisp[1]->labelsize(12);
 
 			TabsMain[3]->end();
 		}

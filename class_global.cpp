@@ -226,6 +226,11 @@ editor::editor(int W, int H, const char *L)
     : Fl_Double_Window(W, H, L) {
 	_editor();
 }
+static void setXYdisp(int x,int y,unsigned n){
+	char tmp[64];
+	snprintf(tmp,64,"X: %d, Y: %d",x,y);
+	window->cordDisp[n]->copy_label(tmp);
+}
 int editor::handle(int event){
 	//printf("Event was %s (%d)\n", fl_eventnames[event], event);     // e.g. "Event was FL_PUSH (1)"
 	if (Fl_Double_Window::handle(event)) return (1);
@@ -281,6 +286,7 @@ int editor::handle(int event){
 						if (Fl::event_button()==FL_LEFT_MOUSE){
 							if(!((selTileE_G[0]==temp_one)&&(selTileE_G[1]==temp_two)&&tileEditModePlace_G)){
 								currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,temp_one,temp_two,tileMap_pal.theRow,G_hflip[0],G_vflip[0],G_highlow_p[0]);
+								setXYdisp(temp_one,temp_two,0);
 							}
 							tileEditModePlace_G=false;
 							damage(FL_DAMAGE_USER1);
@@ -303,12 +309,13 @@ int editor::handle(int event){
 								tileMap_pal.changeRow(Rm);
 								for(int as=0;as<4;++as)
 									palRTE[as]->value(as==Rm);
+								setXYdisp(temp_one,temp_two,0);
 								redraw();
 							}
 						}
 					}
 					if (Fl::event_x() > tile_placer_tile_offset_x && Fl::event_y() > tile_placer_tile_offset_y && Fl::event_x() < tile_placer_tile_offset_x+(tiles_size*8) && Fl::event_y() < tile_placer_tile_offset_y+(tiles_size*8)){
-						uint8_t temp_two,temp_one;
+						unsigned temp_two,temp_one;
 						temp_one=(Fl::event_x()-tile_placer_tile_offset_x)/tiles_size;
 						temp_two=(Fl::event_y()-tile_placer_tile_offset_y)/tiles_size;
 						if (G_hflip[0])
@@ -370,6 +377,7 @@ int editor::handle(int event){
 									currentProject->Chunk->setHflip(currentChunk,tx,ty,G_hflip[1]);
 									currentProject->Chunk->setVflip(currentChunk,tx,ty,G_vflip[1]);
 									currentProject->Chunk->setBlock(currentChunk,tx,ty,selBlock);
+									setXYdisp(tx,ty,1);
 								}
 								tileEditModeChunk_G=false;
 								damage(FL_DAMAGE_USER1);
@@ -388,6 +396,7 @@ int editor::handle(int event){
 									tile_select_3->value(currentProject->Chunk->getBlock(currentChunk,tx,ty));
 									solidBits_G=currentProject->Chunk->getSolid(currentChunk,tx,ty);
 									solidChunkMenu->value(solidBits_G);
+									setXYdisp(tx,ty,1);
 									redraw();
 								}
 							}
