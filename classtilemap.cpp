@@ -55,6 +55,7 @@ void tileMap::resizeBlocks(uint32_t wn,uint32_t hn){
 		window->map_w->value(mapSizeW);
 		window->map_h->value(mapSizeH);
 	}
+	ScrollUpdate();
 }
 void tileMap::blockAmt(uint32_t newAmt){
 	amt=newAmt;
@@ -63,12 +64,59 @@ void tileMap::blockAmt(uint32_t newAmt){
 }
 const char * MapWidthTxt="Map width";
 const char * MapHeightTxt="Map height";
+static void rect2rect(uint8_t*in,uint8_t*out,unsigned xin,unsigned yin,unsigned win,unsigned wout,unsigned hout){
+	in+=(yin*win)+xin;
+	while(hout--){
+		memcpy(out,in,wout);
+		in+=win;
+		out+=wout;
+	}
+}
 void tileMap::toggleBlocks(bool set){
 	if(set!=isBlock){
 		if(set){
+			//First get user input on the demensions of each block
+			char * str_ptr;
+			str_ptr=(char *)fl_input("Enter block width");
+			if (!str_ptr)
+				return;
+			if (!verify_str_number_only(str_ptr))
+				return;
+			uint32_t w,h;
+			w=atoi(str_ptr);
+			if(mapSizeW%w){
+				fl_alert("You must enter a number that will result in an integer when divding by %d",mapSizeW);
+				return;
+			}
+			str_ptr=(char *)fl_input("Enter block height");
+			if (!str_ptr)
+				return;
+			if (!verify_str_number_only(str_ptr))
+				return;
+			h=atoi(str_ptr);
+			if(mapSizeH%h){
+				fl_alert("You must enter a number that will result in an integer when divding by %d",mapSizeH);
+				return;
+			}
+			if((mapSizeW!=w)||(mapSizeH!=h)){
+				//The tiles will need to be rearagned
+				uint8_t*tmp=(uint8_t*)malloc(mapSizeW*mapSizeH*TileMapSizePerEntry);
+				uint8_t*out=tmp;
+				printf("w: %d h: %d %d %d\n",w,h,mapSizeW,mapSizeH);
+				for(uint_fast32_t y=0;y<mapSizeH;y+=h){
+					for(uint_fast32_t x=0;x<mapSizeW;x+=w){
+						printf("%d %d\n",x,y);
+						rect2rect(tileMapDat,out,x*TileMapSizePerEntry,y,mapSizeW*TileMapSizePerEntry,w*TileMapSizePerEntry,h);
+						out+=w*h*TileMapSizePerEntry;
+					}
+				}
+				memcpy(tileMapDat,tmp,mapSizeH*mapSizeW*TileMapSizePerEntry);
+				free(tmp);
+			}
 			isBlock=true;
-			amt=mapSizeH;
-			mapSizeH=1;
+			amt=(mapSizeW*mapSizeH)/(w*h);
+			mapSizeW=w;
+			mapSizeH=h;
 			mapSizeHA=mapSizeH*amt;
 		}else{
 			isBlock=false;
@@ -77,12 +125,13 @@ void tileMap::toggleBlocks(bool set){
 			mapSizeHA=mapSizeH;
 		}
 	}
+	window->map_w->value(mapSizeW);
+	window->map_h->value(mapSizeH);
 	if(set){
 		window->map_w->label("Block width");
 		window->map_w->callback(resizeBlocksCB);
 		window->map_h->label("Block height");
 		window->map_h->callback(resizeBlocksCB);
-		window->map_h->value(mapSizeH);
 		window->map_amt->show();
 		window->map_amt->value(amt);
 	}else{
@@ -90,9 +139,9 @@ void tileMap::toggleBlocks(bool set){
 		window->map_w->label(MapWidthTxt);
 		window->map_h->callback(callback_resize_map);
 		window->map_h->label(MapHeightTxt);
-		window->map_h->value(mapSizeH);
 		window->map_amt->hide();
 	}
+	updateTileSelectAmt();
 	ScrollUpdate();
 }
 bool tileMap::get_hflip(uint32_t x,uint32_t y){
@@ -585,15 +634,13 @@ void tileMap::ScrollUpdate(void){
 	}
 	if(map_scroll){
 		window->map_x_scroll->show();
-		window->map_x_scroll->value(old_scroll,1,0,map_scroll+2);//the reason for adding map_scroll/2 to map_scroll is because without it the user will not be able to scroll the tilemap all the way
+		window->map_x_scroll->value(old_scroll,1,0,map_scroll+2);
 	}else
 		window->map_x_scroll->hide();
 	old_scroll=window->map_y_scroll->value();
-	map_scroll=(mapSizeH*amt)-((window->h()-map_off_y)/tile_size_placer/8);//size of all offscreen tiles in pixels
-	//printf("y: %d\n",map_scroll);
+	map_scroll=(mapSizeHA)-((window->h()-map_off_y)/tile_size_placer/8);//size of all offscreen tiles in pixels
 	if (map_scroll < 0)
 		map_scroll=0;
-	//cout << "tiles off screen: " << map_scroll << endl;
 	if (old_scroll > map_scroll){
 		old_scroll=map_scroll;
 		map_scroll_pos_y=map_scroll;

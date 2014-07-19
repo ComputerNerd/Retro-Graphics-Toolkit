@@ -14,6 +14,7 @@
     along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
     Copyright Sega16 (or whatever you wish to call me (2012-2014)
 */
+#define TileMapSizePerEntry 4
 class tileMap{
 private:
 public:
