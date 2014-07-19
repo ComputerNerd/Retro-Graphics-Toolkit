@@ -58,7 +58,7 @@ uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row){
 static int32_t cur_x=0, cur_y=0;
 static int32_t img_width=0, img_height=0; 
 
-static uint8_t rgb_select=0;
+static unsigned rgb_select=0;
 	
 #define SIZE 16	/* queue size: number of
 				 * pixels remembered */ 
@@ -682,7 +682,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 	case 4:
 	{
 		if(colSpace&&(h>8)){
-			if(!fl_ask("Dither to colorspace? WARNING SLOW!"))
+			//if(!fl_ask("Dither to colorspace? WARNING SLOW!"))//I have found that this results in worse quality anyways when using
 				return;
 		}
 		uint16_t tempPalSize;

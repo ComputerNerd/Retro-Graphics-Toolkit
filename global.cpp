@@ -235,9 +235,9 @@ static inline uint32_t sq(uint32_t x){
 	return x*x;
 }
 uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b){
-	uint8_t i;
+	unsigned i;
 	int bestIndex = 0;
-	uint8_t max_rgb=palEdit.perRow*3;
+	unsigned max_rgb=palEdit.perRow*3;
 	row*=max_rgb;
 	uint32_t minerrori=(255*255)+(255*255)+(255*255)+1;
 	double minerrord=100000.0;
@@ -271,7 +271,7 @@ uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b){
 				}}
 		}
 	}
-    return bestIndex;
+	return bestIndex;
 }
 uint8_t find_near_color_from_row(uint8_t row,uint8_t r,uint8_t g,uint8_t b){
 	return (find_near_color_from_row_rgb(row,r,g,b)/3)-(row*palEdit.perRow);

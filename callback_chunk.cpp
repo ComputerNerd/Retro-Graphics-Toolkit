@@ -66,6 +66,7 @@ void useBlocksCB(Fl_Widget*o,void*){
 	}else
 		window->tile_select_3->label("Tile select");
 	currentProject->Chunk->useBlocks=use;
+	updateTileSelectAmt();
 	window->redraw();
 }
 void scrollChunkCB(Fl_Widget*,void*){
