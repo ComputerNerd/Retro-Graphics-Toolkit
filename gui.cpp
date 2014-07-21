@@ -30,14 +30,6 @@ uint16_t true_color_box_x,true_color_box_y;
 static int returnVal=0;
 static Fl_Choice*PopC;
 static Fl_Window * winP;
-void updateTileSelectAmt(void){
-	window->tile_select->maximum(currentProject->tileC->tiles_amount);
-	window->tile_select_2->maximum(currentProject->tileC->tiles_amount);
-	if(currentProject->Chunk->useBlocks)
-		window->tile_select_3->maximum(currentProject->tileMapC->amt);
-	else
-		window->tile_select_3->maximum(currentProject->tileC->tiles_amount);
-}
 void updateTileSelectAmt(uint32_t newMax){
 	window->tile_select->maximum(newMax);
 	window->tile_select_2->maximum(newMax);
@@ -45,6 +37,10 @@ void updateTileSelectAmt(uint32_t newMax){
 		window->tile_select_3->maximum(currentProject->tileMapC->amt);
 	else
 		window->tile_select_3->maximum(newMax);
+	window->spritest->maximum(newMax);
+}
+void updateTileSelectAmt(void){
+	updateTileSelectAmt(currentProject->tileC->tiles_amount);
 }
 void setRet(Fl_Widget*,void*r){
 	bool Cancel=(uintptr_t)r?true:false;
@@ -79,4 +75,29 @@ int MenuPopup(const char * title,const char * text,unsigned num,...){
 		return returnVal;
 	}
 	return -1;
+}
+bool load_file_generic(const char * the_tile,bool save_file){
+	// Create native chooser
+	Fl_Native_File_Chooser native;
+	native.title(the_tile);
+	if (save_file == false)
+		native.type(Fl_Native_File_Chooser::BROWSE_FILE);
+	else
+		native.type(Fl_Native_File_Chooser::BROWSE_SAVE_FILE);
+	// Show native chooser
+	switch (native.show())
+	{
+	case -1: fprintf(stderr, "ERROR: %s\n", native.errmsg()); break;	// ERROR
+	case  1: fprintf(stderr, "*** CANCEL\n"); fl_beep(); break;		// CANCEL
+	default:// PICKED FILE
+		if (native.filename())
+		{
+			the_file=native.filename();
+			//native.~Fl_Native_File_Chooser();//sementation fault
+			return true;//the only way this this function will return true is the user picked a file
+		}
+		break;
+	}
+	//native.~Fl_Native_File_Chooser();
+	return false;//if an error happened or the user did not pick a file the function returns false
 }

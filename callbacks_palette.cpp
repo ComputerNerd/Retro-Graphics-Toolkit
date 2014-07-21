@@ -305,9 +305,13 @@ void rgb_pal_to_entry(Fl_Widget*,void*){
 }
 void entryToRgb(Fl_Widget*,void*){
 	unsigned en=tileEdit_pal.getEntry()*3;
-	window->rgb_red->value(currentProject->rgbPal[en++]);
-	window->rgb_green->value(currentProject->rgbPal[en++]);
-	window->rgb_blue->value(currentProject->rgbPal[en]);
+	truecolor_temp[0]=currentProject->rgbPal[en];
+	truecolor_temp[1]=currentProject->rgbPal[en+1];
+	truecolor_temp[2]=currentProject->rgbPal[en+2];
+	window->rgb_red->value(truecolor_temp[0]);
+	window->rgb_green->value(truecolor_temp[1]);
+	window->rgb_blue->value(truecolor_temp[2]);
+	window->redraw();
 }
 void clearPalette(Fl_Widget*,void*){
 	if (fl_ask("This will set all colors to 0 are you sure you want to do this?")){

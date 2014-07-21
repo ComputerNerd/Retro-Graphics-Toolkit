@@ -26,7 +26,7 @@ For example the save project file function goes here
 #include "class_tiles.h"
 #include "classtilemap.h"
 #include "classChunks.h"
-
+#include "classSprites.h"
 #define currentProjectVersionNUM 5
 extern uint32_t curProjectID;
 struct Project{/*!<Holds all data needed for a project based system for examaple tile screen and level 1 are 2 seperate projects*/
@@ -37,6 +37,7 @@ struct Project{/*!<Holds all data needed for a project based system for examaple
 	tileMap* tileMapC;
 	tiles* tileC;
 	ChunkClass*Chunk;
+	sprites*spritesC;
 	uint8_t* rgbPal;
 	uint8_t* palDat;
 	uint8_t* palType;/*!<Sets 3 different types for each palette entry free locked and reserved*/

@@ -20,11 +20,13 @@
 #include "classSprite.h"
 class sprites{
 	public:
-		uint32_t amt;
-		sprite**spriteslist;
+		uint32_t amt;//The amount of sprites
+		sprite**spriteslist;//spriteslist pointers to a dynammicly allocated array that holds pointers to calls sprite created with the new operater
 		sprites();
+		sprites(const sprites& other);
 		~sprites();
-		void importImg(void);
-		void loadSprites(FILE*fp);
-		void saveSprites(FILE*fp);
+		void importImg(uint32_t to);//the paramter to counts from 0
+		bool load(FILE*fp);
+		bool save(FILE*fp);
+		void setAmt(uint32_t amtnew);
 };

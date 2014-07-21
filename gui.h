@@ -14,6 +14,7 @@
    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
+#pragma once
 #define default_map_off_x 256
 #define default_map_off_y 256
 #define tile_placer_tile_offset_x 88
@@ -50,3 +51,4 @@ extern uint16_t true_color_box_x,true_color_box_y;
 void updateTileSelectAmt(void);
 void updateTileSelectAmt(uint32_t newMax);
 int MenuPopup(const char * title,const char * text,unsigned num,...);
+bool load_file_generic(const char * the_tile="Pick a file",bool save_file=false);

@@ -22,9 +22,59 @@ sprites::sprites(){
 	spriteslist=(sprite**)malloc(sizeof(sprite*));
 	spriteslist[0]=new sprite;
 }
+sprites::sprites(const sprites& other){
+	spriteslist=(sprite**)malloc(other.amt*sizeof(sprite*));
+	for(uint32_t i=0;i<other.amt;++i)
+		spriteslist[i]=new sprite(other.spriteslist[i]->w,other.spriteslist[i]->h,other.spriteslist[i]->starttile,other.spriteslist[i]->palrow);
+	amt=other.amt;
+}
 sprites::~sprites(){
 	for(uint32_t x=0;x<amt;++x)
 		delete spriteslist[x];
 	free(spriteslist);
 }
-		
+bool sprites::save(FILE*fp){
+	/*Format
+	 * uint32_t amount
+	 * And for each sprite:
+	 * uint32_t width
+	 * uint32_t height
+	 * uint32_t start tile
+	 * uint32_t pal row*/
+	fwrite(&amt,sizeof(uint32_t),1,fp);
+	for(unsigned n=0;n<amt;++n){
+		fwrite(&spriteslist[n]->w,sizeof(uint32_t),1,fp);
+		fwrite(&spriteslist[n]->h,sizeof(uint32_t),1,fp);
+		fwrite(&spriteslist[n]->starttile,sizeof(uint32_t),1,fp);
+		fwrite(&spriteslist[n]->palrow,sizeof(uint32_t),1,fp);
+	}
+	return true;
+}
+void sprites::setAmt(uint32_t amtnew){
+	if(amtnew>amt){
+		//Create more sprites with default paramater
+		spriteslist=(sprite**)realloc(spriteslist,amtnew*sizeof(sprite*));
+		for(unsigned n=amt;n<amtnew;++n)
+			spriteslist[n]=new sprite;
+	}else if(amtnew<amt){
+		for(unsigned n=amtnew;n<amt;++n)
+			delete spriteslist[n];
+		spriteslist=(sprite**)realloc(spriteslist,amtnew*sizeof(sprite*));
+	}
+	amt=amtnew;
+}
+bool sprites::load(FILE*fp){
+	uint32_t amtnew;
+	fread(&amtnew,sizeof(uint32_t),1,fp);
+	setAmt(amtnew);
+	for(unsigned n=0;n<amt;++n){
+		fread(&spriteslist[n]->w,sizeof(uint32_t),1,fp);
+		fread(&spriteslist[n]->h,sizeof(uint32_t),1,fp);
+		fread(&spriteslist[n]->starttile,sizeof(uint32_t),1,fp);
+		fread(&spriteslist[n]->palrow,sizeof(uint32_t),1,fp);
+	}
+	return true;
+}
+void sprites::importImg(uint32_t to){
+	
+}

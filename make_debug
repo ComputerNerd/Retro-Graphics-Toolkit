@@ -1,3 +1,4 @@
+CPPFLAGS=-MD -MP
 CC=gcc
 CPP=g++
 #gentoo fix needs include directory set to /usr/include/fltk-1 if you are using a different distro then this may not apply to you
@@ -8,17 +9,17 @@ OBJECTS=project.o main.o callbacks_palette.o callback_tiles.o class_global.o glo
 	class_tiles.o kens/nemesis.o kens/enigma.o kens/kosinski.o spatial_color_quant.o NEUQUANT.o \
 	classtilemap.o palette.o zlibwrapper.o color_compare.o windowinit.o tiles_io.o savepng.o \
 	callback_project.o callback_tilemap.o callback_gui.o classChunks.o compressionWrapper.o callback_chunk.o gui.o \
-	wu.o system.o filemisc.o classSprite.o classSprites.o
+	wu.o system.o filemisc.o classSprite.o classSprites.o callbacksprites.o
 LINKER=-L/usr/lib/fltk-1/ -lfltk_images -lfltk -lpng -ljpeg -lXft -lXext -lXinerama -lX11 -lz
 EXECUTABLE=RetroGraphicsToolkit
-
 all: $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
 	$(CPP) $(LDFLAGS) $(OBJECTS) $(LINKER) -o $@
 .c.o:
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $< -o $@
 .cpp.o:
-	$(CPP) $(CFLAGS) $< -o $@
+	$(CPP) $(CPPFLAGS) $(CFLAGS) $< -o $@
 clean:
 	rm $(OBJECTS) $(EXECUTABLE)
+-include $(OBJECTS:.o=.d)

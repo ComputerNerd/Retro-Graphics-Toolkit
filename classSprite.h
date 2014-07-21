@@ -19,11 +19,9 @@
 class sprite{
 	public:
 		uint32_t w,h;//In tiles
-		uint32_t*tileslist;//the array contains w*h elements
+		uint32_t starttile;
 		uint32_t palrow;
 		sprite();
-		sprite(uint32_t wi,uint32_t hi,uint32_t palrowset);
-		~sprite();
-		void display(unsigned x,unsigned y);
-		void setsize(uint32_t wnew,uint32_t hnew);
+		sprite(uint32_t wi,uint32_t hi,uint32_t palrowset,uint32_t settile);
+		void draw(unsigned x,unsigned y,unsigned zoom);
 };

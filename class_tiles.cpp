@@ -242,8 +242,8 @@ void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,int zoom,uint8_t pa
 	tile_draw*=tileSize;
 	switch (currentProject->gameSystem){
 		case sega_genesis:
-			for (y=0;y<8;y++){
-				for (x=0;x<4;x++){
+			for (y=0;y<8;++y){
+				for (x=0;x<4;++x){
 					//get two pixels
 					uint8_t temp=tileTemp[(y*4)+x];
 					//split the two pixels

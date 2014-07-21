@@ -22,6 +22,7 @@
 #include "callback_gui.h"
 #include "callback_project.h"
 #include "callback_chunk.h"
+#include "callbacksprites.h"
 void set_mode_tabs(Fl_Widget* o, void*){
 	Fl_Group * val=(Fl_Group*)(Fl_Tabs*)window->the_tabs->value();
 	if (val==window->TabsMain[pal_edit]){
@@ -75,6 +76,9 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Chunks",0, 0, 0, FL_SUBMENU},
 			{"Import sonic 1 chunks",0,ImportS1CBChunks,0},
 			{"Import sonic 1 chunks (append)",0,ImportS1CBChunks,(void*)1},
+			{0},
+		{"Sprites",0, 0, 0, FL_SUBMENU},
+			{"Append imported sprite",0,appendSpriteCB,0},
 			{0},
 		{0},
 	{"Palette Actions",0, 0, 0, FL_SUBMENU},
@@ -211,18 +215,18 @@ void editor::_editor(){
 			subSysC->copy(subSysNES);
 			subSysC->value(1);
 			subSysC->hide();
-			{ Fl_Group *o = new Fl_Group(304, 192, 88, 96);
+			{ Fl_Group *o = new Fl_Group(306, 188, 88, 96);
 				{
-					palType[0] = new Fl_Round_Button(304, 192, 64, 32, "Free");
+					palType[0] = new Fl_Round_Button(306, 188, 64, 32, "Free");
 					palType[0]->type(FL_RADIO_BUTTON);
 					palType[0]->set();
 					palType[0]->callback((Fl_Callback*) setPalType,(void *)0);
 					palType[0]->tooltip(freeDes);
-					palType[1] = new Fl_Round_Button(304, 224, 72, 32, "Locked");
+					palType[1] = new Fl_Round_Button(306, 220, 72, 32, "Locked");
 					palType[1]->type(FL_RADIO_BUTTON);
 					palType[1]->callback((Fl_Callback*) setPalType,(void *)1);
 					palType[1]->tooltip(lockedDes);
-					palType[2] = new Fl_Round_Button(304, 256, 88, 32, "Reserved");
+					palType[2] = new Fl_Round_Button(306, 252, 88, 32, "Reserved");
 					palType[2]->type(FL_RADIO_BUTTON);
 					palType[2]->callback((Fl_Callback*) setPalType,(void *)2);
 					palType[2]->tooltip(reservedDes);
@@ -298,7 +302,7 @@ void editor::_editor(){
 			rgb_alpha->value(0);
 			rgb_alpha->align(FL_ALIGN_LEFT);
 			rgb_alpha->callback(update_truecolor,(void *)3);
-			{ Fl_Group *o = new Fl_Group(304, 96, 88, 96);
+			{Fl_Group *o = new Fl_Group(304, 96, 88, 96);
 				{
 					palType[3] = new Fl_Round_Button(304, 96, 64, 32, "Free");
 					palType[3]->type(FL_RADIO_BUTTON);
@@ -502,14 +506,12 @@ void editor::_editor(){
 			tile_select_3->align(FL_ALIGN_TOP);
 			tile_select_3->callback(selBlockCB);
 
-
 			hflipCB[1] = new Fl_Check_Button(tile_place_buttons_x_off,160,64,32,"hflip");
 			hflipCB[1]->callback(set_hflipCB,(void*)1);
 			vflipCB[1] = new Fl_Check_Button(tile_place_buttons_x_off,192,64,32,"vflip");
 			vflipCB[1]->callback(set_vflipCB,(void*)1);
 			prioCB[1] = new Fl_Check_Button(tile_place_buttons_x_off,224,72,32,"priority");
 			prioCB[1]->callback(set_prioCB,(void*)1);
-
 
 			solidChunkMenu=new Fl_Choice(tile_place_buttons_x_off,256,128,24);
 			solidChunkMenu->copy(SolidMenu);
@@ -520,6 +522,22 @@ void editor::_editor(){
 			TabsMain[chunkEditor]->end();
 		}
 		{TabsMain[spriteEditor] = new Fl_Group(rx,ry,rw,rh,"Sprites");
+			spritesel=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,64,128,24,"Sprite select");
+			spritesel->step(1);
+			spritesel->maximum(0);
+			spritesel->align(FL_ALIGN_TOP);
+			spritest=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,104,128,24,"Start tile");
+			spritest->step(1);
+			spritest->maximum(0);
+			spritest->align(FL_ALIGN_TOP);
+			spritesize[0]=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,144,128,24,"Width");
+			spritesize[0]->step(1);
+			spritesize[0]->maximum(0);
+			spritesize[0]->align(FL_ALIGN_TOP);
+			spritesize[1]=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,184,128,24,"Height");
+			spritesize[1]->step(1);
+			spritesize[1]->maximum(0);
+			spritesize[1]->align(FL_ALIGN_TOP);
 			TabsMain[spriteEditor]->end();
 		}
 		{TabsMain[settingsTab] = new Fl_Group(rx,ry,rw,rh,"Settings/projects");

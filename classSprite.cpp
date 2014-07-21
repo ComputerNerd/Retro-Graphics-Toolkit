@@ -17,17 +17,27 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "classSprite.h"
+#include "project.h"
 sprite::sprite(){
 	w=h=1;
-	tileslist=(uint32_t*)malloc(sizeof(uint32_t));
+	starttile=0;
 	palrow=0;
 }
-sprite::sprite(uint32_t wi,uint32_t hi,uint32_t palrowset){
+sprite::sprite(uint32_t wi,uint32_t hi,uint32_t palrowset,uint32_t settile){
 	w=wi;
 	h=hi;
-	tileslist=(uint32_t*)malloc(w*h*sizeof(uint32_t));
 	palrow=palrowset;
+	starttile=settile;
 }
-sprite::~sprite(){
-	free(tileslist);
+void sprite::draw(unsigned x,unsigned y,unsigned zoom){
+	unsigned yy=y;
+	unsigned t=starttile;
+	for(unsigned i=0;i<w;++i){//This is backwards due to the way sega genesis stores sprites. The code is the same for NES because height will always be one
+		for(unsigned j=0;j<h;++j){
+			currentProject->tileC->draw_tile(x,y,t++,zoom,palrow,false,false);
+			yy+=currentProject->tileC->sizey*zoom;
+		}
+		x+=currentProject->tileC->sizex*zoom;
+		yy=y;
+	}
 }

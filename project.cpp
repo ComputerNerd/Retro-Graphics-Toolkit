@@ -35,6 +35,7 @@ void initProject(void){
 	currentProject->tileC=new tiles;
 	currentProject->tileMapC=new tileMap;
 	currentProject->Chunk=new ChunkClass;
+	currentProject->spritesC=new sprites;
 	currentProject->rgbPal=(uint8_t*)calloc(1,256);
 	currentProject->palDat=(uint8_t*)calloc(1,128);
 	currentProject->palType=(uint8_t*)calloc(1,64);
@@ -136,10 +137,16 @@ void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable){
 			projects[share]->tileMapC=projects[with]->tileMapC;
 		}
 		if(what&pjHaveChunks){
-			if((projects[share]->share[3]<0)&&(projects[share]->useMask&pjHaveMap))
+			if((projects[share]->share[chunkEditor]<0)&&(projects[share]->useMask&pjHaveChunks))
 				delete projects[share]->Chunk;
-			projects[share]->share[3]=with;
+			projects[share]->share[chunkEditor]=with;
 			projects[share]->Chunk=projects[with]->Chunk;
+		}
+		if(what&pjHaveSprites){
+			if((projects[share]->share[spriteEditor]<0)&&(projects[share]->useMask&pjHaveSprites))
+				delete projects[share]->spritesC;
+			projects[share]->share[spriteEditor]=with;
+			projects[share]->spritesC=projects[with]->spritesC;
 		}
 	}else{
 		if(what&pjHavePal){
@@ -154,23 +161,24 @@ void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable){
 			projects[share]->share[0]=-1;
 		}
 		if(what&pjHaveTiles){
-			if((projects[share]->share[1]>=0)&&(projects[share]->useMask&pjHaveTiles)){
-				//Create a copy of the shared data
+			if((projects[share]->share[1]>=0)&&(projects[share]->useMask&pjHaveTiles))//Create a copy of the shared data
 				projects[share]->tileC = new tiles(*projects[with]->tileC);
-			}
 			projects[share]->share[1]=-1;
 		}
 		if(what&pjHaveMap){
-			if((projects[share]->share[2]>=0)&&(projects[share]->useMask&pjHaveMap)){
+			if((projects[share]->share[2]>=0)&&(projects[share]->useMask&pjHaveMap))
 				projects[share]->tileMapC = new tileMap(*projects[with]->tileMapC);
-			}
 			projects[share]->share[2]=-1;//Even if we don't have the data sharing can still be disabled
 		}
 		if(what&pjHaveChunks){
-			if((projects[share]->share[3]>=0)&&(projects[share]->useMask&pjHaveMap)){
+			if((projects[share]->share[3]>=0)&&(projects[share]->useMask&pjHaveChunks))
 				projects[share]->Chunk = new ChunkClass(*projects[with]->Chunk);
-			}
 			projects[share]->share[3]=-1;//Even if we don't have the data sharing can still be disabled
+		}
+		if(what&pjHaveSprites){
+			if((projects[share]->share[4]>=0)&&(projects[share]->useMask&pjHaveSprites))
+				projects[share]->spritesC = new sprites(*projects[with]->spritesC);
+			projects[share]->share[4]=-1;//Even if we don't have the data sharing can still be disabled
 		}
 	}
 }
@@ -184,12 +192,13 @@ bool appendProject(void){
 	projects[projects_count]->tileC=new tiles;
 	projects[projects_count]->tileMapC=new tileMap;
 	projects[projects_count]->Chunk=new ChunkClass;
+	projects[projects_count]->spritesC=new sprites;
 	projects[projects_count]->Name.assign(defaultName);
 	projects[projects_count]->rgbPal=(uint8_t*)calloc(1,256);
 	projects[projects_count]->palDat=(uint8_t*)calloc(1,128);
 	projects[projects_count]->palType=(uint8_t*)calloc(1,64);
 	projects[projects_count]->gameSystem=sega_genesis;
-	projects[projects_count]->subSystem=0;
+	projects[projects_count]->subSystem=3;
 	std::fill(projects[projects_count]->share,&projects[projects_count]->share[shareAmtPj],-1);
 	projects[projects_count]->useMask=pjDefaultMask;
 	++projects_count;
@@ -206,11 +215,15 @@ bool removeProject(uint32_t id){
 		fl_alert("You must have atleast one project.");
 		return false;
 	}
-	if((projects[id]->share[1]<0)&&(projects[id]->useMask&pjHaveTiles))
+	if((projects[id]->share[tile_edit]<0)&&(projects[id]->useMask&pjHaveTiles))
 		delete projects[id]->tileC;
-	if((projects[id]->share[2]<0)&&(projects[id]->useMask&pjHaveMap))
+	if((projects[id]->share[tile_place]<0)&&(projects[id]->useMask&pjHaveMap))
 		delete projects[id]->tileMapC;
-	if((projects[id]->share[0]<0)&&(projects[id]->useMask&pjHavePal)){
+	if((projects[id]->share[chunkEditor]<0)&&(projects[id]->useMask&pjHaveChunks))
+		delete projects[id]->Chunk;
+	if((projects[id]->share[spriteEditor]<0)&&(projects[id]->useMask&pjHaveSprites))
+		delete projects[id]->spritesC;
+	if((projects[id]->share[pal_edit]<0)&&(projects[id]->useMask&pjHavePal)){
 		free(projects[id]->rgbPal);
 		free(projects[id]->palDat);
 		free(projects[id]->palType);
@@ -413,6 +426,12 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 			}
 		}
 	}
+	if(projects[id]->useMask&pjHaveSprites){
+		if(projects[id]->share[4]<0){
+			if(version>=5)
+				projects[id]->spritesC->load(fi);
+		}
+	}
 	return true;
 }
 bool loadProject(uint32_t id){
@@ -527,6 +546,10 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 			fwrite(&projects[id]->Chunk->amt,1,sizeof(uint32_t),fo);
 			compressToFile(projects[id]->Chunk->chunks,projects[id]->Chunk->wi*projects[id]->Chunk->hi*sizeof(struct ChunkAttrs)*projects[id]->Chunk->amt,fo);
 		}
+	}
+	if(haveTemp&pjHaveSprites){
+		if(saveShared||(projects[id]->share[4]<0))
+			projects[id]->spritesC->save(fo);
 	}
 	return true;
 }

@@ -1,18 +1,18 @@
 /*
- This file is part of Retro Graphics Toolkit
+   This file is part of Retro Graphics Toolkit
 
-    Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or any later version.
+   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or any later version.
 
-    Retro Graphics Toolkit is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+   Retro Graphics Toolkit is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   You should have received a copy of the GNU General Public License
+   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
 #include "includes.h"
 #include "class_global.h"
@@ -262,30 +262,4 @@ uint32_t cal_offset_truecolor(uint16_t x,uint16_t y,uint16_t rgb,uint32_t tile){
 	blue_temp=truecolor_data[cal_offset_truecolor(0,0,2,0)]//get the blue pixel at pixel 0,0 at tile 0
 	*/
 	return (x*4)+(y*32)+rgb+(tile*256);
-}
-//bool load_file_generic(const char * the_tile="Pick a file",bool save_file=false)
-bool load_file_generic(const char * the_tile,bool save_file){
-	// Create native chooser
-	Fl_Native_File_Chooser native;
-	native.title(the_tile);
-	if (save_file == false)
-		native.type(Fl_Native_File_Chooser::BROWSE_FILE);
-	else
-		native.type(Fl_Native_File_Chooser::BROWSE_SAVE_FILE);
-	// Show native chooser
-	switch (native.show())
-	{
-	case -1: fprintf(stderr, "ERROR: %s\n", native.errmsg()); break;	// ERROR
-	case  1: fprintf(stderr, "*** CANCEL\n"); fl_beep(); break;		// CANCEL
-	default:// PICKED FILE
-		if (native.filename())
-		{
-			the_file=native.filename();
-			//native.~Fl_Native_File_Chooser();//sementation fault
-			return true;//the only way this this function will return true is the user picked a file
-		}
-		break;
-	}
-	//native.~Fl_Native_File_Chooser();
-	return false;//if an error happened or the user did not pick a file the function returns false
 }

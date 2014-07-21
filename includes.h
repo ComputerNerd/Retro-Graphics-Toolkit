@@ -55,4 +55,3 @@
 #include <FL/Fl_Image.H>
 #include <FL/Fl_Progress.H>
 #include <inttypes.h>
-//using namespace std;

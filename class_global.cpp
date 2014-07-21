@@ -232,9 +232,9 @@ static void setXYdisp(int x,int y,unsigned n){
 	window->cordDisp[n]->copy_label(tmp);
 }
 static void setXYdispBlock(int x,int y){
-	if(currentProject->Chunk->useBlocks){
+	if(currentProject->tileMapC->isBlock){
 		char tmp[128];
-		snprintf(tmp,64,"Block: %d X: %d, Y: %d",y/currentProject->tileMapC->mapSizeH,x%currentProject->tileMapC->mapSizeW,y%currentProject->tileMapC->mapSizeH);
+		snprintf(tmp,128,"Block: %d X: %d, Y: %d",y/currentProject->tileMapC->mapSizeH,x%currentProject->tileMapC->mapSizeW,y%currentProject->tileMapC->mapSizeH);
 		window->cordDisp[0]->copy_label(tmp);
 	}else
 		setXYdisp(x,y,0);

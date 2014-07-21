@@ -48,6 +48,9 @@ class editor : public Fl_Double_Window{
 	Fl_Slider* tile_select_2;
 	Fl_Slider* chunk_select;
 	Fl_Slider* tile_select_3;
+	Fl_Slider* spritesel;
+	Fl_Slider* spritest;//sprite start tile
+	Fl_Slider* spritesize[2];//sprite width,height
 	Fl_Slider* projectSelect;
 	Fl_Tabs* the_tabs;
 	Fl_Round_Button* palType[9];
