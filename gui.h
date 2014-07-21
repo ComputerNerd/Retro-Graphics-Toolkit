@@ -13,7 +13,7 @@
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
-   */
+*/
 #define default_map_off_x 256
 #define default_map_off_y 256
 #define tile_placer_tile_offset_x 88
@@ -39,11 +39,13 @@ extern uint16_t tile_edit_offset_x,tile_edit_offset_y;
 extern uint16_t tile_placer_tile_offset_y;
 extern uint16_t tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
 extern uint16_t true_color_box_x,true_color_box_y;
+//These values below must corespond with array offsets for tabs
 #define pal_edit 0
 #define tile_edit 1
 #define tile_place 2
 #define chunkEditor 3
-#define settingsTab 4
+#define spriteEditor 4
+#define settingsTab 5
 
 void updateTileSelectAmt(void);
 void updateTileSelectAmt(uint32_t newMax);

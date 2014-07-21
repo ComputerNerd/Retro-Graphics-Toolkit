@@ -30,7 +30,6 @@ Header for globals included with all other files.
 //functions
 uint8_t nearest_color_index(uint8_t val);
 void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha=true,bool alphaZero=false);
-bool saveBinAsText(void * ptr,size_t sizeBin,FILE * myfile);
 bool verify_str_number_only(char * str);
 uint32_t cal_offset_truecolor(uint16_t x,uint16_t y,uint16_t rgb,uint32_t tile);
 bool load_file_generic(const char * the_tile="Pick a file",bool save_file=false);
@@ -40,10 +39,19 @@ uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b);
 uint32_t MakeRGBcolor(uint32_t pixel,float saturation = 1.1f, float hue_tweak = 0.0f,float contrast = 1.0f, float brightness = 1.0f,float gamma = 2.2f);
 //uint32_t MakeRGBcolor(uint32_t pixel,float saturation, float hue_tweak,float contrast, float brightness ,float gamma );
 //varibles and defines
+//System declerations
 #define sega_genesis 0
 #define NES 1
-#define NES2x2 0
-#define NES1x1 1
+#define frameBuffer_pal 2
+#define frameBuffer 3
+/*Subsystem declarations
+ * Subsystem as the name implies depends on which system is selected
+ * These are not compatible when switching systems
+ * For the sega geneis bits 1-0 contain bit depth 0 means 1 bit
+ * For the NES bit 1 contains bit depth 1 if 2 bit 0 if 1 bit
+ * For palette framebuffer bits 2-0 contain bit depth add 1 to get actual just like the others*/
+#define NES2x2 1//Note for version 4 or eariler projects and hence in eariler versions of Retro Graphics Toolkit these bit 0 was inverted
+#define NES1x1 0
 extern Fl_Group * shadow_highlight_switch;
 //tabs group id
 extern bool show_grid_placer;

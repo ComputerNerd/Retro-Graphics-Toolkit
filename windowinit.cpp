@@ -1,3 +1,19 @@
+/*
+   This file is part of Retro Graphics Toolkit
+
+   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or any later version.
+
+   Retro Graphics Toolkit is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+*/
 #include "global.h"
 #include "callbacks_palette.h"
 #include "callback_tiles.h"
@@ -6,36 +22,22 @@
 #include "callback_gui.h"
 #include "callback_project.h"
 #include "callback_chunk.h"
-/*
- This file is part of Retro Graphics Toolkit
-
-    Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or any later version.
-
-    Retro Graphics Toolkit is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-    Copyright Sega16 (or whatever you wish to call me (2012-2014)
-*/
 void set_mode_tabs(Fl_Widget* o, void*){
 	Fl_Group * val=(Fl_Group*)(Fl_Tabs*)window->the_tabs->value();
-	if (val==window->TabsMain[0]){
+	if (val==window->TabsMain[pal_edit]){
 		mode_editor=pal_edit;
 		palEdit.updateSlider();
-	}else if (val==window->TabsMain[1]){
+	}else if (val==window->TabsMain[tile_edit]){
 		mode_editor=tile_edit;
 		tileEdit_pal.updateSlider();
-	}else if (val==window->TabsMain[2]){
+	}else if (val==window->TabsMain[tile_place]){
 		mode_editor=tile_place;
 		tileMap_pal.updateSlider();
-	}else if(val==window->TabsMain[3]){
+	}else if(val==window->TabsMain[chunkEditor]){
 		mode_editor=chunkEditor;
-	}else if (val==window->TabsMain[4]){
+	}else if(val==window->TabsMain[spriteEditor]){
+		mode_editor=spriteEditor;
+	}else if (val==window->TabsMain[settingsTab]){
 		mode_editor=settingsTab;
 	}
 }
@@ -117,16 +119,16 @@ static const Fl_Menu_Item ditherChoices[]={
 	{0}
 };
 static const Fl_Menu_Item subSysNES[]={
-		{"2x2 tile palette",0,setSubSysCB,(void*)NES2x2},
-		{"1x1 tile palette",0,setSubSysCB,(void*)NES1x1},
-		{0}
+	{"1x1 tile palette",0,setSubSysCB,(void*)NES1x1},
+	{"2x2 tile palette",0,setSubSysCB,(void*)NES2x2},
+	{0}
 };
 static const Fl_Menu_Item SolidMenu[]={
-		{"Not solid",0,solidCB,(void*)0},
-		{"Top solid",0,solidCB,(void*)1},
-		{"Left/Right/Bottom solid",0,solidCB,(void*)2},
-		{"All solid",0,solidCB,(void*)3},
-		{0}
+	{"Not solid",0,solidCB,(void*)0},
+	{"Top solid",0,solidCB,(void*)1},
+	{"Left/Right/Bottom solid",0,solidCB,(void*)2},
+	{"All solid",0,solidCB,(void*)3},
+	{0}
 };
 extern const char * MapWidthTxt;
 extern const char * MapHeightTxt;
@@ -140,13 +142,14 @@ void editor::_editor(){
 	true_color_box_y=default_true_color_box_y;
 	tile_edit_truecolor_off_x=default_tile_edit_truecolor_off_x;
 	tile_edit_truecolor_off_y=default_tile_edit_truecolor_off_y;
+	std::fill(tabsHidden,&tabsHidden[shareAmtPj],false);
 	{
 		the_tabs = new Fl_Tabs(0, 24, 800, 576);
 		the_tabs->callback(set_mode_tabs);
 		int rx,ry,rw,rh;
 		the_tabs->client_area(rx,ry,rw,rh);
 		{
-			TabsMain[0] = new Fl_Group(rx, ry, rw, rh, "palette editor");
+			TabsMain[pal_edit] = new Fl_Group(rx, ry, rw, rh, "palette editor");
 			//stuff realed to this group should go here
 			palEdit.more_init(4);
 			pal_size = new Fl_Hor_Value_Slider(128,384,320,24,"Palette box size");
@@ -206,6 +209,7 @@ void editor::_editor(){
 			o->copy(ditherChoices);}
 			subSysC=new Fl_Choice(208, 464, 128, 24);
 			subSysC->copy(subSysNES);
+			subSysC->value(1);
 			subSysC->hide();
 			{ Fl_Group *o = new Fl_Group(304, 192, 88, 96);
 				{
@@ -225,9 +229,9 @@ void editor::_editor(){
 					o->end();
 				} // End of buttons
 			}//end of group
-      			TabsMain[0]->end();
+      			TabsMain[pal_edit]->end();
 		} // Fl_Group* o
-		{TabsMain[1] = new Fl_Group(rx, ry, rw, rh, "Tile Editor");
+		{TabsMain[tile_edit] = new Fl_Group(rx, ry, rw, rh, "Tile Editor");
 			//stuff realed to this group should go here
 			{ Fl_Group* o = new Fl_Group(0, 0, 800, 567);
 				{
@@ -331,9 +335,9 @@ void editor::_editor(){
 			tile_select->value(0);
 			tile_select->align(FL_ALIGN_LEFT);
 			tile_select->callback(set_tile_current);
-			TabsMain[1]->end();
+			TabsMain[tile_edit]->end();
 		}
-		{TabsMain[2] = new Fl_Group(rx,ry,rw,rh,"Plane Mapping/Block Editor");
+		{TabsMain[tile_place] = new Fl_Group(rx,ry,rw,rh,"Plane Mapping/Block Editor");
 			{
 				Fl_Group* o = new Fl_Group(tile_place_buttons_x_off, 192, 60, 128);
 				{
@@ -457,9 +461,9 @@ void editor::_editor(){
 			cordDisp[0]=new Fl_Box(tile_place_buttons_x_off,556,128,64);
 			cordDisp[0]->labelsize(12);
 
-			TabsMain[2]->end();
+			TabsMain[tile_place]->end();
 		}
-		{TabsMain[3] = new Fl_Group(rx,ry,rw,rh,"Chunk editor");
+		{TabsMain[chunkEditor] = new Fl_Group(rx,ry,rw,rh,"Chunk editor");
 			useBlocksChunkCBtn=new Fl_Check_Button(8, 48, 152, 24, "Use blocks");
 			useBlocksChunkCBtn->callback(useBlocksCB);
 			chunk_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,512,160,24,"Tile Zoom Factor:");
@@ -513,9 +517,12 @@ void editor::_editor(){
 			cordDisp[1]=new Fl_Box(tile_place_buttons_x_off,556,128,64);
 			cordDisp[1]->labelsize(12);
 
-			TabsMain[3]->end();
+			TabsMain[chunkEditor]->end();
 		}
-		{TabsMain[4] = new Fl_Group(rx,ry,rw,rh,"Settings/projects");
+		{TabsMain[spriteEditor] = new Fl_Group(rx,ry,rw,rh,"Sprites");
+			TabsMain[spriteEditor]->end();
+		}
+		{TabsMain[settingsTab] = new Fl_Group(rx,ry,rw,rh,"Settings/projects");
 			projectSelect=new Fl_Hor_Value_Slider(112,56,128,24,"Current project");
 			projectSelect->minimum(0);
 			projectSelect->maximum(0);
@@ -529,7 +536,7 @@ void editor::_editor(){
 			{Fl_Button *o = new Fl_Button(428, 52, 168, 32, "Delete selected project");
 				o->callback(deleteProjectCB);
 			}
-			
+			//IMPORTANT if adding a new tab remember to update these
 			sharePrj[0]=new Fl_Check_Button(8,112,112,16,"Share palette");
 			sharePrj[0]->callback(shareProjectCB,(void*)pjHavePal);
 			sharePrj[1]=new Fl_Check_Button(120,112,96,16,"Share Tiles");
@@ -538,24 +545,30 @@ void editor::_editor(){
 			sharePrj[2]->callback(shareProjectCB,(void*)pjHaveMap);
 			sharePrj[3]=new Fl_Check_Button(336,112,120,16,"Share chunks");
 			sharePrj[3]->callback(shareProjectCB,(void*)pjHaveChunks);
+			sharePrj[4]=new Fl_Check_Button(456,112,120,16,"Share sprites");
+			sharePrj[4]->callback(shareProjectCB,(void*)pjHaveSprites);
 			
 			havePrj[0]=new Fl_Check_Button(8,88,112,16,"Have palette");
 			havePrj[0]->callback(haveCB,(void*)pjHavePal);
-			havePrj[1]=new Fl_Check_Button(120,88,96,16,"Have Tiles");
+			havePrj[1]=new Fl_Check_Button(120,88,96,16,"Have tiles");
 			havePrj[1]->callback(haveCB,(void*)pjHaveTiles);
-			havePrj[2]=new Fl_Check_Button(232,88,120,16,"Have TileMap");
+			havePrj[2]=new Fl_Check_Button(232,88,120,16,"Have tileMap");
 			havePrj[2]->callback(haveCB,(void*)pjHaveMap);
-			havePrj[3]=new Fl_Check_Button(344,88,120,16,"Have Chunks");
+			havePrj[3]=new Fl_Check_Button(344,88,120,16,"Have chunks");
 			havePrj[3]->callback(haveCB,(void*)pjHaveChunks);
+			havePrj[4]=new Fl_Check_Button(456,88,120,16,"Have sprites");
+			havePrj[4]->callback(haveCB,(void*)pjHaveChunks);
 			
-			shareWith[0]=new Fl_Hor_Value_Slider(8,142,128,24,"Share Palette with:");
+			shareWith[0]=new Fl_Hor_Value_Slider(8,142,128,24,"Share palette with:");
 			shareWith[0]->callback(switchShareCB,(void*)pjHavePal);
 			shareWith[1]=new Fl_Hor_Value_Slider(136,142,128,24,"Share tiles with:");
 			shareWith[1]->callback(switchShareCB,(void*)pjHaveTiles);
-			shareWith[2]=new Fl_Hor_Value_Slider(264,142,128,24,"Share TileMap with:");
+			shareWith[2]=new Fl_Hor_Value_Slider(264,142,128,24,"Share tileMap with:");
 			shareWith[2]->callback(switchShareCB,(void*)pjHaveMap);
-			shareWith[3]=new Fl_Hor_Value_Slider(400,142,128,24,"Share Chunks with:");
+			shareWith[3]=new Fl_Hor_Value_Slider(400,142,128,24,"Share chunks with:");
 			shareWith[3]->callback(switchShareCB,(void*)pjHaveChunks);
+			shareWith[4]=new Fl_Hor_Value_Slider(536,142,128,24,"Share sprites with:");
+			shareWith[4]->callback(switchShareCB,(void*)pjHaveSprites);
 			for(int x=0;x<shareAmtPj;++x){
 				havePrj[x]->value(1);
 				shareWith[x]->minimum(0);
@@ -570,8 +583,7 @@ void editor::_editor(){
 			TxtEditProject->buffer(TxtBufProject);
 			TxtEditProject->textfont(FL_TIMES);
 			TxtBufProject->text(currentProject->Name.c_str());
-			std::fill(tabsHidden,&tabsHidden[4],false);
-			TabsMain[4]->end();
+			TabsMain[settingsTab]->end();
 		}
 	}
 }

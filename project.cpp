@@ -1,18 +1,18 @@
 /*
- This file is part of Retro Graphics Toolkit
+   This file is part of Retro Graphics Toolkit
 
-    Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or any later version.
+   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or any later version.
 
-    Retro Graphics Toolkit is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+   Retro Graphics Toolkit is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-    Copyright Sega16 (or whatever you wish to call me (2012-2014)
+   You should have received a copy of the GNU General Public License
+   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me (2012-2014)
 */
 #include "project.h"
 #include <FL/Fl.H>
@@ -259,13 +259,14 @@ void switchProject(uint32_t id){
 			tileEdit_pal.changeSystem();
 			tileMap_pal.changeSystem();
 			update_emphesis(0,0);
-			if(projects[id]->subSystem==NES2x2){
+			if(projects[id]->subSystem&NES2x2){
 				window->map_w->step(2);
 				window->map_h->step(2);
 			}else{
 				window->map_w->step(1);
 				window->map_h->step(1);
 			}
+			window->subSysC->value(currentProject->subSystem&1);
 		break;
 	}
 	//Make sure sliders have correct values
@@ -322,7 +323,7 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 		tmp[0]=d;
 		tmp[1]=0;
 		projects[id]->Name.assign(tmp);
-		while(d!=0){
+		while(d){
 			d=fgetc(fi);
 			projects[id]->Name.append(1,d);
 		}
@@ -336,10 +337,21 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 	else
 		projects[id]->useMask=pjHavePal|pjHaveTiles|pjHaveMap;
 	fread(&projects[id]->gameSystem,1,sizeof(uint32_t),fi);
-	if(version>=4)
+	if(version>=4){
 		fread(&projects[id]->subSystem,1,sizeof(uint32_t),fi);
-	else
-		projects[id]->subSystem=0;
+		if((version==4)){
+			switch(projects[id]->gameSystem){
+				case sega_genesis:
+					projects[id]->subSystem=3;//Default to 4 bit
+				break;
+				case NES:
+					projects[id]->subSystem^=1;//Fix the fact that NES2x2 and NES1x1 were switched around in version 4
+					projects[id]->subSystem|=2;//Default to 2 bit
+				break;
+			}
+		}
+	}else
+		projects[id]->subSystem=3;
 	int entries,eSize;
 	switch(projects[id]->gameSystem){
 		case sega_genesis:
@@ -390,14 +402,14 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 	if(projects[id]->useMask&pjHaveChunks){
 		if(projects[id]->share[3]<0){
 			if(version>=3){
-			uint8_t useBlockTemp;
-			fread(&useBlockTemp,1,sizeof(uint8_t),fi);
-			projects[id]->Chunk->useBlocks=useBlockTemp?true:false;
-			fread(&projects[id]->Chunk->wi,1,sizeof(uint32_t),fi);
-			fread(&projects[id]->Chunk->hi,1,sizeof(uint32_t),fi);
-			fread(&projects[id]->Chunk->amt,1,sizeof(uint32_t),fi);
-			projects[id]->Chunk->chunks=(struct ChunkAttrs*)realloc(projects[id]->Chunk->chunks,projects[id]->Chunk->wi*projects[id]->Chunk->hi*sizeof(struct ChunkAttrs)*projects[id]->Chunk->amt);
-			decompressFromFile(projects[id]->Chunk->chunks,projects[id]->Chunk->wi*projects[id]->Chunk->hi*sizeof(struct ChunkAttrs)*projects[id]->Chunk->amt,fi);
+				uint8_t useBlockTemp;
+				fread(&useBlockTemp,1,sizeof(uint8_t),fi);
+				projects[id]->Chunk->useBlocks=useBlockTemp?true:false;
+				fread(&projects[id]->Chunk->wi,1,sizeof(uint32_t),fi);
+				fread(&projects[id]->Chunk->hi,1,sizeof(uint32_t),fi);
+				fread(&projects[id]->Chunk->amt,1,sizeof(uint32_t),fi);
+				projects[id]->Chunk->chunks=(struct ChunkAttrs*)realloc(projects[id]->Chunk->chunks,projects[id]->Chunk->wi*projects[id]->Chunk->hi*sizeof(struct ChunkAttrs)*projects[id]->Chunk->amt);
+				decompressFromFile(projects[id]->Chunk->chunks,projects[id]->Chunk->wi*projects[id]->Chunk->hi*sizeof(struct ChunkAttrs)*projects[id]->Chunk->amt,fi);
 			}
 		}
 	}
@@ -423,7 +435,7 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 	You can find the format in project.h
 	if these bits are zero skip it 
 	uint32_t game system
-	if(version >= 4) uint32_t sub System
+	if(version >= 4) uint32_t sub System requires special handeling for version==4
 	palette data (128 bytes if sega genesis or 16 bytes if NES)
 	if((version>=5)&&(gameSystem==NES)) 16 bytes for sprite specific palette
 	Free locked reserved data 64 bytes if sega genesis or 16 if NES
@@ -534,7 +546,7 @@ bool saveAllProjects(void){
 	uint32_t amount of projects stored
 	uint32_t version
 	Before each project header is
-	int32_t share[shareAmtPj] For version 4 the value of shareAmtPj is 4 however in version 5 the value will be 7 to accomidate for spirtes and animation
+	int32_t share[shareAmtPj] For version 4 the value of shareAmtPj is 4 in version 5 the value is 5
 	(format described in saveProject is repeated n amount of times let n = amount of projects stored) The only difference is version is not stored
 	*/
 	if(!load_file_generic("Save projects group as...",true))
@@ -554,6 +566,11 @@ bool saveAllProjects(void){
 }
 static void invaildGroup(void){
 	fl_alert("This is not a valid project group");
+}
+static void readShare(unsigned amt,FILE*fi,unsigned x){
+	fread(projects[x]->share,amt,sizeof(uint32_t),fi);
+	if(amt<shareAmtPj)
+		std::fill(&projects[x]->share[amt-1],&projects[x]->share[shareAmtPj],-1);
 }
 bool loadAllProjects(bool Old){
 	if(!load_file_generic("Load projects group"))
@@ -580,10 +597,9 @@ bool loadAllProjects(bool Old){
 	}
 	for(unsigned x=0;x<projects_count;++x){
 		if(Old){
-			fread(projects[x]->share,3,sizeof(uint32_t),fi);
-			std::fill(&projects[x]->share[3],&projects[x]->share[shareAmtPj],-1);
+			readShare(3,fi,x);
 		}else
-			fread(projects[x]->share,shareAmtPj,sizeof(uint32_t),fi);
+			readShare((version==4)?4:shareAmtPj,fi,x);
 		if(Old){
 			if(!(loadProjectFile(x,fi,true,3)))
 				return false;
@@ -602,6 +618,10 @@ bool loadAllProjects(bool Old){
 		if(version>=3){
 			if(projects[x]->share[3]>=0)
 				shareProject(x,projects[x]->share[3],pjHaveChunks,true);
+			if(version>=5){
+				if(projects[x]->share[4]>=0)
+					shareProject(x,projects[x]->share[4],pjHaveSprites,true);
+			}
 		}
 	}
 	fclose(fi);

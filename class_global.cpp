@@ -231,6 +231,14 @@ static void setXYdisp(int x,int y,unsigned n){
 	snprintf(tmp,64,"X: %d, Y: %d",x,y);
 	window->cordDisp[n]->copy_label(tmp);
 }
+static void setXYdispBlock(int x,int y){
+	if(currentProject->Chunk->useBlocks){
+		char tmp[128];
+		snprintf(tmp,64,"Block: %d X: %d, Y: %d",y/currentProject->tileMapC->mapSizeH,x%currentProject->tileMapC->mapSizeW,y%currentProject->tileMapC->mapSizeH);
+		window->cordDisp[0]->copy_label(tmp);
+	}else
+		setXYdisp(x,y,0);
+}
 int editor::handle(int event){
 	//printf("Event was %s (%d)\n", fl_eventnames[event], event);     // e.g. "Event was FL_PUSH (1)"
 	if (Fl_Double_Window::handle(event)) return (1);
@@ -286,7 +294,7 @@ int editor::handle(int event){
 						if (Fl::event_button()==FL_LEFT_MOUSE){
 							if(!((selTileE_G[0]==temp_one)&&(selTileE_G[1]==temp_two)&&tileEditModePlace_G)){
 								currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,temp_one,temp_two,tileMap_pal.theRow,G_hflip[0],G_vflip[0],G_highlow_p[0]);
-								setXYdisp(temp_one,temp_two,0);
+								setXYdispBlock(temp_one,temp_two);
 							}
 							tileEditModePlace_G=false;
 							damage(FL_DAMAGE_USER1);
@@ -309,7 +317,7 @@ int editor::handle(int event){
 								tileMap_pal.changeRow(Rm);
 								for(int as=0;as<4;++as)
 									palRTE[as]->value(as==Rm);
-								setXYdisp(temp_one,temp_two,0);
+								setXYdispBlock(temp_one,temp_two);
 								redraw();
 							}
 						}

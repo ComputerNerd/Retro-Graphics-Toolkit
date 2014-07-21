@@ -13,11 +13,12 @@
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
-   */
+*/
 //this is were all the callbacks for palette realted functions go
 #include "global.h"
 #include "class_global.h"
 #include "color_convert.h"
+#include "filemisc.h"
 void save_palette(Fl_Widget*, void* start_end){
 	char temp[4];
 	switch (currentProject->gameSystem){
@@ -40,27 +41,32 @@ void save_palette(Fl_Widget*, void* start_end){
 	if (!verify_str_number_only(returned))
 		return;
 	uint8_t end = atoi(returned)+1;
-	if (currentProject->gameSystem==sega_genesis){
-		start*=2;
-		end*=2;
-	}
-	uint8_t type=fl_choice("How would like this file saved?","Binary","C header",0);
+	int type=askSaveType();
 	if (load_file_generic("Save palette",true)==true){
 		FILE * myfile;
-		if (type == 1){
+		if (type){
 			myfile = fopen(the_file.c_str(),"w");
-			fputs("const uint8_t palDat[]={",myfile);
 		}else
 			myfile = fopen(the_file.c_str(),"wb");
 		if (likely(myfile!=0)){
 			//save the palette
-			if (type == 1){
-				if (saveBinAsText(currentProject->palDat+start,end-start,myfile)==false){
+			if (type){
+				char comment[512];
+				snprintf(comment,512,"Colors %d-%d",start,end-1);
+				if(currentProject->gameSystem==sega_genesis){
+					start*=2;//Be sure to keep this in sync with the other if statment shortly below
+					end*=2;
+				}
+				if (saveBinAsText(currentProject->palDat+start,end-start,myfile,type,comment,"palDat")==false){
 					fl_alert("Error: can not save file %s",the_file.c_str());
 					return;
 				}
 				fputs("};",myfile);
 			}else{
+				if(currentProject->gameSystem==sega_genesis){
+					start*=2;
+					end*=2;
+				}
 				if (fwrite(currentProject->palDat+start,1,end-start,myfile)==0){
 					fl_alert("Error: can not save file %s",the_file.c_str());
 					return;

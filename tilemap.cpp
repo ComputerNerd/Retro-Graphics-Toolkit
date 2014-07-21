@@ -232,7 +232,7 @@ void tileMap::pickRow(uint8_t amount){
 	double maxPal=divide;
 	double divBy;
 	unsigned addBy;
-	if((currentProject->gameSystem==NES)&&(currentProject->subSystem==NES2x2)){
+	if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
 		divBy=256.0;//8*8*4
 		addBy=2;
 	}else{
@@ -242,7 +242,7 @@ void tileMap::pickRow(uint8_t amount){
 	for (y=0;y<mapSizeHA;y+=addBy){
 		for (x=0;x<mapSizeW;x+=addBy){
 			double hh;
-			if((currentProject->gameSystem==NES)&&(currentProject->subSystem==NES2x2)){
+			if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
 				hh=getHH(get_tile(x,y),type);
 				hh+=getHH(get_tile(x+1,y),type);
 				hh+=getHH(get_tile(x,y+1),type);
@@ -385,7 +385,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 		progress->label("Picking tiles based on delta");
 	}
 	unsigned per;
-	if((currentProject->gameSystem==NES)&&(currentProject->subSystem==NES2x2))
+	if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2))
 		per=2;
 	else
 		per=1;

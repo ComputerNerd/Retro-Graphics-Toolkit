@@ -36,7 +36,7 @@ void set_game_system(Fl_Widget*,void* selection){
 			currentProject->tileC->tileSize=32;
 			//create_shadow_highlight_buttons();
 			shadow_highlight_switch->show();
-			{//for varibles to be declared inside of switch statment I must put brackes around so the compiler knows when to free them
+			{
 				uint8_t pal_temp[128];
 				uint8_t c;
 				for (c=0;c<128;c+=2){
@@ -66,14 +66,13 @@ void set_game_system(Fl_Widget*,void* selection){
 			update_emphesis(0,0);
 			currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*16);
 			//on the NES tilemaps need to be a multiple of 2
-			if(currentProject->subSystem==NES2x2){
-				if(((currentProject->tileMapC->mapSizeW)&1) && ((currentProject->tileMapC->mapSizeHA)&1))
-					currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeHA+1);
-				if((currentProject->tileMapC->mapSizeW)&1)
-					currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeHA);
-				if((currentProject->tileMapC->mapSizeHA)&1)
-					currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeHA+1);
-			}
+			currentProject->subSystem=NES2x2;
+			if(((currentProject->tileMapC->mapSizeW)&1) && ((currentProject->tileMapC->mapSizeHA)&1))
+				currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeHA+1);
+			if((currentProject->tileMapC->mapSizeW)&1)
+				currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeHA);
+			if((currentProject->tileMapC->mapSizeHA)&1)
+				currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeHA+1);
 			window->map_w->value(currentProject->tileMapC->mapSizeW);
 			window->map_h->value(currentProject->tileMapC->mapSizeHA);
 			window->map_w->step(2);

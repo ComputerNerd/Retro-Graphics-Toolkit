@@ -16,28 +16,19 @@
 */
 #include "global.h"
 #include "kens.h"
+#include "filemisc.h"
 void save_tiles(Fl_Widget*,void*){
 	if (load_file_generic("Pick a location to save tiles",true) == true){
-		uint8_t type=fl_choice("How would like this file saved?","Binary","C header",0);
+		int type=askSaveType();
 		uint8_t compression=fl_choice("What kind of compression do you want used?","Uncompressed","Nemesis","Kosinski");
 		FILE* myfile;
 		uint8_t* compdat;
 		uint32_t compsize;
-		if (type==1)
+		if(type)
 			myfile = fopen(the_file.c_str(),"w");
 		else
 			myfile = fopen(the_file.c_str(),"wb");
 		if (likely(myfile!=0)){
-			if (type == 1){
-				char temp[2048];
-				sprintf(temp,"//%d tiles",currentProject->tileC->tiles_amount+1);
-				fputs((const char *)temp,myfile);
-				if (compression==1)
-					fputs(" nemesis compressed",myfile);
-				else
-					fputc('\n',myfile);
-				fputs("const uint8_t tileDat[]={",myfile);
-			}
 			if(compression){
 				std::string input;
 				input.assign((const char *)currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize);
@@ -52,33 +43,34 @@ void save_tiles(Fl_Widget*,void*){
 				}
 				compsize=outfun.str().length();
 				compdat=(uint8_t*)malloc(compsize);
-				if (compdat==0)
+				if(!compdat)
 					show_malloc_error(compsize)
 				std::string output=outfun.str();
 				output.copy((char *)compdat,compsize);
 				printf("Compressed to %d uncompressed would be %d so therefore the file the ratio is %f\n",compsize,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize,(double)compsize/(double)((currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize)*100.0);
 			}
-			if (type == 1){
+			if (type){
+				char comment[2048];
+				snprintf(comment,2048,"%d tiles",currentProject->tileC->tiles_amount+1);
 				if (compression){
-					if(saveBinAsText(compdat,compsize,myfile)==false){
+					if(saveBinAsText(compdat,compsize,myfile,type,comment,"tileDat")==false){
 						free(compdat);
 						fl_alert("Error: can not save file %s",the_file.c_str());
 						return;
 					}
 				}else{
-					if (saveBinAsText(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize,myfile)==false) {
+					if (saveBinAsText(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize,myfile,type,comment,"tileDat")==false) {
 						fl_alert("Error: can not save file %s",the_file.c_str());
 						return;
 					}
 				}
-				fputs("};",myfile);
 			}else{
 				if(compression)
 					fwrite(compdat,1,compsize,myfile);
 				else
 					fwrite(currentProject->tileC->tileDat,currentProject->tileC->tileSize,(currentProject->tileC->tiles_amount+1),myfile);
 			}
-			if (compression==1)
+			if(compression==1)
 				free(compdat);
 		}else
 			fl_alert("Error: can not save file %s",the_file.c_str());
@@ -90,7 +82,7 @@ void load_tiles(Fl_Widget*,void*o){
 	//format row,append
 	uint32_t file_size;
 	int mode=(uintptr_t)o;
-	char * returned=(char*)fl_input("What row should these tiles use?\nEnter 0 to 3 to selected a row or -1 to -4 to auto determine based on tilemap\n The number after the negative symbol is the default row +1 if not tile is found","-1");
+	char * returned=(char*)fl_input("What row should these tiles use?\nEnter 0 to 3 to selected a row or -1 to -4 to auto determine based on tilemap\nWhen specifing a negative number to figure out what the default will be use this formula abs(row)-1","-1");
 	if (!returned)
 		return;
 	if (!verify_str_number_only(returned))
@@ -257,7 +249,7 @@ void load_truecolor_tiles(Fl_Widget*,void*){
 	}
 }
 void save_tiles_truecolor(Fl_Widget*,void*){
-	if (load_file_generic("Save truecolor tiles",true) == true){
+	if (load_file_generic("Save truecolor tiles",true)){
 		FILE * myfile;
 		myfile = fopen(the_file.c_str(),"wb");
 		if (myfile){

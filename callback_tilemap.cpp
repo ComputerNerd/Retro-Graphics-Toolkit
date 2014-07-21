@@ -215,7 +215,7 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 				tilebit=7;
 			break;
 			case NES:
-				if(currentProject->subSystem==NES2x2)
+				if(currentProject->subSystem&NES2x2)
 					tilebit=15;
 				else
 					tilebit=7;

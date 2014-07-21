@@ -1,18 +1,18 @@
 /*
- This file is part of Retro Graphics Toolkit
+   This file is part of Retro Graphics Toolkit
 
-    Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or any later version.
+   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or any later version.
 
-    Retro Graphics Toolkit is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+   Retro Graphics Toolkit is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-    Copyright Sega16 (or whatever you wish to call me (2012-2014)
+   You should have received a copy of the GNU General Public License
+   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
 #include "global.h"
 #include "palette.h"
@@ -27,32 +27,29 @@ uint8_t to_nes_color_rgb(uint8_t red,uint8_t green,uint8_t blue){
 	//this function does not set any values to global palette it is done in other functions
 	uint32_t minerrori =(255*255) +(255*255) +(255*255) +1;
 	double minerrord=100000.0;
-	uint8_t bestcolor=0;
-	for (uint8_t a=0;a<16;++a){
-		for (uint8_t c=0;c<4;++c){
-			uint8_t temp=a|(c<<4);
-			switch(nearestAlg){
-			case 0:
-				{double distance=ciede2000rgb(red,green,blue,nespaltab_r[temp],nespaltab_g[temp],nespaltab_b[temp]);
-				if (distance <= minerrord){
-					minerrord = distance;
-					bestcolor = temp;
-				}}
-			break;
-			case 1:
-				{double distance=ColourDistance(red,green,blue,nespaltab_r[temp],nespaltab_g[temp],nespaltab_b[temp]);
-				if (distance <= minerrord){
-					minerrord = distance;
-					bestcolor = temp;
-				}}
-			break;
-			default:
-				{uint32_t distance=sq(nespaltab_r[temp]-red)+sq(nespaltab_g[temp]-green)+sq(nespaltab_b[temp]-blue);
-				if (distance <= minerrori){
-					minerrori = distance;
-					bestcolor = temp;
-				}}
-			}
+	unsigned bestcolor=0;
+	for (unsigned temp=0;temp<64;++temp){
+		switch(nearestAlg){
+		case 0:
+			{double distance=ciede2000rgb(red,green,blue,nespaltab_r[temp],nespaltab_g[temp],nespaltab_b[temp]);
+			if (distance <= minerrord){
+				minerrord = distance;
+				bestcolor = temp;
+			}}
+		break;
+		case 1:
+			{double distance=ColourDistance(red,green,blue,nespaltab_r[temp],nespaltab_g[temp],nespaltab_b[temp]);
+			if (distance <= minerrord){
+				minerrord = distance;
+				bestcolor = temp;
+			}}
+		break;
+		default:
+			{uint32_t distance=sq(nespaltab_r[temp]-red)+sq(nespaltab_g[temp]-green)+sq(nespaltab_b[temp]-blue);
+			if (distance <= minerrori){
+				minerrori = distance;
+				bestcolor = temp;
+			}}
 		}
 	}
 	return bestcolor;
@@ -118,7 +115,7 @@ uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_
 	colors_found[1]=*image_ptr++;
 	colors_found[2]=*image_ptr++;
 	if (useAlpha)
-		image_ptr++;
+		++image_ptr;
 	uint8_t start=1;
 	uint32_t y;
 	for (y=0;y<h;++y){
@@ -155,16 +152,12 @@ uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_
 	return colors_amount/3;
 }
 void updateNesTab(uint8_t emps){
-	uint8_t c,v;
 	uint32_t rgb_out;
-	for(c=0;c<16;++c){
-		for(v=0;v<4;++v){
-			uint8_t temp=c|(v<<4);
+	for(unsigned temp=0;temp<64;++temp){
 			rgb_out=MakeRGBcolor(temp|emps);
 			nespaltab_r[temp]=(rgb_out>>16)&255;//red
 			nespaltab_g[temp]=(rgb_out>>8)&255;//green
 			nespaltab_b[temp]=rgb_out&255;//blue
-		}
 	}
 }
 void update_emphesis(Fl_Widget*,void*){
@@ -186,10 +179,9 @@ void update_emphesis(Fl_Widget*,void*){
 	  ||++----- Value (voltage)
 	  ++------- Unimplemented, reads back as 0*/
 	emps<<=6;
-	uint8_t c,v;
 	uint32_t rgb_out;
 	updateNesTab(emps);
-	for (c=0;c<48;c+=3){
+	for(unsigned c=0;c<48;c+=3){
 		rgb_out=MakeRGBcolor(currentProject->palDat[c/3]|emps);
 		currentProject->rgbPal[c]=(rgb_out>>16)&255;//red
 		currentProject->rgbPal[c+1]=(rgb_out>>8)&255;//green

@@ -102,7 +102,7 @@ static int32_t error[SIZE]; /* queue with error
 	if ((currentProject->gameSystem == sega_genesis) && (useHiL == 9)){
 		uint8_t tempSet;
 		if(isChunkD_G)
-			tempSet=(currentProject->Chunk->getPrio(idChunk_G,cur_x/8,cur_y/8)^1)*8;
+			tempSet=(currentProject->Chunk->getPrio_t(idChunk_G,cur_x/8,cur_y/8)^1)*8;
 		else
 			tempSet=(currentProject->tileMapC->get_prio(cur_x/8,cur_y/8)^1)*8;
 		set_palette_type(tempSet);
@@ -111,7 +111,7 @@ static int32_t error[SIZE]; /* queue with error
 		pvalue=nearest_color_chan(pvalue,rgb_select,theforcedfun);
 	else{
 		if(isChunkD_G)
-			pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->Chunk->getTileRow(idChunk_G,cur_x/8,cur_y/8));
+			pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->Chunk->getTileRow_t(idChunk_G,cur_x/8,cur_y/8));
 		else
 			pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->tileMapC->get_palette_map(cur_x/8,cur_y/8));
 	}
@@ -711,8 +711,8 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					tempPalSize=64;
 					palettesize=64;
 					colPtr=(uint8_t *)malloc(64*3);
-					for (rl=0;rl<16;++rl){
-						for (gl=0;gl<4;++gl){
+					for(rl=0;rl<16;++rl){
+						for(gl=0;gl<4;++gl){
 							uint8_t temp=rl|(gl<<4);
 							*colPtr++=nespaltab_r[temp];
 							*colPtr++=nespaltab_g[temp];
@@ -771,7 +771,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				if (currentProject->gameSystem == sega_genesis && type_temp != 0){
 					uint8_t tempSet;
 					if(isChunk)
-						tempSet=(currentProject->Chunk->getPrio(idChunk,x/8,y/8)^1)*8;
+						tempSet=(currentProject->Chunk->getPrio_t(idChunk,x/8,y/8)^1)*8;
 					else
 						tempSet=(currentProject->tileMapC->get_prio(x/8,y/8)^1)*8;
 					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted
@@ -803,7 +803,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 							pal_row=forcedrow;
 						else{
 							if(isChunk)
-								pal_row=currentProject->Chunk->getTileRow(idChunk,x/8,y/8);
+								pal_row=currentProject->Chunk->getTileRow_t(idChunk,x/8,y/8);
 							else
 								pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
 						}
@@ -868,7 +868,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 						pal_row=forcedrow;
 					else{
 						if(isChunk)
-							pal_row=currentProject->Chunk->getTileRow(idChunk,x/rgbRowsize,y/8);
+							pal_row=currentProject->Chunk->getTileRow_t(idChunk,x/rgbRowsize,y/8);
 						else
 							pal_row=currentProject->tileMapC->get_palette_map(x/rgbRowsize,y/8);
 					}
@@ -878,7 +878,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				if(currentProject->gameSystem == sega_genesis && type_temp != 0){
 					uint8_t tempSet;
 					if(isChunk)
-						tempSet=(currentProject->Chunk->getPrio(idChunk,x/rgbRowsize,y/8)^1)*8;
+						tempSet=(currentProject->Chunk->getPrio_t(idChunk,x/rgbRowsize,y/8)^1)*8;
 					else
 						tempSet=(currentProject->tileMapC->get_prio(x/rgbRowsize,y/8)^1)*8;
 					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted
@@ -952,7 +952,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 						pal_row=forcedrow;
 					else{
 						if(isChunk)
-							pal_row=currentProject->Chunk->getTileRow(idChunk,x/8,y/8);
+							pal_row=currentProject->Chunk->getTileRow_t(idChunk,x/8,y/8);
 						else
 							pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
 					}
@@ -961,7 +961,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				if (currentProject->gameSystem == sega_genesis && type_temp != 0){
 					uint8_t tempSet;
 					if(isChunk)
-						tempSet=(currentProject->Chunk->getPrio(idChunk,x/8,y/8)^1)*8;
+						tempSet=(currentProject->Chunk->getPrio_t(idChunk,x/8,y/8)^1)*8;
 					else
 						tempSet=(currentProject->tileMapC->get_prio(x/8,y/8)^1)*8;
 					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted

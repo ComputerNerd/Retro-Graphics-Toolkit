@@ -17,6 +17,7 @@
 #include "project.h"
 #include "callback_tilemap.h"
 #include "kens.h"
+#include "filemisc.h"
 tileMap::tileMap(){
 	amt=1;
 	mapSizeHA=mapSizeW=mapSizeH=2;
@@ -152,14 +153,14 @@ bool tileMap::get_prio(uint32_t x,uint32_t y){
 	return (tileMapDat[((y*mapSizeW)+x)*4]>>7)&1;
 }
 uint8_t tileMap::get_palette_map(uint32_t x,uint32_t y){
-	if((currentProject->gameSystem==NES)&&(currentProject->subSystem==NES2x2)){
+	if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
 		x&=~1;
 		y&=~1;
 	}
 	return (tileMapDat[((y*mapSizeW)+x)*4]>>5)&3;
 }
 void tileMap::set_pal_row(uint32_t x,uint32_t y,uint8_t row){
-	if((currentProject->gameSystem==NES)&&(currentProject->subSystem==NES2x2)){
+	if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
 		//printf("%d %d %d %d\n",x&(~1),x|1,y&(~1),y|1);
 		tileMapDat[((y*mapSizeW)+(x&(~1)))*4]&= ~(3 << 5);
 		tileMapDat[((y*mapSizeW)+(x&(~1)))*4]|=row<<5;
@@ -231,21 +232,14 @@ bool tileMap::saveToFile(){
 	uint16_t x,y;
 	FILE * myfile;
 	uint32_t fileSize;
-	uint8_t type,compression, * mapptr;
+	int type;
+	uint8_t compression, * mapptr;
 	if (load_file_generic("Save tilemap to",true)){
-		type=fl_choice("How would like this file saved?","Binary","C header",0);
+		type=askSaveType();
 		compression=fl_choice("In what format would you like this tilemap saved","Uncompressed","Enigma Compression",0);
-		if (type == 1){
-			char temp[2048];
+		if(type){
 			myfile = fopen(the_file.c_str(),"w");
-			sprintf(temp,"//Width %d Height %d",mapSizeW,mapSizeH*amt);
-			fputs((const char *)temp,myfile);
-			if(compression==1)
-				fputs(" Enigma compressed",myfile);
-			fputc('\n',myfile);
-			fputs("const uint8_t mapDat[]={",myfile);
-		}
-		else
+		}else
 			myfile = fopen(the_file.c_str(),"wb");
 		if (likely(myfile!=0)){
 			switch (currentProject->gameSystem){
@@ -305,8 +299,12 @@ bool tileMap::saveToFile(){
 				output.copy((char*)mapptr,fileSize);
 				printf("compressed to %d bytes\n",fileSize);
 			}
-			if (type == 1){
-				if (saveBinAsText(mapptr,fileSize,myfile)==false){
+			if(type){
+				char temp[2048];
+				snprintf(temp,2048,"//Width %d Height %d",mapSizeW,mapSizeH*amt);
+				if(compression==1)
+					strcat(temp," Enigma compressed");
+				if (saveBinAsText(mapptr,fileSize,myfile,type,temp,"mapDat")==false){
 					free(mapptr);
 					return false;
 				}
@@ -316,17 +314,14 @@ bool tileMap::saveToFile(){
 			free(mapptr);
 			fclose(myfile);
 			puts("File Saved");
-		}
-		else
+		}else
 			return false;
 	}
 	if (currentProject->gameSystem == NES){
 		if (load_file_generic("Save attributes to",true) == true) {
-			if (type == 1){
+			if(type){
 				myfile = fopen(the_file.c_str(),"w");
-				fputs("const uint8_t attrDat[]={",myfile);
-			}
-			else
+			}else
 				myfile = fopen(the_file.c_str(),"wb");
 			if (likely(myfile!=0)) {
 				uint8_t * AttrMap = (uint8_t *)malloc((mapSizeW/4)*(mapSizeH*amt/4));
@@ -339,18 +334,16 @@ bool tileMap::saveToFile(){
 				}
 				//AttrMap-=(mapSizeW/4)*(mapSizeH/4);
 				printf("%d %d\n",AttrMap,freeAttrMap);
-				if (type == 1){
-					if (saveBinAsText(freeAttrMap,(mapSizeW/4)*(mapSizeH*amt/4),myfile)==false)
-							return false;
-						fputs("};",myfile);
-				}
-				else
+				if(type){
+					if(saveBinAsText(freeAttrMap,(mapSizeW/4)*(mapSizeH*amt/4),myfile,type,0,"mapDatAttr")==false)
+						return false;
+					fputs("};",myfile);
+				}else
 					fwrite(freeAttrMap,1,(mapSizeW/4)*(mapSizeH*amt/4),myfile);		
 				free(freeAttrMap);
 				fclose(myfile);
 				puts("File Saved");
-			}
-			else
+			}else
 				return false;
 		}
 	}
