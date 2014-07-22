@@ -60,6 +60,7 @@ static void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y){
 	
 }
 void editor::updateSpriteSliders(void){
+	spritesel->maximum(currentProject->spritesC->amt-1);
 	spritest->value(currentProject->spritesC->spriteslist[curSprite]->starttile);
 	spritesize[0]->value(currentProject->spritesC->spriteslist[curSprite]->w);
 	spritesize[1]->value(currentProject->spritesC->spriteslist[curSprite]->h);

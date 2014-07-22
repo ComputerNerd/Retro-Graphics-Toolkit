@@ -18,6 +18,7 @@
 #include "savepng.h"
 #include "dither.h"
 #include "callback_chunk.h"
+#include "callbacksprites.h"
 void tileDPicker(Fl_Widget*,void*){
 	Fl_Window *win;
 	Fl_Progress *progress;
@@ -137,7 +138,7 @@ void save_tilemap_as_colspace(Fl_Widget*,void*){
 		uint32_t w=currentProject->tileMapC->mapSizeW*8;
 		uint32_t h=currentProject->tileMapC->mapSizeHA*8;
 		uint8_t * image=(uint8_t*)malloc(w*h*3);
-		truecolor_to_image(image,-1,false);
+		currentProject->tileMapC->truecolor_to_image(image,-1,false);
 		ditherImage(image,w,h,false,true);
 		savePNG(the_file.c_str(),w,h,(void*)image);
 		free(image);
@@ -164,36 +165,64 @@ void fill_tile_map_with_tile(Fl_Widget*,void*){
 		window->damage(FL_DAMAGE_USER1);
 	}
 }
-void dither_tilemap_as_image(Fl_Widget*,void*){
+void dither_tilemap_as_image(Fl_Widget*,void*sprite){
 	//normally this program dithers all tiles individully this is not always desirable
 	//to fix this I created this function It convertes the tilemap to image and dithers all tiles
 	//so first create ram for image
+	bool isSprite=((uintptr_t)sprite)?true:false;
 	uint8_t * image;
 	uint32_t w,h;
-	w=currentProject->tileMapC->mapSizeW*8;
-	h=currentProject->tileMapC->mapSizeHA*8;
-	uint8_t method=fl_choice("How would you like this tilemap dithered?","Dither each palette row separately","Dither entire image at once","cancel");
+	if(isSprite){
+		w=currentProject->spritesC->spriteslist[curSprite]->w;
+		h=currentProject->spritesC->spriteslist[curSprite]->h;
+	}else{
+		w=currentProject->tileMapC->mapSizeW;
+		h=currentProject->tileMapC->mapSizeHA;
+	}
+	w*=currentProject->tileC->sizex;
+	h*=currentProject->tileC->sizey;
+	unsigned method;
+	if(isSprite)
+		method=1;
+	else
+		fl_choice("How would you like this tilemap dithered?","Dither each palette row separately","Dither entire image at once","Cancel");
 	if(method==2)
 		return;
 	image = (uint8_t *)malloc(w*h*4);
 	if (!image)
 		show_malloc_error(w*h*4)
 	if(method==1){
-		truecolor_to_image(image,-1);
-		ditherImage(image,w,h,true,true);
-		ditherImage(image,w,h,true,false);
-		truecolorimageToTiles(image,-1);
+		if(isSprite){
+			tileMap*spriteMap=new tileMap(w/currentProject->tileC->sizex,h/currentProject->tileC->sizey);
+			//make verticle tile map
+			unsigned t=currentProject->spritesC->spriteslist[curSprite]->starttile;
+			for(unsigned i=0;i<w/currentProject->tileC->sizex;++i){
+				for(unsigned j=0;j<h/currentProject->tileC->sizey;++j){
+					//void set_tile_full(uint32_t tile,uint32_t x,uint32_t y,uint8_t palette_row,bool use_hflip,bool use_vflip,bool highorlow_prio);
+					spriteMap->set_tile_full(t++,i,j,currentProject->spritesC->spriteslist[curSprite]->palrow,false,false,false);
+				}
+			}
+			spriteMap->truecolor_to_image(image,-1);
+			ditherImage(image,w,h,true,true,true,currentProject->spritesC->spriteslist[curSprite]->palrow);
+			ditherImage(image,w,h,true,false,true,currentProject->spritesC->spriteslist[curSprite]->palrow);
+			spriteMap->truecolorimageToTiles(image,-1);
+			delete spriteMap;
+		}else{
+			currentProject->tileMapC->truecolor_to_image(image,-1);
+			ditherImage(image,w,h,true,true);
+			ditherImage(image,w,h,true,false);
+			currentProject->tileMapC->truecolorimageToTiles(image,-1);
+		}
 	}else{
 		for (uint8_t rowz=0;rowz<4;rowz++){
 			printf("Row %d\n",rowz);
-			truecolor_to_image(image,rowz);
+			currentProject->tileMapC->truecolor_to_image(image,rowz);
 			ditherImage(image,w,h,true,true);
 			ditherImage(image,w,h,true,false);
 			//convert back to tiles
-			truecolorimageToTiles(image,rowz);
+			currentProject->tileMapC->truecolorimageToTiles(image,rowz);
 		}
 	}
-	putchar('\n');
 	puts("Done with image");
 	window->damage(FL_DAMAGE_USER1);
 	Fl::check();
@@ -221,6 +250,7 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 					tilebit=7;
 			break;
 			default:
+				loaded_image->release();
 				show_default_error
 			break;
 		}

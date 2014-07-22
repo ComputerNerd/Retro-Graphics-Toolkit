@@ -1,28 +1,36 @@
 /*
- This file is part of Retro Graphics Toolkit
+   This file is part of Retro Graphics Toolkit
 
-    Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or any later version.
+   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or any later version.
 
-    Retro Graphics Toolkit is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+   Retro Graphics Toolkit is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-    Copyright Sega16 (or whatever you wish to call me (2012-2014)
+   You should have received a copy of the GNU General Public License
+   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
 #include "project.h"
 #include "callback_tilemap.h"
 #include "kens.h"
 #include "filemisc.h"
+#include "classtilemap.h"
 tileMap::tileMap(){
 	amt=1;
 	mapSizeHA=mapSizeW=mapSizeH=2;
 	isBlock=false;
-	tileMapDat=(uint8_t *)calloc(16,1);
+	tileMapDat=(uint8_t *)calloc(4,TileMapSizePerEntry);
+}
+tileMap::tileMap(uint32_t w,uint32_t h){
+	amt=1;
+	mapSizeW=w;
+	mapSizeHA=mapSizeH=h;
+	isBlock=false;
+	tileMapDat=(uint8_t*)malloc(TileMapSizePerEntry*w*h);
 }
 tileMap::tileMap(const tileMap& other){
 	mapSizeW=other.mapSizeW;
@@ -690,4 +698,133 @@ void tileMap::resize_tile_map(uint32_t new_x,uint32_t new_y){
 	if(isBlock)
 		mapSizeH/=amt;
 	ScrollUpdate();
+}
+bool tileMap::truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha){
+	/*!
+	the_image pointer to image must be able to hold the image using rgba 32bit or rgb 24bit if not using alpha
+	useRow what row to use or -1 for no row
+	*/
+	if (the_image == 0){
+		fl_alert("Error malloc must be called before generating this image");
+		return false;
+	}
+	uint32_t w,h;
+	w=mapSizeW*currentProject->tileC->sizex;
+	h=mapSizeHA*currentProject->tileC->sizey;
+	uint16_t x_tile=0,y_tile=0;
+	uint32_t truecolor_tile_ptr=0;
+	uint8_t pixelSize,pSize2;
+	if (useAlpha){
+		pixelSize=4;
+		pSize2=32;
+	}else{
+		pixelSize=3;
+		pSize2=24;
+	}
+	if (useRow != -1){
+		for (uint64_t a=0;a<(h*w*pixelSize)-w*pixelSize;a+=w*pixelSize*8){//a tiles y
+			for (uint_fast32_t b=0;b<w*pixelSize;b+=pSize2){//b tiles x
+				truecolor_tile_ptr=get_tileRow(x_tile,y_tile,useRow)*256;
+				if (truecolor_tile_ptr != -256){
+					for (uint_fast32_t y=0;y<w*pSize2;y+=w*pixelSize){//pixels y
+						if (useAlpha)
+							memcpy(&the_image[a+b+y],&currentProject->tileC->truetileDat[truecolor_tile_ptr],32);
+						else{
+							unsigned xx=0;
+							for (unsigned x=0;x<32;x+=4){//pixels x
+								the_image[a+b+y+xx]=currentProject->tileC->truetileDat[truecolor_tile_ptr+x];
+								the_image[a+b+y+xx+1]=currentProject->tileC->truetileDat[truecolor_tile_ptr+x+1];
+								the_image[a+b+y+xx+2]=currentProject->tileC->truetileDat[truecolor_tile_ptr+x+2];
+								xx+=3;
+							}
+						}
+						truecolor_tile_ptr+=32;
+					}
+				}else{
+					for (uint32_t y=0;y<w*pSize2;y+=w*pixelSize)//pixels y
+						memset(&the_image[a+b+y],0,pSize2);
+				}
+				++x_tile;
+			}
+			x_tile=0;
+			++y_tile;
+		}
+	}else{
+		for (uint64_t a=0;a<(h*w*pixelSize)-w*pixelSize;a+=w*pixelSize*8){//a tiles y
+			for (uint32_t b=0;b<w*pixelSize;b+=pSize2){//b tiles x
+				truecolor_tile_ptr=get_tile(x_tile,y_tile)*256;
+				for (uint32_t y=0;y<w*pixelSize*8;y+=w*pixelSize){//pixels y
+					if (useAlpha)
+						memcpy(&the_image[a+b+y],&currentProject->tileC->truetileDat[truecolor_tile_ptr],32);
+					else{
+						unsigned xx=0;
+						for (unsigned x=0;x<32;x+=4){//pixels x
+							the_image[a+b+y+xx]=currentProject->tileC->truetileDat[truecolor_tile_ptr+x];
+							the_image[a+b+y+xx+1]=currentProject->tileC->truetileDat[truecolor_tile_ptr+x+1];
+							the_image[a+b+y+xx+2]=currentProject->tileC->truetileDat[truecolor_tile_ptr+x+2];
+							xx+=3;
+						}
+					}
+					truecolor_tile_ptr+=32;
+				}
+				x_tile++;
+			}
+			x_tile=0;
+			++y_tile;
+		}
+	}
+	return true;
+}
+void tileMap::truecolorimageToTiles(uint8_t * image,int rowusage,bool useAlpha){
+	uint8_t type_temp=palTypeGen;
+	uint8_t tempSet=0;
+	uint8_t truecolor_tile[256];
+	uint_fast32_t x_tile=0;
+	uint_fast32_t y_tile=0;
+	uint_fast8_t pSize=useAlpha ? 4:3;
+	uint_fast8_t pTile=useAlpha ? 32:24;
+	uint32_t w=mapSizeW*8;
+	uint32_t h=mapSizeHA*8;
+	uint_fast32_t truecolor_tile_ptr;
+	for (uint_fast32_t a=0;a<(h*w*pSize)-w*pSize;a+=w*pSize*8){//a tiles y
+		for (uint_fast32_t b=0;b<w*pSize;b+=pTile){//b tiles x
+			uint8_t temp;
+			int32_t current_tile;
+			if(rowusage==-1){
+				current_tile=get_tile(x_tile,y_tile);
+			}else{
+				current_tile=get_tileRow(x_tile,y_tile,rowusage);
+				if (current_tile == -1)
+					goto dont_convert_tile;
+			}
+			truecolor_tile_ptr=0;
+			for (uint32_t y=0;y<w*pSize*8;y+=w*pSize)//pixels y
+			{
+				if(useAlpha){
+					memcpy(&truecolor_tile[truecolor_tile_ptr],&image[a+b+y],32);
+					truecolor_tile_ptr+=32;
+				}else{
+					for(uint8_t xx=0;xx<24;xx+=3){
+						memcpy(&truecolor_tile[truecolor_tile_ptr],&image[a+b+y+xx],3);
+						truecolor_tile_ptr+=3;
+						truecolor_tile[truecolor_tile_ptr]=255;
+						++truecolor_tile_ptr;
+					}
+				}
+			}
+			//convert back to tile
+			uint8_t * TileTempPtr;
+			if ((type_temp != 0) && (currentProject->gameSystem == sega_genesis)){
+				tempSet=(get_prio(x_tile,y_tile)^1)*8;
+				set_palette_type(tempSet);
+			}
+			currentProject->tileC->truecolor_to_tile_ptr(get_palette_map(x_tile,y_tile),current_tile,truecolor_tile,false);
+dont_convert_tile:
+		x_tile++;	
+		}
+	x_tile=0;
+	y_tile++;
+	}
+	if (currentProject->gameSystem == sega_genesis)
+		set_palette_type(type_temp);
 }
