@@ -110,8 +110,6 @@ static int numCmp(uint8_t*dat,unsigned n,uint8_t num){
 }
 void sprites::importImg(uint32_t to){
 	if(load_file_generic()){
-		if(to>=amt)
-			setAmt(to+1);
 		Fl_Shared_Image * loaded_image=Fl_Shared_Image::get(the_file.c_str());
 		if(!loaded_image){
 			fl_alert("Error loading image");
@@ -130,22 +128,28 @@ void sprites::importImg(uint32_t to){
 				hmax=16;
 			break;
 		}
-		if((wnew>wmax)||(hnew>hmax)){
-			fl_alert("Image too big max dimmensions %d %d\nThis image size was %d %d",wmax,hmax,wnew,hnew);
+		if((wnew&7)||(hnew&7)){
+			fl_alert("%d or %d are not a multiple of 8",wnew,hnew);
 			loaded_image->release();
 			return;
 		}
+		//Determin how many sprites will be created
+		unsigned spritesnew=(wnew/wmax)*(hnew/hmax);
+		if(spritesnew){
+			if((wnew%wmax)&&(wnew>wmax))
+				++spritesnew;
+			if((hnew%hmax)&&(hnew>hmax))
+				++spritesnew;
+		}else
+			spritesnew=1;
+		if((int)to>((int)amt-(int)spritesnew))
+			setAmt(to+spritesnew);
 		if((loaded_image->d() != 3 && loaded_image->d() != 4)){
 			fl_alert("Please use color depth of 3 or 4\nYou Used %d",loaded_image->d());
 			loaded_image->release();
 			return;
 		}else
 			printf("Image depth %d\n",loaded_image->d());
-		if((wnew&7)||(hnew&7)){
-			fl_alert("%d or %d are not a multiple of 8",wnew,hnew);
-			loaded_image->release();
-			return;
-		}
 		unsigned startTile=currentProject->tileC->tiles_amount;
 		uint8_t*out=currentProject->tileC->truetileDat+(startTile*256);
 		unsigned newTiles=(wnew/8)*(hnew/8);
@@ -161,17 +165,25 @@ void sprites::importImg(uint32_t to){
 			currentProject->tileC->tiles_amount+=newTiles;
 			++startTile;
 		}
-		spriteslist[to]->w=wnew/8;
-		spriteslist[to]->h=hnew/8;
-		spriteslist[to]->starttile=startTile;
 		//set new amount
 		currentProject->tileC->tileDat=(uint8_t *)realloc(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize);
 		currentProject->tileC->truetileDat=(uint8_t *)realloc(currentProject->tileC->truetileDat,(currentProject->tileC->tiles_amount+1)*256);
 		out=currentProject->tileC->truetileDat+(startTile*256);
 		uint8_t * img_ptr=(uint8_t *)loaded_image->data()[0];
-		for(unsigned i=0;i<wnew;i+=8){
-			for(unsigned j=0;j<hnew;j+=8)
-				out=rect2rect(img_ptr,out,i,j,wnew,8,8,(loaded_image->d()==4)?true:false);
+		for(unsigned y=0,cnt=0,tilecnt=startTile;y<hnew;y+=hmax){
+			for(unsigned x=0;x<wnew;x+=wmax,++cnt){
+				unsigned dimx,dimy;
+				dimx=((wnew-x)>=wmax)?wmax:x%wmax;
+				dimy=((hnew-y)>=hmax)?hmax:y%hmax;
+				spriteslist[to+cnt]->w=dimx/8;
+				spriteslist[to+cnt]->h=dimy/8;
+				spriteslist[to+cnt]->starttile=tilecnt;
+				tilecnt+=(dimx/8)*(dimy/8);
+				for(unsigned i=0;i<dimx;i+=8){
+					for(unsigned j=0;j<dimy;j+=8)
+						out=rect2rect(img_ptr,out,i+x,j+y,wnew,8,8,(loaded_image->d()==4)?true:false);
+				}
+			}
 		}
 		loaded_image->release();
 		window->updateSpriteSliders();
