@@ -134,14 +134,7 @@ void sprites::importImg(uint32_t to){
 			return;
 		}
 		//Determin how many sprites will be created
-		unsigned spritesnew=(wnew/wmax)*(hnew/hmax);
-		if(spritesnew){
-			if((wnew%wmax)&&(wnew>wmax))
-				++spritesnew;
-			if((hnew%hmax)&&(hnew>hmax))
-				++spritesnew;
-		}else
-			spritesnew=1;
+		unsigned spritesnew=((wnew+wmax-8)/wmax)*((hnew+hmax-8)/hmax);
 		if((int)to>((int)amt-(int)spritesnew))
 			setAmt(to+spritesnew);
 		if((loaded_image->d() != 3 && loaded_image->d() != 4)){
@@ -173,8 +166,8 @@ void sprites::importImg(uint32_t to){
 		for(unsigned y=0,cnt=0,tilecnt=startTile;y<hnew;y+=hmax){
 			for(unsigned x=0;x<wnew;x+=wmax,++cnt){
 				unsigned dimx,dimy;
-				dimx=((wnew-x)>=wmax)?wmax:x%wmax;
-				dimy=((hnew-y)>=hmax)?hmax:y%hmax;
+				dimx=((wnew-x)>=wmax)?wmax:(wnew-x)%wmax;
+				dimy=((hnew-y)>=hmax)?hmax:(hnew-y)%hmax;
 				spriteslist[to+cnt]->w=dimx/8;
 				spriteslist[to+cnt]->h=dimy/8;
 				spriteslist[to+cnt]->starttile=tilecnt;
