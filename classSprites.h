@@ -25,8 +25,9 @@ class sprites{
 		sprites();
 		sprites(const sprites& other);
 		~sprites();
-		void importImg(uint32_t to);//the paramter to counts from 0
+		void importImg(uint32_t to);//the paramter counts from 0
 		bool load(FILE*fp);
 		bool save(FILE*fp);
 		void setAmt(uint32_t amtnew);
+		void del(uint32_t id);
 };

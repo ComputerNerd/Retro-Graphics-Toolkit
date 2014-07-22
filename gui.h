@@ -17,6 +17,8 @@
 #pragma once
 #define default_map_off_x 256
 #define default_map_off_y 256
+#define defaultspritex 192
+#define defaultspritey 56
 #define tile_placer_tile_offset_x 88
 #define default_tile_placer_tile_offset_y 208
 #define tile_place_buttons_x_off 8
@@ -40,6 +42,7 @@ extern uint16_t tile_edit_offset_x,tile_edit_offset_y;
 extern uint16_t tile_placer_tile_offset_y;
 extern uint16_t tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
 extern uint16_t true_color_box_x,true_color_box_y;
+extern unsigned SpriteOff[2];
 //These values below must corespond with array offsets for tabs
 #define pal_edit 0
 #define tile_edit 1

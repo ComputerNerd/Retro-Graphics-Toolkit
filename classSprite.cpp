@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include "classSprite.h"
 #include "project.h"
+#include "class_tiles.h"
 sprite::sprite(){
 	w=h=1;
 	starttile=0;
@@ -34,7 +35,7 @@ void sprite::draw(unsigned x,unsigned y,unsigned zoom){
 	unsigned t=starttile;
 	for(unsigned i=0;i<w;++i){//This is backwards due to the way sega genesis stores sprites. The code is the same for NES because height will always be one
 		for(unsigned j=0;j<h;++j){
-			currentProject->tileC->draw_tile(x,y,t++,zoom,palrow,false,false);
+			currentProject->tileC->draw_tile(x,yy,t++,zoom,palrow,false,false);
 			yy+=currentProject->tileC->sizey*zoom;
 		}
 		x+=currentProject->tileC->sizex*zoom;

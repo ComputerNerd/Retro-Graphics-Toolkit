@@ -17,7 +17,7 @@
 #include "global.h"
 #include "color_compare.h"
 #include "color_convert.h"
-void update_box_size(Fl_Widget*, void*){
+void redrawOnlyCB(Fl_Widget*, void*){
 	window->redraw();
 }
 void showAbout(Fl_Widget*,void*){

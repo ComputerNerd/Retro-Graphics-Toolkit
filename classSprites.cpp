@@ -15,8 +15,10 @@
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
 #include <stdlib.h>
+#include <string.h>
 #include "classSprite.h"
 #include "classSprites.h"
+#include "includes.h"
 sprites::sprites(){
 	amt=1;
 	spriteslist=(sprite**)malloc(sizeof(sprite*));
@@ -77,4 +79,19 @@ bool sprites::load(FILE*fp){
 }
 void sprites::importImg(uint32_t to){
 	
+}
+void sprites::del(uint32_t id){
+	if(amt<=1){
+		fl_alert("If you want no sprites uncheck have sprites instead.");
+		return;
+	}
+	if(id<amt){
+		delete spriteslist[id];
+		--amt;
+		if(id<amt){
+			//if not at the end of the list
+			memmove(spriteslist+id,spriteslist+id+1,(amt-1)*sizeof(uint32_t));
+		}
+		spriteslist=(sprite**)realloc(spriteslist,amt*sizeof(sprite*));
+	}
 }

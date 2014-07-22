@@ -30,6 +30,8 @@ uint16_t true_color_box_x,true_color_box_y;
 static int returnVal=0;
 static Fl_Choice*PopC;
 static Fl_Window * winP;
+unsigned SpriteOff[2];
+
 void updateTileSelectAmt(uint32_t newMax){
 	window->tile_select->maximum(newMax);
 	window->tile_select_2->maximum(newMax);

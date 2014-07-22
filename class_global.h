@@ -23,6 +23,7 @@ class editor : public Fl_Double_Window{
 	void _editor();
 	void draw_non_gui();
 	public:
+	void updateSpriteSliders(void);
 	bool tabsHidden[shareAmtPj+1];//The purpose of the +1 is to accomidate for the settings/project tab
 	Fl_Box* cordDisp[2];//The purpose of this is to display coordinates of tile in plane and chunk editor
 	Fl_Choice* subSysC;
@@ -51,6 +52,8 @@ class editor : public Fl_Double_Window{
 	Fl_Slider* spritesel;
 	Fl_Slider* spritest;//sprite start tile
 	Fl_Slider* spritesize[2];//sprite width,height
+	Fl_Slider* spritepalrow;//selects palette row
+	Fl_Slider* spritezoom;
 	Fl_Slider* projectSelect;
 	Fl_Tabs* the_tabs;
 	Fl_Round_Button* palType[9];

@@ -17,6 +17,8 @@
 #include "global.h"
 #include "class_global.h"
 #include "callback_chunk.h"
+#include "callbacksprites.h"
+#include "classSprite.h"
 editor *window = new editor(800,600,"Retro Graphics Toolkit v0.5");//this creates the window
 static void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y){
 	uint8_t grid[32*32*3];
@@ -56,6 +58,12 @@ static void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y){
 	}
 	fl_draw_image(grid,x,y,32,32,3);
 	
+}
+void editor::updateSpriteSliders(void){
+	spritest->value(currentProject->spritesC->spriteslist[curSprite]->starttile);
+	spritesize[0]->value(currentProject->spritesC->spriteslist[curSprite]->w);
+	spritesize[1]->value(currentProject->spritesC->spriteslist[curSprite]->h);
+	spritepalrow->value(currentProject->spritesC->spriteslist[curSprite]->palrow);
 }
 void editor::draw_non_gui(void){
 	//When resizing the window things move around so we need to compensate for that
@@ -198,6 +206,11 @@ void editor::draw_non_gui(void){
 				if((xo>=ChunkOff[0])&&(yo>=ChunkOff[1]))
 					fl_rect(xo,yo,tsx+1,tsy+1,FL_BLUE);
 			}
+		break;
+		case spriteEditor:
+			SpriteOff[0]=(double)((double)w()/800.0)*(double)defaultspritex;
+			SpriteOff[1]=(double)((double)w()/600.0)*(double)defaultspritey;
+			currentProject->spritesC->spriteslist[curSprite]->draw(SpriteOff[0],SpriteOff[1],spritezoom->value());
 		break;
 	}//end of switch statment
 }

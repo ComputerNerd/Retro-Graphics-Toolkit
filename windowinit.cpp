@@ -78,7 +78,7 @@ static const Fl_Menu_Item menuEditor[]={
 			{"Import sonic 1 chunks (append)",0,ImportS1CBChunks,(void*)1},
 			{0},
 		{"Sprites",0, 0, 0, FL_SUBMENU},
-			{"Append imported sprite",0,appendSpriteCB,0},
+			{"Append imported sprite",0,appendSpriteimportCB,0},
 			{0},
 		{0},
 	{"Palette Actions",0, 0, 0, FL_SUBMENU},
@@ -161,7 +161,7 @@ void editor::_editor(){
 			pal_size->step(1);
 			pal_size->value(32);
 			pal_size->align(FL_ALIGN_LEFT);
-			pal_size->callback(update_box_size);
+			pal_size->callback(redrawOnlyCB);
 			ditherPower = new Fl_Hor_Value_Slider(128,416,320,24,"Dither Power");
 			ditherPower->tooltip("A lower value resualts in more dithering artifacts a higer value resualts in less artifacts");
 			ditherPower->minimum(1);
@@ -526,18 +526,47 @@ void editor::_editor(){
 			spritesel->step(1);
 			spritesel->maximum(0);
 			spritesel->align(FL_ALIGN_TOP);
+			spritesel->callback(selSpriteCB);
 			spritest=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,104,128,24,"Start tile");
 			spritest->step(1);
 			spritest->maximum(0);
 			spritest->align(FL_ALIGN_TOP);
+			spritest->callback(setvalueSpriteCB,0);
+
 			spritesize[0]=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,144,128,24,"Width");
 			spritesize[0]->step(1);
-			spritesize[0]->maximum(0);
+			spritesize[0]->value(1);
+			spritesize[0]->minimum(1);
+			spritesize[0]->maximum(4);
 			spritesize[0]->align(FL_ALIGN_TOP);
+			spritesize[0]->callback(setvalueSpriteCB,(void*)1);
+
 			spritesize[1]=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,184,128,24,"Height");
 			spritesize[1]->step(1);
-			spritesize[1]->maximum(0);
+			spritesize[1]->value(1);
+			spritesize[1]->minimum(1);
+			spritesize[1]->maximum(4);
 			spritesize[1]->align(FL_ALIGN_TOP);
+			spritesize[1]->callback(setvalueSpriteCB,(void*)2);
+
+			spritepalrow=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,224,128,24,"Palette row");
+			spritepalrow->step(1);
+			spritepalrow->maximum(3);
+			spritepalrow->align(FL_ALIGN_TOP);
+			spritepalrow->callback(setvalueSpriteCB,(void*)3);
+
+			spritezoom=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,264,128,24,"Zoom");
+			spritezoom->step(1);
+			spritezoom->minimum(1);
+			spritezoom->value(16);
+			spritezoom->maximum(16);
+			spritezoom->align(FL_ALIGN_TOP);
+			spritezoom->callback(redrawOnlyCB);
+
+			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off, 304, 152, 32, "Append blank sprite");
+			o->callback(appendSpriteCB);}
+			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off, 344, 152, 32, "Delete sprite");
+			o->callback(delSpriteCB);}
 			TabsMain[spriteEditor]->end();
 		}
 		{TabsMain[settingsTab] = new Fl_Group(rx,ry,rw,rh,"Settings/projects");
