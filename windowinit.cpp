@@ -78,7 +78,8 @@ static const Fl_Menu_Item menuEditor[]={
 			{"Import sonic 1 chunks (append)",0,ImportS1CBChunks,(void*)1},
 			{0},
 		{"Sprites",0, 0, 0, FL_SUBMENU},
-			{"Imported sprite append",0,appendSpriteimportCB,0},
+			{"Imported sprite",0,SpriteimportCB,0},
+			{"Imported sprite append",0,SpriteimportCB,(void*)1},
 			{0},
 		{0},
 	{"Palette Actions",0, 0, 0, FL_SUBMENU},
@@ -608,7 +609,7 @@ void editor::_editor(){
 			havePrj[3]=new Fl_Check_Button(344,88,120,16,"Have chunks");
 			havePrj[3]->callback(haveCB,(void*)pjHaveChunks);
 			havePrj[4]=new Fl_Check_Button(456,88,120,16,"Have sprites");
-			havePrj[4]->callback(haveCB,(void*)pjHaveChunks);
+			havePrj[4]->callback(haveCB,(void*)pjHaveSprites);
 			
 			shareWith[0]=new Fl_Hor_Value_Slider(8,142,128,24,"Share palette with:");
 			shareWith[0]->callback(switchShareCB,(void*)pjHavePal);

@@ -30,4 +30,5 @@ class sprites{
 		bool save(FILE*fp);
 		void setAmt(uint32_t amtnew);
 		void del(uint32_t id);
+		void enforceMax(unsigned wmax,unsigned hmax);
 };

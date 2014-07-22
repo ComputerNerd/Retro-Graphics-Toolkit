@@ -185,7 +185,7 @@ void dither_tilemap_as_image(Fl_Widget*,void*sprite){
 	if(isSprite)
 		method=1;
 	else
-		fl_choice("How would you like this tilemap dithered?","Dither each palette row separately","Dither entire image at once","Cancel");
+		method=fl_choice("How would you like this tilemap dithered?","Dither each palette row separately","Dither entire image at once","Cancel");
 	if(method==2)
 		return;
 	image = (uint8_t *)malloc(w*h*4);

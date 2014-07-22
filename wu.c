@@ -391,13 +391,13 @@ int wu_quant(unsigned char *inbuf, int width, int height, int quant_to, uint8_t 
 		&mb, 33*33*33 * sizeof(int),
 		&tag, 33*33*33, NULL);*/
 	mem=calloc(1,(33*33*33 * sizeof(double))+(4*33*33*33 * sizeof(int))+(33*33*33));
+	if (!mem) return (-1);
 	m2=mem;
 	wt=mem+(33*33*33 * sizeof(double));
 	mr=mem+(33*33*33 * sizeof(int))+(33*33*33 * sizeof(double));
 	mg=mem+(2*33*33*33 * sizeof(int))+(33*33*33 * sizeof(double));
 	mb=mem+(3*33*33*33 * sizeof(int))+(33*33*33 * sizeof(double));
 	tag=mem+(4*33*33*33 * sizeof(int))+(33*33*33 * sizeof(double));
-	if (!mem) return (-1);
 
 	Hist3d(inbuf, wt, mr, mg, mb);
 	puts("Hist3d done");

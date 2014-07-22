@@ -101,6 +101,13 @@ static uint8_t*rect2rect(uint8_t*in,uint8_t*out,unsigned xin,unsigned yin,unsign
 	}
 	return out;
 }
+static int numCmp(uint8_t*dat,unsigned n,uint8_t num){
+	while(n--){
+		if(*dat++!=num)
+			return 0;
+	}
+	return 1;
+}
 void sprites::importImg(uint32_t to){
 	if(load_file_generic()){
 		if(to>=amt)
@@ -140,13 +147,27 @@ void sprites::importImg(uint32_t to){
 			return;
 		}
 		unsigned startTile=currentProject->tileC->tiles_amount;
+		uint8_t*out=currentProject->tileC->truetileDat+(startTile*256);
+		unsigned newTiles=(wnew/8)*(hnew/8);
+		//See if tile is blank
+		bool overwrite=false;//This is to avoid duplicate code otherwise there would be the need for two else statments with identical code
+		if(numCmp(out,256,0)){
+			if(fl_ask("Tile %d detected as blank overwrite?",startTile))
+				overwrite=true;
+		}
+		if(overwrite){
+			currentProject->tileC->tiles_amount+=newTiles-1;
+		}else{
+			currentProject->tileC->tiles_amount+=newTiles;
+			++startTile;
+		}
 		spriteslist[to]->w=wnew/8;
 		spriteslist[to]->h=hnew/8;
 		spriteslist[to]->starttile=startTile;
-		unsigned newTiles=(wnew/8)*(hnew/8);
-		for(unsigned i=0;i<newTiles;++i)
-			new_tile(0,0);
-		uint8_t*out=currentProject->tileC->truetileDat+(startTile*256);
+		//set new amount
+		currentProject->tileC->tileDat=(uint8_t *)realloc(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize);
+		currentProject->tileC->truetileDat=(uint8_t *)realloc(currentProject->tileC->truetileDat,(currentProject->tileC->tiles_amount+1)*256);
+		out=currentProject->tileC->truetileDat+(startTile*256);
 		uint8_t * img_ptr=(uint8_t *)loaded_image->data()[0];
 		for(unsigned i=0;i<wnew;i+=8){
 			for(unsigned j=0;j<hnew;j+=8)
@@ -154,6 +175,7 @@ void sprites::importImg(uint32_t to){
 		}
 		loaded_image->release();
 		window->updateSpriteSliders();
+		updateTileSelectAmt();
 		window->redraw();
 	}
 }
@@ -170,5 +192,13 @@ void sprites::del(uint32_t id){
 			memmove(spriteslist+id,spriteslist+id+1,(amt-1)*sizeof(uint32_t));
 		}
 		spriteslist=(sprite**)realloc(spriteslist,amt*sizeof(sprite*));
+	}
+}
+void sprites::enforceMax(unsigned wmax,unsigned hmax){
+	for(unsigned n=0;n<amt;++n){
+		if(spriteslist[n]->w>wmax)
+			spriteslist[n]->w=wmax;
+		if(spriteslist[n]->h>hmax)
+			spriteslist[n]->h=hmax;
 	}
 }

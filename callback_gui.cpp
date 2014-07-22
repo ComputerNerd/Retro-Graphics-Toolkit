@@ -52,6 +52,10 @@ void set_game_system(Fl_Widget*,void* selection){
 			currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*32);
 			window->map_w->step(1);
 			window->map_h->step(1);
+			window->spritesize[0]->maximum(4);
+			window->spritesize[1]->maximum(4);
+			currentProject->spritesC->enforceMax(4,4);
+			window->updateSpriteSliders();
 		break;
 		case NES:
 			currentProject->gameSystem=NES;
@@ -77,6 +81,10 @@ void set_game_system(Fl_Widget*,void* selection){
 			window->map_h->value(currentProject->tileMapC->mapSizeHA);
 			window->map_w->step(2);
 			window->map_h->step(2);
+			window->spritesize[0]->maximum(1);
+			window->spritesize[1]->maximum(2);
+			currentProject->spritesC->enforceMax(1,2);
+			window->updateSpriteSliders();
 		break;
 		default:
 			show_default_error
