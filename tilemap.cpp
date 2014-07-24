@@ -210,9 +210,6 @@ static inline uint8_t pick4Deltai(uint32_t * d){
 static inline uint32_t sqri(int x){
 	return x*x;
 }
-static inline double squareDouble(double x){
-	return x*x;
-}
 static inline double pickIt(double h,double l,double s,unsigned type){
 	switch(type){
 		case 0:
@@ -227,15 +224,10 @@ static inline double pickIt(double h,double l,double s,unsigned type){
 	}
 }
 typedef std::pair<double,int> HLSpair;
-typedef std::pair<unsigned,unsigned> histPair;
-bool comparatorHLS(const HLSpair& l,const HLSpair& r){
-	return l.first < r.first;
-}
-bool comparatorHist(const histPair& l,const histPair& r){
-	return l.first < r.first;
-}
+bool comparatorHLS(const HLSpair& l,const HLSpair& r)
+   { return l.first < r.first; }
 void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
-	int alg=MenuPopup("Select picking algorithm","Pick which method you think works better for this image.",7,"Guowei Hong and Ronnier Luo","ciede2000","Weighted","Mean squared error","Hue difference","Saturation difference","Lightness difference");
+	int alg=MenuPopup("Select picking algorithm","Pick which method you think works better for this image.",6,"ciede2000","Weighted","Mean squared error","Hue difference","Saturation difference","Lightness difference");
 	if(alg<0)
 		return;
 	if(fl_ask("Would you like the palette to be ordered by hue or light or saturation")){
@@ -271,8 +263,6 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 		memcpy(currentProject->palType,newPalType,palEdit.perRow*4);
 		delete[] MapHLS;
 	}
-	unsigned tsx=currentProject->tileC->sizex;
-	unsigned tsy=currentProject->tileC->sizey;
 	uint8_t type_temp=palTypeGen;
 	uint8_t tempSet=0;
 	double d[4];//Delta
@@ -323,17 +313,12 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 		per=2;
 	else
 		per=1;
-	double*imgLab[4];
-	if(!alg){
-		for(t=0;t<4;++t)
-			imgLab[t]=(double*)malloc(tsx*tsy*per*per*3*sizeof(double));
-	}
 	for (uint_fast32_t a=0;a<(h*w*4)-(w*4*per);a+=w*4*8*per){//a tiles y
 		for (uint_fast32_t b=0;b<w*4;b+=32*per){//b tiles x
-			if((alg==3)||(alg==2))
+			if(alg>=2)
 				memset(di,0,4*sizeof(uint32_t));
 			else{
-				for (t=0;t<4;++t)
+				for (t=0;t<4;t++)
 					d[t]=0.0;
 			}
 			if ((type_temp != 0) && (currentProject->gameSystem == sega_genesis)){
@@ -341,28 +326,22 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 				set_palette_type(tempSet);
 			}
 			for(t=0;t<4;++t){
-				for(unsigned c=0;c<per*w*4*8;c+=w*4*8){//Handle per y
-					for(uint32_t y=0,yy=0;y<w*4*8;y+=w*4,yy+=tsx*per*3){//pixels y
-						for(unsigned e=0,ee=0;e<per*32;e+=32,ee+=24){//Handle per x
-							if((imagein[a+b+y+x+3+c+e]!=0)||(!alg)){//Avoid checking transperency
+				for(unsigned c=0;c<per*w*4*8;c+=w*4*8){
+					for(uint32_t y=0;y<w*4*8;y+=w*4){//pixels y
+						for(unsigned e=0;e<per*32;e+=32){
+							if(imagein[a+b+y+x+3+c+e]!=0){//Avoid checking transperency
 								switch(alg){
 									case 0:
-										{unsigned xx=0;
-										for(x=0;x<32;x+=4,xx+=3)
-											Rgb2Lab(imageout[t][a+b+y+x+c+e],imageout[t][a+b+y+x+c+e+1],imageout[t][a+b+y+x+c+e+2],&imgLab[t][ee+xx+yy],&imgLab[t][ee+xx+yy+1],&imgLab[t][ee+xx+yy+2]);
-										}
-									break;
-									case 1:
 										for(x=0;x<32;x+=4)
 											d[t]+=std::abs(ciede2000rgb(imagein[a+b+y+x+c+e],imagein[a+b+y+x+1+c+e],imagein[a+b+y+x+2+c+e],imageout[t][a+b+y+x+c+e],imageout[t][a+b+y+x+1+c+e],imageout[t][a+b+y+x+2+c+e]));
-									break;
-									case 2:
+										break;
+									case 1:
 										for(x=0;x<32;x+=4)
-											di[t]+=std::abs(ColourDistance(imagein[a+b+y+x+c+e],imagein[a+b+y+x+1+c+e],imagein[a+b+y+x+2+c+e],imageout[t][a+b+y+x+c+e],imageout[t][a+b+y+x+1+c+e],imageout[t][a+b+y+x+2+c+e]));
-									break;
+											d[t]+=std::abs(ColourDistance(imagein[a+b+y+x+c+e],imagein[a+b+y+x+1+c+e],imagein[a+b+y+x+2+c+e],imageout[t][a+b+y+x+c+e],imageout[t][a+b+y+x+1+c+e],imageout[t][a+b+y+x+2+c+e]));
+										break;
+									case 3:
 									case 4:
 									case 5:
-									case 6:
 										for(x=0;x<32;x+=4){
 											double h[2],l[2],s[2];
 											rgbToHls(imagein[a+b+y+x+c+e],imagein[a+b+y+x+1+c+e],imagein[a+b+y+x+2+c+e],h,l,s);
@@ -370,8 +349,8 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 											d[t]+=std::abs(pickIt(h[0],l[0],s[0],alg-3)-pickIt(h[1],l[1],s[1],alg-3));
 										}
 										//printf("d[%d]=%f\n",t,d[t]);
-									break;
-									default://Usally case 3
+										break;
+									default://Usally case 2
 										for(x=0;x<32;x+=4)
 											di[t]+=sqri(imagein[a+b+y+x+c+e]-imageout[t][a+b+y+x+c+e])+sqri(imagein[a+b+y+x+1+c+e]-imageout[t][a+b+y+x+1+c+e])+sqri(imagein[a+b+y+x+2+c+e]-imageout[t][a+b+y+x+2+c+e]);
 								}
@@ -381,86 +360,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 				}
 			}
 			uint8_t sillyrow;
-			if(!alg){
-				for(t=0;t<4;++t){
-					double hmin,hmax;
-					double c,h;
-					double*imgPtr=&imgLab[t][0];
-					Lab2Lch(&c,&h,imgPtr[1],imgPtr[2]);
-					hmin=hmax=h;
-					imgPtr+=3;
-					unsigned i,j;
-					double*himg=(double*)malloc(tsx*tsy*per*per*sizeof(double));
-					himg[0]=h;
-					for(i=1;i<tsx*tsy*per*per;++i){
-						Lab2Lch(&c,&h,imgPtr[1],imgPtr[2]);
-						himg[i]=h;
-						if(hmin>h)
-							hmin=h;
-						if(hmax<h)
-							hmax=h;
-						imgPtr+=3;
-					}
-					unsigned samples=unsigned(double(std::abs(hmax-hmin))*10.0);
-					if(samples){
-						//uint32_t*hist=(uint32_t*)calloc(sizeof(uint32_t),samples+1);
-						histPair* hist=new histPair[samples+1];
-						int hmini=hmin*10.0;
-						for(i=0;i<samples;++i){
-							hist[i].first=0;
-							hist[i].second=i;
-						}
-						for(i=0;i<tsx*tsy*per*per;++i)
-							++hist[int(himg[i]*10.0)-hmini].first;
-						std::sort(hist,hist+samples,comparatorHist);
-						uint64_t sum=0;
-						for(i=0;i<samples;++i)
-							sum+=hist[i].first;
-						for(uint64_t sumTmp=0;(sumTmp<sum/4)&&(i<samples);++i){
-							sumTmp+=hist[i].first;
-							hist[i].first/=4;
-						}
-						for(uint64_t sumTmp=0;(sumTmp<sum/4)&&(i<samples);++i){
-							sumTmp+=hist[i].first;
-							hist[i].first/=2;
-						}
-						for(uint64_t sumTmp=0;(sumTmp<sum/4)&&(i<samples);++i)
-							sumTmp+=hist[i].first;
-						for(;i<samples;++i)
-							hist[i].first=(hist[i].first*9)/4;//Multiply by 2.25
-						double*CD=(double*)malloc((samples+4)*sizeof(double));
-						std::fill(CD,CD+samples,0.0);
-						imgPtr=&imgLab[t][0];
-						for(i=0;i<tsx*tsy*per*per;++i){
-							int hue=int(himg[i]*10.0);
-							if(CD[hist[hue-hmini].second]==0.0){
-								double Lin,ain,bin;
-								Rgb2Lab(imagein[a+b+((i%tsx)*4)+((i/tsx)*w*4)],imagein[a+b+((i%tsx)*4)+((i/tsx)*w*4)+1],imagein[a+b+((i%tsx)*4)+((i/tsx)*w*4)+2],&Lin,&ain,&bin);
-								CD[hist[hue-hmini].second]+=ciede2000(Lin,ain,bin,imgPtr[i*3],imgPtr[i*3+1],imgPtr[i*3+2],1.0,1.0,1.0);
-								CD[hist[hue-hmini].second]/=2.0;
-								for(j=0;j<tsx*tsy*per*per;++j){
-									if(i==j)
-										break;
-									int hue2=int(himg[j]*10.0);
-									if(hue==hue2){
-										Rgb2Lab(imagein[a+b+((j%tsx)*4)+((j/tsx)*w*4)],imagein[a+b+((j%tsx)*4)+((j/tsx)*w*4)+1],imagein[a+b+((j%tsx)*4)+((j/tsx)*w*4)+2],&Lin,&ain,&bin);
-										CD[hist[hue-hmini].second]+=ciede2000(Lin,ain,bin,imgPtr[j*3],imgPtr[j*3+1],imgPtr[j*3+2],1.0,1.0,1.0);
-										CD[hist[hue-hmini].second]/=2.0;
-									}
-								}
-							}
-						}
-						//Now finally calculate the difference
-						for(i=0;i<samples;++i)
-							d[t]+=double(hist[i].first)*squareDouble(CD[i])/4.0;
-						printf("t: %d X: %d Y: %d samples: %d sum: %d difference: %f\n",t,xtile,ytile,samples,sum,d[t]);
-						delete[] hist;
-						free(CD);
-					}
-					free(himg);
-				}
-				sillyrow=pick4Delta(d);
-			}else if((alg==3)||(alg==2))
+			if(alg==2)
 				sillyrow=pick4Deltai(di);
 			else
 				sillyrow=pick4Delta(d);
@@ -478,7 +378,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 			xtile+=per;
 		}
 		if(showProgress){
-			if((a%(w*4*tsx*16))==0){
+			if((a%(w*4*8*16))==0){
 				progress->value(ytile);
 				window->redraw();
 				Fl::check();
@@ -487,17 +387,13 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 		xtile=0;
 		ytile+=per;
 	}
-	if(!alg){
-		for(t=0;t<4;++t)
-			free(imgLab[t]);
-	}
 	free(imagein);
 	free(imageout[0]);
 	free(imageout[1]);
 	free(imageout[2]);
 	free(imageout[3]);
 	free(imageout);
-	if(currentProject->gameSystem == sega_genesis)
+	if (currentProject->gameSystem == sega_genesis)
 		set_palette_type(type_temp);
 }
 #define CLIP(X) ( (X) > 255 ? 255 : (X) < 0 ? 0 : X)
