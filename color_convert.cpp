@@ -38,9 +38,9 @@ uint8_t to_nes_color_rgb(uint8_t red,uint8_t green,uint8_t blue){
 			}}
 		break;
 		case 1:
-			{double distance=ColourDistance(red,green,blue,nespaltab_r[temp],nespaltab_g[temp],nespaltab_b[temp]);
-			if (distance <= minerrord){
-				minerrord = distance;
+			{uint32_t distance=ColourDistance(red,green,blue,nespaltab_r[temp],nespaltab_g[temp],nespaltab_b[temp]);
+			if (distance <= minerrori){
+				minerrori = distance;
 				bestcolor = temp;
 			}}
 		break;

@@ -216,7 +216,7 @@ uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b){
 	int bestIndex = 0;
 	unsigned max_rgb=palEdit.perRow*3;
 	row*=max_rgb;
-	uint32_t minerrori=(255*255)+(255*255)+(255*255)+1;
+	uint32_t minerrori=0xFFFFFFFF;
 	double minerrord=100000.0;
 	for (i=row; i<max_rgb+row; i+=3){
 		switch(nearestAlg){
@@ -230,10 +230,10 @@ uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b){
 				}}
 			break;
 			case 1:
-				{double distance=ColourDistance(r,g,b,currentProject->rgbPal[i],currentProject->rgbPal[i+1],currentProject->rgbPal[i+2]);
-				if (distance <= minerrord){
+				{uint32_t distance=ColourDistance(r,g,b,currentProject->rgbPal[i],currentProject->rgbPal[i+1],currentProject->rgbPal[i+2]);
+				if (distance <= minerrori){
 					if (currentProject->palType[i/3]!=2){
-						minerrord = distance;
+						minerrori = distance;
 						bestIndex = i;
 					}
 				}}

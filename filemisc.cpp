@@ -70,9 +70,16 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,int type,const char*comme
 				break;
 			}
 		}
+		if(((x&31)==31)&&(type!=1))
+			endc=0;
+		else
+			endc=',';
 		if(x==(sizeBin-1))
 			endc='\n';
-		fprintf(fp,"%d%c",*dat,endc);
+		if(endc)
+			fprintf(fp,"%d%c",*dat,endc);
+		else
+			fprintf(fp,"%d",*dat);
 		++dat;
 	}
 	if(type==1)
