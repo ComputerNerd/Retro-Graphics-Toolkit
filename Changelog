@@ -1,0 +1,7 @@
+Most recent changes are placed at the top
+
+20140723
+Made some text better for tooltips (you can see the difference by hovering over GUI elements)
+Added tile amount counter in plane editor
+Fixed a bug in pick tile row based on delta for hls
+Started keeping track of changes

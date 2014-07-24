@@ -168,7 +168,7 @@ void editor::_editor(){
 			pal_size->align(FL_ALIGN_LEFT);
 			pal_size->callback(redrawOnlyCB);
 			ditherPower = new Fl_Hor_Value_Slider(128,416,320,24,"Dither Power");
-			ditherPower->tooltip("A lower value resualts in more dithering artifacts a higer value resualts in less artifacts");
+			ditherPower->tooltip("A lower value results in more dithering artifacts a higer value results in less artifacts");
 			ditherPower->minimum(1);
 			ditherPower->maximum(255);
 			ditherPower->step(1);
@@ -179,7 +179,7 @@ void editor::_editor(){
 				{
 					Fl_Round_Button* o = new Fl_Round_Button(96, 280, 64, 32, "Normal");
 					o->type(FL_RADIO_BUTTON);
-					o->tooltip("This is the default sega genesis color.When shadow/highlight mode is disabled all tiles will look like this however when enabling shadow higligh mode and a tile is set to high prioraty you will the tile will use these set of colors");
+					o->tooltip("This is the regular sega genesis color space. When shadow/highlight mode is disabled all tiles will look like this however when enabling shadow higligh mode and a tile is set to high prioraty you will the tile will use these set of colors");
 					o->callback((Fl_Callback*) set_palette_type_callback,(void *)0);
 					o->set();
 				} // Fl_Round_Button* o
@@ -191,7 +191,7 @@ void editor::_editor(){
 				} // Fl_Round_Button* o
 				{
 					Fl_Round_Button* o = new Fl_Round_Button(240, 280, 64, 32, "Highlight");
-					o->tooltip("This mode uses the color sets that a highlighted sprite or tile uses to make a tile highlighted use a mask sprite");
+					o->tooltip("This mode uses the color sets that a highlighted sprite or tile uses. To make a tile highlighted use a mask sprite");
 					o->type(FL_RADIO_BUTTON);
 					o->callback((Fl_Callback*) set_palette_type_callback,(void *)16);
 				} // Fl_Round_Button* o
@@ -275,7 +275,7 @@ void editor::_editor(){
 				o->callback(new_tile);
 			}
 			{ Fl_Button *o = new Fl_Button(668, default_palette_bar_offset_y, 128, 32, "Delete Selected Tile");
-				o->tooltip("This button will delete the curretly selected tile");
+				o->tooltip("This button will delete the currently selected tile");
 				o->callback(delete_tile_at_location);
 			}
 			tileEdit_pal.more_init();
@@ -341,7 +341,6 @@ void editor::_editor(){
 			tile_select->minimum(0);
 			tile_select->maximum(0);
 			tile_select->step(1);
-			tile_select->value(0);
 			tile_select->align(FL_ALIGN_LEFT);
 			tile_select->callback(set_tile_current);
 			TabsMain[tile_edit]->end();
@@ -414,9 +413,10 @@ void editor::_editor(){
 			tile_select_2->minimum(0);
 			tile_select_2->maximum(0);
 			tile_select_2->step(1);
-			tile_select_2->value(0);
 			tile_select_2->align(FL_ALIGN_LEFT);
 			tile_select_2->callback(set_tile_currentTP);
+			totalTiles=new Fl_Box(512,default_palette_bar_offset_y,128,64);
+			totalTiles->labelsize(12);
 			tileMap_pal.more_init();
 			//buttons for tile settings
 			{ Fl_Group *o = new Fl_Group(304, 96, 88, 96);
@@ -449,14 +449,14 @@ void editor::_editor(){
 			prioCB[0]->tooltip("If checked tile is high priority");
 			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,400,96,32,"Show grid?");
 				o->callback(set_grid_placer);
-				o->tooltip("This button Toggles whether or not a grid is visible over the tilemap this will allow you to easily see were each tile is");
+				o->tooltip("This button toggles whether or not a grid is visible over the tilemap this will allow you to easily see were each tile is");
 			}
 			BlocksCBtn = new Fl_Check_Button(tile_place_buttons_x_off,432,96,32,"Blocks?");
 			BlocksCBtn->callback(toggleBlocksCB);
 			BlocksCBtn->tooltip("Toggles if tilemap is treated as blocks");
 			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,464,192,32,"Show only selected row");
 				o->callback(toggleRowSolo);
-				o->tooltip("When checked Tiles that do not use the selected row will not be drawn");
+				o->tooltip("When checked tiles that do not use the selected row will not be drawn");
 			}
 			place_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,512,160,24,"Tile Zoom Factor:");
 			place_tile_size->minimum(1);
@@ -507,7 +507,6 @@ void editor::_editor(){
 			tile_select_3->minimum(0);
 			tile_select_3->maximum(0);
 			tile_select_3->step(1);
-			tile_select_3->value(0);
 			tile_select_3->align(FL_ALIGN_TOP);
 			tile_select_3->callback(selBlockCB);
 

@@ -13,9 +13,8 @@
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
-   */
-/*
-Stuff related to tilemap operations goes here*/
+*/
+/* Stuff related to tilemap operations goes here*/
 #include "global.h"
 #include "quant.h"
 #include "color_compare.h"
@@ -315,7 +314,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 		per=1;
 	for (uint_fast32_t a=0;a<(h*w*4)-(w*4*per);a+=w*4*8*per){//a tiles y
 		for (uint_fast32_t b=0;b<w*4;b+=32*per){//b tiles x
-			if(alg>=2)
+			if(alg==2)
 				memset(di,0,4*sizeof(uint32_t));
 			else{
 				for (t=0;t<4;t++)

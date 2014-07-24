@@ -16,6 +16,7 @@
 */
 #include <stdint.h>
 #include <cstdarg>
+#include <stdio.h>
 #include "gui.h"
 #include "includes.h"
 #include "project.h"
@@ -40,6 +41,9 @@ void updateTileSelectAmt(uint32_t newMax){
 	else
 		window->tile_select_3->maximum(newMax);
 	window->spritest->maximum(newMax);
+	char tmp[128];
+	snprintf(tmp,128,"Total tiles: %d",newMax+1);
+	window->totalTiles->copy_label(tmp);
 }
 void updateTileSelectAmt(void){
 	updateTileSelectAmt(currentProject->tileC->tiles_amount);

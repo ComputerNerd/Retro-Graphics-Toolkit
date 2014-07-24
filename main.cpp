@@ -20,6 +20,7 @@ int main(int argc, char **argv){
 	window->resizable(window);
 	Fl::scheme("plastic");
 	fl_register_images();
+	updateTileSelectAmt();
 	//// For a nicer looking browser under linux, call Fl_File_Icon::load_system_icons();
 	//// (If you do this, you'll need to link with fltk_images)
 	//// NOTE: If you do not load the system icons, the file chooser will still work, but
