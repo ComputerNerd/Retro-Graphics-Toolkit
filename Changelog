@@ -1,5 +1,10 @@
 Most recent changes are placed at the top
 
+20140724
+Yliluoma dither methods never tries to dither to colorspace as it takes too long even for one tile
+Improved loading and saving with compression (unifed options)
+Added resizing of Chunks
+
 20140723
 Made some text better for tooltips (you can see the difference by hovering over GUI elements)
 Added tile amount counter in plane editor

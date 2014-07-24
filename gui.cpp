@@ -60,7 +60,8 @@ int MenuPopup(const char * title,const char * text,unsigned num,...){
 	if(num){
 		winP=new Fl_Window(480,128,title);
 		winP->begin();
-		Fl_Box * txt=new Fl_Box(FL_NO_BOX,8,8,464,88,text);
+		if(text)
+			Fl_Box * txt=new Fl_Box(FL_NO_BOX,8,8,464,88,text);
 		PopC=new Fl_Choice(8,96,192,24);
 		va_list arguments;
 		va_start(arguments,num);	// Initializing arguments to store all values after num
@@ -82,28 +83,30 @@ int MenuPopup(const char * title,const char * text,unsigned num,...){
 	}
 	return -1;
 }
-bool load_file_generic(const char * the_tile,bool save_file){
+bool load_file_generic(const char * the_tile,bool save_file){//Warning this function sets global variable string the_file
 	// Create native chooser
 	Fl_Native_File_Chooser native;
 	native.title(the_tile);
-	if (save_file == false)
-		native.type(Fl_Native_File_Chooser::BROWSE_FILE);
-	else
+	if(save_file)
 		native.type(Fl_Native_File_Chooser::BROWSE_SAVE_FILE);
+	else
+		native.type(Fl_Native_File_Chooser::BROWSE_FILE);
 	// Show native chooser
-	switch (native.show())
-	{
-	case -1: fprintf(stderr, "ERROR: %s\n", native.errmsg()); break;	// ERROR
-	case  1: fprintf(stderr, "*** CANCEL\n"); fl_beep(); break;		// CANCEL
-	default:// PICKED FILE
-		if (native.filename())
-		{
-			the_file=native.filename();
-			//native.~Fl_Native_File_Chooser();//sementation fault
-			return true;//the only way this this function will return true is the user picked a file
-		}
+	switch (native.show()){
+		case -1:
+			//fprintf(stderr, "ERROR: %s\n", native.errmsg());
+			fl_alert("Error %s",native.errmsg());
+		break;	// ERROR
+		case  1:
+			fprintf(stderr, "*** CANCEL\n");
+			//fl_beep();
+		break;		// CANCEL
+		default:// Picked File
+			if (native.filename()){
+				the_file=native.filename();
+				return true;//the only way this this function will return true is the user picked a file
+			}
 		break;
 	}
-	//native.~Fl_Native_File_Chooser();
 	return false;//if an error happened or the user did not pick a file the function returns false
 }

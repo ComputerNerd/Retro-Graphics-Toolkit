@@ -15,5 +15,8 @@
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
 #pragma once
-void * decodeKosinski(const char * filename,uint32_t &fileSize);
-void * decodeEnigma(const char * filename,uint32_t &fileSize);
+const char*typeToText(int type);
+int compressionAsk(void);
+std::string decodeTypeStr(const char * filename,size_t &filesize,int type);
+void*decodeType(const char * filename,size_t &filesize,int type);
+void*encodeType(void*in,size_t n,size_t&outSize,int type);

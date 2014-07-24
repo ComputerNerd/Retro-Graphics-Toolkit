@@ -681,7 +681,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 	case 5://Yliluoma's ordered dithering algorithm
 	case 4:
 	{
-		if(colSpace&&(h>8)){
+		if(colSpace){
 			//if(!fl_ask("Dither to colorspace? WARNING SLOW!"))//I have found that this results in worse quality anyways when using
 				return;
 		}

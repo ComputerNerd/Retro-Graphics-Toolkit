@@ -158,8 +158,8 @@ void fill_tile_map_with_tile(Fl_Widget*,void*){
 		return;
 	}
 	if(fl_ask("This will erase the entire tilemap and fill it with the currently selected tile\nAre you sure you want to do this?")){
-		for (uint16_t y=0;y<currentProject->tileMapC->mapSizeHA;++y) {
-			for (uint16_t x=0;x<currentProject->tileMapC->mapSizeW;++x)
+		for (uint32_t y=0;y<currentProject->tileMapC->mapSizeHA;++y){
+			for (uint32_t x=0;x<currentProject->tileMapC->mapSizeW;++x)
 				currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,x,y,tileMap_pal.theRow,G_hflip[0],G_vflip[0],G_highlow_p[0]);
 		}
 		window->damage(FL_DAMAGE_USER1);

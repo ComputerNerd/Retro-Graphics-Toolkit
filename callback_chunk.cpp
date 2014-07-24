@@ -23,6 +23,12 @@ unsigned ChunkOff[2]={DefaultChunkX,DefaultChunkY};
 unsigned scrollChunks_G[2];
 uint_fast32_t editChunk_G[2];//x,y
 uint32_t selBlock;
+void resizeChunkCB(Fl_Widget*o,void*){
+	currentProject->Chunk->resize(window->chunksize[0]->value(),window->chunksize[1]->value());
+	window->updateChunkSizeSliders();
+	currentProject->Chunk->scrollChunks();
+	window->redraw();
+}
 void selBlockCB(Fl_Widget*o,void*){
 	Fl_Slider*s=(Fl_Slider*)o;
 	selBlock=(uintptr_t)s->value();

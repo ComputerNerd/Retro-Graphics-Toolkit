@@ -66,6 +66,13 @@ void editor::updateSpriteSliders(void){
 	spritesize[1]->value(currentProject->spritesC->spriteslist[curSprite]->h);
 	spritepalrow->value(currentProject->spritesC->spriteslist[curSprite]->palrow);
 }
+void editor::updateChunkSizeSliders(uint32_t wi,uint32_t hi){
+	chunksize[0]->value(wi);
+	chunksize[1]->value(hi);
+}
+void editor::updateChunkSizeSliders(void){
+	updateChunkSizeSliders(currentProject->Chunk->wi,currentProject->Chunk->hi);
+}
 void editor::draw_non_gui(void){
 	//When resizing the window things move around so we need to compensate for that
 	int x,y;//we will need to reuse these later

@@ -22,6 +22,7 @@ extern unsigned ChunkOff[2];
 extern unsigned scrollChunks_G[2];
 extern uint_fast32_t editChunk_G[2];
 extern uint32_t selBlock;
+void resizeChunkCB(Fl_Widget*o,void*);
 void selBlockCB(Fl_Widget*,void*b);
 void solidCB(Fl_Widget*,void*s);
 void ImportS1CBChunks(Fl_Widget*,void*a);

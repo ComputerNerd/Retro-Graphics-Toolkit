@@ -311,6 +311,7 @@ void switchProject(uint32_t id){
 	window->useBlocksChunkCBtn->value(projects[id]->Chunk->useBlocks?1:0);
 	window->BlocksCBtn->value(projects[id]->tileMapC->isBlock?1:0);
 	window->chunk_select->maximum(projects[id]->Chunk->amt-1);
+	window->updateChunkSizeSliders(projects[id]->Chunk->wi,projects[id]->Chunk->hi);
 	projects[id]->tileMapC->toggleBlocks(projects[id]->tileMapC->isBlock);
 	//projects[id]->tileMapC->ScrollUpdate();//toggleBlocks calls this funciton
 	if(projects[id]->gameSystem==NES)

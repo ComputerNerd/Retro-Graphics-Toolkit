@@ -19,6 +19,7 @@
 #include "kens.h"
 #include "filemisc.h"
 #include "classtilemap.h"
+#include "compressionWrapper.h"
 tileMap::tileMap(){
 	amt=1;
 	mapSizeHA=mapSizeW=mapSizeH=2;
@@ -237,14 +238,16 @@ bool tileMap::saveToFile(){
 	returns false if there was an error but remeber if the user cancles this it is not an error
 	*/
 	//first see how this file should be saved
-	uint16_t x,y;
+	uint32_t x,y;
 	FILE * myfile;
-	uint32_t fileSize;
-	int type;
-	uint8_t compression, * mapptr;
+	size_t fileSize;
+	int type,compression;
+	uint8_t* mapptr;
 	if (load_file_generic("Save tilemap to",true)){
 		type=askSaveType();
-		compression=fl_choice("In what format would you like this tilemap saved","Uncompressed","Enigma Compression",0);
+		compression=compressionAsk();
+		if(compression<0)
+			return true;
 		if(type){
 			myfile = fopen(the_file.c_str(),"w");
 		}else
@@ -252,8 +255,7 @@ bool tileMap::saveToFile(){
 		if (likely(myfile!=0)){
 			switch (currentProject->gameSystem){
 				case sega_genesis:
-					{
-					uint16_t * TheMap;
+					{uint16_t * TheMap;
 					fileSize=(mapSizeW*mapSizeH*amt)*2;
 					TheMap = (uint16_t*)malloc(fileSize);
 					for (y=0;y<mapSizeH*amt;++y){
@@ -273,11 +275,10 @@ bool tileMap::saveToFile(){
 						}
 					}
 					TheMap-=mapSizeW*mapSizeH*amt;//return to begining so it can be freeded and the file saved
-					mapptr=(uint8_t*)TheMap;
-				}//brackets used to prevent TheMap conflict
+					mapptr=(uint8_t*)TheMap;}
 				break;
 				case NES:
-				{uint8_t * TheMap;
+					{uint8_t * TheMap;
 					fileSize=mapSizeW*mapSizeH*amt;
 					TheMap = (uint8_t *)malloc(fileSize);
 					for (y=0;y<mapSizeH*amt;++y){
@@ -294,29 +295,18 @@ bool tileMap::saveToFile(){
 					mapptr=TheMap;}
 				break;
 			}
-			if(compression==1){
-				std::string input,output;
-				std::ostringstream outcomp;
-				enigma ecomp;
-				input.assign((const char*)mapptr,fileSize);
-				std::stringstream iss(input);
-				ecomp.encode(iss,outcomp);
-				output=outcomp.str();
-				fileSize=outcomp.str().length();
-				mapptr=(uint8_t*)realloc(mapptr,fileSize);
-				output.copy((char*)mapptr,fileSize);
-				printf("compressed to %d bytes\n",fileSize);
+			if(compression){
+				void*TheMap=mapptr;
+				mapptr=(uint8_t*)encodeType(TheMap,fileSize,fileSize,compression);
+				free(TheMap);
 			}
 			if(type){
 				char temp[2048];
-				snprintf(temp,2048,"//Width %d Height %d",mapSizeW,mapSizeH*amt);
-				if(compression==1)
-					strcat(temp," Enigma compressed");
-				if (saveBinAsText(mapptr,fileSize,myfile,type,temp,"mapDat")==false){
+				snprintf(temp,2048,"Width %d Height %d %s",mapSizeW,mapSizeH*amt,typeToText(type));
+				if(!saveBinAsText(mapptr,fileSize,myfile,type,temp,"mapDat")){
 					free(mapptr);
 					return false;
 				}
-				fputs("};",myfile);
 			}else
 				fwrite(mapptr,1,fileSize,myfile);
 			free(mapptr);
@@ -362,12 +352,12 @@ static void zero_error_tile_map(int32_t x){
 	fl_alert("Please enter value greater than zero you on the other hand entered %d",x);
 }
 bool tileMap::loadFromFile(){
-//start by loading the file
+	//start by loading the file
 	/*Only will return false when there is a malloc error or file error
 	the file saving user cancalation and not entering the number correctly return true*/
 	size_t file_size;
 	if (load_file_generic("Load tile map data") == true){
-		uint8_t compression=fl_choice("What kind of compression is this tilemap?","Uncompressed","Enigma Compressed",0);
+		int compression=compressionAsk();
 		//get width and height
 		int blocksLoad=fl_ask("Are you loading blocks?");
 		std::string tilemap_file=the_file;
@@ -386,7 +376,7 @@ bool tileMap::loadFromFile(){
 			zero_error_tile_map(w);
 			return true;
 		}
-		if (currentProject->gameSystem == NES && (w & 1)){
+		if (currentProject->gameSystem == NES && (w & 1)&&(currentProject->subSystem&NES2x2)){
 			fl_alert("Error unlike in sega genesis mode NES mode needs the width and height to be a multiple to 2");
 			return true;
 		}
@@ -403,7 +393,7 @@ bool tileMap::loadFromFile(){
 			zero_error_tile_map(h);
 			return true;
 		}
-		if (currentProject->gameSystem == NES && (h & 1)){
+		if (currentProject->gameSystem == NES && (h & 1)&&(currentProject->subSystem&NES2x2)){
 			fl_alert("Error unlike in sega genesis mode NES mode needs the width and height the be a multiple to 2");
 			return true;
 		}
@@ -416,19 +406,17 @@ bool tileMap::loadFromFile(){
 			return true;
 		offset=atoi(str_ptr);
 		window->BlocksCBtn->value(blocksLoad?1:0);
-		std::ifstream file (tilemap_file.c_str(), std::ios::in|std::ios::binary|std::ios::ate);
-		file_size = file.tellg();
-		file.seekg (0, std::ios::beg);//return to the beginning of the file
-		uint32_t size_temp;
-		std::ostringstream outDecomp;
-		if (compression==1){
-			enigma decomp;
-			std::stringstream iss;
-			iss << file.rdbuf();
-			decomp.decode(iss,outDecomp);
-			file_size=outDecomp.str().length();
-			printf("Decompressed to %d bytes\n",file_size);
+		FILE*fp;
+		if(!compression){
+			fp=fopen(tilemap_file.c_str(),"rb");
+			fseek(fp,0,SEEK_END);
+			file_size = ftell(fp);
+			rewind(fp);
 		}
+		size_t size_temp;
+		std::string output;
+		if(compression)
+			output=decodeTypeStr(tilemap_file.c_str(),file_size,compression);
 		uint32_t blocksLoaded=file_size/w/h;
 		switch (currentProject->gameSystem){
 			case sega_genesis:
@@ -463,13 +451,13 @@ bool tileMap::loadFromFile(){
 		uint8_t * tempMap = (uint8_t *) malloc(size_temp);
 		if (unlikely(!tileMapDat))
 			show_malloc_error(size_temp)
-		if (compression==1){
-			std::string output=outDecomp.str();
+		if (compression)
 			output.copy((char *)tempMap, file_size);
-		}else if (compression==0)
-			file.read ((char *)tempMap, size_temp);
-		file.close();
-		uint16_t x,y;
+		else if (!compression){
+			fread((char *)tempMap,size_temp,1,fp);
+			fclose(fp);
+		}
+		uint32_t x,y;
 		switch (currentProject->gameSystem){
 			case sega_genesis:
 				for (y=0;y<mapSizeH*amt;++y){
@@ -506,7 +494,7 @@ bool tileMap::loadFromFile(){
 					}
 				}
 				//now load attributes
-				if (load_file_generic("Load Attribtues") == true){
+				if (load_file_generic("Load Attribtues")){
 					FILE * fp=fopen(the_file.c_str(),"rb");
 					fseek(fp, 0L, SEEK_END);
 					uint32_t sz=ftell(fp);
