@@ -17,6 +17,7 @@
 #include "global.h"
 #include "color_compare.h"
 #include "color_convert.h"
+#include "system.h"
 void redrawOnlyCB(Fl_Widget*, void*){
 	window->redraw();
 }
@@ -24,67 +25,101 @@ void showAbout(Fl_Widget*,void*){
 	fl_alert("Retro Graphics Toolkit is written by sega16/nintendo8/sonic master or whatever username you know me as\nThis program was built on %s %s\n",__DATE__,__TIME__);
 }
 void set_game_system(Fl_Widget*,void* selection){
-	uint32_t sel8=(uintptr_t)selection;
-	if (unlikely(sel8 == currentProject->gameSystem)){
+	uint32_t sel=(uintptr_t)selection;
+	if (unlikely(sel == currentProject->gameSystem)){
 		fl_alert("You are already in that mode");
 		return;
 	}
-	switch(sel8){
+	unsigned bd=getBitdepthcurSys();
+	switch(sel){
 		case sega_genesis:
-			//fl_alert("Sega genesis Mode");
+			if(bd>4)
+				bd=4;
+			{uint32_t oldSys=currentProject->gameSystem;
 			currentProject->gameSystem=sega_genesis;
-			currentProject->tileC->tileSize=32;
-			//create_shadow_highlight_buttons();
+			currentProject->subSystem=0;
+			setBitdepthcurSys(bd);
 			shadow_highlight_switch->show();
-			{
-				uint8_t pal_temp[128];
-				uint8_t c;
-				for (c=0;c<128;c+=2){
-					uint16_t temp=to_sega_genesis_color(c/2);
-					pal_temp[c]=temp>>8;
-					pal_temp[c+1]=temp&255;
+			if(containsDataCurProj(pjHavePal)){
+				if(oldSys==NES){
+					uint8_t pal_temp[128];
+					unsigned c;
+					for (c=0;c<128;c+=2){
+						uint16_t temp=to_sega_genesis_color(c/2);
+						pal_temp[c]=temp>>8;
+						pal_temp[c+1]=temp&255;
+					}
+					memcpy(currentProject->palDat,pal_temp,128);
 				}
-				memcpy(currentProject->palDat,pal_temp,128);
+				palEdit.changeSystem();
+				tileEdit_pal.changeSystem();
+				tileMap_pal.changeSystem();
 			}
-			palEdit.changeSystem();
-			tileEdit_pal.changeSystem();
-			tileMap_pal.changeSystem();
-			currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*32);
-			window->map_w->step(1);
-			window->map_h->step(1);
-			window->spritesize[0]->maximum(4);
-			window->spritesize[1]->maximum(4);
-			currentProject->spritesC->enforceMax(4,4);
-			window->updateSpriteSliders();
+			if(containsDataCurProj(pjHaveTiles)){
+				currentProject->tileC->tileSize=32;
+				currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*32);
+			}
+			if(containsDataCurProj(pjHaveMap)){
+				window->map_w->step(1);
+				window->map_h->step(1);
+			}
+			if(containsDataCurProj(pjHaveSprites)){
+				window->spritesize[0]->maximum(4);
+				window->spritesize[1]->maximum(4);
+				currentProject->spritesC->enforceMax(4,4);
+				window->updateSpriteSliders();
+			}}
 		break;
 		case NES:
+			bd=getBitdepthcurSys();
+			if(bd>2)
+				bd=2;
 			currentProject->gameSystem=NES;
-			currentProject->tileC->tileSize=16;
+			currentProject->subSystem=0;
+			setBitdepthcurSys(bd);
 			shadow_highlight_switch->hide();
 			updateNesTab(0);
-			for (uint8_t c=0;c<16;c++)
-				currentProject->palDat[c]=to_nes_color(c);
-			palEdit.changeSystem();
-			tileEdit_pal.changeSystem();
-			tileMap_pal.changeSystem();
-			update_emphesis(0,0);
-			currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*16);
-			//on the NES tilemaps need to be a multiple of 2
-			currentProject->subSystem=NES2x2;
-			if(((currentProject->tileMapC->mapSizeW)&1) && ((currentProject->tileMapC->mapSizeHA)&1))
-				currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeHA+1);
-			if((currentProject->tileMapC->mapSizeW)&1)
-				currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeHA);
-			if((currentProject->tileMapC->mapSizeHA)&1)
-				currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeHA+1);
-			window->map_w->value(currentProject->tileMapC->mapSizeW);
-			window->map_h->value(currentProject->tileMapC->mapSizeHA);
-			window->map_w->step(2);
-			window->map_h->step(2);
-			window->spritesize[0]->maximum(1);
-			window->spritesize[1]->maximum(2);
-			currentProject->spritesC->enforceMax(1,2);
-			window->updateSpriteSliders();
+			if(containsDataCurProj(pjHavePal)){
+				for (unsigned c=0;c<16;++c)
+					currentProject->palDat[c]=to_nes_color(c);
+				palEdit.changeSystem();
+				tileEdit_pal.changeSystem();
+				tileMap_pal.changeSystem();
+				update_emphesis(0,0);
+			}
+			if(containsDataCurProj(pjHaveTiles)){
+				currentProject->tileC->tileSize=16;
+				currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*16);
+			}
+			currentProject->subSystem|=NES2x2;
+			if(containsDataCurProj(pjHaveMap)){
+				//on the NES tilemaps need to be a multiple of 2
+				if(((currentProject->tileMapC->mapSizeW)&1) && ((currentProject->tileMapC->mapSizeHA)&1))
+					currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeHA+1);
+				if((currentProject->tileMapC->mapSizeW)&1)
+					currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeHA);
+				if((currentProject->tileMapC->mapSizeHA)&1)
+					currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeHA+1);
+				window->map_w->value(currentProject->tileMapC->mapSizeW);
+				window->map_h->value(currentProject->tileMapC->mapSizeHA);
+				window->map_w->step(2);
+				window->map_h->step(2);
+			}
+			if(containsDataCurProj(pjHaveSprites)){
+				window->spritesize[0]->maximum(1);
+				window->spritesize[1]->maximum(2);
+				currentProject->spritesC->enforceMax(1,2);
+				window->updateSpriteSliders();
+			}
+		break;
+		case frameBuffer_pal:
+			{currentProject->gameSystem=frameBuffer_pal;
+			currentProject->subSystem=0;
+			if(bd>8)
+				bd=8;
+			setBitdepthcurSys(bd);
+			shadow_highlight_switch->hide();
+			}
 		break;
 		default:
 			show_default_error
@@ -93,7 +128,7 @@ void set_game_system(Fl_Widget*,void* selection){
 	}
 	if(currentProject->gameSystem==NES){
 		window->subSysC->show();
-		window->subSysC->value(currentProject->subSystem);
+		window->subSysC->value(currentProject->subSystem&1);
 	}else
 		window->subSysC->hide();
 	window->redraw();

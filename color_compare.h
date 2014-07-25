@@ -1,3 +1,5 @@
+#pragma once
+#include <stdint.h>
 uint32_t ColourDistance(int r1,int g1,int b1, int r2,int g2,int b2);
 void Rgb2Lch(double *L, double *C, double *H, uint8_t RI, uint8_t GI, uint8_t BI);
 void Rgb2Xyz(double *X, double *Y, double *Z, uint8_t RI, uint8_t GI, uint8_t BI);

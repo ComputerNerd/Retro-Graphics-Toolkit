@@ -1,5 +1,8 @@
 Most recent changes are placed at the top
 
+20140725
+Fixed import tilemap as image alignment
+
 20140724
 Yliluoma dither methods never tries to dither to colorspace as it takes too long even for one tile
 Improved loading and saving with compression (unifed options)

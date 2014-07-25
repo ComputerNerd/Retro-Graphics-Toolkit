@@ -238,38 +238,26 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 			fl_alert("Error loading image");
 			return;
 		}
-		unsigned tilebit;
-		switch(currentProject->gameSystem){
-			case sega_genesis:
-				tilebit=7;
-			break;
-			case NES:
-				if(currentProject->subSystem&NES2x2)
-					tilebit=15;
-				else
-					tilebit=7;
-			break;
-			default:
-				loaded_image->release();
-				show_default_error
-			break;
+		unsigned tilebitw,tilebith;
+		tilebitw=currentProject->tileC->sizex;
+		tilebith=currentProject->tileC->sizey;
+		if((currentProject->subSystem&NES2x2)&&(currentProject->gameSystem==NES)){
+			tilebitw*=2;
+			tilebith*=2;
 		}
 		uint32_t w,h;
 		w=loaded_image->w();
 		h=loaded_image->h();
 		printf("image width: %d image height: %d\n",w,h);
 		uint32_t w8,h8;
-		uint32_t wt,ht;
-		unsigned wr,hr;
-		wt=w&(~(uint32_t)tilebit);
-		ht=h&(~(uint32_t)tilebit);
-		wr=w&tilebit;
-		hr=h&tilebit;
-		w8=w/8;
-		h8=h/8;
-		if (wr!=0)
+		uint32_t wt,ht,wr,hr;
+		wr=w%tilebitw;
+		hr=h%tilebith;
+		w8=w/currentProject->tileC->sizex;
+		h8=h/currentProject->tileC->sizey;
+		if (wr)
 			++w8;
-		if (hr!=0)
+		if (hr)
 			++h8;
 		if((currentProject->gameSystem==NES)&&(currentProject->subSystem=NES2x2)){
 			if((wr-8)>0)
@@ -277,16 +265,14 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 			if((hr-8)>0)
 				++h8;
 		}
-		if ((wr != 0) && (hr != 0))
-			fl_alert("Warning both width and height are not a multiple of %d",tilebit+1);
-		else if (wr != 0)
-			fl_alert("Warning width is not a multiple of %d",tilebit+1);
-		else if (hr != 0)
-			fl_alert("Warning height is not a multiple of %d",tilebit+1);
-		printf("w %d h %d wt %d ht %d wr %d hr %d w8 %d h8 %d\n",w,h,wt,ht,wr,hr,w8,h8);
+		wt=w8*currentProject->tileC->sizex;
+		ht=h8*currentProject->tileC->sizey;
+		if(wr)
+			fl_alert("Warning width is not a multiple of %d",tilebitw);
+		if(hr)
+			fl_alert("Warning height is not a multiple of %d",tilebith);
 		//start by copying the data
-		uint8_t * img_ptr=(uint8_t *)loaded_image->data()[0];
-		//printf("First Pixel Red: %d Green: %d Blue: %d\n",img_ptr[0],img_ptr[1],img_ptr[2]);
+		uint8_t * imgptr=(uint8_t *)loaded_image->data()[0];
 		//now we can convert to tiles
 		if (unlikely(loaded_image->d() != 3 && loaded_image->d() != 4)){
 			fl_alert("Please use color depth of 3 or 4\nYou Used %d",loaded_image->d());
@@ -301,72 +287,52 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 			currentProject->tileC->tiles_amount=(w8*h8)-1;
 			updateTileSelectAmt();
 		}
-		//uint8_t sizeTemp,sizeTemp2;
-		uint64_t a;
-		uint32_t b,y,x=0;
-		uint8_t xx;
 		uint32_t tx,ty=0;
-		switch (loaded_image->d()){
-			case 3:
-				for (a=0;a<(ht*wt*3)-wt*3;a+=w*3*8){//a tiles y
-					tx=0;
-					for (b=0;b<wt*3;b+=24){//b tiles x
-						if(over)
-							truecolor_tile_ptr=currentProject->tileMapC->get_tile(tx,ty)*256;
-						for (y=0;y<wt*3*8;y+=w*3){//pixels y
-							xx=0;
-							for (x=0;x<32;x+=4){//pixels x
-								memcpy(&currentProject->tileC->truetileDat[truecolor_tile_ptr+x],&img_ptr[a+b+y+xx],3);
-								currentProject->tileC->truetileDat[truecolor_tile_ptr+x+3]=255;//solid
-								xx+=3;
+		unsigned center[3];
+		center[0]=(wt-w)/2;
+		center[1]=(ht-h)/2;
+		center[2]=wt-w-center[0];
+		unsigned depth=loaded_image->d();
+		for(uint32_t y=0,tcnt=0;y<ht;++y,++ty){
+			if(y%currentProject->tileC->sizey)
+				tcnt-=wt/currentProject->tileC->sizex;
+			tx=0;
+			for(uint32_t x=0;x<wt;x+=currentProject->tileC->sizex,++tcnt,++tx){
+				uint32_t ctile;
+				if(over)
+					ctile=currentProject->tileMapC->get_tile(tx,ty);
+				else
+					ctile=tcnt;
+				uint8_t*ttile=currentProject->tileC->truetileDat+((ctile*currentProject->tileC->sizex*currentProject->tileC->sizey*4)+((y%currentProject->tileC->sizey)*currentProject->tileC->sizex*4));
+				//First take care of border
+				unsigned line=currentProject->tileC->sizex;
+				if((y<center[1])||(y>=(h+center[1])))
+					memset(ttile,0,line*4);
+				else{
+					if(x<center[0]){
+						memset(ttile,0,center[0]*4);
+						line-=center[0];
+						ttile+=center[0]*4;
+					}else if(x>=(wt-currentProject->tileC->sizex))
+						line-=center[2];
+					switch (depth){
+						case 3:
+							for(unsigned xx=0;xx<line;++xx){
+								*ttile++=*imgptr++;
+								*ttile++=*imgptr++;
+								*ttile++=*imgptr++;
+								*ttile++=255;
 							}
-							truecolor_tile_ptr+=32;
-						}
-						++tx;
+						break;
+						case 4:
+							memcpy(ttile,imgptr,line*4);
+							imgptr+=line*4;
+						break;
 					}
-					if (wr!=0){//handle borders
-						b+=24;
-						uint32_t yy=0;
-						for (y=0;y<8;++y){
-							xx=0;
-							for (x=0;x<wr*4;x+=4){
-								memcpy(&currentProject->tileC->truetileDat[truecolor_tile_ptr+x],&img_ptr[a+b+yy+xx],3);
-								currentProject->tileC->truetileDat[truecolor_tile_ptr+x+3]=255;//solid
-								xx+=3;
-							}
-							memset(&currentProject->tileC->truetileDat[truecolor_tile_ptr+x+4],0,32-xx-4);
-							truecolor_tile_ptr+=32;
-							yy+=w*3;
-						}
-					}
-					++ty;
+					if(x>=(wt-currentProject->tileC->sizex))
+						memset(ttile,0,center[2]*4);
 				}
-			break;
-			case 4:
-				for (a=0;a<(ht*wt*4)-wt*4;a+=w*4*8){//a tiles y
-					tx=0;
-					for (b=0;b<wt*4;b+=32){//b tiles x
-						if(over)
-							truecolor_tile_ptr=currentProject->tileMapC->get_tile(tx,ty)*256;
-						for (y=0;y<wt*4*8;y+=w*4){//pixels y
-							memcpy(&currentProject->tileC->truetileDat[truecolor_tile_ptr],&img_ptr[a+b+y],32);
-							truecolor_tile_ptr+=32;
-						}
-						++tx;
-					}
-					if (wr!=0){//handle borders
-						b+=32;
-						uint32_t yy=wt*4*8;
-						for (y=0;y<8;++y){
-							memcpy(&currentProject->tileC->truetileDat[truecolor_tile_ptr],&img_ptr[a+b+y],wr*4);
-							memset(&currentProject->tileC->truetileDat[truecolor_tile_ptr+x+4],0,32-(wr*4)-4);
-							truecolor_tile_ptr+=32;
-							yy+=w*3;
-						}
-					}
-					++ty;
-				}
-			break;
+			}
 		}
 		loaded_image->release();
 		if(!over){
@@ -374,10 +340,10 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 			window->map_w->value(w8);
 			window->map_h->value(h8);
 			uint32_t tilecounter=0;
-			for (y=0;y<h8;++y){
-				for (x=0;x<w8;++x){
+			for (uint32_t y=0;y<h8;++y){
+				for (uint32_t x=0;x<w8;++x){
 					currentProject->tileMapC->set_tile_full(tilecounter,x,y,0,false,false,false);
-					tilecounter++;
+					++tilecounter;
 				}
 			}
 		}

@@ -38,33 +38,6 @@ uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b);
 uint32_t MakeRGBcolor(uint32_t pixel,float saturation = 1.1f, float hue_tweak = 0.0f,float contrast = 1.0f, float brightness = 1.0f,float gamma = 2.2f);
 //uint32_t MakeRGBcolor(uint32_t pixel,float saturation, float hue_tweak,float contrast, float brightness ,float gamma );
 //varibles and defines
-//System declerations
-#define sega_genesis 0
-#define NES 1
-#define frameBuffer_pal 2
-#define frameBuffer 3//For example rgb565 would be here instead of frameBuffer_pal because the colors are fixed and all can be used
-/*Subsystem declarations
- * Subsystem as the name implies depends on which system is selected
- * These are not compatible when switching systems
- * For the sega geneis bits 1-0 contain bit depth 0 means 1 bit
- * For the NES bit 1 contains bit depth 1 if 2 bit 0 if 1 bit
- * For palette framebuffer bits 2-0 contain bit depth add 1 to get actual just like the others
- * For framebuffer bits 4-0 contain bit depth again remember to add one to get actual bit depth
- * Valid values are
- * 0 - 1 bit black and white
- * 14 - rgb555
- * 15 - rgb565
- * 23 - rgb888
- * 31 - rgba 8888
- * Bit 4 specifies order this depends on bit depth
- * When 15 or 16`specifies byte swapping
- * When 24 bit or 32 stores as bgr or rgb
- * if bit depth is 32 bit then bit 5 is used to determin if alpha value should be before or after rgb/bgr
- * */
-#define NES2x2 1//Note for version 4 or eariler projects and hence in eariler versions of Retro Graphics Toolkit bit 0 was inverted
-#define NES1x1 0
-#define NES2bit 2
-#define NES1bit 0
 extern Fl_Group * shadow_highlight_switch;
 //tabs group id
 extern bool show_grid_placer;

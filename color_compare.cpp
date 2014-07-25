@@ -1,5 +1,6 @@
 #include "global.h"
 #include <cmath>
+#include "color_compare.h"
 //From http://www.compuphase.com/cmetric.htm
 uint32_t ColourDistance(int r1,int g1,int b1, int r2,int g2,int b2){
 	int_fast32_t rmean = ( (int_fast32_t)r1 + (int_fast32_t)r2 ) / 2;

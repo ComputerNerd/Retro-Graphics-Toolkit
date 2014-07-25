@@ -16,6 +16,7 @@
 */
 //Color conversion functions should go here
 #pragma once
+#include <stdint.h>
 extern uint8_t nespaltab_r[];
 extern uint8_t nespaltab_g[];
 extern uint8_t nespaltab_b[];

@@ -277,6 +277,7 @@ void editor::_editor(){
 			{ Fl_Button *o = new Fl_Button(668, default_palette_bar_offset_y, 128, 32, "Delete Selected Tile");
 				o->tooltip("This button will delete the currently selected tile");
 				o->callback(delete_tile_at_location);
+				o->labelsize(11);
 			}
 			tileEdit_pal.more_init();
 			rgb_red = new Fl_Hor_Value_Slider(64,default_palette_bar_offset_y+136,128,24,"RGB red");

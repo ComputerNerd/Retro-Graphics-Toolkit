@@ -25,6 +25,10 @@ struct Project * currentProject;
 Fl_Slider* curPrj;
 static const char * defaultName="Add a description here.";
 uint32_t curProjectID=0;
+bool containsDataCurProj(uint32_t mask){
+	unsigned off=__builtin_ctz(mask);
+	return ((currentProject->useMask&pjHavePal)||(currentProject->share[off]>0))?true:false;
+}
 void initProject(void){
 	projects = (struct Project **) malloc(sizeof(void *));
 	projects[0] = new struct Project;

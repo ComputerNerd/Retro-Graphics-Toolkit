@@ -15,8 +15,10 @@
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
 #include "global.h"
-#include "palette.h"
 #include "color_compare.h"
+#include "color_convert.h"
+#include "system.h"
+#include "palette.h"
 uint8_t nespaltab_r[64];
 uint8_t nespaltab_g[64];
 uint8_t nespaltab_b[64];
@@ -58,9 +60,6 @@ uint8_t to_nes_color(uint8_t pal_index){
 	//this function does not set any values to global palette it is done in other functions
 	pal_index*=3;
 	return to_nes_color_rgb(currentProject->rgbPal[pal_index],currentProject->rgbPal[pal_index+1],currentProject->rgbPal[pal_index+2]);
-}
-uint32_t toNesRgb(uint8_t ri,uint8_t gi,uint8_t bi){
-	return MakeRGBcolor(to_nes_color_rgb(ri,gi,bi));
 }
 uint8_t toNesChan(uint8_t ri,uint8_t gi,uint8_t bi,uint8_t chan){
 	uint32_t rgb_out=toNesRgb(ri,gi,bi);
@@ -105,7 +104,7 @@ uint16_t to_sega_genesis_color(uint16_t pal_index){
 	//bgr format
 	return ((r-palTypeGen)<<1)|((g-palTypeGen)<<5)|((b-palTypeGen)<<9);
 }
-uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_found,bool useAlpha=false){
+uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_found,bool useAlpha){
 	/*!
 	Scans for colors in an image stops at over 256 as if there is an excess of 256 colors there is no reason to countinue
 	*/

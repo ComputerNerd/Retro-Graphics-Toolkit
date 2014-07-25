@@ -17,13 +17,25 @@
 #include "project.h"
 #include "global.h"
 //System refers to game system and such or device for example sega genesis or NES
+unsigned getPixelVal(uint32_t tileId,uint32_t x,uint32_t y){
+	unsigned bd=getBitdepthcurSysraw();
+	if((currentProject->gameSystem==NES)&&(bd==1)){
+		//Planar unlike the rest
+
+	}
+	switch(bd){
+		case 0://1 bit
+
+		break;
+	}
+}
 static void setbdmask(unsigned bd,unsigned mask){
 	if(bd>mask)
 		bd=mask;
 	currentProject->subSystem&=~mask;
 	currentProject->subSystem|=bd;
 }
-void setBitdepthcurSysraw(unsigned bd){
+void setBitdepthcurSys(unsigned bd){
 	--bd;
 	switch(currentProject->gameSystem){
 		case sega_genesis:
