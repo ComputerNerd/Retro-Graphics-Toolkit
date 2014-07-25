@@ -654,6 +654,59 @@ static inline uint8_t addCheck(uint16_t val,uint8_t add){
 		(a) = 255; \
 	else \
 		(a) += (b);
+/* 8x8 threshold map (note: the patented pattern dithering algorithm uses 4x4) */
+static const unsigned char mapTK[8*8]={
+	0,48,12,60, 3,51,15,63,
+	32,16,44,28,35,19,47,31,
+	8,56, 4,52,11,59, 7,55,
+	40,24,36,20,43,27,39,23,
+	2,50,14,62, 1,49,13,61,
+	34,18,46,30,33,17,45,29,
+	10,58, 6,54, 9,57, 5,53,
+	42,26,38,22,41,25,37,21};
+/* Luminance for each palette entry, to be initialized as soon as the program begins */
+struct MixingPlanTK{
+    unsigned colors[64];
+};
+MixingPlanTK DeviseBestMixingPlanTK(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * pal,uint16_t offset){
+	// Input color in RGB
+	float input_rgb[3] = {rIn,gIn,bIn};
+	pal+=offset*3;
+	offsetGloablY3=offset;
+	MixingPlanTK result = { {0} };
+	const int src[3] = {rIn,gIn,bIn};
+
+	const double X = 0.09;  // Error multiplier
+	int e[3] = { 0, 0, 0 }; // Error accumulator
+	for(unsigned c=0; c<64; ++c){
+		// Current temporary value
+		int t[3] = { src[0] + e[0] * X, src[1] + e[1] * X, src[2] + e[2] * X };
+		// Clamp it in the allowed RGB range
+		if(t[0]<0) t[0]=0; else if(t[0]>255) t[0]=255;
+		if(t[1]<0) t[1]=0; else if(t[1]>255) t[1]=255;
+		if(t[2]<0) t[2]=0; else if(t[2]>255) t[2]=255;
+		// Find the closest color from the palette
+		double least_penalty = 1e99;
+		unsigned chosen = c%palettesize;
+		for(unsigned index=0; index<palettesize; ++index){
+			const int pc[3] = {pal[index*3],pal[index*3+1],pal[index*3+2]};
+			double penalty = ColorCompare(pc[0],pc[1],pc[2], t[0],t[1],t[2]);
+			if(penalty < least_penalty){
+				least_penalty = penalty;
+				chosen=index;
+			}
+		}
+		// Add it to candidates and update the error
+		result.colors[c] = chosen;
+		const int pc[3] = {pal[chosen*3],pal[chosen*3+1],pal[chosen*3+2]};
+		e[0] += src[0]-pc[0];
+		e[1] += src[1]-pc[1];
+		e[2] += src[2]-pc[2];
+	}
+	// Sort the colors according to luminance
+	std::sort(result.colors, result.colors+64, PaletteCompareLuma);
+	return result;
+}
 void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpace,bool forceRow,uint8_t forcedrow,bool isChunk,uint32_t idChunk){
 	/*!
 	this function will take an input with or without alpha and dither it
@@ -674,15 +727,16 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 	}
 	uint8_t r_old,g_old,b_old,a_old;
 	uint8_t r_new,g_new,b_new,a_new;
-	uint8_t pal_row;
+	unsigned pal_row;
 	int16_t error_rgb[4];
 	switch (ditherAlg){
+	case 7:
 	case 6:
 	case 5://Yliluoma's ordered dithering algorithm
 	case 4:
 	{
 		if(colSpace){
-			//if(!fl_ask("Dither to colorspace? WARNING SLOW!"))//I have found that this results in worse quality anyways when using
+			//if(!fl_ask("Dither to colorspace? WARNING SLOW!"))//I have found that this results in worse quality anyways
 				return;
 		}
 		uint16_t tempPalSize;
@@ -777,7 +831,25 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted
 				}
 				unsigned tempPalOff;
-				if(ditherAlg==4){
+				if(forceRow)
+					pal_row=forcedrow;
+				else{
+					if(isChunk)
+						pal_row=currentProject->Chunk->getTileRow_t(idChunk,x/8,y/8);
+					else
+						pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
+				}
+				if(ditherAlg==7){
+					unsigned map_value = mapTK[(x & 7) + ((y & 7) << 3)];
+					MixingPlanTK plan;
+					if(colSpace){
+						plan=DeviseBestMixingPlanTK(r_old,g_old,b_old,colPtr,0);
+						tempPalOff=plan.colors[map_value]*3;
+					}else{
+						plan=DeviseBestMixingPlanTK(r_old,g_old,b_old,currentProject->rgbPal,pal_row*palettesize);
+						tempPalOff=(plan.colors[map_value]+(pal_row*palettesize))*3;
+					}
+				}else if(ditherAlg==4){
 					float map_value = mapY1[(x & 7) + ((y & 7) << 3)];
 					MixingPlanY1 plan;
 					if(colSpace){
@@ -799,14 +871,6 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 						//gdImageSetPixel(im, x,y, plan[ map_value ]);
 						tempPalOff=plan[map_value]*3;
 					}else{
-						if(forceRow)
-							pal_row=forcedrow;
-						else{
-							if(isChunk)
-								pal_row=currentProject->Chunk->getTileRow_t(idChunk,x/8,y/8);
-							else
-								pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
-						}
 						if(ditherAlg==5)
 							plan = DeviseBestMixingPlanY2(r_old,g_old,b_old,currentProject->rgbPal,pal_row*palettesize, 16);
 						else

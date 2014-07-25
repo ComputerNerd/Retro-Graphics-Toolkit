@@ -125,6 +125,7 @@ static const Fl_Menu_Item ditherChoices[]={
 	{"Yliluoma 1",0,set_ditherAlg,(void *)4},
 	{"Yliluoma 2",0,set_ditherAlg,(void *)5},
 	{"Yliluoma 3",0,set_ditherAlg,(void *)6},
+	{"Thomas Knoll",0,set_ditherAlg,(void *)7},
 	{0}
 };
 static const Fl_Menu_Item subSysNES[]={
