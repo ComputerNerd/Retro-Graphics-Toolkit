@@ -327,6 +327,7 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 						case 4:
 							memcpy(ttile,imgptr,line*4);
 							imgptr+=line*4;
+							ttile+=line*4;
 						break;
 					}
 					if(x>=(wt-currentProject->tileC->sizex))

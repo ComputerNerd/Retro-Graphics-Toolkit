@@ -416,7 +416,7 @@ void editor::_editor(){
 			tile_select_2->step(1);
 			tile_select_2->align(FL_ALIGN_LEFT);
 			tile_select_2->callback(set_tile_currentTP);
-			totalTiles=new Fl_Box(512,default_palette_bar_offset_y,128,64);
+			totalTiles=new Fl_Box(536,default_palette_bar_offset_y,128,64);
 			totalTiles->labelsize(12);
 			tileMap_pal.more_init();
 			//buttons for tile settings
