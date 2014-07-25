@@ -50,7 +50,7 @@ static double min3(double a,double b,double c){
  * @param   Number  b       The blue color value
  * @return  Array           The HSL representation
  */
-void rgbToHls(double r,double g,double b,double * hh,double * ll,double * ss){
+static void rgbToHls(double r,double g,double b,double * hh,double * ll,double * ss){
 	r /= 255.0;
 	g /= 255.0;
 	b /= 255.0;
@@ -58,56 +58,74 @@ void rgbToHls(double r,double g,double b,double * hh,double * ll,double * ss){
 	double min = min3(r, g, b);
 	double h, s, l = (max + min) / 2.0;
 
-	if(max == min){
+	if(max == min)
 		h = s = 0.0; // achromatic
-	}else{
+	else{
 		double d = max - min;
 		s = l > 0.5 ? d / (2.0 - max - min) : d / (max + min);
-		if (max == r)
+		/*if (max == r)
 			h = (g - b) / d + (g < b ? 6 : 0);
 		else if (max == g)
 			h = (b - r) / d + 2.0;
 		else
 			h = (r - g) / d + 4.0;
+		h /= 6.0;*/
 
-		h /= 6.0;
+		//From: http://easyrgb.com/index.php?X=MATH&H=18#text18
+		double del_R = ((( max - r )/6.0) + (d/2.0)) / d;
+		double del_G = ((( max - g )/6.0) + (d/2.0)) / d;
+		double del_B = ((( max - b )/6.0) + (d/2.0)) / d;
+
+		if      (r == max ) h = del_B - del_G;
+		else if (g == max ) h = (1.0/3.0) + del_R - del_B;
+		else if (b == max ) h = (2.0/3.0) + del_G - del_R;
+
+		if (h < 0.0) h += 1.0;
+		if (h > 1.0) h -= 1.0;
 	}
+	if(h>1.0)
+		printf("Warning %f\n",h);
 	*hh=h;
 	*ll=l;
 	*ss=s;
 }
-void rgbtohsv(uint8_t R,uint8_t G,uint8_t B,double * hh,double * ss,double * vv){
-	double var_R =  R / 255.0;				//RGB from 0 to 255
-	double var_G =  G / 255.0;
-	double var_B =  B / 255.0;
-
-	double var_Min = min3(var_R, var_G, var_B);		//Min. value of RGB
-	double var_Max = max3(var_R, var_G, var_B);		//Max. value of RGB
-	double del_Max = var_Max - var_Min;			//Delta RGB value 
-	double V = var_Max;
-	double H,S;
-	if (del_Max == 0.0){					//This is a gray, no chroma...
-		H = 0.0;					//HSV results from 0 to 1
-		S = 0.0;
-	}else{							//Chromatic data...
-		S = del_Max / var_Max;
-		double del_R = (((var_Max - var_R ) / 6.0 ) + (del_Max / 2.0 )) / del_Max;
-		double del_G = (((var_Max - var_G ) / 6.0 ) + (del_Max / 2.0 )) / del_Max;
-		double del_B = (((var_Max - var_B ) / 6.0 ) + (del_Max / 2.0 )) / del_Max;
-		if (var_R == var_Max)
-			H = del_B - del_G;
-		else if (var_G == var_Max)
-			H = (1.0 / 3.0) + del_R - del_B;
-		else if (var_B == var_Max)
-			H = (2.0 / 3.0) + del_G - del_R;
-		if (H < 0.0)
-			H += 1.0;
-		if (H > 1.0)
-			H -= 1.0;
+static void addHist(uint32_t cur_tile,int type,uint32_t*hist,unsigned sz){
+	double szz=(double)sz;
+	uint8_t * truePtr=&currentProject->tileC->truetileDat[cur_tile*256];
+	double h,l,s;
+	for(unsigned z=0;z<256;z+=4){
+		rgbToHls(truePtr[0],truePtr[1],truePtr[2],&h,&l,&s);
+		truePtr+=4;
+		switch(type){
+			case 0:
+				++hist[unsigned(h*szz)];
+			break;
+			case 1:
+				++hist[unsigned(l*szz)];
+			break;
+			case 2:
+				++hist[unsigned(s*szz)];
+			break;
+			case 3:
+				++hist[unsigned(h*s*szz)];
+			break;
+			case 4:
+				++hist[unsigned(h*l*szz)];
+			break;
+			case 5:
+				++hist[unsigned(s*l*szz)];
+			break;
+			case 6:
+				++hist[unsigned((h+s)*szz)];
+			break;
+			case 7:
+				++hist[unsigned((h+l)*szz)];
+			break;
+			case 8:
+				++hist[unsigned((s+l)*szz)];
+			break;
+		}
 	}
-	*hh=H;
-	*ss=S;
-	*vv=V;
 }
 static double getHH(uint32_t cur_tile,int type){
 	double hh=0.0;
@@ -119,67 +137,116 @@ static double getHH(uint32_t cur_tile,int type){
 		switch(type){
 			case 0:
 				hh+=h;
-				break;
+			break;
 			case 1:
 				hh+=l;
-				break;
+			break;
 			case 2:
 				hh+=s;
-				break;
+			break;
 			case 3:
 				hh+=h*s;
-				break;
+			break;
 			case 4:
 				hh+=h*l;
-				break;
+			break;
 			case 5:
 				hh+=s*l;
-				break;
+			break;
 			case 6:
 				hh+=h+s;
-				break;
+			break;
 			case 7:
 				hh+=h+l;
-				break;
+			break;
 			case 8:
 				hh+=s+l;
-				break;
+			break;
 		}
 	}
 	return hh;
 }
 void tileMap::pickRow(uint8_t amount){
 	int type=MenuPopup("Pick tile row based on...","Please pick what most defines the image",9,"Hue","Brightness","Saturation","Hue*satuaration","Hue*Brightness","Brightness*saturation","Hue+satuaration","Hue+Brightness","Brightness+saturation");
+	if(type<0)
+		return;
+	int method=MenuPopup("Select a method","This depends on the image",3,"Average","Histogram section with most occurances","Histogram peak");
 	double divide=(double)amount;//convert to double
 	uint32_t x,y;
 	double maxPal=divide;
 	double divBy;
 	unsigned addBy;
 	if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
-		divBy=256.0;//8*8*4
+		divBy=256.0;//8*8*2*2
 		addBy=2;
 	}else{
 		divBy=64.0;//8*8
 		addBy=1;
 	}
+	uint32_t*hist,sz;
+	if(method){
+		if(type>=6)
+			sz=2000;
+		else
+			sz=1000;
+		hist=(uint32_t*)malloc(sz*sizeof(uint32_t));
+	}
 	for (y=0;y<mapSizeHA;y+=addBy){
 		for (x=0;x<mapSizeW;x+=addBy){
-			double hh;
-			if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
-				hh=getHH(get_tile(x,y),type);
-				hh+=getHH(get_tile(x+1,y),type);
-				hh+=getHH(get_tile(x,y+1),type);
-				hh+=getHH(get_tile(x+1,y+1),type);
-			}else
-				hh=getHH(get_tile(x,y),type);
-			hh/=divBy/divide;
-			if (hh >= maxPal){
-				printf("hh >= %f %f %d\n",maxPal,hh,(int)hh);
-				hh=divide-0.5;
+			if(method){
+				std::fill(hist,hist+sz,0);
+				if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
+					addHist(get_tile(x,y),type,hist,sz);
+					addHist(get_tile(x+1,y),type,hist,sz);
+					addHist(get_tile(x,y+1),type,hist,sz);
+					addHist(get_tile(x+1,y+1),type,hist,sz);
+				}else
+					addHist(get_tile(x,y),type,hist,sz);
+				unsigned divH=sz/amount;
+				if(method==2){
+					uint32_t maxv,*histp=hist,i,ent;
+					for(i=maxv=ent=0;i<sz;++i){
+						if(maxv<*histp){
+							maxv=*histp;
+							ent=i;
+						}
+						++histp;
+					}
+					set_pal_row(x,y,ent/divH);
+				}else if(method==1){
+					uint32_t*sums=(uint32_t*)alloca(amount*sizeof(uint32_t)),i,*histp=hist,maxv,ent;
+					std::fill(sums,sums+amount,0);
+					for(i=ent=0;i<sz;++i)
+						sums[i/divH]+=*histp++;
+					maxv=sums[0];
+					for(i=1;i<amount;++i){
+						if(maxv<sums[i]){
+							maxv=sums[i];
+							ent=i;
+						}
+					}
+					set_pal_row(x,y,ent);
+				}
+			}else{
+				double hh;
+				if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
+					hh=getHH(get_tile(x,y),type);
+					hh+=getHH(get_tile(x+1,y),type);
+					hh+=getHH(get_tile(x,y+1),type);
+					hh+=getHH(get_tile(x+1,y+1),type);
+				}else
+					hh=getHH(get_tile(x,y),type);
+				hh/=divBy/divide;
+				if (hh >= maxPal){
+					printf("hh >= %f %f %d\n",maxPal,hh,(int)hh);
+					hh=divide-0.5;
+				}
+				set_pal_row(x,y,hh);
 			}
-			set_pal_row(x,y,hh);
 		}
 	}
+	if(method)
+		free(hist);
 }
 void tileMap::allRowZero(void){
 	uint32_t x,y;

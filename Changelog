@@ -1,6 +1,7 @@
 Most recent changes are placed at the top
 
 20140725
+Added new histogram based hue tile picking options
 Fixed a bug related to Yliluoma 1 where which row is not checked
 Added Thomas Knoll dither (Yliluoma's implementation)
 Fixed import tilemap as image alignment

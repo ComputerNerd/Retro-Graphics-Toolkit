@@ -214,7 +214,7 @@ void dither_tilemap_as_image(Fl_Widget*,void*sprite){
 			currentProject->tileMapC->truecolorimageToTiles(image,-1);
 		}
 	}else{
-		for (uint8_t rowz=0;rowz<4;rowz++){
+		for (uint8_t rowz=0;rowz<4;++rowz){
 			printf("Row %d\n",rowz);
 			currentProject->tileMapC->truecolor_to_image(image,rowz);
 			ditherImage(image,w,h,true,true);
