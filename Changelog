@@ -1,6 +1,10 @@
 Most recent changes are placed at the top
 
 20140725
+Fixed some minor bugs related to compression.
+Added clipboard support for saving as text.
+
+20140725
 Added new histogram based hue tile picking options
 Fixed a bug related to Yliluoma 1 where which row is not checked
 Added Thomas Knoll dither (Yliluoma's implementation)

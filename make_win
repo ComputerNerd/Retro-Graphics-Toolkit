@@ -1,5 +1,6 @@
 CC=i686-pc-mingw32-gcc
 CPP=i686-pc-mingw32-g++
+STRIP=i686-pc-mingw32-strip
 #to compile on windows you must compile fltk
 #I compiled fltk in a folder named fltk-1.3.2 which is in the Retro Graphics tookit directory
 #if that is not the case for you edit the makefile changing paths
@@ -18,6 +19,7 @@ all: $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
 	$(CPP) $(LDFLAGS) $(OBJECTS) $(LINKER) -o $@
+	$(STRIP) $(EXECUTABLE)
 .c.o:
 	$(CC) $(CFLAGS) $< -o $@
 .cpp.o:

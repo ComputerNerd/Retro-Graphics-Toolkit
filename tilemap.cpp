@@ -206,10 +206,12 @@ void tileMap::pickRow(uint8_t amount){
 			uint32_t*histp=hist;
 			while(!(*histp++));//Atleast one entry in the array will contain a nonzero value
 			minh=(histp-hist);
+			--minh;
 			histp=hist+sz-1;
 			while(!(*histp--));
 			maxh=(histp-hist);
 			maxh+=2;
+			printf("Histogram stretched to [%d,%d)\n",minh,maxh);
 		}else{
 			minh=0;
 			maxh=sz;
@@ -517,7 +519,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 #define CYCbCr2R(Y, Cb, Cr) CLIP( Y + ( 91881 * Cr >> 16 ) - 179 )
 #define CYCbCr2G(Y, Cb, Cr) CLIP( Y - (( 22544 * Cb + 46793 * Cr ) >> 16) + 135)
 #define CYCbCr2B(Y, Cb, Cr) CLIP( Y + (116129 * Cb >> 16 ) - 226 )
-static void reduceImage(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t offsetPal,Fl_Progress *progress,uint8_t maxCol,unsigned yuv,unsigned alg,bool isSprite=false){
+static void reduceImage(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t offsetPal,Fl_Progress *progress,Fl_Window*pwin,uint8_t maxCol,unsigned yuv,unsigned alg,bool isSprite=false){
 	progress->maximum(1.0);
 	unsigned off2=offsetPal*2;
 	unsigned off3=offsetPal*3;
@@ -699,7 +701,11 @@ try_again_color:
 						colorz++;
 					else
 						can_go_again=false;
-					printf("Trying again at %d needs more color\n",colorz);
+					char tmp[1024];
+					snprintf(tmp,1024,"Found only %d colors trying again with %d",new_colors,colorz);
+					pwin->copy_label(tmp);
+					puts(tmp);
+					Fl::check();
 					goto try_again_color;
 				}
 			}
@@ -831,9 +837,9 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 		return;
 	Fl_Window *win;
 	Fl_Progress *progress;
-	win = new Fl_Window(250,45,"Progress");		// access parent window
+	win = new Fl_Window(400,45,"Progress");		// access parent window
 	win->begin();					// add progress bar to it..
-	progress = new Fl_Progress(25,7,200,30);
+	progress = new Fl_Progress(25,7,350,30);
 	progress->minimum(0.0);				// set progress range to be 0.0 ~ 1.0
 	progress->maximum(1.0);
 	progress->color(0x88888800);			// background color
@@ -857,14 +863,14 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 		if (rowAuto)
 			currentProject->tileMapC->allRowZero();
 		if(isSprite)
-			reduceImage(image,found_colors,-1,currentProject->spritesC->spriteslist[curSprite]->palrow*fun_palette,progress,perRow[0],yuv,alg,true);
+			reduceImage(image,found_colors,-1,currentProject->spritesC->spriteslist[curSprite]->palrow*fun_palette,progress,win,perRow[0],yuv,alg,true);
 		else
-			reduceImage(image,found_colors,-1,0,progress,perRow[0],yuv,alg);
+			reduceImage(image,found_colors,-1,0,progress,win,perRow[0],yuv,alg);
 		window->damage(FL_DAMAGE_USER1);
 		Fl::check();
 	}else{
 		if(rowAuto==2){
-			reduceImage(image,found_colors,-1,0,progress,colorstotal,yuv,alg);
+			reduceImage(image,found_colors,-1,0,progress,win,colorstotal,yuv,alg);
 			currentProject->tileMapC->pickRowDelta(true,progress);
 			window->damage(FL_DAMAGE_USER1);
 			Fl::check();
@@ -872,7 +878,7 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 			if (rowAuto)
 				currentProject->tileMapC->pickRow(rows);
 			for (uint8_t nerdL=0;nerdL<rows;nerdL++){
-				reduceImage(image,found_colors,nerdL,nerdL*fun_palette,progress,perRow[nerdL],yuv,alg);
+				reduceImage(image,found_colors,nerdL,nerdL*fun_palette,progress,win,perRow[nerdL],yuv,alg);
 				window->damage(FL_DAMAGE_USER1);
 				Fl::check();
 			}

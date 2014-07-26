@@ -19,32 +19,46 @@
 #include "filemisc.h"
 #include "compressionWrapper.h"
 void save_tiles(Fl_Widget*,void*){
-	if (load_file_generic("Pick a location to save tiles",true) == true){
-		int type=askSaveType();
+	int type=askSaveType();
+	int clipboard;
+	if(type){
+		clipboard=clipboardAsk();
+		if(clipboard==2)
+			return;
+	}else
+		clipboard=0;
+	bool pickedFile;
+	if(clipboard)
+		pickedFile=true;
+	else
+		pickedFile=load_file_generic("Pick a location to save tiles",true);
+	if(pickedFile){
 		int compression=compressionAsk();
 		if(compression<0)
 			return;
 		FILE* myfile;
 		uint8_t* compdat;
 		size_t compsize;
-		if(type)
+		if(clipboard)
+			myfile=0;
+		else if(type)
 			myfile = fopen(the_file.c_str(),"w");
 		else
 			myfile = fopen(the_file.c_str(),"wb");
-		if (likely(myfile!=0)){
+		if (likely(myfile||clipboard)){
 			if(compression)
-				encodeType(currentProject->tileC->tileDat,currentProject->tileC->tileSize*(currentProject->tileC->tiles_amount+1),compsize,type);
+				compdat=(uint8_t*)encodeType(currentProject->tileC->tileDat,currentProject->tileC->tileSize*(currentProject->tileC->tiles_amount+1),compsize,type);
 			if (type){
 				char comment[2048];
-				snprintf(comment,2048,"%d tiles %s",currentProject->tileC->tiles_amount+1,typeToText(type));
+				snprintf(comment,2048,"%d tiles %s",currentProject->tileC->tiles_amount+1,typeToText(compression));
 				if (compression){
-					if(saveBinAsText(compdat,compsize,myfile,type,comment,"tileDat")==false){
+					if(saveBinAsText(compdat,compsize,myfile,type,comment,"tileDat",8)==false){
 						free(compdat);
 						fl_alert("Error: can not save file %s",the_file.c_str());
 						return;
 					}
 				}else{
-					if(saveBinAsText(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize,myfile,type,comment,"tileDat")==false){
+					if(saveBinAsText(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize,myfile,type,comment,"tileDat",32)==false){
 						fl_alert("Error: can not save file %s",the_file.c_str());
 						return;
 					}
@@ -59,7 +73,8 @@ void save_tiles(Fl_Widget*,void*){
 				free(compdat);
 		}else
 			fl_alert("Error: can not save file %s",the_file.c_str());
-		fclose(myfile);
+		if(myfile)
+			fclose(myfile);
 	}
 }
 void load_tiles(Fl_Widget*,void*o){

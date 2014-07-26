@@ -42,26 +42,42 @@ void save_palette(Fl_Widget*, void* start_end){
 		return;
 	uint8_t end = atoi(returned)+1;
 	int type=askSaveType();
-	if (load_file_generic("Save palette",true)==true){
+	int clipboard;
+	if(type){
+		clipboard=clipboardAsk();
+		if(clipboard==2)
+			return;
+	}else
+		clipboard=0;
+	bool pickedFile;
+	if(clipboard)
+		pickedFile=true;
+	else
+		pickedFile=load_file_generic("Save palette",true);
+	if(pickedFile){
 		FILE * myfile;
-		if (type){
+		if(clipboard)
+			myfile=0;//When file is null for the function saveBinAsText clipboard will be used
+		else if(type)
 			myfile = fopen(the_file.c_str(),"w");
-		}else
+		else
 			myfile = fopen(the_file.c_str(),"wb");
-		if (likely(myfile!=0)){
+		if (likely(myfile||clipboard)){
 			//save the palette
 			if (type){
 				char comment[512];
 				snprintf(comment,512,"Colors %d-%d",start,end-1);
+				int bits;
 				if(currentProject->gameSystem==sega_genesis){
 					start*=2;//Be sure to keep this in sync with the other if statment shortly below
 					end*=2;
-				}
-				if (saveBinAsText(currentProject->palDat+start,end-start,myfile,type,comment,"palDat")==false){
+					bits=16;
+				}else
+					bits=8;
+				if (saveBinAsText(currentProject->palDat+start,end-start,myfile,type,comment,"palDat",bits)==false){
 					fl_alert("Error: can not save file %s",the_file.c_str());
 					return;
 				}
-				fputs("};",myfile);
 			}else{
 				if(currentProject->gameSystem==sega_genesis){
 					start*=2;
@@ -72,9 +88,10 @@ void save_palette(Fl_Widget*, void* start_end){
 					return;
 				}
 			}
-			fclose(myfile);
+			if(myfile)
+				fclose(myfile);
 		}else
-			fl_alert("myfile.is_open() returned false that means there was an error in creating the file");
+			fl_alert("Cannot open file %s",the_file.c_str());
 	}
 }
 void update_palette(Fl_Widget* o, void* v){

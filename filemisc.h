@@ -14,5 +14,6 @@
    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
+int clipboardAsk(void);
 int askSaveType(void);
-bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,int type,const char*comment,const char*label);
+bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,int type,const char*comment,const char*label,int bits);

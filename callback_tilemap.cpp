@@ -250,7 +250,8 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		h=loaded_image->h();
 		printf("image width: %d image height: %d\n",w,h);
 		uint32_t w8,h8;
-		uint32_t wt,ht,wr,hr;
+		uint32_t wt,ht;
+		int wr,hr;
 		wr=w%tilebitw;
 		hr=h%tilebith;
 		w8=w/currentProject->tileC->sizex;
@@ -262,7 +263,7 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		if((currentProject->gameSystem==NES)&&(currentProject->subSystem=NES2x2)){
 			if((wr-8)>0)
 				++w8;
-			if((hr-8)>0)
+			if((int)(hr-8)>0)
 				++h8;
 		}
 		wt=w8*currentProject->tileC->sizex;

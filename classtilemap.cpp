@@ -243,16 +243,30 @@ bool tileMap::saveToFile(){
 	size_t fileSize;
 	int type,compression;
 	uint8_t* mapptr;
-	if (load_file_generic("Save tilemap to",true)){
-		type=askSaveType();
+	type=askSaveType();
+	int clipboard;
+	if(type){
+		clipboard=clipboardAsk();
+		if(clipboard==2)
+			return true;
+	}else
+		clipboard=0;
+	bool pickedFile;
+	if(clipboard)
+		pickedFile=true;
+	else
+		pickedFile=load_file_generic("Save tilemap to",true);
+	if(pickedFile){
 		compression=compressionAsk();
 		if(compression<0)
 			return true;
-		if(type){
+		if(clipboard)
+			myfile=0;
+		else if(type)
 			myfile = fopen(the_file.c_str(),"w");
-		}else
+		else
 			myfile = fopen(the_file.c_str(),"wb");
-		if (likely(myfile!=0)){
+		if (likely(myfile||clipboard)){
 			switch (currentProject->gameSystem){
 				case sega_genesis:
 					{uint16_t * TheMap;
@@ -302,26 +316,38 @@ bool tileMap::saveToFile(){
 			}
 			if(type){
 				char temp[2048];
-				snprintf(temp,2048,"Width %d Height %d %s",mapSizeW,mapSizeH*amt,typeToText(type));
-				if(!saveBinAsText(mapptr,fileSize,myfile,type,temp,"mapDat")){
+				snprintf(temp,2048,"Width %d Height %d %s",mapSizeW,mapSizeH*amt,typeToText(compression));
+				int bits;
+				if((currentProject->gameSystem==sega_genesis)&&(!compression))
+					bits=16;
+				else
+					bits=8;
+				if(!saveBinAsText(mapptr,fileSize,myfile,type,temp,"mapDat",bits)){
 					free(mapptr);
 					return false;
 				}
 			}else
 				fwrite(mapptr,1,fileSize,myfile);
 			free(mapptr);
-			fclose(myfile);
+			if(myfile)
+				fclose(myfile);
 			puts("File Saved");
 		}else
 			return false;
 	}
 	if (currentProject->gameSystem == NES){
-		if (load_file_generic("Save attributes to",true) == true) {
-			if(type){
+		if(clipboard)
+			fl_alert("Copy the data to clipboard and press okay after this tilemap attributes will be copied to clipboard");
+		else
+			pickedFile=load_file_generic("Save attributes to",true);
+		if(pickedFile){
+			if(clipboard)
+				myfile=0;
+			else if(type)
 				myfile = fopen(the_file.c_str(),"w");
-			}else
+			else
 				myfile = fopen(the_file.c_str(),"wb");
-			if (likely(myfile!=0)) {
+			if (likely(myfile||clipboard)) {
 				uint8_t * AttrMap = (uint8_t *)malloc((mapSizeW/4)*(mapSizeH*amt/4));
 				uint8_t * freeAttrMap=AttrMap;
 				for (y=0;y<mapSizeH*amt;y+=4){
@@ -333,13 +359,13 @@ bool tileMap::saveToFile(){
 				//AttrMap-=(mapSizeW/4)*(mapSizeH/4);
 				printf("%d %d\n",AttrMap,freeAttrMap);
 				if(type){
-					if(saveBinAsText(freeAttrMap,(mapSizeW/4)*(mapSizeH*amt/4),myfile,type,0,"mapDatAttr")==false)
+					if(saveBinAsText(freeAttrMap,(mapSizeW/4)*(mapSizeH*amt/4),myfile,type,0,"mapDatAttr",8)==false)
 						return false;
-					fputs("};",myfile);
 				}else
 					fwrite(freeAttrMap,1,(mapSizeW/4)*(mapSizeH*amt/4),myfile);		
 				free(freeAttrMap);
-				fclose(myfile);
+				if(myfile)
+					fclose(myfile);
 				puts("File Saved");
 			}else
 				return false;
