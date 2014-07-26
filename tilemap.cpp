@@ -183,8 +183,9 @@ void tileMap::pickRow(uint8_t amount){
 		divBy=64.0;//8*8
 		addBy=1;
 	}
-	uint32_t*hist,sz;
+	uint32_t*hist,sz,stretch;
 	if(method){
+		stretch=fl_ask("Stretch histogram?");
 		if(type>=6)
 			sz=2000;
 		else
@@ -202,10 +203,26 @@ void tileMap::pickRow(uint8_t amount){
 					addHist(get_tile(x+1,y+1),type,hist,sz);
 				}else
 					addHist(get_tile(x,y),type,hist,sz);
-				unsigned divH=sz/amount;
+				//Find min and max of the histogram
+				uint32_t minh,maxh;
+				uint32_t*histp;
+				if(stretch){
+					histp=hist;
+					while(*histp++);//Atleast one entry in the array will contain a nonzero value
+					minh=(histp-hist)/sizeof(uint32_t);
+					histp=hist+sz-1;
+					while(*histp--);
+					maxh=(histp-hist)/sizeof(uint32_t);
+					++maxh;
+				}else{
+					minh=0;
+					maxh=sz;
+				}
+				unsigned divH=(maxh-minh)/amount;
 				if(method==2){
-					uint32_t maxv,*histp=hist,i,ent;
-					for(i=maxv=ent=0;i<sz;++i){
+					uint32_t maxv,i,ent;
+					histp=hist+minh;
+					for(i=maxv=ent=0;i<maxh;++i){
 						if(maxv<*histp){
 							maxv=*histp;
 							ent=i;
@@ -214,9 +231,10 @@ void tileMap::pickRow(uint8_t amount){
 					}
 					set_pal_row(x,y,ent/divH);
 				}else if(method==1){
-					uint32_t*sums=(uint32_t*)alloca(amount*sizeof(uint32_t)),i,*histp=hist,maxv,ent;
+					uint32_t*sums=(uint32_t*)alloca(amount*sizeof(uint32_t)),i,maxv,ent;
+					histp=hist+minh;
 					std::fill(sums,sums+amount,0);
-					for(i=ent=0;i<sz;++i)
+					for(i=ent=0;i<maxh;++i)
 						sums[i/divH]+=*histp++;
 					maxv=sums[0];
 					for(i=1;i<amount;++i){
