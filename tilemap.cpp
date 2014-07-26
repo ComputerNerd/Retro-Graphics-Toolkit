@@ -183,14 +183,37 @@ void tileMap::pickRow(uint8_t amount){
 		divBy=64.0;//8*8
 		addBy=1;
 	}
-	uint32_t*hist,sz,stretch;
+	uint32_t*hist,sz,stretch,maxh,minh;
 	if(method){
 		stretch=fl_ask("Stretch histogram?");
 		if(type>=6)
 			sz=2000;
 		else
 			sz=1000;
-		hist=(uint32_t*)malloc(sz*sizeof(uint32_t));
+		hist=(uint32_t*)calloc(sz,sizeof(uint32_t));
+		for (y=0;y<mapSizeHA;y+=addBy){
+			for (x=0;x<mapSizeW;x+=addBy){
+				if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
+					addHist(get_tile(x,y),type,hist,sz);
+					addHist(get_tile(x+1,y),type,hist,sz);
+					addHist(get_tile(x,y+1),type,hist,sz);
+					addHist(get_tile(x+1,y+1),type,hist,sz);
+				}else
+					addHist(get_tile(x,y),type,hist,sz);
+			}
+		}
+		if(stretch){
+			uint32_t*histp=hist;
+			while(!(*histp++));//Atleast one entry in the array will contain a nonzero value
+			minh=(histp-hist);
+			histp=hist+sz-1;
+			while(!(*histp--));
+			maxh=(histp-hist);
+			maxh+=2;
+		}else{
+			minh=0;
+			maxh=sz;
+		}
 	}
 	for (y=0;y<mapSizeHA;y+=addBy){
 		for (x=0;x<mapSizeW;x+=addBy){
@@ -204,21 +227,10 @@ void tileMap::pickRow(uint8_t amount){
 				}else
 					addHist(get_tile(x,y),type,hist,sz);
 				//Find min and max of the histogram
-				uint32_t minh,maxh;
 				uint32_t*histp;
-				if(stretch){
-					histp=hist;
-					while(*histp++);//Atleast one entry in the array will contain a nonzero value
-					minh=(histp-hist)/sizeof(uint32_t);
-					histp=hist+sz-1;
-					while(*histp--);
-					maxh=(histp-hist)/sizeof(uint32_t);
-					++maxh;
-				}else{
-					minh=0;
-					maxh=sz;
-				}
 				unsigned divH=(maxh-minh)/amount;
+				if(!divH)
+					divH=1;
 				if(method==2){
 					uint32_t maxv,i,ent;
 					histp=hist+minh;
