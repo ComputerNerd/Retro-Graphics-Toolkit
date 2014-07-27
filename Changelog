@@ -1,6 +1,8 @@
 Most recent changes are placed at the top
 
 20140725
+Released v0.61
+Fixed importing gifs
 Fixed some minor bugs related to compression.
 Added clipboard support for saving as text.
 

@@ -35,6 +35,7 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,int type,const char*comme
 	2 - asm
 	3 - bex
 	*/
+	bits=8;
 	uint8_t * dat8=(uint8_t *)ptr;
 	uint16_t * dat16=(uint16_t *)ptr;
 	uint32_t * dat32=(uint32_t *)ptr;
@@ -48,6 +49,17 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,int type,const char*comme
 			return false;
 		}
 		sizeBin/=mask+1;
+	}
+	switch(bits){
+		case 8:
+			mask=31;
+		break;
+		case 16:
+			mask=15;
+		break;
+		case 32:
+			mask=7;
+		break;
 	}
 	if(comment){
 		switch(type){
@@ -80,7 +92,7 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,int type,const char*comme
 		break;
 	}
 	for (size_t x=0;x<sizeBin;++x){
-		if ((x&31)==0){
+		if ((x&mask)==0){
 			temp.push_back('\n');
 			switch(type){
 				case 2:
@@ -111,7 +123,7 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,int type,const char*comme
 				break;
 			}
 		}
-		if(((x&31)==31)&&(type!=1))
+		if(((x&mask)==mask)&&(type!=1))
 			endc=0;
 		else
 			endc=',';

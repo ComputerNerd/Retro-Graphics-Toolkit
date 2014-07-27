@@ -275,8 +275,9 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		//start by copying the data
 		uint8_t * imgptr=(uint8_t *)loaded_image->data()[0];
 		//now we can convert to tiles
-		if (unlikely(loaded_image->d() != 3 && loaded_image->d() != 4)){
-			fl_alert("Please use color depth of 3 or 4\nYou Used %d",loaded_image->d());
+		unsigned depth=loaded_image->d();
+		if (unlikely(depth != 3 && depth != 4 && depth!=1)){
+			fl_alert("Please use color depth of 1 or 3 or 4\nYou Used %d",loaded_image->d());
 			loaded_image->release();
 			return;
 		}else
@@ -293,11 +294,41 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		center[0]=(wt-w)/2;
 		center[1]=(ht-h)/2;
 		center[2]=wt-w-center[0];
-		unsigned depth=loaded_image->d();
+		uint8_t*palMap;
+		int grayscale;
+		int numcolors;
+		unsigned remap[256];
+		if(depth==1){
+			char*timgptr=(char*)imgptr;
+			//See if grayscale or colormapped xpm
+			long wtmp,htmp;
+			if(isdigit(*timgptr)){
+				/*Checking to see if the first byte is a digit is not enough.
+				What if the first pixel just happen to fall in digit range?
+				Avoid this by verifing width and height*/
+				if(strtol(timgptr,&timgptr,10)==w){
+					if(strtol(timgptr,&timgptr,10)==h){
+						numcolors=abs(strtol(timgptr,&timgptr,10));
+						palMap=(uint8_t*)loaded_image->data()[1];
+						imgptr=(uint8_t*)loaded_image->data()[2];
+						grayscale=0;
+						std::fill(remap,remap+256,0);
+						for(unsigned xx=0;xx<numcolors*4;xx+=4)
+							remap[palMap[xx]]=xx;
+					}else
+						grayscale=1;
+				}else
+					grayscale=1;
+
+			}else
+				grayscale=1;
+		}
 		for(uint32_t y=0,tcnt=0;y<ht;++y,++ty){
 			if(y%currentProject->tileC->sizey)
 				tcnt-=wt/currentProject->tileC->sizex;
 			tx=0;
+			if((!((y<center[1])||(y>=(h+center[1]))))&&(depth==1)&&(!grayscale))
+				imgptr=(uint8_t*)loaded_image->data()[y+2-center[1]];
 			for(uint32_t x=0;x<wt;x+=currentProject->tileC->sizex,++tcnt,++tx){
 				uint32_t ctile;
 				if(over)
@@ -317,6 +348,28 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 					}else if(x>=(wt-currentProject->tileC->sizex))
 						line-=center[2];
 					switch (depth){
+						case 1:
+							for(unsigned xx=0;xx<line;++xx){
+								if(grayscale){
+									*ttile++=*imgptr;
+									*ttile++=*imgptr;
+									*ttile++=*imgptr++;
+									*ttile++=255;
+								}else{
+									if(*imgptr==' '){
+										memset(ttile,0,4);
+										ttile+=4;
+										++imgptr;
+									}else{
+										unsigned p=(*imgptr++);
+										*ttile++=palMap[remap[p]+1];
+										*ttile++=palMap[remap[p]+2];
+										*ttile++=palMap[remap[p]+3];
+										*ttile++=255;
+									}
+								}
+							}
+						break;
 						case 3:
 							for(unsigned xx=0;xx<line;++xx){
 								*ttile++=*imgptr++;
