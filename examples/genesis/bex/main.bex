@@ -1,7 +1,9 @@
+	'Displays the devster logo`
 	palettes palDat,0,0,64
 	loadtiles tileDat,165,128
- 	'DrawTiles16 lblptr&(<TileMap>),<X Pos>,<Y Pos>,<Width>,<Height>,<Adder>
-	print "Image created with Retro Graphics Toolkit"
+	print "Image converted using"
+	print "Retro Graphics Toolkit"
+	'DrawTiles16 lblptr&(<TileMap>),<X Pos>,<Y Pos>,<Width>,<Height>,<Adder>
 	DrawTiles16 lblptr&(mapDat),0,3,19,18,128
 	end
 Declare Asm Sub DrawTiles16(d5.l, d0.w, d1.w, d2.w, d3.w, d4.w)	
@@ -40,7 +42,6 @@ palDat:
 	data 0,0,4,110,2,78,0,46,0,128,0,172,6,102,14,238,6,102,2,74,2,106,4,110,2,76,2,108,14,14,0,172
 	data 0,0,0,128,0,172,2,130,12,206,8,174,6,142,4,110,2,78,0,46,0,174,0,46,2,78,4,78,4,110,6,142
 
-
 ' Width 19 Height 18 Uncompressed
 mapDat:
 	data 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
@@ -65,7 +66,6 @@ mapDat:
 	data 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,161,0,162,0,163,0,162,0,162,0,164,24,19,0,0,0,0
 	data 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 	data 0,0,0,0,0,0,0,0,0,0,0,0
-
 
 ' 165 tiles Uncompressed
 tileDat:

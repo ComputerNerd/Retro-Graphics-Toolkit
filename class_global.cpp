@@ -19,7 +19,7 @@
 #include "callback_chunk.h"
 #include "callbacksprites.h"
 #include "classSprite.h"
-editor *window = new editor(800,600,"Retro Graphics Toolkit v0.61");//this creates the window
+editor *window = new editor(800,600,"Retro Graphics Toolkit v0.611");//this creates the window
 static void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y){
 	uint8_t grid[32*32*3];
 	//first generate grid

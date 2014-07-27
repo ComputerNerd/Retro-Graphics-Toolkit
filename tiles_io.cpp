@@ -47,7 +47,7 @@ void save_tiles(Fl_Widget*,void*){
 			myfile = fopen(the_file.c_str(),"wb");
 		if (likely(myfile||clipboard)){
 			if(compression)
-				compdat=(uint8_t*)encodeType(currentProject->tileC->tileDat,currentProject->tileC->tileSize*(currentProject->tileC->tiles_amount+1),compsize,type);
+				compdat=(uint8_t*)encodeType(currentProject->tileC->tileDat,currentProject->tileC->tileSize*(currentProject->tileC->tiles_amount+1),compsize,compression);
 			if (type){
 				char comment[2048];
 				snprintf(comment,2048,"%d tiles %s",currentProject->tileC->tiles_amount+1,typeToText(compression));

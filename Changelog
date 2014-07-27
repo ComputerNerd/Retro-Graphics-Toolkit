@@ -1,6 +1,11 @@
 Most recent changes are placed at the top
 
-20140725
+20140727
+Released Version 0.611
+Added export to sonic 1 chunks
+Fixed urgent bug wrong compression used for saving tiles
+
+20140726
 Released v0.61
 Fixed importing gifs
 Fixed some minor bugs related to compression.

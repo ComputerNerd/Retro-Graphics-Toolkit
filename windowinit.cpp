@@ -76,6 +76,7 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Chunks",0, 0, 0, FL_SUBMENU},
 			{"Import sonic 1 chunks",0,ImportS1CBChunks,0},
 			{"Import sonic 1 chunks (append)",0,ImportS1CBChunks,(void*)1},
+			{"Save chunks as sonic 1 format",0,saveChunkS1CB},
 			{0},
 		{"Sprites",0, 0, 0, FL_SUBMENU},
 			{"Imported sprite",0,SpriteimportCB,0},

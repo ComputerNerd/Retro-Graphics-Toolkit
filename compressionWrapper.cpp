@@ -78,6 +78,8 @@ std::string decodeTypeStr(const char * filename,size_t &filesize,int type){
 		case 3:
 			return decodeEnigma(filename,filesize);
 		break;
+		default:
+			show_default_error
 	}
 }
 void*decodeType(const char * filename,size_t &filesize,int type){
@@ -118,7 +120,7 @@ void*encodeEng(void*in,size_t n,size_t&outSize){
 	outSize=outcomp.str().length();
 	void*outdat=malloc(outSize);
 	output.copy((char*)outdat,outSize);
-	printf("compressed to %d bytes\n",outSize);
+	printf("Compressed to %d from %d\n",outSize,n);
 	return outdat;
 }
 void*encodeType(void*in,size_t n,size_t&outSize,int type){
@@ -132,6 +134,8 @@ void*encodeType(void*in,size_t n,size_t&outSize,int type){
 		case 3:
 			return encodeEng(in,n,outSize);
 		break;
+		default:
+			show_default_error
 	}
 	return 0;
 }

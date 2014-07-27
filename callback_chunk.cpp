@@ -23,6 +23,9 @@ unsigned ChunkOff[2]={DefaultChunkX,DefaultChunkY};
 unsigned scrollChunks_G[2];
 uint_fast32_t editChunk_G[2];//x,y
 uint32_t selBlock;
+void saveChunkS1CB(Fl_Widget*o,void*){
+	currentProject->Chunk->exportSonic1();
+}
 void resizeChunkCB(Fl_Widget*o,void*){
 	currentProject->Chunk->resize(window->chunksize[0]->value(),window->chunksize[1]->value());
 	window->updateChunkSizeSliders();
