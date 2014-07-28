@@ -396,9 +396,8 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 			fread(&projects[id]->tileC->amt,1,sizeof(uint32_t),fi);
 			if(version<6)
 				++projects[id]->tileC->amt;
-			projects[id]->tileC->tDat.resize(projects[id]->tileC->amt*projects[id]->tileC->tileSize);
+			projects[id]->tileC->resizeAmt();
 			decompressFromFile(projects[id]->tileC->tDat.data(),projects[id]->tileC->tileSize*(projects[id]->tileC->amt),fi);
-			projects[id]->tileC->truetDat.resize(projects[id]->tileC->amt*projects[id]->tileC->tcSize);
 			decompressFromFile(projects[id]->tileC->truetDat.data(),projects[id]->tileC->tcSize*(projects[id]->tileC->amt),fi);
 		}
 	}
@@ -430,8 +429,8 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 				fread(&projects[id]->Chunk->wi,1,sizeof(uint32_t),fi);
 				fread(&projects[id]->Chunk->hi,1,sizeof(uint32_t),fi);
 				fread(&projects[id]->Chunk->amt,1,sizeof(uint32_t),fi);
-				projects[id]->Chunk->chunks=(struct ChunkAttrs*)realloc(projects[id]->Chunk->chunks,projects[id]->Chunk->wi*projects[id]->Chunk->hi*sizeof(struct ChunkAttrs)*projects[id]->Chunk->amt);
-				decompressFromFile(projects[id]->Chunk->chunks,projects[id]->Chunk->wi*projects[id]->Chunk->hi*sizeof(struct ChunkAttrs)*projects[id]->Chunk->amt,fi);
+				projects[id]->Chunk->resizeAmt();
+				decompressFromFile(projects[id]->Chunk->chunks.data(),projects[id]->Chunk->wi*projects[id]->Chunk->hi*sizeof(struct ChunkAttrs)*projects[id]->Chunk->amt,fi);
 			}
 		}
 	}
@@ -551,7 +550,7 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 			fwrite(&projects[id]->Chunk->wi,1,sizeof(uint32_t),fo);
 			fwrite(&projects[id]->Chunk->hi,1,sizeof(uint32_t),fo);
 			fwrite(&projects[id]->Chunk->amt,1,sizeof(uint32_t),fo);
-			compressToFile(projects[id]->Chunk->chunks,projects[id]->Chunk->wi*projects[id]->Chunk->hi*sizeof(struct ChunkAttrs)*projects[id]->Chunk->amt,fo);
+			compressToFile(projects[id]->Chunk->chunks.data(),projects[id]->Chunk->wi*projects[id]->Chunk->hi*sizeof(struct ChunkAttrs)*projects[id]->Chunk->amt,fo);
 		}
 	}
 	if(haveTemp&pjHaveSprites){

@@ -73,7 +73,8 @@ void tiles::remove_tile_at(uint32_t tileDel){
 		current_tile=amt-1;
 		window->tile_select->value(current_tile);
 		window->tile_select_2->value(current_tile);
-		window->tile_select_3->value(current_tile);
+		if(!currentProject->Chunk->useBlocks)
+			window->tile_select_3->value(current_tile);
 	}
 }
 void tiles::truecolor_to_tile(uint8_t palette_row,uint32_t cur_tile){

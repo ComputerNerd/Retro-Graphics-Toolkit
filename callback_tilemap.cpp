@@ -331,7 +331,7 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 					ctile=currentProject->tileMapC->get_tile(tx,ty);
 				else
 					ctile=tcnt;
-				uint8_t*ttile=currentProject->tileC->truetDat.data()+((ctile*currentProject->tileC->sizew*currentProject->tileC->sizeh*4)+((y%currentProject->tileC->sizeh)*currentProject->tileC->sizew*4));
+				uint8_t*ttile=currentProject->tileC->truetDat.data()+((ctile*currentProject->tileC->tcSize)+((y%currentProject->tileC->sizeh)*currentProject->tileC->sizew*4));
 				//First take care of border
 				unsigned line=currentProject->tileC->sizew;
 				if((y<center[1])||(y>=(h+center[1])))

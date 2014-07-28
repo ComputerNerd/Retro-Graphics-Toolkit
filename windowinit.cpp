@@ -272,14 +272,14 @@ void editor::_editor(){
 				o->callback(set_grid);
 				o->tooltip("This button Toggles wheater or not you which to see a grid while editing your tiles. A grid can help you see the spacing betwen each pixel.");
 			}
-			{ Fl_Button *o = new Fl_Button(540, default_palette_bar_offset_y, 120, 32, "New Tile");//these button should be inline with the palette bar
+			{ Fl_Button *o = new Fl_Button(538, default_palette_bar_offset_y, 104, 32, "New Tile");//these button should be inline with the palette bar
 				o->tooltip("This will append a blank tile to the tile buffer in the ram.");
 				o->callback(new_tile);
 			}
-			{ Fl_Button *o = new Fl_Button(668, default_palette_bar_offset_y, 128, 32, "Delete Selected Tile");
+			{ Fl_Button *o = new Fl_Button(656, default_palette_bar_offset_y, 140, 32, "Delete Selected Tile");
 				o->tooltip("This button will delete the currently selected tile");
 				o->callback(delete_tile_at_location);
-				o->labelsize(11);
+				o->labelsize(12);
 			}
 			tileEdit_pal.more_init();
 			rgb_red = new Fl_Hor_Value_Slider(64,default_palette_bar_offset_y+136,128,24,"RGB red");
