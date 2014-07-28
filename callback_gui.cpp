@@ -57,7 +57,7 @@ void set_game_system(Fl_Widget*,void* selection){
 			}
 			if(containsDataCurProj(pjHaveTiles)){
 				currentProject->tileC->tileSize=32;
-				currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*32);
+				currentProject->tileC->resizeAmt();
 			}
 			if(containsDataCurProj(pjHaveMap)){
 				window->map_w->step(1);
@@ -89,7 +89,7 @@ void set_game_system(Fl_Widget*,void* selection){
 			}
 			if(containsDataCurProj(pjHaveTiles)){
 				currentProject->tileC->tileSize=16;
-				currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*16);
+				currentProject->tileC->resizeAmt();
 			}
 			currentProject->subSystem|=NES2x2;
 			if(containsDataCurProj(pjHaveMap)){

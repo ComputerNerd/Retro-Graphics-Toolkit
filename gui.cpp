@@ -34,10 +34,11 @@ static Fl_Window * winP;
 unsigned SpriteOff[2];
 
 void updateTileSelectAmt(uint32_t newMax){
+	--newMax;
 	window->tile_select->maximum(newMax);
 	window->tile_select_2->maximum(newMax);
 	if(currentProject->Chunk->useBlocks)
-		window->tile_select_3->maximum(currentProject->tileMapC->amt);
+		window->tile_select_3->maximum(currentProject->tileMapC->amt-1);
 	else
 		window->tile_select_3->maximum(newMax);
 	window->spritest->maximum(newMax);
@@ -46,7 +47,7 @@ void updateTileSelectAmt(uint32_t newMax){
 	window->totalTiles->copy_label(tmp);
 }
 void updateTileSelectAmt(void){
-	updateTileSelectAmt(currentProject->tileC->tiles_amount);
+	updateTileSelectAmt(currentProject->tileC->amt);
 }
 void setRet(Fl_Widget*,void*r){
 	bool Cancel=(uintptr_t)r?true:false;

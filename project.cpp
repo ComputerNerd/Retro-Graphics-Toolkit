@@ -290,7 +290,7 @@ void switchProject(uint32_t id){
 	window->map_w->value(projects[id]->tileMapC->mapSizeW);
 	window->map_h->value(projects[id]->tileMapC->mapSizeH);
 	window->map_amt->value(projects[id]->tileMapC->amt);
-	updateTileSelectAmt(projects[id]->tileC->tiles_amount);
+	updateTileSelectAmt(projects[id]->tileC->amt);
 	for(int x=0;x<shareAmtPj;++x){
 		window->sharePrj[x]->value(projects[id]->share[x]<0?0:1);
 		window->havePrj[x]->value(projects[id]->useMask>>x&1);
@@ -376,11 +376,13 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 			entries=64;
 			eSize=2;
 			projects[id]->tileC->tileSize=32;
+			projects[id]->tileC->tcSize=256;
 		break;
 		case NES:
 			entries=16;
 			eSize=1;
 			projects[id]->tileC->tileSize=16;
+			projects[id]->tileC->tcSize=256;
 		break;
 	}
 	if(projects[id]->useMask&pjHavePal){
@@ -391,11 +393,13 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 	}
 	if(projects[id]->useMask&pjHaveTiles){
 		if(projects[id]->share[1]<0){
-			fread(&projects[id]->tileC->tiles_amount,1,sizeof(uint32_t),fi);
-			projects[id]->tileC->tileDat=(uint8_t*)realloc(projects[id]->tileC->tileDat,projects[id]->tileC->tileSize*(projects[id]->tileC->tiles_amount+1));
-			decompressFromFile(projects[id]->tileC->tileDat,projects[id]->tileC->tileSize*(projects[id]->tileC->tiles_amount+1),fi);
-			projects[id]->tileC->truetileDat=(uint8_t*)realloc(projects[id]->tileC->truetileDat,256*(projects[id]->tileC->tiles_amount+1));
-			decompressFromFile(projects[id]->tileC->truetileDat,256*(projects[id]->tileC->tiles_amount+1),fi);
+			fread(&projects[id]->tileC->amt,1,sizeof(uint32_t),fi);
+			if(version<6)
+				++projects[id]->tileC->amt;
+			projects[id]->tileC->tDat.resize(projects[id]->tileC->amt*projects[id]->tileC->tileSize);
+			decompressFromFile(projects[id]->tileC->tDat.data(),projects[id]->tileC->tileSize*(projects[id]->tileC->amt),fi);
+			projects[id]->tileC->truetDat.resize(projects[id]->tileC->amt*projects[id]->tileC->tcSize);
+			decompressFromFile(projects[id]->tileC->truetDat.data(),projects[id]->tileC->tcSize*(projects[id]->tileC->amt),fi);
 		}
 	}
 	if(projects[id]->useMask&pjHaveMap){
@@ -505,17 +509,15 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 	fwrite(&haveTemp,sizeof(uint32_t),1,fo);
 	fwrite(&projects[id]->gameSystem,sizeof(uint32_t),1,fo);
 	fwrite(&projects[id]->subSystem,sizeof(uint32_t),1,fo);
-	int entries,eSize,tSize;
+	int entries,eSize;
 	switch(projects[id]->gameSystem){
 		case sega_genesis:
 			entries=64;
 			eSize=2;
-			tSize=32;
 		break;
 		case NES:
 			entries=16;
 			eSize=1;
-			tSize=16;
 		break;
 	}
 	if(haveTemp&pjHavePal){
@@ -526,9 +528,9 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 	}
 	if(haveTemp&pjHaveTiles){
 		if(saveShared||(projects[id]->share[1]<0)){
-			fwrite(&projects[id]->tileC->tiles_amount,1,sizeof(uint32_t),fo);
-			compressToFile(projects[id]->tileC->tileDat,tSize*(projects[id]->tileC->tiles_amount+1),fo);
-			compressToFile(projects[id]->tileC->truetileDat,256*(projects[id]->tileC->tiles_amount+1),fo);
+			fwrite(&projects[id]->tileC->amt,1,sizeof(uint32_t),fo);
+			compressToFile(projects[id]->tileC->tDat.data(),projects[id]->tileC->tileSize*(projects[id]->tileC->amt),fo);
+			compressToFile(projects[id]->tileC->truetDat.data(),projects[id]->tileC->tcSize*(projects[id]->tileC->amt),fo);
 		}
 	}
 	if(haveTemp&pjHaveMap){

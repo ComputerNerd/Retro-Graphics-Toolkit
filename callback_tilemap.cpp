@@ -78,7 +78,7 @@ void FixOutOfRangeCB(Fl_Widget*,void*){
 	//use current attributes
 	for(int y=0;y<currentProject->tileMapC->mapSizeHA;++y){
 		for(int x=0;x<currentProject->tileMapC->mapSizeW;++x){
-			if(currentProject->tileMapC->get_tile(x,y)>currentProject->tileC->tiles_amount)
+			if(currentProject->tileMapC->get_tile(x,y)>=currentProject->tileC->amt)
 				currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,x,y,tileMap_pal.theRow,G_hflip[0],G_vflip[0],G_highlow_p[0]);
 		}
 	}
@@ -118,7 +118,7 @@ void save_tilemap_as_image(Fl_Widget*,void*){
 		uint8_t * tempptr,yy;
 		for(y=0;y<h;y+=8){
 			for(x=0;x<w;x+=8){
-				tileToTrueCol(currentProject->tileC->tileDat+(currentProject->tileMapC->get_tile(x/8,y/8)*currentProject->tileC->tileSize),temptile,currentProject->tileMapC->get_palette_map(x/8,y/8),false);
+				tileToTrueCol(currentProject->tileC->tDat.data()+(currentProject->tileMapC->get_tile(x/8,y/8)*currentProject->tileC->tileSize),temptile,currentProject->tileMapC->get_palette_map(x/8,y/8),false);
 				tempptr=temptile;
 				for(yy=0;yy<8;++yy){
 					memcpy(image,tempptr,24);
@@ -179,8 +179,8 @@ void dither_tilemap_as_image(Fl_Widget*,void*sprite){
 		w=currentProject->tileMapC->mapSizeW;
 		h=currentProject->tileMapC->mapSizeHA;
 	}
-	w*=currentProject->tileC->sizex;
-	h*=currentProject->tileC->sizey;
+	w*=currentProject->tileC->sizew;
+	h*=currentProject->tileC->sizeh;
 	unsigned method;
 	if(isSprite)
 		method=1;
@@ -193,11 +193,11 @@ void dither_tilemap_as_image(Fl_Widget*,void*sprite){
 		show_malloc_error(w*h*4)
 	if(method==1){
 		if(isSprite){
-			tileMap*spriteMap=new tileMap(w/currentProject->tileC->sizex,h/currentProject->tileC->sizey);
+			tileMap*spriteMap=new tileMap(w/currentProject->tileC->sizew,h/currentProject->tileC->sizeh);
 			//make verticle tile map
 			unsigned t=currentProject->spritesC->spriteslist[curSprite]->starttile;
-			for(unsigned i=0;i<w/currentProject->tileC->sizex;++i){
-				for(unsigned j=0;j<h/currentProject->tileC->sizey;++j){
+			for(unsigned i=0;i<w/currentProject->tileC->sizew;++i){
+				for(unsigned j=0;j<h/currentProject->tileC->sizeh;++j){
 					//void set_tile_full(uint32_t tile,uint32_t x,uint32_t y,uint8_t palette_row,bool use_hflip,bool use_vflip,bool highorlow_prio);
 					spriteMap->set_tile_full(t++,i,j,currentProject->spritesC->spriteslist[curSprite]->palrow,false,false,false);
 				}
@@ -239,8 +239,8 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 			return;
 		}
 		unsigned tilebitw,tilebith;
-		tilebitw=currentProject->tileC->sizex;
-		tilebith=currentProject->tileC->sizey;
+		tilebitw=currentProject->tileC->sizew;
+		tilebith=currentProject->tileC->sizeh;
 		if((currentProject->subSystem&NES2x2)&&(currentProject->gameSystem==NES)){
 			tilebitw*=2;
 			tilebith*=2;
@@ -254,8 +254,8 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		int wr,hr;
 		wr=w%tilebitw;
 		hr=h%tilebith;
-		w8=w/currentProject->tileC->sizex;
-		h8=h/currentProject->tileC->sizey;
+		w8=w/currentProject->tileC->sizew;
+		h8=h/currentProject->tileC->sizeh;
 		if (wr)
 			++w8;
 		if (hr)
@@ -266,8 +266,8 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 			if((int)(hr-8)>0)
 				++h8;
 		}
-		wt=w8*currentProject->tileC->sizex;
-		ht=h8*currentProject->tileC->sizey;
+		wt=w8*currentProject->tileC->sizew;
+		ht=h8*currentProject->tileC->sizeh;
 		if(wr)
 			fl_alert("Warning width is not a multiple of %d",tilebitw);
 		if(hr)
@@ -282,11 +282,8 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 			return;
 		}else
 			printf("Image depth %d\n",loaded_image->d());
-		uint64_t truecolor_tile_ptr=0;
 		if(!over){
-			currentProject->tileC->truetileDat = (uint8_t *)realloc(currentProject->tileC->truetileDat,w8*h8*256);
-			currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,w8*h8*currentProject->tileC->tileSize);
-			currentProject->tileC->tiles_amount=(w8*h8)-1;
+			currentProject->tileC->resizeAmt(w8*h8);
 			updateTileSelectAmt();
 		}
 		uint32_t tx,ty=0;
@@ -301,7 +298,6 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		if(depth==1){
 			char*timgptr=(char*)imgptr;
 			//See if grayscale or colormapped xpm
-			long wtmp,htmp;
 			if(isdigit(*timgptr)){
 				/*Checking to see if the first byte is a digit is not enough.
 				What if the first pixel just happen to fall in digit range?
@@ -324,20 +320,20 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 				grayscale=1;
 		}
 		for(uint32_t y=0,tcnt=0;y<ht;++y,++ty){
-			if(y%currentProject->tileC->sizey)
-				tcnt-=wt/currentProject->tileC->sizex;
+			if(y%currentProject->tileC->sizeh)
+				tcnt-=wt/currentProject->tileC->sizew;
 			tx=0;
 			if((!((y<center[1])||(y>=(h+center[1]))))&&(depth==1)&&(!grayscale))
 				imgptr=(uint8_t*)loaded_image->data()[y+2-center[1]];
-			for(uint32_t x=0;x<wt;x+=currentProject->tileC->sizex,++tcnt,++tx){
+			for(uint32_t x=0;x<wt;x+=currentProject->tileC->sizew,++tcnt,++tx){
 				uint32_t ctile;
 				if(over)
 					ctile=currentProject->tileMapC->get_tile(tx,ty);
 				else
 					ctile=tcnt;
-				uint8_t*ttile=currentProject->tileC->truetileDat+((ctile*currentProject->tileC->sizex*currentProject->tileC->sizey*4)+((y%currentProject->tileC->sizey)*currentProject->tileC->sizex*4));
+				uint8_t*ttile=currentProject->tileC->truetDat.data()+((ctile*currentProject->tileC->sizew*currentProject->tileC->sizeh*4)+((y%currentProject->tileC->sizeh)*currentProject->tileC->sizew*4));
 				//First take care of border
-				unsigned line=currentProject->tileC->sizex;
+				unsigned line=currentProject->tileC->sizew;
 				if((y<center[1])||(y>=(h+center[1])))
 					memset(ttile,0,line*4);
 				else{
@@ -345,7 +341,7 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 						memset(ttile,0,center[0]*4);
 						line-=center[0];
 						ttile+=center[0]*4;
-					}else if(x>=(wt-currentProject->tileC->sizex))
+					}else if(x>=(wt-currentProject->tileC->sizew))
 						line-=center[2];
 					switch (depth){
 						case 1:
@@ -384,7 +380,7 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 							ttile+=line*4;
 						break;
 					}
-					if(x>=(wt-currentProject->tileC->sizex))
+					if(x>=(wt-currentProject->tileC->sizew))
 						memset(ttile,0,center[2]*4);
 				}
 			}
@@ -477,7 +473,7 @@ void shadow_highligh_findout(Fl_Widget*,void*){
 				uint32_t cur_tile=currentProject->tileMapC->get_tile(x,y);
 				uint8_t over=0;
 				for (xx=cur_tile*256;xx<cur_tile*256+256;xx+=4){
-					if ((currentProject->tileC->truetileDat[xx] > 130) || (currentProject->tileC->truetileDat[xx+1] > 130) || (currentProject->tileC->truetileDat[xx+2] > 130))
+					if ((currentProject->tileC->truetDat[xx] > 130) || (currentProject->tileC->truetDat[xx+1] > 130) || (currentProject->tileC->truetDat[xx+2] > 130))
 						over++;
 				}
 				if (over > 4)
@@ -494,10 +490,10 @@ void shadow_highligh_findout(Fl_Widget*,void*){
 			for (x=0;x<currentProject->tileMapC->mapSizeW;++x){
 				uint32_t cur_tile=currentProject->tileMapC->get_tile(x,y);
 				uint32_t errorSh=0,errorNorm=0;
-				uint8_t * ptrorgin=&currentProject->tileC->truetileDat[(cur_tile*256)];
+				uint8_t * ptrorgin=&currentProject->tileC->truetDat[(cur_tile*currentProject->tileC->tcSize)];
 				set_palette_type(0);//normal
 				currentProject->tileC->truecolor_to_tile(currentProject->tileMapC->get_palette_map(x,y),cur_tile);
-				tileToTrueCol(&currentProject->tileC->tileDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tileMapC->get_palette_map(x,y));
+				tileToTrueCol(&currentProject->tileC->tDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tileMapC->get_palette_map(x,y));
 				for (xx=0;xx<256;xx+=4){
 					errorNorm+=abs(temp[xx]-ptrorgin[xx]);
 					errorNorm+=abs(temp[xx+1]-ptrorgin[xx+1]);
@@ -505,7 +501,7 @@ void shadow_highligh_findout(Fl_Widget*,void*){
 				}
 				set_palette_type(8);//shadow
 				currentProject->tileC->truecolor_to_tile(currentProject->tileMapC->get_palette_map(x,y),cur_tile);
-				tileToTrueCol(&currentProject->tileC->tileDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tileMapC->get_palette_map(x,y));
+				tileToTrueCol(&currentProject->tileC->tDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tileMapC->get_palette_map(x,y));
 				for (xx=0;xx<256;xx+=4){
 					errorSh+=abs(temp[xx]-ptrorgin[xx]);
 					errorSh+=abs(temp[xx+1]-ptrorgin[xx+1]);

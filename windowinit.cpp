@@ -54,7 +54,7 @@ static const Fl_Menu_Item menuEditor[]={
 			{"Save tiles",0,save_tiles,0},
 			{"Save truecolor tiles",0,save_tiles_truecolor,0},
 			{0},
-		{"Paletes",0, 0, 0, FL_SUBMENU},
+		{"Palettes",0, 0, 0, FL_SUBMENU},
 			{"Open palette",0,loadPalette,0},
 			{"Save Palette",0, save_palette,0},
 			{0},

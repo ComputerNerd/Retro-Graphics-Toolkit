@@ -91,7 +91,7 @@ static void rgbToHls(double r,double g,double b,double * hh,double * ll,double *
 }
 static void addHist(uint32_t cur_tile,int type,uint32_t*hist,unsigned sz){
 	double szz=(double)sz;
-	uint8_t * truePtr=&currentProject->tileC->truetileDat[cur_tile*256];
+	uint8_t * truePtr=&currentProject->tileC->truetDat[cur_tile*256];
 	double h,l,s;
 	for(unsigned z=0;z<256;z+=4){
 		rgbToHls(truePtr[0],truePtr[1],truePtr[2],&h,&l,&s);
@@ -129,7 +129,7 @@ static void addHist(uint32_t cur_tile,int type,uint32_t*hist,unsigned sz){
 }
 static double getHH(uint32_t cur_tile,int type){
 	double hh=0.0;
-	uint8_t * truePtr=&currentProject->tileC->truetileDat[cur_tile*256];
+	uint8_t * truePtr=&currentProject->tileC->truetDat[cur_tile*256];
 	double h,l,s;
 	for(unsigned z=0;z<256;z+=4){
 		rgbToHls(truePtr[0],truePtr[1],truePtr[2],&h,&l,&s);
@@ -553,8 +553,8 @@ static void reduceImage(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_
 		h=currentProject->tileMapC->mapSizeHA;
 		currentProject->tileMapC->truecolor_to_image(image,row,false);
 	}
-	w*=currentProject->tileC->sizex;
-	h*=currentProject->tileC->sizey;
+	w*=currentProject->tileC->sizew;
+	h*=currentProject->tileC->sizeh;
 	progress->label("Dithering to colorspace");
 	Fl::check();
 	if(!yuv)
@@ -813,8 +813,8 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 		w=currentProject->tileMapC->mapSizeW;
 		h=currentProject->tileMapC->mapSizeHA;
 	}
-	w*=currentProject->tileC->sizex;
-	h*=currentProject->tileC->sizey;
+	w*=currentProject->tileC->sizew;
+	h*=currentProject->tileC->sizeh;
 	uint32_t colors_found;
 	//uint8_t * found_colors;
 	uint8_t found_colors[768];

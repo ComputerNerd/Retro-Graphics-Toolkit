@@ -187,8 +187,8 @@ void editor::draw_non_gui(void){
 			}
 			if(tileEditModePlace_G){
 				int32_t xo,yo;
-				xo=((selTileE_G[0]-map_scroll_pos_x)*currentProject->tileC->sizex*placer_tile_size)+map_off_x;
-				yo=((selTileE_G[1]-map_scroll_pos_y)*currentProject->tileC->sizey*placer_tile_size)+map_off_y;
+				xo=((selTileE_G[0]-map_scroll_pos_x)*currentProject->tileC->sizew*placer_tile_size)+map_off_x;
+				yo=((selTileE_G[1]-map_scroll_pos_y)*currentProject->tileC->sizeh*placer_tile_size)+map_off_y;
 				if((xo>=map_off_x)&&(yo>=map_off_y))
 					fl_rect(xo,yo,placer_tile_size*8+1,placer_tile_size*8+1,FL_BLUE);
 			}
@@ -201,8 +201,8 @@ void editor::draw_non_gui(void){
 			if(tileEditModeChunk_G){
 				int32_t xo,yo;
 				unsigned tsx,tsy;
-				tsx=currentProject->tileC->sizex*tiles_size;
-				tsy=currentProject->tileC->sizey*tiles_size;
+				tsx=currentProject->tileC->sizew*tiles_size;
+				tsy=currentProject->tileC->sizeh*tiles_size;
 				if(currentProject->Chunk->useBlocks){
 					tsx*=currentProject->tileMapC->mapSizeW;
 					tsy*=currentProject->tileMapC->mapSizeH;
@@ -283,10 +283,10 @@ int editor::handle(int event){
 						temp_two=(Fl::event_y()-tile_edit_truecolor_off_y)/tiles_size;
 						//true color tiles are slightly easier to edit
 						//I now have a proper function to calulate the offset so I am using that
-						currentProject->tileC->truetileDat[cal_offset_truecolor(temp_one,temp_two,0,currentProject->tileC->current_tile)]=truecolor_temp[0];//red
-						currentProject->tileC->truetileDat[cal_offset_truecolor(temp_one,temp_two,1,currentProject->tileC->current_tile)]=truecolor_temp[1];//green
-						currentProject->tileC->truetileDat[cal_offset_truecolor(temp_one,temp_two,2,currentProject->tileC->current_tile)]=truecolor_temp[2];//blue
-						currentProject->tileC->truetileDat[cal_offset_truecolor(temp_one,temp_two,3,currentProject->tileC->current_tile)]=truecolor_temp[3];//alpha
+						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,0,currentProject->tileC->current_tile)]=truecolor_temp[0];//red
+						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,1,currentProject->tileC->current_tile)]=truecolor_temp[1];//green
+						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,2,currentProject->tileC->current_tile)]=truecolor_temp[2];//blue
+						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,3,currentProject->tileC->current_tile)]=truecolor_temp[3];//alpha
 						currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);
 						damage(FL_DAMAGE_USER1);
 					}
@@ -295,9 +295,9 @@ int editor::handle(int event){
 						temp_one=(Fl::event_x()-tile_edit_offset_x)/tiles_size;
 						temp_two=(Fl::event_y()-tile_edit_offset_y)/tiles_size;
 						uint8_t get_pal=(tileEdit_pal.theRow*48)+(tileEdit_pal.box_sel*3);
-						currentProject->tileC->truetileDat[cal_offset_truecolor(temp_one,temp_two,0,currentProject->tileC->current_tile)]=currentProject->rgbPal[get_pal];//red
-						currentProject->tileC->truetileDat[cal_offset_truecolor(temp_one,temp_two,1,currentProject->tileC->current_tile)]=currentProject->rgbPal[get_pal+1];//green
-						currentProject->tileC->truetileDat[cal_offset_truecolor(temp_one,temp_two,2,currentProject->tileC->current_tile)]=currentProject->rgbPal[get_pal+2];//blue
+						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,0,currentProject->tileC->current_tile)]=currentProject->rgbPal[get_pal];//red
+						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,1,currentProject->tileC->current_tile)]=currentProject->rgbPal[get_pal+1];//green
+						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,2,currentProject->tileC->current_tile)]=currentProject->rgbPal[get_pal+2];//blue
 						currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);
 						damage(FL_DAMAGE_USER1);
 					}
@@ -361,23 +361,23 @@ int editor::handle(int event){
 						if (temp_one & 1){//faster
 							//odd
 							//split pixels
-							uint8_t temp=currentProject->tileC->tileDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)];
+							uint8_t temp=currentProject->tileC->tDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)];
 							//first,second pixel
 							temp_1=temp>>4;//first pixel
 							temp_2=temp&15;//second pixel
 							//put temp_1 back in proper place
 							temp_1<<=4;
 							temp_1|=tileMap_pal.box_sel;
-							currentProject->tileC->tileDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)]=temp_1;
+							currentProject->tileC->tDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)]=temp_1;
 						}else{
 							//even
 							//split pixels
-							uint8_t temp=currentProject->tileC->tileDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)];
+							uint8_t temp=currentProject->tileC->tDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)];
 							//first,second pixel
 							temp_1=temp>>4;//first pixel
 							temp_2=temp&15;//second pixel
 							temp_2|=tileMap_pal.box_sel<<4;
-							currentProject->tileC->tileDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)]=temp_2;
+							currentProject->tileC->tDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)]=temp_2;
 						}
 						damage(FL_DAMAGE_USER1);//no need to redraw the gui
 					}
@@ -386,8 +386,8 @@ int editor::handle(int event){
 					if((Fl::event_x()>=ChunkOff[0])&&(Fl::event_y()>=ChunkOff[1])){
 						uint_fast32_t maxx,maxy;
 						tiles_size=chunk_tile_size->value();
-						maxx=currentProject->Chunk->wi*currentProject->tileC->sizex*tiles_size;
-						maxy=currentProject->Chunk->hi*currentProject->tileC->sizey*tiles_size;
+						maxx=currentProject->Chunk->wi*currentProject->tileC->sizew*tiles_size;
+						maxy=currentProject->Chunk->hi*currentProject->tileC->sizeh*tiles_size;
 						if(currentProject->Chunk->useBlocks){
 							maxx*=currentProject->tileMapC->mapSizeW;
 							maxy*=currentProject->tileMapC->mapSizeH;
@@ -396,8 +396,8 @@ int editor::handle(int event){
 						maxy+=ChunkOff[1];
 						if((Fl::event_x()<=maxx)&&(Fl::event_y()<=maxy)){
 							unsigned tx,ty;
-							tx=(Fl::event_x()-ChunkOff[0])/(currentProject->tileC->sizex*tiles_size);
-							ty=(Fl::event_y()-ChunkOff[1])/(currentProject->tileC->sizey*tiles_size);
+							tx=(Fl::event_x()-ChunkOff[0])/(currentProject->tileC->sizew*tiles_size);
+							ty=(Fl::event_y()-ChunkOff[1])/(currentProject->tileC->sizeh*tiles_size);
 							if(currentProject->Chunk->useBlocks){
 								tx/=currentProject->tileMapC->mapSizeW;
 								ty/=currentProject->tileMapC->mapSizeH;

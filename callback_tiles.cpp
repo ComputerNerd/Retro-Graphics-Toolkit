@@ -24,19 +24,7 @@ void delete_tile_at_location(Fl_Widget*, void* row){
 	window->redraw();
 }
 void new_tile(Fl_Widget*,void*){
-	currentProject->tileC->tiles_amount++;
-	currentProject->tileC->tileDat=(uint8_t *)realloc(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize);
-	if (currentProject->tileC->tileDat == 0){
-		show_realloc_error((currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize);
-		exit(1);
-	}
-	currentProject->tileC->truetileDat=(uint8_t *)realloc(currentProject->tileC->truetileDat,(currentProject->tileC->tiles_amount+1)*256);
-	if (currentProject->tileC->truetileDat == 0){
-		show_realloc_error((currentProject->tileC->tiles_amount+1)*256)
-		exit(1);
-	}
-	memset(&currentProject->tileC->tileDat[currentProject->tileC->tiles_amount*currentProject->tileC->tileSize],0,currentProject->tileC->tileSize);
-	memset(&currentProject->tileC->truetileDat[currentProject->tileC->tiles_amount*256],0,256);
+	currentProject->tileC->appendTile();
 	//set the new maximum for slider
 	updateTileSelectAmt();
 	//redraw so the user knows that there is another tile
@@ -75,12 +63,12 @@ void update_all_tiles(Fl_Widget*,void*){
 		sel_pal=tileMap_pal.theRow;
 	else
 		sel_pal=tileEdit_pal.theRow;
-	if (currentProject->tileC->tiles_amount > 63)
+	if (currentProject->tileC->amt>=63)
 		putchar('\n');
-	for (uint32_t x=0;x<currentProject->tileC->tiles_amount+1;++x) {
+	for (uint32_t x=0;x<currentProject->tileC->amt;++x) {
 		currentProject->tileC->truecolor_to_tile(sel_pal,x);
-		if ((x % 64) == 0)
-			printf("Progress: %f\r",((float)x/(float)currentProject->tileC->tiles_amount)*100.0);
+		if ((!(x&63))&&x)
+			printf("Progress: %f\r",((float)x/(float)currentProject->tileC->amt)*100.0);
 	}
 	window->redraw();
 }
@@ -92,14 +80,14 @@ void remove_duplicate_truecolor(Fl_Widget*,void*){
 	uint32_t tile_remove_c=0;
 	int32_t cur_tile,curT;
 	puts("Pass 1");
-	for (cur_tile=0;cur_tile<=currentProject->tileC->tiles_amount;cur_tile++){
-		for (curT=currentProject->tileC->tiles_amount;curT>=0;curT--){
+	for (cur_tile=0;cur_tile<=currentProject->tileC->amt-1;cur_tile++){
+		for (curT=currentProject->tileC->amt-1;curT>=0;curT--){
 			if (cur_tile == curT)//dont compare it's self
 				continue;
 			#if __LP64__
-			if (currentProject->tileC->cmp_trueC(cur_tile,(uint64_t *)&currentProject->tileC->truetileDat[curT*256]))
+			if (currentProject->tileC->cmp_trueC(cur_tile,(uint64_t *)&currentProject->tileC->truetDat[curT*currentProject->tileC->tcSize]))
 			#else
-			if (currentProject->tileC->cmp_trueC(cur_tile,(uint32_t *)&currentProject->tileC->truetileDat[curT*256]))
+			if (currentProject->tileC->cmp_trueC(cur_tile,(uint32_t *)&currentProject->tileC->truetDat[curT*currentProject->tileC->tcSize]))
 			#endif
 			{
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,false,false);
@@ -114,8 +102,8 @@ void remove_duplicate_truecolor(Fl_Widget*,void*){
 	tile_remove_c=0;
 	puts("Pass 2 h-flip");
 	uint8_t trueColTemp[256];
-	for (cur_tile=0;cur_tile<=currentProject->tileC->tiles_amount;cur_tile++){
-		for (curT=currentProject->tileC->tiles_amount;curT>=0;curT--){
+	for (cur_tile=0;cur_tile<=currentProject->tileC->amt-1;cur_tile++){
+		for (curT=currentProject->tileC->amt-1;curT>=0;curT--){
 			if (cur_tile == curT)//dont compare it's self
 				continue;
 			currentProject->tileC->hflip_truecolor(curT,(uint32_t *)trueColTemp);
@@ -136,8 +124,8 @@ void remove_duplicate_truecolor(Fl_Widget*,void*){
 	printf("Removed %d tiles\n",tile_remove_c);
 	tile_remove_c=0;
 	puts("Pass 3 v-flip");
-	for (cur_tile=0;cur_tile<=currentProject->tileC->tiles_amount;cur_tile++){
-		for (curT=currentProject->tileC->tiles_amount;curT>=0;curT--){
+	for (cur_tile=0;cur_tile<=currentProject->tileC->amt-1;cur_tile++){
+		for (curT=currentProject->tileC->amt-1;curT>=0;curT--){
 			if (cur_tile == curT)//dont compare it's self
 				continue;
 			currentProject->tileC->vflip_truecolor(curT,trueColTemp);
@@ -158,8 +146,8 @@ void remove_duplicate_truecolor(Fl_Widget*,void*){
 	printf("Removed %d tiles\n",tile_remove_c);
 	tile_remove_c=0;
 	puts("Pass 4 vh-flip");
-	for (cur_tile=0;cur_tile<=currentProject->tileC->tiles_amount;cur_tile++){
-		for (curT=currentProject->tileC->tiles_amount;curT>=0;curT--){
+	for (cur_tile=0;cur_tile<=currentProject->tileC->amt-1;cur_tile++){
+		for (curT=currentProject->tileC->amt-1;curT>=0;curT--){
 			if (cur_tile == curT)//dont compare it's self
 				continue;
 			currentProject->tileC->hflip_truecolor(curT,(uint32_t *)trueColTemp);
@@ -190,12 +178,12 @@ void fill_tile(Fl_Widget* o, void*){
 		uint8_t * tile_ptr_temp;
 		switch (currentProject->gameSystem){
 			case sega_genesis:
-				tile_ptr_temp = &currentProject->tileC->tileDat[currentProject->tileC->current_tile*32];
+				tile_ptr_temp = &currentProject->tileC->tDat[currentProject->tileC->current_tile*32];
 				color+=color<<4;
 				memset(tile_ptr_temp,color,32);
 			break;
 			case NES:
-				tile_ptr_temp = &currentProject->tileC->tileDat[currentProject->tileC->current_tile*16];
+				tile_ptr_temp = &currentProject->tileC->tDat[currentProject->tileC->current_tile*16];
 				//for the NES it is different
 				uint8_t col_1;
 				uint8_t col_2;
@@ -213,11 +201,11 @@ void fill_tile(Fl_Widget* o, void*){
 		}
 	}
 	else if (mode_editor == tile_edit){
-		for (uint32_t x=currentProject->tileC->current_tile*256;x<(currentProject->tileC->current_tile*256)+256;x+=4){
-			currentProject->tileC->truetileDat[x]=truecolor_temp[0];//red
-			currentProject->tileC->truetileDat[x+1]=truecolor_temp[1];//green
-			currentProject->tileC->truetileDat[x+2]=truecolor_temp[2];//blue
-			currentProject->tileC->truetileDat[x+3]=truecolor_temp[3];//alpha
+		for (uint32_t x=currentProject->tileC->current_tile*currentProject->tileC->tcSize;x<(currentProject->tileC->current_tile*currentProject->tileC->tcSize)+currentProject->tileC->tcSize;x+=4){
+			currentProject->tileC->truetDat[x]=truecolor_temp[0];//red
+			currentProject->tileC->truetDat[x+1]=truecolor_temp[1];//green
+			currentProject->tileC->truetDat[x+2]=truecolor_temp[2];//blue
+			currentProject->tileC->truetDat[x+3]=truecolor_temp[3];//alpha
 		}
 		currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);
 	}else

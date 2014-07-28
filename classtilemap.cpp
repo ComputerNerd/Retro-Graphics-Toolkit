@@ -551,6 +551,7 @@ bool tileMap::loadFromFile(){
 		isBlock=blocksLoad;
 		toggleBlocks(blocksLoad);
 		window->redraw();
+		return true;
 	}
 }
 void tileMap::sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vflip){
@@ -723,8 +724,8 @@ bool tileMap::truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha
 		return false;
 	}
 	uint32_t w,h;
-	w=mapSizeW*currentProject->tileC->sizex;
-	h=mapSizeHA*currentProject->tileC->sizey;
+	w=mapSizeW*currentProject->tileC->sizew;
+	h=mapSizeHA*currentProject->tileC->sizeh;
 	uint16_t x_tile=0,y_tile=0;
 	uint32_t truecolor_tile_ptr=0;
 	uint8_t pixelSize,pSize2;
@@ -742,13 +743,13 @@ bool tileMap::truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha
 				if (truecolor_tile_ptr != -256){
 					for (uint_fast32_t y=0;y<w*pSize2;y+=w*pixelSize){//pixels y
 						if (useAlpha)
-							memcpy(&the_image[a+b+y],&currentProject->tileC->truetileDat[truecolor_tile_ptr],32);
+							memcpy(&the_image[a+b+y],&currentProject->tileC->truetDat[truecolor_tile_ptr],32);
 						else{
 							unsigned xx=0;
 							for (unsigned x=0;x<32;x+=4){//pixels x
-								the_image[a+b+y+xx]=currentProject->tileC->truetileDat[truecolor_tile_ptr+x];
-								the_image[a+b+y+xx+1]=currentProject->tileC->truetileDat[truecolor_tile_ptr+x+1];
-								the_image[a+b+y+xx+2]=currentProject->tileC->truetileDat[truecolor_tile_ptr+x+2];
+								the_image[a+b+y+xx]=currentProject->tileC->truetDat[truecolor_tile_ptr+x];
+								the_image[a+b+y+xx+1]=currentProject->tileC->truetDat[truecolor_tile_ptr+x+1];
+								the_image[a+b+y+xx+2]=currentProject->tileC->truetDat[truecolor_tile_ptr+x+2];
 								xx+=3;
 							}
 						}
@@ -769,13 +770,13 @@ bool tileMap::truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha
 				truecolor_tile_ptr=get_tile(x_tile,y_tile)*256;
 				for (uint32_t y=0;y<w*pixelSize*8;y+=w*pixelSize){//pixels y
 					if (useAlpha)
-						memcpy(&the_image[a+b+y],&currentProject->tileC->truetileDat[truecolor_tile_ptr],32);
+						memcpy(&the_image[a+b+y],&currentProject->tileC->truetDat[truecolor_tile_ptr],32);
 					else{
 						unsigned xx=0;
 						for (unsigned x=0;x<32;x+=4){//pixels x
-							the_image[a+b+y+xx]=currentProject->tileC->truetileDat[truecolor_tile_ptr+x];
-							the_image[a+b+y+xx+1]=currentProject->tileC->truetileDat[truecolor_tile_ptr+x+1];
-							the_image[a+b+y+xx+2]=currentProject->tileC->truetileDat[truecolor_tile_ptr+x+2];
+							the_image[a+b+y+xx]=currentProject->tileC->truetDat[truecolor_tile_ptr+x];
+							the_image[a+b+y+xx+1]=currentProject->tileC->truetDat[truecolor_tile_ptr+x+1];
+							the_image[a+b+y+xx+2]=currentProject->tileC->truetDat[truecolor_tile_ptr+x+2];
 							xx+=3;
 						}
 					}
@@ -802,7 +803,6 @@ void tileMap::truecolorimageToTiles(uint8_t * image,int rowusage,bool useAlpha){
 	uint_fast32_t truecolor_tile_ptr;
 	for (uint_fast32_t a=0;a<(h*w*pSize)-w*pSize;a+=w*pSize*8){//a tiles y
 		for (uint_fast32_t b=0;b<w*pSize;b+=pTile){//b tiles x
-			uint8_t temp;
 			int32_t current_tile;
 			if(rowusage==-1){
 				current_tile=get_tile(x_tile,y_tile);
@@ -827,7 +827,6 @@ void tileMap::truecolorimageToTiles(uint8_t * image,int rowusage,bool useAlpha){
 				}
 			}
 			//convert back to tile
-			uint8_t * TileTempPtr;
 			if ((type_temp != 0) && (currentProject->gameSystem == sega_genesis)){
 				tempSet=(get_prio(x_tile,y_tile)^1)*8;
 				set_palette_type(tempSet);

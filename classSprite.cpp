@@ -36,9 +36,9 @@ void sprite::draw(unsigned x,unsigned y,unsigned zoom){
 	for(unsigned i=0;i<w;++i){//This is backwards due to the way sega genesis stores sprites. The code is the same for NES because height will always be one
 		for(unsigned j=0;j<h;++j){
 			currentProject->tileC->draw_tile(x,yy,t++,zoom,palrow,false,false);
-			yy+=currentProject->tileC->sizey*zoom;
+			yy+=currentProject->tileC->sizeh*zoom;
 		}
-		x+=currentProject->tileC->sizex*zoom;
+		x+=currentProject->tileC->sizew*zoom;
 		yy=y;
 	}
 }

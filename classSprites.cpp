@@ -143,8 +143,8 @@ void sprites::importImg(uint32_t to){
 			return;
 		}else
 			printf("Image depth %d\n",loaded_image->d());
-		unsigned startTile=currentProject->tileC->tiles_amount;
-		uint8_t*out=currentProject->tileC->truetileDat+(startTile*256);
+		unsigned startTile=currentProject->tileC->amt-1;
+		uint8_t*out=currentProject->tileC->truetDat.data()+(startTile*256);
 		unsigned newTiles=(wnew/8)*(hnew/8);
 		//See if tile is blank
 		bool overwrite=false;//This is to avoid duplicate code otherwise there would be the need for two else statments with identical code
@@ -153,15 +153,14 @@ void sprites::importImg(uint32_t to){
 				overwrite=true;
 		}
 		if(overwrite){
-			currentProject->tileC->tiles_amount+=newTiles-1;
+			currentProject->tileC->amt+=newTiles-1;
 		}else{
-			currentProject->tileC->tiles_amount+=newTiles;
+			currentProject->tileC->amt+=newTiles;
 			++startTile;
 		}
 		//set new amount
-		currentProject->tileC->tileDat=(uint8_t *)realloc(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize);
-		currentProject->tileC->truetileDat=(uint8_t *)realloc(currentProject->tileC->truetileDat,(currentProject->tileC->tiles_amount+1)*256);
-		out=currentProject->tileC->truetileDat+(startTile*256);
+		currentProject->tileC->resizeAmt();
+		out=currentProject->tileC->truetDat.data()+(startTile*currentProject->tileC->tcSize);
 		uint8_t * img_ptr=(uint8_t *)loaded_image->data()[0];
 		for(unsigned y=0,cnt=0,tilecnt=startTile;y<hnew;y+=hmax){
 			for(unsigned x=0;x<wnew;x+=wmax,++cnt){

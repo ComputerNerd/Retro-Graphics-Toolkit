@@ -21,12 +21,15 @@ public:
 	tiles(const tiles& other);
 	~tiles();
 	uint8_t tileSize;/*!< Sets the size on one tile in bytes 16 or 32 depends of if NES or genesis*/
-	uint32_t tiles_amount;/*!< Amount of tiles couting from 0 that means that a value of 0 is one tile*/
+	uint32_t amt;/*!< Amount of tiles*/
 	uint32_t current_tile;/*!< The current tile that is being edited*/
-	uint8_t * tileDat;/*!< Pointer to the tile data*/
-	uint8_t * truetileDat;/*< Pointer to Truecolor tile data*/
-	unsigned sizex,sizey;
+	std::vector<uint8_t> tDat;/*!< Pointer to the tile data*/
+	std::vector<uint8_t> truetDat;/*< Pointer to Truecolor tile data*/
+	unsigned sizew,sizeh;
 	unsigned tcSize;
+	void resizeAmt(uint32_t amtnew);//Resizes array to hold enough for set amount
+	void resizeAmt(void);
+	void appendTile(void);
 	void remove_tile_at(uint32_t);
 	void truecolor_to_tile_ptr(uint8_t palette_row,uint32_t cur_tile,uint8_t * tileinput,bool Usedither=true);
 	void truecolor_to_tile(uint8_t,uint32_t);/*!< truecolor_to_tile will update/dither the selected tile*/
@@ -40,7 +43,6 @@ public:
 	void vflip_tile_ptr(uint8_t *,uint8_t *);
 	void blank_tile(uint32_t);/*!<This makes the tile use color 0*/ 
 	void remove_duplicate_tiles();
-	void get_tiles(uint8_t *,uint8_t *,uint32_t);/*!< get_tiles allows use to easy copy tiles from another class*/
 #if __LP64__
 	bool cmp_trueC(uint32_t one,uint64_t * two);/*!<Used to compare two truecolor tiles returns true if the same*/
 #else

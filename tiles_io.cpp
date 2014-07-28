@@ -47,10 +47,10 @@ void save_tiles(Fl_Widget*,void*){
 			myfile = fopen(the_file.c_str(),"wb");
 		if (likely(myfile||clipboard)){
 			if(compression)
-				compdat=(uint8_t*)encodeType(currentProject->tileC->tileDat,currentProject->tileC->tileSize*(currentProject->tileC->tiles_amount+1),compsize,compression);
+				compdat=(uint8_t*)encodeType(currentProject->tileC->tDat.data(),currentProject->tileC->tileSize*(currentProject->tileC->amt),compsize,compression);
 			if (type){
 				char comment[2048];
-				snprintf(comment,2048,"%d tiles %s",currentProject->tileC->tiles_amount+1,typeToText(compression));
+				snprintf(comment,2048,"%d tiles %s",currentProject->tileC->amt,typeToText(compression));
 				if (compression){
 					if(saveBinAsText(compdat,compsize,myfile,type,comment,"tileDat",8)==false){
 						free(compdat);
@@ -58,7 +58,7 @@ void save_tiles(Fl_Widget*,void*){
 						return;
 					}
 				}else{
-					if(saveBinAsText(currentProject->tileC->tileDat,(currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize,myfile,type,comment,"tileDat",32)==false){
+					if(saveBinAsText(currentProject->tileC->tDat.data(),(currentProject->tileC->amt)*currentProject->tileC->tileSize,myfile,type,comment,"tileDat",32)==false){
 						fl_alert("Error: can not save file %s",the_file.c_str());
 						return;
 					}
@@ -67,7 +67,7 @@ void save_tiles(Fl_Widget*,void*){
 				if(compression)
 					fwrite(compdat,1,compsize,myfile);
 				else
-					fwrite(currentProject->tileC->tileDat,currentProject->tileC->tileSize,(currentProject->tileC->tiles_amount+1),myfile);
+					fwrite(currentProject->tileC->tDat.data(),currentProject->tileC->tileSize,(currentProject->tileC->amt),myfile);
 			}
 			if(compression)
 				free(compdat);
@@ -129,41 +129,27 @@ void load_tiles(Fl_Widget*,void*o){
 				if(off>=0){
 					offset_tiles=off;
 					offset_tiles_bytes=offset_tiles*currentProject->tileC->tileSize;
-					//if(
-					//currentProject->tileC->tileDat=(uint8_t*)realloc(currentProject->tileC->tileDat,(file_size+((currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize)));
 				}else{
 					fl_alert("You must enter a number greater than or equal to zero");
 					fclose(myfile);
 					return;
 				}
 			}else if(mode==1){
-				offset_tiles=currentProject->tileC->tiles_amount+1;
+				offset_tiles=currentProject->tileC->amt;
 				offset_tiles_bytes=offset_tiles*currentProject->tileC->tileSize;
-				currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,file_size+((currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize));
-				if(!currentProject->tileC->tileDat){
-					if (compression==0)
-						fclose(myfile);
-					show_realloc_error(file_size+((currentProject->tileC->tiles_amount+1)*currentProject->tileC->tileSize))
-				}
+				currentProject->tileC->tDat.resize(file_size+((currentProject->tileC->amt)*currentProject->tileC->tileSize));
 			}else{
-				currentProject->tileC->tileDat = (uint8_t *)realloc(currentProject->tileC->tileDat,file_size);
-				if(!currentProject->tileC->tileDat){
-					if (!compression)
-						fclose(myfile);
-					show_realloc_error(file_size)
-				}
+				currentProject->tileC->tDat.resize(file_size);
 				offset_tiles=0;
 				offset_tiles_bytes=0;
 			}
 			if(compression)
-				output.copy((char *)currentProject->tileC->tileDat+offset_tiles_bytes,file_size);
+				output.copy((char *)currentProject->tileC->tDat.data()+offset_tiles_bytes,file_size);
 			else{
-				fread(currentProject->tileC->tileDat+offset_tiles_bytes,1,file_size,myfile);
+				fread(currentProject->tileC->tDat.data()+offset_tiles_bytes,1,file_size,myfile);
 				fclose(myfile);
 			}
-			currentProject->tileC->truetileDat = (uint8_t *)realloc(currentProject->tileC->truetileDat,(file_size*truecolor_multiplier)+(offset_tiles_bytes*truecolor_multiplier));
-			if(!currentProject->tileC->truetileDat)
-				show_malloc_error(file_size*truecolor_multiplier)
+			currentProject->tileC->truetDat.resize((file_size*truecolor_multiplier)+(offset_tiles_bytes*truecolor_multiplier));
 			for(uint32_t c=offset_tiles;c<(file_size/currentProject->tileC->tileSize)+offset_tiles;c++) {
 				if(row < 0){
 					uint32_t x,y;
@@ -177,12 +163,12 @@ void load_tiles(Fl_Widget*,void*o){
 						}
 					}
 doTile:
-					tileToTrueCol(&currentProject->tileC->tileDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetileDat[(c*256)],foundRow,true,alphaZero);
+					tileToTrueCol(&currentProject->tileC->tDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetDat[(c*256)],foundRow,true,alphaZero);
 				}else
-					tileToTrueCol(&currentProject->tileC->tileDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetileDat[(c*256)],defaultRow,true,alphaZero);
+					tileToTrueCol(&currentProject->tileC->tDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetDat[(c*256)],defaultRow,true,alphaZero);
 			}
-			currentProject->tileC->tiles_amount=(file_size/currentProject->tileC->tileSize)-1;
-			currentProject->tileC->tiles_amount+=offset_tiles;
+			currentProject->tileC->amt=(file_size/currentProject->tileC->tileSize);
+			currentProject->tileC->amt+=offset_tiles;
 			updateTileSelectAmt();
 			window->tile_select->value(0);
 			window->tile_select_2->value(0);
@@ -205,26 +191,12 @@ void load_truecolor_tiles(Fl_Widget*,void*){
 			fclose(myfile);
 			return;
 		}
-		free(currentProject->tileC->truetileDat);
-		free(currentProject->tileC->tileDat);
-		currentProject->tileC->truetileDat = (uint8_t *)malloc(file_size);
-		if (currentProject->tileC->truetileDat == 0)
-			show_malloc_error(file_size)
-		switch (currentProject->gameSystem){
-			case sega_genesis:
-				currentProject->tileC->tileDat = (uint8_t *)malloc(file_size/6);
-			break;
-			case NES:
-				currentProject->tileC->tileDat = (uint8_t *)malloc(file_size/12);
-			break;
-		}
-		if (currentProject->tileC->tileDat == 0)
-			show_malloc_error(file_size/6)
+		currentProject->tileC->truetDat.resize(file_size);
+		currentProject->tileC->tDat.resize(file_size*currentProject->tileC->tileSize/currentProject->tileC->tcSize);
 		rewind(myfile);
-		fread(currentProject->tileC->truetileDat,file_size,1,myfile);
+		fread(currentProject->tileC->truetDat.data(),file_size,1,myfile);
 		fclose(myfile);
-		currentProject->tileC->tiles_amount=file_size/256;
-		currentProject->tileC->tiles_amount--;
+		currentProject->tileC->amt=file_size/256;
 		updateTileSelectAmt();
 		window->redraw();
 	}
@@ -234,8 +206,7 @@ void save_tiles_truecolor(Fl_Widget*,void*){
 		FILE * myfile;
 		myfile = fopen(the_file.c_str(),"wb");
 		if (myfile){
-			fwrite(currentProject->tileC->truetileDat,1,(currentProject->tileC->tiles_amount+1)*256,myfile);
-			puts("Great Sucess File Saved!");
+			fwrite(currentProject->tileC->truetDat.data(),1,(currentProject->tileC->amt)*currentProject->tileC->tcSize,myfile);
 			fclose(myfile);
 		}else
 			fl_alert("Error: can not save file %s",the_file.c_str());
