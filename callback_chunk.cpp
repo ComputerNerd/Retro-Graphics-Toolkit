@@ -71,10 +71,9 @@ void useBlocksCB(Fl_Widget*o,void*){
 			window->redraw();
 			return;
 		}
-		window->tile_select_3->label("Block select");
-	}else
-		window->tile_select_3->label("Tile select");
+	}
 	currentProject->Chunk->useBlocks=use;
+	window->updateBlockTilesChunk();
 	updateTileSelectAmt();
 	window->redraw();
 }

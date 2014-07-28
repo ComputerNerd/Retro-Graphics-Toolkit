@@ -23,6 +23,8 @@ class editor : public Fl_Double_Window{
 	void _editor();
 	void draw_non_gui();
 	public:
+	void updateBlockTilesChunk(uint32_t prj);
+	void updateBlockTilesChunk(void);
 	void updateSpriteSliders(void);
 	void updateChunkSizeSliders(uint32_t wi,uint32_t hi);
 	void updateChunkSizeSliders(void);

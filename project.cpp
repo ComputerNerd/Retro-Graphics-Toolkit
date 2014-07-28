@@ -24,7 +24,7 @@ uint32_t projects_count;//holds how many projects there are this is needed for r
 struct Project * currentProject;
 Fl_Slider* curPrj;
 static const char * defaultName="Add a description here.";
-uint32_t curProjectID=0;
+uint32_t curProjectID;
 bool containsDataCurProj(uint32_t mask){
 	unsigned off=__builtin_ctz(mask);
 	return ((currentProject->useMask&pjHavePal)||(currentProject->share[off]>0))?true:false;
@@ -312,16 +312,17 @@ void switchProject(uint32_t id){
 			}
 		}
 	}
-	window->useBlocksChunkCBtn->value(projects[id]->Chunk->useBlocks?1:0);
 	window->BlocksCBtn->value(projects[id]->tileMapC->isBlock?1:0);
 	window->chunk_select->maximum(projects[id]->Chunk->amt-1);
 	window->updateChunkSizeSliders(projects[id]->Chunk->wi,projects[id]->Chunk->hi);
 	projects[id]->tileMapC->toggleBlocks(projects[id]->tileMapC->isBlock);
 	//projects[id]->tileMapC->ScrollUpdate();//toggleBlocks calls this funciton
+	window->updateBlockTilesChunk(id);
 	if(projects[id]->gameSystem==NES)
 		window->subSysC->show();
 	else
 		window->subSysC->hide();
+	
 	window->redraw();
 }
 static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t version=currentProjectVersionNUM){

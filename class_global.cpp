@@ -19,7 +19,7 @@
 #include "callback_chunk.h"
 #include "callbacksprites.h"
 #include "classSprite.h"
-editor *window = new editor(800,600,"Retro Graphics Toolkit v0.611");//this creates the window
+editor *window = new editor(800,600,"Retro Graphics Toolkit v0.62");//this creates the window
 static void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y){
 	uint8_t grid[32*32*3];
 	//first generate grid
@@ -58,6 +58,18 @@ static void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y){
 	}
 	fl_draw_image(grid,x,y,32,32,3);
 	
+}
+void editor::updateBlockTilesChunk(uint32_t prj){
+	if(projects[prj]->Chunk->useBlocks){
+		tile_select_3->label("Block select");
+		useBlocksChunkCBtn->value(1);
+	}else{
+		tile_select_3->label("Tile select");
+		useBlocksChunkCBtn->value(0);
+	}
+}
+void editor::updateBlockTilesChunk(void){
+	updateBlockTilesChunk(curProjectID);
 }
 void editor::updateSpriteSliders(void){
 	spritesel->maximum(currentProject->spritesC->amt-1);
