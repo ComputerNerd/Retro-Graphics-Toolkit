@@ -410,7 +410,7 @@ void set_prioCB(Fl_Widget*,void*o){
 	G_highlow_p[off]^=true;
 	if((tileEditModeChunk_G)&&(off==1))
 		currentProject->Chunk->setPrio(currentChunk,editChunk_G[0],editChunk_G[1],G_highlow_p[off]);
-	if(tileEditModePlace_G)
+	else if(tileEditModePlace_G&&(off==0))
 		currentProject->tileMapC->set_prio(selTileE_G[0],selTileE_G[1],G_highlow_p[off]);
 	window->redraw();
 }

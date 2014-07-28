@@ -328,9 +328,13 @@ int editor::handle(int event){
 								tileEditModePlace_G=true;
 								selTileE_G[0]=temp_one;
 								selTileE_G[1]=temp_two;
-								hflipCB[0]->value(currentProject->tileMapC->get_hflip(temp_one,temp_two));
-								vflipCB[0]->value(currentProject->tileMapC->get_vflip(temp_one,temp_two));
-								prioCB[0]->value(currentProject->tileMapC->get_prio(temp_one,temp_two));
+								G_highlow_p[0]=currentProject->tileMapC->get_prio(temp_one,temp_two);
+								G_hflip[0]=currentProject->tileMapC->get_hflip(temp_one,temp_two);
+								G_vflip[0]=currentProject->tileMapC->get_vflip(temp_one,temp_two);
+								hflipCB[0]->value(G_hflip[0]);
+								vflipCB[0]->value(G_vflip[0]);
+								prioCB[0]->value(G_highlow_p[0]);
+
 								uint32_t cT=currentProject->tileMapC->get_tile(temp_one,temp_two);
 								tile_select_2->value(cT);
 								currentProject->tileC->current_tile=cT;

@@ -1,6 +1,7 @@
 Most recent changes are placed at the top
 
 20140727
+Fixed bug in plane editor edit more where check boxes do not reflect interal values
 Released Version 0.611
 Added export to sonic 1 chunks
 Fixed urgent bug wrong compression used for saving tiles
