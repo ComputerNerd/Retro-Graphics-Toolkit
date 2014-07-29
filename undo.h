@@ -23,7 +23,9 @@ enum undoTypes_t{
 	uTilemapEdit,
 	uTilemapResize,
 	uPalette,
-	uPaletteEntry
+	uPaletteEntry,
+	uSwitchSys,
+	uSwitchPrj
 };
 enum tileTypeMask_t{
 	tTypeTile=1,
@@ -58,13 +60,13 @@ struct undoTilemapEdit{
 };
 struct undoTilemapResize{
 	uint32_t w,h;//Old width and height
-	void*ptr;//Contains a point ONLY TO LOST DATA if the tilemap was made bigger this will be NULL
+	void*ptr;//Contains a pointer ONLY TO LOST DATA if the tilemap was made bigger this will be NULL
 };
 //There is no struct for undo Palette the undoEvent struct will just point to the old data
 struct undoPaletteEntry{
-	uint32_t id,val;
+	uint32_t id,val,valnew;
 };
-void popUndo(void);
+void popUndoRedo(bool redo);
 void historyWindow(void);//Controls settings and shows history
 void pushTile(uint32_t id,tileTypeMask_t type);
 void pushTilePixel(uint32_t id,uint32_t x,uint32_t y,tileTypeMask_t type);
@@ -73,4 +75,6 @@ void pushTilemapEdit(uint32_t x,uint32_t y);
 void pushTilemapResize(uint32_t wnew,uint32_t hnew);
 void pushTilemapAll();
 void pushPaletteEntry(uint32_t id);
-void pushPaletteEntryall(void);
+void pushPaletteAll(void);
+void pushSwitchSys(void);
+void pushSwitchPrj(void);

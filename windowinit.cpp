@@ -23,6 +23,7 @@
 #include "callback_project.h"
 #include "callback_chunk.h"
 #include "callbacksprites.h"
+#include "undocallback.h"
 void set_mode_tabs(Fl_Widget* o, void*){
 	Fl_Group * val=(Fl_Group*)(Fl_Tabs*)window->the_tabs->value();
 	if (val==window->TabsMain[pal_edit]){
@@ -112,6 +113,10 @@ static const Fl_Menu_Item menuEditor[]={
 	{"Sprite actions",0, 0, 0, FL_SUBMENU},
 		{"Generate optimal palette for selected sprite",0,generate_optimal_palette,(void*)1},
 		{"Dither sprite as image",0,dither_tilemap_as_image,(void*)1},
+		{0},
+	{"Undo/Redo",0, 0, 0, FL_SUBMENU},
+		{"Undo",FL_CTRL+'z',undoCB},
+		{"Redo",FL_CTRL+'y',redoCB},
 		{0},
 	{"Help",0, 0, 0, FL_SUBMENU},
 		{"About",0,showAbout},

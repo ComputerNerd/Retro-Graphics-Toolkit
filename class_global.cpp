@@ -272,8 +272,11 @@ static void setXYdispBlock(int x,int y){
 	}else
 		setXYdisp(x,y,0);
 }
+int pushed_g;
 int editor::handle(int event){
 	//printf("Event was %s (%d)\n", fl_eventnames[event], event);     // e.g. "Event was FL_PUSH (1)"
+	if(event==FL_PUSH)
+		pushed_g=1;//The slider callback will need to clear this
 	if (Fl_Double_Window::handle(event)) return (1);
 	//printf("Event was %s (%d)\n", fl_eventnames[event], event);     // e.g. "Event was FL_PUSH (1)"
 	unsigned tiles_size;

@@ -68,7 +68,7 @@ void palette_bar::check_box(int16_t x,int16_t y){
 	This function is in charge of seeing if the mouse click is on a box and what box it is
 	for x and y pass the mouser cordinace
 	*/
-	uint8_t boxSize=window->pal_size->value();
+	unsigned boxSize=window->pal_size->value();
 	x-=offx;
 	y-=offy;
 	if (x < 0)

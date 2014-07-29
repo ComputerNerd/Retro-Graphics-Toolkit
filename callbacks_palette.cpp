@@ -19,6 +19,7 @@
 #include "class_global.h"
 #include "color_convert.h"
 #include "filemisc.h"
+#include "undo.h"
 void save_palette(Fl_Widget*, void* start_end){
 	char temp[4];
 	switch (currentProject->gameSystem){
@@ -101,7 +102,7 @@ void update_palette(Fl_Widget* o, void* v){
 	if (currentProject->gameSystem == sega_genesis){
 		uint8_t temp_var=0;
 		uint8_t temp2=(uint8_t)s->value();
-		uint8_t temp_entry=0;
+		unsigned temp_entry=0;
 		switch (mode_editor){
 			case pal_edit:
 				temp_entry=palEdit.box_sel+(palEdit.theRow*16);
@@ -113,11 +114,13 @@ void update_palette(Fl_Widget* o, void* v){
 				temp_entry=tileMap_pal.box_sel+(tileMap_pal.theRow*16);
 			break;
 		}
+		if(pushed_g){
+			pushed_g=0;
+			pushPaletteEntry(temp_entry);
+		}
 		switch ((uintptr_t)v){
 			case 0://red
 				temp_var=currentProject->palDat[(temp_entry*2)+1];//get the green value we need to save it for later
-				//temp_var>>=4;
-				//temp_var<<=4;//put the green value back in proper place
 				temp_var&=0xF0;
 				temp_var|=temp2;
 				currentProject->palDat[(temp_entry*2)+1]=temp_var;
@@ -128,8 +131,8 @@ void update_palette(Fl_Widget* o, void* v){
 				//this is very similar to what I just did above
 				temp_var=currentProject->palDat[(temp_entry*2)+1];
 				temp_var&=15;//get only the red value
-				//now add the new green value to it
-				temp_var+=temp2<<4;
+				//now OR the new green value to it
+				temp_var|=temp2<<4;
 				currentProject->palDat[(temp_entry*2)+1]=temp_var;
 				//now convert the new green value
 				currentProject->rgbPal[(temp_entry*3)+1]=palTab[(temp2>>1)+palTypeGen];
@@ -179,6 +182,10 @@ void update_palette(Fl_Widget* o, void* v){
 				show_default_error
 				return;
 			break;
+		}
+		if(pushed_g){
+			pushed_g=0;
+			pushPaletteEntry(temp_entry);
 		}
 		currentProject->palDat[temp_entry]=pal;
 		rgb_out=MakeRGBcolor(pal);

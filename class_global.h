@@ -17,6 +17,7 @@
 #pragma once
 #include "project.h"
 #include <inttypes.h>
+extern int pushed_g;
 class editor : public Fl_Double_Window{
 	private:
 	Fl_Menu_Bar *menu;
