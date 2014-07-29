@@ -119,6 +119,7 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Undo",FL_CTRL+'z',undoCB},
 		{"Redo",FL_CTRL+'y',redoCB},
 		{"Show estimated ram usage",0,showMemUsageUndo},
+		{"Show history window",FL_CTRL+'h',historyWindow},
 		{0},
 	{"Help",0, 0, 0, FL_SUBMENU},
 		{"About",0,showAbout},

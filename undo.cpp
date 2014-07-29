@@ -342,3 +342,56 @@ void pushPaletteEntry(uint32_t id){
 		break;
 	}
 }
+static Fl_Window * win;
+static void closeHistory(Fl_Widget*,void*){
+	win->hide();
+}
+void historyWindow(Fl_Widget*,void*){
+	win=new Fl_Window(350,450,"History");
+	win->begin();
+	Fl_Button * Close=new Fl_Button(143,418,64,24,"Close");
+	Close->callback(closeHistory);
+	Fl_Browser*hist=new Fl_Browser(8,32,336,386);
+	char tmp[2048];
+	snprintf(tmp,2048,"%d items sorted from oldest to newest\nPosition selected",amount);
+	hist->copy_label(tmp);
+	hist->align(FL_ALIGN_TOP);
+	for(unsigned n=0;n<amount;++n){
+		struct undoEvent*uptr=undoBuf+n;
+		switch(uptr->type){
+			case uTile:
+				{struct undoTile*ut=(struct undoTile*)uptr->ptr;
+				snprintf(tmp,2048,"Change tile %d",ut->id);
+				}
+			break;
+			case uTilePixel:
+				{struct undoTilePixel*ut=(struct undoTilePixel*)uptr->ptr;
+				snprintf(tmp,2048,"Edit tile pixel X: %d Y: %d",ut->x,ut->y);
+				}
+			break;
+			case uTileAll:
+				{struct undoTileAll*ut=(struct undoTileAll*)uptr->ptr;
+				snprintf(tmp,2048,"Change all tiles amount: %d",ut->amt);
+				}
+			break;
+			case uPalette:
+				strcpy(tmp,"Change entire palette");
+			break;
+			case uPaletteEntry:
+				{struct undoPaletteEntry*up=(struct undoPaletteEntry*)uptr->ptr;
+				snprintf(tmp,2048,"Change palette entry: %d",up->id);
+				}
+			break;
+			default:
+				snprintf(tmp,2048,"TODO unhandled %d",uptr->type);
+		}
+		hist->add(tmp);
+	}
+	hist->select(pos+1);
+	win->end();
+	win->set_modal();
+	win->show();
+	while(win->shown())
+		Fl::wait();
+	delete win;
+}

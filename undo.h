@@ -25,8 +25,13 @@ enum undoTypes_t{
 	uTilemapResize,
 	uPalette,
 	uPaletteEntry,
+	uChunk,
+	uChunkAll,
+	uChunkEdit,
+	uChunkResize,
 	uSwitchSys,
-	uSwitchPrj
+	uSwitchPrj,//No struct reuses ptr
+	uLoadPrj
 };
 enum tileTypeMask_t{
 	tTypeTile=1,
@@ -74,7 +79,7 @@ struct undoPaletteEntry{
 };
 void showMemUsageUndo(Fl_Widget*,void*);
 void UndoRedo(bool redo);
-void historyWindow(void);//Controls settings and shows history
+void historyWindow(Fl_Widget*,void*);//Controls settings and shows history
 void pushTile(uint32_t id,tileTypeMask_t type);
 void pushTilePixel(uint32_t id,uint32_t x,uint32_t y,tileTypeMask_t type);
 void pushTilesAll(tileTypeMask_t type);
