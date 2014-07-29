@@ -55,11 +55,14 @@ static void pushEventPrepare(void){
 	resizeArray(++amount);
 }
 void popUndoRedo(bool redo){
-	printf("Pos: %d\n",pos);
+	if((pos<0)&&(!redo))
+		return;
 	if(!amount)
 		return;
-	if(redo&&(pos>=amount))
+	if(redo&&(pos>=int_fast32_t(amount)))
 		return;
+	if(redo&&(pos<=int_fast32_t(amount)))
+		++pos;
 	struct undoEvent*uptr=undoBuf+pos;
 	switch(uptr->type){
 		case uTile:
@@ -114,12 +117,8 @@ void popUndoRedo(bool redo){
 		break;
 
 	}
-	if(redo)
-		++pos;
-	else{
-		if(pos)
-			--pos;
-	}
+	if(!redo)
+		--pos;
 	window->redraw();
 }
 void pushTile(uint32_t id,tileTypeMask_t type){
