@@ -1,6 +1,8 @@
 Most recent changes are placed at the top
 
 20140729
+Fixed a bug where when switching tabs incorect tile may be drawn
+Added more support for undoing changes to tiles
 Added undo history window
 Added append chunk button
 Added undoing for tile pixel edits

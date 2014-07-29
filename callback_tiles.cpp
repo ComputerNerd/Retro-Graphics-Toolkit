@@ -19,8 +19,7 @@
 #include "tilemap.h"
 #include "undo.h"
 void delete_tile_at_location(Fl_Widget*, void* row){
-	/* this function will delete the tile that the user has selected
-	   remeber both current_tile and tiles_amount are counting from zero that means that a value of zero means one tile */
+	/* this function will delete the tile that the user has selected */
 	currentProject->tileC->remove_tile_at(currentProject->tileC->current_tile);
 	window->redraw();
 }
@@ -38,6 +37,7 @@ void update_truecolor(Fl_Widget* o,void* v){
 }
 void blank_tile(Fl_Widget*,void*){
 	//this will fill the current tile with zeros
+	pushTile(currentProject->tileC->current_tile,tTypeBoth);
 	currentProject->tileC->blank_tile(currentProject->tileC->current_tile);
 	window->damage(FL_DAMAGE_USER1);
 }

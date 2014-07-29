@@ -31,9 +31,11 @@ void set_mode_tabs(Fl_Widget* o, void*){
 		mode_editor=pal_edit;
 		palEdit.updateSlider();
 	}else if (val==window->TabsMain[tile_edit]){
+		currentProject->tileC->current_tile=window->tile_select->value();
 		mode_editor=tile_edit;
 		tileEdit_pal.updateSlider();
 	}else if (val==window->TabsMain[tile_place]){
+		currentProject->tileC->current_tile=window->tile_select_2->value();
 		mode_editor=tile_place;
 		tileMap_pal.updateSlider();
 	}else if(val==window->TabsMain[chunkEditor]){
