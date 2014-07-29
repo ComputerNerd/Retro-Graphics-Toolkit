@@ -127,7 +127,7 @@ void popUndoRedo(bool redo){
 			tileEdit_pal.updateSlider();
 			tileMap_pal.updateSlider();
 		break;
-		case uPaletteEntry://old=new-delta new=old+delta
+		case uPaletteEntry:
 			{struct undoPaletteEntry*up=(struct undoPaletteEntry*)uptr->ptr;
 			switch(currentProject->gameSystem){
 				case sega_genesis:
@@ -157,10 +157,26 @@ void popUndoRedo(bool redo){
 				case tile_edit:
 					tileEdit_pal.box_sel=up->id%palEdit.perRow;
 					tileEdit_pal.changeRow(up->id/tileEdit_pal.perRow);
+					{unsigned focus=0;
+					for(unsigned i=0;i<4;++i)
+						focus|=Fl::focus()==window->palRTE[i];
+					for(unsigned i=0;i<4;++i){
+						if(focus&&(i==tileEdit_pal.theRow))
+							Fl::focus(window->palRTE[i]);
+						window->palRTE[i]->value(i==tileEdit_pal.theRow);
+					}}
 				break;
 				case tile_place:
 					tileMap_pal.box_sel=up->id%tileMap_pal.perRow;
 					tileMap_pal.changeRow(up->id/tileMap_pal.perRow);
+					{unsigned focus=0;
+					for(unsigned i=0;i<4;++i)
+						focus|=Fl::focus()==window->palRTE[i+4];
+					for(unsigned i=0;i<4;++i){
+						if(focus&&(i==tileMap_pal.theRow))
+							Fl::focus(window->palRTE[i+4]);
+						window->palRTE[i+4]->value(i==tileMap_pal.theRow);
+					}}
 				break;
 			}}
 		break;

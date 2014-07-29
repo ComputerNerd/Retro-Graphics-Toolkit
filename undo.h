@@ -35,7 +35,7 @@ enum tileTypeMask_t{
 };
 struct undoEvent{//This struct mearly holds which type of undo this is
 	undoTypes_t type;
-	void*ptr;//Can also be reused for information for example appendTile will store tile id if doing so limit yourself to 32bit values.
+	void*ptr;//Can also be reused for information for example appendTile will store tile id if doing so limit yourself to 32bit values. Even if void* is 64bit on your system
 };
 struct undoTile{//The purpose of this struct if to completly undo a tile
 	tileTypeMask_t type;
@@ -50,14 +50,14 @@ struct undoTileGroup{//Easily make changes to countigous tiles
 };
 struct undoTilePixel{
 	tileTypeMask_t type;
-	uint32_t id,x,y,val;
+	uint32_t id,x,y,val,valnew;
 };
 struct undoTilemap{//For undoing the entire tilemap
 	uint32_t w,h;//The width and height
 	void*ptr;//Points to tilemap data that is w*h*4 bytes
 };
 struct undoTilemapEdit{
-	uint32_t x,y,val;
+	uint32_t x,y,val,valnew;
 };
 struct undoTilemapResize{
 	uint32_t w,h;//Old width and height

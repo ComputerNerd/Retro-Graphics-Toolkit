@@ -159,6 +159,10 @@ void update_palette(Fl_Widget* o, void* v){
 				temp_entry=tileMap_pal.box_sel+(tileMap_pal.theRow*4);
 			break;
 		}
+		if(pushed_g){
+			pushed_g=0;
+			pushPaletteEntry(temp_entry);
+		}
 		switch ((uintptr_t)v){
 			/*
 			76543210
@@ -178,14 +182,6 @@ void update_palette(Fl_Widget* o, void* v){
 				pal&=15;
 				pal|=((uint8_t)s->value())<<4;
 			break;
-			default://I am not sure why I include a default error handeler the chances of this happening are pretty much zero
-				show_default_error
-				return;
-			break;
-		}
-		if(pushed_g){
-			pushed_g=0;
-			pushPaletteEntry(temp_entry);
 		}
 		currentProject->palDat[temp_entry]=pal;
 		rgb_out=MakeRGBcolor(pal);

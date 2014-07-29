@@ -253,25 +253,25 @@ void editor::_editor(){
 			//stuff realed to this group should go here
 			{ Fl_Group* o = new Fl_Group(0, 0, 800, 567);
 				{
-					Fl_Round_Button* o = new Fl_Round_Button(384, default_palette_bar_offset_y+40, 56, 32, "Row 0");
-					o->type(FL_RADIO_BUTTON);
-					o->set();
-					o->callback((Fl_Callback*) set_tile_row,(void *)0);
+					palRTE[0] = new Fl_Round_Button(384, default_palette_bar_offset_y+40, 56, 32, "Row 0");
+					palRTE[0]->type(FL_RADIO_BUTTON);
+					palRTE[0]->set();
+					palRTE[0]->callback((Fl_Callback*) set_tile_row,(void *)0);
 				} // Fl_Round_Button* o
 				{
-					Fl_Round_Button* o = new Fl_Round_Button(448, default_palette_bar_offset_y+40, 56, 32, "Row 1");
-					o->type(FL_RADIO_BUTTON);
-					o->callback((Fl_Callback*) set_tile_row,(void *)1);
+					palRTE[1] = new Fl_Round_Button(448, default_palette_bar_offset_y+40, 56, 32, "Row 1");
+					palRTE[1]->type(FL_RADIO_BUTTON);
+					palRTE[1]->callback((Fl_Callback*) set_tile_row,(void *)1);
 				} // Fl_Round_Button* o
 				{
-					Fl_Round_Button* o = new Fl_Round_Button(512, default_palette_bar_offset_y+40, 56, 32, "Row 2");
-					o->type(FL_RADIO_BUTTON);
-					o->callback((Fl_Callback*) set_tile_row,(void *)2);
+					palRTE[2] = new Fl_Round_Button(512, default_palette_bar_offset_y+40, 56, 32, "Row 2");
+					palRTE[2]->type(FL_RADIO_BUTTON);
+					palRTE[2]->callback((Fl_Callback*) set_tile_row,(void *)2);
 				} // Fl_Round_Button* o
 				{
-					Fl_Round_Button* o = new Fl_Round_Button(576, default_palette_bar_offset_y+40, 56, 32, "Row 3");
-					o->type(FL_RADIO_BUTTON);
-					o->callback((Fl_Callback*) set_tile_row,(void *)3);
+					palRTE[3] = new Fl_Round_Button(576, default_palette_bar_offset_y+40, 56, 32, "Row 3");
+					palRTE[3]->type(FL_RADIO_BUTTON);
+					palRTE[3]->callback((Fl_Callback*) set_tile_row,(void *)3);
 				} // Fl_Round_Button* o
 			o->end();
 			} // Fl_Group* o
@@ -359,25 +359,25 @@ void editor::_editor(){
 			{
 				Fl_Group* o = new Fl_Group(tile_place_buttons_x_off, 192, 60, 128);
 				{
-					palRTE[0] = new Fl_Round_Button(tile_place_buttons_x_off, 192, 60, 28, "Row 0");
-					palRTE[0]->type(FL_RADIO_BUTTON);
-					palRTE[0]->set();
-					palRTE[0]->callback((Fl_Callback*) set_tile_row,(void *)0);
+					palRTE[4] = new Fl_Round_Button(tile_place_buttons_x_off, 192, 60, 28, "Row 0");
+					palRTE[4]->type(FL_RADIO_BUTTON);
+					palRTE[4]->set();
+					palRTE[4]->callback((Fl_Callback*) set_tile_row,(void *)0);
 				} // Fl_Round_Button* o
 				{
-					palRTE[1] = new Fl_Round_Button(tile_place_buttons_x_off, 220, 60, 28, "Row 1");
-					palRTE[1]->type(FL_RADIO_BUTTON);
-					palRTE[1]->callback((Fl_Callback*) set_tile_row,(void *)1);
+					palRTE[5] = new Fl_Round_Button(tile_place_buttons_x_off, 220, 60, 28, "Row 1");
+					palRTE[5]->type(FL_RADIO_BUTTON);
+					palRTE[5]->callback((Fl_Callback*) set_tile_row,(void *)1);
 				} // Fl_Round_Button* o
 				{
-					palRTE[2] = new Fl_Round_Button(tile_place_buttons_x_off, 248, 60, 28, "Row 2");
-					palRTE[2]->type(FL_RADIO_BUTTON);
-					palRTE[2]->callback((Fl_Callback*) set_tile_row,(void *)2);
+					palRTE[6] = new Fl_Round_Button(tile_place_buttons_x_off, 248, 60, 28, "Row 2");
+					palRTE[6]->type(FL_RADIO_BUTTON);
+					palRTE[6]->callback((Fl_Callback*) set_tile_row,(void *)2);
 				} // Fl_Round_Button* o
 				{
-					palRTE[3] = new Fl_Round_Button(tile_place_buttons_x_off, 276, 60, 28, "Row 3");
-					palRTE[3]->type(FL_RADIO_BUTTON);
-					palRTE[3]->callback((Fl_Callback*) set_tile_row,(void *)3);
+					palRTE[7] = new Fl_Round_Button(tile_place_buttons_x_off, 276, 60, 28, "Row 3");
+					palRTE[7]->type(FL_RADIO_BUTTON);
+					palRTE[7]->callback((Fl_Callback*) set_tile_row,(void *)3);
 				} // Fl_Round_Button* o
 				o->end();
 			} // Fl_Group* o

@@ -356,7 +356,7 @@ int editor::handle(int event){
 								uint8_t Rm=currentProject->tileMapC->get_palette_map(temp_one,temp_two);
 								tileMap_pal.changeRow(Rm);
 								for(int as=0;as<4;++as)
-									palRTE[as]->value(as==Rm);
+									palRTE[as+4]->value(as==Rm);
 								setXYdispBlock(temp_one,temp_two);
 								redraw();
 							}
