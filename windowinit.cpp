@@ -546,6 +546,9 @@ void editor::_editor(){
 			cordDisp[1]=new Fl_Box(tile_place_buttons_x_off,556,128,64);
 			cordDisp[1]->labelsize(12);
 
+			{ Fl_Button *o = new Fl_Button(tile_place_buttons_x_off,364, 112, 32, "Append Chunk");
+				o->callback(appendChunkCB);
+			}
 			updateChunkSizeSliders();
 
 			TabsMain[chunkEditor]->end();

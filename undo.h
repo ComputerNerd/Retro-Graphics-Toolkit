@@ -16,9 +16,10 @@
 #pragma once
 enum undoTypes_t{
 	uTile=0,
-	uTileGroup,
+	uTileAll,
 	uTilePixel,
-	uTileAppend,
+	uTileAppend,//No struct reuses ptr
+	uTileNew,//No struct reuses ptr
 	uTilemap,
 	uTilemapEdit,
 	uTilemapResize,
@@ -43,11 +44,11 @@ struct undoTile{//The purpose of this struct if to completly undo a tile
 	void*ptrnew;
 	void*ptr;//when type is both first the truecolor tile will be stored then the regular tile
 };
-struct undoTileGroup{//Easily make changes to countigous tiles
+struct undoTileAll{
 	tileTypeMask_t type;
-	bool all;//Is this all the tiles that there are
-	uint32_t start,finish;// [start,finish]
+	uint32_t amt,amtnew;
 	void*ptr;
+	void*ptrnew;
 };
 struct undoTilePixel{
 	tileTypeMask_t type;

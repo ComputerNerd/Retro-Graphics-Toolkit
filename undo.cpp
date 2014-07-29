@@ -281,6 +281,28 @@ void pushTilePixel(uint32_t id,uint32_t x,uint32_t y,tileTypeMask_t type){
 	else
 		ut->val=currentProject->tileC->getPixel(id,x,y);
 }
+static void cpyAllTiles(uint8_t*ptr,tileTypeMask_t type){
+	if(type&tTypeTile){
+		memcpy(ptr,currentProject->tileC->tDat.data(),currentProject->tileC->amt*currentProject->tileC->tileSize);
+		ptr+=currentProject->tileC->amt*currentProject->tileC->tileSize;
+	}
+	if(type&tTypeTruecolor)
+		memcpy(ptr,currentProject->tileC->truetDat.data(),currentProject->tileC->amt*currentProject->tileC->tcSize);
+}
+void pushTilesAll(tileTypeMask_t type){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uTileAll;
+	uptr->ptr=malloc(sizeof(struct undoTileAll));
+	memUsed+=sizeof(struct undoTileAll);
+	struct undoTileAll*ut=(struct undoTileAll*)uptr->ptr;
+	ut->amt=currentProject->tileC->amt;
+	unsigned sz=getSzTile(type)*ut->amt;
+	ut->ptr=malloc(sz);
+	memUsed+=sz;
+	ut->type=type;
+	cpyAllTiles((uint8_t*)ut->ptr,type);
+}
 void pushPaletteAll(void){
 	pushEventPrepare();
 	struct undoEvent*uptr=undoBuf+pos;
