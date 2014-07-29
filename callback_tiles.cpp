@@ -17,6 +17,7 @@
 #include "global.h"
 #include "class_global.h"
 #include "tilemap.h"
+#include "undo.h"
 void delete_tile_at_location(Fl_Widget*, void* row){
 	/* this function will delete the tile that the user has selected
 	   remeber both current_tile and tiles_amount are counting from zero that means that a value of zero means one tile */
@@ -65,6 +66,9 @@ void update_all_tiles(Fl_Widget*,void*){
 		sel_pal=tileEdit_pal.theRow;
 	if (currentProject->tileC->amt>=63)
 		putchar('\n');
+
+	pushTilesAll(tTypeTile);
+
 	for (uint32_t x=0;x<currentProject->tileC->amt;++x) {
 		currentProject->tileC->truecolor_to_tile(sel_pal,x);
 		if ((!(x&63))&&x)

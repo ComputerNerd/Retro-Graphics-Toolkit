@@ -59,11 +59,23 @@ static void cleanupEvent(uint32_t id){
 			if(ut->ptrnew){
 				free(ut->ptrnew);
 				memUsed-=sz;
-			}}
+			}
+			memUsed-=sizeof(struct undoTile);}
 		break;
 		case uTilePixel:
 			free(uptr->ptr);
 			memUsed-=sizeof(struct undoTilePixel);
+		break;
+		case uTileAll:
+			{struct undoTileAll*ut=(struct undoTileAll*)uptr->ptr;
+			unsigned sz=getSzTile(ut->type)*currentProject->tileC->amt;
+			free(ut->ptr);
+			memUsed-=sz;
+			if(ut->ptrnew){
+				free(ut->ptrnew);
+				memUsed-=sz;
+			}
+			memUsed-=sizeof(struct undoTileAll);}
 		break;
 		case uPalette:
 			{struct undoPalette*up=(struct undoPalette*)uptr->ptr;
@@ -119,6 +131,26 @@ static void tilesToU(uint8_t*ptr,uint32_t id,tileTypeMask_t type){
 	if(type&tTypeTruecolor)
 		memcpy(currentProject->tileC->truetDat.data()+(id*currentProject->tileC->tcSize),ptr,currentProject->tileC->tcSize);
 }
+static void cpyAllTiles(uint8_t*ptr,unsigned amt,tileTypeMask_t type){
+	if(type&tTypeTile){
+		memcpy(ptr,currentProject->tileC->tDat.data(),amt*currentProject->tileC->tileSize);
+		ptr+=amt*currentProject->tileC->tileSize;
+	}
+	if(type&tTypeTruecolor)
+		memcpy(ptr,currentProject->tileC->truetDat.data(),amt*currentProject->tileC->tcSize);
+}
+static void cpyAllTilesU(uint8_t*ptr,unsigned amt,tileTypeMask_t type){
+	if(amt!=currentProject->tileC->amt){
+		currentProject->tileC->resizeAmt(amt);
+		updateTileSelectAmt();
+	}
+	if(type&tTypeTile){
+		memcpy(currentProject->tileC->tDat.data(),ptr,amt*currentProject->tileC->tileSize);
+		ptr+=amt*currentProject->tileC->tileSize;
+	}
+	if(type&tTypeTruecolor)
+		memcpy(currentProject->tileC->truetDat.data(),ptr,amt*currentProject->tileC->tcSize);
+}
 void UndoRedo(bool redo){
 	if((pos<0)&&(!redo))
 		return;
@@ -160,6 +192,21 @@ void UndoRedo(bool redo){
 					ut->valnew=currentProject->tileC->getPixel(ut->id,ut->x,ut->y);
 					currentProject->tileC->setPixel(ut->id,ut->x,ut->y,ut->val);
 				}
+			}}
+		break;
+		case uTileAll:
+			{struct undoTileAll*ut=(struct undoTileAll*)uptr->ptr;
+			if(redo)
+				cpyAllTilesU((uint8_t*)ut->ptrnew,ut->amtnew,ut->type);
+			else{
+				if(!ut->ptrnew){
+					ut->amtnew=currentProject->tileC->amt;
+					unsigned sz=getSzTile(ut->type)*ut->amtnew;
+					ut->ptrnew=malloc(sz);
+					memUsed+=sz;
+				}
+				cpyAllTiles((uint8_t*)ut->ptrnew,ut->amtnew,ut->type);
+				cpyAllTilesU((uint8_t*)ut->ptr,ut->amt,ut->type);
 			}}
 		break;
 		case uPalette:
@@ -281,14 +328,6 @@ void pushTilePixel(uint32_t id,uint32_t x,uint32_t y,tileTypeMask_t type){
 	else
 		ut->val=currentProject->tileC->getPixel(id,x,y);
 }
-static void cpyAllTiles(uint8_t*ptr,tileTypeMask_t type){
-	if(type&tTypeTile){
-		memcpy(ptr,currentProject->tileC->tDat.data(),currentProject->tileC->amt*currentProject->tileC->tileSize);
-		ptr+=currentProject->tileC->amt*currentProject->tileC->tileSize;
-	}
-	if(type&tTypeTruecolor)
-		memcpy(ptr,currentProject->tileC->truetDat.data(),currentProject->tileC->amt*currentProject->tileC->tcSize);
-}
 void pushTilesAll(tileTypeMask_t type){
 	pushEventPrepare();
 	struct undoEvent*uptr=undoBuf+pos;
@@ -301,7 +340,8 @@ void pushTilesAll(tileTypeMask_t type){
 	ut->ptr=malloc(sz);
 	memUsed+=sz;
 	ut->type=type;
-	cpyAllTiles((uint8_t*)ut->ptr,type);
+	ut->ptrnew=0;
+	cpyAllTiles((uint8_t*)ut->ptr,ut->amt,type);
 }
 void pushPaletteAll(void){
 	pushEventPrepare();

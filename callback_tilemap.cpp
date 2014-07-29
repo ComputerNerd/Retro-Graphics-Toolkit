@@ -19,6 +19,7 @@
 #include "dither.h"
 #include "callback_chunk.h"
 #include "callbacksprites.h"
+#include "undo.h"
 void tileDPicker(Fl_Widget*,void*){
 	Fl_Window *win;
 	Fl_Progress *progress;
@@ -191,6 +192,9 @@ void dither_tilemap_as_image(Fl_Widget*,void*sprite){
 	image = (uint8_t *)malloc(w*h*4);
 	if (!image)
 		show_malloc_error(w*h*4)
+
+		pushTilesAll(tTypeTile);
+
 	if(method==1){
 		if(isSprite){
 			tileMap*spriteMap=new tileMap(w/currentProject->tileC->sizew,h/currentProject->tileC->sizeh);
@@ -223,7 +227,6 @@ void dither_tilemap_as_image(Fl_Widget*,void*sprite){
 			currentProject->tileMapC->truecolorimageToTiles(image,rowz);
 		}
 	}
-	puts("Done with image");
 	window->damage(FL_DAMAGE_USER1);
 	Fl::check();
 	free(image);
@@ -282,6 +285,9 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 			return;
 		}else
 			printf("Image depth %d\n",loaded_image->d());
+
+		pushTilesAll(tTypeBoth);
+
 		if(!over){
 			currentProject->tileC->resizeAmt(w8*h8);
 			updateTileSelectAmt();

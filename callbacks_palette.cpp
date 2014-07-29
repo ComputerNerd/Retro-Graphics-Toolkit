@@ -114,7 +114,7 @@ void update_palette(Fl_Widget* o, void* v){
 				temp_entry=tileMap_pal.box_sel+(tileMap_pal.theRow*16);
 			break;
 		}
-		if(pushed_g){
+		if(pushed_g||(Fl::event()==FL_KEYDOWN)){
 			pushed_g=0;
 			pushPaletteEntry(temp_entry);
 		}
@@ -159,7 +159,7 @@ void update_palette(Fl_Widget* o, void* v){
 				temp_entry=tileMap_pal.box_sel+(tileMap_pal.theRow*4);
 			break;
 		}
-		if(pushed_g){
+		if(pushed_g||(Fl::event()==FL_KEYDOWN)){
 			pushed_g=0;
 			pushPaletteEntry(temp_entry);
 		}
