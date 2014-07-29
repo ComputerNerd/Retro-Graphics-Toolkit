@@ -42,7 +42,6 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,int type,const char*comme
 	char endc=',';
 	std::string temp;
 	unsigned mask=(bits/8)-1;
-	char tmp[16];
 	if(mask){
 		if(sizeBin&mask){
 			fl_alert("Error filetype unaligned to %d bits",bits);
@@ -79,8 +78,7 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,int type,const char*comme
 	switch(type){
 		case 1:
 			temp.append("const uint");
-			snprintf(tmp,16,"%d",bits);
-			temp.append(tmp);
+			temp+=std::to_string(bits);
 			temp.append("_t ");
 			temp.append(label);
 			temp.append("[]={");
@@ -131,16 +129,15 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,int type,const char*comme
 			endc='\n';
 		switch(bits){
 			case 8:
-				snprintf(tmp,16,"%u",*dat8++);
+				temp+=std::to_string(*dat8++);
 			break;
 			case 16:
-				snprintf(tmp,16,"%u",*dat16++);
+				temp+=std::to_string(*dat16++);
 			break;
 			case 32:
-				snprintf(tmp,16,"%u",*dat32++);
+				temp+=std::to_string(*dat32++);
 			break;
 		}
-		temp.append(tmp);
 		if(endc)
 			temp.push_back(endc);
 	}
