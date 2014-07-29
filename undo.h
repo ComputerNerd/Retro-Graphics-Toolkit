@@ -66,6 +66,7 @@ struct undoTilemapResize{
 struct undoPaletteEntry{
 	uint32_t id,val,valnew;
 };
+void showMemUsageUndo(Fl_Widget*,void*);
 void popUndoRedo(bool redo);
 void historyWindow(void);//Controls settings and shows history
 void pushTile(uint32_t id,tileTypeMask_t type);

@@ -24,6 +24,7 @@
 #include "callback_chunk.h"
 #include "callbacksprites.h"
 #include "undocallback.h"
+#include "undo.h"
 void set_mode_tabs(Fl_Widget* o, void*){
 	Fl_Group * val=(Fl_Group*)(Fl_Tabs*)window->the_tabs->value();
 	if (val==window->TabsMain[pal_edit]){
@@ -117,6 +118,7 @@ static const Fl_Menu_Item menuEditor[]={
 	{"Undo/Redo",0, 0, 0, FL_SUBMENU},
 		{"Undo",FL_CTRL+'z',undoCB},
 		{"Redo",FL_CTRL+'y',redoCB},
+		{"Show estimated ram usage",0,showMemUsageUndo},
 		{0},
 	{"Help",0, 0, 0, FL_SUBMENU},
 		{"About",0,showAbout},

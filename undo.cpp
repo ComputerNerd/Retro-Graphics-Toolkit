@@ -23,6 +23,9 @@ static uint_fast32_t amount;
 static uint_fast32_t memUsed;
 static uint_fast32_t maxMen=16*1024*1024;//Limit undo buffer to 16Mb this is better than limiting by depth as each item varies in size
 static int_fast32_t pos=-1;
+void showMemUsageUndo(Fl_Widget*,void*){
+	fl_alert("The undo stack currently uses %d bytes of ram not including any overhead\nAmount of items %d",memUsed,amount);
+}
 static void resizeArray(uint32_t amt){
 	if(undoBuf){
 		if(amt)
@@ -35,24 +38,27 @@ static void resizeArray(uint32_t amt){
 		if(amt)
 			undoBuf=(struct undoEvent*)malloc(amt*sizeof(struct undoEvent));
 	}
-	memUsed+=sizeof(struct undoEvent);
 }
 static void cleanupEvent(uint32_t id){
 	struct undoEvent*uptr=undoBuf+id;
 	switch(uptr->type){
 		case uPaletteEntry:
 			free(uptr->ptr);
+			memUsed-=sizeof(struct undoPaletteEntry);
 		break;
 	}
 }
 static void pushEventPrepare(void){
 	++pos;
 	if((pos<=amount)&&amount){
-		for(uint_fast32_t i=pos;i<amount;++i)
+		for(uint_fast32_t i=pos;i<amount;++i){
 			cleanupEvent(i);
+			memUsed-=sizeof(struct undoEvent);
+		}
 	}
 	amount=pos;
 	resizeArray(++amount);
+	memUsed+=sizeof(struct undoEvent);
 }
 void popUndoRedo(bool redo){
 	if((pos<0)&&(!redo))
@@ -109,9 +115,11 @@ void popUndoRedo(bool redo){
 				break;
 				case tile_edit:
 					tileEdit_pal.box_sel=up->id%palEdit.perRow;
+					tileEdit_pal.changeRow(up->id/tileEdit_pal.perRow);
 				break;
 				case tile_place:
 					tileMap_pal.box_sel=up->id%tileMap_pal.perRow;
+					tileMap_pal.changeRow(up->id/tileMap_pal.perRow);
 				break;
 			}}
 		break;

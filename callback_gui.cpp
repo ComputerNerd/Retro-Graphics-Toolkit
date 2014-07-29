@@ -18,11 +18,21 @@
 #include "color_compare.h"
 #include "color_convert.h"
 #include "system.h"
+static const char* GPLv3="This program is free software: you can redistribute it and/or modify\n"
+	"it under the terms of the GNU General Public License as published by\n"
+	"the Free Software Foundation, either version 3 of the License, or\n"
+	"(at your option) any later version.\n\n"
+	"This program is distributed in the hope that it will be useful,\n"
+	"but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+	"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+	"GNU General Public License for more details.\n\n"
+	"You should have received a copy of the GNU General Public License\n"
+	"along with this program.  If not, see <http://www.gnu.org/licenses/>.\n";
 void redrawOnlyCB(Fl_Widget*, void*){
 	window->redraw();
 }
 void showAbout(Fl_Widget*,void*){
-	fl_alert("Retro Graphics Toolkit is written by sega16/nintendo8/sonic master or whatever username you know me as\nThis program was built on %s %s\n",__DATE__,__TIME__);
+	fl_alert("Retro Graphics Toolkit is written by sega16/nintendo8/sonic master or whatever username you know me as\nThis program was built on %s %s\n\n%s",__DATE__,__TIME__,GPLv3);
 }
 void set_game_system(Fl_Widget*,void* selection){
 	uint32_t sel=(uintptr_t)selection;

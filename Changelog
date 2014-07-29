@@ -1,6 +1,7 @@
 Most recent changes are placed at the top
 
 20140728
+Added GPL text to about box
 Added undoing and redoing palette
 Fixed a bug where loading a project using blocks would not change the slider text
 Internal changes regarding chunks the user will not notice this
