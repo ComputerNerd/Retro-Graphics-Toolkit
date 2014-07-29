@@ -22,6 +22,24 @@
 uint8_t nespaltab_r[64];
 uint8_t nespaltab_g[64];
 uint8_t nespaltab_b[64];
+void updateRGBindex(unsigned index){
+	switch(currentProject->gameSystem){
+		case sega_genesis:
+			{uint16_t*ptr=(uint16_t*)currentProject->palDat+index;
+			currentProject->rgbPal[index*3+2]=palTab[((*ptr>>1)&7)+palTypeGen];//Blue note that bit shifting is different due to little endian
+			currentProject->rgbPal[index*3+1]=palTab[((*ptr>>13)&7)+palTypeGen];//Green
+			currentProject->rgbPal[index*3]=palTab[((*ptr>>9)&7)+palTypeGen];//Red
+			}
+		break;
+		case NES:
+			{uint32_t rgb_out=MakeRGBcolor(currentProject->palDat[index]);
+			currentProject->rgbPal[index*3+2]=rgb_out&255;//blue
+			currentProject->rgbPal[index*3+1]=(rgb_out>>8)&255;//green
+			currentProject->rgbPal[index*3]=(rgb_out>>16)&255;//red
+			}
+		break;
+	}
+}
 static inline uint32_t sq(uint32_t x){
 	return x*x;
 }

@@ -338,7 +338,8 @@ void entryToRgb(Fl_Widget*,void*){
 	window->redraw();
 }
 void clearPalette(Fl_Widget*,void*){
-	if (fl_ask("This will set all colors to 0 are you sure you want to do this?")){
+	if(fl_ask("This will set all colors to 0 are you sure you want to do this?\nYou can undo this by pressing pressing CTRL+Z")){
+		pushPaletteAll();
 		memset(currentProject->palDat,0,128);
 		memset(currentProject->rgbPal,0,192);
 		window->damage(FL_DAMAGE_USER1);

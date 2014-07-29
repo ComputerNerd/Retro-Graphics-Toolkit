@@ -25,6 +25,7 @@
 #include "palette.h"
 #include "wu.h"
 #include "callbacksprites.h"
+#include "undo.h"
 static double max3(double a,double b,double c){
 	if ((a > b) && (a > c))
 		return a;
@@ -835,6 +836,7 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	yuv=MenuPopup("Color space selection","What color space would you like to use?",3,"rgb","yuv","YCbCr");
 	if(yuv<0)
 		return;
+	pushPaletteAll();//Save the old palette
 	Fl_Window *win;
 	Fl_Progress *progress;
 	win = new Fl_Window(400,45,"Progress");		// access parent window

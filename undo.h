@@ -44,6 +44,7 @@ struct undoTile{//The purpose of this struct if to completly undo a tile
 };
 struct undoTileGroup{//Easily make changes to countigous tiles
 	tileTypeMask_t type;
+	bool all;//Is this all the tiles that there are
 	uint32_t start,finish;// [start,finish]
 	void*ptr;
 };
@@ -62,7 +63,10 @@ struct undoTilemapResize{
 	uint32_t w,h;//Old width and height
 	void*ptr;//Contains a pointer ONLY TO LOST DATA if the tilemap was made bigger this will be NULL
 };
-//There is no struct for undo Palette the undoEvent struct will just point to the old data
+struct undoPalette{
+	void*ptr;
+	void*ptrnew;
+};
 struct undoPaletteEntry{
 	uint32_t id,val,valnew;
 };

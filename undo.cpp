@@ -18,6 +18,7 @@
 #include "system.h"
 #include "project.h"
 #include "undo.h"
+#include "color_convert.h"
 static struct undoEvent*undoBuf;
 static uint_fast32_t amount;
 static uint_fast32_t memUsed;
@@ -42,6 +43,26 @@ static void resizeArray(uint32_t amt){
 static void cleanupEvent(uint32_t id){
 	struct undoEvent*uptr=undoBuf+id;
 	switch(uptr->type){
+		case uPalette:
+			{struct undoPalette*up=(struct undoPalette*)uptr->ptr;
+			unsigned sz;
+			switch(currentProject->gameSystem){
+				case sega_genesis:
+					sz=128;
+				break;
+				case NES:
+					sz=16;
+				break;
+			}
+			free(up->ptr);
+			memUsed-=sz;
+			if(up->ptrnew){
+				free(up->ptrnew);
+				memUsed-=sz;
+			}
+			free(uptr->ptr);
+			memUsed-=sizeof(struct undoPalette);}
+		break;
 		case uPaletteEntry:
 			free(uptr->ptr);
 			memUsed-=sizeof(struct undoPaletteEntry);
@@ -77,6 +98,35 @@ void popUndoRedo(bool redo){
 
 			}}
 		break;
+		case uPalette:
+			{struct undoPalette*up=(struct undoPalette*)uptr->ptr;
+			unsigned sz,el;
+			switch(currentProject->gameSystem){
+				case sega_genesis:
+					sz=128;
+					el=64;
+				break;
+				case NES:
+					el=sz=16;
+				break;
+			}
+			if(redo)
+				memcpy(currentProject->palDat,up->ptrnew,sz);
+			else{
+				if(!up->ptrnew){
+					up->ptrnew=malloc(sz);
+					memUsed+=sz;
+				}
+				memcpy(up->ptrnew,currentProject->palDat,sz);
+				memcpy(currentProject->palDat,up->ptr,sz);
+			}
+			for(unsigned i=0;i<el;++i)
+				updateRGBindex(i);
+			}
+			palEdit.updateSlider();
+			tileEdit_pal.updateSlider();
+			tileMap_pal.updateSlider();
+		break;
 		case uPaletteEntry://old=new-delta new=old+delta
 			{struct undoPaletteEntry*up=(struct undoPaletteEntry*)uptr->ptr;
 			switch(currentProject->gameSystem){
@@ -87,12 +137,7 @@ void popUndoRedo(bool redo){
 					else{
 						up->valnew=*ptr;
 						*ptr=up->val;
-					}
-					//printf("R: %d G: %d B: %d\n",(*ptr>>9)&7,(*ptr>>13)&7,(*ptr>>1)&1);
-					currentProject->rgbPal[up->id*3+2]=palTab[((*ptr>>1)&7)+palTypeGen];//Blue note that bit shifting is different due to little endian
-					currentProject->rgbPal[up->id*3+1]=palTab[((*ptr>>13)&7)+palTypeGen];//Green
-					currentProject->rgbPal[up->id*3]=palTab[((*ptr>>9)&7)+palTypeGen];//Red
-					}
+					}}
 				break;
 				case NES:
 					if(redo)
@@ -101,13 +146,9 @@ void popUndoRedo(bool redo){
 						up->valnew=currentProject->palDat[up->id];
 						currentProject->palDat[up->id]=up->val;
 					}
-					{uint32_t rgb_out=MakeRGBcolor(currentProject->palDat[up->id]);
-					currentProject->rgbPal[up->id*3+2]=rgb_out&255;//blue
-					currentProject->rgbPal[up->id*3+1]=(rgb_out>>8)&255;//green
-					currentProject->rgbPal[up->id*3]=(rgb_out>>16)&255;//red
-					}
 				break;
 			}
+			updateRGBindex(up->id);
 			switch (mode_editor){
 				case pal_edit:
 					palEdit.box_sel=up->id%palEdit.perRow;
@@ -146,7 +187,27 @@ void pushTile(uint32_t id,tileTypeMask_t type){
 	memUsed+=sz;
 }
 void pushTilePixel(uint32_t tile,uint32_t x,uint32_t y,uint32_t type){
-
+}
+void pushPaletteAll(void){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uPalette;
+	uptr->ptr=malloc(sizeof(struct undoPalette));
+	memUsed+=sizeof(struct undoPalette);
+	struct undoPalette*up=(struct undoPalette*)uptr->ptr;
+	switch(currentProject->gameSystem){
+		case sega_genesis:
+			up->ptr=malloc(128);
+			memcpy(up->ptr,currentProject->palDat,128);
+			memUsed+=128;
+		break;
+		case NES:
+			up->ptr=malloc(16);
+			memcpy(up->ptr,currentProject->palDat,16);
+			memUsed+=16;
+		break;
+	}
+	up->ptrnew=0;
 }
 void pushPaletteEntry(uint32_t id){
 	pushEventPrepare();
