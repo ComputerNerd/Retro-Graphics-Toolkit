@@ -18,6 +18,7 @@
 #include "class_tiles.h"
 #include "dither.h"
 #include "tilemap.h"
+#include "errorMsg.h"
 //tiles tiles_main;
 tiles::tiles(){
 	current_tile=0;
@@ -48,6 +49,96 @@ tiles::tiles(const tiles& other){
 tiles::~tiles(){
 	tDat.clear();
 	truetDat.clear();
+}
+void tiles::setPixel(uint32_t tile,uint32_t x,uint32_t y,uint32_t val){
+	if(x>=sizew)
+		x=sizew-1;
+	if(y>=sizeh)
+		y=sizeh-1;
+	uint8_t*ptr=&tDat[(tile*tileSize)];
+	unsigned bdr,bd;
+	bdr=getBitdepthcurSysraw();
+	bd=bdr+1;
+	unsigned maxp=(1<<bd)-1;
+	if(val>maxp)
+		val=maxp;
+	if((currentProject->gameSystem==NES)&&bdr){//NES stores planar tiles
+		x=7-x;
+		ptr+=y;
+		if(val&1)//First plane
+			*ptr|=1<<x;
+		else
+			*ptr&=~(1<<x);
+		ptr+=8;
+		if(val&2)//First plane
+			*ptr|=1<<x;
+		else
+			*ptr&=~(1<<x);
+	}else{
+		switch(bdr){
+			case 0:
+				x=7-x;
+				ptr+=(y*sizew/8)+(x/8);
+				if(val)
+					*ptr|=1<<x;
+				else
+					*ptr&=~(1<<x);
+			break;
+			case 3:
+				ptr+=((y*sizew)/2)+(x/2);
+				if(x&1){
+					*ptr&=~3;
+					*ptr|=val;
+				}else{
+					*ptr&=~(3<<4);
+					*ptr|=val<<4;
+				}
+			break;
+			default:
+				show_default_error
+		}
+	}
+}
+uint32_t tiles::getPixel(uint32_t tile,uint32_t x,uint32_t y){
+	if(x>=sizew)
+		x=sizew-1;
+	if(y>=sizeh)
+		y=sizeh-1;
+	uint8_t*ptr=&tDat[(tile*tileSize)];
+	unsigned bdr;
+	bdr=getBitdepthcurSysraw();
+	if((currentProject->gameSystem==NES)&&bdr){//NES stores planar tiles
+		x=7-x;
+		ptr+=y;
+		return ((*ptr&(1<<x))>>x)|(((*(ptr+8)&(1<<x))>>x)<<1);
+	}else{
+		switch(bdr){
+			case 0:
+				x=7-x;
+				ptr+=y*sizew/8;
+				return (*ptr&(1<<x))>>x;
+			break;
+			case 3:
+				ptr+=((y*sizew)/2)+(x/2);
+				if(x&1)
+					return *ptr&15;
+				else
+					return *ptr>>4;
+			break;
+		}
+	}
+}
+void tiles::setPixelTc(uint32_t tile,uint32_t x,uint32_t y,uint32_t val){
+	uint32_t*tt=(uint32_t*)((uint8_t*)truetDat.data()+(tile*tcSize));
+	tt+=y*sizew;
+	tt+=x;
+	*tt=val;
+}
+uint32_t tiles::getPixelTc(uint32_t tile,uint32_t x,uint32_t y){
+	uint32_t*tt=(uint32_t*)((uint8_t*)truetDat.data()+(tile*tcSize));
+	tt+=y*sizew;
+	tt+=x;
+	return*tt;
 }
 void tiles::resizeAmt(uint32_t amtnew){
 	amt=amtnew;

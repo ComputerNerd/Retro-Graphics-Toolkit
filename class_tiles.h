@@ -27,6 +27,10 @@ public:
 	std::vector<uint8_t> truetDat;/*< Pointer to Truecolor tile data*/
 	unsigned sizew,sizeh;
 	unsigned tcSize;
+	void setPixel(uint32_t tile,uint32_t x,uint32_t y,uint32_t val);
+	uint32_t getPixel(uint32_t tile,uint32_t x,uint32_t y);
+	void setPixelTc(uint32_t tile,uint32_t x,uint32_t y,uint32_t val);
+	uint32_t getPixelTc(uint32_t tile,uint32_t x,uint32_t y);
 	void resizeAmt(uint32_t amtnew);//Resizes array to hold enough for set amount
 	void resizeAmt(void);
 	void appendTile(void);

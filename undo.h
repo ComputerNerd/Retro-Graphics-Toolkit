@@ -40,6 +40,7 @@ struct undoEvent{//This struct mearly holds which type of undo this is
 struct undoTile{//The purpose of this struct if to completly undo a tile
 	tileTypeMask_t type;
 	uint32_t id;
+	void*ptrnew;
 	void*ptr;//when type is both first the truecolor tile will be stored then the regular tile
 };
 struct undoTileGroup{//Easily make changes to countigous tiles
@@ -71,7 +72,7 @@ struct undoPaletteEntry{
 	uint32_t id,val,valnew;
 };
 void showMemUsageUndo(Fl_Widget*,void*);
-void popUndoRedo(bool redo);
+void UndoRedo(bool redo);
 void historyWindow(void);//Controls settings and shows history
 void pushTile(uint32_t id,tileTypeMask_t type);
 void pushTilePixel(uint32_t id,uint32_t x,uint32_t y,tileTypeMask_t type);

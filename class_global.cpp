@@ -19,6 +19,7 @@
 #include "callback_chunk.h"
 #include "callbacksprites.h"
 #include "classSprite.h"
+#include "undo.h"
 editor *window = new editor(800,600,"Retro Graphics Toolkit v0.62");//this creates the window
 static void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y){
 	uint8_t grid[32*32*3];
@@ -298,10 +299,12 @@ int editor::handle(int event){
 						temp_two=(Fl::event_y()-tile_edit_truecolor_off_y)/tiles_size;
 						//true color tiles are slightly easier to edit
 						//I now have a proper function to calulate the offset so I am using that
+						pushTilePixel(currentProject->tileC->current_tile,temp_one,temp_two,tTypeTruecolor);
 						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,0,currentProject->tileC->current_tile)]=truecolor_temp[0];//red
 						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,1,currentProject->tileC->current_tile)]=truecolor_temp[1];//green
 						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,2,currentProject->tileC->current_tile)]=truecolor_temp[2];//blue
 						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,3,currentProject->tileC->current_tile)]=truecolor_temp[3];//alpha
+						pushTile(currentProject->tileC->current_tile,tTypeTile);
 						currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);
 						damage(FL_DAMAGE_USER1);
 					}
@@ -310,9 +313,11 @@ int editor::handle(int event){
 						temp_one=(Fl::event_x()-tile_edit_offset_x)/tiles_size;
 						temp_two=(Fl::event_y()-tile_edit_offset_y)/tiles_size;
 						uint8_t get_pal=(tileEdit_pal.theRow*48)+(tileEdit_pal.box_sel*3);
+						pushTilePixel(currentProject->tileC->current_tile,temp_one,temp_two,tTypeTruecolor);
 						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,0,currentProject->tileC->current_tile)]=currentProject->rgbPal[get_pal];//red
 						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,1,currentProject->tileC->current_tile)]=currentProject->rgbPal[get_pal+1];//green
 						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,2,currentProject->tileC->current_tile)]=currentProject->rgbPal[get_pal+2];//blue
+						pushTile(currentProject->tileC->current_tile,tTypeTile);
 						currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);
 						damage(FL_DAMAGE_USER1);
 					}
@@ -337,8 +342,8 @@ int editor::handle(int event){
 						}else{
 							//fl_alert("Tile attributes id: %d h-flip: %d v-flip %d priority: %d pal row: %d\nAt location x: %d y: %d",currentProject->tileMapC->get_tile(temp_one,temp_two),currentProject->tileMapC->get_hflip(temp_one,temp_two),currentProject->tileMapC->get_vflip(temp_one,temp_two),currentProject->tileMapC->get_prio(temp_one,temp_two),currentProject->tileMapC->get_palette_map(temp_one,temp_two),temp_one,temp_two);
 							if(((tileEditModePlace_G)&&(selTileE_G[0]==temp_one)&&(selTileE_G[1]==temp_two))){
-									tileEditModePlace_G=false;
-									damage(FL_DAMAGE_USER1);
+								tileEditModePlace_G=false;
+								damage(FL_DAMAGE_USER1);
 							}else{
 								tileEditModePlace_G=true;
 								selTileE_G[0]=temp_one;
@@ -370,30 +375,8 @@ int editor::handle(int event){
 							temp_one=7-temp_one;
 						if (G_vflip[0])
 							temp_two=7-temp_two;
-						//now we know which pixel we are editing
-						//see if it is even or odd
-						uint8_t temp_1,temp_2;
-						if (temp_one & 1){//faster
-							//odd
-							//split pixels
-							uint8_t temp=currentProject->tileC->tDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)];
-							//first,second pixel
-							temp_1=temp>>4;//first pixel
-							temp_2=temp&15;//second pixel
-							//put temp_1 back in proper place
-							temp_1<<=4;
-							temp_1|=tileMap_pal.box_sel;
-							currentProject->tileC->tDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)]=temp_1;
-						}else{
-							//even
-							//split pixels
-							uint8_t temp=currentProject->tileC->tDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)];
-							//first,second pixel
-							temp_1=temp>>4;//first pixel
-							temp_2=temp&15;//second pixel
-							temp_2|=tileMap_pal.box_sel<<4;
-							currentProject->tileC->tDat[(currentProject->tileC->current_tile*32)+(temp_one/2)+(temp_two*4)]=temp_2;
-						}
+						pushTilePixel(currentProject->tileC->current_tile,temp_one,temp_two,tTypeTile);
+						currentProject->tileC->setPixel(currentProject->tileC->current_tile,temp_one,temp_two,tileMap_pal.box_sel);
 						damage(FL_DAMAGE_USER1);//no need to redraw the gui
 					}
 				break;

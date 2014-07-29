@@ -40,9 +40,31 @@ static void resizeArray(uint32_t amt){
 			undoBuf=(struct undoEvent*)malloc(amt*sizeof(struct undoEvent));
 	}
 }
+static unsigned getSzTile(tileTypeMask_t type){
+	unsigned sz=0;
+	if(type&tTypeTile)
+		sz+=currentProject->tileC->tileSize;
+	if(type&tTypeTruecolor)
+		sz+=currentProject->tileC->tcSize;
+	return sz;
+}
 static void cleanupEvent(uint32_t id){
 	struct undoEvent*uptr=undoBuf+id;
 	switch(uptr->type){
+		case uTile:
+			{struct undoTile*ut=(struct undoTile*)uptr->ptr;
+			unsigned sz=getSzTile(ut->type);
+			free(ut->ptr);
+			memUsed-=sz;
+			if(ut->ptrnew){
+				free(ut->ptrnew);
+				memUsed-=sz;
+			}}
+		break;
+		case uTilePixel:
+			free(uptr->ptr);
+			memUsed-=sizeof(struct undoTilePixel);
+		break;
 		case uPalette:
 			{struct undoPalette*up=(struct undoPalette*)uptr->ptr;
 			unsigned sz;
@@ -81,12 +103,28 @@ static void pushEventPrepare(void){
 	resizeArray(++amount);
 	memUsed+=sizeof(struct undoEvent);
 }
-void popUndoRedo(bool redo){
+static void tilesTo(uint8_t*ptr,uint32_t id,tileTypeMask_t type){
+	if(type&tTypeTile){
+		memcpy(ptr,currentProject->tileC->tDat.data()+(id*currentProject->tileC->tileSize),currentProject->tileC->tileSize);
+		ptr+=currentProject->tileC->tileSize;
+	}
+	if(type&tTypeTruecolor)
+		memcpy(ptr,currentProject->tileC->truetDat.data()+(id*currentProject->tileC->tcSize),currentProject->tileC->tcSize);
+}
+static void tilesToU(uint8_t*ptr,uint32_t id,tileTypeMask_t type){
+	if(type&tTypeTile){
+		memcpy(currentProject->tileC->tDat.data()+(id*currentProject->tileC->tileSize),ptr,currentProject->tileC->tileSize);
+		ptr+=currentProject->tileC->tileSize;
+	}
+	if(type&tTypeTruecolor)
+		memcpy(currentProject->tileC->truetDat.data()+(id*currentProject->tileC->tcSize),ptr,currentProject->tileC->tcSize);
+}
+void UndoRedo(bool redo){
 	if((pos<0)&&(!redo))
 		return;
 	if(!amount)
 		return;
-	if(redo&&(pos>=int_fast32_t(amount)))
+	if(redo&&(pos>=(int_fast32_t(amount)-1)))
 		return;
 	if(redo&&(pos<=int_fast32_t(amount)))
 		++pos;
@@ -94,8 +132,34 @@ void popUndoRedo(bool redo){
 	switch(uptr->type){
 		case uTile:
 			{struct undoTile*ut=(struct undoTile*)uptr->ptr;
-			if(ut->type&tTypeDelete){
-
+			if(redo)
+				tilesToU((uint8_t*)ut->ptrnew,ut->id,ut->type);
+			else{
+				if(!ut->ptrnew){
+					unsigned sz=getSzTile(ut->type);
+					ut->ptrnew=malloc(sz);
+					memUsed+=sz;
+				}
+				tilesTo((uint8_t*)ut->ptrnew,ut->id,ut->type);
+				tilesToU((uint8_t*)ut->ptr,ut->id,ut->type);
+			}}
+		break;
+		case uTilePixel:
+			{struct undoTilePixel*ut=(struct undoTilePixel*)uptr->ptr;
+			if(ut->type==tTypeTruecolor){
+				if(redo)
+					currentProject->tileC->setPixelTc(ut->id,ut->x,ut->y,ut->valnew);
+				else{
+					ut->valnew=currentProject->tileC->getPixelTc(ut->id,ut->x,ut->y);
+					currentProject->tileC->setPixelTc(ut->id,ut->x,ut->y,ut->val);
+				}
+			}else{
+				if(redo)
+					currentProject->tileC->setPixel(ut->id,ut->x,ut->y,ut->valnew);
+				else{
+					ut->valnew=currentProject->tileC->getPixel(ut->id,ut->x,ut->y);
+					currentProject->tileC->setPixel(ut->id,ut->x,ut->y,ut->val);
+				}
 			}}
 		break;
 		case uPalette:
@@ -192,17 +256,30 @@ void pushTile(uint32_t id,tileTypeMask_t type){
 	uptr->type=uTile;
 	uptr->ptr=malloc(sizeof(struct undoTile));
 	memUsed+=sizeof(struct undoTile);
+	unsigned sz=getSzTile(type);
 	struct undoTile*ut=(struct undoTile*)uptr->ptr;
-	uint32_t sz=0;
-	if(type&tTypeTile)
-		sz+=currentProject->tileC->tileSize;
-	if(type&tTypeTruecolor)
-		sz+=currentProject->tileC->tcSize;
 	ut->ptr=malloc(sz);
+	ut->ptrnew=0;
 	ut->id=id;
+	ut->type=type;
 	memUsed+=sz;
+	tilesTo((uint8_t*)ut->ptr,id,type);
 }
-void pushTilePixel(uint32_t tile,uint32_t x,uint32_t y,uint32_t type){
+void pushTilePixel(uint32_t id,uint32_t x,uint32_t y,tileTypeMask_t type){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uTilePixel;
+	uptr->ptr=malloc(sizeof(struct undoTilePixel));
+	memUsed+=sizeof(struct undoTilePixel);
+	struct undoTilePixel*ut=(struct undoTilePixel*)uptr->ptr;
+	ut->id=id;
+	ut->x=x;
+	ut->y=y;
+	ut->type=type;
+	if(type==tTypeTruecolor)
+		ut->val=currentProject->tileC->getPixelTc(id,x,y);
+	else
+		ut->val=currentProject->tileC->getPixel(id,x,y);
 }
 void pushPaletteAll(void){
 	pushEventPrepare();

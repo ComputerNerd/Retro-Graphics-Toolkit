@@ -35,7 +35,7 @@ void initProject(void){
 	currentProject=projects[0];
 	projects_count=1;
 	currentProject->gameSystem=sega_genesis;
-	currentProject->subSystem=0;
+	currentProject->subSystem=3;
 	currentProject->tileC=new tiles;
 	currentProject->tileMapC=new tileMap;
 	currentProject->Chunk=new ChunkClass;
@@ -351,6 +351,11 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 	if(loadVersion)
 		fread(&version,1,sizeof(uint32_t),fi);
 	printf("Read as version %d\n",version);
+	if(version>currentProjectVersionNUM){
+		fl_alert("The latest project version Retro Graphics Toolkit supports is %d but you are opening %d",currentProjectVersionNUM,version);
+		fclose(fi);
+		return false;
+	}
 	if(version)
 		fread(&projects[id]->useMask,1,sizeof(uint32_t),fi);
 	else
@@ -358,16 +363,11 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 	fread(&projects[id]->gameSystem,1,sizeof(uint32_t),fi);
 	if(version>=4){
 		fread(&projects[id]->subSystem,1,sizeof(uint32_t),fi);
-		if((version==4)){
-			switch(projects[id]->gameSystem){
-				case sega_genesis:
-					projects[id]->subSystem=3;//Default to 4 bit
-				break;
-				case NES:
-					projects[id]->subSystem^=1;//Fix the fact that NES2x2 and NES1x1 were switched around in version 4
-					projects[id]->subSystem|=2;//Default to 2 bit
-				break;
-			}
+		if((version<6)&&(projects[id]->gameSystem==sega_genesis))
+			projects[id]->subSystem=3;//Old projects were storing the wrong number for 4bit graphics even though that is what is stored
+		if(version==4&&(projects[id]->gameSystem==NES)){
+			projects[id]->subSystem^=1;//Fix the fact that NES2x2 and NES1x1 were switched around in version 4
+			projects[id]->subSystem|=2;//Default to 2 bit
 		}
 	}else
 		projects[id]->subSystem=3;
@@ -624,6 +624,11 @@ bool loadAllProjects(bool Old){
 	if(!Old){
 		fread(&version,1,sizeof(uint32_t),fi);
 		printf("Group is version %d\n",version);
+		if(version>currentProjectVersionNUM){
+			fl_alert("The latest project version Retro Graphics Toolkit supports is %d but you are opening %d",currentProjectVersionNUM,version);
+			fclose(fi);
+			return false;
+		}
 	}
 	for(unsigned x=0;x<projects_count;++x){
 		if(Old){

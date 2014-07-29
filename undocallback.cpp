@@ -16,8 +16,8 @@
 #include "includes.h"
 #include "undo.h"
 void undoCB(Fl_Widget*,void*){
-	popUndoRedo(false);
+	UndoRedo(false);
 }
 void redoCB(Fl_Widget*,void*){
-	popUndoRedo(true);
+	UndoRedo(true);
 }

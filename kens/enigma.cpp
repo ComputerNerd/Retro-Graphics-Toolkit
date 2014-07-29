@@ -305,7 +305,7 @@ bool enigma::decode(std::istream& Src, std::ostream& Dst, std::streampos Locatio
 }
 
 // Blazing fast function that gives the index of the MSB.
-static inline unsigned char log2(unsigned short v)
+static inline unsigned char log2i(unsigned short v)//Changed name to avoid c++11 conflict
 {
 	register unsigned char r; // result of log2(v) will go here
 	register unsigned char shift;
@@ -372,7 +372,7 @@ void enigma::encode_internal(std::istream& Src, std::ostream& Dst, std::streamsi
 	}
 
 	base_flag_io *mask = base_flag_io::create(maskval >> 11);
-	unsigned short const packet_length = log2(maskval & 0x7ff) + 1;
+	unsigned short const packet_length = log2i(maskval & 0x7ff) + 1;
 
 	// Find the most common 2-byte value.
 	Compare_count cmp;
