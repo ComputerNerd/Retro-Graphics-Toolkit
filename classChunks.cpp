@@ -34,6 +34,10 @@ ChunkClass::ChunkClass(const ChunkClass& other){
 ChunkClass::~ChunkClass(void){
 	chunks.clear();
 }
+void ChunkClass::removeAt(uint32_t at){
+	chunks.erase(chunks.begin()+(at*wi*hi),chunks.begin()+((at+1)*wi*hi));
+	--amt;
+}
 void ChunkClass::resizeAmt(uint32_t amtnew){
 	chunks.resize(amtnew*wi*hi);
 	amt=amtnew;

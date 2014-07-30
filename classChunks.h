@@ -30,6 +30,7 @@ public:
 	ChunkClass();
 	ChunkClass(const ChunkClass& other);
 	~ChunkClass();
+	void removeAt(uint32_t at);
 	void resizeAmt(uint32_t amtnew);
 	void resizeAmt(void);
 	bool getPrio_t(uint32_t id,uint32_t x,uint32_t y);

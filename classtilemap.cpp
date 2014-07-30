@@ -750,7 +750,7 @@ bool tileMap::truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha
 		for (uint64_t a=0;a<(h*w*pixelSize)-w*pixelSize;a+=w*pixelSize*8){//a tiles y
 			for (uint_fast32_t b=0;b<w*pixelSize;b+=pSize2){//b tiles x
 				truecolor_tile_ptr=get_tileRow(x_tile,y_tile,useRow)*256;
-				if (truecolor_tile_ptr != -256){
+				if((truecolor_tile_ptr != -256)&&(truecolor_tile_ptr<(currentProject->tileC->amt*256))){
 					for (uint_fast32_t y=0;y<w*pSize2;y+=w*pixelSize){//pixels y
 						if (useAlpha)
 							memcpy(&the_image[a+b+y],&currentProject->tileC->truetDat[truecolor_tile_ptr],32);
@@ -778,21 +778,26 @@ bool tileMap::truecolor_to_image(uint8_t * the_image,int8_t useRow,bool useAlpha
 		for (uint64_t a=0;a<(h*w*pixelSize)-w*pixelSize;a+=w*pixelSize*8){//a tiles y
 			for (uint32_t b=0;b<w*pixelSize;b+=pSize2){//b tiles x
 				truecolor_tile_ptr=get_tile(x_tile,y_tile)*256;
-				for (uint32_t y=0;y<w*pixelSize*8;y+=w*pixelSize){//pixels y
-					if (useAlpha)
-						memcpy(&the_image[a+b+y],&currentProject->tileC->truetDat[truecolor_tile_ptr],32);
-					else{
-						unsigned xx=0;
-						for (unsigned x=0;x<32;x+=4){//pixels x
-							the_image[a+b+y+xx]=currentProject->tileC->truetDat[truecolor_tile_ptr+x];
-							the_image[a+b+y+xx+1]=currentProject->tileC->truetDat[truecolor_tile_ptr+x+1];
-							the_image[a+b+y+xx+2]=currentProject->tileC->truetDat[truecolor_tile_ptr+x+2];
-							xx+=3;
+				if(truecolor_tile_ptr<(currentProject->tileC->amt*256)){
+					for (uint32_t y=0;y<w*pixelSize*8;y+=w*pixelSize){//pixels y
+						if (useAlpha)
+							memcpy(&the_image[a+b+y],&currentProject->tileC->truetDat[truecolor_tile_ptr],32);
+						else{
+							unsigned xx=0;
+							for (unsigned x=0;x<32;x+=4){//pixels x
+								the_image[a+b+y+xx]=currentProject->tileC->truetDat[truecolor_tile_ptr+x];
+								the_image[a+b+y+xx+1]=currentProject->tileC->truetDat[truecolor_tile_ptr+x+1];
+								the_image[a+b+y+xx+2]=currentProject->tileC->truetDat[truecolor_tile_ptr+x+2];
+								xx+=3;
+							}
 						}
+						truecolor_tile_ptr+=32;
 					}
-					truecolor_tile_ptr+=32;
+				}else{
+					for (uint32_t y=0;y<w*pSize2;y+=w*pixelSize)//pixels y
+						memset(&the_image[a+b+y],0,pSize2);
 				}
-				x_tile++;
+				++x_tile;
 			}
 			x_tile=0;
 			++y_tile;
@@ -820,6 +825,8 @@ void tileMap::truecolorimageToTiles(uint8_t * image,int rowusage,bool useAlpha){
 					goto dont_convert_tile;
 			}else{
 				current_tile=get_tileRow(x_tile,y_tile,rowusage);
+				if(current_tile>=currentProject->tileC->amt)
+					goto dont_convert_tile;
 				if (current_tile == -1)
 					goto dont_convert_tile;
 			}
@@ -848,7 +855,7 @@ dont_convert_tile:
 		++x_tile;
 		}
 	x_tile=0;
-	y_tile++;
+	++y_tile;
 	}
 	if (currentProject->gameSystem == sega_genesis)
 		set_palette_type(type_temp);
