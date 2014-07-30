@@ -181,11 +181,12 @@ void UndoRedo(bool redo){
 				}else
 					tilesToU((uint8_t*)ut->ptrnew,ut->id,ut->type);
 			}else{
-				if((!ut->ptrnew)&&(!ut->type&tTypeDeleteFlag)){
+				if((!ut->ptrnew)&&(!(ut->type&tTypeDeleteFlag))){
 					unsigned sz=getSzTile(ut->type);
 					ut->ptrnew=malloc(sz);
 					memUsed+=sz;
-				}else if(ut->type&tTypeDeleteFlag){
+				}
+				if(ut->type&tTypeDeleteFlag){
 					currentProject->tileC->insertTile(ut->id);
 					updateTileSelectAmt();
 				}else

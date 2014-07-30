@@ -170,7 +170,7 @@ void editor::_editor(){
 		int rx,ry,rw,rh;
 		the_tabs->client_area(rx,ry,rw,rh);
 		{
-			TabsMain[pal_edit] = new Fl_Group(rx, ry, rw, rh, "palette editor");
+			TabsMain[pal_edit] = new Fl_Group(rx, ry, rw, rh, "Palette editor");
 			//stuff realed to this group should go here
 			palEdit.more_init(4);
 			pal_size = new Fl_Hor_Value_Slider(128,384,320,24,"Palette box size");
@@ -252,7 +252,7 @@ void editor::_editor(){
 			}//end of group
       			TabsMain[pal_edit]->end();
 		} // Fl_Group* o
-		{TabsMain[tile_edit] = new Fl_Group(rx, ry, rw, rh, "Tile Editor");
+		{TabsMain[tile_edit] = new Fl_Group(rx, ry, rw, rh, "Tile editor");
 			//stuff realed to this group should go here
 			{ Fl_Group* o = new Fl_Group(0, 0, 800, 567);
 				{
@@ -343,7 +343,7 @@ void editor::_editor(){
 			}
 			tile_edit_offset_x=default_tile_edit_offset_x;
 			tile_edit_offset_y=default_tile_edit_offset_y;
-			tile_size = new Fl_Hor_Value_Slider(448,default_palette_bar_offset_y+72,242,24,"Tile Zoom");
+			tile_size = new Fl_Hor_Value_Slider(448,default_palette_bar_offset_y+72,242,24,"Tile zoom");
 			tile_size->tooltip(TooltipZoom);
 			tile_size->minimum(1);
 			tile_size->maximum(64);
@@ -361,7 +361,7 @@ void editor::_editor(){
 			tile_select->callback(set_tile_current);
 			TabsMain[tile_edit]->end();
 		}
-		{TabsMain[tile_place] = new Fl_Group(rx,ry,rw,rh,"Plane Mapping/Block Editor");
+		{TabsMain[tile_place] = new Fl_Group(rx,ry,rw,rh,"Plane mapping/block editor");
 			{
 				Fl_Group* o = new Fl_Group(tile_place_buttons_x_off, 192, 60, 128);
 				{
@@ -454,13 +454,13 @@ void editor::_editor(){
 				} // End of buttons
 			}//end of group
 			
-			hflipCB[0] = new Fl_Check_Button(tile_place_buttons_x_off,304,64,32,"hflip");
+			hflipCB[0] = new Fl_Check_Button(tile_place_buttons_x_off,304,64,32,"Hflip");
 			hflipCB[0]->callback(set_hflipCB,(void*)0);
 			hflipCB[0]->tooltip("This sets whether or not the tile is flipped horizontally");
-			vflipCB[0] = new Fl_Check_Button(tile_place_buttons_x_off,336,64,32,"vflip");
+			vflipCB[0] = new Fl_Check_Button(tile_place_buttons_x_off,336,64,32,"Vflip");
 			vflipCB[0]->callback(set_vflipCB,(void*)0);
 			vflipCB[0]->tooltip("This sets whether or not the tile is flipped vertically");
-			prioCB[0] = new Fl_Check_Button(tile_place_buttons_x_off,368,72,32,"priority");
+			prioCB[0] = new Fl_Check_Button(tile_place_buttons_x_off,368,72,32,"Priority");
 			prioCB[0]->callback(set_prioCB,(void*)0);
 			prioCB[0]->tooltip("If checked tile is high priority");
 			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,400,96,32,"Show grid?");
@@ -474,7 +474,7 @@ void editor::_editor(){
 				o->callback(toggleRowSolo);
 				o->tooltip("When checked tiles that do not use the selected row will not be drawn");
 			}
-			place_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,512,160,24,"Tile Zoom Factor:");
+			place_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,512,160,24,"Tile zoom factor:");
 			place_tile_size->minimum(1);
 			place_tile_size->maximum(16);
 			place_tile_size->step(1);
@@ -491,7 +491,7 @@ void editor::_editor(){
 		{TabsMain[chunkEditor] = new Fl_Group(rx,ry,rw,rh,"Chunk editor");
 			useBlocksChunkCBtn=new Fl_Check_Button(8, 48, 152, 24, "Use blocks");
 			useBlocksChunkCBtn->callback(useBlocksCB);
-			chunk_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,512,160,24,"Tile Zoom Factor:");
+			chunk_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,512,160,24,"Tile zoom factor:");
 			chunk_tile_size->minimum(1);
 			chunk_tile_size->maximum(16);
 			chunk_tile_size->step(1);
@@ -511,7 +511,7 @@ void editor::_editor(){
 			chunkY->callback(scrollChunkY);
 			chunkY->hide();
 			
-			chunk_select = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,88,160,24,"Chunk Select");
+			chunk_select = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,88,160,24,"Chunk select");
 			chunk_select->minimum(0);
 			chunk_select->maximum(0);
 			chunk_select->step(1);
@@ -526,11 +526,11 @@ void editor::_editor(){
 			tile_select_3->align(FL_ALIGN_TOP);
 			tile_select_3->callback(selBlockCB);
 
-			hflipCB[1] = new Fl_Check_Button(tile_place_buttons_x_off,160,64,32,"hflip");
+			hflipCB[1] = new Fl_Check_Button(tile_place_buttons_x_off,160,64,32,"Hflip");
 			hflipCB[1]->callback(set_hflipCB,(void*)1);
-			vflipCB[1] = new Fl_Check_Button(tile_place_buttons_x_off,192,64,32,"vflip");
+			vflipCB[1] = new Fl_Check_Button(tile_place_buttons_x_off,192,64,32,"Vflip");
 			vflipCB[1]->callback(set_vflipCB,(void*)1);
-			prioCB[1] = new Fl_Check_Button(tile_place_buttons_x_off,224,72,32,"priority");
+			prioCB[1] = new Fl_Check_Button(tile_place_buttons_x_off,224,72,32,"Priority");
 			prioCB[1]->callback(set_prioCB,(void*)1);
 
 			solidChunkMenu=new Fl_Choice(tile_place_buttons_x_off,256,128,24);
@@ -552,11 +552,11 @@ void editor::_editor(){
 			cordDisp[1]=new Fl_Box(tile_place_buttons_x_off,556,128,64);
 			cordDisp[1]->labelsize(12);
 
-			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off,364, 112, 32, "Append Chunk");
+			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off,364, 112, 32, "Append chunk");
 				o->callback(appendChunkCB);
 			}
 
-			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off,396, 144, 32, "Delete selected Chunk");
+			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off,396, 160, 32, "Delete selected chunk");
 				o->callback(delChunkAtCB);
 			}
 			updateChunkSizeSliders();

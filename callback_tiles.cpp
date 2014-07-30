@@ -186,13 +186,14 @@ void remove_duplicate_truecolor(Fl_Widget*,void*){
 void fill_tile(Fl_Widget* o, void*){
 	//fills tile with currently selected color
 	if (mode_editor == tile_place){
+		pushTile(currentProject->tileC->current_tile,tTypeTile);
 		uint8_t color;
 		color=tileMap_pal.box_sel;
 		uint8_t * tile_ptr_temp;
 		switch (currentProject->gameSystem){
 			case sega_genesis:
 				tile_ptr_temp = &currentProject->tileC->tDat[currentProject->tileC->current_tile*32];
-				color+=color<<4;
+				color|=color<<4;
 				memset(tile_ptr_temp,color,32);
 			break;
 			case NES:
@@ -214,6 +215,7 @@ void fill_tile(Fl_Widget* o, void*){
 		}
 	}
 	else if (mode_editor == tile_edit){
+		pushTile(currentProject->tileC->current_tile,tTypeBoth);
 		for (uint32_t x=currentProject->tileC->current_tile*currentProject->tileC->tcSize;x<(currentProject->tileC->current_tile*currentProject->tileC->tcSize)+currentProject->tileC->tcSize;x+=4){
 			currentProject->tileC->truetDat[x]=truecolor_temp[0];//red
 			currentProject->tileC->truetDat[x+1]=truecolor_temp[1];//green
