@@ -24,6 +24,8 @@ class editor : public Fl_Double_Window{
 	void _editor();
 	void draw_non_gui();
 	public:
+	void updateMapWH(uint32_t w,uint32_t h);
+	void updateMapWH(void);
 	void updateTileMapGUI(uint32_t x,uint32_t y);
 	void updateBlockTilesChunk(uint32_t prj);
 	void updateBlockTilesChunk(void);
@@ -40,8 +42,8 @@ class editor : public Fl_Double_Window{
 	Fl_Scrollbar * map_y_scroll;
 	Fl_Scrollbar* chunkX;
 	Fl_Scrollbar* chunkY;
-	Fl_Slider* map_w;
-	Fl_Slider* map_h;
+	Fl_Int_Input* map_w;
+	Fl_Int_Input* map_h;
 	Fl_Slider* map_amt;
 	Fl_Slider* rgb_red;
 	Fl_Slider* rgb_green;

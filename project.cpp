@@ -256,8 +256,6 @@ void switchProject(uint32_t id){
 			tileEdit_pal.changeSystem();
 			tileMap_pal.changeSystem();
 			set_palette_type(0);
-			window->map_w->step(1);
-			window->map_h->step(1);
 		break;
 		case NES:
 			projects[id]->tileC->tileSize=16;
@@ -276,19 +274,11 @@ void switchProject(uint32_t id){
 			tileEdit_pal.changeSystem();
 			tileMap_pal.changeSystem();
 			update_emphesis(0,0);
-			if(projects[id]->subSystem&NES2x2){
-				window->map_w->step(2);
-				window->map_h->step(2);
-			}else{
-				window->map_w->step(1);
-				window->map_h->step(1);
-			}
 			window->subSysC->value(currentProject->subSystem&1);
 		break;
 	}
 	//Make sure sliders have correct values
-	window->map_w->value(projects[id]->tileMapC->mapSizeW);
-	window->map_h->value(projects[id]->tileMapC->mapSizeH);
+	window->updateMapWH(projects[id]->tileMapC->mapSizeW,projects[id]->tileMapC->mapSizeH);
 	window->map_amt->value(projects[id]->tileMapC->amt);
 	updateTileSelectAmt(projects[id]->tileC->amt);
 	for(int x=0;x<shareAmtPj;++x){

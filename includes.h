@@ -45,6 +45,7 @@
 #include <FL/Fl_Text_Buffer.H>
 #include <FL/Fl_Text_Editor.H>
 #include <FL/Fl_Choice.H>
+#include <FL/Fl_Int_Input.H>
 #include <fstream>
 #include <iostream>
 #include <algorithm>

@@ -69,10 +69,6 @@ void set_game_system(Fl_Widget*,void* selection){
 				currentProject->tileC->tileSize=32;
 				currentProject->tileC->resizeAmt();
 			}
-			if(containsDataCurProj(pjHaveMap)){
-				window->map_w->step(1);
-				window->map_h->step(1);
-			}
 			if(containsDataCurProj(pjHaveSprites)){
 				window->spritesize[0]->maximum(4);
 				window->spritesize[1]->maximum(4);
@@ -110,10 +106,7 @@ void set_game_system(Fl_Widget*,void* selection){
 					currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeHA);
 				if((currentProject->tileMapC->mapSizeHA)&1)
 					currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeHA+1);
-				window->map_w->value(currentProject->tileMapC->mapSizeW);
-				window->map_h->value(currentProject->tileMapC->mapSizeHA);
-				window->map_w->step(2);
-				window->map_h->step(2);
+				window->updateMapWH();
 			}
 			if(containsDataCurProj(pjHaveSprites)){
 				window->spritesize[0]->maximum(1);

@@ -72,8 +72,7 @@ void tileMap::resizeBlocks(uint32_t wn,uint32_t hn){
 		mapSizeHA=mapSizeH*amt;
 		window->map_amt->value(amt);
 	}else{
-		window->map_w->value(mapSizeW);
-		window->map_h->value(mapSizeH);
+		window->updateMapWH();
 	}
 	ScrollUpdate();
 }
@@ -143,8 +142,7 @@ void tileMap::toggleBlocks(bool set){
 			mapSizeHA=mapSizeH;
 		}
 	}
-	window->map_w->value(mapSizeW);
-	window->map_h->value(mapSizeH);
+	window->updateMapWH();
 	if(set){
 		window->map_w->label("Block width");
 		window->map_w->callback(resizeBlocksCB);
@@ -392,7 +390,7 @@ bool tileMap::loadFromFile(){
 	/*Only will return false when there is a malloc error or file error
 	the file saving user cancalation and not entering the number correctly return true*/
 	size_t file_size;
-	if (load_file_generic("Load tile map data") == true){
+	if (load_file_generic("Load tile map data")){
 		int compression=compressionAsk();
 		//get width and height
 		int blocksLoad=fl_ask("Are you loading blocks?");
@@ -470,8 +468,7 @@ bool tileMap::loadFromFile(){
 			break;
 		}
 		printf("W %d H %d blocks loaded %d\n",w,h,blocksLoaded);
-		window->map_w->value(w);
-		window->map_h->value(h);
+		window->updateMapWH();
 		mapSizeW=w;
 		mapSizeH=h;
 		if(blocksLoad)
@@ -561,8 +558,8 @@ bool tileMap::loadFromFile(){
 		isBlock=blocksLoad;
 		toggleBlocks(blocksLoad);
 		window->redraw();
-		return true;
 	}
+	return true;
 }
 void tileMap::sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vflip){
 	uint_fast32_t x,y;

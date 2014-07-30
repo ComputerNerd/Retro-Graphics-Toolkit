@@ -387,18 +387,14 @@ void editor::_editor(){
 				} // Fl_Round_Button* o
 				o->end();
 			} // Fl_Group* o
-			map_w = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+72,312,24,MapWidthTxt);
-			map_w->minimum(1);
-			map_w->maximum(8192);
-			map_w->step(1);
-			map_w->value(2);
+			map_w = new Fl_Int_Input(480,default_palette_bar_offset_y+72,312,24,MapWidthTxt);
+			map_w->when(FL_WHEN_ENTER_KEY);
+			map_w->value("2");
 			map_w->align(FL_ALIGN_LEFT);
 			map_w->callback(callback_resize_map);
-			map_h = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+104,312,24,MapHeightTxt);
-			map_h->minimum(1);
-			map_h->maximum(8192);
-			map_h->step(1);
-			map_h->value(2);
+			map_h = new Fl_Int_Input(480,default_palette_bar_offset_y+104,312,24,MapHeightTxt);
+			map_h->when(FL_WHEN_ENTER_KEY);
+			map_h->value("2");
 			map_h->align(FL_ALIGN_LEFT);
 			map_h->callback(callback_resize_map);
 			map_amt = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+136,312,24,"Blocks");

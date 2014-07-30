@@ -49,15 +49,24 @@ void setMapW(Fl_Widget*,void*){
 	if (!verify_str_number_only(str_ptr))
 		return;
 	uint32_t wTemp=atoi(str_ptr);
+	int32_t htmp;
+	htmp=atoi(window->map_h->value());
+	if(htmp<=0)
+		return;
 	if(currentProject->tileMapC->isBlock)
-		currentProject->tileMapC->resizeBlocks(wTemp,window->map_h->value());
+		currentProject->tileMapC->resizeBlocks(wTemp,htmp);
 	else
-		currentProject->tileMapC->resize_tile_map(wTemp,window->map_h->value());
-	window->map_w->value(wTemp);
+		currentProject->tileMapC->resize_tile_map(wTemp,htmp);
+	window->map_w->value(str_ptr);
 	window->redraw();
 }
 void resizeBlocksCB(Fl_Widget*o,void*){
-	currentProject->tileMapC->resizeBlocks(window->map_w->value(),window->map_h->value());
+	int32_t wtmp,htmp;
+	wtmp=atoi(window->map_w->value());
+	htmp=atoi(window->map_h->value());
+	if((wtmp<=0)||(htmp<=0))
+		return;
+	currentProject->tileMapC->resizeBlocks(wtmp,htmp);
 	window->redraw();
 }
 void blocksAmtCB(Fl_Widget*o,void*){
@@ -86,13 +95,12 @@ void FixOutOfRangeCB(Fl_Widget*,void*){
 	window->damage(FL_DAMAGE_USER1);
 }
 void callback_resize_map(Fl_Widget* o,void*){
-	uint32_t w,h;
-	w=window->map_w->value();
-	h=window->map_h->value();
-	if(pushed_g||(Fl::event()==FL_KEYDOWN)){
-		pushed_g=0;
-		pushTilemapResize(w,h);
-	}
+	int32_t w,h;
+	w=atoi(window->map_w->value());
+	h=atoi(window->map_h->value());
+	if((w<=0)||(h<=0))
+		return;
+	pushTilemapResize(w,h);
 	currentProject->tileMapC->resize_tile_map(w,h);
 	window->redraw();
 }
@@ -410,8 +418,7 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		if(!over){
 			pushTilemapAll(false);
 			currentProject->tileMapC->resize_tile_map(w8,h8);
-			window->map_w->value(w8);
-			window->map_h->value(h8);
+			window->updateMapWH();
 			uint32_t tilecounter=0;
 			for (uint32_t y=0;y<h8;++y){
 				for (uint32_t x=0;x<w8;++x){

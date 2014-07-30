@@ -358,8 +358,7 @@ void UndoRedo(bool redo){
 				if(um->ptr)
 					cpyResizeGeneric((uint8_t*)um->ptr,currentProject->tileMapC->tileMapDat,um->w,um->h,um->wnew,um->hnew,4,1,true);
 			}
-			window->map_w->value(currentProject->tileMapC->mapSizeW);
-			window->map_h->value(currentProject->tileMapC->mapSizeH);}
+			window->updateMapWH();}
 
 		break;
 		case uPalette:

@@ -60,6 +60,16 @@ static void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y){
 	fl_draw_image(grid,x,y,32,32,3);
 	
 }
+void editor::updateMapWH(uint32_t w,uint32_t h){
+	char tmp[16];
+	snprintf(tmp,16,"%d",w);
+	map_w->value(tmp);
+	snprintf(tmp,16,"%d",h);
+	map_h->value(tmp);
+}
+void editor::updateMapWH(void){
+	updateMapWH(currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeH);
+}
 void editor::updateBlockTilesChunk(uint32_t prj){
 	if(projects[prj]->Chunk->useBlocks){
 		tile_select_3->label("Block select");
