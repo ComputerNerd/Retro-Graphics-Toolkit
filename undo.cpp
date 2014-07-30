@@ -19,6 +19,7 @@
 #include "project.h"
 #include "undo.h"
 #include "color_convert.h"
+#include <FL/Fl_Browser.H>
 static struct undoEvent*undoBuf;
 static uint_fast32_t amount;
 static uint_fast32_t memUsed;
@@ -423,12 +424,18 @@ void historyWindow(Fl_Widget*,void*){
 		switch(uptr->type){
 			case uTile:
 				{struct undoTile*ut=(struct undoTile*)uptr->ptr;
-				snprintf(tmp,2048,"Change tile %d",ut->id);
+				if(ut->type&tTypeDeleteFlag)
+					snprintf(tmp,2048,"Delete tile %d",ut->id);
+				else
+					snprintf(tmp,2048,"Change tile %d",ut->id);
 				}
 			break;
 			case uTilePixel:
 				{struct undoTilePixel*ut=(struct undoTilePixel*)uptr->ptr;
-				snprintf(tmp,2048,"Edit tile pixel X: %d Y: %d",ut->x,ut->y);
+				if(ut->type&tTypeTruecolor)
+					snprintf(tmp,2048,"Edit truecolor tile pixel X: %d Y: %d",ut->x,ut->y);
+				else
+					snprintf(tmp,2048,"Edit tile pixel X: %d Y: %d",ut->x,ut->y);
 				}
 			break;
 			case uTileAll:
