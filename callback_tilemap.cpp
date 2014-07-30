@@ -89,6 +89,10 @@ void callback_resize_map(Fl_Widget* o,void*){
 	uint32_t w,h;
 	w=window->map_w->value();
 	h=window->map_h->value();
+	if(pushed_g||(Fl::event()==FL_KEYDOWN)){
+		pushed_g=0;
+		pushTilemapResize(w,h);
+	}
 	currentProject->tileMapC->resize_tile_map(w,h);
 	window->redraw();
 }

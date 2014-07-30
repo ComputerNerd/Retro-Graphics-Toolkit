@@ -70,7 +70,7 @@ struct undoTilemapEdit{
 	uint32_t x,y,val,valnew;
 };
 struct undoTilemapResize{
-	uint32_t w,h;//Old width and height
+	uint32_t w,h,wnew,hnew;//Old width and height
 	void*ptr;//Contains a pointer ONLY TO LOST DATA
 };
 struct undoPalette{

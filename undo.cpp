@@ -49,6 +49,17 @@ static unsigned getSzTile(tileTypeMask_t type){
 		sz+=currentProject->tileC->tcSize;
 	return sz;
 }
+static uint32_t getSzResizeGeneric(uint32_t w,uint32_t h,uint32_t wnew,uint32_t hnew,uint32_t szelm,uint32_t n){//szelm is the size per element of what you are resizing
+	if((w>wnew)||(h>hnew)){
+		uint32_t tmp=0;
+		if(w>wnew)
+			tmp=(w-wnew)*hnew*szelm*n;
+		if(h>hnew)
+			tmp+=(h-hnew)*w*szelm*n;
+		return tmp;
+	}else
+		return 0;
+}
 static void cleanupEvent(uint32_t id){
 	struct undoEvent*uptr=undoBuf+id;
 	switch(uptr->type){
@@ -101,6 +112,13 @@ static void cleanupEvent(uint32_t id){
 					sz*=4;
 				free(um->ptrnew);
 				memUsed-=sz;
+			}}
+		break;
+		case uTilemapResize:
+			{struct undoTilemapResize*um=(struct undoTilemapResize*)uptr->ptr;
+			if(um->ptr){
+				free(um->ptr);
+				memUsed-=getSzResizeGeneric(um->w,um->h,um->wnew,um->hnew,4,1);
 			}}
 		break;
 		case uPalette:
@@ -187,6 +205,34 @@ static void attrCpyU(uint8_t*dst,uint8_t*src,uint_fast32_t n){
 	while(n--){
 		*dst=*src++;
 		dst+=4;
+	}
+}
+static void cpyResizeGeneric(uint8_t*dst,uint8_t*src,uint32_t w,uint32_t h,uint32_t wnew,uint32_t hnew,uint32_t szelm,uint32_t n,bool reverse){
+	if((w>wnew)||(h>hnew)){
+		while(n--){
+			if(w>wnew){
+				for(uint32_t i=0;i<std::min(hnew,h);++i){
+					src+=wnew*szelm;
+					if(reverse)
+						memcpy(src,dst,(w-wnew)*szelm);
+					else
+						memcpy(dst,src,(w-wnew)*szelm);
+					dst+=(w-wnew)*szelm;
+					src+=(w-wnew)*szelm;
+				}
+			}else
+				src+=w*std::min(hnew,h)*szelm;
+			if(h>hnew){
+				for(uint32_t i=hnew;i<h;++i){
+					if(reverse)
+						memcpy(src,dst,w*szelm);
+					else
+						memcpy(dst,src,w*szelm);
+					dst+=w*szelm;
+					src+=w*szelm;
+				}
+			}
+		}
 	}
 }
 void UndoRedo(bool redo){
@@ -302,6 +348,19 @@ void UndoRedo(bool redo){
 					memcpy(currentProject->tileMapC->tileMapDat,um->ptr,um->w*um->h*4);
 				}
 			}}
+		break;
+		case uTilemapResize:
+			{struct undoTilemapResize*um=(struct undoTilemapResize*)uptr->ptr;
+			if(redo)
+				currentProject->tileMapC->resize_tile_map(um->wnew,um->hnew);
+			else{
+				currentProject->tileMapC->resize_tile_map(um->w,um->h);
+				if(um->ptr)
+					cpyResizeGeneric((uint8_t*)um->ptr,currentProject->tileMapC->tileMapDat,um->w,um->h,um->wnew,um->hnew,4,1,true);
+			}
+			window->map_w->value(currentProject->tileMapC->mapSizeW);
+			window->map_h->value(currentProject->tileMapC->mapSizeH);}
+
 		break;
 		case uPalette:
 			{struct undoPalette*up=(struct undoPalette*)uptr->ptr;
@@ -474,6 +533,27 @@ void pushTilemapEdit(uint32_t x,uint32_t y){
 	um->y=y;
 	um->val=currentProject->tileMapC->getRaw(x,y);
 }
+void pushTilemapResize(uint32_t wnew,uint32_t hnew){
+	if((wnew==currentProject->tileMapC->mapSizeW)&&(hnew==currentProject->tileMapC->mapSizeHA))
+		return;
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uTilemapResize;
+	uptr->ptr=malloc(sizeof(struct undoTilemapResize));
+	memUsed+=sizeof(struct undoTilemapResize);
+	struct undoTilemapResize*um=(struct undoTilemapResize*)uptr->ptr;
+	um->w=currentProject->tileMapC->mapSizeW;
+	um->h=currentProject->tileMapC->mapSizeHA;
+	um->wnew=wnew;
+	um->hnew=hnew;
+	uint32_t sz=getSzResizeGeneric(um->w,um->h,wnew,hnew,4,1);
+	if(sz){
+		um->ptr=malloc(sz);
+		memUsed+=sz;
+		cpyResizeGeneric((uint8_t*)um->ptr,currentProject->tileMapC->tileMapDat,um->w,um->h,wnew,hnew,4,1,false);
+	}else
+		um->ptr=0;
+}
 void pushPaletteAll(void){
 	pushEventPrepare();
 	struct undoEvent*uptr=undoBuf+pos;
@@ -558,6 +638,10 @@ void historyWindow(Fl_Widget*,void*){
 			break;
 			case uTilemapattr:
 				strcpy(tmp,"Change tilemap attributes");
+			break;
+			case uTilemapResize:
+				{struct undoTilemapResize*um=(struct undoTilemapResize*)uptr->ptr;
+				snprintf(tmp,2048,"Resize from w: %d h: %d to w: %d h: %d",um->w,um->h,um->wnew,um->hnew);}	
 			break;
 			case uTilemapEdit:
 				{struct undoTilemapEdit*um=(struct undoTilemapEdit*)uptr->ptr;
