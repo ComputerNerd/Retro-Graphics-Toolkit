@@ -269,6 +269,13 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 			if((int)(hr-8)>0)
 				++h8;
 		}
+		if(over){
+			if((w8!=currentProject->tileMapC->mapSizeW)(h8!=currentProject->tileMapC->mapSizeH)){
+				fl_alert("When importing over tilemap width and height must be the same");
+				loaded_image->release();
+				return;
+			}
+		}
 		wt=w8*currentProject->tileC->sizew;
 		ht=h8*currentProject->tileC->sizeh;
 		if(wr)

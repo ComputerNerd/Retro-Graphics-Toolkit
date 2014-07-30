@@ -1,7 +1,9 @@
 Most recent changes are placed at the top
 
 20140729
+Checks size for import image over tilemap
 Fixed a bug where using dither tilemap as image with a tilemap containing out of range tiles would cause a crash
+Fixed a bug where import image over tilemap would try to write to out of range tiles
 Added support for undoing tilemap edits
 Added custome sized sonic 1 formated chunk loading
 Fixed a bug where when switching tabs incorect tile may be drawn
