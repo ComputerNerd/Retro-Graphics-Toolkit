@@ -239,7 +239,37 @@ static inline uint16_t swap_word(uint16_t w){
 	return (a<<8)|b;
 }
 #endif
+static void errorNum(void){
+	fl_alert("Please enter a value greater than zero");
+}
 void ChunkClass::importSonic1(const char * filename,bool append){
+	if(fl_ask("Custome width and height?")){
+		char*ptr=(char*)fl_input("Width");
+		if(!ptr)
+			return;
+		if(!verify_str_number_only(ptr))
+			return;
+		int witmp=atoi(ptr);
+		if(witmp<=0){
+			errorNum();
+			return;
+		}
+		ptr=(char*)fl_input("Height");
+		if(!ptr)
+			return;
+		if(!verify_str_number_only(ptr))
+			return;
+		int hitmp=atoi(ptr);
+		if(hitmp<=0){
+			errorNum();
+			return;
+		}
+		if(append)
+			resize(wi,hi);
+		wi=witmp;
+		hi=hitmp;
+	}else
+		wi=hi=16;
 	int compression=compressionAsk();
 	if(compression<0)
 		return;
@@ -261,7 +291,6 @@ void ChunkClass::importSonic1(const char * filename,bool append){
 		off=amt;
 	else
 		off=0;
-	wi=hi=16;
 	window->updateChunkSizeSliders(wi,hi);
 	amt=(fileSize/512)+off;
 	chunks.resize(amt*wi*hi);
@@ -356,6 +385,8 @@ void ChunkClass::exportSonic1(void){
 	}
 }
 void ChunkClass::resize(uint32_t wnew,uint32_t hnew){
+	if((wnew==wi)&&(hnew==hi))
+		return;
 	struct ChunkAttrs*tmp=(struct ChunkAttrs*)malloc(sizeof(struct ChunkAttrs)*wi*hi*amt);
 	memcpy(tmp,chunks.data(),sizeof(struct ChunkAttrs)*wi*hi*amt);
 	chunks.resize(amt*wnew*hnew);
