@@ -292,7 +292,6 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 			currentProject->tileC->resizeAmt(w8*h8);
 			updateTileSelectAmt();
 		}
-		uint32_t tx,ty=0;
 		unsigned center[3];
 		center[0]=(wt-w)/2;
 		center[1]=(ht-h)/2;
@@ -325,17 +324,22 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 			}else
 				grayscale=1;
 		}
-		for(uint32_t y=0,tcnt=0;y<ht;++y,++ty){
+		for(uint32_t y=0,tcnt=0;y<ht;++y){
 			if(y%currentProject->tileC->sizeh)
 				tcnt-=wt/currentProject->tileC->sizew;
-			tx=0;
 			if((!((y<center[1])||(y>=(h+center[1]))))&&(depth==1)&&(!grayscale))
 				imgptr=(uint8_t*)loaded_image->data()[y+2-center[1]];
-			for(uint32_t x=0;x<wt;x+=currentProject->tileC->sizew,++tcnt,++tx){
+			for(uint32_t x=0;x<wt;x+=currentProject->tileC->sizew,++tcnt){
 				uint32_t ctile;
-				if(over)
-					ctile=currentProject->tileMapC->get_tile(tx,ty);
-				else
+				if(over){
+					ctile=currentProject->tileMapC->get_tile(x/currentProject->tileC->sizew,y/currentProject->tileC->sizeh);
+					//See if ctile is allocated
+					if(ctile>=currentProject->tileC->amt){
+						//tile on map but not a tile assoicated with it
+						imgptr+=currentProject->tileC->sizew*depth;
+						continue;
+					}
+				}else
 					ctile=tcnt;
 				uint8_t*ttile=currentProject->tileC->truetDat.data()+((ctile*currentProject->tileC->tcSize)+((y%currentProject->tileC->sizeh)*currentProject->tileC->sizew*4));
 				//First take care of border

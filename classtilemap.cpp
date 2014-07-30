@@ -483,7 +483,7 @@ bool tileMap::loadFromFile(){
 			fl_alert("Warning: The Tile map that you are attempting to load is smaller than a tile map that has the width and height that you specified\nThis missing data will be padded with tile zero");
 		//start converting to tile
 		//free(tile_map);
-		tileMapDat = (uint8_t *) realloc(tileMapDat,(w*h)*4*amt);
+		tileMapDat = (uint8_t *)realloc(tileMapDat,(w*h)*4*amt);
 		uint8_t * tempMap = (uint8_t *) malloc(size_temp);
 		if (unlikely(!tileMapDat))
 			show_malloc_error(size_temp)
@@ -816,6 +816,8 @@ void tileMap::truecolorimageToTiles(uint8_t * image,int rowusage,bool useAlpha){
 			int32_t current_tile;
 			if(rowusage==-1){
 				current_tile=get_tile(x_tile,y_tile);
+				if(current_tile>=currentProject->tileC->amt)
+					goto dont_convert_tile;
 			}else{
 				current_tile=get_tileRow(x_tile,y_tile,rowusage);
 				if (current_tile == -1)
@@ -843,7 +845,7 @@ void tileMap::truecolorimageToTiles(uint8_t * image,int rowusage,bool useAlpha){
 			}
 			currentProject->tileC->truecolor_to_tile_ptr(get_palette_map(x_tile,y_tile),current_tile,truecolor_tile,false);
 dont_convert_tile:
-		x_tile++;	
+		++x_tile;
 		}
 	x_tile=0;
 	y_tile++;
