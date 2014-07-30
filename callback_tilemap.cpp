@@ -412,8 +412,10 @@ void set_prioCB(Fl_Widget*,void*o){
 	G_highlow_p[off]^=true;
 	if((tileEditModeChunk_G)&&(off==1))
 		currentProject->Chunk->setPrio(currentChunk,editChunk_G[0],editChunk_G[1],G_highlow_p[off]);
-	else if(tileEditModePlace_G&&(off==0))
+	else if(tileEditModePlace_G&&(off==0)){
+		pushTilemapEdit(selTileE_G[0],selTileE_G[1]);
 		currentProject->tileMapC->set_prio(selTileE_G[0],selTileE_G[1],G_highlow_p[off]);
+	}
 	window->redraw();
 }
 void set_hflipCB(Fl_Widget*,void*o){
@@ -421,8 +423,10 @@ void set_hflipCB(Fl_Widget*,void*o){
 	G_hflip[off]^=true;
 	if((tileEditModeChunk_G)&&(off==1))
 		currentProject->Chunk->setHflip(currentChunk,editChunk_G[0],editChunk_G[1],G_hflip[off]);
-	else if(tileEditModePlace_G&&(off==0))
+	else if(tileEditModePlace_G&&(off==0)){
+		pushTilemapEdit(selTileE_G[0],selTileE_G[1]);
 		currentProject->tileMapC->set_hflip(selTileE_G[0],selTileE_G[1],G_hflip[off]);
+	}
 	window->redraw();
 }
 void set_vflipCB(Fl_Widget*,void*o){
@@ -430,8 +434,10 @@ void set_vflipCB(Fl_Widget*,void*o){
 	G_vflip[off]^=true;
 	if((tileEditModeChunk_G)&&(off==1))
 		currentProject->Chunk->setVflip(currentChunk,editChunk_G[0],editChunk_G[1],G_vflip[off]);
-	else if(tileEditModePlace_G&&(off==0))
+	else if(tileEditModePlace_G&&(off==0)){
+		pushTilemapEdit(selTileE_G[0],selTileE_G[1]);
 		currentProject->tileMapC->set_vflip(selTileE_G[0],selTileE_G[1],G_vflip[off]);
+	}
 	window->redraw();
 }
 void update_map_scroll_x(Fl_Widget*,void*){

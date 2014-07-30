@@ -52,6 +52,16 @@ tileMap::tileMap(const tileMap& other){
 tileMap::~tileMap(){
 	free(tileMapDat);
 }
+void tileMap::setRaw(uint32_t x,uint32_t y,uint32_t val){
+	uint32_t*tptr=(uint32_t*)tileMapDat;
+	tptr+=(y*mapSizeW)+x;
+	*tptr=val;
+}
+uint32_t tileMap::getRaw(uint32_t x,uint32_t y){
+	uint32_t*tptr=(uint32_t*)tileMapDat;
+	tptr+=(y*mapSizeW)+x;
+	return*tptr;
+}
 void tileMap::resizeBlocks(uint32_t wn,uint32_t hn){
 	uint32_t amtTemp=mapSizeW*mapSizeH*amt;
 	amtTemp/=(wn*hn);

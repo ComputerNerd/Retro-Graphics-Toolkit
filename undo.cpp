@@ -61,6 +61,7 @@ static void cleanupEvent(uint32_t id){
 				free(ut->ptrnew);
 				memUsed-=sz;
 			}
+			free(uptr->ptr);
 			memUsed-=sizeof(struct undoTile);}
 		break;
 		case uTilePixel:
@@ -76,10 +77,15 @@ static void cleanupEvent(uint32_t id){
 				free(ut->ptrnew);
 				memUsed-=sz;
 			}
+			free(uptr->ptr);
 			memUsed-=sizeof(struct undoTileAll);}
 		break;
 		case uTileAppend:
 			//Nothing to do here
+		break;
+		case uTilemapEdit:
+			free(uptr->ptr);
+			memUsed-=sizeof(struct undoTilemapEdit);
 		break;
 		case uPalette:
 			{struct undoPalette*up=(struct undoPalette*)uptr->ptr;
@@ -227,6 +233,17 @@ void UndoRedo(bool redo){
 				currentProject->tileC->resizeAmt(currentProject->tileC->amt-1);
 			updateTileSelectAmt();
 		break;
+		case uTilemapEdit:
+			{struct undoTilemapEdit*um=(struct undoTilemapEdit*)uptr->ptr;
+			if(redo)
+				currentProject->tileMapC->setRaw(um->x,um->y,um->valnew);
+			else{
+				um->valnew=currentProject->tileMapC->getRaw(um->x,um->y);
+				currentProject->tileMapC->setRaw(um->x,um->y,um->val);
+			}
+			if(tileEditModePlace_G)
+				window->updateTileMapGUI(um->x,um->y);}
+		break;
 		case uPalette:
 			{struct undoPalette*up=(struct undoPalette*)uptr->ptr;
 			unsigned sz,el;
@@ -366,6 +383,17 @@ void pushTileAppend(void){
 	struct undoEvent*uptr=undoBuf+pos;
 	uptr->type=uTileAppend;
 }
+void pushTilemapEdit(uint32_t x,uint32_t y){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uTilemapEdit;
+	uptr->ptr=malloc(sizeof(struct undoTilemapEdit));
+	memUsed+=sizeof(struct undoTilemapEdit);
+	struct undoTilemapEdit*um=(struct undoTilemapEdit*)uptr->ptr;
+	um->x=x;
+	um->y=y;
+	um->val=currentProject->tileMapC->getRaw(x,y);
+}
 void pushPaletteAll(void){
 	pushEventPrepare();
 	struct undoEvent*uptr=undoBuf+pos;
@@ -440,19 +468,21 @@ void historyWindow(Fl_Widget*,void*){
 			break;
 			case uTileAll:
 				{struct undoTileAll*ut=(struct undoTileAll*)uptr->ptr;
-				snprintf(tmp,2048,"Change all tiles amount: %d",ut->amt);
-				}
+				snprintf(tmp,2048,"Change all tiles amount: %d",ut->amt);}
 			break;
 			case uTileAppend:
 				strcpy(tmp,"Append tile");
+			break;
+			case uTilemapEdit:
+				{struct undoTilemapEdit*um=(struct undoTilemapEdit*)uptr->ptr;
+				snprintf(tmp,2048,"Edit tilemap X: %d Y: %d",um->x,um->y);}	
 			break;
 			case uPalette:
 				strcpy(tmp,"Change entire palette");
 			break;
 			case uPaletteEntry:
 				{struct undoPaletteEntry*up=(struct undoPaletteEntry*)uptr->ptr;
-				snprintf(tmp,2048,"Change palette entry: %d",up->id);
-				}
+				snprintf(tmp,2048,"Change palette entry: %d",up->id);}
 			break;
 			default:
 				snprintf(tmp,2048,"TODO unhandled %d",uptr->type);

@@ -265,7 +265,7 @@ void ChunkClass::importSonic1(const char * filename,bool append){
 			return;
 		}
 		if(append)
-			resize(wi,hi);
+			resize(witmp,hitmp);
 		wi=witmp;
 		hi=hitmp;
 	}else

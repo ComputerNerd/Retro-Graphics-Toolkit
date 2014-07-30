@@ -257,8 +257,10 @@ void set_tile_row(Fl_Widget*,void* row){
 		break;
 		case tile_place:
 			tileMap_pal.changeRow(selrow);
-			if(tileEditModePlace_G)
+			if(tileEditModePlace_G){
+				pushTilemapEdit(selTileE_G[0],selTileE_G[1]);
 				currentProject->tileMapC->set_pal_row(selTileE_G[0],selTileE_G[1],selrow);
+			}
 		break;
 	}
 	window->redraw();//trigger a redraw so that the new row is displayed

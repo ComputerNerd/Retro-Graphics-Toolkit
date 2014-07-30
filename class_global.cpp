@@ -274,6 +274,31 @@ static void setXYdispBlock(int x,int y){
 		setXYdisp(x,y,0);
 }
 int pushed_g;
+void editor::updateTileMapGUI(uint32_t x,uint32_t y){
+	selTileE_G[0]=x;
+	selTileE_G[1]=y;
+	G_highlow_p[0]=currentProject->tileMapC->get_prio(x,y);
+	G_hflip[0]=currentProject->tileMapC->get_hflip(x,y);
+	G_vflip[0]=currentProject->tileMapC->get_vflip(x,y);
+	hflipCB[0]->value(G_hflip[0]);
+	vflipCB[0]->value(G_vflip[0]);
+	prioCB[0]->value(G_highlow_p[0]);
+
+	uint32_t cT=currentProject->tileMapC->get_tile(x,y);
+	tile_select_2->value(cT);
+	currentProject->tileC->current_tile=cT;
+	uint8_t Rm=currentProject->tileMapC->get_palette_map(x,y);
+	tileMap_pal.changeRow(Rm);
+	unsigned focus=0;
+	for(int as=0;as<4;++as)
+		focus|=Fl::focus()==palRTE[as+4];
+	for(int as=0;as<4;++as){
+		palRTE[as+4]->value(as==Rm);
+		if(focus&&(as==Rm))
+			Fl::focus(palRTE[as+4]);
+	}
+	setXYdispBlock(x,y);
+}
 int editor::handle(int event){
 	//printf("Event was %s (%d)\n", fl_eventnames[event], event);     // e.g. "Event was FL_PUSH (1)"
 	if(event==FL_PUSH)
@@ -334,6 +359,7 @@ int editor::handle(int event){
 						temp_two+=+map_scroll_pos_y;
 						if (Fl::event_button()==FL_LEFT_MOUSE){
 							if(!((selTileE_G[0]==temp_one)&&(selTileE_G[1]==temp_two)&&tileEditModePlace_G)){
+								pushTilemapEdit(temp_one,temp_two);
 								currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,temp_one,temp_two,tileMap_pal.theRow,G_hflip[0],G_vflip[0],G_highlow_p[0]);
 								setXYdispBlock(temp_one,temp_two);
 							}
@@ -346,23 +372,7 @@ int editor::handle(int event){
 								damage(FL_DAMAGE_USER1);
 							}else{
 								tileEditModePlace_G=true;
-								selTileE_G[0]=temp_one;
-								selTileE_G[1]=temp_two;
-								G_highlow_p[0]=currentProject->tileMapC->get_prio(temp_one,temp_two);
-								G_hflip[0]=currentProject->tileMapC->get_hflip(temp_one,temp_two);
-								G_vflip[0]=currentProject->tileMapC->get_vflip(temp_one,temp_two);
-								hflipCB[0]->value(G_hflip[0]);
-								vflipCB[0]->value(G_vflip[0]);
-								prioCB[0]->value(G_highlow_p[0]);
-
-								uint32_t cT=currentProject->tileMapC->get_tile(temp_one,temp_two);
-								tile_select_2->value(cT);
-								currentProject->tileC->current_tile=cT;
-								uint8_t Rm=currentProject->tileMapC->get_palette_map(temp_one,temp_two);
-								tileMap_pal.changeRow(Rm);
-								for(int as=0;as<4;++as)
-									palRTE[as+4]->value(as==Rm);
-								setXYdispBlock(temp_one,temp_two);
+								updateTileMapGUI(temp_one,temp_two);
 								redraw();
 							}
 						}

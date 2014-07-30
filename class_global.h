@@ -24,6 +24,7 @@ class editor : public Fl_Double_Window{
 	void _editor();
 	void draw_non_gui();
 	public:
+	void updateTileMapGUI(uint32_t x,uint32_t y);
 	void updateBlockTilesChunk(uint32_t prj);
 	void updateBlockTilesChunk(void);
 	void updateSpriteSliders(void);

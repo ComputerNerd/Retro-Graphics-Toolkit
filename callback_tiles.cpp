@@ -61,8 +61,10 @@ void set_tile_current(Fl_Widget* o,void*){
 void set_tile_currentTP(Fl_Widget* o,void*){
 	Fl_Slider* s = (Fl_Slider*)o;
 	currentProject->tileC->current_tile=s->value();
-	if(tileEditModePlace_G)
+	if(tileEditModePlace_G){
+		pushTilemapEdit(selTileE_G[0],selTileE_G[1]);
 		currentProject->tileMapC->set_tile(currentProject->tileC->current_tile,selTileE_G[0],selTileE_G[1]);
+	}
 	window->redraw();
 }
 void update_all_tiles(Fl_Widget*,void*){
