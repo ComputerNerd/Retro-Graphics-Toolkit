@@ -270,7 +270,7 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 				++h8;
 		}
 		if(over){
-			if((w8!=currentProject->tileMapC->mapSizeW)(h8!=currentProject->tileMapC->mapSizeH)){
+			if((w8!=currentProject->tileMapC->mapSizeW)||(h8!=currentProject->tileMapC->mapSizeH)){
 				fl_alert("When importing over tilemap width and height must be the same");
 				loaded_image->release();
 				return;
