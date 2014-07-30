@@ -87,6 +87,22 @@ static void cleanupEvent(uint32_t id){
 			free(uptr->ptr);
 			memUsed-=sizeof(struct undoTilemapEdit);
 		break;
+		case uTilemap:
+		case uTilemapattr:
+			{struct undoTilemap*um=(struct undoTilemap*)uptr->ptr;
+			uint_fast32_t sz=um->w*um->h;
+			if(uptr->type==uTilemap)
+				sz*=4;
+			free(um->ptr);
+			memUsed-=sz;
+			if(um->ptrnew){
+				sz=um->wnew*um->hnew;
+				if(uptr->type==uTilemap)
+					sz*=4;
+				free(um->ptrnew);
+				memUsed-=sz;
+			}}
+		break;
 		case uPalette:
 			{struct undoPalette*up=(struct undoPalette*)uptr->ptr;
 			unsigned sz;
@@ -160,6 +176,18 @@ static void cpyAllTilesU(uint8_t*ptr,unsigned amt,tileTypeMask_t type){
 	}
 	if(type&tTypeTruecolor)
 		memcpy(currentProject->tileC->truetDat.data(),ptr,amt*currentProject->tileC->tcSize);
+}
+static void attrCpy(uint8_t*dst,uint8_t*src,uint_fast32_t n){
+	while(n--){
+		*dst++=*src;
+		src+=4;
+	}
+}
+static void attrCpyU(uint8_t*dst,uint8_t*src,uint_fast32_t n){
+	while(n--){
+		*dst=*src++;
+		dst+=4;
+	}
 }
 void UndoRedo(bool redo){
 	if((pos<0)&&(!redo))
@@ -244,6 +272,36 @@ void UndoRedo(bool redo){
 			}
 			if(tileEditModePlace_G)
 				window->updateTileMapGUI(um->x,um->y);}
+		break;
+		case uTilemap:
+		case uTilemapattr:
+			{struct undoTilemap*um=(struct undoTilemap*)uptr->ptr;
+			if(redo){
+				if(uptr->type==uTilemapattr)
+					attrCpyU(currentProject->tileMapC->tileMapDat,(uint8_t*)um->ptrnew,um->wnew*um->hnew);
+				else{
+					currentProject->tileMapC->resize_tile_map(um->wnew,um->hnew);
+					memcpy(currentProject->tileMapC->tileMapDat,um->ptrnew,um->wnew*um->hnew*4);
+				}
+			}else{
+				if(!um->ptrnew){
+					um->wnew=currentProject->tileMapC->mapSizeW;
+					um->hnew=currentProject->tileMapC->mapSizeHA;
+					if(uptr->type==uTilemapattr){
+						um->ptrnew=malloc(um->wnew*um->hnew);
+						attrCpy((uint8_t*)um->ptrnew,currentProject->tileMapC->tileMapDat,um->wnew*um->hnew);
+					}else{
+						um->ptrnew=malloc(um->wnew*um->hnew*4);
+						memcpy(um->ptrnew,currentProject->tileMapC->tileMapDat,um->wnew*um->hnew*4);
+					}
+				}
+				if(uptr->type==uTilemapattr){
+					attrCpyU(currentProject->tileMapC->tileMapDat,(uint8_t*)um->ptr,um->w*um->h);
+				}else{
+					currentProject->tileMapC->resize_tile_map(um->w,um->h);
+					memcpy(currentProject->tileMapC->tileMapDat,um->ptr,um->w*um->h*4);
+				}
+			}}
 		break;
 		case uPalette:
 			{struct undoPalette*up=(struct undoPalette*)uptr->ptr;
@@ -384,6 +442,27 @@ void pushTileAppend(void){
 	struct undoEvent*uptr=undoBuf+pos;
 	uptr->type=uTileAppend;
 }
+void pushTilemapAll(bool attrOnly){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	if(attrOnly)
+		uptr->type=uTilemapattr;
+	else
+		uptr->type=uTilemap;
+	uptr->ptr=malloc(sizeof(struct undoTilemap));
+	memUsed+=sizeof(struct undoTilemap);
+	struct undoTilemap*um=(struct undoTilemap*)uptr->ptr;
+	um->w=currentProject->tileMapC->mapSizeW;
+	um->h=currentProject->tileMapC->mapSizeHA;
+	um->ptrnew=0;
+	if(attrOnly){
+		um->ptr=malloc(um->w*um->h);
+		attrCpy((uint8_t*)um->ptr,currentProject->tileMapC->tileMapDat,um->w*um->h);
+	}else{
+		um->ptr=malloc(um->w*um->h*4);
+		memcpy(um->ptr,currentProject->tileMapC->tileMapDat,um->w*um->h*4);
+	}
+}
 void pushTilemapEdit(uint32_t x,uint32_t y){
 	pushEventPrepare();
 	struct undoEvent*uptr=undoBuf+pos;
@@ -445,7 +524,7 @@ void historyWindow(Fl_Widget*,void*){
 	Close->callback(closeHistory);
 	Fl_Browser*hist=new Fl_Browser(8,32,336,386);
 	char tmp[2048];
-	snprintf(tmp,2048,"%d items sorted from oldest to newest\nPosition selected",amount);
+	snprintf(tmp,2048,"%d items sorted from oldest to newest\nPosition selected: %d (can be -1)",amount,pos);
 	hist->copy_label(tmp);
 	hist->align(FL_ALIGN_TOP);
 	for(unsigned n=0;n<amount;++n){
@@ -473,6 +552,12 @@ void historyWindow(Fl_Widget*,void*){
 			break;
 			case uTileAppend:
 				strcpy(tmp,"Append tile");
+			break;
+			case uTilemap:
+				strcpy(tmp,"Change tilemap");
+			break;
+			case uTilemapattr:
+				strcpy(tmp,"Change tilemap attributes");
 			break;
 			case uTilemapEdit:
 				{struct undoTilemapEdit*um=(struct undoTilemapEdit*)uptr->ptr;

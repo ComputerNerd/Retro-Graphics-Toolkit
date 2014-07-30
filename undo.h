@@ -21,6 +21,7 @@ enum undoTypes_t{
 	uTileAppend,//No struct
 	uTileNew,//No struct reuses ptr
 	uTilemap,
+	uTilemapattr,
 	uTilemapEdit,
 	uTilemapResize,
 	uPalette,
@@ -61,15 +62,16 @@ struct undoTilePixel{
 	uint32_t id,x,y,val,valnew;
 };
 struct undoTilemap{//For undoing the entire tilemap
-	uint32_t w,h;//The width and height
-	void*ptr;//Points to tilemap data that is w*h*4 bytes
+	uint32_t w,h,wnew,hnew;//The width and height
+	void*ptr;//Points to tilemap data that is w*h*4 bytes or attributes if so size is w*h
+	void*ptrnew;
 };
 struct undoTilemapEdit{
 	uint32_t x,y,val,valnew;
 };
 struct undoTilemapResize{
 	uint32_t w,h;//Old width and height
-	void*ptr;//Contains a pointer ONLY TO LOST DATA if the tilemap was made bigger this will be NULL
+	void*ptr;//Contains a pointer ONLY TO LOST DATA
 };
 struct undoPalette{
 	void*ptr;
@@ -87,7 +89,7 @@ void pushTilesAll(tileTypeMask_t type);
 void pushTileAppend(void);
 void pushTilemapEdit(uint32_t x,uint32_t y);
 void pushTilemapResize(uint32_t wnew,uint32_t hnew);
-void pushTilemapAll();
+void pushTilemapAll(bool attrOnly);
 void pushPaletteEntry(uint32_t id);
 void pushPaletteAll(void);
 void pushSwitchSys(void);

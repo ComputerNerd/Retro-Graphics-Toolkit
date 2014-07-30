@@ -293,7 +293,7 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		}else
 			printf("Image depth %d\n",loaded_image->d());
 
-		pushTilesAll(tTypeBoth);
+		pushTilesAll(tTypeTruecolor);
 
 		if(!over){
 			currentProject->tileC->resizeAmt(w8*h8);
@@ -404,6 +404,7 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		}
 		loaded_image->release();
 		if(!over){
+			pushTilemapAll(false);
 			currentProject->tileMapC->resize_tile_map(w8,h8);
 			window->map_w->value(w8);
 			window->map_h->value(h8);

@@ -172,6 +172,9 @@ void tileMap::pickRow(uint8_t amount){
 	if(type<0)
 		return;
 	int method=MenuPopup("Select a method","This depends on the image",3,"Average","Histogram section with most occurances","Histogram peak");
+	if(method<0)
+		return;
+	pushTilemapAll(true);
 	double divide=(double)amount;//convert to double
 	uint32_t x,y;
 	double maxPal=divide;
@@ -329,8 +332,11 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	int alg=MenuPopup("Select picking algorithm","Pick which method you think works better for this image.",6,"ciede2000","Weighted","Mean squared error","Hue difference","Saturation difference","Lightness difference");
 	if(alg<0)
 		return;
+	pushTilemapAll(true);
+	pushTilesAll(tTypeTile);
 	if(fl_ask("Would you like the palette to be ordered by hue or light or saturation")){
 		unsigned type=fl_choice("What do you want it ordered by","Hue","Light","Saturation");
+		pushPaletteAll();
 		HLSpair* MapHLS=new HLSpair[palEdit.perRow*4];//Remember to change if there is a palete with a different amount than 4 rows
 		for(unsigned x=0;x<palEdit.perRow*3*4;x+=3){
 			double h,l,s,cmp,cmp2;

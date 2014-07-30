@@ -599,11 +599,11 @@ void tileMap::set_tile_full(uint32_t tile,uint32_t x,uint32_t y,uint8_t palette_
 	15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
         p  c   c  v  h  n n n n n n n n n n n
 
-    p = Priority flag
-    c = Palette select
-    v = Vertical flip
-    h = Horizontal flip
-    n = Pattern name
+	p = Priority flag
+	c = Palette select
+	v = Vertical flip
+	h = Horizontal flip
+	n = Pattern name
 	*/
 	//the exteneded tile maping format is a generic format it goes like this
 	//The first byte stores attributes in sega genesis format except with no tile data
