@@ -1,6 +1,7 @@
 Most recent changes are placed at the top
 
 20140729
+Added custome sized sonic 1 formated chunk loading
 Fixed a bug where when switching tabs incorect tile may be drawn
 Added more support for undoing changes to tiles
 Added undo history window
