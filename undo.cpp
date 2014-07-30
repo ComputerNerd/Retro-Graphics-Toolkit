@@ -77,6 +77,9 @@ static void cleanupEvent(uint32_t id){
 			}
 			memUsed-=sizeof(struct undoTileAll);}
 		break;
+		case uTileAppend:
+			//Nothing to do here
+		break;
 		case uPalette:
 			{struct undoPalette*up=(struct undoPalette*)uptr->ptr;
 			unsigned sz;
@@ -164,15 +167,22 @@ void UndoRedo(bool redo){
 	switch(uptr->type){
 		case uTile:
 			{struct undoTile*ut=(struct undoTile*)uptr->ptr;
-			if(redo)
-				tilesToU((uint8_t*)ut->ptrnew,ut->id,ut->type);
-			else{
-				if(!ut->ptrnew){
+			if(redo){
+				if(ut->type&tTypeDeleteFlag){
+					currentProject->tileC->remove_tile_at(ut->id);
+					updateTileSelectAmt();
+				}else
+					tilesToU((uint8_t*)ut->ptrnew,ut->id,ut->type);
+			}else{
+				if((!ut->ptrnew)&&(!ut->type&tTypeDeleteFlag)){
 					unsigned sz=getSzTile(ut->type);
 					ut->ptrnew=malloc(sz);
 					memUsed+=sz;
-				}
-				tilesTo((uint8_t*)ut->ptrnew,ut->id,ut->type);
+				}else if(ut->type&tTypeDeleteFlag){
+					currentProject->tileC->insertTile(ut->id);
+					updateTileSelectAmt();
+				}else
+					tilesTo((uint8_t*)ut->ptrnew,ut->id,ut->type);
 				tilesToU((uint8_t*)ut->ptr,ut->id,ut->type);
 			}}
 		break;
@@ -208,6 +218,13 @@ void UndoRedo(bool redo){
 				cpyAllTiles((uint8_t*)ut->ptrnew,ut->amtnew,ut->type);
 				cpyAllTilesU((uint8_t*)ut->ptr,ut->amt,ut->type);
 			}}
+		break;
+		case uTileAppend:
+			if(redo)
+				currentProject->tileC->appendTile();
+			else
+				currentProject->tileC->resizeAmt(currentProject->tileC->amt-1);
+			updateTileSelectAmt();
 		break;
 		case uPalette:
 			{struct undoPalette*up=(struct undoPalette*)uptr->ptr;
@@ -343,6 +360,11 @@ void pushTilesAll(tileTypeMask_t type){
 	ut->ptrnew=0;
 	cpyAllTiles((uint8_t*)ut->ptr,ut->amt,type);
 }
+void pushTileAppend(void){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uTileAppend;
+}
 void pushPaletteAll(void){
 	pushEventPrepare();
 	struct undoEvent*uptr=undoBuf+pos;
@@ -413,6 +435,9 @@ void historyWindow(Fl_Widget*,void*){
 				{struct undoTileAll*ut=(struct undoTileAll*)uptr->ptr;
 				snprintf(tmp,2048,"Change all tiles amount: %d",ut->amt);
 				}
+			break;
+			case uTileAppend:
+				strcpy(tmp,"Append tile");
 			break;
 			case uPalette:
 				strcpy(tmp,"Change entire palette");

@@ -50,6 +50,12 @@ tiles::~tiles(){
 	tDat.clear();
 	truetDat.clear();
 }
+void tiles::insertTile(uint32_t at){
+	++at;//the insert function inserts before
+	tDat.insert(tDat.begin()+at*tileSize,tileSize,0);
+	truetDat.insert(truetDat.begin()+at*tcSize,tcSize,0);
+	++amt;
+}
 void tiles::setPixel(uint32_t tile,uint32_t x,uint32_t y,uint32_t val){
 	if(x>=sizew)
 		x=sizew-1;

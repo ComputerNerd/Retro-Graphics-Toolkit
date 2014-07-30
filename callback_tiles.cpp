@@ -18,12 +18,19 @@
 #include "class_global.h"
 #include "tilemap.h"
 #include "undo.h"
+void insertTileCB(Fl_Widget*,void*){
+	currentProject->tileC->insertTile(currentProject->tileC->current_tile+1);
+	updateTileSelectAmt();
+	window->redraw();
+}
 void delete_tile_at_location(Fl_Widget*, void* row){
 	/* this function will delete the tile that the user has selected */
+	pushTile(currentProject->tileC->current_tile,tTypeDelete);
 	currentProject->tileC->remove_tile_at(currentProject->tileC->current_tile);
 	window->redraw();
 }
 void new_tile(Fl_Widget*,void*){
+	pushTileAppend();
 	currentProject->tileC->appendTile();
 	//set the new maximum for slider
 	updateTileSelectAmt();

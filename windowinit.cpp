@@ -278,18 +278,17 @@ void editor::_editor(){
 				} // Fl_Round_Button* o
 			o->end();
 			} // Fl_Group* o
-			{ Fl_Check_Button* o = new Fl_Check_Button(640,default_palette_bar_offset_y+40,120,32,"Show grid?");
-				o->callback(set_grid);
-				o->tooltip("This button Toggles wheater or not you which to see a grid while editing your tiles. A grid can help you see the spacing betwen each pixel.");
-			}
-			{ Fl_Button *o = new Fl_Button(538, default_palette_bar_offset_y, 104, 32, "New Tile");//these button should be inline with the palette bar
+			{ Fl_Button *o = new Fl_Button(538, default_palette_bar_offset_y, 104, 32, "Append tile");//these button should be inline with the palette bar
 				o->tooltip("This will append a blank tile to the tile buffer in the ram.");
 				o->callback(new_tile);
 			}
-			{ Fl_Button *o = new Fl_Button(656, default_palette_bar_offset_y, 140, 32, "Delete Selected Tile");
+			{ Fl_Button *o = new Fl_Button(656, default_palette_bar_offset_y, 140, 32, "Delete selected tile");
 				o->tooltip("This button will delete the currently selected tile");
 				o->callback(delete_tile_at_location);
 				o->labelsize(12);
+			}
+			{ Fl_Button *o = new Fl_Button(656, default_palette_bar_offset_y+34,140, 32,"Insert after tile");
+				o->callback(insertTileCB);
 			}
 			tileEdit_pal.more_init();
 			rgb_red = new Fl_Hor_Value_Slider(64,default_palette_bar_offset_y+136,128,24,"RGB red");
@@ -338,9 +337,13 @@ void editor::_editor(){
 					o->end();
 				} // End of buttons
 			}//end of group
+			{ Fl_Check_Button* o = new Fl_Check_Button(694,default_palette_bar_offset_y+68,100,32,"Show grid?");
+				o->callback(set_grid);
+				o->tooltip("This button Toggles wheater or not you which to see a grid while editing your tiles. A grid can help you see the spacing betwen each pixel.");
+			}
 			tile_edit_offset_x=default_tile_edit_offset_x;
 			tile_edit_offset_y=default_tile_edit_offset_y;
-			tile_size = new Fl_Hor_Value_Slider(496,default_palette_bar_offset_y+72,304,24,"Tile Zoom Factor:");
+			tile_size = new Fl_Hor_Value_Slider(448,default_palette_bar_offset_y+72,242,24,"Tile Zoom");
 			tile_size->tooltip(TooltipZoom);
 			tile_size->minimum(1);
 			tile_size->maximum(64);
@@ -349,7 +352,7 @@ void editor::_editor(){
 			tile_size->align(FL_ALIGN_LEFT);
 			tile_size->callback(update_offset_tile_edit);
 			//now for the tile select slider
-			tile_select = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+104,320,24,"Tile select");
+			tile_select = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+104,312,24,"Tile select");
 			tile_select->tooltip("This slider selects which tile that you are editing the first tile is zero");
 			tile_select->minimum(0);
 			tile_select->maximum(0);

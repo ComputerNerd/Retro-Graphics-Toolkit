@@ -18,7 +18,7 @@ enum undoTypes_t{
 	uTile=0,
 	uTileAll,
 	uTilePixel,
-	uTileAppend,//No struct reuses ptr
+	uTileAppend,//No struct
 	uTileNew,//No struct reuses ptr
 	uTilemap,
 	uTilemapEdit,
@@ -37,7 +37,8 @@ enum tileTypeMask_t{
 	tTypeTile=1,
 	tTypeTruecolor,
 	tTypeBoth,
-	tTypeDelete=7//This sets bit tTypeBoth|4
+	tTypeDeleteFlag,//Used for checking if delete do not pass to any tile functions
+	tTypeDelete=7//This sets bit tTypeBoth|tTypeDeleteFlag
 };
 struct undoEvent{//This struct mearly holds which type of undo this is
 	undoTypes_t type;
@@ -83,6 +84,7 @@ void historyWindow(Fl_Widget*,void*);//Controls settings and shows history
 void pushTile(uint32_t id,tileTypeMask_t type);
 void pushTilePixel(uint32_t id,uint32_t x,uint32_t y,tileTypeMask_t type);
 void pushTilesAll(tileTypeMask_t type);
+void pushTileAppend(void);
 void pushTilemapEdit(uint32_t x,uint32_t y);
 void pushTilemapResize(uint32_t wnew,uint32_t hnew);
 void pushTilemapAll();
