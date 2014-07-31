@@ -552,10 +552,10 @@ void UndoRedo(bool redo){
 			window->chunk_select->maximum(currentProject->Chunk->amt-1);
 		break;
 		case uChunkNew:
-			/*if(redo)
-				currentProject->Chunk->resizeAmt
-			else*/
-				
+			if(redo)
+				currentProject->Chunk->insert((uintptr_t)uptr->ptr);
+			else
+				currentProject->Chunk->removeAt((uintptr_t)uptr->ptr);
 			window->chunk_select->maximum(currentProject->Chunk->amt-1);
 		break;
 
@@ -750,6 +750,12 @@ void pushChunkEdit(uint32_t id,uint32_t x,uint32_t y){
 	uc->y=y;
 	uc->id=id;
 	uc->val=currentProject->Chunk->getElm(id,x,y);
+}
+void pushChunkNew(uint32_t id){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uChunkNew;
+	uptr->ptr=(void*)id;
 }
 void pushChunkAppend(void){
 	pushEventPrepare();

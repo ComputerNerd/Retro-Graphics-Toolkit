@@ -30,6 +30,7 @@ public:
 	ChunkClass();
 	ChunkClass(const ChunkClass& other);
 	~ChunkClass();
+	void insert(uint32_t at);
 	void setElm(uint32_t id,uint32_t x,uint32_t y,struct ChunkAttrs c);
 	struct ChunkAttrs getElm(uint32_t id,uint32_t x,uint32_t y);
 	void removeAt(uint32_t at);

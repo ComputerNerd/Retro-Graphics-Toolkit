@@ -34,6 +34,12 @@ ChunkClass::ChunkClass(const ChunkClass& other){
 ChunkClass::~ChunkClass(void){
 	chunks.clear();
 }
+void ChunkClass::insert(uint32_t at){
+	struct ChunkAttrs tmp;
+	memset(&tmp,0,sizeof(tmp));
+	chunks.insert(chunks.begin()+(at*wi*hi),wi*hi,tmp);
+	++amt;
+}
 void ChunkClass::setElm(uint32_t id,uint32_t x,uint32_t y,struct ChunkAttrs c){
 	struct ChunkAttrs*ch=chunks.data()+(id*wi*hi)+(y*wi)+x;
 	ch->flags=c.flags;

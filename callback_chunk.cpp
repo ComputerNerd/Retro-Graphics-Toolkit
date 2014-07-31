@@ -24,6 +24,12 @@ unsigned ChunkOff[2]={DefaultChunkX,DefaultChunkY};
 unsigned scrollChunks_G[2];
 uint_fast32_t editChunk_G[2];//x,y
 uint32_t selBlock;
+void insertChunkCB(Fl_Widget*,void*){
+	pushChunkNew(currentChunk+1);
+	currentProject->Chunk->insert(currentChunk+1);
+	window->chunk_select->maximum(currentProject->Chunk->amt-1);
+	window->redraw();
+}
 void delChunkAtCB(Fl_Widget*,void*){
 	currentProject->Chunk->removeAt(currentChunk);
 	window->chunk_select->maximum(currentProject->Chunk->amt-1);
