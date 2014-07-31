@@ -29,12 +29,16 @@ enum undoTypes_t{
 	uPalette,
 	uPaletteEntry,
 	uChunk,
+	uChunkDelete,
 	uChunkAll,
 	uChunkEdit,
 	uChunkResize,
+	uChunkAppend,
+	uChunkNew,//No struct reuses ptr
 	uSwitchSys,
 	uSwitchPrj,//No struct reuses ptr
-	uLoadPrj
+	uLoadPrj,
+	ULoadPrjGroup,
 };
 enum tileTypeMask_t{
 	tTypeTile=1,
@@ -92,6 +96,15 @@ struct undoChunkEdit{
 	uint32_t id,x,y;
 	struct ChunkAttrs valnew,val;
 };
+struct undoChunk{
+	uint32_t id;
+	struct ChunkAttrs*valnew,*val;
+};
+struct undoChunkAll{
+	uint32_t w,h,wnew,hnew;//The width and height
+	uint32_t amt,amtnew;
+	struct ChunkAttrs*valnew,*val;
+};
 void showMemUsageUndo(Fl_Widget*,void*);
 void UndoRedo(bool redo);
 void historyWindow(Fl_Widget*,void*);//Controls settings and shows history
@@ -107,7 +120,11 @@ void pushTilemapResize(uint32_t wnew,uint32_t hnew);
 void pushTilemapAll(bool attrOnly);
 void pushPaletteEntry(uint32_t id);
 void pushPaletteAll(void);
+void pushChunk(uint32_t id,bool rm);
+void pushChunksAll(void);
 void pushChunkResize(uint32_t wnew,uint32_t hnew);
 void pushChunkEdit(uint32_t id,uint32_t x,uint32_t y);
+void pushChunkAppend(void);
+void pushChunkNew(uint32_t id);
 void pushSwitchSys(void);
 void pushSwitchPrj(void);

@@ -30,6 +30,7 @@ void delChunkAtCB(Fl_Widget*,void*){
 	window->redraw();
 }
 void appendChunkCB(Fl_Widget*o,void*){
+	pushChunkAppend();
 	currentProject->Chunk->resizeAmt(currentProject->Chunk->amt+1);
 	window->chunk_select->maximum(currentProject->Chunk->amt-1);
 	window->redraw();

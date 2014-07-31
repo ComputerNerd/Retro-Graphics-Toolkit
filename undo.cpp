@@ -94,6 +94,8 @@ static void cleanupEvent(uint32_t id){
 		break;
 		case uTileNew:
 		case uTileAppend:
+		case uChunkAppend:
+		case uChunkNew:
 			//Nothing to do here
 		break;
 		case uTileGroup:
@@ -542,6 +544,20 @@ void UndoRedo(bool redo){
 				window->updateChunkGUI(uc->x,uc->y);
 			}
 		break;
+		case uChunkAppend:
+			if(redo)
+				currentProject->Chunk->resizeAmt(currentProject->Chunk->amt+1);
+			else
+				currentProject->Chunk->resizeAmt(currentProject->Chunk->amt-1);
+			window->chunk_select->maximum(currentProject->Chunk->amt-1);
+		break;
+		case uChunkNew:
+			/*if(redo)
+				currentProject->Chunk->resizeAmt
+			else*/
+				
+			window->chunk_select->maximum(currentProject->Chunk->amt-1);
+		break;
 
 	}
 	if(!redo)
@@ -735,6 +751,11 @@ void pushChunkEdit(uint32_t id,uint32_t x,uint32_t y){
 	uc->id=id;
 	uc->val=currentProject->Chunk->getElm(id,x,y);
 }
+void pushChunkAppend(void){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uChunkAppend;
+}
 static Fl_Window * win;
 static void closeHistory(Fl_Widget*,void*){
 	win->hide();
@@ -776,7 +797,7 @@ void historyWindow(Fl_Widget*,void*){
 				strcpy(tmp,"Append tile");
 			break;
 			case uTileNew:
-				snprintf(tmp,2048,"Insert tile after %u",unsigned(uintptr_t(uptr->ptr)));
+				snprintf(tmp,2048,"Insert tile at %u",unsigned(uintptr_t(uptr->ptr)));
 			case uTileGroup:
 				{struct undoTileGroup*ut=(struct undoTileGroup*)uptr->ptr;
 				snprintf(tmp,2048,"Tile group tiles affected: %d",ut->lst.size());}
@@ -806,6 +827,16 @@ void historyWindow(Fl_Widget*,void*){
 			case uChunkEdit:
 				{struct undoChunkEdit*uc=(struct undoChunkEdit*)uptr->ptr;
 				snprintf(tmp,2048,"Edit Chunk ID: %d X: %d Y: %d",uc->id,uc->x,uc->y);}	
+			break;
+			case uChunk:
+				{struct undoChunk*uc=(struct undoChunk*)uptr->ptr;
+				snprintf(tmp,2048,"Chunk ID: %d",uc->id);}	
+			break;
+			case uChunkAppend:
+				strcpy(tmp,"Append chunk");
+			break;
+			case uChunkNew:
+				snprintf(tmp,2048,"Insert chunk at %u",unsigned(uintptr_t(uptr->ptr)));
 			break;
 			default:
 				snprintf(tmp,2048,"TODO unhandled %d",uptr->type);
