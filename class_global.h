@@ -44,6 +44,7 @@ class editor : public Fl_Double_Window{
 	Fl_Scrollbar* chunkY;
 	Fl_Int_Input* map_w;
 	Fl_Int_Input* map_h;
+	Fl_Int_Input* chunksize[2];//chunk width,height
 	Fl_Slider* map_amt;
 	Fl_Slider* rgb_red;
 	Fl_Slider* rgb_green;
@@ -58,7 +59,6 @@ class editor : public Fl_Double_Window{
 	Fl_Slider* tile_select_2;
 	Fl_Slider* chunk_select;
 	Fl_Slider* tile_select_3;
-	Fl_Slider* chunksize[2];//chunk width,height
 	Fl_Slider* spritesel;
 	Fl_Slider* spritest;//sprite start tile
 	Fl_Slider* spritesize[2];//sprite width,height

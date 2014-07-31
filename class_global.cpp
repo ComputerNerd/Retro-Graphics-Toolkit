@@ -90,8 +90,11 @@ void editor::updateSpriteSliders(void){
 	spritepalrow->value(currentProject->spritesC->spriteslist[curSprite]->palrow);
 }
 void editor::updateChunkSizeSliders(uint32_t wi,uint32_t hi){
-	chunksize[0]->value(wi);
-	chunksize[1]->value(hi);
+	char tmp[16];
+	snprintf(tmp,16,"%d",wi);
+	chunksize[0]->value(tmp);
+	snprintf(tmp,16,"%d",hi);
+	chunksize[1]->value(tmp);
 }
 void editor::updateChunkSizeSliders(void){
 	updateChunkSizeSliders(currentProject->Chunk->wi,currentProject->Chunk->hi);

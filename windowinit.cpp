@@ -531,19 +531,16 @@ void editor::_editor(){
 			solidChunkMenu=new Fl_Choice(tile_place_buttons_x_off,256,128,24);
 			solidChunkMenu->copy(SolidMenu);
 
-			chunksize[0]=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,296,128,24,"Width (in tiles)");
-			chunksize[0]->step(1);
-			chunksize[0]->minimum(1);
-			chunksize[0]->maximum(4096);
+			chunksize[0]=new Fl_Int_Input(tile_place_buttons_x_off,296,128,24,"Width (in tiles)");
 			chunksize[0]->align(FL_ALIGN_TOP);
 			chunksize[0]->callback(resizeChunkCB);
+			chunksize[0]->value("16");
 
-			chunksize[1]=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,336,128,24,"Height (in tiles)");
-			chunksize[1]->step(1);
-			chunksize[1]->minimum(1);
-			chunksize[1]->maximum(4096);
+			chunksize[1]=new Fl_Int_Input(tile_place_buttons_x_off,336,128,24,"Height (in tiles)");
 			chunksize[1]->align(FL_ALIGN_TOP);
 			chunksize[1]->callback(resizeChunkCB);
+			chunksize[1]->value("16");
+
 			cordDisp[1]=new Fl_Box(tile_place_buttons_x_off,556,128,64);
 			cordDisp[1]->labelsize(12);
 

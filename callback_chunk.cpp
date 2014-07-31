@@ -37,7 +37,9 @@ void saveChunkS1CB(Fl_Widget*o,void*){
 	currentProject->Chunk->exportSonic1();
 }
 void resizeChunkCB(Fl_Widget*o,void*){
-	currentProject->Chunk->resize(window->chunksize[0]->value(),window->chunksize[1]->value());
+	int32_t wtmp=SafeTxtInput(window->chunksize[0]);
+	int32_t htmp=SafeTxtInput(window->chunksize[1]);
+	currentProject->Chunk->resize(wtmp,htmp);
 	window->updateChunkSizeSliders();
 	currentProject->Chunk->scrollChunks();
 	window->redraw();
