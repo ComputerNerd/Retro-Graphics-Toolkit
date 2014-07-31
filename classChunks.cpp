@@ -34,6 +34,14 @@ ChunkClass::ChunkClass(const ChunkClass& other){
 ChunkClass::~ChunkClass(void){
 	chunks.clear();
 }
+void ChunkClass::setElm(uint32_t id,uint32_t x,uint32_t y,struct ChunkAttrs c){
+	struct ChunkAttrs*ch=chunks.data()+(id*wi*hi)+(y*wi)+x;
+	ch->flags=c.flags;
+	ch->block=c.block;
+}
+struct ChunkAttrs ChunkClass::getElm(uint32_t id,uint32_t x,uint32_t y){
+	return chunks[(id*wi*hi)+(y*wi)+x];
+}
 void ChunkClass::removeAt(uint32_t at){
 	chunks.erase(chunks.begin()+(at*wi*hi),chunks.begin()+((at+1)*wi*hi));
 	--amt;
@@ -84,6 +92,9 @@ bool ChunkClass::getVflip(uint32_t id,uint32_t x,uint32_t y){
 }
 unsigned ChunkClass::getOff(uint32_t id,uint32_t x,uint32_t y){
 	return (id*wi*hi)+(y*wi)+x;
+}
+bool ChunkClass::getPrio(uint32_t id,uint32_t x,uint32_t y){
+	return (chunks[getOff(id,x,y)].flags&4)>>2;
 }
 void ChunkClass::setBlock(uint32_t id,uint32_t x,uint32_t y,uint32_t block){
 	chunks[getOff(id,x,y)].block=block;
@@ -295,7 +306,7 @@ void ChunkClass::importSonic1(const char * filename,bool append){
 		off=amt;
 	else
 		off=0;
-	window->updateChunkSizeSliders(wi,hi);
+	window->updateChunkSize(wi,hi);
 	amt=(fileSize/512)+off;
 	chunks.resize(amt*wi*hi);
 	struct ChunkAttrs*cptr=chunks.data();
@@ -319,10 +330,6 @@ void ChunkClass::importSonic1(const char * filename,bool append){
 	free(Dat);
 }
 void ChunkClass::exportSonic1(void){
-	if(!useBlocks){
-		fl_alert("Sonic 1 uses blocks, you are not please enable blocks and try again");
-		return;
-	}
 	FILE*fp;
 	int type,compression;
 	type=askSaveType();
@@ -416,4 +423,5 @@ void ChunkClass::resize(uint32_t wnew,uint32_t hnew){
 	wi=wnew;
 	hi=hnew;
 	free(tmp);
+	scrollChunks();
 }

@@ -89,15 +89,15 @@ void editor::updateSpriteSliders(void){
 	spritesize[1]->value(currentProject->spritesC->spriteslist[curSprite]->h);
 	spritepalrow->value(currentProject->spritesC->spriteslist[curSprite]->palrow);
 }
-void editor::updateChunkSizeSliders(uint32_t wi,uint32_t hi){
+void editor::updateChunkSize(uint32_t wi,uint32_t hi){
 	char tmp[16];
 	snprintf(tmp,16,"%d",wi);
 	chunksize[0]->value(tmp);
 	snprintf(tmp,16,"%d",hi);
 	chunksize[1]->value(tmp);
 }
-void editor::updateChunkSizeSliders(void){
-	updateChunkSizeSliders(currentProject->Chunk->wi,currentProject->Chunk->hi);
+void editor::updateChunkSize(void){
+	updateChunkSize(currentProject->Chunk->wi,currentProject->Chunk->hi);
 }
 void editor::draw_non_gui(void){
 	//When resizing the window things move around so we need to compensate for that
@@ -312,6 +312,21 @@ void editor::updateTileMapGUI(uint32_t x,uint32_t y){
 	}
 	setXYdispBlock(x,y);
 }
+void editor::updateChunkGUI(uint32_t tx,uint32_t ty){
+	editChunk_G[0]=tx;
+	editChunk_G[1]=ty;
+	G_hflip[1]=currentProject->Chunk->getHflip(currentChunk,tx,ty);
+	G_vflip[1]=currentProject->Chunk->getVflip(currentChunk,tx,ty);
+	G_highlow_p[1]=currentProject->Chunk->getPrio(currentChunk,tx,ty);
+	hflipCB[1]->value(G_hflip[1]);
+	vflipCB[1]->value(G_vflip[1]);
+	prioCB[1]->value(G_highlow_p[1]);
+
+	tile_select_3->value(currentProject->Chunk->getBlock(currentChunk,tx,ty));
+	solidBits_G=currentProject->Chunk->getSolid(currentChunk,tx,ty);
+	solidChunkMenu->value(solidBits_G);
+	setXYdisp(tx,ty,1);
+}
 int editor::handle(int event){
 	//printf("Event was %s (%d)\n", fl_eventnames[event], event);     // e.g. "Event was FL_PUSH (1)"
 	if(event==FL_PUSH)
@@ -427,6 +442,7 @@ int editor::handle(int event){
 							ty+=scrollChunks_G[1];
 							if(Fl::event_button()==FL_LEFT_MOUSE){
 								if(!((tileEditModeChunk_G)&&(tx==editChunk_G[0])&&(ty==editChunk_G[1]))){
+									pushChunkEdit(currentChunk,tx,ty);
 									currentProject->Chunk->setSolid(currentChunk,tx,ty,solidBits_G);
 									currentProject->Chunk->setHflip(currentChunk,tx,ty,G_hflip[1]);
 									currentProject->Chunk->setVflip(currentChunk,tx,ty,G_vflip[1]);
@@ -441,16 +457,7 @@ int editor::handle(int event){
 									damage(FL_DAMAGE_USER1);
 								}else{
 									tileEditModeChunk_G=true;
-									editChunk_G[0]=tx;
-									editChunk_G[1]=ty;
-									G_hflip[1]=currentProject->Chunk->getHflip(currentChunk,tx,ty);
-									G_vflip[1]=currentProject->Chunk->getVflip(currentChunk,tx,ty);
-									hflipCB[1]->value(G_hflip[1]);
-									vflipCB[1]->value(G_vflip[1]);
-									tile_select_3->value(currentProject->Chunk->getBlock(currentChunk,tx,ty));
-									solidBits_G=currentProject->Chunk->getSolid(currentChunk,tx,ty);
-									solidChunkMenu->value(solidBits_G);
-									setXYdisp(tx,ty,1);
+									updateChunkGUI(tx,ty);
 									redraw();
 								}
 							}

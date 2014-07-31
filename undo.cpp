@@ -15,18 +15,19 @@
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
 #include <stdlib.h>
+#include <FL/Fl_Browser.H>
 #include "system.h"
 #include "project.h"
 #include "undo.h"
 #include "color_convert.h"
-#include <FL/Fl_Browser.H>
+#include "callback_chunk.h"
 static struct undoEvent*undoBuf;
 static uint_fast32_t amount;
 static uint_fast32_t memUsed;
 static uint_fast32_t maxMen=16*1024*1024;//Limit undo buffer to 16Mb this is better than limiting by depth as each item varies in size
 static int_fast32_t pos=-1;
 void showMemUsageUndo(Fl_Widget*,void*){
-	fl_alert("The undo stack currently uses %d bytes of ram not including any overhead\nAmount of items %d",memUsed,amount);
+	fl_alert("May not be accurate\nThe undo stack currently uses %d bytes of ram not including any overhead\nAmount of items %d",memUsed,amount);
 }
 static void resizeArray(uint32_t amt){
 	if(undoBuf){
@@ -125,21 +126,18 @@ static void cleanupEvent(uint32_t id){
 					sz*=4;
 				free(um->ptrnew);
 				memUsed-=sz;
-			}}
+			}
+			free(uptr->ptr);
+			memUsed-=sizeof(undoTilemap);}
 		break;
 		case uTilemapResize:
 			{struct undoResize*um=(struct undoResize*)uptr->ptr;
 			if(um->ptr){
 				free(um->ptr);
 				memUsed-=getSzResizeGeneric(um->w,um->h,um->wnew,um->hnew,4,1);
-			}}
-		break;
-		case uChunkResize:
-			{struct undoResize*um=(struct undoResize*)uptr->ptr;
-			if(um->ptr){
-				free(um->ptr);
-				memUsed-=getSzResizeGeneric(um->w,um->h,um->wnew,um->hnew,sizeof(struct ChunkAttrs),currentProject->Chunk->amt);
-			}}
+			}
+			free(uptr->ptr);
+			memUsed-=sizeof(struct undoResize);}
 		break;
 		case uPalette:
 			{struct undoPalette*up=(struct undoPalette*)uptr->ptr;
@@ -164,6 +162,19 @@ static void cleanupEvent(uint32_t id){
 		case uPaletteEntry:
 			free(uptr->ptr);
 			memUsed-=sizeof(struct undoPaletteEntry);
+		break;
+		case uChunkResize:
+			{struct undoResize*um=(struct undoResize*)uptr->ptr;
+			if(um->ptr){
+				free(um->ptr);
+				memUsed-=getSzResizeGeneric(um->w,um->h,um->wnew,um->hnew,sizeof(struct ChunkAttrs),currentProject->Chunk->amt);
+			}
+			free(uptr->ptr);
+			memUsed-=sizeof(struct undoResize);}
+		break;
+		case uChunkEdit:
+			free(uptr->ptr);
+			memUsed-=sizeof(struct undoChunkEdit);
 		break;
 	}
 }
@@ -414,17 +425,6 @@ void UndoRedo(bool redo){
 				}
 			}}
 		break;
-		case uChunkResize:
-			{struct undoResize*um=(struct undoResize*)uptr->ptr;
-			if(redo)
-				currentProject->Chunk->resize(um->wnew,um->hnew);
-			else{
-				currentProject->Chunk->resize(um->w,um->h);
-				if(um->ptr)
-					cpyResizeGeneric((uint8_t*)um->ptr,(uint8_t*)currentProject->Chunk->chunks.data(),um->w,um->h,um->wnew,um->hnew,sizeof(struct ChunkAttrs),currentProject->Chunk->amt,true);
-			}
-			window->updateChunkSizeSliders();}
-		break;
 		case uTilemapResize:
 			{struct undoResize*um=(struct undoResize*)uptr->ptr;
 			if(redo)
@@ -518,6 +518,29 @@ void UndoRedo(bool redo){
 					}}
 				break;
 			}}
+		break;
+		case uChunkResize:
+			{struct undoResize*um=(struct undoResize*)uptr->ptr;
+			if(redo)
+				currentProject->Chunk->resize(um->wnew,um->hnew);
+			else{
+				currentProject->Chunk->resize(um->w,um->h);
+				if(um->ptr)
+					cpyResizeGeneric((uint8_t*)um->ptr,(uint8_t*)currentProject->Chunk->chunks.data(),um->w,um->h,um->wnew,um->hnew,sizeof(struct ChunkAttrs),currentProject->Chunk->amt,true);
+			}
+			window->updateChunkSize();}
+		break;
+		case uChunkEdit:
+			{struct undoChunkEdit*uc=(struct undoChunkEdit*)uptr->ptr;
+			if(redo){
+				currentProject->Chunk->setElm(uc->id,uc->x,uc->y,uc->valnew);
+			}else{
+				uc->valnew=currentProject->Chunk->getElm(uc->id,uc->x,uc->y);
+				currentProject->Chunk->setElm(uc->id,uc->x,uc->y,uc->val);
+			}
+			if(tileEditModeChunk_G)
+				window->updateChunkGUI(uc->x,uc->y);
+			}
 		break;
 
 	}
@@ -658,9 +681,6 @@ static void pushResize(uint32_t wnew,uint32_t hnew,uint32_t w,uint32_t h,uint8_t
 void pushTilemapResize(uint32_t wnew,uint32_t hnew){
 	pushResize(wnew,hnew,currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeHA,currentProject->tileMapC->tileMapDat,uTilemapResize,4,1);
 }
-void pushChunkResize(uint32_t wnew,uint32_t hnew){
-	pushResize(wnew,hnew,currentProject->Chunk->wi,currentProject->Chunk->hi,(uint8_t*)currentProject->Chunk->chunks.data(),uChunkResize,sizeof(struct ChunkAttrs),currentProject->Chunk->amt);
-}
 void pushPaletteAll(void){
 	pushEventPrepare();
 	struct undoEvent*uptr=undoBuf+pos;
@@ -699,6 +719,21 @@ void pushPaletteEntry(uint32_t id){
 			up->val=(int32_t)currentProject->palDat[id];
 		break;
 	}
+}
+void pushChunkResize(uint32_t wnew,uint32_t hnew){
+	pushResize(wnew,hnew,currentProject->Chunk->wi,currentProject->Chunk->hi,(uint8_t*)currentProject->Chunk->chunks.data(),uChunkResize,sizeof(struct ChunkAttrs),currentProject->Chunk->amt);
+}
+void pushChunkEdit(uint32_t id,uint32_t x,uint32_t y){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uChunkEdit;
+	uptr->ptr=malloc(sizeof(struct undoChunkEdit));
+	memUsed+=sizeof(struct undoChunkEdit);
+	struct undoChunkEdit*uc=(struct undoChunkEdit*)uptr->ptr;
+	uc->x=x;
+	uc->y=y;
+	uc->id=id;
+	uc->val=currentProject->Chunk->getElm(id,x,y);
 }
 static Fl_Window * win;
 static void closeHistory(Fl_Widget*,void*){
@@ -767,6 +802,10 @@ void historyWindow(Fl_Widget*,void*){
 			case uPaletteEntry:
 				{struct undoPaletteEntry*up=(struct undoPaletteEntry*)uptr->ptr;
 				snprintf(tmp,2048,"Change palette entry: %d",up->id);}
+			break;
+			case uChunkEdit:
+				{struct undoChunkEdit*uc=(struct undoChunkEdit*)uptr->ptr;
+				snprintf(tmp,2048,"Edit Chunk ID: %d X: %d Y: %d",uc->id,uc->x,uc->y);}	
 			break;
 			default:
 				snprintf(tmp,2048,"TODO unhandled %d",uptr->type);

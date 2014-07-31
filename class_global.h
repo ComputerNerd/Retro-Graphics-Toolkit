@@ -30,8 +30,9 @@ class editor : public Fl_Double_Window{
 	void updateBlockTilesChunk(uint32_t prj);
 	void updateBlockTilesChunk(void);
 	void updateSpriteSliders(void);
-	void updateChunkSizeSliders(uint32_t wi,uint32_t hi);
-	void updateChunkSizeSliders(void);
+	void updateChunkGUI(uint32_t tx,uint32_t ty);
+	void updateChunkSize(uint32_t wi,uint32_t hi);
+	void updateChunkSize(void);
 	bool tabsHidden[shareAmtPj+1];//The purpose of the +1 is to accomidate for the settings/project tab
 	Fl_Box* cordDisp[2];//The purpose of this is to display coordinates of tile in plane and chunk editor
 	Fl_Box*totalTiles;

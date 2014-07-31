@@ -14,6 +14,7 @@
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
 #pragma once
+#include "classChunks.h"
 enum undoTypes_t{
 	uTile=0,
 	uTileAll,
@@ -61,7 +62,7 @@ struct undoTileAll{
 struct undoTileGroup{
 	tileTypeMask_t type;
 	std::vector<uint32_t> lst;//Contains group of affect tiles
-	std::vector<uint8_t> data;//Similar situation to other structs as in what this contains and what order
+	std::vector<uint8_t> data;//Similar situation to other tile structs as in what this contains and what order
 	std::vector<uint8_t> datanew;
 };
 struct undoTilePixel{
@@ -87,6 +88,10 @@ struct undoPalette{
 struct undoPaletteEntry{
 	uint32_t id,val,valnew;
 };
+struct undoChunkEdit{
+	uint32_t id,x,y;
+	struct ChunkAttrs valnew,val;
+};
 void showMemUsageUndo(Fl_Widget*,void*);
 void UndoRedo(bool redo);
 void historyWindow(Fl_Widget*,void*);//Controls settings and shows history
@@ -103,5 +108,6 @@ void pushTilemapAll(bool attrOnly);
 void pushPaletteEntry(uint32_t id);
 void pushPaletteAll(void);
 void pushChunkResize(uint32_t wnew,uint32_t hnew);
+void pushChunkEdit(uint32_t id,uint32_t x,uint32_t y);
 void pushSwitchSys(void);
 void pushSwitchPrj(void);

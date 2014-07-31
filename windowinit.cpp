@@ -119,7 +119,7 @@ static const Fl_Menu_Item menuEditor[]={
 	{"Undo/Redo",0, 0, 0, FL_SUBMENU},
 		{"Undo",FL_CTRL+'z',undoCB},
 		{"Redo",FL_CTRL+'y',redoCB},
-		{"Show estimated ram usage",0,showMemUsageUndo},
+		//{"Show estimated ram usage",0,showMemUsageUndo},
 		{"Show history window",FL_CTRL+'h',historyWindow},
 		{0},
 	{"Help",0, 0, 0, FL_SUBMENU},
@@ -553,7 +553,7 @@ void editor::_editor(){
 			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off,396, 160, 32, "Delete selected chunk");
 				o->callback(delChunkAtCB);
 			}
-			updateChunkSizeSliders();
+			updateChunkSize();
 
 			TabsMain[chunkEditor]->end();
 		}

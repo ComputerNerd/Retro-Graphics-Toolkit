@@ -42,14 +42,14 @@ void resizeChunkCB(Fl_Widget*o,void*){
 	int32_t htmp=SafeTxtInput(window->chunksize[1]);
 	pushChunkResize(wtmp,htmp);
 	currentProject->Chunk->resize(wtmp,htmp);
-	window->updateChunkSizeSliders();
-	currentProject->Chunk->scrollChunks();
+	window->updateChunkSize();
 	window->redraw();
 }
 void selBlockCB(Fl_Widget*o,void*){
 	Fl_Slider*s=(Fl_Slider*)o;
 	selBlock=(uintptr_t)s->value();
 	if(tileEditModeChunk_G){
+		pushChunkEdit(currentChunk,editChunk_G[0],editChunk_G[1]);
 		currentProject->Chunk->setBlock(currentChunk,editChunk_G[0],editChunk_G[1],selBlock);
 		window->redraw();
 	}
@@ -58,6 +58,7 @@ void solidCB(Fl_Widget*o,void*){
 	Fl_Choice*s=(Fl_Choice*)o;
 	solidBits_G=(uintptr_t)s->value();
 	if(tileEditModeChunk_G){
+		pushChunkEdit(currentChunk,editChunk_G[0],editChunk_G[1]);
 		currentProject->Chunk->setSolid(currentChunk,editChunk_G[0],editChunk_G[1],solidBits_G);
 		window->redraw();
 	}

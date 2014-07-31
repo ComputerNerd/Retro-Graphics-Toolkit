@@ -30,10 +30,13 @@ public:
 	ChunkClass();
 	ChunkClass(const ChunkClass& other);
 	~ChunkClass();
+	void setElm(uint32_t id,uint32_t x,uint32_t y,struct ChunkAttrs c);
+	struct ChunkAttrs getElm(uint32_t id,uint32_t x,uint32_t y);
 	void removeAt(uint32_t at);
 	void resizeAmt(uint32_t amtnew);
 	void resizeAmt(void);
 	bool getPrio_t(uint32_t id,uint32_t x,uint32_t y);
+	bool getPrio(uint32_t id,uint32_t x,uint32_t y);
 	uint8_t getTileRow_t(uint32_t id,uint32_t x,uint32_t y);//x and y refer to tiles not blocks
 	unsigned getOff(uint32_t id,uint32_t x,uint32_t y);
 	void setBlock(uint32_t id,uint32_t x,uint32_t y,uint32_t block);//Which chunk,offset x,offset y (offsets relative to chunk)
