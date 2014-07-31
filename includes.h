@@ -46,6 +46,8 @@
 #include <FL/Fl_Text_Editor.H>
 #include <FL/Fl_Choice.H>
 #include <FL/Fl_Int_Input.H>
+#include <FL/Fl_Image.H>
+#include <FL/Fl_Progress.H>
 #include <fstream>
 #include <iostream>
 #include <algorithm>
@@ -53,6 +55,4 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <FL/Fl_Image.H>
-#include <FL/Fl_Progress.H>
 #include <inttypes.h>

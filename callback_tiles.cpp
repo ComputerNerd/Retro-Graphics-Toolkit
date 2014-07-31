@@ -90,6 +90,8 @@ void remove_duplicate_tiles(Fl_Widget*,void*){
 }
 void remove_duplicate_truecolor(Fl_Widget*,void*){
 	//sub_tile_map
+	pushTilemapAll(false);
+	pushTileGroupPrepare(tTypeDelete);
 	uint32_t tile_remove_c=0;
 	int32_t cur_tile,curT;
 	puts("Pass 1");
@@ -104,6 +106,7 @@ void remove_duplicate_truecolor(Fl_Widget*,void*){
 			#endif
 			{
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,false,false);
+				addTileGroup(curT,curT+tile_remove_c);
 				currentProject->tileC->remove_tile_at(curT);
 				tile_remove_c++;
 			}
@@ -127,6 +130,7 @@ void remove_duplicate_truecolor(Fl_Widget*,void*){
 			#endif
 			{
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,true,false);
+				addTileGroup(curT,curT+tile_remove_c);
 				currentProject->tileC->remove_tile_at(curT);
 				tile_remove_c++;
 			}
@@ -149,6 +153,7 @@ void remove_duplicate_truecolor(Fl_Widget*,void*){
 			#endif
 			{
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,false,true);
+				addTileGroup(curT,curT+tile_remove_c);
 				currentProject->tileC->remove_tile_at(curT);
 				tile_remove_c++;
 			}
@@ -172,6 +177,7 @@ void remove_duplicate_truecolor(Fl_Widget*,void*){
 			#endif
 			{
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,true,true);
+				addTileGroup(curT,curT+tile_remove_c);
 				currentProject->tileC->remove_tile_at(curT);
 				tile_remove_c++;
 			}

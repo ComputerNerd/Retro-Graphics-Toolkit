@@ -32,7 +32,26 @@ static int returnVal=0;
 static Fl_Choice*PopC;
 static Fl_Window * winP;
 unsigned SpriteOff[2];
-
+static void zeroError(const char*more){
+	fl_alert("Please enter a value greater than zero\n%s",more);
+}
+int SafeTxtInput(Fl_Int_Input*in){
+	int val=atoi(in->value());
+	if(val<=0){
+		if(val==0){
+			zeroError("Defaulting to one");
+			val=1;
+		}else{
+			zeroError("Defaulting to absoulute value");
+			val=-val;
+		}
+		char tmp[16];
+		snprintf(tmp,16,"%d",val);
+		in->value(tmp);
+		window->redraw();
+	}
+	return val;
+}
 void updateTileSelectAmt(uint32_t newMax){
 	--newMax;
 	window->tile_select->maximum(newMax);
@@ -62,7 +81,7 @@ int MenuPopup(const char * title,const char * text,unsigned num,...){
 		winP=new Fl_Window(480,128,title);
 		winP->begin();
 		if(text)
-			Fl_Box * txt=new Fl_Box(FL_NO_BOX,8,8,464,88,text);
+			new Fl_Box(FL_NO_BOX,8,8,464,88,text);
 		PopC=new Fl_Choice(8,96,192,24);
 		va_list arguments;
 		va_start(arguments,num);	// Initializing arguments to store all values after num

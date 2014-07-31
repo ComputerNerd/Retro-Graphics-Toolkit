@@ -19,7 +19,8 @@
 #include "dither.h"
 #include "tilemap.h"
 #include "errorMsg.h"
-//tiles tiles_main;
+#include "undo.h"
+#include <exception>
 tiles::tiles(){
 	current_tile=0;
 	amt=1;
@@ -51,10 +52,17 @@ tiles::~tiles(){
 	truetDat.clear();
 }
 void tiles::insertTile(uint32_t at){
-	++at;//the insert function inserts before
-	tDat.insert(tDat.begin()+at*tileSize,tileSize,0);
-	truetDat.insert(truetDat.begin()+at*tcSize,tcSize,0);
-	++amt;
+	try{
+		if(at>amt)
+			resizeAmt(at);
+		else
+			++amt;
+		tDat.insert(tDat.begin()+at*tileSize,tileSize,0);
+		truetDat.insert(truetDat.begin()+at*tcSize,tcSize,0);
+	}catch(std::exception& e){
+		fl_alert("Error inserting tile at %d\nAdditional details: %s",at-1,e.what());
+		exit(1);
+	}
 }
 void tiles::setPixel(uint32_t tile,uint32_t x,uint32_t y,uint32_t val){
 	if(x>=sizew)
@@ -493,6 +501,8 @@ void tiles::blank_tile(uint32_t tileUsage){
 		memset(&tDat[tileUsage*tileSize],0,tileSize);
 }
 void tiles::remove_duplicate_tiles(){
+	pushTilemapAll(false);
+	pushTileGroupPrepare(tTypeDelete);
 	char bufT[1024];
 	Fl_Window *win;
 	Fl_Progress *progress;
@@ -509,8 +519,7 @@ void tiles::remove_duplicate_tiles(){
 	uint32_t tile_remove_c=0;
 	int32_t cur_tile,curT;
 	uint8_t * tileTemp=(uint8_t *)alloca(tileSize);
-	puts("Pass 1");
-	for (cur_tile=0;cur_tile<=amt-1;cur_tile++){
+	for (cur_tile=0;cur_tile<amt;++cur_tile){
 		for (curT=amt-1;curT>=0;curT--){
 			if (cur_tile == curT)//dont compare it's self
 				continue;
@@ -521,22 +530,11 @@ void tiles::remove_duplicate_tiles(){
 			#endif
 			{
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,false,false);
+				addTileGroup(curT,curT+tile_remove_c);
 				remove_tile_at(curT);
 				tile_remove_c++;
-				//printf("Deleted tile %d\nRemoved %d tiles\n",curT,tile_remove_c);
-			}
-		}
-		progress->value((float)cur_tile/(float)amt/4.0f);
-		sprintf(bufT,"Removed %d tiles",tile_remove_c);
-		progress->label(bufT);
-		Fl::check();
-	}
-	//tile_remove_c=0;
-	puts("Pass 2 h-flip");
-	for (cur_tile=0;cur_tile<=amt-1;cur_tile++){
-		for (curT=amt-1;curT>=0;curT--){
-			if (cur_tile == curT)//dont compare it's self
 				continue;
+			}
 			hflip_tile(curT,tileTemp);
 			#if __LP64__
 			if (cmp_tiles(cur_tile,(uint64_t *)tileTemp))
@@ -545,47 +543,12 @@ void tiles::remove_duplicate_tiles(){
 			#endif
 			{
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,true,false);
+				addTileGroup(curT,curT+tile_remove_c);
 				remove_tile_at(curT);
 				tile_remove_c++;
-				//printf("Deleted tile %d\nRemoved %d tiles\n",curT,tile_remove_c);
-			}
-		}
-		progress->value(((float)cur_tile/(float)amt/4.0f)+.25f);
-		sprintf(bufT,"Removed %d tiles",tile_remove_c);
-		progress->label(bufT);
-		Fl::check();
-	}
-	//tile_remove_c=0;
-	puts("Pass 3 v-flip");
-	for (cur_tile=0;cur_tile<amt;cur_tile++){
-		for (curT=amt-1;curT>=0;curT--){
-			if (cur_tile == curT)//dont compare it's self
 				continue;
-			vflip_tile(curT,tileTemp);
-			#if __LP64__
-			if (cmp_tiles(cur_tile,(uint64_t *)tileTemp))
-			#else
-			if (cmp_tiles(cur_tile,(uint32_t *)tileTemp))
-			#endif
-			{
-				currentProject->tileMapC->sub_tile_map(curT,cur_tile,false,true);
-				remove_tile_at(curT);
-				tile_remove_c++;
-				//printf("Deleted tile %d\nRemoved %d tiles\n",curT,tile_remove_c);
 			}
-		}
-		progress->value(((float)cur_tile/(float)amt/4.0f)+.5f);
-		sprintf(bufT,"Removed %d tiles",tile_remove_c);
-		progress->label(bufT);
-		Fl::check();
-	}
-	//tile_remove_c=0;
-	puts("Pass 4 vh-flip");
-	for (cur_tile=0;cur_tile<amt;cur_tile++){
-		for (curT=amt-1;curT>=0;curT--){
-			if (cur_tile == curT)//dont compare it's self
-				continue;
-			hflip_tile(curT,tileTemp);
+			//hflip_tile(curT,tileTemp);//Already done
 			vflip_tile_ptr(tileTemp,tileTemp);
 			#if __LP64__
 			if (cmp_tiles(cur_tile,(uint64_t *)tileTemp))
@@ -594,13 +557,28 @@ void tiles::remove_duplicate_tiles(){
 			#endif
 			{
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,true,true);
+				addTileGroup(curT,curT+tile_remove_c);
 				remove_tile_at(curT);
 				tile_remove_c++;
+				continue;
 				//printf("Deleted tile %d\nRemoved %d tiles\n",curT,tile_remove_c);
 			}
+			vflip_tile(curT,tileTemp);
+			#if __LP64__
+			if (cmp_tiles(cur_tile,(uint64_t *)tileTemp))
+			#else
+			if (cmp_tiles(cur_tile,(uint32_t *)tileTemp))
+			#endif
+			{
+				currentProject->tileMapC->sub_tile_map(curT,cur_tile,false,true);
+				addTileGroup(curT,curT+tile_remove_c);
+				remove_tile_at(curT);
+				tile_remove_c++;
+				continue;
+			}
 		}
-		progress->value(((float)cur_tile/(float)amt/4.0f)+.75f);
-		sprintf(bufT,"Removed %d tiles",tile_remove_c);
+		progress->value((float)cur_tile/(float)amt);
+		snprintf(bufT,1024,"Removed %d tiles",tile_remove_c);
 		progress->label(bufT);
 		Fl::check();
 	}

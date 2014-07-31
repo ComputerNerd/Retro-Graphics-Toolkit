@@ -1,5 +1,8 @@
 Most recent changes are placed at the top
+
 20140730
+Added remove duplicate tile undoing
+Remove set map width menu item, it is easier and faster to use the text boxes
 More tilemap undoing
 Added delete chunk button
 

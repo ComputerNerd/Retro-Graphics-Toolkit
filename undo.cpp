@@ -94,6 +94,18 @@ static void cleanupEvent(uint32_t id){
 		case uTileAppend:
 			//Nothing to do here
 		break;
+		case uTileGroup:
+			{struct undoTileGroup*ut=(struct undoTileGroup*)uptr->ptr;
+			unsigned sz=getSzTile(ut->type)*ut->lst.size();
+			ut->data.clear();
+			memUsed-=sz;
+			if(ut->datanew.size()){
+				ut->datanew.clear();
+				memUsed-=sz;
+			}
+			delete uptr->ptr;
+			memUsed-=sizeof(struct undoTileGroup);}
+		break;
 		case uTilemapEdit:
 			free(uptr->ptr);
 			memUsed-=sizeof(struct undoTilemapEdit);
@@ -301,6 +313,38 @@ void UndoRedo(bool redo){
 				cpyAllTilesU((uint8_t*)ut->ptr,ut->amt,ut->type);
 			}}
 		break;
+		case uTileGroup:
+			{struct undoTileGroup*ut=(struct undoTileGroup*)uptr->ptr;
+			unsigned sz=getSzTile(ut->type);
+			if(redo){
+				if(ut->type&tTypeDeleteFlag){
+					for(uint_fast32_t i=0;i<ut->lst.size();++i)
+						currentProject->tileC->remove_tile_at(ut->lst[i]);
+					updateTileSelectAmt();
+				}else{
+					for(uint_fast32_t i=0;i<ut->lst.size();++i)
+						tilesToU(ut->datanew.data()+(i*sz),ut->lst[i],ut->type);
+				}
+			}else{
+				if((!(ut->datanew.size()))&&(!(ut->type&tTypeDeleteFlag))){
+					ut->datanew.resize(sz*ut->lst.size());
+					memUsed+=sz*ut->lst.size();
+					for(uint_fast32_t i=0;i<ut->lst.size();++i)
+						tilesTo(ut->datanew.data()+(i*sz),ut->lst[i],ut->type);
+				}
+				if(ut->type&tTypeDeleteFlag){
+					uint32_t fullSize=currentProject->tileC->amt+ut->lst.size();
+					for(uint_fast32_t i=0;i<ut->lst.size();++i){
+						if(ut->lst[i]<currentProject->tileC->amt)
+							currentProject->tileC->insertTile(ut->lst[i]);
+					}
+					currentProject->tileC->resizeAmt(fullSize);
+					updateTileSelectAmt();
+				}
+				for(uint_fast32_t i=0;i<ut->lst.size();++i)
+					tilesToU(ut->data.data()+(i*sz),ut->lst[i],ut->type);
+			}}
+		break;
 		case uTileAppend:
 			if(redo)
 				currentProject->tileC->appendTile();
@@ -500,6 +544,26 @@ void pushTileAppend(void){
 	struct undoEvent*uptr=undoBuf+pos;
 	uptr->type=uTileAppend;
 }
+void pushTileGroupPrepare(tileTypeMask_t type){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uTileGroup;
+	uptr->ptr=new struct undoTileGroup;
+	memUsed+=sizeof(struct undoTileGroup);
+	struct undoTileGroup*ut=(struct undoTileGroup*)uptr->ptr;
+	ut->type=type;
+}
+void addTileGroup(uint32_t tile,int32_t forceid){
+	struct undoEvent*uptr=undoBuf+pos;
+	struct undoTileGroup*ut=(struct undoTileGroup*)uptr->ptr;
+	if(forceid>0)
+		ut->lst.push_back(forceid);
+	else
+		ut->lst.push_back(tile);
+	unsigned sz=getSzTile(ut->type);
+	ut->data.resize(sz*ut->lst.size());
+	tilesTo(ut->data.data()+(sz*(ut->lst.size()-1)),tile,ut->type);
+}
 void pushTilemapAll(bool attrOnly){
 	pushEventPrepare();
 	struct undoEvent*uptr=undoBuf+pos;
@@ -631,6 +695,10 @@ void historyWindow(Fl_Widget*,void*){
 			break;
 			case uTileAppend:
 				strcpy(tmp,"Append tile");
+			break;
+			case uTileGroup:
+				{struct undoTileGroup*ut=(struct undoTileGroup*)uptr->ptr;
+				snprintf(tmp,2048,"Tile group tiles affected: %d",ut->lst.size());}
 			break;
 			case uTilemap:
 				strcpy(tmp,"Change tilemap");

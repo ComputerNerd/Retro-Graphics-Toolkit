@@ -40,32 +40,10 @@ void tileDPicker(Fl_Widget*,void*){
 	delete win;
 	window->damage(FL_DAMAGE_USER1);
 }
-
-void setMapW(Fl_Widget*,void*){
-	char * str_ptr;
-	str_ptr=(char *)fl_input("Enter Width");
-	if (!str_ptr)
-		return;
-	if (!verify_str_number_only(str_ptr))
-		return;
-	uint32_t wTemp=atoi(str_ptr);
-	int32_t htmp;
-	htmp=atoi(window->map_h->value());
-	if(htmp<=0)
-		return;
-	if(currentProject->tileMapC->isBlock)
-		currentProject->tileMapC->resizeBlocks(wTemp,htmp);
-	else
-		currentProject->tileMapC->resize_tile_map(wTemp,htmp);
-	window->map_w->value(str_ptr);
-	window->redraw();
-}
 void resizeBlocksCB(Fl_Widget*o,void*){
 	int32_t wtmp,htmp;
-	wtmp=atoi(window->map_w->value());
-	htmp=atoi(window->map_h->value());
-	if((wtmp<=0)||(htmp<=0))
-		return;
+	wtmp=SafeTxtInput(window->map_w);
+	htmp=SafeTxtInput(window->map_h);
 	currentProject->tileMapC->resizeBlocks(wtmp,htmp);
 	window->redraw();
 }
@@ -96,10 +74,8 @@ void FixOutOfRangeCB(Fl_Widget*,void*){
 }
 void callback_resize_map(Fl_Widget* o,void*){
 	int32_t w,h;
-	w=atoi(window->map_w->value());
-	h=atoi(window->map_h->value());
-	if((w<=0)||(h<=0))
-		return;
+	w=SafeTxtInput(window->map_w);
+	h=SafeTxtInput(window->map_h);
 	pushTilemapResize(w,h);
 	currentProject->tileMapC->resize_tile_map(w,h);
 	window->redraw();

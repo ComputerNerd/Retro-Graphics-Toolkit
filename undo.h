@@ -17,6 +17,7 @@
 enum undoTypes_t{
 	uTile=0,
 	uTileAll,
+	uTileGroup,
 	uTilePixel,
 	uTileAppend,//No struct
 	uTileNew,//No struct reuses ptr
@@ -43,7 +44,7 @@ enum tileTypeMask_t{
 };
 struct undoEvent{//This struct mearly holds which type of undo this is
 	undoTypes_t type;
-	void*ptr;//Can also be reused for information for example appendTile will store tile id if doing so limit yourself to 32bit values. Even if void* is 64bit on your system
+	void*ptr;//Can also be reused for information for example appendTile will store tile id if doing so limit yourself to 32bit values. Even if void* is 64bit on your system also can point to pointer created either by malloc or new
 };
 struct undoTile{//The purpose of this struct if to completly undo a tile
 	tileTypeMask_t type;
@@ -56,6 +57,12 @@ struct undoTileAll{
 	uint32_t amt,amtnew;
 	void*ptr;
 	void*ptrnew;
+};
+struct undoTileGroup{
+	tileTypeMask_t type;
+	std::vector<uint32_t> lst;//Contains group of affect tiles
+	std::vector<uint8_t> data;//Similar situation to other structs as in what this contains and what order
+	std::vector<uint8_t> datanew;
 };
 struct undoTilePixel{
 	tileTypeMask_t type;
@@ -85,6 +92,8 @@ void UndoRedo(bool redo);
 void historyWindow(Fl_Widget*,void*);//Controls settings and shows history
 void pushTile(uint32_t id,tileTypeMask_t type);
 void pushTilePixel(uint32_t id,uint32_t x,uint32_t y,tileTypeMask_t type);
+void pushTileGroupPrepare(tileTypeMask_t type);
+void addTileGroup(uint32_t tile,int32_t forceid=-1);
 void pushTilesAll(tileTypeMask_t type);
 void pushTileAppend(void);
 void pushTilemapEdit(uint32_t x,uint32_t y);

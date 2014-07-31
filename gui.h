@@ -15,6 +15,7 @@
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
 #pragma once
+#include <FL/Fl_Int_Input.H>
 #define default_map_off_x 256
 #define default_map_off_y 256
 #define defaultspritex 192
@@ -51,6 +52,7 @@ extern unsigned SpriteOff[2];
 #define spriteEditor 4
 #define settingsTab 5
 
+int SafeTxtInput(Fl_Int_Input*in);
 void updateTileSelectAmt(void);
 void updateTileSelectAmt(uint32_t newMax);
 int MenuPopup(const char * title,const char * text,unsigned num,...);
