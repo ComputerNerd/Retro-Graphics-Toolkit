@@ -19,6 +19,7 @@
 #include "tilemap.h"
 #include "undo.h"
 void insertTileCB(Fl_Widget*,void*){
+	pushTilenew(currentProject->tileC->current_tile+1);
 	currentProject->tileC->insertTile(currentProject->tileC->current_tile+1);
 	updateTileSelectAmt();
 	window->redraw();

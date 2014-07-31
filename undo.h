@@ -20,7 +20,7 @@ enum undoTypes_t{
 	uTileGroup,
 	uTilePixel,
 	uTileAppend,//No struct
-	uTileNew,//No struct reuses ptr
+	uTileNew,//No struct reuses ptr for insert tile after
 	uTilemap,
 	uTilemapattr,
 	uTilemapEdit,
@@ -91,6 +91,7 @@ void showMemUsageUndo(Fl_Widget*,void*);
 void UndoRedo(bool redo);
 void historyWindow(Fl_Widget*,void*);//Controls settings and shows history
 void pushTile(uint32_t id,tileTypeMask_t type);
+void pushTilenew(uint32_t id);
 void pushTilePixel(uint32_t id,uint32_t x,uint32_t y,tileTypeMask_t type);
 void pushTileGroupPrepare(tileTypeMask_t type);
 void addTileGroup(uint32_t tile,int32_t forceid=-1);

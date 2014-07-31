@@ -91,6 +91,7 @@ static void cleanupEvent(uint32_t id){
 			free(uptr->ptr);
 			memUsed-=sizeof(struct undoTileAll);}
 		break;
+		case uTileNew:
 		case uTileAppend:
 			//Nothing to do here
 		break;
@@ -358,6 +359,13 @@ void UndoRedo(bool redo){
 				currentProject->tileC->resizeAmt(currentProject->tileC->amt-1);
 			updateTileSelectAmt();
 		break;
+		case uTileNew:
+			if(redo)
+				currentProject->tileC->insertTile((uintptr_t)uptr->ptr);
+			else
+				currentProject->tileC->remove_tile_at((uintptr_t)uptr->ptr);
+			updateTileSelectAmt();
+		break;
 		case uTilemapEdit:
 			{struct undoTilemapEdit*um=(struct undoTilemapEdit*)uptr->ptr;
 			if(redo)
@@ -513,6 +521,12 @@ void pushTile(uint32_t id,tileTypeMask_t type){
 	ut->type=type;
 	memUsed+=sz;
 	tilesTo((uint8_t*)ut->ptr,id,type);
+}
+void pushTilenew(uint32_t id){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uTileNew;
+	uptr->ptr=(void*)id;
 }
 void pushTilePixel(uint32_t id,uint32_t x,uint32_t y,tileTypeMask_t type){
 	pushEventPrepare();
@@ -697,11 +711,13 @@ void historyWindow(Fl_Widget*,void*){
 			break;
 			case uTileAll:
 				{struct undoTileAll*ut=(struct undoTileAll*)uptr->ptr;
-				snprintf(tmp,2048,"Change all tiles amount: %d",ut->amt);}
+				snprintf(tmp,2048,"Change all tiles amount: %u",ut->amt);}
 			break;
 			case uTileAppend:
 				strcpy(tmp,"Append tile");
 			break;
+			case uTileNew:
+				snprintf(tmp,2048,"Insert tile after %u",unsigned(uintptr_t(uptr->ptr)));
 			case uTileGroup:
 				{struct undoTileGroup*ut=(struct undoTileGroup*)uptr->ptr;
 				snprintf(tmp,2048,"Tile group tiles affected: %d",ut->lst.size());}
