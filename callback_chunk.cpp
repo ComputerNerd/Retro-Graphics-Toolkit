@@ -16,6 +16,7 @@
 */
 #include "project.h"
 #include "includes.h"
+#include "undo.h"
 uint32_t currentChunk;
 unsigned solidBits_G;
 bool tileEditModeChunk_G;
@@ -39,6 +40,7 @@ void saveChunkS1CB(Fl_Widget*o,void*){
 void resizeChunkCB(Fl_Widget*o,void*){
 	int32_t wtmp=SafeTxtInput(window->chunksize[0]);
 	int32_t htmp=SafeTxtInput(window->chunksize[1]);
+	pushChunkResize(wtmp,htmp);
 	currentProject->Chunk->resize(wtmp,htmp);
 	window->updateChunkSizeSliders();
 	currentProject->Chunk->scrollChunks();

@@ -76,7 +76,7 @@ struct undoTilemap{//For undoing the entire tilemap
 struct undoTilemapEdit{
 	uint32_t x,y,val,valnew;
 };
-struct undoTilemapResize{
+struct undoResize{
 	uint32_t w,h,wnew,hnew;//Old width and height
 	void*ptr;//Contains a pointer ONLY TO LOST DATA
 };
@@ -102,5 +102,6 @@ void pushTilemapResize(uint32_t wnew,uint32_t hnew);
 void pushTilemapAll(bool attrOnly);
 void pushPaletteEntry(uint32_t id);
 void pushPaletteAll(void);
+void pushChunkResize(uint32_t wnew,uint32_t hnew);
 void pushSwitchSys(void);
 void pushSwitchPrj(void);

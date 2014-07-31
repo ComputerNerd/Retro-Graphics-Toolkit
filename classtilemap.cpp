@@ -52,6 +52,13 @@ tileMap::tileMap(const tileMap& other){
 tileMap::~tileMap(){
 	free(tileMapDat);
 }
+bool tileMap::inRange(uint32_t x,uint32_t y){
+	if (mapSizeW < x || mapSizeHA < y){
+		printf("Out of range %u %u\n",x,y);
+		return false;
+	}else
+		return true;
+}
 void tileMap::setRaw(uint32_t x,uint32_t y,uint32_t val){
 	uint32_t*tptr=(uint32_t*)tileMapDat;
 	tptr+=(y*mapSizeW)+x;
@@ -161,20 +168,32 @@ void tileMap::toggleBlocks(bool set){
 	ScrollUpdate();
 }
 bool tileMap::get_hflip(uint32_t x,uint32_t y){
-	return (tileMapDat[((y*mapSizeW)+x)*4]>>3)&1;
+	if(inRange(x,y))
+		return (tileMapDat[((y*mapSizeW)+x)*4]>>3)&1;
+	else
+		return false;
 }
 bool tileMap::get_vflip(uint32_t x,uint32_t y){
-	return (tileMapDat[((y*mapSizeW)+x)*4]>>4)&1;
+	if(inRange(x,y))
+		return (tileMapDat[((y*mapSizeW)+x)*4]>>4)&1;
+	else
+		return false;
 }
 bool tileMap::get_prio(uint32_t x,uint32_t y){
-	return (tileMapDat[((y*mapSizeW)+x)*4]>>7)&1;
+	if(inRange(x,y))
+		return (tileMapDat[((y*mapSizeW)+x)*4]>>7)&1;
+	else
+		return false;
 }
 uint8_t tileMap::get_palette_map(uint32_t x,uint32_t y){
-	if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
-		x&=~1;
-		y&=~1;
-	}
-	return (tileMapDat[((y*mapSizeW)+x)*4]>>5)&3;
+	if(inRange(x,y)){
+			if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
+				x&=~1;
+				y&=~1;
+			}
+			return (tileMapDat[((y*mapSizeW)+x)*4]>>5)&3;
+	}else
+		return 0;
 }
 void tileMap::set_pal_row(uint32_t x,uint32_t y,uint8_t row){
 	if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
@@ -584,7 +603,7 @@ void tileMap::sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vfl
 	}
 }
 void tileMap::set_tile_full(uint32_t tile,uint32_t x,uint32_t y,uint8_t palette_row,bool use_hflip,bool use_vflip,bool highorlow_prio){
-	if (mapSizeW < x || (mapSizeH*amt) < y) {
+	if (mapSizeW < x || (mapSizeHA) < y) {
 		printf("Error (%d,%d) cannot be set to a tile as it is not on the map",x,y);
 		return;
 	}

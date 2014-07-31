@@ -532,11 +532,13 @@ void editor::_editor(){
 			solidChunkMenu->copy(SolidMenu);
 
 			chunksize[0]=new Fl_Int_Input(tile_place_buttons_x_off,296,128,24,"Width (in tiles)");
+			chunksize[0]->when(FL_WHEN_ENTER_KEY);
 			chunksize[0]->align(FL_ALIGN_TOP);
 			chunksize[0]->callback(resizeChunkCB);
 			chunksize[0]->value("16");
 
 			chunksize[1]=new Fl_Int_Input(tile_place_buttons_x_off,336,128,24,"Height (in tiles)");
+			chunksize[1]->when(FL_WHEN_ENTER_KEY);
 			chunksize[1]->align(FL_ALIGN_TOP);
 			chunksize[1]->callback(resizeChunkCB);
 			chunksize[1]->value("16");

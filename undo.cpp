@@ -128,10 +128,17 @@ static void cleanupEvent(uint32_t id){
 			}}
 		break;
 		case uTilemapResize:
-			{struct undoTilemapResize*um=(struct undoTilemapResize*)uptr->ptr;
+			{struct undoResize*um=(struct undoResize*)uptr->ptr;
 			if(um->ptr){
 				free(um->ptr);
 				memUsed-=getSzResizeGeneric(um->w,um->h,um->wnew,um->hnew,4,1);
+			}}
+		break;
+		case uChunkResize:
+			{struct undoResize*um=(struct undoResize*)uptr->ptr;
+			if(um->ptr){
+				free(um->ptr);
+				memUsed-=getSzResizeGeneric(um->w,um->h,um->wnew,um->hnew,sizeof(struct ChunkAttrs),currentProject->Chunk->amt);
 			}}
 		break;
 		case uPalette:
@@ -407,8 +414,19 @@ void UndoRedo(bool redo){
 				}
 			}}
 		break;
+		case uChunkResize:
+			{struct undoResize*um=(struct undoResize*)uptr->ptr;
+			if(redo)
+				currentProject->Chunk->resize(um->wnew,um->hnew);
+			else{
+				currentProject->Chunk->resize(um->w,um->h);
+				if(um->ptr)
+					cpyResizeGeneric((uint8_t*)um->ptr,(uint8_t*)currentProject->Chunk->chunks.data(),um->w,um->h,um->wnew,um->hnew,sizeof(struct ChunkAttrs),currentProject->Chunk->amt,true);
+			}
+			window->updateChunkSizeSliders();}
+		break;
 		case uTilemapResize:
-			{struct undoTilemapResize*um=(struct undoTilemapResize*)uptr->ptr;
+			{struct undoResize*um=(struct undoResize*)uptr->ptr;
 			if(redo)
 				currentProject->tileMapC->resize_tile_map(um->wnew,um->hnew);
 			else{
@@ -616,26 +634,32 @@ void pushTilemapEdit(uint32_t x,uint32_t y){
 	um->y=y;
 	um->val=currentProject->tileMapC->getRaw(x,y);
 }
-void pushTilemapResize(uint32_t wnew,uint32_t hnew){
-	if((wnew==currentProject->tileMapC->mapSizeW)&&(hnew==currentProject->tileMapC->mapSizeHA))
+static void pushResize(uint32_t wnew,uint32_t hnew,uint32_t w,uint32_t h,uint8_t*ptr,undoTypes_t type,uint32_t szelm,uint32_t n){
+	if((wnew==w)&&(hnew==h))
 		return;
 	pushEventPrepare();
 	struct undoEvent*uptr=undoBuf+pos;
-	uptr->type=uTilemapResize;
-	uptr->ptr=malloc(sizeof(struct undoTilemapResize));
-	memUsed+=sizeof(struct undoTilemapResize);
-	struct undoTilemapResize*um=(struct undoTilemapResize*)uptr->ptr;
-	um->w=currentProject->tileMapC->mapSizeW;
-	um->h=currentProject->tileMapC->mapSizeHA;
+	uptr->type=type;
+	uptr->ptr=malloc(sizeof(struct undoResize));
+	memUsed+=sizeof(struct undoResize);
+	struct undoResize*um=(struct undoResize*)uptr->ptr;
+	um->w=w;
+	um->h=h;
 	um->wnew=wnew;
 	um->hnew=hnew;
-	uint32_t sz=getSzResizeGeneric(um->w,um->h,wnew,hnew,4,1);
+	uint32_t sz=getSzResizeGeneric(um->w,um->h,wnew,hnew,szelm,n);
 	if(sz){
 		um->ptr=malloc(sz);
 		memUsed+=sz;
-		cpyResizeGeneric((uint8_t*)um->ptr,currentProject->tileMapC->tileMapDat,um->w,um->h,wnew,hnew,4,1,false);
+		cpyResizeGeneric((uint8_t*)um->ptr,ptr,um->w,um->h,wnew,hnew,szelm,n,false);
 	}else
 		um->ptr=0;
+}
+void pushTilemapResize(uint32_t wnew,uint32_t hnew){
+	pushResize(wnew,hnew,currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeHA,currentProject->tileMapC->tileMapDat,uTilemapResize,4,1);
+}
+void pushChunkResize(uint32_t wnew,uint32_t hnew){
+	pushResize(wnew,hnew,currentProject->Chunk->wi,currentProject->Chunk->hi,(uint8_t*)currentProject->Chunk->chunks.data(),uChunkResize,sizeof(struct ChunkAttrs),currentProject->Chunk->amt);
 }
 void pushPaletteAll(void){
 	pushEventPrepare();
@@ -728,8 +752,9 @@ void historyWindow(Fl_Widget*,void*){
 			case uTilemapattr:
 				strcpy(tmp,"Change tilemap attributes");
 			break;
+			case uChunkResize:
 			case uTilemapResize:
-				{struct undoTilemapResize*um=(struct undoTilemapResize*)uptr->ptr;
+				{struct undoResize*um=(struct undoResize*)uptr->ptr;
 				snprintf(tmp,2048,"Resize from w: %d h: %d to w: %d h: %d",um->w,um->h,um->wnew,um->hnew);}	
 			break;
 			case uTilemapEdit:

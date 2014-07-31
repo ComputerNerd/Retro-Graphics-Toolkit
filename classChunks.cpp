@@ -405,11 +405,13 @@ void ChunkClass::resize(uint32_t wnew,uint32_t hnew){
 			cptr+=wnew;
 			tptr+=wi;
 		}
-		for(uint32_t y=hi;y<hnew;++y){
-			memset(cptr,0,wnew*sizeof(struct ChunkAttrs));
-			cptr+=wnew;
-			tptr+=wi;
-		}
+		if(hnew>hi){
+			for(uint32_t y=hi;y<hnew;++y){
+				memset(cptr,0,wnew*sizeof(struct ChunkAttrs));
+				cptr+=wnew;
+			}
+		}else
+			tptr+=(hi-hnew)*wi;
 	}
 	wi=wnew;
 	hi=hnew;
