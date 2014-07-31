@@ -95,6 +95,9 @@ void remove_duplicate_truecolor(Fl_Widget*,void*){
 	uint32_t tile_remove_c=0;
 	int32_t cur_tile,curT;
 	puts("Pass 1");
+	std::vector<uint32_t> remap(currentProject->tileC->amt);
+	for(uint32_t i=0;i<currentProject->tileC->amt;++i)
+		remap[i]=i;
 	for (cur_tile=0;cur_tile<=currentProject->tileC->amt-1;cur_tile++){
 		for (curT=currentProject->tileC->amt-1;curT>=0;curT--){
 			if (cur_tile == curT)//dont compare it's self
@@ -106,7 +109,8 @@ void remove_duplicate_truecolor(Fl_Widget*,void*){
 			#endif
 			{
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,false,false);
-				addTileGroup(curT,curT+tile_remove_c);
+				addTileGroup(curT,remap[curT]);
+				remap.erase(remap.begin()+curT);
 				currentProject->tileC->remove_tile_at(curT);
 				tile_remove_c++;
 			}
@@ -130,7 +134,8 @@ void remove_duplicate_truecolor(Fl_Widget*,void*){
 			#endif
 			{
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,true,false);
-				addTileGroup(curT,curT+tile_remove_c);
+				addTileGroup(curT,remap[curT]);
+				remap.erase(remap.begin()+curT);
 				currentProject->tileC->remove_tile_at(curT);
 				tile_remove_c++;
 			}
@@ -153,7 +158,8 @@ void remove_duplicate_truecolor(Fl_Widget*,void*){
 			#endif
 			{
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,false,true);
-				addTileGroup(curT,curT+tile_remove_c);
+				addTileGroup(curT,remap[curT]);
+				remap.erase(remap.begin()+curT);
 				currentProject->tileC->remove_tile_at(curT);
 				tile_remove_c++;
 			}
@@ -177,7 +183,8 @@ void remove_duplicate_truecolor(Fl_Widget*,void*){
 			#endif
 			{
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,true,true);
-				addTileGroup(curT,curT+tile_remove_c);
+				addTileGroup(curT,remap[curT]);
+				remap.erase(remap.begin()+curT);
 				currentProject->tileC->remove_tile_at(curT);
 				tile_remove_c++;
 			}
@@ -185,6 +192,7 @@ void remove_duplicate_truecolor(Fl_Widget*,void*){
 		//if ((cur_tile % 4096) == 0)
 		//printf("On tile %d Removed %d\r",cur_tile,tile_remove_c);
 	}
+	remap.clear();
 	printf("Removed %d tiles\n",tile_remove_c);
 	tile_remove_c=0;
 	window->redraw();

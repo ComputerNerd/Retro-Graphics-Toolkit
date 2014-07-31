@@ -141,6 +141,7 @@ uint32_t tiles::getPixel(uint32_t tile,uint32_t x,uint32_t y){
 			break;
 		}
 	}
+	return 0;
 }
 void tiles::setPixelTc(uint32_t tile,uint32_t x,uint32_t y,uint32_t val){
 	uint32_t*tt=(uint32_t*)((uint8_t*)truetDat.data()+(tile*tcSize));
@@ -519,9 +520,12 @@ void tiles::remove_duplicate_tiles(){
 	uint32_t tile_remove_c=0;
 	int32_t cur_tile,curT;
 	uint8_t * tileTemp=(uint8_t *)alloca(tileSize);
+	std::vector<uint32_t> remap(amt);
+	for(uint32_t i=0;i<amt;++i)
+		remap[i]=i;
 	for (cur_tile=0;cur_tile<amt;++cur_tile){
 		for (curT=amt-1;curT>=0;curT--){
-			if (cur_tile == curT)//dont compare it's self
+			if (cur_tile == curT)//don't compare with itself
 				continue;
 			#if __LP64__
 			if (cmp_tiles(cur_tile,(uint64_t *)&tDat[curT*tileSize]))
@@ -530,10 +534,11 @@ void tiles::remove_duplicate_tiles(){
 			#endif
 			{
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,false,false);
-				addTileGroup(curT,curT+tile_remove_c);
+				addTileGroup(curT,remap[curT]);
+				remap.erase(remap.begin()+curT);
 				remove_tile_at(curT);
 				tile_remove_c++;
-				continue;
+				continue;//curT does not exist anymore useless to do more comparasions
 			}
 			hflip_tile(curT,tileTemp);
 			#if __LP64__
@@ -543,7 +548,8 @@ void tiles::remove_duplicate_tiles(){
 			#endif
 			{
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,true,false);
-				addTileGroup(curT,curT+tile_remove_c);
+				addTileGroup(curT,remap[curT]);
+				remap.erase(remap.begin()+curT);
 				remove_tile_at(curT);
 				tile_remove_c++;
 				continue;
@@ -557,7 +563,8 @@ void tiles::remove_duplicate_tiles(){
 			#endif
 			{
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,true,true);
-				addTileGroup(curT,curT+tile_remove_c);
+				addTileGroup(curT,remap[curT]);
+				remap.erase(remap.begin()+curT);
 				remove_tile_at(curT);
 				tile_remove_c++;
 				continue;
@@ -571,7 +578,8 @@ void tiles::remove_duplicate_tiles(){
 			#endif
 			{
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,false,true);
-				addTileGroup(curT,curT+tile_remove_c);
+				addTileGroup(curT,remap[curT]);
+				remap.erase(remap.begin()+curT);
 				remove_tile_at(curT);
 				tile_remove_c++;
 				continue;
@@ -582,6 +590,7 @@ void tiles::remove_duplicate_tiles(){
 		progress->label(bufT);
 		Fl::check();
 	}
+	remap.clear();
 	printf("Removed %d tiles\n",tile_remove_c);
 	win->remove(progress);// remove progress bar from window
 	delete(progress);// deallocate it

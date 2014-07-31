@@ -318,31 +318,37 @@ void UndoRedo(bool redo){
 			unsigned sz=getSzTile(ut->type);
 			if(redo){
 				if(ut->type&tTypeDeleteFlag){
-					for(uint_fast32_t i=0;i<ut->lst.size();++i)
-						currentProject->tileC->remove_tile_at(ut->lst[i]);
+					std::vector<uint32_t> tmp=ut->lst;
+					std::sort(tmp.begin(),tmp.end());
+					for(int_fast32_t i=tmp.size();i--;)
+						currentProject->tileC->remove_tile_at(tmp[i]);
 					updateTileSelectAmt();
 				}else{
-					for(uint_fast32_t i=0;i<ut->lst.size();++i)
+					for(int_fast32_t i=ut->lst.size()-1;i>=0;--i)
 						tilesToU(ut->datanew.data()+(i*sz),ut->lst[i],ut->type);
 				}
 			}else{
 				if((!(ut->datanew.size()))&&(!(ut->type&tTypeDeleteFlag))){
 					ut->datanew.resize(sz*ut->lst.size());
 					memUsed+=sz*ut->lst.size();
-					for(uint_fast32_t i=0;i<ut->lst.size();++i)
+					for(int_fast32_t i=ut->lst.size()-1;i>=0;--i)
 						tilesTo(ut->datanew.data()+(i*sz),ut->lst[i],ut->type);
 				}
 				if(ut->type&tTypeDeleteFlag){
 					uint32_t fullSize=currentProject->tileC->amt+ut->lst.size();
-					for(uint_fast32_t i=0;i<ut->lst.size();++i){
-						if(ut->lst[i]<currentProject->tileC->amt)
-							currentProject->tileC->insertTile(ut->lst[i]);
+					std::vector<uint32_t> tmp=ut->lst;
+					std::sort(tmp.begin(),tmp.end());
+					for(int_fast32_t i=0;i<tmp.size();++i){
+						if(tmp[i]<currentProject->tileC->amt){
+							currentProject->tileC->insertTile(tmp[i]);
+						}
 					}
 					currentProject->tileC->resizeAmt(fullSize);
 					updateTileSelectAmt();
 				}
-				for(uint_fast32_t i=0;i<ut->lst.size();++i)
+				for(int_fast32_t i=ut->lst.size()-1;i>=0;--i){
 					tilesToU(ut->data.data()+(i*sz),ut->lst[i],ut->type);
+				}
 			}}
 		break;
 		case uTileAppend:
