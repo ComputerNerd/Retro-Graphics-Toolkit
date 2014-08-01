@@ -19,7 +19,7 @@
 #define default_map_off_x 256
 #define default_map_off_y 256
 #define defaultspritex 192
-#define defaultspritey 56
+#define defaultspritey 72
 #define tile_placer_tile_offset_x 88
 #define default_tile_placer_tile_offset_y 208
 #define tile_place_buttons_x_off 8

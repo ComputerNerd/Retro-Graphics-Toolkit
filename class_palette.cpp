@@ -21,10 +21,12 @@
 palette_bar palEdit;
 palette_bar tileEdit_pal;
 palette_bar tileMap_pal;
+palette_bar spritePal;
 uint8_t palette_bar::getEntry(void){
 	return box_sel+(theRow*perRow);
 }
-void palette_bar::more_init(uint8_t x,uint16_t offsetx,uint16_t offsety){
+void palette_bar::more_init(uint8_t x,uint16_t offsetx,uint16_t offsety,bool altset,unsigned ln){
+	alt=altset;
 	switch (currentProject->gameSystem){
 		case sega_genesis:
 			perRow=16;
@@ -38,21 +40,21 @@ void palette_bar::more_init(uint8_t x,uint16_t offsetx,uint16_t offsety){
 	offyy=offsety;
 	offx=offsetx;
 	offy=offsety;
-	pal_r = new Fl_Hor_Value_Slider(offx+32,offy+8+(rows*32),256,24,"Red");
+	pal_r = new Fl_Hor_Value_Slider(offx+32,offy+8+(rows*32),ln,24,"Red");
 	pal_r->minimum(0); pal_r->maximum(0x0E);
 	pal_r->step(2);
 	pal_r->value(0);
 	pal_r->align(FL_ALIGN_LEFT);
 	pal_r->callback(update_palette, (void*)0);
 
-	pal_g = new Fl_Hor_Value_Slider(offx+32,offy+40+(rows*32),256,24,"Green");
+	pal_g = new Fl_Hor_Value_Slider(offx+32,offy+40+(rows*32),ln,24,"Green");
 	pal_g->minimum(0); pal_g->maximum(0x0E);
 	pal_g->step(2);
 	pal_g->value(0);
 	pal_g->align(FL_ALIGN_LEFT);
 	pal_g->callback(update_palette, (void*)1);
 
-	pal_b = new Fl_Hor_Value_Slider(offx+32,offy+72+(rows*32),256,24,"Blue");
+	pal_b = new Fl_Hor_Value_Slider(offx+32,offy+72+(rows*32),ln,24,"Blue");
 	pal_b->minimum(0); pal_b->maximum(0x0E);
 	pal_b->step(2);
 	pal_b->value(0);

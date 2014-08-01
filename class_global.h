@@ -69,7 +69,7 @@ class editor : public Fl_Double_Window{
 	Fl_Tabs* the_tabs;
 	Fl_Round_Button* palType[9];
 	Fl_Round_Button* GameSys[2];
-	Fl_Round_Button* palRTE[8];
+	Fl_Round_Button* palRTE[12];
 	Fl_Check_Button* hflipCB[2];
 	Fl_Check_Button* vflipCB[2];
 	Fl_Check_Button* prioCB[2];

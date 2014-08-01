@@ -254,27 +254,19 @@ void editor::_editor(){
 		{TabsMain[tile_edit] = new Fl_Group(rx, ry, rw, rh, "Tile editor");
 			//stuff realed to this group should go here
 			{ Fl_Group* o = new Fl_Group(0, 0, 800, 567);
-				{
-					palRTE[0] = new Fl_Round_Button(384, default_palette_bar_offset_y+40, 56, 32, "Row 0");
-					palRTE[0]->type(FL_RADIO_BUTTON);
-					palRTE[0]->set();
-					palRTE[0]->callback((Fl_Callback*) set_tile_row,(void *)0);
-				} // Fl_Round_Button* o
-				{
-					palRTE[1] = new Fl_Round_Button(448, default_palette_bar_offset_y+40, 56, 32, "Row 1");
-					palRTE[1]->type(FL_RADIO_BUTTON);
-					palRTE[1]->callback((Fl_Callback*) set_tile_row,(void *)1);
-				} // Fl_Round_Button* o
-				{
-					palRTE[2] = new Fl_Round_Button(512, default_palette_bar_offset_y+40, 56, 32, "Row 2");
-					palRTE[2]->type(FL_RADIO_BUTTON);
-					palRTE[2]->callback((Fl_Callback*) set_tile_row,(void *)2);
-				} // Fl_Round_Button* o
-				{
-					palRTE[3] = new Fl_Round_Button(576, default_palette_bar_offset_y+40, 56, 32, "Row 3");
-					palRTE[3]->type(FL_RADIO_BUTTON);
-					palRTE[3]->callback((Fl_Callback*) set_tile_row,(void *)3);
-				} // Fl_Round_Button* o
+				palRTE[0] = new Fl_Round_Button(384, default_palette_bar_offset_y+40, 56, 32, "Row 0");
+				palRTE[0]->type(FL_RADIO_BUTTON);
+				palRTE[0]->set();
+				palRTE[0]->callback((Fl_Callback*) set_tile_row,(void *)0);
+				palRTE[1] = new Fl_Round_Button(448, default_palette_bar_offset_y+40, 56, 32, "Row 1");
+				palRTE[1]->type(FL_RADIO_BUTTON);
+				palRTE[1]->callback((Fl_Callback*) set_tile_row,(void *)1);
+				palRTE[2] = new Fl_Round_Button(512, default_palette_bar_offset_y+40, 56, 32, "Row 2");
+				palRTE[2]->type(FL_RADIO_BUTTON);
+				palRTE[2]->callback((Fl_Callback*) set_tile_row,(void *)2);
+				palRTE[3] = new Fl_Round_Button(576, default_palette_bar_offset_y+40, 56, 32, "Row 3");
+				palRTE[3]->type(FL_RADIO_BUTTON);
+				palRTE[3]->callback((Fl_Callback*) set_tile_row,(void *)3);
 			o->end();
 			} // Fl_Group* o
 			{ Fl_Button *o = new Fl_Button(538, default_palette_bar_offset_y, 104, 32, "Append tile");//these button should be inline with the palette bar
@@ -561,18 +553,19 @@ void editor::_editor(){
 			TabsMain[chunkEditor]->end();
 		}
 		{TabsMain[spriteEditor] = new Fl_Group(rx,ry,rw,rh,"Sprites");
-			spritesel=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,64,128,24,"Sprite select");
+			spritePal.more_init(1,16,56,true,128);
+			spritesel=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,200,128,24,"Sprite select");
 			spritesel->step(1);
 			spritesel->maximum(0);
 			spritesel->align(FL_ALIGN_TOP);
 			spritesel->callback(selSpriteCB);
-			spritest=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,104,128,24,"Start tile");
+			spritest=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,240,128,24,"Start tile");
 			spritest->step(1);
 			spritest->maximum(0);
 			spritest->align(FL_ALIGN_TOP);
 			spritest->callback(setvalueSpriteCB,0);
 
-			spritesize[0]=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,144,128,24,"Width (in tiles)");
+			spritesize[0]=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,280,128,24,"Width (in tiles)");
 			spritesize[0]->step(1);
 			spritesize[0]->value(1);
 			spritesize[0]->minimum(1);
@@ -580,7 +573,7 @@ void editor::_editor(){
 			spritesize[0]->align(FL_ALIGN_TOP);
 			spritesize[0]->callback(setvalueSpriteCB,(void*)1);
 
-			spritesize[1]=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,184,128,24,"Height (in tiles)");
+			spritesize[1]=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,320,128,24,"Height (in tiles)");
 			spritesize[1]->step(1);
 			spritesize[1]->value(1);
 			spritesize[1]->minimum(1);
@@ -588,13 +581,13 @@ void editor::_editor(){
 			spritesize[1]->align(FL_ALIGN_TOP);
 			spritesize[1]->callback(setvalueSpriteCB,(void*)2);
 
-			spritepalrow=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,224,128,24,"Palette row");
+			spritepalrow=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,360,128,24,"Palette row");
 			spritepalrow->step(1);
 			spritepalrow->maximum(3);
 			spritepalrow->align(FL_ALIGN_TOP);
 			spritepalrow->callback(setvalueSpriteCB,(void*)3);
 
-			spritezoom=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,264,128,24,"Zoom");
+			spritezoom=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,400,128,24,"Zoom");
 			spritezoom->step(1);
 			spritezoom->minimum(1);
 			spritezoom->value(16);
@@ -602,9 +595,9 @@ void editor::_editor(){
 			spritezoom->align(FL_ALIGN_TOP);
 			spritezoom->callback(redrawOnlyCB);
 
-			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off, 304, 152, 32, "Append blank sprite");
+			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off, 432, 152, 32, "Append blank sprite");
 			o->callback(appendSpriteCB);}
-			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off, 344, 152, 32, "Delete sprite");
+			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off, 472, 152, 32, "Delete sprite");
 			o->callback(delSpriteCB);}
 			TabsMain[spriteEditor]->end();
 		}

@@ -1,5 +1,6 @@
 Most recent changes are placed at the top
 20140731
+Fixed attributes save crash NES
 Added insert after chunk button
 Added chunk edit undoing
 Fixed a chunk resize bug

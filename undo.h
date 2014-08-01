@@ -98,7 +98,7 @@ struct undoChunkEdit{
 };
 struct undoChunk{
 	uint32_t id;
-	struct ChunkAttrs*valnew,*val;
+	struct ChunkAttrs*ptr,*ptrnew;
 };
 struct undoChunkAll{
 	uint32_t w,h,wnew,hnew;//The width and height

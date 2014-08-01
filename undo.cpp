@@ -14,6 +14,7 @@
    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
+#include <cmath>//For some reason this is needed when compiling with mingw otherwise hypot error is encountered
 #include <stdlib.h>
 #include <FL/Fl_Browser.H>
 #include "system.h"
@@ -149,7 +150,7 @@ static void cleanupEvent(uint32_t id){
 					sz=128;
 				break;
 				case NES:
-					sz=16;
+					sz=32;
 				break;
 			}
 			free(up->ptr);
@@ -188,6 +189,18 @@ static void cleanupEvent(uint32_t id){
 			}
 			free(uptr->ptr);
 			memUsed-=sizeof(struct undoChunkAll);}
+		break;
+		case uChunk:
+		case uChunkDelete:
+			{struct undoChunk*uc=(struct undoChunk*)uptr->ptr;
+			free(uc->ptr);
+			memUsed-=currentProject->Chunk->wi*currentProject->Chunk->hi*sizeof(struct ChunkAttrs);
+			if(uc->ptrnew){
+				free(uc->ptrnew);
+				memUsed-=currentProject->Chunk->wi*currentProject->Chunk->hi*sizeof(struct ChunkAttrs);
+			}
+			free(uptr->ptr);
+			memUsed-=sizeof(struct undoChunk);}
 		break;
 	}
 }
@@ -459,7 +472,7 @@ void UndoRedo(bool redo){
 					el=64;
 				break;
 				case NES:
-					el=sz=16;
+					el=sz=32;
 				break;
 			}
 			if(redo)
@@ -589,6 +602,12 @@ void UndoRedo(bool redo){
 			}
 			window->updateChunkSize();
 			window->chunk_select->maximum(currentProject->Chunk->amt-1);}
+		break;
+		case uChunk:
+		case uChunkDelete:
+			{struct undoChunk*uc=(struct undoChunk*)uptr->ptr;
+
+			}
 		break;
 	}
 	if(!redo)
@@ -742,9 +761,9 @@ void pushPaletteAll(void){
 			memUsed+=128;
 		break;
 		case NES:
-			up->ptr=malloc(16);
-			memcpy(up->ptr,currentProject->palDat,16);
-			memUsed+=16;
+			up->ptr=malloc(32);
+			memcpy(up->ptr,currentProject->palDat,32);
+			memUsed+=32;
 		break;
 	}
 	up->ptrnew=0;
@@ -792,6 +811,19 @@ void pushChunkAppend(void){
 	pushEventPrepare();
 	struct undoEvent*uptr=undoBuf+pos;
 	uptr->type=uChunkAppend;
+}
+void pushChunk(uint32_t id,bool rm){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	if(rm)
+		uptr->type=uChunkDelete;
+	else
+		uptr->type=uChunk;
+	uptr->ptr=malloc(sizeof(struct undoChunk));
+	memUsed+=sizeof(struct undoChunk);
+	struct undoChunk*uc=(struct undoChunk*)uptr->ptr;
+	uc->ptrnew=0;
+	uc->ptr=(struct ChunkAttrs*)malloc(currentProject->Chunk->wi*currentProject->Chunk->hi*sizeof(struct ChunkAttrs));
 }
 void pushChunksAll(void){
 	pushEventPrepare();
@@ -881,7 +913,11 @@ void historyWindow(Fl_Widget*,void*){
 			break;
 			case uChunk:
 				{struct undoChunk*uc=(struct undoChunk*)uptr->ptr;
-				snprintf(tmp,2048,"Chunk ID: %d",uc->id);}	
+				snprintf(tmp,2048,"Change chunk: %d",uc->id);}	
+			break;
+			case uChunkDelete:
+				{struct undoChunk*uc=(struct undoChunk*)uptr->ptr;
+				snprintf(tmp,2048,"Delete chunk: %d",uc->id);}	
 			break;
 			case uChunkAppend:
 				strcpy(tmp,"Append chunk");

@@ -375,21 +375,18 @@ bool tileMap::saveToFile(){
 			else
 				myfile = fopen(the_file.c_str(),"wb");
 			if (likely(myfile||clipboard)) {
-				uint8_t * AttrMap = (uint8_t *)malloc((mapSizeW/4)*(mapSizeH*amt/4));
+				uint8_t * AttrMap = (uint8_t *)malloc(((mapSizeW+2)/4)*((mapSizeHA+2)/4));
 				uint8_t * freeAttrMap=AttrMap;
-				for (y=0;y<mapSizeH*amt;y+=4){
+				for (y=0;y<mapSizeHA;y+=4){
 					for (x=0;x<mapSizeW;x+=4){
 						*AttrMap++ = get_palette_map(x,y) | (get_palette_map(x+2,y)<<2) | (get_palette_map(x,y+2) << 4) | (get_palette_map(x+2,y+2) << 6);
-						printf("x: %d y: %d\n",x,y);
 					}
 				}
-				//AttrMap-=(mapSizeW/4)*(mapSizeH/4);
-				printf("%d %d\n",AttrMap,freeAttrMap);
 				if(type){
-					if(saveBinAsText(freeAttrMap,(mapSizeW/4)*(mapSizeH*amt/4),myfile,type,0,"mapDatAttr",8)==false)
+					if(saveBinAsText(freeAttrMap,((mapSizeW+2)/4)*((mapSizeHA+2)/4),myfile,type,0,"mapDatAttr",8)==false)
 						return false;
 				}else
-					fwrite(freeAttrMap,1,(mapSizeW/4)*(mapSizeH*amt/4),myfile);		
+					fwrite(freeAttrMap,1,((mapSizeW+2)/4)*((mapSizeHA+2)/4),myfile);		
 				free(freeAttrMap);
 				if(myfile)
 					fclose(myfile);

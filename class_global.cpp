@@ -242,6 +242,8 @@ void editor::draw_non_gui(void){
 			}
 		break;
 		case spriteEditor:
+			spritePal.updateSize();
+			spritePal.draw_boxes();
 			SpriteOff[0]=(double)((double)w()/800.0)*(double)defaultspritex;
 			SpriteOff[1]=(double)((double)w()/600.0)*(double)defaultspritey;
 			currentProject->spritesC->spriteslist[curSprite]->draw(SpriteOff[0],SpriteOff[1],spritezoom->value());
@@ -463,6 +465,9 @@ int editor::handle(int event){
 							}
 						}
 					}
+				break;
+				case spriteEditor:
+					spritePal.check_box(Fl::event_x(),Fl::event_y());
 				break;
 			}
 		break;

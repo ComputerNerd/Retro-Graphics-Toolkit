@@ -21,6 +21,7 @@ class palette_bar{
 	uint16_t offx,offy;//the offset in which the palette selection boxes will appear
 	uint16_t offxx,offyy;//the offset in which the palette selection boxes will appear
 public:
+	bool alt;
 	Fl_Slider* pal_r;
 	Fl_Slider* pal_g;
 	Fl_Slider* pal_b;
@@ -30,10 +31,10 @@ public:
 	uint8_t getEntry(void);
 	void check_box(int16_t,int16_t);
 	void draw_boxes();
-	void more_init(uint8_t x=1,uint16_t offsetx=16,uint16_t offsety=56);//this one should be called in a function that creates the gui elements
+	void more_init(uint8_t x=1,uint16_t offsetx=16,uint16_t offsety=56,bool altset=false,unsigned ln=256);//this one should be called in a function that creates the gui elements
 	void changeRow(uint8_t);
 	void changeSystem();
 	void updateSlider();
 	void updateSize(void);
 }
-extern palEdit,tileEdit_pal,tileMap_pal;
+extern palEdit,tileEdit_pal,tileMap_pal,spritePal;
