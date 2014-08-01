@@ -14,10 +14,12 @@
    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
+#include <exception>
 #include "global.h"
 #include "compressionWrapper.h"
 #include "callback_chunk.h"
 #include "filemisc.h"
+#include "undo.h"
 ChunkClass::ChunkClass(void){
 	chunks.resize(256);
 	amt=1;
@@ -49,8 +51,21 @@ struct ChunkAttrs ChunkClass::getElm(uint32_t id,uint32_t x,uint32_t y){
 	return chunks[(id*wi*hi)+(y*wi)+x];
 }
 void ChunkClass::removeAt(uint32_t at){
-	chunks.erase(chunks.begin()+(at*wi*hi),chunks.begin()+((at+1)*wi*hi));
+	if(amt<2){
+		fl_alert("If you don't want chunks uncheck have chunks instead of deleteing");
+		return;
+	}
+	try{
+		chunks.erase(chunks.begin()+(at*wi*hi),chunks.begin()+((at+1)*wi*hi));
+	}catch (std::exception&e){
+		fl_alert("Error cannot remove tile %d\nAdditional details: %s",at,e.what());
+		exit(1);
+	}
 	--amt;
+	if(window->chunk_select->value()>=amt){
+		window->chunk_select->value(amt-1);
+		currentChunk=amt-1;
+	}
 }
 void ChunkClass::resizeAmt(uint32_t amtnew){
 	chunks.resize(amtnew*wi*hi);
@@ -294,6 +309,7 @@ void ChunkClass::importSonic1(const char * filename,bool append){
 	int compression=compressionAsk();
 	if(compression<0)
 		return;
+	pushChunksAll();
 	uint16_t* Dat;
 	size_t fileSize;
 	if(compression)

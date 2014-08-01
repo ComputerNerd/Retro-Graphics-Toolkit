@@ -103,7 +103,7 @@ struct undoChunk{
 struct undoChunkAll{
 	uint32_t w,h,wnew,hnew;//The width and height
 	uint32_t amt,amtnew;
-	struct ChunkAttrs*valnew,*val;
+	struct ChunkAttrs*ptr,*ptrnew;
 };
 void showMemUsageUndo(Fl_Widget*,void*);
 void UndoRedo(bool redo);

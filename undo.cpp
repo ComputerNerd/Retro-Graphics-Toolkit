@@ -178,6 +178,17 @@ static void cleanupEvent(uint32_t id){
 			free(uptr->ptr);
 			memUsed-=sizeof(struct undoChunkEdit);
 		break;
+		case uChunkAll:
+			{struct undoChunkAll*uc=(struct undoChunkAll*)uptr->ptr;
+			free(uc->ptr);
+			memUsed-=uc->w*uc->h*uc->amt*sizeof(struct ChunkAttrs);
+			if(uc->ptrnew){
+				free(uc->ptrnew);
+				memUsed-=uc->wnew*uc->hnew*uc->amtnew*sizeof(struct ChunkAttrs);
+			}
+			free(uptr->ptr);
+			memUsed-=sizeof(struct undoChunkAll);}
+		break;
 	}
 }
 static void pushEventPrepare(void){
@@ -558,7 +569,27 @@ void UndoRedo(bool redo){
 				currentProject->Chunk->removeAt((uintptr_t)uptr->ptr);
 			window->chunk_select->maximum(currentProject->Chunk->amt-1);
 		break;
-
+		case uChunkAll:
+			{struct undoChunkAll*uc=(struct undoChunkAll*)uptr->ptr;
+			if(redo){
+				currentProject->Chunk->resize(uc->wnew,uc->hnew);
+				currentProject->Chunk->resizeAmt(uc->amtnew);
+				memcpy(currentProject->Chunk->chunks.data(),uc->ptrnew,uc->wnew*uc->hnew*uc->amtnew*sizeof(struct ChunkAttrs));
+			}else{
+				if(!uc->ptrnew){
+					uc->wnew=currentProject->Chunk->wi;
+					uc->hnew=currentProject->Chunk->hi;
+					uc->amtnew=currentProject->Chunk->amt;
+					uc->ptrnew=(struct ChunkAttrs*)malloc(uc->wnew*uc->hnew*uc->amtnew*sizeof(struct ChunkAttrs));
+					memcpy(uc->ptrnew,currentProject->Chunk->chunks.data(),uc->wnew*uc->hnew*uc->amtnew*sizeof(struct ChunkAttrs));
+				}
+				currentProject->Chunk->resize(uc->w,uc->h);
+				currentProject->Chunk->resizeAmt(uc->amt);
+				memcpy(currentProject->Chunk->chunks.data(),uc->ptr,uc->w*uc->h*uc->amt*sizeof(struct ChunkAttrs));
+			}
+			window->updateChunkSize();
+			window->chunk_select->maximum(currentProject->Chunk->amt-1);}
+		break;
 	}
 	if(!redo)
 		--pos;
@@ -762,6 +793,20 @@ void pushChunkAppend(void){
 	struct undoEvent*uptr=undoBuf+pos;
 	uptr->type=uChunkAppend;
 }
+void pushChunksAll(void){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uChunkAll;
+	uptr->ptr=malloc(sizeof(struct undoChunkAll));
+	memUsed+=sizeof(struct undoChunkAll);
+	struct undoChunkAll*uc=(struct undoChunkAll*)uptr->ptr;
+	uc->ptrnew=0;
+	uc->w=currentProject->Chunk->wi;
+	uc->h=currentProject->Chunk->hi;
+	uc->amt=currentProject->Chunk->amt;
+	uc->ptr=(struct ChunkAttrs*)malloc(uc->w*uc->h*uc->amt*sizeof(struct ChunkAttrs));
+	memcpy(uc->ptr,currentProject->Chunk->chunks.data(),uc->w*uc->h*uc->amt*sizeof(struct ChunkAttrs));
+}
 static Fl_Window * win;
 static void closeHistory(Fl_Widget*,void*){
 	win->hide();
@@ -843,6 +888,9 @@ void historyWindow(Fl_Widget*,void*){
 			break;
 			case uChunkNew:
 				snprintf(tmp,2048,"Insert chunk at %u",unsigned(uintptr_t(uptr->ptr)));
+			break;
+			case uChunkAll:
+				strcpy(tmp,"Change all chunks");
 			break;
 			default:
 				snprintf(tmp,2048,"TODO unhandled %d",uptr->type);

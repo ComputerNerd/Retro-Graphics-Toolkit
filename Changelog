@@ -1,5 +1,6 @@
 Most recent changes are placed at the top
 20140731
+Added insert after chunk button
 Added chunk edit undoing
 Fixed a chunk resize bug
 Added chunk resize undoing
