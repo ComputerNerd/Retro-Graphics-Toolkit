@@ -178,7 +178,7 @@ void updateNesTab(uint8_t emps){
 	}
 }
 void update_emphesis(Fl_Widget*,void*){
-	uint8_t emps;
+	unsigned emps;
 	switch (mode_editor){
 		case pal_edit:
 			emps=palEdit.pal_b->value();
@@ -189,6 +189,9 @@ void update_emphesis(Fl_Widget*,void*){
 		case tile_place:
 			emps=tileMap_pal.pal_b->value();
 		break;
+		case spriteEditor:
+			emps=spritePal.pal_b->value();
+		break;
 	}
 	/*76543210
 	  ||||||||
@@ -198,7 +201,12 @@ void update_emphesis(Fl_Widget*,void*){
 	emps<<=6;
 	uint32_t rgb_out;
 	updateNesTab(emps);
-	for(unsigned c=0;c<48;c+=3){
+	unsigned off;
+	if(mode_editor==spriteEditor)//Allows sprites to have different emepsis values
+		off=16*3;
+	else
+		off=0;
+	for(unsigned c=off;c<48+off;c+=3){
 		rgb_out=MakeRGBcolor(currentProject->palDat[c/3]|emps);
 		currentProject->rgbPal[c]=(rgb_out>>16)&255;//red
 		currentProject->rgbPal[c+1]=(rgb_out>>8)&255;//green

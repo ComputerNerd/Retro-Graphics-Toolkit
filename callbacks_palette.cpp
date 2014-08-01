@@ -20,6 +20,7 @@
 #include "color_convert.h"
 #include "filemisc.h"
 #include "undo.h"
+#include "errorMsg.h"
 void save_palette(Fl_Widget*, void* start_end){
 	char temp[4];
 	switch (currentProject->gameSystem){
@@ -29,6 +30,8 @@ void save_palette(Fl_Widget*, void* start_end){
 		case NES:
 			strcpy(temp,"15");
 		break;
+		default:
+			show_default_error
 	}
 	char * returned=(char *)fl_input("Counting from zero enter the first entry that you want saved","0");
 	if(!returned)
@@ -99,25 +102,30 @@ void update_palette(Fl_Widget* o, void* v){
 	//first get the color and draw the box
 	Fl_Slider* s = (Fl_Slider*)o;
 	//now we need to update the entry we are editing
+	unsigned temp_entry=0;
+	switch (mode_editor){
+		case pal_edit:
+			temp_entry=palEdit.box_sel+(palEdit.theRow*palEdit.perRow);
+		break;
+		case tile_edit:
+			temp_entry=tileEdit_pal.box_sel+(tileEdit_pal.theRow*tileEdit_pal.perRow);
+		break;
+		case tile_place:
+			temp_entry=tileMap_pal.box_sel+(tileMap_pal.theRow*tileMap_pal.perRow);
+		break;
+		case spriteEditor:
+			temp_entry=spritePal.box_sel+(spritePal.theRow*spritePal.perRow);
+		break;
+		default:
+			show_default_error
+	}
+	if(pushed_g||(Fl::event()==FL_KEYDOWN)){
+		pushed_g=0;
+		pushPaletteEntry(temp_entry);
+	}
 	if (currentProject->gameSystem == sega_genesis){
 		uint8_t temp_var=0;
 		uint8_t temp2=(uint8_t)s->value();
-		unsigned temp_entry=0;
-		switch (mode_editor){
-			case pal_edit:
-				temp_entry=palEdit.box_sel+(palEdit.theRow*16);
-			break;
-			case tile_edit:
-				temp_entry=tileEdit_pal.box_sel+(tileEdit_pal.theRow*16);
-			break;
-			case tile_place:
-				temp_entry=tileMap_pal.box_sel+(tileMap_pal.theRow*16);
-			break;
-		}
-		if(pushed_g||(Fl::event()==FL_KEYDOWN)){
-			pushed_g=0;
-			pushPaletteEntry(temp_entry);
-		}
 		switch ((uintptr_t)v){
 			case 0://red
 				temp_var=currentProject->palDat[(temp_entry*2)+1];//get the green value we need to save it for later
@@ -147,22 +155,6 @@ void update_palette(Fl_Widget* o, void* v){
 	else if (currentProject->gameSystem == NES){
 		uint8_t pal;
 		uint32_t rgb_out;
-		uint8_t temp_entry=0;
-		switch (mode_editor){
-			case pal_edit:
-				temp_entry=palEdit.box_sel+(palEdit.theRow*4);
-			break;
-			case tile_edit:
-				temp_entry=tileEdit_pal.box_sel+(tileEdit_pal.theRow*4);
-			break;
-			case tile_place:
-				temp_entry=tileMap_pal.box_sel+(tileMap_pal.theRow*4);
-			break;
-		}
-		if(pushed_g||(Fl::event()==FL_KEYDOWN)){
-			pushed_g=0;
-			pushPaletteEntry(temp_entry);
-		}
 		switch ((uintptr_t)v){
 			/*
 			76543210
@@ -281,14 +273,13 @@ void setPalType(Fl_Widget*,void*type){
 		break;
 		default:
 			show_default_error
-		break;
 	}
 	window->redraw();
 }
 void pickNearAlg(Fl_Widget*,void*){
 	nearestAlg=fl_choice("Which nearest color algorithm would you like to use?","ciede2000","Weighted http://www.compuphase.com/cmetric.htm","Euclidean distance");
 }
-void set_palette_type_callback(Fl_Widget*,void* type){
+void set_palette_type_callback(Fl_Widget*,void* type){//Specific to sega genesis
 	set_palette_type((uintptr_t)type);
 	window->redraw();
 }

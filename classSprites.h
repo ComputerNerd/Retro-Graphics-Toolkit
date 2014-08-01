@@ -18,17 +18,32 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "classSprite.h"
+#include <vector>
+#include <string>
+struct spriteGroup{
+	std::vector<int32_t> offx;
+	std::vector<int32_t> offy;
+	std::vector<uint32_t> loadat;//Where the sprite will be loaded in game (useful for games like sonic which overwrite vram to animate)
+	std::string name;//Useful for nice formated output
+	std::vector<class sprite> list;
+};
 class sprites{
 	public:
 		uint32_t amt;//The amount of sprites
-		sprite**spriteslist;//spriteslist pointers to a dynammicly allocated array that holds pointers to calls sprite created with the new operater
+		std::vector<struct spriteGroup> groups;
 		sprites();
 		sprites(const sprites& other);
 		~sprites();
+		void draw(uint32_t id,uint32_t x,uint32_t y,int32_t zoom);
+		void spriteGroupToImage(uint8_t*img,uint32_t id,int row=-1,bool alpha=true);
+		void spriteImageToTiles(uint8_t*img,uint32_t id,int rowUsage,bool alpha=true);
+		uint32_t width(uint32_t id);
+		uint32_t height(uint32_t id);
 		void importImg(uint32_t to);//the paramter counts from 0
-		bool load(FILE*fp);
+		bool load(FILE*fp,uint32_t version);
 		bool save(FILE*fp);
 		void setAmt(uint32_t amtnew);
+		void setAmtgroup(uint32_t id,uint32_t amtnew);
 		void del(uint32_t id);
 		void enforceMax(unsigned wmax,unsigned hmax);
 };

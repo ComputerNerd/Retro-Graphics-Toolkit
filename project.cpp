@@ -428,7 +428,7 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 	if(projects[id]->useMask&pjHaveSprites){
 		if(projects[id]->share[4]<0){
 			if(version>=5)
-				projects[id]->spritesC->load(fi);
+				projects[id]->spritesC->load(fi,version);
 		}
 	}
 	return true;

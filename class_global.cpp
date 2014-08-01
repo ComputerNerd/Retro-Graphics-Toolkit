@@ -83,11 +83,12 @@ void editor::updateBlockTilesChunk(void){
 	updateBlockTilesChunk(curProjectID);
 }
 void editor::updateSpriteSliders(void){
-	spritesel->maximum(currentProject->spritesC->amt-1);
-	spritest->value(currentProject->spritesC->spriteslist[curSprite]->starttile);
-	spritesize[0]->value(currentProject->spritesC->spriteslist[curSprite]->w);
-	spritesize[1]->value(currentProject->spritesC->spriteslist[curSprite]->h);
-	spritepalrow->value(currentProject->spritesC->spriteslist[curSprite]->palrow);
+	spriteselgroup->maximum(currentProject->spritesC->amt-1);
+	spritesel->maximum(currentProject->spritesC->groups[curSpritegroup].list.size()-1);
+	spritest->value(currentProject->spritesC->groups[curSpritegroup].list[curSprite].starttile);
+	spritesize[0]->value(currentProject->spritesC->groups[curSpritegroup].list[curSprite].w);
+	spritesize[1]->value(currentProject->spritesC->groups[curSpritegroup].list[curSprite].h);
+	spritepalrow->value(currentProject->spritesC->groups[curSpritegroup].list[curSprite].palrow);
 }
 void editor::updateChunkSize(uint32_t wi,uint32_t hi){
 	char tmp[16];
@@ -246,7 +247,7 @@ void editor::draw_non_gui(void){
 			spritePal.draw_boxes();
 			SpriteOff[0]=(double)((double)w()/800.0)*(double)defaultspritex;
 			SpriteOff[1]=(double)((double)w()/600.0)*(double)defaultspritey;
-			currentProject->spritesC->spriteslist[curSprite]->draw(SpriteOff[0],SpriteOff[1],spritezoom->value());
+			currentProject->spritesC->draw(curSpritegroup,SpriteOff[0],SpriteOff[1],spritezoom->value());
 		break;
 	}//end of switch statment
 }

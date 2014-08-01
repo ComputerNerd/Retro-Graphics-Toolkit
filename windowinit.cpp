@@ -353,29 +353,20 @@ void editor::_editor(){
 			TabsMain[tile_edit]->end();
 		}
 		{TabsMain[tile_place] = new Fl_Group(rx,ry,rw,rh,"Plane mapping/block editor");
-			{
-				Fl_Group* o = new Fl_Group(tile_place_buttons_x_off, 192, 60, 128);
-				{
-					palRTE[4] = new Fl_Round_Button(tile_place_buttons_x_off, 192, 60, 28, "Row 0");
-					palRTE[4]->type(FL_RADIO_BUTTON);
-					palRTE[4]->set();
-					palRTE[4]->callback((Fl_Callback*) set_tile_row,(void *)0);
-				} // Fl_Round_Button* o
-				{
-					palRTE[5] = new Fl_Round_Button(tile_place_buttons_x_off, 220, 60, 28, "Row 1");
-					palRTE[5]->type(FL_RADIO_BUTTON);
-					palRTE[5]->callback((Fl_Callback*) set_tile_row,(void *)1);
-				} // Fl_Round_Button* o
-				{
-					palRTE[6] = new Fl_Round_Button(tile_place_buttons_x_off, 248, 60, 28, "Row 2");
-					palRTE[6]->type(FL_RADIO_BUTTON);
-					palRTE[6]->callback((Fl_Callback*) set_tile_row,(void *)2);
-				} // Fl_Round_Button* o
-				{
-					palRTE[7] = new Fl_Round_Button(tile_place_buttons_x_off, 276, 60, 28, "Row 3");
-					palRTE[7]->type(FL_RADIO_BUTTON);
-					palRTE[7]->callback((Fl_Callback*) set_tile_row,(void *)3);
-				} // Fl_Round_Button* o
+			{Fl_Group* o = new Fl_Group(tile_place_buttons_x_off, 192, 60, 128);
+				palRTE[4] = new Fl_Round_Button(tile_place_buttons_x_off, 192, 60, 28, "Row 0");
+				palRTE[4]->type(FL_RADIO_BUTTON);
+				palRTE[4]->set();
+				palRTE[4]->callback((Fl_Callback*) set_tile_row,(void *)0);
+				palRTE[5] = new Fl_Round_Button(tile_place_buttons_x_off, 220, 60, 28, "Row 1");
+				palRTE[5]->type(FL_RADIO_BUTTON);
+				palRTE[5]->callback((Fl_Callback*) set_tile_row,(void *)1);
+				palRTE[6] = new Fl_Round_Button(tile_place_buttons_x_off, 248, 60, 28, "Row 2");
+				palRTE[6]->type(FL_RADIO_BUTTON);
+				palRTE[6]->callback((Fl_Callback*) set_tile_row,(void *)2);
+				palRTE[7] = new Fl_Round_Button(tile_place_buttons_x_off, 276, 60, 28, "Row 3");
+				palRTE[7]->type(FL_RADIO_BUTTON);
+				palRTE[7]->callback((Fl_Callback*) set_tile_row,(void *)3);
 				o->end();
 			} // Fl_Group* o
 			map_w = new Fl_Int_Input(480,default_palette_bar_offset_y+72,312,24,MapWidthTxt);
@@ -554,18 +545,24 @@ void editor::_editor(){
 		}
 		{TabsMain[spriteEditor] = new Fl_Group(rx,ry,rw,rh,"Sprites");
 			spritePal.more_init(1,16,56,true,128);
-			spritesel=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,200,128,24,"Sprite select");
+			spriteselgroup=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,200,168,24,"Sprite group select");
+			spriteselgroup->step(1);
+			spriteselgroup->maximum(0);
+			spriteselgroup->align(FL_ALIGN_TOP);
+			spriteselgroup->callback(selspriteGroup);
+
+			spritesel=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,224,168,24,"Sprite select");
 			spritesel->step(1);
 			spritesel->maximum(0);
 			spritesel->align(FL_ALIGN_TOP);
 			spritesel->callback(selSpriteCB);
-			spritest=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,240,128,24,"Start tile");
+			spritest=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,248,168,24,"Start tile");
 			spritest->step(1);
 			spritest->maximum(0);
 			spritest->align(FL_ALIGN_TOP);
 			spritest->callback(setvalueSpriteCB,0);
 
-			spritesize[0]=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,280,128,24,"Width (in tiles)");
+			spritesize[0]=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,272,168,24,"Width (in tiles)");
 			spritesize[0]->step(1);
 			spritesize[0]->value(1);
 			spritesize[0]->minimum(1);
@@ -573,7 +570,7 @@ void editor::_editor(){
 			spritesize[0]->align(FL_ALIGN_TOP);
 			spritesize[0]->callback(setvalueSpriteCB,(void*)1);
 
-			spritesize[1]=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,320,128,24,"Height (in tiles)");
+			spritesize[1]=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,320,168,24,"Height (in tiles)");
 			spritesize[1]->step(1);
 			spritesize[1]->value(1);
 			spritesize[1]->minimum(1);
@@ -581,13 +578,13 @@ void editor::_editor(){
 			spritesize[1]->align(FL_ALIGN_TOP);
 			spritesize[1]->callback(setvalueSpriteCB,(void*)2);
 
-			spritepalrow=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,360,128,24,"Palette row");
+			spritepalrow=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,360,168,24,"Palette row");
 			spritepalrow->step(1);
 			spritepalrow->maximum(3);
 			spritepalrow->align(FL_ALIGN_TOP);
 			spritepalrow->callback(setvalueSpriteCB,(void*)3);
 
-			spritezoom=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,400,128,24,"Zoom");
+			spritezoom=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,400,168,24,"Zoom");
 			spritezoom->step(1);
 			spritezoom->minimum(1);
 			spritezoom->value(16);

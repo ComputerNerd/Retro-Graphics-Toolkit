@@ -1,4 +1,7 @@
 Most recent changes are placed at the top
+20140801
+Fixed a bug where msb of emepesis bits did not apply
+
 20140731
 Fixed attributes save crash NES
 Added insert after chunk button

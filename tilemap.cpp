@@ -339,7 +339,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 		pushPaletteAll();
 		HLSpair* MapHLS=new HLSpair[palEdit.perRow*4];//Remember to change if there is a palete with a different amount than 4 rows
 		for(unsigned x=0;x<palEdit.perRow*3*4;x+=3){
-			double h,l,s,cmp,cmp2;
+			double h,l,s;
 			rgbToHls(currentProject->rgbPal[x],currentProject->rgbPal[x+1],currentProject->rgbPal[x+2],&h,&l,&s);
 			MapHLS[x/3].first=pickIt(h,l,s,type);
 			MapHLS[x/3].second=x/3;
@@ -372,7 +372,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	uint8_t tempSet=0;
 	double d[4];//Delta
 	uint32_t di[4];//Delta integer
-	uint32_t x,y;
+	uint32_t x;
 	uint8_t t;
 	uint8_t temp[256];//Just as a word of caution this is used for both sprintf temporary buffer and temporary truecolor tile buffer
 	uint32_t w,h;
@@ -526,7 +526,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 #define CYCbCr2R(Y, Cb, Cr) CLIP( Y + ( 91881 * Cr >> 16 ) - 179 )
 #define CYCbCr2G(Y, Cb, Cr) CLIP( Y - (( 22544 * Cb + 46793 * Cr ) >> 16) + 135)
 #define CYCbCr2B(Y, Cb, Cr) CLIP( Y + (116129 * Cb >> 16 ) - 226 )
-static void reduceImage(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_t offsetPal,Fl_Progress *progress,Fl_Window*pwin,uint8_t maxCol,unsigned yuv,unsigned alg,bool isSprite=false){
+static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,uint8_t offsetPal,Fl_Progress *progress,Fl_Window*pwin,uint8_t maxCol,unsigned yuv,unsigned alg,bool isSprite=false){
 	progress->maximum(1.0);
 	unsigned off2=offsetPal*2;
 	unsigned off3=offsetPal*3;
@@ -542,19 +542,7 @@ static void reduceImage(uint8_t * image,uint8_t * found_colors,int8_t row,uint8_
 		break;
 	}
 	if(isSprite){
-		w=currentProject->spritesC->spriteslist[curSprite]->w;
-		h=currentProject->spritesC->spriteslist[curSprite]->h;
-		tileMap*spriteMap=new tileMap(w,h);
-		//make verticle tile map
-		unsigned t=currentProject->spritesC->spriteslist[curSprite]->starttile;
-		for(unsigned i=0;i<w;++i){
-			for(unsigned j=0;j<h;++j){
-				//void set_tile_full(uint32_t tile,uint32_t x,uint32_t y,uint8_t palette_row,bool use_hflip,bool use_vflip,bool highorlow_prio);
-				spriteMap->set_tile_full(t++,i,j,currentProject->spritesC->spriteslist[curSprite]->palrow,false,false,false);
-			}
-		}
-		spriteMap->truecolor_to_image(image,row,false);
-		delete spriteMap;
+		currentProject->spritesC->spriteGroupToImage(image,curSpritegroup,row,false);
 	}else{
 		w=currentProject->tileMapC->mapSizeW;
 		h=currentProject->tileMapC->mapSizeHA;
@@ -814,14 +802,14 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	//uint8_t * colors;
 	uint32_t w,h;
 	if(isSprite){
-		w=currentProject->spritesC->spriteslist[curSprite]->w;
-		h=currentProject->spritesC->spriteslist[curSprite]->h;
+		w=currentProject->spritesC->width(curSpritegroup);
+		h=currentProject->spritesC->height(curSpritegroup);
 	}else{
 		w=currentProject->tileMapC->mapSizeW;
 		h=currentProject->tileMapC->mapSizeHA;
+		w*=currentProject->tileC->sizew;
+		h*=currentProject->tileC->sizeh;
 	}
-	w*=currentProject->tileC->sizew;
-	h*=currentProject->tileC->sizeh;
 	uint32_t colors_found;
 	//uint8_t * found_colors;
 	uint8_t found_colors[768];
@@ -871,7 +859,7 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 		if (rowAuto)
 			currentProject->tileMapC->allRowZero();
 		if(isSprite)
-			reduceImage(image,found_colors,-1,currentProject->spritesC->spriteslist[curSprite]->palrow*fun_palette,progress,win,perRow[0],yuv,alg,true);
+			reduceImage(image,found_colors,-1,0,progress,win,perRow[0],yuv,alg,true);
 		else
 			reduceImage(image,found_colors,-1,0,progress,win,perRow[0],yuv,alg);
 		window->damage(FL_DAMAGE_USER1);

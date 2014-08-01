@@ -162,14 +162,14 @@ void dither_tilemap_as_image(Fl_Widget*,void*sprite){
 	uint8_t * image;
 	uint32_t w,h;
 	if(isSprite){
-		w=currentProject->spritesC->spriteslist[curSprite]->w;
-		h=currentProject->spritesC->spriteslist[curSprite]->h;
+		w=currentProject->spritesC->width(curSpritegroup);
+		h=currentProject->spritesC->height(curSpritegroup);
 	}else{
 		w=currentProject->tileMapC->mapSizeW;
 		h=currentProject->tileMapC->mapSizeHA;
+		w*=currentProject->tileC->sizew;
+		h*=currentProject->tileC->sizeh;
 	}
-	w*=currentProject->tileC->sizew;
-	h*=currentProject->tileC->sizeh;
 	unsigned method;
 	if(isSprite)
 		method=1;
@@ -185,20 +185,10 @@ void dither_tilemap_as_image(Fl_Widget*,void*sprite){
 
 	if(method==1){
 		if(isSprite){
-			tileMap*spriteMap=new tileMap(w/currentProject->tileC->sizew,h/currentProject->tileC->sizeh);
-			//make verticle tile map
-			unsigned t=currentProject->spritesC->spriteslist[curSprite]->starttile;
-			for(unsigned i=0;i<w/currentProject->tileC->sizew;++i){
-				for(unsigned j=0;j<h/currentProject->tileC->sizeh;++j){
-					//void set_tile_full(uint32_t tile,uint32_t x,uint32_t y,uint8_t palette_row,bool use_hflip,bool use_vflip,bool highorlow_prio);
-					spriteMap->set_tile_full(t++,i,j,currentProject->spritesC->spriteslist[curSprite]->palrow,false,false,false);
-				}
-			}
-			spriteMap->truecolor_to_image(image,-1);
-			ditherImage(image,w,h,true,true,true,currentProject->spritesC->spriteslist[curSprite]->palrow);
-			ditherImage(image,w,h,true,false,true,currentProject->spritesC->spriteslist[curSprite]->palrow);
-			spriteMap->truecolorimageToTiles(image,-1);
-			delete spriteMap;
+			currentProject->spritesC->spriteGroupToImage(image,curSpritegroup,-1);
+			ditherImage(image,w,h,true,true);
+			ditherImage(image,w,h,true,false);
+			currentProject->spritesC->spriteImageToTiles(image,curSpritegroup,-1);
 		}else{
 			currentProject->tileMapC->truecolor_to_image(image,-1);
 			ditherImage(image,w,h,true,true);

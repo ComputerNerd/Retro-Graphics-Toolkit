@@ -60,6 +60,7 @@ class editor : public Fl_Double_Window{
 	Fl_Slider* tile_select_2;
 	Fl_Slider* chunk_select;
 	Fl_Slider* tile_select_3;
+	Fl_Slider* spriteselgroup;
 	Fl_Slider* spritesel;
 	Fl_Slider* spritest;//sprite start tile
 	Fl_Slider* spritesize[2];//sprite width,height

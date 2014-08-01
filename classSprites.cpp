@@ -21,61 +21,137 @@
 #include "includes.h"
 #include "callback_tiles.h"
 #include "global.h"
+static const char*spriteDefName="DefaultSpriteGroupLabel";
 sprites::sprites(){
 	amt=1;
-	spriteslist=(sprite**)malloc(sizeof(sprite*));
-	spriteslist[0]=new sprite;
+	groups.push_back(spriteGroup());
+	groups[0].list.push_back(sprite());
+	groups[0].name.assign(spriteDefName);
+	groups[0].offx.push_back(0);
+	groups[0].offy.push_back(0);
+	groups[0].loadat.push_back(0);
 }
 sprites::sprites(const sprites& other){
-	spriteslist=(sprite**)malloc(other.amt*sizeof(sprite*));
-	for(uint32_t i=0;i<other.amt;++i)
-		spriteslist[i]=new sprite(other.spriteslist[i]->w,other.spriteslist[i]->h,other.spriteslist[i]->starttile,other.spriteslist[i]->palrow);
+	groups.reserve(other.groups.size());
+	for(uint32_t i=0;i<other.groups.size();++i)
+		groups.push_back(spriteGroup());
+	for(uint32_t j=0;j<other.groups.size();++j){
+		groups[j].list.reserve(other.groups[j].list.size());
+		for(uint32_t i=0;i<other.groups[j].list.size();++i)
+			groups[j].list.push_back(sprite(other.groups[j].list[i].w,other.groups[j].list[i].h,other.groups[j].list[i].palrow,other.groups[j].list[i].starttile));
+	}
 	amt=other.amt;
 }
 sprites::~sprites(){
-	for(uint32_t x=0;x<amt;++x)
-		delete spriteslist[x];
-	free(spriteslist);
+	for(uint32_t j=0;j<amt;++j){
+		groups[j].list.clear();
+		groups[j].offx.clear();
+		groups[j].offy.clear();
+		groups[j].list.clear();
+		groups[j].name.clear();
+	}
+	groups.clear();
+}
+
+void sprites::spriteGroupToImage(uint8_t*img,uint32_t id,int row,bool alpha){
+	fl_alert("sprite to image");
+}
+void sprites::spriteImageToTiles(uint8_t*img,uint32_t id,int rowUsage,bool alpha){
+	fl_alert("image to sprite");
+}
+uint32_t sprites::width(uint32_t id){
+	fl_alert("Width");
+}
+uint32_t sprites::height(uint32_t id){
+	fl_alert("Height");
+}
+void sprites::draw(uint32_t id,uint32_t x,uint32_t y,int32_t zoom){
+	for(uint32_t i=0;i<groups[id].list.size();++i){
+		groups[id].list[i].draw(x+(groups[id].offx[i]*zoom),y+(groups[id].offy[i]),zoom);
+	}
 }
 bool sprites::save(FILE*fp){
-	/*Format
-	 * uint32_t amount
-	 * And for each sprite:
-	 * uint32_t width
-	 * uint32_t height
-	 * uint32_t start tile
-	 * uint32_t pal row*/
+	/* Format:
+	 * uint32_t group amount
+	 * for each group
+	 * uint32_t sprite amount
+	 * Null terminated sprite group name or just 0 if default name
+	 * for each sprite in group
+	 * int32_t offset x
+	 * int32_t offset y
+	 * uint32_t loadat
+	 * uint32_t w
+	 * uint32_t h
+	 * uint32_t starttile
+	 * uint32_t pal row
+	 */
 	fwrite(&amt,sizeof(uint32_t),1,fp);
 	for(unsigned n=0;n<amt;++n){
-		fwrite(&spriteslist[n]->w,sizeof(uint32_t),1,fp);
-		fwrite(&spriteslist[n]->h,sizeof(uint32_t),1,fp);
-		fwrite(&spriteslist[n]->starttile,sizeof(uint32_t),1,fp);
-		fwrite(&spriteslist[n]->palrow,sizeof(uint32_t),1,fp);
+		uint32_t amtgroup=groups[n].list.size();
+		fwrite(&amtgroup,sizeof(uint32_t),1,fp);
+		if(strcmp(groups[n].name.c_str(),spriteDefName))
+			fputs(groups[n].name.c_str(),0);
+		fputc(0,fp);
+		for(uint32_t i=0;i<amtgroup;++i){
+			fwrite(&groups[n].offx[i],sizeof(int32_t),1,fp);
+			fwrite(&groups[n].offy[i],sizeof(int32_t),1,fp);
+			fwrite(&groups[n].loadat[i],sizeof(uint32_t),1,fp);
+			fwrite(&groups[n].list[i].w,sizeof(uint32_t),1,fp);
+			fwrite(&groups[n].list[i].h,sizeof(uint32_t),1,fp);
+			fwrite(&groups[n].list[i].starttile,sizeof(uint32_t),1,fp);
+			fwrite(&groups[n].list[i].palrow,sizeof(uint32_t),1,fp);
+		}
 	}
 	return true;
 }
 void sprites::setAmt(uint32_t amtnew){
 	if(amtnew>amt){
 		//Create more sprites with default paramater
-		spriteslist=(sprite**)realloc(spriteslist,amtnew*sizeof(sprite*));
-		for(unsigned n=amt;n<amtnew;++n)
-			spriteslist[n]=new sprite;
+		groups.resize(amtnew);
+		for(unsigned n=amt;n<amtnew;++n){
+			groups[n].list.push_back(sprite());
+			groups[n].name.assign(spriteDefName);
+		}
 	}else if(amtnew<amt){
 		for(unsigned n=amtnew;n<amt;++n)
-			delete spriteslist[n];
-		spriteslist=(sprite**)realloc(spriteslist,amtnew*sizeof(sprite*));
+			groups[n].list.clear();
+		groups.resize(amtnew);
 	}
 	amt=amtnew;
 }
-bool sprites::load(FILE*fp){
-	uint32_t amtnew;
-	fread(&amtnew,sizeof(uint32_t),1,fp);
-	setAmt(amtnew);
-	for(unsigned n=0;n<amt;++n){
-		fread(&spriteslist[n]->w,sizeof(uint32_t),1,fp);
-		fread(&spriteslist[n]->h,sizeof(uint32_t),1,fp);
-		fread(&spriteslist[n]->starttile,sizeof(uint32_t),1,fp);
-		fread(&spriteslist[n]->palrow,sizeof(uint32_t),1,fp);
+void sprites::setAmtgroup(uint32_t id,uint32_t amtnew){
+	uint32_t amtold=groups[id].list.size();
+	if(amtold==amtnew)
+		return;
+	groups[id].list.resize(amtnew);
+	groups[id].offx.resize(amtnew);
+	groups[id].offy.resize(amtnew);
+	groups[id].loadat.resize(amtnew);
+	if(amtnew>amtold){
+		for(unsigned i=amtold;i<amtnew;++i)
+			groups[id].name.assign(spriteDefName);
+	}
+}
+bool sprites::load(FILE*fp,uint32_t version){
+	if(version>=7){
+
+	}else{
+		/* Old format
+		 * uint32_t amount
+		 * And for each sprite:
+		 * uint32_t width
+		 * uint32_t height
+		 * uint32_t start tile
+		 * uint32_t pal row*/
+		uint32_t amtnew;
+		fread(&amtnew,sizeof(uint32_t),1,fp);
+		setAmt(amtnew);
+		for(unsigned n=0;n<amt;++n){
+			fread(&groups[n].list[0].w,sizeof(uint32_t),1,fp);
+			fread(&groups[n].list[0].h,sizeof(uint32_t),1,fp);
+			fread(&groups[n].list[0].starttile,sizeof(uint32_t),1,fp);
+			fread(&groups[n].list[0].palrow,sizeof(uint32_t),1,fp);
+		}
 	}
 	return true;
 }
@@ -135,8 +211,8 @@ void sprites::importImg(uint32_t to){
 		}
 		//Determin how many sprites will be created
 		unsigned spritesnew=((wnew+wmax-8)/wmax)*((hnew+hmax-8)/hmax);
-		if((int)to>((int)amt-(int)spritesnew))
-			setAmt(to+spritesnew);
+		if(to>=amt)
+			setAmt(to+1);
 		if((loaded_image->d() != 3 && loaded_image->d() != 4)){
 			fl_alert("Please use color depth of 3 or 4\nYou Used %d",loaded_image->d());
 			loaded_image->release();
@@ -162,14 +238,19 @@ void sprites::importImg(uint32_t to){
 		currentProject->tileC->resizeAmt();
 		out=currentProject->tileC->truetDat.data()+(startTile*currentProject->tileC->tcSize);
 		uint8_t * img_ptr=(uint8_t *)loaded_image->data()[0];
+		setAmtgroup(to,spritesnew);
+		groups[to].name.assign(fl_filename_name(the_file.c_str()));
 		for(unsigned y=0,cnt=0,tilecnt=startTile;y<hnew;y+=hmax){
 			for(unsigned x=0;x<wnew;x+=wmax,++cnt){
 				unsigned dimx,dimy;
 				dimx=((wnew-x)>=wmax)?wmax:(wnew-x)%wmax;
 				dimy=((hnew-y)>=hmax)?hmax:(hnew-y)%hmax;
-				spriteslist[to+cnt]->w=dimx/8;
-				spriteslist[to+cnt]->h=dimy/8;
-				spriteslist[to+cnt]->starttile=tilecnt;
+				groups[to].list[cnt].w=dimx/8;
+				groups[to].list[cnt].h=dimy/8;
+				groups[to].list[cnt].starttile=tilecnt;
+				groups[to].offx[cnt]=x;
+				groups[to].offy[cnt]=y;
+				groups[to].loadat[cnt]=tilecnt;
 				tilecnt+=(dimx/8)*(dimy/8);
 				for(unsigned i=0;i<dimx;i+=8){
 					for(unsigned j=0;j<dimy;j+=8)
@@ -189,20 +270,22 @@ void sprites::del(uint32_t id){
 		return;
 	}
 	if(id<amt){
-		delete spriteslist[id];
-		--amt;
-		if(id<amt){
-			//if not at the end of the list
-			memmove(spriteslist+id,spriteslist+id+1,(amt-1)*sizeof(uint32_t));
-		}
-		spriteslist=(sprite**)realloc(spriteslist,amt*sizeof(sprite*));
-	}
+		groups[id].offx.erase(groups[id].offx.begin()+id);
+		groups[id].offy.erase(groups[id].offy.begin()+id);
+		groups[id].loadat.erase(groups[id].loadat.begin()+id);
+		groups[id].name.erase(groups[id].name.begin()+id);
+		groups[id].list.erase(groups[id].list.begin()+id);
+		groups.erase(groups.begin()+id);
+	}else
+		fl_alert("You cannot delete what does not exist");
 }
 void sprites::enforceMax(unsigned wmax,unsigned hmax){
-	for(unsigned n=0;n<amt;++n){
-		if(spriteslist[n]->w>wmax)
-			spriteslist[n]->w=wmax;
-		if(spriteslist[n]->h>hmax)
-			spriteslist[n]->h=hmax;
+	for(unsigned j=0;j<amt;++j){
+		for(unsigned i=0;i<groups[j].list.size();++i){
+		if(groups[j].list[i].w>wmax)
+			groups[j].list[i].w=wmax;
+		if(groups[j].list[i].h>hmax)
+			groups[j].list[i].h=hmax;
+		}
 	}
 }

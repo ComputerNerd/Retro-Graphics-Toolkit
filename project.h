@@ -28,7 +28,7 @@ For example the save project file function goes here
 #include "classtilemap.h"
 #include "classChunks.h"
 #include "classSprites.h"
-#define currentProjectVersionNUM 6
+#define currentProjectVersionNUM 7
 extern uint32_t curProjectID;
 struct Project{/*!<Holds all data needed for a project based system for examaple tile screen and level 1 are 2 seperate projects*/
 	std::string Name;

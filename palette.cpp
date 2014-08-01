@@ -13,8 +13,9 @@
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
-   */
+*/
 #include "global.h"
+#include "errorMsg.h"
 uint8_t palTypeGen=0;
 void swapEntry(uint8_t one,uint8_t two){
 	if(unlikely(one==two))
@@ -31,6 +32,8 @@ void swapEntry(uint8_t one,uint8_t two){
 			memcpy(currentProject->palDat+two,currentProject->palDat+one,1);
 			currentProject->palDat[one]=palOld;}
 		break;
+		default:
+			show_default_error
 	}
 	uint8_t rgb[3];
 	memcpy(rgb,currentProject->rgbPal+(two*3),3);
@@ -61,5 +64,4 @@ void set_palette_type(uint8_t type){
 		temp_var>>=1;
 		currentProject->rgbPal[rgb_array]=palTab[temp_var+type];
 	}
-	//window->redraw();
 }
