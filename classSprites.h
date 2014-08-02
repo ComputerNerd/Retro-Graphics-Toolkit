@@ -45,7 +45,7 @@ class sprites{
 		bool load(FILE*fp,uint32_t version);
 		bool save(FILE*fp);
 		void setAmt(uint32_t amtnew);
-		void setAmtgroup(uint32_t id,uint32_t amtnew);
+		void setAmtingroup(uint32_t id,uint32_t amtnew);
 		void del(uint32_t id);
 		void delingroup(uint32_t id,uint32_t subid);
 		void enforceMax(unsigned wmax,unsigned hmax);

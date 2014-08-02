@@ -890,6 +890,7 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	palEdit.updateSlider();
 	tileEdit_pal.updateSlider();
 	tileMap_pal.updateSlider();
+	spritePal.updateSlider();
 	window->redraw();
 	Fl::check();
 }

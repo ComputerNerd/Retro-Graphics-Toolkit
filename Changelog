@@ -1,5 +1,9 @@
 Most recent changes are placed at the top
+20140802
+Update dither sprite as image and generate optimal palette for grouping
+
 20140801
+Added sprite grouping support
 Fixed a bug where msb of emepesis bits did not apply
 
 20140731

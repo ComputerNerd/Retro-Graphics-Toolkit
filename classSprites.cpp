@@ -183,6 +183,42 @@ void sprites::draw(uint32_t id,uint32_t x,uint32_t y,int32_t zoom){
 		groups[id].list[i].draw(xoff,yoff,zoom);
 	}
 }
+void sprites::setAmt(uint32_t amtnew){
+	if(amtnew>amt){
+		//Create more sprites with default paramater
+		groups.resize(amtnew);
+		for(unsigned n=amt;n<amtnew;++n){
+			groups[n].list.push_back(sprite());
+			groups[n].name.assign(spriteDefName);
+			groups[n].offx.push_back(0);
+			groups[n].offy.push_back(0);
+			groups[n].loadat.push_back(0);
+		}
+	}else if(amtnew<amt){
+		for(unsigned n=amtnew;n<amt;++n){
+			groups[n].offx.clear();
+			groups[n].offy.clear();
+			groups[n].loadat.clear();
+			groups[n].name.clear();
+			groups[n].list.clear();
+		}
+		groups.resize(amtnew);
+	}
+	amt=amtnew;
+}
+void sprites::setAmtingroup(uint32_t id,uint32_t amtnew){
+	uint32_t amtold=groups[id].list.size();
+	if(amtold==amtnew)
+		return;
+	groups[id].list.resize(amtnew);
+	groups[id].offx.resize(amtnew);
+	groups[id].offy.resize(amtnew);
+	groups[id].loadat.resize(amtnew);
+	if(amtnew>amtold){
+		for(unsigned i=amtold;i<amtnew;++i)
+			groups[id].name.assign(spriteDefName);
+	}
+}
 bool sprites::save(FILE*fp){
 	/* Format:
 	 * uint32_t group amount
@@ -203,7 +239,7 @@ bool sprites::save(FILE*fp){
 		uint32_t amtgroup=groups[n].list.size();
 		fwrite(&amtgroup,sizeof(uint32_t),1,fp);
 		if(strcmp(groups[n].name.c_str(),spriteDefName))
-			fputs(groups[n].name.c_str(),0);
+			fputs(groups[n].name.c_str(),fp);
 		fputc(0,fp);
 		for(uint32_t i=0;i<amtgroup;++i){
 			fwrite(&groups[n].offx[i],sizeof(int32_t),1,fp);
@@ -217,37 +253,32 @@ bool sprites::save(FILE*fp){
 	}
 	return true;
 }
-void sprites::setAmt(uint32_t amtnew){
-	if(amtnew>amt){
-		//Create more sprites with default paramater
-		groups.resize(amtnew);
-		for(unsigned n=amt;n<amtnew;++n){
-			groups[n].list.push_back(sprite());
-			groups[n].name.assign(spriteDefName);
-		}
-	}else if(amtnew<amt){
-		for(unsigned n=amtnew;n<amt;++n)
-			groups[n].list.clear();
-		groups.resize(amtnew);
-	}
-	amt=amtnew;
-}
-void sprites::setAmtgroup(uint32_t id,uint32_t amtnew){
-	uint32_t amtold=groups[id].list.size();
-	if(amtold==amtnew)
-		return;
-	groups[id].list.resize(amtnew);
-	groups[id].offx.resize(amtnew);
-	groups[id].offy.resize(amtnew);
-	groups[id].loadat.resize(amtnew);
-	if(amtnew>amtold){
-		for(unsigned i=amtold;i<amtnew;++i)
-			groups[id].name.assign(spriteDefName);
-	}
-}
 bool sprites::load(FILE*fp,uint32_t version){
 	if(version>=7){
-
+		uint32_t amtnew;
+		fread(&amtnew,sizeof(uint32_t),1,fp);
+		setAmt(amtnew);
+		for(unsigned n=0;n<amt;++n){
+			uint32_t amtgroup;
+			fread(&amtgroup,sizeof(int32_t),1,fp);
+			setAmtingroup(n,amtgroup);
+			char a=fgetc(fp);
+			if(a){
+				groups[n].name.clear();
+				groups[n].name.push_back(a);
+				for(;a=fgetc(fp),a;)
+					groups[n].name.push_back(a);
+			}
+			for(uint32_t i=0;i<amtgroup;++i){
+				fread(&groups[n].offx[i],sizeof(int32_t),1,fp);
+				fread(&groups[n].offy[i],sizeof(int32_t),1,fp);
+				fread(&groups[n].loadat[i],sizeof(uint32_t),1,fp);
+				fread(&groups[n].list[i].w,sizeof(uint32_t),1,fp);
+				fread(&groups[n].list[i].h,sizeof(uint32_t),1,fp);
+				fread(&groups[n].list[i].starttile,sizeof(uint32_t),1,fp);
+				fread(&groups[n].list[i].palrow,sizeof(uint32_t),1,fp);
+			}
+		}
 	}else{
 		/* Old format
 		 * uint32_t amount
@@ -329,7 +360,7 @@ void sprites::importImg(uint32_t to){
 		currentProject->tileC->resizeAmt();
 		out=currentProject->tileC->truetDat.data()+(startTile*currentProject->tileC->tcSize);
 		uint8_t * img_ptr=(uint8_t *)loaded_image->data()[0];
-		setAmtgroup(to,spritesnew);
+		setAmtingroup(to,spritesnew);
 		groups[to].name.assign(fl_filename_name(the_file.c_str()));
 		for(unsigned y=0,cnt=0,tilecnt=startTile;y<hnew;y+=hmax){
 			for(unsigned x=0;x<wnew;x+=wmax,++cnt){

@@ -335,5 +335,6 @@ void clearPalette(Fl_Widget*,void*){
 		palEdit.updateSlider();
 		tileEdit_pal.updateSlider();
 		tileMap_pal.updateSlider();
+		spritePal.updateSlider();
 	}
 }

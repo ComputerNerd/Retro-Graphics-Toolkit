@@ -491,6 +491,7 @@ void UndoRedo(bool redo){
 			palEdit.updateSlider();
 			tileEdit_pal.updateSlider();
 			tileMap_pal.updateSlider();
+			spritePal.updateSlider();
 		break;
 		case uPaletteEntry:
 			{struct undoPaletteEntry*up=(struct undoPaletteEntry*)uptr->ptr;
