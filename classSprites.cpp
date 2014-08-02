@@ -52,22 +52,34 @@ sprites::~sprites(){
 	}
 	groups.clear();
 }
-static uint8_t*rect2rect(uint8_t*in,uint8_t*out,unsigned xin,unsigned yin,unsigned win,unsigned wout,unsigned hout,bool alpha){
+static uint8_t*rect2rect(uint8_t*in,uint8_t*out,unsigned xin,unsigned yin,unsigned win,unsigned wout,unsigned hout,bool alpha,bool reverse=false){
 	if(alpha)
 		in+=(yin*win*4)+(xin*4);
 	else
 		in+=(yin*win*3)+(xin*3);
 	while(hout--){
 		if(alpha){
-			memcpy(out,in,wout*4);
+			if(reverse)
+				memcpy(in,out,wout*4);
+			else
+				memcpy(out,in,wout*4);
 			in+=win*4;
 			out+=wout*4;
 		}else{
-			for(unsigned i=0;i<wout;++i){
-				*out++=*in++;
-				*out++=*in++;
-				*out++=*in++;
-				*out++=255;
+			if(reverse){
+				for(unsigned i=0;i<wout;++i){
+					*in++=*out++;
+					*in++=*out++;
+					*in++=*out++;
+					++out;
+				}
+			}else{
+				for(unsigned i=0;i<wout;++i){
+					*out++=*in++;
+					*out++=*in++;
+					*out++=*in++;
+					*out++=255;
+				}
 			}
 			in+=(win-wout)*3;
 		}
@@ -80,6 +92,7 @@ void sprites::spriteGroupToImage(uint8_t*img,uint32_t id,int row,bool alpha){
 	minmaxoffx(id,minx,maxx);
 	uint32_t w=abs(maxx-minx);
 	uint32_t h=abs(maxy-miny);
+	printf("%d %d %d %d %u %u\n",minx,maxx,miny,maxy,w,h);
 	unsigned bpp;//Bytes per pixel
 	if(alpha)
 		bpp=4;
@@ -91,7 +104,17 @@ void sprites::spriteGroupToImage(uint8_t*img,uint32_t id,int row,bool alpha){
 		int32_t yoff=groups[id].offy[i];
 		xoff-=minx;
 		yoff-=miny;
-	}	
+		uint32_t ttile=groups[id].list[i].starttile;
+		if((row!=groups[id].list[i].palrow)&&(row>=0))
+			continue;//Skip if we only want a specific row
+		for(uint32_t x=0;x<groups[id].list[i].w;x+=currentProject->tileC->sizew){
+			for(uint32_t y=0;y<groups[id].list[i].h;y+=currentProject->tileC->sizeh,++ttile){
+				printf("%u %d\n",xoff+x,yoff+y);
+				uint8_t*outptr=currentProject->tileC->truetDat.data()+(ttile*currentProject->tileC->tcSize);
+				rect2rect(img,outptr,xoff+x,yoff+y,w,currentProject->tileC->sizew,currentProject->tileC->sizeh,alpha,true);
+			}
+		}
+	}
 }
 void sprites::spriteImageToTiles(uint8_t*img,uint32_t id,int rowUsage,bool alpha){
 	int32_t miny,maxy,minx,maxx;

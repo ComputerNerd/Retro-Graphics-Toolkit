@@ -542,14 +542,16 @@ static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,uint8_t o
 		break;
 	}
 	if(isSprite){
+		w=currentProject->spritesC->width(curSpritegroup);
+		h=currentProject->spritesC->height(curSpritegroup);
 		currentProject->spritesC->spriteGroupToImage(image,curSpritegroup,row,false);
 	}else{
 		w=currentProject->tileMapC->mapSizeW;
 		h=currentProject->tileMapC->mapSizeHA;
+		w*=currentProject->tileC->sizew;
+		h*=currentProject->tileC->sizeh;
 		currentProject->tileMapC->truecolor_to_image(image,row,false);
 	}
-	w*=currentProject->tileC->sizew;
-	h*=currentProject->tileC->sizeh;
 	progress->label("Dithering to colorspace");
 	Fl::check();
 	if(!yuv)
