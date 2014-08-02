@@ -91,6 +91,7 @@ static void intstr(int x,char*tmp){
 void editor::updateSpriteSliders(void){
 	spriteselgroup->maximum(currentProject->spritesC->amt-1);
 	spritesel->maximum(currentProject->spritesC->groups[curSpritegroup].list.size()-1);
+	spriteslat->maximum(currentProject->spritesC->groups[curSpritegroup].list.size()-1);
 	spritest->value(currentProject->spritesC->groups[curSpritegroup].list[curSprite].starttile);
 	spriteslat->value(currentProject->spritesC->groups[curSpritegroup].loadat[curSprite]);
 	spritesize[0]->value(currentProject->spritesC->groups[curSpritegroup].list[curSprite].w);

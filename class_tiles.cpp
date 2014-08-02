@@ -204,7 +204,6 @@ void tiles::truecolor_to_tile_ptr(uint8_t palette_row,uint32_t cur_tile,uint8_t 
 		for (unsigned x=0;x<8;++x){
 			uint8_t temp=find_near_color_from_row(palette_row,truePtr[0],truePtr[1],truePtr[2]);
 			truePtr+=3;
-			//get difference
 			//sega genesis tile format
 			//even pixel,odd pixel
 			switch (currentProject->gameSystem){

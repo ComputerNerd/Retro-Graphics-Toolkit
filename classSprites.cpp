@@ -92,7 +92,6 @@ void sprites::spriteGroupToImage(uint8_t*img,uint32_t id,int row,bool alpha){
 	minmaxoffx(id,minx,maxx);
 	uint32_t w=abs(maxx-minx);
 	uint32_t h=abs(maxy-miny);
-	printf("%d %d %d %d %u %u\n",minx,maxx,miny,maxy,w,h);
 	unsigned bpp;//Bytes per pixel
 	if(alpha)
 		bpp=4;
@@ -107,9 +106,8 @@ void sprites::spriteGroupToImage(uint8_t*img,uint32_t id,int row,bool alpha){
 		uint32_t ttile=groups[id].list[i].starttile;
 		if((row!=groups[id].list[i].palrow)&&(row>=0))
 			continue;//Skip if we only want a specific row
-		for(uint32_t x=0;x<groups[id].list[i].w;x+=currentProject->tileC->sizew){
-			for(uint32_t y=0;y<groups[id].list[i].h;y+=currentProject->tileC->sizeh,++ttile){
-				printf("%u %d\n",xoff+x,yoff+y);
+		for(uint32_t x=0;x<groups[id].list[i].w*currentProject->tileC->sizew;x+=currentProject->tileC->sizew){
+			for(uint32_t y=0;y<groups[id].list[i].h*currentProject->tileC->sizeh;y+=currentProject->tileC->sizeh,++ttile){
 				uint8_t*outptr=currentProject->tileC->truetDat.data()+(ttile*currentProject->tileC->tcSize);
 				rect2rect(img,outptr,xoff+x,yoff+y,w,currentProject->tileC->sizew,currentProject->tileC->sizeh,alpha,true);
 			}
@@ -120,6 +118,29 @@ void sprites::spriteImageToTiles(uint8_t*img,uint32_t id,int rowUsage,bool alpha
 	int32_t miny,maxy,minx,maxx;
 	minmaxoffy(id,miny,maxy);
 	minmaxoffx(id,minx,maxx);
+	uint8_t tcTemp[256];
+	uint32_t w=abs(maxx-minx);
+	uint32_t h=abs(maxy-miny);
+	unsigned bpp;//Bytes per pixel
+	if(alpha)
+		bpp=4;
+	else
+		bpp=3;
+	for(uint32_t i=0;i<groups[id].offx.size();++i){
+		int32_t xoff=groups[id].offx[i];
+		int32_t yoff=groups[id].offy[i];
+		xoff-=minx;
+		yoff-=miny;
+		uint32_t ttile=groups[id].list[i].starttile;
+		if((rowUsage!=groups[id].list[i].palrow)&&(rowUsage>=0))
+			continue;//Skip if we only want a specific row
+		for(uint32_t x=0;x<groups[id].list[i].w*currentProject->tileC->sizew;x+=currentProject->tileC->sizew){
+			for(uint32_t y=0;y<groups[id].list[i].h*currentProject->tileC->sizeh;y+=currentProject->tileC->sizeh,++ttile){
+				rect2rect(img,tcTemp,xoff+x,yoff+y,w,currentProject->tileC->sizew,currentProject->tileC->sizeh,alpha,false);
+				currentProject->tileC->truecolor_to_tile_ptr(groups[id].list[i].palrow,ttile,tcTemp,false);
+			}
+		}
+	}
 }
 void sprites::minmaxoffy(uint32_t id,int32_t&miny,int32_t&maxy){
 	miny=maxy=groups[id].offy[0];
