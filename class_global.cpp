@@ -82,19 +82,31 @@ void editor::updateBlockTilesChunk(uint32_t prj){
 void editor::updateBlockTilesChunk(void){
 	updateBlockTilesChunk(curProjectID);
 }
+static void uintstr(unsigned x,char*tmp){
+	snprintf(tmp,16,"%u",x);
+}
+static void intstr(int x,char*tmp){
+	snprintf(tmp,16,"%d",x);
+}
 void editor::updateSpriteSliders(void){
 	spriteselgroup->maximum(currentProject->spritesC->amt-1);
 	spritesel->maximum(currentProject->spritesC->groups[curSpritegroup].list.size()-1);
 	spritest->value(currentProject->spritesC->groups[curSpritegroup].list[curSprite].starttile);
+	spriteslat->value(currentProject->spritesC->groups[curSpritegroup].loadat[curSprite]);
 	spritesize[0]->value(currentProject->spritesC->groups[curSpritegroup].list[curSprite].w);
 	spritesize[1]->value(currentProject->spritesC->groups[curSpritegroup].list[curSprite].h);
 	spritepalrow->value(currentProject->spritesC->groups[curSpritegroup].list[curSprite].palrow);
+	char tmp[16];
+	intstr(currentProject->spritesC->groups[curSpritegroup].offx[curSprite],tmp);
+	spritesoff[0]->value(tmp);
+	intstr(currentProject->spritesC->groups[curSpritegroup].offy[curSprite],tmp);
+	spritesoff[1]->value(tmp);
 }
 void editor::updateChunkSize(uint32_t wi,uint32_t hi){
 	char tmp[16];
-	snprintf(tmp,16,"%d",wi);
+	uintstr(wi,tmp);
 	chunksize[0]->value(tmp);
-	snprintf(tmp,16,"%d",hi);
+	uintstr(hi,tmp);
 	chunksize[1]->value(tmp);
 }
 void editor::updateChunkSize(void){

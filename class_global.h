@@ -62,6 +62,8 @@ class editor : public Fl_Double_Window{
 	Fl_Slider* tile_select_3;
 	Fl_Slider* spriteselgroup;
 	Fl_Slider* spritesel;
+	Fl_Slider* spriteslat;
+	Fl_Int_Input* spritesoff[2];
 	Fl_Slider* spritest;//sprite start tile
 	Fl_Slider* spritesize[2];//sprite width,height
 	Fl_Slider* spritepalrow;//selects palette row

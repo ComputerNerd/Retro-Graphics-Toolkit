@@ -31,7 +31,7 @@ public:
 	uint8_t getEntry(void);
 	void check_box(int,int);
 	void draw_boxes(void);
-	void more_init(uint8_t x=1,uint16_t offsetx=16,uint16_t offsety=56,bool altset=false,unsigned ln=256);//this one should be called in a function that creates the gui elements
+	void more_init(uint8_t x=1,uint16_t offsetx=16,uint16_t offsety=56,bool altset=false,unsigned ln=256,bool small=false);//this one should be called in a function that creates the gui elements
 	void changeRow(uint8_t);
 	void changeSystem(void);
 	void updateSlider(void);

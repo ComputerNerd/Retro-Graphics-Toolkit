@@ -52,22 +52,91 @@ sprites::~sprites(){
 	}
 	groups.clear();
 }
-
+static uint8_t*rect2rect(uint8_t*in,uint8_t*out,unsigned xin,unsigned yin,unsigned win,unsigned wout,unsigned hout,bool alpha){
+	if(alpha)
+		in+=(yin*win*4)+(xin*4);
+	else
+		in+=(yin*win*3)+(xin*3);
+	while(hout--){
+		if(alpha){
+			memcpy(out,in,wout*4);
+			in+=win*4;
+			out+=wout*4;
+		}else{
+			for(unsigned i=0;i<wout;++i){
+				*out++=*in++;
+				*out++=*in++;
+				*out++=*in++;
+				*out++=255;
+			}
+			in+=(win-wout)*3;
+		}
+	}
+	return out;
+}
 void sprites::spriteGroupToImage(uint8_t*img,uint32_t id,int row,bool alpha){
-	fl_alert("sprite to image");
+	int32_t miny,maxy,minx,maxx;
+	minmaxoffy(id,miny,maxy);
+	minmaxoffx(id,minx,maxx);
+	uint32_t w=abs(maxx-minx);
+	uint32_t h=abs(maxy-miny);
+	unsigned bpp;//Bytes per pixel
+	if(alpha)
+		bpp=4;
+	else
+		bpp=3;
+	memset(img,0,w*h*bpp);
+	for(uint32_t i=0;i<groups[id].offx.size();++i){
+		int32_t xoff=groups[id].offx[i];
+		int32_t yoff=groups[id].offy[i];
+		xoff-=minx;
+		yoff-=miny;
+	}	
 }
 void sprites::spriteImageToTiles(uint8_t*img,uint32_t id,int rowUsage,bool alpha){
-	fl_alert("image to sprite");
+	int32_t miny,maxy,minx,maxx;
+	minmaxoffy(id,miny,maxy);
+	minmaxoffx(id,minx,maxx);
+}
+void sprites::minmaxoffy(uint32_t id,int32_t&miny,int32_t&maxy){
+	miny=maxy=groups[id].offy[0];
+	for(uint32_t i=0;i<groups[id].offy.size();++i){
+		if(groups[id].offy[i]<miny)
+			miny=groups[id].offy[i];
+		int32_t tmpy=groups[id].offy[i]+(groups[id].list[i].h*currentProject->tileC->sizeh);
+		if(tmpy>maxy)
+			maxy=tmpy;
+	}
+}
+void sprites::minmaxoffx(uint32_t id,int32_t&minx,int32_t&maxx){
+	minx=maxx=groups[id].offx[0];
+	for(uint32_t i=0;i<groups[id].offx.size();++i){
+		if(groups[id].offx[i]<minx)
+			minx=groups[id].offx[i];
+		int32_t tmpx=groups[id].offx[i]+(groups[id].list[i].w*currentProject->tileC->sizew);
+		if(tmpx>maxx)
+			maxx=tmpx;
+	}
 }
 uint32_t sprites::width(uint32_t id){
-	fl_alert("Width");
+	int32_t minx,maxx;
+	minmaxoffx(id,minx,maxx);
+	return abs(maxx-minx);
 }
 uint32_t sprites::height(uint32_t id){
-	fl_alert("Height");
+	int32_t miny,maxy;
+	minmaxoffy(id,miny,maxy);
+	return abs(maxy-miny);
 }
 void sprites::draw(uint32_t id,uint32_t x,uint32_t y,int32_t zoom){
 	for(uint32_t i=0;i<groups[id].list.size();++i){
-		groups[id].list[i].draw(x+(groups[id].offx[i]*zoom),y+(groups[id].offy[i]),zoom);
+		unsigned xoff=x+(groups[id].offx[i]*zoom);
+		unsigned yoff=y+(groups[id].offy[i]*zoom);
+		if(xoff>=window->w())
+			continue;
+		if(yoff>=window->h())
+			continue;
+		groups[id].list[i].draw(xoff,yoff,zoom);
 	}
 }
 bool sprites::save(FILE*fp){
@@ -154,28 +223,6 @@ bool sprites::load(FILE*fp,uint32_t version){
 		}
 	}
 	return true;
-}
-static uint8_t*rect2rect(uint8_t*in,uint8_t*out,unsigned xin,unsigned yin,unsigned win,unsigned wout,unsigned hout,bool alpha){
-	if(alpha)
-		in+=(yin*win*4)+(xin*4);
-	else
-		in+=(yin*win*3)+(xin*3);
-	while(hout--){
-		if(alpha){
-			memcpy(out,in,wout*4);
-			in+=win*4;
-			out+=wout*4;
-		}else{
-			for(unsigned i=0;i<wout;++i){
-				*out++=*in++;
-				*out++=*in++;
-				*out++=*in++;
-				*out++=255;
-			}
-			in+=(win-wout)*3;
-		}
-	}
-	return out;
 }
 static int numCmp(uint8_t*dat,unsigned n,uint8_t num){
 	while(n--){
@@ -270,10 +317,25 @@ void sprites::del(uint32_t id){
 		return;
 	}
 	if(id<amt){
+		groups[id].offx.clear();
+		groups[id].offy.clear();
+		groups[id].loadat.clear();
+		groups[id].name.clear();
+		groups[id].list.clear();
+		groups.erase(groups.begin()+id);
+	}else
+		fl_alert("You cannot delete what does not exist");
+}
+void sprites::delingroup(uint32_t id,uint32_t subid){
+	uint32_t amtold=groups[id].list.size();
+	if(amtold<=1){
+		fl_alert("Delete the entire group instead if that is what you want");
+		return;
+	}
+	if(subid<amtold){
 		groups[id].offx.erase(groups[id].offx.begin()+id);
 		groups[id].offy.erase(groups[id].offy.begin()+id);
 		groups[id].loadat.erase(groups[id].loadat.begin()+id);
-		groups[id].name.erase(groups[id].name.begin()+id);
 		groups[id].list.erase(groups[id].list.begin()+id);
 		groups.erase(groups.begin()+id);
 	}else

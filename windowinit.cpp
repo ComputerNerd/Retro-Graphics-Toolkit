@@ -42,6 +42,7 @@ void set_mode_tabs(Fl_Widget* o, void*){
 		mode_editor=chunkEditor;
 	}else if(val==window->TabsMain[spriteEditor]){
 		mode_editor=spriteEditor;
+		spritePal.updateSlider();
 	}else if (val==window->TabsMain[settingsTab]){
 		mode_editor=settingsTab;
 	}
@@ -544,58 +545,101 @@ void editor::_editor(){
 			TabsMain[chunkEditor]->end();
 		}
 		{TabsMain[spriteEditor] = new Fl_Group(rx,ry,rw,rh,"Sprites");
-			spritePal.more_init(1,16,56,true,128);
-			spriteselgroup=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,200,168,24,"Sprite group select");
+			spritePal.more_init(1,16,54,true,128,true);
+			spriteselgroup=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,184,168,22,"Sprite group select");
 			spriteselgroup->step(1);
 			spriteselgroup->maximum(0);
 			spriteselgroup->align(FL_ALIGN_TOP);
 			spriteselgroup->callback(selspriteGroup);
+			spriteselgroup->labelsize(12);
 
-			spritesel=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,224,168,24,"Sprite select");
+			spritesel=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,220,168,22,"Sprite select");
 			spritesel->step(1);
 			spritesel->maximum(0);
 			spritesel->align(FL_ALIGN_TOP);
 			spritesel->callback(selSpriteCB);
-			spritest=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,248,168,24,"Start tile");
+			spritesel->labelsize(12);
+
+
+			spritest=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,256,168,22,"Start tile");
 			spritest->step(1);
 			spritest->maximum(0);
 			spritest->align(FL_ALIGN_TOP);
 			spritest->callback(setvalueSpriteCB,0);
+			spritest->labelsize(12);
 
-			spritesize[0]=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,272,168,24,"Width (in tiles)");
+
+			spriteslat=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,292,168,22,"Loaded at");
+			spriteslat->step(1);
+			spriteslat->maximum(0);
+			spriteslat->align(FL_ALIGN_TOP);
+			spriteslat->callback(setvalueSpriteCB,(void*)4);
+			spriteslat->labelsize(12);
+
+			spritesize[0]=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,326,168,22,"Width (in tiles)");
 			spritesize[0]->step(1);
 			spritesize[0]->value(1);
 			spritesize[0]->minimum(1);
 			spritesize[0]->maximum(4);
 			spritesize[0]->align(FL_ALIGN_TOP);
 			spritesize[0]->callback(setvalueSpriteCB,(void*)1);
+			spritesize[0]->labelsize(12);
 
-			spritesize[1]=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,320,168,24,"Height (in tiles)");
+			spritesize[1]=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,362,168,22,"Height (in tiles)");
 			spritesize[1]->step(1);
 			spritesize[1]->value(1);
 			spritesize[1]->minimum(1);
 			spritesize[1]->maximum(4);
 			spritesize[1]->align(FL_ALIGN_TOP);
 			spritesize[1]->callback(setvalueSpriteCB,(void*)2);
+			spritesize[1]->labelsize(12);
 
-			spritepalrow=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,360,168,24,"Palette row");
+			spritepalrow=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,398,168,22,"Palette row");
 			spritepalrow->step(1);
 			spritepalrow->maximum(3);
 			spritepalrow->align(FL_ALIGN_TOP);
 			spritepalrow->callback(setvalueSpriteCB,(void*)3);
+			spritepalrow->labelsize(12);
 
-			spritezoom=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,400,168,24,"Zoom");
+			spritezoom=new Fl_Hor_Value_Slider(tile_place_buttons_x_off+38,422,130,22,"Zoom");
 			spritezoom->step(1);
 			spritezoom->minimum(1);
 			spritezoom->value(16);
 			spritezoom->maximum(16);
-			spritezoom->align(FL_ALIGN_TOP);
+			spritezoom->align(FL_ALIGN_LEFT);
 			spritezoom->callback(redrawOnlyCB);
+			spritezoom->labelsize(12);
 
-			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off, 432, 152, 32, "Append blank sprite");
-			o->callback(appendSpriteCB);}
-			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off, 472, 152, 32, "Delete sprite");
-			o->callback(delSpriteCB);}
+			spritesoff[0] = new Fl_Int_Input(tile_place_buttons_x_off+62,446,106,24,"Offset X:");
+			spritesoff[0]->when(FL_WHEN_ENTER_KEY);
+			spritesoff[0]->value("0");
+			spritesoff[0]->align(FL_ALIGN_LEFT);
+			
+			spritesoff[1] = new Fl_Int_Input(tile_place_buttons_x_off+62,470,106,24,"Offset Y:");
+			spritesoff[1]->when(FL_WHEN_ENTER_KEY);
+			spritesoff[1]->value("0");
+			spritesoff[1]->align(FL_ALIGN_LEFT);
+			
+			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off, 498, 64, 28, "Append");
+			o->callback(appendSpriteCB,0);
+			o->labelsize(12);}
+			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off+72, 498, 96, 28, "Append group");
+			o->callback(appendSpriteCB,(void*)1);
+			o->labelsize(12);}
+			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off, 528, 64, 28, "Delete");
+			o->callback(delSpriteCB,0);
+			o->labelsize(12);}
+			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off+72, 528, 96, 28, "Delete group");
+			o->callback(delSpriteCB,(void*)1);
+			o->labelsize(12);}
+			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off, 558, 32, 28, "Left");
+			o->labelsize(12);}
+			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off+34, 558, 40, 28, "Right");
+			o->labelsize(12);}
+			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off+78, 558, 28, 28, "Top");
+			o->labelsize(12);}
+			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off+112, 558, 48, 28, "Bottom");
+			o->labelsize(12);}
 			TabsMain[spriteEditor]->end();
 		}
 		{TabsMain[settingsTab] = new Fl_Group(rx,ry,rw,rh,"Settings/projects");

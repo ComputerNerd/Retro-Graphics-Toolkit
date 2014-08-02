@@ -28,7 +28,7 @@ static uint_fast32_t memUsed;
 static uint_fast32_t maxMen=16*1024*1024;//Limit undo buffer to 16Mb this is better than limiting by depth as each item varies in size
 static int_fast32_t pos=-1;
 void showMemUsageUndo(Fl_Widget*,void*){
-	fl_alert("May not be accurate\nThe undo stack currently uses %d bytes of ram not including any overhead\nAmount of items %d",memUsed,amount);
+	fl_alert("May not be accurate\nThe undo stack currently uses %u bytes of ram not including any overhead\nAmount of items %d",(unsigned)memUsed,(int)amount);
 }
 static void resizeArray(uint32_t amt){
 	if(undoBuf){
@@ -850,7 +850,7 @@ void historyWindow(Fl_Widget*,void*){
 	Close->callback(closeHistory);
 	Fl_Browser*hist=new Fl_Browser(8,32,336,386);
 	char tmp[2048];
-	snprintf(tmp,2048,"%d items sorted from oldest to newest\nPosition selected: %d (can be -1)",amount,pos);
+	snprintf(tmp,2048,"%u items sorted from oldest to newest\nPosition selected: %d (can be -1)",(unsigned)amount,(int)pos);
 	hist->copy_label(tmp);
 	hist->align(FL_ALIGN_TOP);
 	for(unsigned n=0;n<amount;++n){
@@ -883,7 +883,7 @@ void historyWindow(Fl_Widget*,void*){
 				snprintf(tmp,2048,"Insert tile at %u",unsigned(uintptr_t(uptr->ptr)));
 			case uTileGroup:
 				{struct undoTileGroup*ut=(struct undoTileGroup*)uptr->ptr;
-				snprintf(tmp,2048,"Tile group tiles affected: %d",ut->lst.size());}
+				snprintf(tmp,2048,"Tile group tiles affected: %u",(unsigned)ut->lst.size());}
 			break;
 			case uTilemap:
 				strcpy(tmp,"Change tilemap");
