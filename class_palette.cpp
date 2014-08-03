@@ -33,6 +33,7 @@ void palette_bar::more_init(uint8_t x,uint16_t offsetx,uint16_t offsety,bool alt
 		sz=22;
 	else
 		sz=24;
+	sysCache=currentProject->gameSystem;
 	switch (currentProject->gameSystem){
 		case sega_genesis:
 			perRow=16;
@@ -183,7 +184,8 @@ void palette_bar::changeSystem(){
 			pal_g->labelsize(13);
 			pal_b->label("Blue");
 			pal_b->labelsize(14);
-			pal_b->resize(pal_b->x()-16,pal_b->y(),pal_b->w()+16,pal_b->h());
+			if(sysCache!=currentProject->gameSystem)
+				pal_b->resize(pal_b->x()-16,pal_b->y(),pal_b->w()+16,pal_b->h());
 			pal_r->step(2);
 			pal_g->step(2);
 			pal_b->step(2);
@@ -200,7 +202,8 @@ void palette_bar::changeSystem(){
 			pal_g->labelsize(14);
 			pal_b->label("Emphasis");
 			pal_b->labelsize(12);
-			pal_b->resize(pal_b->x()+16,pal_b->y(),pal_b->w()-16,pal_b->h());
+			if(sysCache!=currentProject->gameSystem)
+				pal_b->resize(pal_b->x()+16,pal_b->y(),pal_b->w()-16,pal_b->h());
 			pal_r->maximum(15);
 			pal_g->maximum(3);
 			pal_b->maximum(7);
@@ -215,4 +218,5 @@ void palette_bar::changeSystem(){
 			show_default_error
 	}
 	box_sel%=perRow;
+	sysCache=currentProject->gameSystem;
 }

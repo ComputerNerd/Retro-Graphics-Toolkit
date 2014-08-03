@@ -78,6 +78,8 @@ class editor : public Fl_Double_Window{
 	Fl_Check_Button* prioCB[2];
 	Fl_Check_Button* sharePrj[shareAmtPj];
 	Fl_Check_Button* BlocksCBtn;
+	Fl_Check_Button* spritehflip;
+	Fl_Check_Button* spritevflip;
 	Fl_Check_Button* useBlocksChunkCBtn;
 	Fl_Slider* shareWith[shareAmtPj];
 	Fl_Check_Button* havePrj[shareAmtPj];

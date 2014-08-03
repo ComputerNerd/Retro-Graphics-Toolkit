@@ -23,21 +23,36 @@ sprite::sprite(){
 	w=h=1;
 	starttile=0;
 	palrow=0;
+	hflip=vflip=false;
 }
-sprite::sprite(uint32_t wi,uint32_t hi,uint32_t palrowset,uint32_t settile){
+sprite::sprite(uint32_t wi,uint32_t hi,uint32_t palrowset,uint32_t settile,bool hf,bool vf){
 	w=wi;
 	h=hi;
 	palrow=palrowset;
 	starttile=settile;
+	hflip=hf;
+	vflip=vf;
 }
 void sprite::draw(unsigned x,unsigned y,unsigned zoom){
 	unsigned yy=y;
-	unsigned t=starttile;
-	for(unsigned i=0;i<w;++i){//This is backwards due to the way sega genesis stores sprites. The code is the same for NES because width will always be one
+	int32_t t=starttile;
+	if(hflip)
+		t+=w*(h-1);
+	for(unsigned i=0;i<w;++i){//Width and height are swapped due to the way sega genesis stores sprites. The code is the same for NES because width will always be one
+		if(vflip)
+			t+=h-1;
 		for(unsigned j=0;j<h;++j){
-			currentProject->tileC->draw_tile(x,yy,t++,zoom,palrow,false,false);
+			currentProject->tileC->draw_tile(x,yy,t,zoom,palrow,hflip,vflip);
 			yy+=currentProject->tileC->sizeh*zoom;
+			if(vflip)
+				--t;
+			else
+				++t;
 		}
+		if(vflip)
+			t+=h+1;
+		if(hflip)
+			t-=w+w;
 		x+=currentProject->tileC->sizew*zoom;
 		yy=y;
 	}

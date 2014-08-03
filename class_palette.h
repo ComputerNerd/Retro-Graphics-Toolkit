@@ -20,6 +20,7 @@ class palette_bar{
 	uint8_t rows;//tells how many rows there are in the palette
 	uint16_t offx,offy;//the offset in which the palette selection boxes will appear
 	uint16_t offxx,offyy;//the offset in which the palette selection boxes will appear
+	uint32_t sysCache;
 public:
 	bool alt;
 	Fl_Slider* pal_r;

@@ -38,7 +38,7 @@ sprites::sprites(const sprites& other){
 	for(uint32_t j=0;j<other.groups.size();++j){
 		groups[j].list.reserve(other.groups[j].list.size());
 		for(uint32_t i=0;i<other.groups[j].list.size();++i)
-			groups[j].list.push_back(sprite(other.groups[j].list[i].w,other.groups[j].list[i].h,other.groups[j].list[i].palrow,other.groups[j].list[i].starttile));
+			groups[j].list.push_back(sprite(other.groups[j].list[i].w,other.groups[j].list[i].h,other.groups[j].list[i].palrow,other.groups[j].list[i].starttile,other.groups[j].list[i].hflip,other.groups[j].list[i].vflip));
 	}
 	amt=other.amt;
 }
@@ -121,11 +121,6 @@ void sprites::spriteImageToTiles(uint8_t*img,uint32_t id,int rowUsage,bool alpha
 	uint8_t tcTemp[256];
 	uint32_t w=abs(maxx-minx);
 	uint32_t h=abs(maxy-miny);
-	unsigned bpp;//Bytes per pixel
-	if(alpha)
-		bpp=4;
-	else
-		bpp=3;
 	for(uint32_t i=0;i<groups[id].offx.size();++i){
 		int32_t xoff=groups[id].offx[i];
 		int32_t yoff=groups[id].offy[i];
@@ -233,6 +228,7 @@ bool sprites::save(FILE*fp){
 	 * uint32_t h
 	 * uint32_t starttile
 	 * uint32_t pal row
+	 * uint8_t hvflip flags bit 0 hflip bit 1 vflip
 	 */
 	fwrite(&amt,sizeof(uint32_t),1,fp);
 	for(unsigned n=0;n<amt;++n){
@@ -249,6 +245,8 @@ bool sprites::save(FILE*fp){
 			fwrite(&groups[n].list[i].h,sizeof(uint32_t),1,fp);
 			fwrite(&groups[n].list[i].starttile,sizeof(uint32_t),1,fp);
 			fwrite(&groups[n].list[i].palrow,sizeof(uint32_t),1,fp);
+			uint8_t hvflip=groups[n].list[i].hflip|(groups[n].list[i].vflip<<1);
+			fwrite(&hvflip,sizeof(uint8_t),1,fp);
 		}
 	}
 	return true;
@@ -265,9 +263,9 @@ bool sprites::load(FILE*fp,uint32_t version){
 			char a=fgetc(fp);
 			if(a){
 				groups[n].name.clear();
-				groups[n].name.push_back(a);
-				for(;a=fgetc(fp),a;)
+				do{
 					groups[n].name.push_back(a);
+				}while(a=fgetc(fp));
 			}
 			for(uint32_t i=0;i<amtgroup;++i){
 				fread(&groups[n].offx[i],sizeof(int32_t),1,fp);
@@ -277,6 +275,10 @@ bool sprites::load(FILE*fp,uint32_t version){
 				fread(&groups[n].list[i].h,sizeof(uint32_t),1,fp);
 				fread(&groups[n].list[i].starttile,sizeof(uint32_t),1,fp);
 				fread(&groups[n].list[i].palrow,sizeof(uint32_t),1,fp);
+				uint8_t hvflip;
+				fread(&hvflip,sizeof(uint8_t),1,fp);
+				groups[n].list[i].hflip=hvflip&1;
+				groups[n].list[i].vflip=(hvflip&2)>>1;
 			}
 		}
 	}else{

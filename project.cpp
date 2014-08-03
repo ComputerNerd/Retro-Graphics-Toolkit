@@ -328,14 +328,9 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 	}
 	char d=fgetc(fi);
 	if(d){
-		char tmp[2];
-		tmp[0]=d;
-		tmp[1]=0;
-		projects[id]->Name.assign(tmp);
-		while(d){
-			d=fgetc(fi);
-			projects[id]->Name.append(1,d);
-		}
+		do{
+			projects[id]->Name.push_back(d);
+		}while(d=fgetc(fi));
 	}else
 		projects[id]->Name.assign(defaultName);
 	if(loadVersion)
