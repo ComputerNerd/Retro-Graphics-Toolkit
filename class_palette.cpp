@@ -135,6 +135,8 @@ void palette_bar::draw_boxes(void){
 		fl_draw_box(FL_EMBOSSED_FRAME,box_sel*box_size+offx,offy,box_size,box_size,0);
 	}else{
 		uint8_t*rgbPtr=currentProject->rgbPal;
+		if(alt&&(currentProject->gameSystem==NES))
+			rgbPtr+=perRow*3*4;
 		for (y=0;y<rows;++y){
 			for (x=0;x<perRow;++x){
 				fl_rectf(offx+(x*box_size),offy+(y*box_size),box_size,box_size,*rgbPtr,*(rgbPtr+1),*(rgbPtr+2));
@@ -164,8 +166,13 @@ void palette_bar::updateSlider(){
 				pal_r->value(currentProject->palDat[1+(box_sel*2)+(theRow*32)]&15);		
 			break;
 			case NES:
-				pal_r->value(currentProject->palDat[box_sel+(theRow*4)]&15);
-				pal_g->value((currentProject->palDat[box_sel+(theRow*4)]>>4)&3);
+				if(alt){
+					pal_r->value(currentProject->palDat[box_sel+(theRow*4)+16]&15);
+					pal_g->value((currentProject->palDat[box_sel+(theRow*4)+16]>>4)&3);
+				}else{
+					pal_r->value(currentProject->palDat[box_sel+(theRow*4)]&15);
+					pal_g->value((currentProject->palDat[box_sel+(theRow*4)]>>4)&3);
+				}
 			break;
 			default:
 				show_default_error
@@ -176,47 +183,46 @@ void palette_bar::updateSlider(){
 	window->palType[currentProject->palType[box_sel+(theRow*perRow)]+6]->setonly();
 }
 void palette_bar::changeSystem(){
-	switch (currentProject->gameSystem){
-		case sega_genesis:
-			perRow=16;
-			pal_r->label("Red");
-			pal_g->label("Green");
-			pal_g->labelsize(13);
-			pal_b->label("Blue");
-			pal_b->labelsize(14);
-			if(sysCache!=currentProject->gameSystem)
+	if(sysCache!=currentProject->gameSystem){
+		switch (currentProject->gameSystem){
+			case sega_genesis:
+				perRow=16;
+				pal_r->label("Red");
+				pal_g->label("Green");
+				pal_g->labelsize(13);
+				pal_b->label("Blue");
+				pal_b->labelsize(14);
 				pal_b->resize(pal_b->x()-16,pal_b->y(),pal_b->w()+16,pal_b->h());
-			pal_r->step(2);
-			pal_g->step(2);
-			pal_b->step(2);
-			pal_r->maximum(14);
-			pal_g->maximum(14);
-			pal_b->maximum(14);
-			pal_b->callback(update_palette, (void*)2);
-			updateSlider();
-		break;
-		case NES:
-			perRow=4;
-			pal_r->label("Hue");
-			pal_g->label("Value");
-			pal_g->labelsize(14);
-			pal_b->label("Emphasis");
-			pal_b->labelsize(12);
-			if(sysCache!=currentProject->gameSystem)
+				pal_r->step(2);
+				pal_g->step(2);
+				pal_b->step(2);
+				pal_r->maximum(14);
+				pal_g->maximum(14);
+				pal_b->maximum(14);
+				pal_b->callback(update_palette, (void*)2);
+			break;
+			case NES:
+				perRow=4;
+				pal_r->label("Hue");
+				pal_g->label("Value");
+				pal_g->labelsize(14);
+				pal_b->label("Emphasis");
+				pal_b->labelsize(12);
 				pal_b->resize(pal_b->x()+16,pal_b->y(),pal_b->w()-16,pal_b->h());
-			pal_r->maximum(15);
-			pal_g->maximum(3);
-			pal_b->maximum(7);
-			pal_b->value(0);
-			pal_r->step(1);
-			pal_g->step(1);
-			pal_b->step(1);
-			pal_b->callback(update_emphesis);
-			updateSlider();
-		break;
-		default:
-			show_default_error
+				pal_r->maximum(15);
+				pal_g->maximum(3);
+				pal_b->maximum(7);
+				pal_b->value(0);
+				pal_r->step(1);
+				pal_g->step(1);
+				pal_b->step(1);
+				pal_b->callback(update_emphesis);
+			break;
+			default:
+				show_default_error
+		}
 	}
+	updateSlider();
 	box_sel%=perRow;
 	sysCache=currentProject->gameSystem;
 }

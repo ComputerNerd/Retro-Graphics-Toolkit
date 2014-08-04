@@ -1,4 +1,10 @@
 Most recent changes are placed at the top
+20140804
+Added create new tile for tiles set as flipped useful for NES users
+
+Added NES option to skip color zero on all rows except 0 because NES uses
+"universal background color" This differs from the sega genesis where yes
+there is only one background color however you can still haves colors there.
 
 20140803
 Added import image to tiles option.

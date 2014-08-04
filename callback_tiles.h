@@ -15,6 +15,7 @@
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
 #include "includes.h"
+void tilesnewfilppedCB(Fl_Widget*,void*);
 void insertTileCB(Fl_Widget*,void*);
 void delete_tile_at_location(Fl_Widget*, void* row);
 void new_tile(Fl_Widget*,void*);

@@ -255,12 +255,14 @@ void switchProject(uint32_t id){
 			palEdit.changeSystem();
 			tileEdit_pal.changeSystem();
 			tileMap_pal.changeSystem();
+			spritePal.changeSystem();
 			set_palette_type(0);
 		break;
 		case NES:
 			projects[id]->tileC->tileSize=16;
 			shadow_highlight_switch->hide();
-			updateNesTab(0);
+			updateNesTab(0,false);
+			updateNesTab(0,true);
 			for(int temp_entry=0;temp_entry<64;++temp_entry){
 				uint32_t rgb_out;
 				uint8_t pal;
@@ -273,6 +275,7 @@ void switchProject(uint32_t id){
 			palEdit.changeSystem();
 			tileEdit_pal.changeSystem();
 			tileMap_pal.changeSystem();
+			spritePal.changeSystem();
 			update_emphesis(0,0);
 			window->subSysC->value(currentProject->subSystem&1);
 		break;
@@ -350,7 +353,7 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 		fread(&projects[id]->subSystem,1,sizeof(uint32_t),fi);
 		if((version<6)&&(projects[id]->gameSystem==sega_genesis))
 			projects[id]->subSystem=3;//Old projects were storing the wrong number for 4bit graphics even though that is what is stored
-		if(version==4&&(projects[id]->gameSystem==NES)){
+		if((version==4)&&(projects[id]->gameSystem==NES)){
 			projects[id]->subSystem^=1;//Fix the fact that NES2x2 and NES1x1 were switched around in version 4
 			projects[id]->subSystem|=2;//Default to 2 bit
 		}
@@ -365,7 +368,10 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 			projects[id]->tileC->tcSize=256;
 		break;
 		case NES:
-			entries=16;
+			if(version>=7)
+				entries=32;
+			else
+				entries=16;
 			eSize=1;
 			projects[id]->tileC->tileSize=16;
 			projects[id]->tileC->tcSize=256;
@@ -375,6 +381,10 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 		if(projects[id]->share[0]<0){
 			fread(projects[id]->palDat,eSize,entries,fi);
 			fread(projects[id]->palType,1,entries,fi);
+			if((projects[id]->gameSystem==NES)&&(version<7)){
+				memset(projects[id]->palDat+16,0,16);
+				memset(projects[id]->palType+16,0,16);
+			}
 		}
 	}
 	if(projects[id]->useMask&pjHaveTiles){
@@ -450,8 +460,8 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 	uint32_t game system
 	if(version >= 4) uint32_t sub System requires special handeling for version==4
 	palette data (128 bytes if sega genesis or 16 bytes if NES)
-	if((version>=5)&&(gameSystem==NES)) 16 bytes for sprite specific palette
-	Free locked reserved data 64 bytes if sega genesis or 16 if NES
+	if((version>=7)&&(gameSystem==NES)) 16 bytes for sprite specific palette
+	Free locked reserved data 64 bytes if sega genesis or 32 (16 if version<7) if NES
 	uint32_t tile count
 	uint32_t compressed size tiles
 	tile data will decompress to either 32 bytes * tile count if sega genesis or 16 bytes * tile count if NES and is compressed with zlib
@@ -501,7 +511,7 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 			eSize=2;
 		break;
 		case NES:
-			entries=16;
+			entries=32;
 			eSize=1;
 		break;
 	}

@@ -22,6 +22,9 @@
 uint8_t nespaltab_r[64];
 uint8_t nespaltab_g[64];
 uint8_t nespaltab_b[64];
+uint8_t nespaltab_r_alt[64];
+uint8_t nespaltab_g_alt[64];
+uint8_t nespaltab_b_alt[64];
 void updateRGBindex(unsigned index){
 	switch(currentProject->gameSystem){
 		case sega_genesis:
@@ -126,7 +129,6 @@ uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_
 	/*!
 	Scans for colors in an image stops at over 256 as if there is an excess of 256 colors there is no reason to countinue
 	*/
-	//memset(colors_found,0,w*h*3);
 	uint32_t colors_amount=3;
 	colors_found[0]=*image_ptr++;
 	colors_found[1]=*image_ptr++;
@@ -168,17 +170,27 @@ uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_
 	printf("\n");
 	return colors_amount/3;
 }
-void updateNesTab(uint8_t emps){
+void updateNesTab(unsigned emps,bool alt){
 	uint32_t rgb_out;
-	for(unsigned temp=0;temp<64;++temp){
+	if(alt){
+		for(unsigned temp=0;temp<64;++temp){
+			rgb_out=MakeRGBcolor(temp|emps);
+			nespaltab_r_alt[temp]=(rgb_out>>16)&255;//red
+			nespaltab_g_alt[temp]=(rgb_out>>8)&255;//green
+			nespaltab_b_alt[temp]=rgb_out&255;//blue
+		}
+	}else{
+		for(unsigned temp=0;temp<64;++temp){
 			rgb_out=MakeRGBcolor(temp|emps);
 			nespaltab_r[temp]=(rgb_out>>16)&255;//red
 			nespaltab_g[temp]=(rgb_out>>8)&255;//green
 			nespaltab_b[temp]=rgb_out&255;//blue
+		}
 	}
 }
 void update_emphesis(Fl_Widget*,void*){
 	unsigned emps;
+	unsigned empsSprite;
 	switch (mode_editor){
 		case pal_edit:
 			emps=palEdit.pal_b->value();
@@ -190,7 +202,7 @@ void update_emphesis(Fl_Widget*,void*){
 			emps=tileMap_pal.pal_b->value();
 		break;
 		case spriteEditor:
-			emps=spritePal.pal_b->value();
+			empsSprite=spritePal.pal_b->value();
 		break;
 	}
 	/*76543210
@@ -200,14 +212,16 @@ void update_emphesis(Fl_Widget*,void*){
 	  ++------- Unimplemented, reads back as 0*/
 	emps<<=6;
 	uint32_t rgb_out;
-	updateNesTab(emps);
-	unsigned off;
-	if(mode_editor==spriteEditor)//Allows sprites to have different emepsis values
-		off=16*3;
-	else
-		off=0;
-	for(unsigned c=off;c<48+off;c+=3){
+	updateNesTab(emps,false);
+	updateNesTab(empsSprite,true);
+	for(unsigned c=0;c<48;c+=3){
 		rgb_out=MakeRGBcolor(currentProject->palDat[c/3]|emps);
+		currentProject->rgbPal[c]=(rgb_out>>16)&255;//red
+		currentProject->rgbPal[c+1]=(rgb_out>>8)&255;//green
+		currentProject->rgbPal[c+2]=rgb_out&255;//blue
+	}
+	for(unsigned c=48;c<96;c+=3){
+		rgb_out=MakeRGBcolor(currentProject->palDat[c/3]|empsSprite);
 		currentProject->rgbPal[c]=(rgb_out>>16)&255;//red
 		currentProject->rgbPal[c+1]=(rgb_out>>8)&255;//green
 		currentProject->rgbPal[c+2]=rgb_out&255;//blue

@@ -85,9 +85,10 @@ void set_game_system(Fl_Widget*,void* selection){
 			currentProject->subSystem=0;
 			setBitdepthcurSys(bd);
 			shadow_highlight_switch->hide();
-			updateNesTab(0);
+			updateNesTab(0,false);
+			updateNesTab(0,true);
 			if(containsDataCurProj(pjHavePal)){
-				for (unsigned c=0;c<16;++c)
+				for (unsigned c=0;c<32;++c)
 					currentProject->palDat[c]=to_nes_color(c);
 				palEdit.changeSystem();
 				tileEdit_pal.changeSystem();

@@ -18,6 +18,64 @@
 #include "class_global.h"
 #include "tilemap.h"
 #include "undo.h"
+void tilesnewfilppedCB(Fl_Widget*,void*){
+	pushTilemapAll(false);
+	uint32_t amt=currentProject->tileC->amt;
+	uint32_t*hflip=(uint32_t*)malloc(amt*sizeof(uint32_t));
+	uint32_t*vflip=(uint32_t*)malloc(amt*sizeof(uint32_t));
+	uint32_t*hvflip=(uint32_t*)malloc(amt*sizeof(uint32_t));
+	memset(hflip,0,amt*sizeof(uint32_t));
+	memset(vflip,0,amt*sizeof(uint32_t));
+	memset(hvflip,0,amt*sizeof(uint32_t));
+	uint32_t acum=0;
+	uint8_t * tileTemp=(uint8_t *)alloca(currentProject->tileC->tileSize);
+	for(uint32_t y=0;y<currentProject->tileMapC->mapSizeHA;++y){
+		for(uint32_t x=0;x<currentProject->tileMapC->mapSizeW;++x){
+			bool hf=currentProject->tileMapC->get_hflip(x,y),vf=currentProject->tileMapC->get_vflip(x,y);
+			uint32_t t=currentProject->tileMapC->get_tile(x,y);
+			if(hf&&vf){
+				if(!(hvflip[t])){
+					currentProject->tileC->hflip_tile(t,tileTemp);
+					currentProject->tileC->vflip_tile_ptr(tileTemp,tileTemp);
+					hvflip[t]=amt+acum;
+					pushTileAppend();
+					currentProject->tileC->appendTile();
+					memcpy(currentProject->tileC->tDat.data()+((amt+acum)*currentProject->tileC->tileSize),tileTemp,currentProject->tileC->tileSize);
+					++acum;
+				}
+				currentProject->tileMapC->set_tile(hvflip[t],x,y);
+				currentProject->tileMapC->set_hflip(x,y,false);
+				currentProject->tileMapC->set_vflip(x,y,false);
+			}else if(hf){
+				if(!(hflip[t])){
+					currentProject->tileC->hflip_tile(t,tileTemp);
+					hflip[t]=amt+acum;
+					pushTileAppend();
+					currentProject->tileC->appendTile();
+					memcpy(currentProject->tileC->tDat.data()+((amt+acum)*currentProject->tileC->tileSize),tileTemp,currentProject->tileC->tileSize);
+					++acum;
+				}
+				currentProject->tileMapC->set_tile(hflip[t],x,y);
+				currentProject->tileMapC->set_hflip(x,y,false);
+			}else if(vf){
+				if(!(vflip[t])){
+					currentProject->tileC->vflip_tile(t,tileTemp);
+					vflip[t]=amt+acum;
+					pushTileAppend();
+					currentProject->tileC->appendTile();
+					memcpy(currentProject->tileC->tDat.data()+((amt+acum)*currentProject->tileC->tileSize),tileTemp,currentProject->tileC->tileSize);
+					++acum;
+				}
+				currentProject->tileMapC->set_tile(vflip[t],x,y);
+				currentProject->tileMapC->set_vflip(x,y,false);
+			}
+		}
+	}
+	free(hflip);
+	free(vflip);
+	free(hvflip);
+	updateTileSelectAmt();
+}
 void insertTileCB(Fl_Widget*,void*){
 	pushTilenew(currentProject->tileC->current_tile+1);
 	currentProject->tileC->insertTile(currentProject->tileC->current_tile+1);

@@ -44,7 +44,7 @@ enum tileTypeMask_t{
 	tTypeTile=1,
 	tTypeTruecolor,
 	tTypeBoth,
-	tTypeDeleteFlag,//Used for checking if delete do not pass to any tile functions
+	tTypeDeleteFlag,//Used for checking if delete. Do not pass to any tile functions instead tTypeDelete should be used
 	tTypeDelete=7//This sets bit tTypeBoth|tTypeDeleteFlag
 };
 struct undoEvent{//This struct mearly holds which type of undo this is

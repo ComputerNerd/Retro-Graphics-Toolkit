@@ -33,18 +33,34 @@ void save_palette(Fl_Widget*, void* start_end){
 		default:
 			show_default_error
 	}
-	char * returned=(char *)fl_input("Counting from zero enter the first entry that you want saved","0");
+	char * returned=(char *)fl_input("Counting from zero enter the first entry that you want saved\nFor NES to save the sprite palette the first entry is 16","0");
 	if(!returned)
 		return;
 	if(!verify_str_number_only(returned))
 		return;
-	uint8_t start = atoi(returned);
+	unsigned start = atoi(returned);
 	returned=(char *)fl_input("Counting from zero enter the last entry that you want saved",temp);
 	if (!returned)
 		return;
 	if (!verify_str_number_only(returned))
 		return;
-	uint8_t end = atoi(returned)+1;
+	unsigned end = atoi(returned)+1;
+	bool skipzero;
+	uint8_t bufskip[32];
+	unsigned szskip=0;
+	if(currentProject->gameSystem==NES){
+		skipzero=fl_ask("Would you like to skip saving color 0 for all rows except zero?");
+		if(skipzero){
+			uint8_t*bufptr=bufskip;
+			for(unsigned i=start;i<end;++i){
+				if((i&3)||(i==0)){
+					*bufptr++=currentProject->palDat[i];
+					++szskip;
+				}
+			}
+		}
+	}else
+		skipzero=false;
 	int type=askSaveType();
 	int clipboard;
 	if(type){
@@ -78,18 +94,32 @@ void save_palette(Fl_Widget*, void* start_end){
 					bits=16;
 				}else
 					bits=8;
-				if (saveBinAsText(currentProject->palDat+start,end-start,myfile,type,comment,"palDat",bits)==false){
-					fl_alert("Error: can not save file %s",the_file.c_str());
-					return;
+				if(skipzero){
+					if (!saveBinAsText(bufskip,szskip,myfile,type,comment,"palDat",bits)){
+						fl_alert("Error: can not save file %s",the_file.c_str());
+						return;
+					}
+				}else{
+					if (!saveBinAsText(currentProject->palDat+start,end-start,myfile,type,comment,"palDat",bits)){
+						fl_alert("Error: can not save file %s",the_file.c_str());
+						return;
+					}
 				}
 			}else{
 				if(currentProject->gameSystem==sega_genesis){
 					start*=2;
 					end*=2;
 				}
-				if (fwrite(currentProject->palDat+start,1,end-start,myfile)==0){
-					fl_alert("Error: can not save file %s",the_file.c_str());
-					return;
+				if(skipzero){
+					if (fwrite(bufskip,1,szskip,myfile)==0){
+						fl_alert("Error: can not save file %s",the_file.c_str());
+						return;
+					}
+				}else{
+					if (fwrite(currentProject->palDat+start,1,end-start,myfile)==0){
+						fl_alert("Error: can not save file %s",the_file.c_str());
+						return;
+					}
 				}
 			}
 			if(myfile)
@@ -115,6 +145,8 @@ void update_palette(Fl_Widget* o, void* v){
 		break;
 		case spriteEditor:
 			temp_entry=spritePal.box_sel+(spritePal.theRow*spritePal.perRow);
+			if(currentProject->gameSystem==NES)
+				temp_entry+=16;
 		break;
 		default:
 			show_default_error
@@ -188,11 +220,11 @@ void update_palette(Fl_Widget* o, void* v){
 void loadPalette(Fl_Widget*, void*){
 	uint32_t file_size;
 	uint8_t offset;
-	char * inputTemp=(char *)fl_input("Counting from zero enter the first entry that you want the palette to start at","0");
-	if (inputTemp==0)
+	char * inputTemp=(char *)fl_input("Counting from zero enter the first entry that you want the palette to start at\nFor NES to load a sprite palette enter 16 or greater","0");
+	if (!inputTemp)
 		return;
-	if (verify_str_number_only(inputTemp) == false)
-			return;
+	if (!verify_str_number_only(inputTemp))
+		return;
 	offset=atoi(inputTemp);
 	uint8_t palSize;
 	switch (currentProject->gameSystem){
@@ -201,7 +233,7 @@ void loadPalette(Fl_Widget*, void*){
 			palSize=128;
 		break;
 		case NES:
-			palSize=16;
+			palSize=32;
 		break;
 	}
 	if(load_file_generic("Load palette") == true){
@@ -211,7 +243,7 @@ void loadPalette(Fl_Widget*, void*){
 			fseek(fi,0,SEEK_END);
 			file_size = ftell(fi);
 			if (file_size > palSize-offset){
-				fl_alert("Error: The file size is bigger than %d (%d-%d) bytes it is not a valid palette",palSize-offset,palSize,offset);
+				fl_alert("Error: The file size is bigger than %d (%d-%d) bytes\nMaybe there is extra data or you loaded the wrong file?",palSize-offset,palSize,offset);
 				fclose(fi);
 				return;//end function due to errrors
 			}

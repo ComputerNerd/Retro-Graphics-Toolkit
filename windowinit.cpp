@@ -54,7 +54,7 @@ static const Fl_Menu_Item menuEditor[]={
 	{"File",0, 0, 0, FL_SUBMENU},
 		{"Tiles",0, 0, 0, FL_SUBMENU},
 			{"Open tiles",0,load_tiles,0},
-			{"Open Truecolor Tiles",0,load_truecolor_tiles,0},
+			{"Open truecolor tiles",0,load_truecolor_tiles,0},
 			{"Append tiles",0,load_tiles,(void*)1},
 			{"Save tiles",0,save_tiles,0},
 			{"Save truecolor tiles",0,save_tiles_truecolor,0},
@@ -85,8 +85,8 @@ static const Fl_Menu_Item menuEditor[]={
 			{"Save chunks as sonic 1 format",0,saveChunkS1CB},
 			{0},
 		{"Sprites",0, 0, 0, FL_SUBMENU},
-			{"Imported sprite",0,SpriteimportCB,0},
-			{"Imported sprite append",0,SpriteimportCB,(void*)1},
+			{"Import sprite",0,SpriteimportCB,0},
+			{"Import sprite append",0,SpriteimportCB,(void*)1},
 			{0},
 		{0},
 	{"Palette Actions",0, 0, 0, FL_SUBMENU},
@@ -104,6 +104,7 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Remove duplicate tiles",0,remove_duplicate_tiles,0},
 		{"Update dither all tiles",0,update_all_tiles,0},
 		{"Delete currently selected tile",0,delete_tile_at_location,0},
+		{"Create new tiles for flipped tiles",0,tilesnewfilppedCB},
 		{0},
 	{"TileMap Actions",0, 0, 0, FL_SUBMENU},
 		{"Remove tile from tilemap",0,tilemap_remove_callback,0},
@@ -548,9 +549,10 @@ void editor::_editor(){
 		}
 		{TabsMain[spriteEditor] = new Fl_Group(rx,ry,rw,rh,"Sprites");
 			spritePal.more_init(1,16,54,true,128,true);
-			
-			spritegrouptxt = new Fl_Int_Input(tile_place_buttons_x_off+616,56,168,24,"Group name");
+
+			spritegrouptxt = new Fl_Input(tile_place_buttons_x_off+616,56,168,24,"Group name");
 			spritegrouptxt->value(spriteDefName);
+			spritegrouptxt->callback(assignSpritegroupnameCB);
 
 			spriteselgroup=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,184,168,22,"Sprite group select:");
 			spriteselgroup->step(1);
