@@ -58,6 +58,7 @@ static const Fl_Menu_Item menuEditor[]={
 			{"Append tiles",0,load_tiles,(void*)1},
 			{"Save tiles",0,save_tiles,0},
 			{"Save truecolor tiles",0,save_tiles_truecolor,0},
+			{"Import image to tiles",0,load_image_to_tilemap,(void*)2},
 			{0},
 		{"Palettes",0, 0, 0, FL_SUBMENU},
 			{"Open palette",0,loadPalette,0},
@@ -154,6 +155,7 @@ static const Fl_Menu_Item SolidMenu[]={
 extern const char * MapWidthTxt;
 extern const char * MapHeightTxt;
 static const char * TooltipZoom="By changing this slider you are changing the magnification of the tile for example if this slider was set to 10 that would mean that the tile is magnified by a factor of 10";
+extern const char*spriteDefName;
 void editor::_editor(){
 	//create the window
 	menu = new Fl_Menu_Bar(0,0,800,24);//Create menubar, items..
@@ -546,6 +548,10 @@ void editor::_editor(){
 		}
 		{TabsMain[spriteEditor] = new Fl_Group(rx,ry,rw,rh,"Sprites");
 			spritePal.more_init(1,16,54,true,128,true);
+			
+			spritegrouptxt = new Fl_Int_Input(tile_place_buttons_x_off+616,56,168,24,"Group name");
+			spritegrouptxt->value(spriteDefName);
+
 			spriteselgroup=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,184,168,22,"Sprite group select:");
 			spriteselgroup->step(1);
 			spriteselgroup->maximum(0);

@@ -68,6 +68,7 @@ class editor : public Fl_Double_Window{
 	Fl_Slider* spritesize[2];//sprite width,height
 	Fl_Slider* spritepalrow;//selects palette row
 	Fl_Slider* spritezoom;
+	Fl_Input* spritegrouptxt;
 	Fl_Slider* projectSelect;
 	Fl_Tabs* the_tabs;
 	Fl_Round_Button* palType[9];

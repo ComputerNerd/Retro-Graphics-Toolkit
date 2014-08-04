@@ -212,7 +212,13 @@ void dither_tilemap_as_image(Fl_Widget*,void*sprite){
 }
 void load_image_to_tilemap(Fl_Widget*,void*o){
 	Fl_Shared_Image * loaded_image;
-	bool over=(uintptr_t)o?1:0;
+	bool over=(uintptr_t)o&1;
+	bool tilesonly=(uintptr_t)o>>1;
+	bool append;
+	if(over)
+		append=false;
+	else
+		append=fl_choice("Append tiles or overwite starting at 0?","Overwrite","Append",0);
 	if (load_file_generic("Load image")){
 		loaded_image=Fl_Shared_Image::get(the_file.c_str());
 		if(!loaded_image){
@@ -256,27 +262,30 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		}
 		wt=w8*currentProject->tileC->sizew;
 		ht=h8*currentProject->tileC->sizeh;
-		if(wr)
-			fl_alert("Warning width is not a multiple of %d",tilebitw);
-		if(hr)
-			fl_alert("Warning height is not a multiple of %d",tilebith);
+		if(wr||hr)
+			fl_alert("When width and/or height is not a multiple of %d,%d the image will be centered.\nThe width of this image is %d and the height is %d",tilebitw,tilebith,w,h);
 		//start by copying the data
 		uint8_t * imgptr=(uint8_t *)loaded_image->data()[0];
 		//now we can convert to tiles
 		unsigned depth=loaded_image->d();
 		if (unlikely(depth != 3 && depth != 4 && depth!=1)){
-			fl_alert("Please use color depth of 1 or 3 or 4\nYou Used %d",loaded_image->d());
+			fl_alert("Please use color depth of 1,3 or 4\nYou Used %d",loaded_image->d());
 			loaded_image->release();
 			return;
 		}else
 			printf("Image depth %d\n",loaded_image->d());
 
-		pushTilesAll(tTypeTruecolor);
-
+		pushTilesAll(tTypeBoth);
+		unsigned appendoff;
 		if(!over){
-			currentProject->tileC->resizeAmt(w8*h8);
+			if(append)
+				appendoff=currentProject->tileC->amt;
+			else
+				appendoff=0;
+			currentProject->tileC->resizeAmt(w8*h8+appendoff);
 			updateTileSelectAmt();
-		}
+		}else
+			appendoff=0;
 		unsigned center[3];
 		center[0]=(wt-w)/2;
 		center[1]=(ht-h)/2;
@@ -326,6 +335,7 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 					}
 				}else
 					ctile=tcnt;
+				ctile+=appendoff;
 				uint8_t*ttile=currentProject->tileC->truetDat.data()+((ctile*currentProject->tileC->tcSize)+((y%currentProject->tileC->sizeh)*currentProject->tileC->sizew*4));
 				//First take care of border
 				unsigned line=currentProject->tileC->sizew;
@@ -381,11 +391,11 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 			}
 		}
 		loaded_image->release();
-		if(!over){
+		if((!over)&&(!tilesonly)){
 			pushTilemapAll(false);
 			currentProject->tileMapC->resize_tile_map(w8,h8);
 			window->updateMapWH();
-			uint32_t tilecounter=0;
+			uint32_t tilecounter=appendoff;
 			for (uint32_t y=0;y<h8;++y){
 				for (uint32_t x=0;x<w8;++x){
 					currentProject->tileMapC->set_tile_full(tilecounter,x,y,0,false,false,false);

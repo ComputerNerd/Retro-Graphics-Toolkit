@@ -64,6 +64,7 @@ void set_game_system(Fl_Widget*,void* selection){
 				palEdit.changeSystem();
 				tileEdit_pal.changeSystem();
 				tileMap_pal.changeSystem();
+				spritePal.changeSystem();
 			}
 			if(containsDataCurProj(pjHaveTiles)){
 				currentProject->tileC->tileSize=32;
@@ -91,6 +92,7 @@ void set_game_system(Fl_Widget*,void* selection){
 				palEdit.changeSystem();
 				tileEdit_pal.changeSystem();
 				tileMap_pal.changeSystem();
+				spritePal.changeSystem();
 				update_emphesis(0,0);
 			}
 			if(containsDataCurProj(pjHaveTiles)){

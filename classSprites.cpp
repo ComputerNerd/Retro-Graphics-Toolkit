@@ -21,7 +21,7 @@
 #include "includes.h"
 #include "callback_tiles.h"
 #include "global.h"
-static const char*spriteDefName="DefaultSpriteGroupLabel";
+const char*spriteDefName="DefaultGroupLabel";
 sprites::sprites(){
 	amt=1;
 	groups.push_back(spriteGroup());

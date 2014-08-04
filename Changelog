@@ -1,6 +1,11 @@
 Most recent changes are placed at the top
 
 20140803
+Added import image to tiles option.
+Unlike import image to tilemap this does not affect the tilemap but otherwise remains the same.
+Also tiles can be appended or overwritten.
+
+Added hflip and vflip for sprites and show text label
 
 20140802
 Update dither sprite as image and generate optimal palette for grouping

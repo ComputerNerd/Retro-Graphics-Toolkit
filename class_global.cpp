@@ -102,6 +102,7 @@ void editor::updateSpriteSliders(void){
 	spritesoff[0]->value(tmp);
 	intstr(currentProject->spritesC->groups[curSpritegroup].offy[curSprite],tmp);
 	spritesoff[1]->value(tmp);
+	spritegrouptxt->value(currentProject->spritesC->groups[curSpritegroup].name.c_str());
 }
 void editor::updateChunkSize(uint32_t wi,uint32_t hi){
 	char tmp[16];
