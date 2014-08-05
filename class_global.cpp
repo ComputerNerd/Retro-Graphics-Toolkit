@@ -20,7 +20,8 @@
 #include "callbacksprites.h"
 #include "classSprite.h"
 #include "undo.h"
-editor *window = new editor(800,600,"Retro Graphics Toolkit v0.7");//this creates the window
+const char*rtVersionStr="Retro Graphics Toolkit v0.7";
+editor *window = new editor(800,600,rtVersionStr);//this creates the window
 static void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y){
 	uint8_t grid[32*32*3];
 	//first generate grid
@@ -88,21 +89,24 @@ static void uintstr(unsigned x,char*tmp){
 static void intstr(int x,char*tmp){
 	snprintf(tmp,16,"%d",x);
 }
-void editor::updateSpriteSliders(void){
-	spriteselgroup->maximum(currentProject->spritesC->amt-1);
-	spritesel->maximum(currentProject->spritesC->groups[curSpritegroup].list.size()-1);
-	spriteslat->maximum(currentProject->spritesC->groups[curSpritegroup].list.size()-1);
-	spritest->value(currentProject->spritesC->groups[curSpritegroup].list[curSprite].starttile);
-	spriteslat->value(currentProject->spritesC->groups[curSpritegroup].loadat[curSprite]);
-	spritesize[0]->value(currentProject->spritesC->groups[curSpritegroup].list[curSprite].w);
-	spritesize[1]->value(currentProject->spritesC->groups[curSpritegroup].list[curSprite].h);
-	spritepalrow->value(currentProject->spritesC->groups[curSpritegroup].list[curSprite].palrow);
+void editor::updateSpriteSliders(uint32_t prj){
+	spriteselgroup->maximum(projects[prj]->spritesC->amt-1);
+	spritesel->maximum(projects[prj]->spritesC->groups[curSpritegroup].list.size()-1);
+	spriteslat->maximum(projects[prj]->spritesC->groups[curSpritegroup].list.size()-1);
+	spritest->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].starttile);
+	spriteslat->value(projects[prj]->spritesC->groups[curSpritegroup].loadat[curSprite]);
+	spritesize[0]->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].w);
+	spritesize[1]->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].h);
+	spritepalrow->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].palrow);
 	char tmp[16];
-	intstr(currentProject->spritesC->groups[curSpritegroup].offx[curSprite],tmp);
+	intstr(projects[prj]->spritesC->groups[curSpritegroup].offx[curSprite],tmp);
 	spritesoff[0]->value(tmp);
-	intstr(currentProject->spritesC->groups[curSpritegroup].offy[curSprite],tmp);
+	intstr(projects[prj]->spritesC->groups[curSpritegroup].offy[curSprite],tmp);
 	spritesoff[1]->value(tmp);
-	spritegrouptxt->value(currentProject->spritesC->groups[curSpritegroup].name.c_str());
+	spritegrouptxt->value(projects[prj]->spritesC->groups[curSpritegroup].name.c_str());
+}
+void editor::updateSpriteSliders(void){
+	updateSpriteSliders(curProjectID);
 }
 void editor::updateChunkSize(uint32_t wi,uint32_t hi){
 	char tmp[16];

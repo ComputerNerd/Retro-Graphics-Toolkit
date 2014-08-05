@@ -315,7 +315,7 @@ void switchProject(uint32_t id){
 		window->subSysC->show();
 	else
 		window->subSysC->hide();
-	
+	window->updateSpriteSliders(id);
 	window->redraw();
 }
 static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t version=currentProjectVersionNUM){

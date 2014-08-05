@@ -29,6 +29,7 @@ class editor : public Fl_Double_Window{
 	void updateTileMapGUI(uint32_t x,uint32_t y);
 	void updateBlockTilesChunk(uint32_t prj);
 	void updateBlockTilesChunk(void);
+	void updateSpriteSliders(uint32_t prj);
 	void updateSpriteSliders(void);
 	void updateChunkGUI(uint32_t tx,uint32_t ty);
 	void updateChunkSize(uint32_t wi,uint32_t hi);
@@ -81,6 +82,7 @@ class editor : public Fl_Double_Window{
 	Fl_Check_Button* BlocksCBtn;
 	Fl_Check_Button* spritehflip;
 	Fl_Check_Button* spritevflip;
+	Fl_Check_Button* spriteprio;
 	Fl_Check_Button* useBlocksChunkCBtn;
 	Fl_Slider* shareWith[shareAmtPj];
 	Fl_Check_Button* havePrj[shareAmtPj];

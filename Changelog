@@ -1,5 +1,6 @@
 Most recent changes are placed at the top
 20140804
+Added importing and exporting sprite mapping
 Added create new tile for tiles set as flipped useful for NES users
 
 Added NES option to skip color zero on all rows except 0 because NES uses

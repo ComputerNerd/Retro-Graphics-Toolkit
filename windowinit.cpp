@@ -88,6 +88,7 @@ static const Fl_Menu_Item menuEditor[]={
 			{"Import sprite from image",0,SpriteimportCB,0},
 			{"Import sprite from image (append)",0,SpriteimportCB,(void*)1},
 			{"Import sonic 1 mapping",0,importSonicMappingCB},
+			{"Export sonic 1 mapping",0,exportSonicMappingCB},
 			{0},
 		{0},
 	{"Palette Actions",0, 0, 0, FL_SUBMENU},
@@ -632,6 +633,8 @@ void editor::_editor(){
 			spritehflip->callback(spriteHflipCB);
 			spritevflip = new Fl_Check_Button(tile_place_buttons_x_off+64,470,64,20,"Vflip");
 			spritevflip->callback(spriteVflipCB);
+			spriteprio = new Fl_Check_Button(tile_place_buttons_x_off+128,470,64,20,"Priority");
+			spriteprio->callback(spritePrioCB);
 
 			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off, 492, 64, 28, "Append");
 			o->callback(appendSpriteCB,0);

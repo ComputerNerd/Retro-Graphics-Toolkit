@@ -32,10 +32,12 @@ class sprites{
 		void mappingItem(char*txt);
 	public:
 		uint32_t amt;//The amount of sprites
+		std::string name;
 		std::vector<struct spriteGroup> groups;
 		sprites();
 		sprites(const sprites& other);
 		~sprites();
+		void exportMapping(void);
 		void importMapping(void);
 		void draw(uint32_t id,uint32_t x,uint32_t y,int32_t zoom);
 		void minmaxoffx(uint32_t id,int32_t&minx,int32_t&maxx);
