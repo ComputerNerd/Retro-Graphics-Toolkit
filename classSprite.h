@@ -22,6 +22,7 @@ class sprite{
 		uint32_t starttile;
 		uint32_t palrow;
 		bool hflip,vflip;
+		bool prio;
 		sprite();
 		sprite(uint32_t wi,uint32_t hi,uint32_t palrowset,uint32_t settile,bool hf,bool vf);
 		void draw(unsigned x,unsigned y,unsigned zoom);

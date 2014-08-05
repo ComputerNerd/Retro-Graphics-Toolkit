@@ -85,8 +85,9 @@ static const Fl_Menu_Item menuEditor[]={
 			{"Save chunks as sonic 1 format",0,saveChunkS1CB},
 			{0},
 		{"Sprites",0, 0, 0, FL_SUBMENU},
-			{"Import sprite",0,SpriteimportCB,0},
-			{"Import sprite append",0,SpriteimportCB,(void*)1},
+			{"Import sprite from image",0,SpriteimportCB,0},
+			{"Import sprite from image (append)",0,SpriteimportCB,(void*)1},
+			{"Import sonic 1 mapping",0,importSonicMappingCB},
 			{0},
 		{0},
 	{"Palette Actions",0, 0, 0, FL_SUBMENU},
@@ -619,11 +620,13 @@ void editor::_editor(){
 			spritesoff[0]->when(FL_WHEN_ENTER_KEY);
 			spritesoff[0]->value("0");
 			spritesoff[0]->align(FL_ALIGN_LEFT);
+			spritesoff[0]->callback(setoffspriteCB,0);
 			
 			spritesoff[1] = new Fl_Int_Input(tile_place_buttons_x_off+62,448,106,24,"Offset Y:");
 			spritesoff[1]->when(FL_WHEN_ENTER_KEY);
 			spritesoff[1]->value("0");
 			spritesoff[1]->align(FL_ALIGN_LEFT);
+			spritesoff[1]->callback(setoffspriteCB,(void*)1);
 			
 			spritehflip = new Fl_Check_Button(tile_place_buttons_x_off,470,64,20,"Hflip");
 			spritehflip->callback(spriteHflipCB);

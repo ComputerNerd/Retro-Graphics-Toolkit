@@ -52,6 +52,120 @@ sprites::~sprites(){
 	}
 	groups.clear();
 }
+void sprites::mappingItem(char*txt){
+	if(!txt)
+		return;
+	uint32_t amtgroup;
+	if(txt=strstr(txt,"dc.b")){
+		txt+=strlen("dc.b");
+		while(isspace(*txt++));
+		--txt;
+		if(*txt=='$')
+			amtgroup=strtol(txt+1,&txt,16);
+		else
+			amtgroup=strtol(txt,&txt,0);
+		setAmtingroup(amt-1,amtgroup);
+		for(uint32_t i=0;i<amtgroup;++i){
+			uint8_t buf[5];
+			for(unsigned j=0;j<5;++j){
+				while((!isdigit(*txt)&&((*txt)!='$')))
+					++txt;
+				long tmp;
+				if(*txt=='$')
+					tmp=strtol(txt+1,&txt,16);
+				else
+					tmp=strtol(txt,&txt,0);
+				buf[j]=tmp&255;
+			}
+			//Now convert sprite format
+			/*From sonic retro wiki
+			* Each mapping is 5 bytes long, taking the form TTTT TTTT 0000 WWHH PCCY XAAA AAAA AAAA LLLL LLLL.
+			*
+			* LLLL LLLL is the left co-ordinate of where the mapping appears.
+			* TTTT TTTT is the top co-ordinate of where the mapping appears.
+			* WW is the width of the mapping, in tiles minus one. So 0 means 8 pixels wide, 1 means 16 pixels wide, 2 means 24 pixels wide and 3 means 32 pixels wide.
+			* HH is the height of the mapping, in the same format as the width.
+			* P is the priority-flag. If P is set, the mapping will appear above everything else.
+			* CC is the palette line.
+			* X is the x-flip-flag. If X is set, the mapping will be flipped horizontally.
+			* Y is the y-flip-flag. If Y is set, the mapping will be flipped vertically.
+			* AAA AAAA AAAA is the tile index. */
+			int8_t*bufi=(int8_t*)buf;
+			groups[amt-1].offy[i]=bufi[0];
+			groups[amt-1].list[i].w=((buf[1]>>2)&3)+1;
+			groups[amt-1].list[i].h=(buf[1]&3)+1;
+			groups[amt-1].list[i].prio=(buf[2]&(1<<7))>>7;
+			groups[amt-1].list[i].palrow=(buf[2]&(3<<5))>>5;
+			groups[amt-1].list[i].vflip=(buf[2]&(1<<4))>>4;
+			groups[amt-1].list[i].hflip=(buf[2]&(1<<3))>>3;
+			uint16_t tile=(buf[2]&7)<<8;
+			tile|=buf[3];
+			groups[amt-1].list[i].starttile=tile;
+			groups[amt-1].loadat[i]=tile;
+			groups[amt-1].offx[i]=bufi[4];
+		}
+	}else
+		return;
+}
+void sprites::importMapping(void){
+	if(load_file_generic()){
+		unsigned amtnew=0;
+		FILE*fp=fopen(the_file.c_str(),"r");
+		fseek(fp,0,SEEK_END);
+		size_t sz=ftell(fp);
+		rewind(fp);
+		char*buf=(char*)malloc(sz+1);
+		fread(buf,1,sz,fp);
+		buf[sz]=0;//Ensure that the C-string is null terminated
+		fclose(fp);
+		char*bufp=buf;
+		char*bufend=buf+sz-1;
+		while(bufp<bufend){
+			if(bufp=strstr(bufp,"dc.w")){
+				bufp+=strlen("dc.w");
+				while(isspace(*bufp++));
+				--bufp;
+				char*minus=strstr(bufp,"-");
+				if(!minus)
+					break;
+				*minus=0;
+				++amtnew;
+				setAmt(amtnew);
+				mappingItem(strstr(minus+1,bufp)+strlen(bufp));
+				groups[amtnew-1].name.assign(bufp);
+				bufp=minus+1;
+				//The dc.w psuedo-op can contain multiple words
+				while(1){
+					char*comma=strstr(bufp,",");
+					if(!comma)
+						break;
+					bufp=comma+1;
+					char*nl=strstr(bufp,"\n");//New Line
+					if(!nl)
+						break;
+					if(nl&&(comma<nl)){
+						//Label on same line found
+						while(isspace(*bufp++));
+						--bufp;
+						minus=strstr(bufp,"-");
+						*minus=0;
+						++amtnew;
+						setAmt(amtnew);
+						mappingItem(strstr(minus+1,bufp+strlen(bufp)));
+						groups[amtnew-1].name.assign(bufp);
+						bufp=minus+1;
+						comma=strstr(bufp,",");
+						if((!nl)||(comma>nl))//Is the next comma on a newline?
+							break;
+					}else
+						break;
+				}
+			}else
+				break;
+		}
+		free(buf);
+	}
+}
 static uint8_t*rect2rect(uint8_t*in,uint8_t*out,unsigned xin,unsigned yin,unsigned win,unsigned wout,unsigned hout,bool alpha,bool reverse=false){
 	if(alpha)
 		in+=(yin*win*4)+(xin*4);
@@ -168,9 +282,15 @@ uint32_t sprites::height(uint32_t id){
 	return abs(maxy-miny);
 }
 void sprites::draw(uint32_t id,uint32_t x,uint32_t y,int32_t zoom){
+	int32_t minx,maxx;
+	int32_t miny,maxy;
+	minmaxoffx(id,minx,maxx);
+	minmaxoffy(id,miny,maxy);
 	for(uint32_t i=0;i<groups[id].list.size();++i){
-		unsigned xoff=x+(groups[id].offx[i]*zoom);
-		unsigned yoff=y+(groups[id].offy[i]*zoom);
+		int xoff=x+(groups[id].offx[i]*zoom);
+		xoff-=minx*zoom;
+		int yoff=y+(groups[id].offy[i]*zoom);
+		yoff-=miny*zoom;
 		if(xoff>=window->w())
 			continue;
 		if(yoff>=window->h())
@@ -228,7 +348,7 @@ bool sprites::save(FILE*fp){
 	 * uint32_t h
 	 * uint32_t starttile
 	 * uint32_t pal row
-	 * uint8_t hvflip flags bit 0 hflip bit 1 vflip
+	 * uint8_t hvflip flags bit 0 hflip bit 1 vflip bit 2 priority
 	 */
 	fwrite(&amt,sizeof(uint32_t),1,fp);
 	for(unsigned n=0;n<amt;++n){
@@ -245,7 +365,7 @@ bool sprites::save(FILE*fp){
 			fwrite(&groups[n].list[i].h,sizeof(uint32_t),1,fp);
 			fwrite(&groups[n].list[i].starttile,sizeof(uint32_t),1,fp);
 			fwrite(&groups[n].list[i].palrow,sizeof(uint32_t),1,fp);
-			uint8_t hvflip=groups[n].list[i].hflip|(groups[n].list[i].vflip<<1);
+			uint8_t hvflip=groups[n].list[i].hflip|(groups[n].list[i].vflip<<1)|(groups[n].list[i].prio<<2);
 			fwrite(&hvflip,sizeof(uint8_t),1,fp);
 		}
 	}
@@ -279,6 +399,7 @@ bool sprites::load(FILE*fp,uint32_t version){
 				fread(&hvflip,sizeof(uint8_t),1,fp);
 				groups[n].list[i].hflip=hvflip&1;
 				groups[n].list[i].vflip=(hvflip&2)>>1;
+				groups[n].list[i].prio=(hvflip&1)>>2;
 			}
 		}
 	}else{
