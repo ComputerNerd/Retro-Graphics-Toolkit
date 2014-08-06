@@ -20,6 +20,7 @@
 #include "undo.h"
 void tilesnewfilppedCB(Fl_Widget*,void*){
 	pushTilemapAll(false);
+	pushTileappendGroupPrepare();
 	uint32_t amt=currentProject->tileC->amt;
 	uint32_t*hflip=(uint32_t*)malloc(amt*sizeof(uint32_t));
 	uint32_t*vflip=(uint32_t*)malloc(amt*sizeof(uint32_t));
@@ -29,6 +30,7 @@ void tilesnewfilppedCB(Fl_Widget*,void*){
 	memset(hvflip,0,amt*sizeof(uint32_t));
 	uint32_t acum=0;
 	uint8_t * tileTemp=(uint8_t *)alloca(currentProject->tileC->tileSize);
+	uint8_t * tcTemp=(uint8_t *)alloca(currentProject->tileC->tcSize);
 	for(uint32_t y=0;y<currentProject->tileMapC->mapSizeHA;++y){
 		for(uint32_t x=0;x<currentProject->tileMapC->mapSizeW;++x){
 			bool hf=currentProject->tileMapC->get_hflip(x,y),vf=currentProject->tileMapC->get_vflip(x,y);
@@ -36,11 +38,14 @@ void tilesnewfilppedCB(Fl_Widget*,void*){
 			if(hf&&vf){
 				if(!(hvflip[t])){
 					currentProject->tileC->hflip_tile(t,tileTemp);
+					currentProject->tileC->hflip_truecolor(t,(uint32_t*)tcTemp);
 					currentProject->tileC->vflip_tile_ptr(tileTemp,tileTemp);
+					currentProject->tileC->vflip_truecolor_ptr(tcTemp,tcTemp);
 					hvflip[t]=amt+acum;
-					pushTileAppend();
+					addTileappendGroup(tileTemp,tcTemp);
 					currentProject->tileC->appendTile();
 					memcpy(currentProject->tileC->tDat.data()+((amt+acum)*currentProject->tileC->tileSize),tileTemp,currentProject->tileC->tileSize);
+					memcpy(currentProject->tileC->truetDat.data()+((amt+acum)*currentProject->tileC->tcSize),tcTemp,currentProject->tileC->tcSize);
 					++acum;
 				}
 				currentProject->tileMapC->set_tile(hvflip[t],x,y);
@@ -49,10 +54,12 @@ void tilesnewfilppedCB(Fl_Widget*,void*){
 			}else if(hf){
 				if(!(hflip[t])){
 					currentProject->tileC->hflip_tile(t,tileTemp);
+					currentProject->tileC->hflip_truecolor(t,(uint32_t*)tcTemp);
 					hflip[t]=amt+acum;
-					pushTileAppend();
+					addTileappendGroup(tileTemp,tcTemp);
 					currentProject->tileC->appendTile();
 					memcpy(currentProject->tileC->tDat.data()+((amt+acum)*currentProject->tileC->tileSize),tileTemp,currentProject->tileC->tileSize);
+					memcpy(currentProject->tileC->truetDat.data()+((amt+acum)*currentProject->tileC->tcSize),tcTemp,currentProject->tileC->tcSize);
 					++acum;
 				}
 				currentProject->tileMapC->set_tile(hflip[t],x,y);
@@ -60,10 +67,12 @@ void tilesnewfilppedCB(Fl_Widget*,void*){
 			}else if(vf){
 				if(!(vflip[t])){
 					currentProject->tileC->vflip_tile(t,tileTemp);
+					currentProject->tileC->vflip_truecolor(t,tcTemp);
 					vflip[t]=amt+acum;
-					pushTileAppend();
+					addTileappendGroup(tileTemp,tcTemp);
 					currentProject->tileC->appendTile();
 					memcpy(currentProject->tileC->tDat.data()+((amt+acum)*currentProject->tileC->tileSize),tileTemp,currentProject->tileC->tileSize);
+					memcpy(currentProject->tileC->truetDat.data()+((amt+acum)*currentProject->tileC->tcSize),tcTemp,currentProject->tileC->tcSize);
 					++acum;
 				}
 				currentProject->tileMapC->set_tile(vflip[t],x,y);

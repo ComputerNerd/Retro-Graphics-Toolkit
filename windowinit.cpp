@@ -90,7 +90,7 @@ static const Fl_Menu_Item menuEditor[]={
 			{"Import sprite from image (append)",0,SpriteimportCB,(void*)1},
 			{"Import sonic 1 mapping",0,importSonicMappingCB,(void*)tSonic1},
 			{"Import sonic 2 mapping",0,importSonicMappingCB,(void*)tSonic2},
-			{"Import sonic 1 DPCL",0,importSonicDPCLCB,(void*)tSonic1},
+			{"Import sonic 1 DPLC",0,importSonicDPLCCB,(void*)tSonic1},
 			{"Export sonic 1 mapping",0,exportSonicMappingCB,(void*)tSonic1},
 			{"Export sonic 2 mapping",0,exportSonicMappingCB,(void*)tSonic2},
 			{0},

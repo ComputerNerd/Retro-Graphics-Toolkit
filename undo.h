@@ -21,6 +21,7 @@ enum undoTypes_t{
 	uTileGroup,
 	uTilePixel,
 	uTileAppend,//No struct
+	uTileAppendgroupdat,//uTileGroup could be adapted for this but using seperate code ram is saved
 	uTileNew,//No struct reuses ptr for insert tile after
 	uTilemap,
 	uTilemapattr,
@@ -74,6 +75,11 @@ struct undoTileGroup{
 	std::vector<uint8_t> data;//Similar situation to other tile structs as in what this contains and what order
 	std::vector<uint8_t> datanew;
 };
+struct undoAppendgroupdat{
+	uint32_t amt;
+	std::vector<uint8_t> dat;
+	std::vector<uint8_t> truedat;
+};
 struct undoTilePixel{
 	tileTypeMask_t type;
 	uint32_t id,x,y,val,valnew;
@@ -119,6 +125,8 @@ void pushTilenew(uint32_t id);
 void pushTilePixel(uint32_t id,uint32_t x,uint32_t y,tileTypeMask_t type);
 void pushTileGroupPrepare(tileTypeMask_t type);
 void addTileGroup(uint32_t tile,int32_t forceid=-1);
+void pushTileappendGroupPrepare(void);
+void addTileappendGroup(uint8_t*tdat,uint8_t*truetdat);
 void pushTilesAll(tileTypeMask_t type);
 void pushTileAppend(void);
 void pushTilemapEdit(uint32_t x,uint32_t y);

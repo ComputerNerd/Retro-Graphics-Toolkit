@@ -139,7 +139,7 @@ void sprites::mappingItem(char*txt,gameType_t game){
 	}else
 		return;
 }
-void sprites::DpclItem(char*txt,uint32_t which,gameType_t game){
+void sprites::DplcItem(char*txt,uint32_t which,gameType_t game){
 	/*Sonic 1 format:
 	 * uint8_t amount
 	 * for each of amount
@@ -168,9 +168,13 @@ void sprites::DpclItem(char*txt,uint32_t which,gameType_t game){
 		}
 	}
 }
-void sprites::importDPCL(gameType_t game){
-	if(load_file_generic("Load DPCL")){
-		FILE*fp=fopen(the_file.c_str(),"r");
+void sprites::importDPLC(gameType_t game){
+	if(load_file_generic("Load DPLC")){
+		FILE*fp;
+		if(game==tSonic1)
+			fp=fopen(the_file.c_str(),"r");
+		else
+			fp=fopen(the_file.c_str(),"rb");
 		fseek(fp,0,SEEK_END);
 		size_t sz=ftell(fp);
 		rewind(fp);
@@ -190,7 +194,7 @@ void sprites::importDPCL(gameType_t game){
 				if(!minus)
 					break;
 				*minus=0;
-				DpclItem(strstr(minus+1,bufp)+strlen(bufp),sp++,game);
+				DplcItem(strstr(minus+1,bufp)+strlen(bufp),sp++,game);
 				bufp=minus+1;
 			}else
 				break;

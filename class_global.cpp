@@ -61,11 +61,14 @@ static void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y){
 	fl_draw_image(grid,x,y,32,32,3);
 	
 }
+static void uintstr(unsigned x,char*tmp){
+	snprintf(tmp,16,"%u",x);
+}
 void editor::updateMapWH(uint32_t w,uint32_t h){
 	char tmp[16];
-	snprintf(tmp,16,"%d",w);
+	uintstr(w,tmp);
 	map_w->value(tmp);
-	snprintf(tmp,16,"%d",h);
+	uintstr(h,tmp);
 	map_h->value(tmp);
 }
 void editor::updateMapWH(void){
@@ -83,16 +86,12 @@ void editor::updateBlockTilesChunk(uint32_t prj){
 void editor::updateBlockTilesChunk(void){
 	updateBlockTilesChunk(curProjectID);
 }
-static void uintstr(unsigned x,char*tmp){
-	snprintf(tmp,16,"%u",x);
-}
 static void intstr(int x,char*tmp){
 	snprintf(tmp,16,"%d",x);
 }
 void editor::updateSpriteSliders(uint32_t prj){
 	spriteselgroup->maximum(projects[prj]->spritesC->amt-1);
 	spritesel->maximum(projects[prj]->spritesC->groups[curSpritegroup].list.size()-1);
-	spriteslat->maximum(projects[prj]->spritesC->groups[curSpritegroup].list.size()-1);
 	spritest->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].starttile);
 	spriteslat->value(projects[prj]->spritesC->groups[curSpritegroup].loadat[curSprite]);
 	spritesize[0]->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].w);
