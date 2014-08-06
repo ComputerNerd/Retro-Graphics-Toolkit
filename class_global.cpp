@@ -104,6 +104,9 @@ void editor::updateSpriteSliders(uint32_t prj){
 	intstr(projects[prj]->spritesC->groups[curSpritegroup].offy[curSprite],tmp);
 	spritesoff[1]->value(tmp);
 	spritegrouptxt->value(projects[prj]->spritesC->groups[curSpritegroup].name.c_str());
+	spritehflip->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].hflip);
+	spritevflip->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].vflip);
+	spriteprio->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].prio);
 }
 void editor::updateSpriteSliders(void){
 	updateSpriteSliders(curProjectID);
@@ -383,14 +386,15 @@ int editor::handle(int event){
 						damage(FL_DAMAGE_USER1);
 					}
 					if (Fl::event_x() > tile_edit_offset_x && Fl::event_y() > tile_edit_offset_y && Fl::event_x() < tile_edit_offset_x+(tiles_size*8) && Fl::event_y() < tile_edit_offset_y+(tiles_size*8)){
-						uint8_t temp_two,temp_one;
+						unsigned temp_two,temp_one;
 						temp_one=(Fl::event_x()-tile_edit_offset_x)/tiles_size;
 						temp_two=(Fl::event_y()-tile_edit_offset_y)/tiles_size;
-						uint8_t get_pal=(tileEdit_pal.theRow*48)+(tileEdit_pal.box_sel*3);
+						unsigned get_pal=(tileEdit_pal.theRow*tileEdit_pal.perRow*3)+(tileEdit_pal.box_sel*3);
 						pushTilePixel(currentProject->tileC->current_tile,temp_one,temp_two,tTypeTruecolor);
 						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,0,currentProject->tileC->current_tile)]=currentProject->rgbPal[get_pal];//red
 						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,1,currentProject->tileC->current_tile)]=currentProject->rgbPal[get_pal+1];//green
 						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,2,currentProject->tileC->current_tile)]=currentProject->rgbPal[get_pal+2];//blue
+						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,3,currentProject->tileC->current_tile)]=255;
 						pushTile(currentProject->tileC->current_tile,tTypeTile);
 						currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);
 						damage(FL_DAMAGE_USER1);

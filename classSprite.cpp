@@ -37,7 +37,7 @@ void sprite::draw(unsigned x,unsigned y,unsigned zoom){
 	unsigned yy=y;
 	int32_t t=starttile;
 	if(hflip)
-		t+=w*(h-1);
+		t+=(w-1)*h;
 	for(unsigned i=0;i<w;++i){//Width and height are swapped due to the way sega genesis stores sprites. The code is the same for NES because width will always be one
 		if(vflip)
 			t+=h-1;
@@ -52,7 +52,7 @@ void sprite::draw(unsigned x,unsigned y,unsigned zoom){
 		if(vflip)
 			t+=h+1;
 		if(hflip)
-			t-=w+w;
+			t-=h*2;
 		x+=currentProject->tileC->sizew*zoom;
 		yy=y;
 	}

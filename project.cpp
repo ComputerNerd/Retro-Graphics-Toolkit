@@ -25,9 +25,50 @@ struct Project * currentProject;
 Fl_Slider* curPrj;
 static const char * defaultName="Add a description here.";
 uint32_t curProjectID;
-bool containsDataCurProj(uint32_t mask){
+bool containsDataProj(uint32_t prj,uint32_t mask){
 	unsigned off=__builtin_ctz(mask);
-	return ((currentProject->useMask&pjHavePal)||(currentProject->share[off]>0))?true:false;
+	return ((projects[prj]->useMask&pjHavePal)||(projects[prj]->share[off]>0))?true:false;
+}
+bool containsDataCurProj(uint32_t mask){
+	return containsDataProj(curProjectID,mask);
+}
+void compactPrjMem(void){
+	int Cold=0,Cnew=0;//Old and new capacity
+	for(uint_fast32_t i=0;i<projects_count;++i){
+		if(containsDataProj(i,pjHaveTiles)){
+			Cold+=projects[i]->tileC->tDat.capacity();
+			Cold+=projects[i]->tileC->truetDat.capacity();
+			projects[i]->tileC->tDat.shrink_to_fit();
+			projects[i]->tileC->truetDat.shrink_to_fit();
+			Cnew+=projects[i]->tileC->tDat.capacity();
+			Cnew+=projects[i]->tileC->truetDat.capacity();
+		}
+		if(containsDataProj(i,pjHaveChunks)){
+			Cold+=projects[i]->Chunk->chunks.capacity();
+			projects[i]->Chunk->chunks.shrink_to_fit();
+			Cnew+=projects[i]->Chunk->chunks.capacity();
+		}
+		if(containsDataProj(i,pjHaveSprites)){
+			for(uint32_t n=0;n<projects[i]->spritesC->amt;++n){
+				Cold+=projects[i]->spritesC->groups[n].list.capacity();
+				Cold+=projects[i]->spritesC->groups[n].list.capacity();
+				Cold+=projects[i]->spritesC->groups[n].offx.capacity();
+				Cold+=projects[i]->spritesC->groups[n].offy.capacity();
+				projects[i]->spritesC->groups[n].loadat.shrink_to_fit();
+				projects[i]->spritesC->groups[n].offx.shrink_to_fit();
+				projects[i]->spritesC->groups[n].offy.shrink_to_fit();
+				projects[i]->spritesC->groups[n].loadat.shrink_to_fit();
+				Cnew+=projects[i]->spritesC->groups[n].list.capacity();
+				Cnew+=projects[i]->spritesC->groups[n].list.capacity();
+				Cnew+=projects[i]->spritesC->groups[n].offx.capacity();
+				Cnew+=projects[i]->spritesC->groups[n].offy.capacity();
+			}
+			Cold+=projects[i]->spritesC->groups.capacity();
+			projects[i]->spritesC->groups.shrink_to_fit();
+			Cnew+=projects[i]->spritesC->groups.capacity();
+		}
+	}
+	printf("Old capacity: %d New capacity: %d saved %d bytes\n",Cold,Cnew,Cold-Cnew);
 }
 void initProject(void){
 	projects = (struct Project **) malloc(sizeof(void *));

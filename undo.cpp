@@ -97,6 +97,9 @@ static void cleanupEvent(uint32_t id){
 		case uTileAppend:
 		case uChunkAppend:
 		case uChunkNew:
+		case uSpriteNewgroup:
+		case uSpriteAppend:
+		case uSpriteAppendgroup:
 			//Nothing to do here
 		break;
 		case uTileGroup:
@@ -202,6 +205,17 @@ static void cleanupEvent(uint32_t id){
 			free(uptr->ptr);
 			memUsed-=sizeof(struct undoChunk);}
 		break;
+	}
+}
+void clearUndoCB(Fl_Widget*,void*){
+	if(fl_ask("Warning this action cannot be undone.\nAre you sure that you want to do this?")){
+		for(uint_fast32_t i=0;i<amount;++i){
+			cleanupEvent(i);
+			memUsed-=sizeof(struct undoEvent);
+		}
+		amount=0;
+		pos=-1;
+		compactPrjMem();
 	}
 }
 static void pushEventPrepare(void){
@@ -610,6 +624,21 @@ void UndoRedo(bool redo){
 
 			}
 		break;
+		case uSpriteAppend:
+			{uint32_t id=(uintptr_t)uptr->ptr;
+			if(redo)
+				currentProject->spritesC->setAmtingroup(id,currentProject->spritesC->groups[id].list.size()+1);
+			else
+				currentProject->spritesC->delingroup(id,currentProject->spritesC->groups[id].list.size()-1);
+			window->updateSpriteSliders();}
+		break;
+		case uSpriteAppendgroup:
+			if(redo)
+				currentProject->spritesC->setAmt(currentProject->spritesC->amt+1);
+			else
+				currentProject->spritesC->del(currentProject->spritesC->amt-1);
+			window->updateSpriteSliders();
+		break;
 	}
 	if(!redo)
 		--pos;
@@ -634,7 +663,7 @@ void pushTilenew(uint32_t id){
 	pushEventPrepare();
 	struct undoEvent*uptr=undoBuf+pos;
 	uptr->type=uTileNew;
-	uptr->ptr=(void*)id;
+	uptr->ptr=(void*)(uintptr_t)id;
 }
 void pushTilePixel(uint32_t id,uint32_t x,uint32_t y,tileTypeMask_t type){
 	pushEventPrepare();
@@ -806,7 +835,7 @@ void pushChunkNew(uint32_t id){
 	pushEventPrepare();
 	struct undoEvent*uptr=undoBuf+pos;
 	uptr->type=uChunkNew;
-	uptr->ptr=(void*)id;
+	uptr->ptr=(void*)(uintptr_t)id;
 }
 void pushChunkAppend(void){
 	pushEventPrepare();
@@ -839,6 +868,17 @@ void pushChunksAll(void){
 	uc->amt=currentProject->Chunk->amt;
 	uc->ptr=(struct ChunkAttrs*)malloc(uc->w*uc->h*uc->amt*sizeof(struct ChunkAttrs));
 	memcpy(uc->ptr,currentProject->Chunk->chunks.data(),uc->w*uc->h*uc->amt*sizeof(struct ChunkAttrs));
+}
+void pushSpriteAppend(uint32_t id){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uSpriteAppend;
+	uptr->ptr=(void*)(uintptr_t)id;
+}
+void pushSpriteAppendgroup(void){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uSpriteAppendgroup;
 }
 static Fl_Window * win;
 static void closeHistory(Fl_Widget*,void*){
@@ -928,6 +968,12 @@ void historyWindow(Fl_Widget*,void*){
 			break;
 			case uChunkAll:
 				strcpy(tmp,"Change all chunks");
+			break;
+			case uSpriteAppend:
+				snprintf(tmp,2048,"Append sprite to group: %u",unsigned(uintptr_t(uptr->ptr)));
+			break;
+			case uSpriteAppendgroup:
+				strcpy(tmp,"Append sprite group");
 			break;
 			default:
 				snprintf(tmp,2048,"TODO unhandled %d",uptr->type);

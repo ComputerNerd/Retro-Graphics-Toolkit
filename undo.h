@@ -35,6 +35,11 @@ enum undoTypes_t{
 	uChunkResize,
 	uChunkAppend,
 	uChunkNew,//No struct reuses ptr
+	uSpriteNew,
+	uSpriteNewgroup,//No struct reuses ptr
+	uSpriteAppend,//No struct reuses ptr
+	uSpriteAppendgroup,//No struct
+	uSpriteAll,
 	uSwitchSys,
 	uSwitchPrj,//No struct reuses ptr
 	uLoadPrj,
@@ -105,6 +110,7 @@ struct undoChunkAll{
 	uint32_t amt,amtnew;
 	struct ChunkAttrs*ptr,*ptrnew;
 };
+void clearUndoCB(Fl_Widget*,void*);
 void showMemUsageUndo(Fl_Widget*,void*);
 void UndoRedo(bool redo);
 void historyWindow(Fl_Widget*,void*);//Controls settings and shows history
@@ -126,5 +132,7 @@ void pushChunkResize(uint32_t wnew,uint32_t hnew);
 void pushChunkEdit(uint32_t id,uint32_t x,uint32_t y);
 void pushChunkAppend(void);
 void pushChunkNew(uint32_t id);
+void pushSpriteAppend(uint32_t id);
+void pushSpriteAppendgroup(void);
 void pushSwitchSys(void);
 void pushSwitchPrj(void);

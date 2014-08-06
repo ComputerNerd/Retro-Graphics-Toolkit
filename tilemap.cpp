@@ -526,7 +526,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 #define CYCbCr2R(Y, Cb, Cr) CLIP( Y + ( 91881 * Cr >> 16 ) - 179 )
 #define CYCbCr2G(Y, Cb, Cr) CLIP( Y - (( 22544 * Cb + 46793 * Cr ) >> 16) + 135)
 #define CYCbCr2B(Y, Cb, Cr) CLIP( Y + (116129 * Cb >> 16 ) - 226 )
-static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,uint8_t offsetPal,Fl_Progress *progress,Fl_Window*pwin,uint8_t maxCol,unsigned yuv,unsigned alg,bool isSprite=false){
+static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,unsigned offsetPal,Fl_Progress *progress,Fl_Window*pwin,uint8_t maxCol,unsigned yuv,unsigned alg,bool isSprite=false){
 	progress->maximum(1.0);
 	unsigned off2=offsetPal*2;
 	unsigned off3=offsetPal*3;
@@ -860,9 +860,14 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	if (rows==1){
 		if (rowAuto)
 			currentProject->tileMapC->allRowZero();
-		if(isSprite)
-			reduceImage(image,found_colors,-1,0,progress,win,perRow[0],yuv,alg,true);
-		else
+		if(isSprite){
+			unsigned off;
+			if(currentProject->gameSystem==NES)
+				off=16;
+			else
+				off=0;
+			reduceImage(image,found_colors,-1,off,progress,win,perRow[0],yuv,alg,true);
+		}else
 			reduceImage(image,found_colors,-1,0,progress,win,perRow[0],yuv,alg);
 		window->damage(FL_DAMAGE_USER1);
 		Fl::check();

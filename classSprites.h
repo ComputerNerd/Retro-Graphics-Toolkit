@@ -17,9 +17,10 @@
 #pragma once
 #include <stdint.h>
 #include <stdio.h>
-#include "classSprite.h"
 #include <vector>
 #include <string>
+#include "classSprite.h"
+#include "gamedef.h"
 struct spriteGroup{
 	std::vector<int32_t> offx;
 	std::vector<int32_t> offy;
@@ -29,7 +30,8 @@ struct spriteGroup{
 };
 class sprites{
 	private:
-		void mappingItem(char*txt);
+		void mappingItem(char*txt,gameType_t game);
+		void DpclItem(char*txt,uint32_t which,gameType_t game);
 	public:
 		uint32_t amt;//The amount of sprites
 		std::string name;
@@ -37,8 +39,9 @@ class sprites{
 		sprites();
 		sprites(const sprites& other);
 		~sprites();
-		void exportMapping(void);
-		void importMapping(void);
+		void importDPCL(gameType_t game);
+		void exportMapping(gameType_t game);
+		void importMapping(gameType_t game);
 		void draw(uint32_t id,uint32_t x,uint32_t y,int32_t zoom);
 		void minmaxoffx(uint32_t id,int32_t&minx,int32_t&maxx);
 		void minmaxoffy(uint32_t id,int32_t&miny,int32_t&maxy);

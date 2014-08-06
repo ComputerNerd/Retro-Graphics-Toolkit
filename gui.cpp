@@ -61,6 +61,7 @@ void updateTileSelectAmt(uint32_t newMax){
 	else
 		window->tile_select_3->maximum(newMax);
 	window->spritest->maximum(newMax);
+	window->spriteslat->maximum(newMax);
 	char tmp[128];
 	snprintf(tmp,128,"Total tiles: %d",newMax+1);
 	window->totalTiles->copy_label(tmp);

@@ -48,7 +48,9 @@ extern struct Project ** projects;
 extern uint32_t projects_count;//holds how many projects there are this is needed for realloc when adding or removing function
 extern struct Project * currentProject;
 extern Fl_Slider* curPrj;
+bool containsDataProj(uint32_t prj,uint32_t mask);
 bool containsDataCurProj(uint32_t mask);
+void compactPrjMem(void);
 void initProject(void) __attribute__((constructor(101)));/*!< this needs to be ran before class constructors*/
 void setHaveProject(uint32_t id,uint32_t mask,bool set);
 void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable);

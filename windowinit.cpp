@@ -25,6 +25,7 @@
 #include "callbacksprites.h"
 #include "undocallback.h"
 #include "undo.h"
+#include "gamedef.h"
 void set_mode_tabs(Fl_Widget* o, void*){
 	Fl_Group * val=(Fl_Group*)(Fl_Tabs*)window->the_tabs->value();
 	if (val==window->TabsMain[pal_edit]){
@@ -87,8 +88,11 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Sprites",0, 0, 0, FL_SUBMENU},
 			{"Import sprite from image",0,SpriteimportCB,0},
 			{"Import sprite from image (append)",0,SpriteimportCB,(void*)1},
-			{"Import sonic 1 mapping",0,importSonicMappingCB},
-			{"Export sonic 1 mapping",0,exportSonicMappingCB},
+			{"Import sonic 1 mapping",0,importSonicMappingCB,(void*)tSonic1},
+			{"Import sonic 2 mapping",0,importSonicMappingCB,(void*)tSonic2},
+			{"Import sonic 1 DPCL",0,importSonicDPCLCB,(void*)tSonic1},
+			{"Export sonic 1 mapping",0,exportSonicMappingCB,(void*)tSonic1},
+			{"Export sonic 2 mapping",0,exportSonicMappingCB,(void*)tSonic2},
 			{0},
 		{0},
 	{"Palette Actions",0, 0, 0, FL_SUBMENU},
@@ -126,6 +130,7 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Redo",FL_CTRL+'y',redoCB},
 		//{"Show estimated ram usage",0,showMemUsageUndo},
 		{"Show history window",FL_CTRL+'h',historyWindow},
+		{"Clear undo buffer",0,clearUndoCB},
 		{0},
 	{"Help",0, 0, 0, FL_SUBMENU},
 		{"About",0,showAbout},
@@ -629,11 +634,11 @@ void editor::_editor(){
 			spritesoff[1]->align(FL_ALIGN_LEFT);
 			spritesoff[1]->callback(setoffspriteCB,(void*)1);
 			
-			spritehflip = new Fl_Check_Button(tile_place_buttons_x_off,470,64,20,"Hflip");
+			spritehflip = new Fl_Check_Button(tile_place_buttons_x_off,470,48,20,"Hflip");
 			spritehflip->callback(spriteHflipCB);
-			spritevflip = new Fl_Check_Button(tile_place_buttons_x_off+64,470,64,20,"Vflip");
+			spritevflip = new Fl_Check_Button(tile_place_buttons_x_off+52,470,48,20,"Vflip");
 			spritevflip->callback(spriteVflipCB);
-			spriteprio = new Fl_Check_Button(tile_place_buttons_x_off+128,470,64,20,"Priority");
+			spriteprio = new Fl_Check_Button(tile_place_buttons_x_off+104,470,56,20,"Priority");
 			spriteprio->callback(spritePrioCB);
 
 			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off, 492, 64, 28, "Append");

@@ -1,4 +1,8 @@
 Most recent changes are placed at the top
+
+20140805
+Fixed sonic 1 sprite mapping import.
+
 20140804
 Added importing and exporting sprite mapping
 Added create new tile for tiles set as flipped useful for NES users
