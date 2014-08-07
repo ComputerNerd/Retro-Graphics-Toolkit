@@ -1,0 +1,139 @@
+/*
+   This file is part of Retro Graphics Toolkit
+
+   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or any later version.
+
+   Retro Graphics Toolkit is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+*/
+#include "includes.h"
+#include "classSprites.h"
+#include "gui.h"
+#include "project.h"
+#include "gamedef.h"
+#include "undo.h"
+uint32_t curSprite;
+uint32_t curSpritegroup;
+void importSonicDPLCCB(Fl_Widget*o,void*t){
+	currentProject->spritesC->importDPLC((gameType_t)(uintptr_t)t);
+	window->updateSpriteSliders();
+	window->redraw();
+}
+void setoffspriteCB(Fl_Widget*o,void*y){
+	Fl_Int_Input*i=(Fl_Int_Input*)o;
+	int tmp=atoi(i->value());
+	if(y){
+		pushSpriteOffy();
+		currentProject->spritesC->groups[curSpritegroup].offy[curSprite]=tmp;	
+	}else{
+		pushSpriteOffx();
+		currentProject->spritesC->groups[curSpritegroup].offx[curSprite]=tmp;	
+	}
+	window->redraw();
+}
+void exportSonicMappingCB(Fl_Widget*o,void*t){
+	currentProject->spritesC->exportMapping((gameType_t)(uintptr_t)t);
+}
+void importSonicMappingCB(Fl_Widget*o,void*t){
+	currentProject->spritesC->importMapping((gameType_t)(uintptr_t)t);
+	window->updateSpriteSliders();
+	window->redraw();
+}
+void assignSpritegroupnameCB(Fl_Widget*o,void*){
+	Fl_Input*i=(Fl_Input*)o;
+	currentProject->spritesC->groups[curSpritegroup].name.assign(i->value());
+	window->redraw();
+}
+void spritePrioCB(Fl_Widget*,void*){
+	pushSpritePrio();
+	currentProject->spritesC->groups[curSpritegroup].list[curSprite].prio^=true;
+	window->redraw();
+}
+void spriteHflipCB(Fl_Widget*,void*){
+	pushSpriteHflip();
+	currentProject->spritesC->groups[curSpritegroup].list[curSprite].hflip^=true;
+	window->redraw();
+}
+void spriteVflipCB(Fl_Widget*,void*){
+	pushSpriteVflip();
+	currentProject->spritesC->groups[curSpritegroup].list[curSprite].vflip^=true;
+	window->redraw();
+}
+void SpriteimportCB(Fl_Widget*,void*append){
+	if((uintptr_t)append)
+		currentProject->spritesC->importImg(currentProject->spritesC->amt);//This works because amt counts from one and the function counts from zero
+	else
+		currentProject->spritesC->importImg(curSprite);
+}
+void selSpriteCB(Fl_Widget*w,void*){
+	Fl_Slider*s=(Fl_Slider*)w;
+	curSprite=s->value();
+	window->updateSpriteSliders();
+	window->redraw();
+}
+void appendSpriteCB(Fl_Widget*,void*g){
+	if(g){
+		pushSpriteAppendgroup();
+		currentProject->spritesC->setAmt(currentProject->spritesC->amt+1);
+		window->spriteselgroup->maximum(currentProject->spritesC->amt-1);
+	}else{
+		pushSpriteAppend(curSpritegroup);
+		currentProject->spritesC->setAmtingroup(curSpritegroup,currentProject->spritesC->groups[curSpritegroup].list.size()+1);
+		window->spritesel->maximum(currentProject->spritesC->groups[curSpritegroup].list.size()-1);
+	}
+	window->redraw();
+}
+void delSpriteCB(Fl_Widget*,void*group){
+	if(group)
+		currentProject->spritesC->del(curSpritegroup);
+	else
+		currentProject->spritesC->delingroup(curSpritegroup,curSprite);
+	window->updateSpriteSliders();
+	window->redraw();
+}
+void selspriteGroup(Fl_Widget*o,void*){
+	Fl_Slider*s=(Fl_Slider*)o;
+	curSpritegroup=s->value();
+	window->updateSpriteSliders();
+	window->redraw();
+}
+#define pushSpriteItem(fname) if(pushed_g||(Fl::event()==FL_KEYDOWN)){ \
+		pushed_g=0; \
+		pushSprite##fname(); \
+	}
+void setvalueSpriteCB(Fl_Widget*o,void*which){
+	Fl_Slider*v=(Fl_Slider*)o;
+	uint32_t val=v->value();
+	switch((uintptr_t)which){
+		case 0:
+			pushSpriteItem(Starttile)
+			currentProject->spritesC->groups[curSpritegroup].list[curSprite].starttile=val;
+		break;
+		case 1:
+			pushSpriteItem(Width)
+			currentProject->spritesC->groups[curSpritegroup].list[curSprite].w=val;
+		break;
+		case 2:
+			pushSpriteItem(Height)
+			currentProject->spritesC->groups[curSpritegroup].list[curSprite].h=val;
+		break;
+		case 3:
+			pushSpriteItem(Palrow)
+			spritePal.changeRow(val);
+			currentProject->spritesC->groups[curSpritegroup].list[curSprite].palrow=val;
+		break;
+		case 4:
+			pushSpriteItem(Loadat)
+			currentProject->spritesC->groups[curSpritegroup].loadat[curSprite]=val;
+		break;
+	}
+	window->redraw();
+}
