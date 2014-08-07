@@ -22,6 +22,39 @@
 #include "undo.h"
 uint32_t curSprite;
 uint32_t curSpritegroup;
+void alignSpriteCB(Fl_Widget*,void*t){
+	uint32_t with;
+	if(currentProject->spritesC->groups[curSpritegroup].list.size()<=1){
+		fl_alert("You must have atleast two sprites to align");
+		return;
+	}
+	pushSpriteOffx();
+	pushSpriteOffy();
+	if(curSprite)
+		with=curSprite-1;
+	else
+		with=curSprite+1;
+	switch((uintptr_t)t){
+		case 0://Left
+			currentProject->spritesC->groups[curSpritegroup].offx[curSprite]=currentProject->spritesC->groups[curSpritegroup].offx[with]-(currentProject->spritesC->groups[curSpritegroup].list[with].w*8);
+			currentProject->spritesC->groups[curSpritegroup].offy[curSprite]=currentProject->spritesC->groups[curSpritegroup].offy[with];
+		break;
+		case 1://Right
+			currentProject->spritesC->groups[curSpritegroup].offx[curSprite]=currentProject->spritesC->groups[curSpritegroup].offx[with]+(currentProject->spritesC->groups[curSpritegroup].list[with].w*8);
+			currentProject->spritesC->groups[curSpritegroup].offy[curSprite]=currentProject->spritesC->groups[curSpritegroup].offy[with];
+		break;
+		case 2://Top
+			currentProject->spritesC->groups[curSpritegroup].offx[curSprite]=currentProject->spritesC->groups[curSpritegroup].offx[with];
+			currentProject->spritesC->groups[curSpritegroup].offy[curSprite]=currentProject->spritesC->groups[curSpritegroup].offy[with]-(currentProject->spritesC->groups[curSpritegroup].list[with].h*8);
+		break;
+		case 3://Bottom
+			currentProject->spritesC->groups[curSpritegroup].offx[curSprite]=currentProject->spritesC->groups[curSpritegroup].offx[with];
+			currentProject->spritesC->groups[curSpritegroup].offy[curSprite]=currentProject->spritesC->groups[curSpritegroup].offy[with]+(currentProject->spritesC->groups[curSpritegroup].list[with].h*8);
+		break;
+	}
+	window->updateSpriteSliders();
+	window->redraw();
+}
 void importSonicDPLCCB(Fl_Widget*o,void*t){
 	currentProject->spritesC->importDPLC((gameType_t)(uintptr_t)t);
 	window->updateSpriteSliders();

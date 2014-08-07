@@ -1039,10 +1039,10 @@ void pushSpriteLoadat(void){
 	mkSpritePush2(uSpriteloadat,loadat);
 }
 void pushSpriteOffx(void){
-	mkSpritePush2(uSpriteloadat,offx);
+	mkSpritePush2(uSpriteoffx,offx);
 }
 void pushSpriteOffy(void){
-	mkSpritePush2(uSpriteloadat,offy);
+	mkSpritePush2(uSpriteoffy,offy);
 }
 #define mkSpritePushbool(thetype,which) pushEventPrepare(); \
 	struct undoEvent*uptr=undoBuf+pos; \

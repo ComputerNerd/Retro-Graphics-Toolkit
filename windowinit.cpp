@@ -655,13 +655,17 @@ void editor::_editor(){
 			o->callback(delSpriteCB,(void*)1);
 			o->labelsize(12);}
 			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off, 552, 32, 28, "Left");
-			o->labelsize(12);}
+			o->labelsize(12);
+			o->callback(alignSpriteCB,(void*)0);}
 			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off+34, 552, 40, 28, "Right");
-			o->labelsize(12);}
+			o->labelsize(12);
+			o->callback(alignSpriteCB,(void*)1);}
 			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off+78, 552, 28, 28, "Top");
-			o->labelsize(12);}
+			o->labelsize(12);
+			o->callback(alignSpriteCB,(void*)2);}
 			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off+112, 552, 48, 28, "Bottom");
-			o->labelsize(12);}
+			o->labelsize(12);
+			o->callback(alignSpriteCB,(void*)3);}
 			TabsMain[spriteEditor]->end();
 		}
 		{TabsMain[settingsTab] = new Fl_Group(rx,ry,rw,rh,"Settings/projects");
