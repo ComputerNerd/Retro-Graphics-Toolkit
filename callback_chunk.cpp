@@ -31,6 +31,7 @@ void insertChunkCB(Fl_Widget*,void*){
 	window->redraw();
 }
 void delChunkAtCB(Fl_Widget*,void*){
+	pushChunk(currentChunk,true);
 	currentProject->Chunk->removeAt(currentChunk);
 	window->chunk_select->maximum(currentProject->Chunk->amt-1);
 	window->redraw();

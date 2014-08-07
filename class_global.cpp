@@ -64,6 +64,13 @@ static void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y){
 static void uintstr(unsigned x,char*tmp){
 	snprintf(tmp,16,"%u",x);
 }
+void editor::updateChunkSel(void){
+	chunk_select->maximum(currentProject->Chunk->amt-1);
+	if(chunk_select->value()>currentProject->Chunk->amt-1){
+		chunk_select->value(currentProject->Chunk->amt-1);
+		currentChunk=currentProject->Chunk->amt-1;
+	}
+}
 void editor::updateMapWH(uint32_t w,uint32_t h){
 	char tmp[16];
 	uintstr(w,tmp);

@@ -22,6 +22,7 @@
 #include "undo.h"
 #include "color_convert.h"
 #include "callback_chunk.h"
+#include "callbacksprites.h"
 static struct undoEvent*undoBuf;
 static uint_fast32_t amount;
 static uint_fast32_t memUsed;
@@ -212,6 +213,12 @@ static void cleanupEvent(uint32_t id){
 			}
 			free(uptr->ptr);
 			memUsed-=sizeof(struct undoChunk);}
+		break;
+		case uSpriteWidth:
+		case uSpriteHeight:
+			{struct undoSpriteVal*uc=(struct undoSpriteVal*)uptr->ptr;
+			free(uptr->ptr);
+			memUsed-=sizeof(struct undoSpriteVal);}
 		break;
 	}
 }
@@ -578,6 +585,11 @@ void UndoRedo(bool redo){
 						window->palRTE[i+4]->value(i==tileMap_pal.theRow);
 					}}
 				break;
+				case spriteEditor:
+					spritePal.box_sel=up->id%spritePal.perRow;
+					spritePal.changeRow(up->id/spritePal.perRow);
+					window->spritepalrow->value(spritePal.theRow);
+				break;
 			}}
 		break;
 		case uChunkResize:
@@ -608,14 +620,14 @@ void UndoRedo(bool redo){
 				currentProject->Chunk->resizeAmt(currentProject->Chunk->amt+1);
 			else
 				currentProject->Chunk->resizeAmt(currentProject->Chunk->amt-1);
-			window->chunk_select->maximum(currentProject->Chunk->amt-1);
+			window->updateChunkSel();
 		break;
 		case uChunkNew:
 			if(redo)
 				currentProject->Chunk->insert((uintptr_t)uptr->ptr);
 			else
 				currentProject->Chunk->removeAt((uintptr_t)uptr->ptr);
-			window->chunk_select->maximum(currentProject->Chunk->amt-1);
+			window->updateChunkSize();
 		break;
 		case uChunkAll:
 			{struct undoChunkAll*uc=(struct undoChunkAll*)uptr->ptr;
@@ -635,13 +647,20 @@ void UndoRedo(bool redo){
 				currentProject->Chunk->resizeAmt(uc->amt);
 				memcpy(currentProject->Chunk->chunks.data(),uc->ptr,uc->w*uc->h*uc->amt*sizeof(struct ChunkAttrs));
 			}
-			window->updateChunkSize();
-			window->chunk_select->maximum(currentProject->Chunk->amt-1);}
+			window->updateChunkSize();}
 		break;
 		case uChunk:
+			fl_alert("TODO");
+		break;
 		case uChunkDelete:
 			{struct undoChunk*uc=(struct undoChunk*)uptr->ptr;
-
+			if(redo)
+				currentProject->Chunk->removeAt(uc->id);
+			else{
+				currentProject->Chunk->insert(uc->id);
+				memcpy(currentProject->Chunk->chunks.data()+(currentProject->Chunk->wi*currentProject->Chunk->hi*uc->id),uc->ptr,currentProject->Chunk->wi*currentProject->Chunk->hi*sizeof(struct ChunkAttrs));
+			}
+			window->updateChunkSel();
 			}
 		break;
 		case uSpriteAppend:
@@ -658,6 +677,11 @@ void UndoRedo(bool redo){
 			else
 				currentProject->spritesC->del(currentProject->spritesC->amt-1);
 			window->updateSpriteSliders();
+		break;
+		case uSpriteWidth:
+			{struct undoSpriteVal*us=(struct undoSpriteVal*)uptr->ptr;
+			
+			}
 		break;
 	}
 	if(!redo)
@@ -890,8 +914,10 @@ void pushChunk(uint32_t id,bool rm){
 	uptr->ptr=malloc(sizeof(struct undoChunk));
 	memUsed+=sizeof(struct undoChunk);
 	struct undoChunk*uc=(struct undoChunk*)uptr->ptr;
+	uc->id=id;
 	uc->ptrnew=0;
 	uc->ptr=(struct ChunkAttrs*)malloc(currentProject->Chunk->wi*currentProject->Chunk->hi*sizeof(struct ChunkAttrs));
+	memcpy(uc->ptr,currentProject->Chunk->chunks.data()+(currentProject->Chunk->wi*currentProject->Chunk->hi*id),currentProject->Chunk->wi*currentProject->Chunk->hi*sizeof(struct ChunkAttrs));
 }
 void pushChunksAll(void){
 	pushEventPrepare();
@@ -917,6 +943,28 @@ void pushSpriteAppendgroup(void){
 	pushEventPrepare();
 	struct undoEvent*uptr=undoBuf+pos;
 	uptr->type=uSpriteAppendgroup;
+}
+void pushSpriteWidth(void){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uSpriteWidth;
+	uptr->ptr=malloc(sizeof(struct undoSpriteVal));
+	memUsed+=sizeof(struct undoSpriteVal);
+	struct undoSpriteVal*us=(struct undoSpriteVal*)uptr->ptr;
+	us->id=curSpritegroup;
+	us->subid=curSprite;
+	us->val=currentProject->spritesC->groups[us->id].list[us->subid].w;
+}
+void pushSpriteHeight(void){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uSpriteHeight;
+	uptr->ptr=malloc(sizeof(struct undoSpriteVal));
+	memUsed+=sizeof(struct undoSpriteVal);
+	struct undoSpriteVal*us=(struct undoSpriteVal*)uptr->ptr;
+	us->id=curSpritegroup;
+	us->subid=curSprite;
+	us->val=currentProject->spritesC->groups[us->id].list[us->subid].h;
 }
 static Fl_Window * win;
 static void closeHistory(Fl_Widget*,void*){
@@ -1016,6 +1064,12 @@ void historyWindow(Fl_Widget*,void*){
 			break;
 			case uSpriteAppendgroup:
 				strcpy(tmp,"Append sprite group");
+			break;
+			case uSpriteWidth:
+				strcpy(tmp,"Change sprite width");
+			break;
+			case uSpriteHeight:
+				strcpy(tmp,"Change sprite height");
 			break;
 			default:
 				snprintf(tmp,2048,"TODO unhandled %d",uptr->type);
