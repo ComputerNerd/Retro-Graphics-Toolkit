@@ -30,8 +30,8 @@ struct spriteGroup{
 };
 class sprites{
 	private:
-		void mappingItem(char*txt,gameType_t game);
-		void DplcItem(char*txt,uint32_t which,gameType_t game);
+		void mappingItem(void*in,uint32_t id,gameType_t game);
+		void DplcItem(void*in,uint32_t which,gameType_t game);
 	public:
 		uint32_t amt;//The amount of sprites
 		std::string name;

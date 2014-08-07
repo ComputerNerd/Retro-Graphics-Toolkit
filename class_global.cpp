@@ -91,7 +91,15 @@ static void intstr(int x,char*tmp){
 }
 void editor::updateSpriteSliders(uint32_t prj){
 	spriteselgroup->maximum(projects[prj]->spritesC->amt-1);
+	if(spriteselgroup->value()>projects[prj]->spritesC->amt-1){
+		spriteselgroup->value(projects[prj]->spritesC->amt-1);
+		curSpritegroup=projects[prj]->spritesC->amt-1;
+	}
 	spritesel->maximum(projects[prj]->spritesC->groups[curSpritegroup].list.size()-1);
+	if(spritesel->value()>projects[prj]->spritesC->groups[curSpritegroup].list.size()-1){
+		spritesel->value(projects[prj]->spritesC->groups[curSpritegroup].list.size()-1);
+		curSprite=projects[prj]->spritesC->groups[curSpritegroup].list.size()-1;
+	}
 	spritest->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].starttile);
 	spriteslat->value(projects[prj]->spritesC->groups[curSpritegroup].loadat[curSprite]);
 	spritesize[0]->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].w);

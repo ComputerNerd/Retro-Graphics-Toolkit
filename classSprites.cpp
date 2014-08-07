@@ -92,54 +92,96 @@ anotherTry:
 	}
 	return txt;
 }
-void sprites::mappingItem(char*txt,gameType_t game){
-	if(!txt)
+void sprites::mappingItem(void*in,uint32_t id,gameType_t game){
+	if(!in)
 		return;
-	uint32_t amtgroup;
-	if(txt=strstr(txt,"dc.b")){
-		txt+=strlen("dc.b");
-		while(isspace(*txt++));
-		--txt;
-		if(*txt=='$')
-			amtgroup=strtol(txt+1,&txt,16);
-		else
-			amtgroup=strtol(txt,&txt,0);
+	if(game==tSonic1){
+		char*txt=(char*)in;
+		if(txt=strstr(txt,"dc.b")){
+			uint32_t amtgroup;
+			txt+=strlen("dc.b");
+			while(isspace(*txt++));
+			--txt;
+			if(*txt=='$')
+				amtgroup=strtol(txt+1,&txt,16);
+			else
+				amtgroup=strtol(txt,&txt,0);
+			if(amtgroup)
+				setAmtingroup(id,amtgroup);
+			for(uint32_t i=0;i<amtgroup;++i){
+				uint8_t buf[5];
+				txt=readNbytesAsm(buf,txt,5);
+				//Now convert sprite format
+				/*From sonic retro wiki
+				 * Each mapping is 5 bytes long, taking the form TTTT TTTT 0000 WWHH PCCY XAAA AAAA AAAA LLLL LLLL.
+				 *
+				 * LLLL LLLL is the left co-ordinate of where the mapping appears.
+				 * TTTT TTTT is the top co-ordinate of where the mapping appears.
+				 * WW is the width of the mapping, in tiles minus one. So 0 means 8 pixels wide, 1 means 16 pixels wide, 2 means 24 pixels wide and 3 means 32 pixels wide.
+				 * HH is the height of the mapping, in the same format as the width.
+				 * P is the priority-flag. If P is set, the mapping will appear above everything else.
+				 * CC is the palette line.
+				 * X is the x-flip-flag. If X is set, the mapping will be flipped horizontally.
+				 * Y is the y-flip-flag. If Y is set, the mapping will be flipped vertically.
+				 * AAA AAAA AAAA is the tile index. */
+				int8_t*bufi=(int8_t*)buf;
+				groups[id].offy[i]=bufi[0];
+				groups[id].list[i].w=((buf[1]>>2)&3)+1;
+				groups[id].list[i].h=(buf[1]&3)+1;
+				groups[id].list[i].prio=(buf[2]&(1<<7))>>7;
+				groups[id].list[i].palrow=(buf[2]&(3<<5))>>5;
+				groups[id].list[i].vflip=(buf[2]&(1<<4))>>4;
+				groups[id].list[i].hflip=(buf[2]&(1<<3))>>3;
+				uint16_t tile=(buf[2]&7)<<8;
+				tile|=buf[3];
+				groups[id].list[i].starttile=tile;
+				groups[id].loadat[i]=tile;
+				groups[id].offx[i]=bufi[4];
+			}
+		}else
+			return;
+	}else{
+		/* From the sonic Retro Wiki
+		 * First word:
+		 * High byte is the relative signed top edge position of the sprite from the center of the object.
+		 * Low byte is the size of the sprite, in tiles minus one.
+		 * The upper four bits are ignored, the next two bits control the width and the lowest two bits control the height.
+		 * Thus sprites can be of any size from 1x1 tile to 4x4 tiles. For example, $01 is a 1x2 sprite, $02 is a 1x3 sprite, $04 is a 2x1 sprite, and so on. 
+		 * Second and third words:
+		 * The second word applies to one-player mode; the third applies to two-player mode.
+		 * The relevant word will be added to the object's VRAM offset and then used as the pattern index for that sprite.
+		 * Like all SEGA Genesis VDP pattern indices, it is a bitmask of the form PCCY XAAA AAAA AAAA.
+		 * P is the priority flag,
+		 * CC is the palette line to use,
+		 * X and Y indicate that the sprite should be flipped horizontally and vertically respectively and
+		 * AAA AAAA AAAA is the actual tile index, i.e. the VRAM offset of the pattern divided by $20 (or bit-shifted right by 5). 
+		 * Fourth word: This is the relative signed left edge position of the sprite from the center of the object. */
+		uint16_t*buf=(uint16_t*)in;
+		unsigned amtgroup=be16toh(*buf++);
 		if(amtgroup)
-			setAmtingroup(amt-1,amtgroup);
-		for(uint32_t i=0;i<amtgroup;++i){
-			uint8_t buf[5];
-			txt=readNbytesAsm(buf,txt,5);
-			//Now convert sprite format
-			/*From sonic retro wiki
-			* Each mapping is 5 bytes long, taking the form TTTT TTTT 0000 WWHH PCCY XAAA AAAA AAAA LLLL LLLL.
-			*
-			* LLLL LLLL is the left co-ordinate of where the mapping appears.
-			* TTTT TTTT is the top co-ordinate of where the mapping appears.
-			* WW is the width of the mapping, in tiles minus one. So 0 means 8 pixels wide, 1 means 16 pixels wide, 2 means 24 pixels wide and 3 means 32 pixels wide.
-			* HH is the height of the mapping, in the same format as the width.
-			* P is the priority-flag. If P is set, the mapping will appear above everything else.
-			* CC is the palette line.
-			* X is the x-flip-flag. If X is set, the mapping will be flipped horizontally.
-			* Y is the y-flip-flag. If Y is set, the mapping will be flipped vertically.
-			* AAA AAAA AAAA is the tile index. */
+			setAmtingroup(id,amtgroup);
+		for(unsigned i=0;i<amtgroup;++i){
 			int8_t*bufi=(int8_t*)buf;
-			groups[amt-1].offy[i]=bufi[0];
-			groups[amt-1].list[i].w=((buf[1]>>2)&3)+1;
-			groups[amt-1].list[i].h=(buf[1]&3)+1;
-			groups[amt-1].list[i].prio=(buf[2]&(1<<7))>>7;
-			groups[amt-1].list[i].palrow=(buf[2]&(3<<5))>>5;
-			groups[amt-1].list[i].vflip=(buf[2]&(1<<4))>>4;
-			groups[amt-1].list[i].hflip=(buf[2]&(1<<3))>>3;
-			uint16_t tile=(buf[2]&7)<<8;
-			tile|=buf[3];
-			groups[amt-1].list[i].starttile=tile;
-			groups[amt-1].loadat[i]=tile;
-			groups[amt-1].offx[i]=bufi[4];
+			groups[id].offy[i]=*bufi++;
+			uint8_t*bufu=(uint8_t*)bufi;
+			groups[id].list[i].w=((*bufu>>2)&3)+1;
+			groups[id].list[i].h=((*bufu++)&3)+1;
+			buf=(uint16_t*)bufu;
+			uint16_t tmp=be16toh(*buf++);
+			++buf;//Skip two player data
+			groups[id].list[i].starttile=tmp&2047;
+			groups[id].loadat[i]=tmp&2047;
+			groups[id].list[i].prio=(tmp>>15)&1;
+			groups[id].list[i].palrow=(tmp>>13)&3;
+			groups[id].list[i].vflip=(tmp>>12)&1;
+			groups[id].list[i].hflip=(tmp>>11)&1;
+			bufi=(int8_t*)buf;
+			groups[id].offx[i]=(bufi[0]<<8)|bufi[1];
+			++buf;
 		}
-	}else
-		return;
+	}
 }
-void sprites::DplcItem(char*txt,uint32_t which,gameType_t game){
+void sprites::DplcItem(void*in,uint32_t which,gameType_t game){
 	/*Sonic 1 format:
 	 * uint8_t amount
 	 * for each of amount
@@ -148,23 +190,53 @@ void sprites::DplcItem(char*txt,uint32_t which,gameType_t game){
 	 * uint8_t how many low byte
 	 * */
 	//Just ignore the the high nyble on the high byte to get start tile
-	unsigned amtd;
-	if(txt=strstr(txt,"dc.b")){
-		txt+=strlen("dc.b");
-		while(isspace(*txt++));
-		--txt;
-		if(*txt=='$')
-			amtd=strtol(txt+1,&txt,16);
-		else
-			amtd=strtol(txt,&txt,0);
-		for(uint32_t i=0;i<amtd;++i){
+	if(game==tSonic1){
+		char*txt=(char*)in;
+		unsigned amtd;
+		if(txt=strstr(txt,"dc.b")){
+			txt+=strlen("dc.b");
+			while(isspace(*txt++));
+			--txt;
+			if(*txt=='$')
+				amtd=strtol(txt+1,&txt,16);
+			else
+				amtd=strtol(txt,&txt,0);
+			for(uint32_t i=0;i<amtd;++i){
+				if(i>=groups[which].list.size())//Avoid writting to nonexistent sprites
+					break;
+				//Read the two bytes
+				uint8_t buf[2];
+				txt=readNbytesAsm(buf,txt,2);
+				uint16_t tile=((buf[0]&15)<<8)|buf[1];
+				groups[which].list[i].starttile=tile;
+			}
+		}
+	}else{
+		//The format is pretty much the same as sonic 1 except amount is now a word instead of a byte
+		uint16_t*buf=(uint16_t*)in;
+		unsigned amtd=be16toh(*buf++);
+		for(unsigned i=0;i<std::max(amtd,(unsigned)groups[which].list.size());++i){
 			if(i>=groups[which].list.size())//Avoid writting to nonexistent sprites
 				break;
-			//Read the two bytes
-			uint8_t buf[2];
-			txt=readNbytesAsm(buf,txt,2);
-			uint16_t tile=((buf[0]&15)<<8)|buf[1];
-			groups[which].list[i].starttile=tile;
+			if(i>=amtd){
+				//Resort to guessing	
+				//Try finding one with same width and height
+				unsigned j;
+				for(j=0;j<groups[which].list.size();++j){
+					if(i==j)
+						continue;
+					if(groups[which].list[i].w==groups[which].list[j].w){
+						if(groups[which].list[i].h==groups[which].list[j].h)
+							break;
+					}
+				}
+				if(j>=groups[which].list.size())
+					j=groups[which].list.size()-1;
+				groups[which].list[i].starttile=groups[which].list[j].starttile;
+			}else{
+				unsigned tile=be16toh(*buf++)&4095;
+				groups[which].list[i].starttile=tile;
+			}
 		}
 	}
 }
@@ -180,24 +252,34 @@ void sprites::importDPLC(gameType_t game){
 		rewind(fp);
 		char*buf=(char*)malloc(sz+1);
 		fread(buf,1,sz,fp);
-		buf[sz]=0;//Ensure that the C-string is null terminated
+		if(game==tSonic1)
+			buf[sz]=0;//Ensure that the C-string is null terminated
 		fclose(fp);
-		char*bufp=buf;
-		char*bufend=buf+sz-1;
 		uint32_t sp=0;
-		while(bufp<bufend){
-			if(bufp=strstr(bufp,"dc.w")){
-				bufp+=strlen("dc.w");
-				while(isspace(*bufp++));
-				--bufp;
-				char*minus=strstr(bufp,"-");
-				if(!minus)
+		if(game==tSonic1){
+			char*bufp=buf;
+			char*bufend=buf+sz-1;
+			while(bufp<bufend){
+				if(bufp=strstr(bufp,"dc.w")){
+					bufp+=strlen("dc.w");
+					while(isspace(*bufp++));
+					--bufp;
+					char*minus=strstr(bufp,"-");
+					if(!minus)
+						break;
+					*minus=0;
+					DplcItem(strstr(minus+1,bufp)+strlen(bufp),sp++,game);
+					bufp=minus+1;
+				}else
 					break;
-				*minus=0;
-				DplcItem(strstr(minus+1,bufp)+strlen(bufp),sp++,game);
-				bufp=minus+1;
-			}else
-				break;
+			}
+		}else{
+			uint16_t*ptr=(uint16_t*)buf;
+			unsigned amtd=be16toh(*ptr)/2;
+			for(uint32_t i=0;i<amtd;++i){
+				unsigned off=be16toh(ptr[i])/2;
+				DplcItem(ptr+off,i,game);
+			}
 		}
 		free(buf);
 	}
@@ -210,66 +292,88 @@ void sprites::importMapping(gameType_t game){
 			amtnew=amt;
 		else
 			amtnew=0;
-		FILE*fp=fopen(the_file.c_str(),"r");
+		FILE*fp;
+		if(game==tSonic1)
+			fp=fopen(the_file.c_str(),"r");
+		else
+			fp=fopen(the_file.c_str(),"rb");
 		fseek(fp,0,SEEK_END);
 		size_t sz=ftell(fp);
 		rewind(fp);
 		char*buf=(char*)malloc(sz+1);
 		fread(buf,1,sz,fp);
-		buf[sz]=0;//Ensure that the C-string is null terminated
+		if(game==tSonic1)
+			buf[sz]=0;//Ensure that the C-string is null terminated
 		fclose(fp);
 		char*bufp=buf;
 		char*bufend=buf+sz-1;
-		while(bufp<bufend){
-			if(bufp=strstr(bufp,"dc.w")){
-				bufp+=strlen("dc.w");
-				while(isspace(*bufp++));
-				--bufp;
-				char*minus=strstr(bufp,"-");
-				if(!minus)
-					break;
-				*minus=0;
-				++amtnew;
-				setAmt(amtnew);
-				mappingItem(strstr(minus+1,bufp)+strlen(bufp),game);
-				groups[amtnew-1].name.assign(bufp);
-				bufp=minus+1;
-				//The dc.w psuedo-op can contain multiple words
-				char*end=bufp;
-				while((isalnum(*end))||(*end=='_'))
-					++end;
-				char endold=*end;
-				*end=0;
-				name.assign(bufp);
-				*end=endold;
-				bufp=end;
-				while(1){
-					char*comma=strstr(bufp,",");
-					if(!comma)
+		if(game==tSonic1){
+			while(bufp<bufend){
+				if(bufp=strstr(bufp,"dc.w")){
+					bufp+=strlen("dc.w");
+					while(isspace(*bufp++));
+					--bufp;
+					char*minus=strstr(bufp,"-");
+					if(!minus)
 						break;
-					char*nl=strstr(bufp,"\n");//New Line
-					if(!nl)
-						break;
-					if(nl&&(comma<nl)){
-						//Label on same line found
-						bufp=comma+1;
-						while(isspace(*bufp++));
-						--bufp;
-						minus=strstr(bufp,"-");
-						*minus=0;
-						++amtnew;
-						setAmt(amtnew);
-						mappingItem(strstr(minus+1,bufp)+strlen(bufp),game);
-						groups[amtnew-1].name.assign(bufp);
-						bufp=minus+1;
-						comma=strstr(bufp,",");
-						if((!comma)||(comma>nl))//Is the next comma on a newline?
+					*minus=0;
+					++amtnew;
+					setAmt(amtnew);
+					mappingItem(strstr(minus+1,bufp)+strlen(bufp),amt-1,game);
+					groups[amtnew-1].name.assign(bufp);
+					bufp=minus+1;
+					//The dc.w psuedo-op can contain multiple words
+					char*end=bufp;
+					while((isalnum(*end))||(*end=='_'))
+						++end;
+					char endold=*end;
+					*end=0;
+					name.assign(bufp);
+					*end=endold;
+					bufp=end;
+					while(1){
+						char*comma=strstr(bufp,",");
+						if(!comma)
 							break;
-					}else
-						break;
-				}
-			}else
-				break;
+						char*nl=strstr(bufp,"\n");//New Line
+						if(!nl)
+							break;
+						if(nl&&(comma<nl)){
+							//Label on same line found
+							bufp=comma+1;
+							while(isspace(*bufp++));
+							--bufp;
+							minus=strstr(bufp,"-");
+							*minus=0;
+							++amtnew;
+							setAmt(amtnew);
+							mappingItem(strstr(minus+1,bufp)+strlen(bufp),amt-1,game);
+							groups[amtnew-1].name.assign(bufp);
+							bufp=minus+1;
+							comma=strstr(bufp,",");
+							if((!comma)||(comma>nl))//Is the next comma on a newline?
+								break;
+						}else
+							break;
+					}
+				}else
+					break;
+			}
+		}else{
+			//Sonic 2's mapping is usally stored in binary
+			name.assign(fl_filename_name(the_file.c_str()));
+			uint16_t*ptr=(uint16_t*)buf;
+			unsigned off=be16toh(*ptr)/2;
+			setAmt(off);//First pointer can be used to find amount just divide by two
+			for(uint32_t i=0;i<amt;++i){
+				unsigned off=be16toh(ptr[i])/2;
+				mappingItem(ptr+off,i,game);
+				groups[i].name.assign(fl_filename_name(the_file.c_str()));
+				char tmp[16];
+				snprintf(tmp,16,"_%u",i);
+				groups[i].name.append(tmp);
+			}
+
 		}
 		free(buf);
 	}
