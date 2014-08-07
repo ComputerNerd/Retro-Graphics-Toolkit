@@ -1,4 +1,8 @@
 Most recent changes are placed at the top
+20140806
+Added sprite value undoing and redoing
+Added sonic 2 mapping and PLC import
+Added Chunk delete undo
 
 20140805
 Fixed sonic 1 sprite mapping import.

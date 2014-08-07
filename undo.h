@@ -128,11 +128,11 @@ struct undoChunkAll{
 };
 struct undoSpriteVal{
 	uint32_t id,subid;
-	uint32_t val,valold;
+	uint32_t val,valnew;
 };
 struct undoSpriteValbool{
 	uint32_t id,subid;
-	bool val,valold;
+	bool val,valnew;
 };
 
 void clearUndoCB(Fl_Widget*,void*);
@@ -163,5 +163,13 @@ void pushSpriteAppend(uint32_t id);
 void pushSpriteAppendgroup(void);
 void pushSpriteWidth(void);
 void pushSpriteHeight(void);
+void pushSpritePalrow(void);
+void pushSpriteStarttile(void);
+void pushSpriteLoadat(void);
+void pushSpriteOffx(void);
+void pushSpriteOffy(void);
+void pushSpriteHflip(void);
+void pushSpriteVflip(void);
+void pushSpritePrio(void);
 void pushSwitchSys(void);
 void pushSwitchPrj(void);

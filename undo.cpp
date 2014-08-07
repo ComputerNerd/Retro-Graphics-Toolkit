@@ -216,9 +216,21 @@ static void cleanupEvent(uint32_t id){
 		break;
 		case uSpriteWidth:
 		case uSpriteHeight:
+		case uSpritePalrow:
+		case uSpritestarttile:
+		case uSpriteloadat:
+		case uSpriteoffx:
+		case uSpriteoffy:
 			{struct undoSpriteVal*uc=(struct undoSpriteVal*)uptr->ptr;
 			free(uptr->ptr);
 			memUsed-=sizeof(struct undoSpriteVal);}
+		break;
+		case uSpriteprio:
+		case uSpritehflip:
+		case uSpritevflip:
+			{struct undoSpriteValbool*uc=(struct undoSpriteValbool*)uptr->ptr;
+			free(uptr->ptr);
+			memUsed-=sizeof(struct undoSpriteValbool);}
 		break;
 	}
 }
@@ -321,6 +333,30 @@ static void cpyResizeGeneric(uint8_t*dst,uint8_t*src,uint32_t w,uint32_t h,uint3
 		}
 	}
 }
+#define mkSpritePop(which) {struct undoSpriteVal*us=(struct undoSpriteVal*)uptr->ptr; \
+	if(redo) \
+		currentProject->spritesC->groups[us->id].list[us->subid].which=us->valnew; \
+	else{ \
+		us->valnew=currentProject->spritesC->groups[us->id].list[us->subid].which; \
+		currentProject->spritesC->groups[us->id].list[us->subid].which=us->val; \
+	} \
+	window->updateSpriteSliders();}
+#define mkSpritePop2(which) {struct undoSpriteVal*us=(struct undoSpriteVal*)uptr->ptr; \
+	if(redo) \
+		currentProject->spritesC->groups[us->id].which[us->subid]=us->valnew; \
+	else{ \
+		us->valnew=currentProject->spritesC->groups[us->id].which[us->subid]; \
+		currentProject->spritesC->groups[us->id].which[us->subid]=us->val; \
+	} \
+	window->updateSpriteSliders();}
+#define mkSpritePopbool(which) {struct undoSpriteValbool*us=(struct undoSpriteValbool*)uptr->ptr; \
+	if(redo) \
+		currentProject->spritesC->groups[us->id].list[us->subid].which=us->valnew; \
+	else{ \
+		us->valnew=currentProject->spritesC->groups[us->id].list[us->subid].which; \
+		currentProject->spritesC->groups[us->id].list[us->subid].which=us->val; \
+	} \
+	window->updateSpriteSliders();}
 void UndoRedo(bool redo){
 	if((pos<0)&&(!redo))
 		return;
@@ -627,7 +663,7 @@ void UndoRedo(bool redo){
 				currentProject->Chunk->insert((uintptr_t)uptr->ptr);
 			else
 				currentProject->Chunk->removeAt((uintptr_t)uptr->ptr);
-			window->updateChunkSize();
+			window->updateChunkSel();
 		break;
 		case uChunkAll:
 			{struct undoChunkAll*uc=(struct undoChunkAll*)uptr->ptr;
@@ -679,9 +715,34 @@ void UndoRedo(bool redo){
 			window->updateSpriteSliders();
 		break;
 		case uSpriteWidth:
-			{struct undoSpriteVal*us=(struct undoSpriteVal*)uptr->ptr;
-			
-			}
+			mkSpritePop(w)
+		break;
+		case uSpriteHeight:
+			mkSpritePop(h)
+		break;
+		case uSpritePalrow:
+			mkSpritePop(palrow)
+		break;
+		case uSpritestarttile:
+			mkSpritePop(starttile)
+		break;
+		case uSpriteloadat:
+			mkSpritePop2(loadat)
+		break;
+		case uSpriteoffx:
+			mkSpritePop2(offx)
+		break;
+		case uSpriteoffy:
+			mkSpritePop2(offy)
+		break;
+		case uSpriteprio:
+			mkSpritePopbool(prio)
+		break;
+		case uSpritehflip:
+			mkSpritePopbool(hflip)
+		break;
+		case uSpritevflip:
+			mkSpritePopbool(vflip)
 		break;
 	}
 	if(!redo)
@@ -944,27 +1005,62 @@ void pushSpriteAppendgroup(void){
 	struct undoEvent*uptr=undoBuf+pos;
 	uptr->type=uSpriteAppendgroup;
 }
+#define mkSpritePush(thetype,which) pushEventPrepare(); \
+	struct undoEvent*uptr=undoBuf+pos; \
+	uptr->type=thetype; \
+	uptr->ptr=malloc(sizeof(struct undoSpriteVal)); \
+	memUsed+=sizeof(struct undoSpriteVal); \
+	struct undoSpriteVal*us=(struct undoSpriteVal*)uptr->ptr; \
+	us->id=curSpritegroup; \
+	us->subid=curSprite; \
+	us->val=currentProject->spritesC->groups[us->id].list[us->subid].which
 void pushSpriteWidth(void){
-	pushEventPrepare();
-	struct undoEvent*uptr=undoBuf+pos;
-	uptr->type=uSpriteWidth;
-	uptr->ptr=malloc(sizeof(struct undoSpriteVal));
-	memUsed+=sizeof(struct undoSpriteVal);
-	struct undoSpriteVal*us=(struct undoSpriteVal*)uptr->ptr;
-	us->id=curSpritegroup;
-	us->subid=curSprite;
-	us->val=currentProject->spritesC->groups[us->id].list[us->subid].w;
+	mkSpritePush(uSpriteWidth,w);
 }
 void pushSpriteHeight(void){
-	pushEventPrepare();
-	struct undoEvent*uptr=undoBuf+pos;
-	uptr->type=uSpriteHeight;
-	uptr->ptr=malloc(sizeof(struct undoSpriteVal));
-	memUsed+=sizeof(struct undoSpriteVal);
-	struct undoSpriteVal*us=(struct undoSpriteVal*)uptr->ptr;
-	us->id=curSpritegroup;
-	us->subid=curSprite;
-	us->val=currentProject->spritesC->groups[us->id].list[us->subid].h;
+	mkSpritePush(uSpriteHeight,h);
+}
+void pushSpritePalrow(void){
+	mkSpritePush(uSpritePalrow,palrow);
+}
+void pushSpriteStarttile(void){
+	mkSpritePush(uSpritestarttile,starttile);
+}
+#define mkSpritePush2(thetype,which) pushEventPrepare(); \
+	struct undoEvent*uptr=undoBuf+pos; \
+	uptr->type=thetype; \
+	uptr->ptr=malloc(sizeof(struct undoSpriteVal)); \
+	memUsed+=sizeof(struct undoSpriteVal); \
+	struct undoSpriteVal*us=(struct undoSpriteVal*)uptr->ptr; \
+	us->id=curSpritegroup; \
+	us->subid=curSprite; \
+	us->val=currentProject->spritesC->groups[us->id].which[us->subid]
+void pushSpriteLoadat(void){
+	mkSpritePush2(uSpriteloadat,loadat);
+}
+void pushSpriteOffx(void){
+	mkSpritePush2(uSpriteloadat,offx);
+}
+void pushSpriteOffy(void){
+	mkSpritePush2(uSpriteloadat,offy);
+}
+#define mkSpritePushbool(thetype,which) pushEventPrepare(); \
+	struct undoEvent*uptr=undoBuf+pos; \
+	uptr->type=thetype; \
+	uptr->ptr=malloc(sizeof(struct undoSpriteValbool)); \
+	memUsed+=sizeof(struct undoSpriteValbool); \
+	struct undoSpriteValbool*us=(struct undoSpriteValbool*)uptr->ptr; \
+	us->id=curSpritegroup; \
+	us->subid=curSprite; \
+	us->val=currentProject->spritesC->groups[us->id].list[us->subid].which
+void pushSpriteHflip(void){
+	mkSpritePushbool(uSpritehflip,hflip);
+}
+void pushSpriteVflip(void){
+	mkSpritePushbool(uSpritevflip,vflip);
+}
+void pushSpritePrio(void){
+	mkSpritePushbool(uSpriteprio,prio);
 }
 static Fl_Window * win;
 static void closeHistory(Fl_Widget*,void*){
@@ -1070,6 +1166,30 @@ void historyWindow(Fl_Widget*,void*){
 			break;
 			case uSpriteHeight:
 				strcpy(tmp,"Change sprite height");
+			break;
+			case uSpritePalrow:
+				strcpy(tmp,"Change sprite palette row");
+			break;
+			case uSpritestarttile:
+				strcpy(tmp,"Change sprite start tile");
+			break;
+			case uSpriteloadat:
+				strcpy(tmp,"Change sprite load at");
+			break;
+			case uSpriteoffx:
+				strcpy(tmp,"Change sprite offset x");
+			break;
+			case uSpriteoffy:
+				strcpy(tmp,"Change sprite offset y");
+			break;
+			case uSpriteprio:
+				strcpy(tmp,"Change sprite priority");
+			break;
+			case uSpritehflip:
+				strcpy(tmp,"Change sprite hflip");
+			break;
+			case uSpritevflip:
+				strcpy(tmp,"Change sprite vflip");
 			break;
 			default:
 				snprintf(tmp,2048,"TODO unhandled %d",uptr->type);
