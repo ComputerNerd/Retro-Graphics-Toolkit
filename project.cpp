@@ -175,11 +175,13 @@ void setHaveProject(uint32_t id,uint32_t mask,bool set){
 	if((mask&pjHaveSprites)&&(projects[id]->share[4]<0)){
 		if(set){
 			if(!(projects[id]->useMask&pjHaveSprites)){
+				window->spriteglobaltxt->show();
 				projects[id]->spritesC=new sprites;
 				projects[id]->useMask|=pjHaveSprites;
 			}
 		}else{
 			if(projects[id]->useMask&pjHaveSprites){
+				window->spriteglobaltxt->hide();
 				delete projects[id]->spritesC;
 				projects[id]->useMask&=~pjHaveSprites;
 			}

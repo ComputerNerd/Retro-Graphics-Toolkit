@@ -27,6 +27,7 @@ enum undoTypes_t{
 	uTilemapattr,
 	uTilemapEdit,
 	uTilemapResize,
+	uTilemapBlocksAmt,
 	uPalette,
 	uPaletteEntry,
 	uChunk,
@@ -150,6 +151,7 @@ void pushTilesAll(tileTypeMask_t type);
 void pushTileAppend(void);
 void pushTilemapEdit(uint32_t x,uint32_t y);
 void pushTilemapResize(uint32_t wnew,uint32_t hnew);
+void pushTilemapBlocksAmt(uint32_t amtnew);
 void pushTilemapAll(bool attrOnly);
 void pushPaletteEntry(uint32_t id);
 void pushPaletteAll(void);

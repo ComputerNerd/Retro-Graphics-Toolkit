@@ -26,10 +26,10 @@ palette_bar spritePal;
 uint8_t palette_bar::getEntry(void){
 	return box_sel+(theRow*perRow);
 }
-void palette_bar::more_init(uint8_t x,uint16_t offsetx,uint16_t offsety,bool altset,unsigned ln,bool small){
+void palette_bar::more_init(uint8_t x,uint16_t offsetx,uint16_t offsety,bool altset,unsigned ln,bool tiny){
 	alt=altset;
 	int sz;
-	if(small)
+	if(tiny)
 		sz=22;
 	else
 		sz=24;
@@ -49,7 +49,7 @@ void palette_bar::more_init(uint8_t x,uint16_t offsetx,uint16_t offsety,bool alt
 	offyy=offsety;
 	offx=offsetx;
 	offy=offsety;
-	if(small)
+	if(tiny)
 		offsety+=6;
 	else
 		offsety+=8;
@@ -60,7 +60,7 @@ void palette_bar::more_init(uint8_t x,uint16_t offsetx,uint16_t offsety,bool alt
 	pal_r->align(FL_ALIGN_LEFT);
 	pal_r->callback(update_palette, (void*)0);
 
-	if(small)
+	if(tiny)
 		offsety+=26;
 	else
 		offsety+=32;
@@ -73,7 +73,7 @@ void palette_bar::more_init(uint8_t x,uint16_t offsetx,uint16_t offsety,bool alt
 	pal_g->callback(update_palette, (void*)1);
 	pal_g->labelsize(13);
 
-	if(small)
+	if(tiny)
 		offsety+=26;
 	else
 		offsety+=32;

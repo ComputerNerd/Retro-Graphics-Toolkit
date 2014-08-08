@@ -23,6 +23,17 @@
 #include "global.h"
 const char*spriteDefName="DefaultGroupLabel";
 const char*spritesName="AllGroupsLabel";
+#if _WIN32
+static inline uint16_t swap_word(uint16_t w){
+	uint8_t a,b;
+	a=w&255;
+	b=w>>8;
+	return (a<<8)|b;
+}
+#define be16toh swap_word
+#define htobe16 swap_word
+#endif
+
 sprites::sprites(){
 	amt=1;
 	groups.push_back(spriteGroup());

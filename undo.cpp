@@ -146,6 +146,7 @@ static void cleanupEvent(uint32_t id){
 			memUsed-=sizeof(undoTilemap);}
 		break;
 		case uTilemapResize:
+		case uTilemapBlocksAmt:
 			{struct undoResize*um=(struct undoResize*)uptr->ptr;
 			if(um->ptr){
 				free(um->ptr);
@@ -538,7 +539,20 @@ void UndoRedo(bool redo){
 					cpyResizeGeneric((uint8_t*)um->ptr,currentProject->tileMapC->tileMapDat,um->w,um->h,um->wnew,um->hnew,4,1,true);
 			}
 			window->updateMapWH();}
-
+		break;
+		case uTilemapBlocksAmt:
+			{struct undoResize*um=(struct undoResize*)uptr->ptr;
+			if(redo){
+				currentProject->tileMapC->blockAmt(um->hnew/currentProject->tileMapC->mapSizeH);
+				char tmp[16];
+				snprintf(tmp,16,"%u",um->hnew/currentProject->tileMapC->mapSizeH);
+			}else{
+				currentProject->tileMapC->blockAmt(um->h/currentProject->tileMapC->mapSizeH);
+				if(um->ptr)
+					cpyResizeGeneric((uint8_t*)um->ptr,currentProject->tileMapC->tileMapDat,um->w,um->h,um->wnew,um->hnew,4,1,true);
+				char tmp[16];
+				snprintf(tmp,16,"%u",um->h/currentProject->tileMapC->mapSizeH);
+			}}
 		break;
 		case uPalette:
 			{struct undoPalette*up=(struct undoPalette*)uptr->ptr;
@@ -898,7 +912,10 @@ static void pushResize(uint32_t wnew,uint32_t hnew,uint32_t w,uint32_t h,uint8_t
 		um->ptr=0;
 }
 void pushTilemapResize(uint32_t wnew,uint32_t hnew){
-	pushResize(wnew,hnew,currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeHA,currentProject->tileMapC->tileMapDat,uTilemapResize,4,1);
+	pushResize(wnew,hnew,currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeHA,currentProject->tileMapC->tileMapDat,uTilemapResize,TileMapSizePerEntry,1);
+}
+void pushTilemapBlocksAmt(uint32_t amtnew){
+	pushResize(currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeH*amtnew,currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeHA,currentProject->tileMapC->tileMapDat,uTilemapBlocksAmt,TileMapSizePerEntry,1);
 }
 void pushPaletteAll(void){
 	pushEventPrepare();
@@ -1122,6 +1139,10 @@ void historyWindow(Fl_Widget*,void*){
 			case uTilemapResize:
 				{struct undoResize*um=(struct undoResize*)uptr->ptr;
 				snprintf(tmp,2048,"Resize from w: %d h: %d to w: %d h: %d",um->w,um->h,um->wnew,um->hnew);}	
+			break;
+			case uTilemapBlocksAmt:
+				{struct undoResize*um=(struct undoResize*)uptr->ptr;
+				snprintf(tmp,2048,"Change blocks amount from %u",um->h/currentProject->tileMapC->mapSizeH);}	
 			break;
 			case uTilemapEdit:
 				{struct undoTilemapEdit*um=(struct undoTilemapEdit*)uptr->ptr;

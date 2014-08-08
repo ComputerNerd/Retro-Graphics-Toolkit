@@ -727,9 +727,10 @@ void editor::_editor(){
 				shareWith[x]->align(FL_ALIGN_TOP);
 			}
 			
-			spriteglobaltxt = new Fl_Input(tile_place_buttons_x_off+616,56,168,24,"Global sprites name");
+			spriteglobaltxt = new Fl_Input(tile_place_buttons_x_off+616,72,168,24,"Global sprites name");
 			spriteglobaltxt->value(spritesName);
 			spriteglobaltxt->callback(assignSpriteglobalnameCB);
+			spriteglobaltxt->align(FL_ALIGN_TOP);
 
 			TxtBufProject = new Fl_Text_Buffer;
 			TxtEditProject = new Fl_Text_Editor(8, 184, 640, 370,"Description/Notes");

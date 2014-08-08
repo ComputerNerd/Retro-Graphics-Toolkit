@@ -50,6 +50,7 @@ void resizeBlocksCB(Fl_Widget*o,void*){
 void blocksAmtCB(Fl_Widget*o,void*){
 	Fl_Int_Input*i=(Fl_Int_Input*)o;
 	int amtTmp=SafeTxtInput(i);
+	pushTilemapBlocksAmt(amtTmp);
 	currentProject->tileMapC->blockAmt(amtTmp);
 	window->redraw();
 }
