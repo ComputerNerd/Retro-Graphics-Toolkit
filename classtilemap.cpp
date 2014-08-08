@@ -40,13 +40,15 @@ tileMap::tileMap(const tileMap& other){
 	isBlock=other.isBlock;
 	if(isBlock){
 		amt=other.amt;
-		tileMapDat=(uint8_t*)malloc(mapSizeW*mapSizeH*4*amt);
-		memcpy(tileMapDat,other.tileMapDat,mapSizeW*mapSizeH*4*amt);
-		printf("Copied map of size %d\n",mapSizeW*mapSizeH*4*amt);
+		mapSizeHA=mapSizeH*amt;
+		tileMapDat=(uint8_t*)malloc(mapSizeW*mapSizeHA*TileMapSizePerEntry);
+		memcpy(tileMapDat,other.tileMapDat,mapSizeW*mapSizeHA*TileMapSizePerEntry);
+		printf("Copied map of size %d\n",mapSizeW*mapSizeHA*TileMapSizePerEntry);
 	}else{
-		tileMapDat=(uint8_t*)malloc(mapSizeW*mapSizeH*4);
-		memcpy(tileMapDat,other.tileMapDat,mapSizeW*mapSizeH*4);
-		printf("Copied map of size %d\n",mapSizeW*mapSizeH*4);
+		amt=1;
+		tileMapDat=(uint8_t*)malloc(mapSizeW*mapSizeH*TileMapSizePerEntry);
+		memcpy(tileMapDat,other.tileMapDat,mapSizeW*mapSizeH*TileMapSizePerEntry);
+		printf("Copied map of size %d\n",mapSizeW*mapSizeH*TileMapSizePerEntry);
 	}
 }
 tileMap::~tileMap(){
@@ -77,16 +79,23 @@ void tileMap::resizeBlocks(uint32_t wn,uint32_t hn){
 		mapSizeW=wn;
 		mapSizeH=hn;
 		mapSizeHA=mapSizeH*amt;
-		window->map_amt->value(amt);
+		char tmp[16];
+		snprintf(tmp,16,"%u",amt);
+		window->map_amt->value(tmp);
 	}else{
 		window->updateMapWH();
 	}
 	ScrollUpdate();
 }
 void tileMap::blockAmt(uint32_t newAmt){
+	if(newAmt==amt)
+		return;
+	tileMapDat=(uint8_t*)realloc(tileMapDat,TileMapSizePerEntry*mapSizeW*mapSizeH*newAmt);
+	if(newAmt>amt)
+		memset(tileMapDat+(amt*TileMapSizePerEntry*mapSizeW*mapSizeH),0,(newAmt-amt)*mapSizeW*mapSizeH*TileMapSizePerEntry);
 	amt=newAmt;
-	resize_tile_map(mapSizeW,mapSizeH*amt);
 	mapSizeHA=mapSizeH*amt;
+	ScrollUpdate();
 }
 const char * MapWidthTxt="Map width";
 const char * MapHeightTxt="Map height";
@@ -156,7 +165,9 @@ void tileMap::toggleBlocks(bool set){
 		window->map_h->label("Block height");
 		window->map_h->callback(resizeBlocksCB);
 		window->map_amt->show();
-		window->map_amt->value(amt);
+		char tmp[16];
+		snprintf(tmp,16,"%u",amt);
+		window->map_amt->value(tmp);
 	}else{
 		window->map_w->callback(callback_resize_map);
 		window->map_w->label(MapWidthTxt);

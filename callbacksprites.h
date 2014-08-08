@@ -16,6 +16,8 @@
 */
 extern uint32_t curSprite;
 extern uint32_t curSpritegroup;
+void assignSpriteglobalnameCB(Fl_Widget*o,void*);
+void exportSonicDPLCCB(Fl_Widget*o,void*t);
 void alignSpriteCB(Fl_Widget*,void*t);
 void importSonicDPLCCB(Fl_Widget*o,void*t);
 void spritePrioCB(Fl_Widget*,void*);

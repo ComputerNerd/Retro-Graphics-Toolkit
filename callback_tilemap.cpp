@@ -48,8 +48,9 @@ void resizeBlocksCB(Fl_Widget*o,void*){
 	window->redraw();
 }
 void blocksAmtCB(Fl_Widget*o,void*){
-	Fl_Slider*s=(Fl_Slider*)o;
-	currentProject->tileMapC->blockAmt(s->value());
+	Fl_Int_Input*i=(Fl_Int_Input*)o;
+	int amtTmp=SafeTxtInput(i);
+	currentProject->tileMapC->blockAmt(amtTmp);
 	window->redraw();
 }
 void toggleBlocksCB(Fl_Widget*o,void*){
@@ -248,9 +249,9 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		if (hr)
 			++h8;
 		if((currentProject->gameSystem==NES)&&(currentProject->subSystem=NES2x2)){
-			if((wr-8)>0)
+			if(w8&1)
 				++w8;
-			if((int)(hr-8)>0)
+			if(h8&1)
 				++h8;
 		}
 		if(over){

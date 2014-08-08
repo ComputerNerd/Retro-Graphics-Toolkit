@@ -1,5 +1,13 @@
 Most recent changes are placed at the top
+
+20140807
+Added sonic 2 mapping and dpcl export also improved sonic 1 dpcl export.
+Testing with sonic 2 sonic mapping and dpcl both resulted in a bit per bit match.
+
+Fixed crash when trying to switch project that does not have all data
+
 20140806
+Added align feature
 Added sprite value undoing and redoing
 Added sonic 2 mapping and PLC import
 Added Chunk delete undo

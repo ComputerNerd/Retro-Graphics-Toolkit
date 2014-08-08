@@ -94,6 +94,8 @@ static const Fl_Menu_Item menuEditor[]={
 			{"Import sonic 2 DPLC",0,importSonicDPLCCB,(void*)tSonic2},
 			{"Export sonic 1 mapping",0,exportSonicMappingCB,(void*)tSonic1},
 			{"Export sonic 2 mapping",0,exportSonicMappingCB,(void*)tSonic2},
+			{"Export sonic 1 DPLC",0,exportSonicDPLCCB,(void*)tSonic1},
+			{"Export sonic 2 DPLC",0,exportSonicDPLCCB,(void*)tSonic2},
 			{0},
 		{0},
 	{"Palette Actions",0, 0, 0, FL_SUBMENU},
@@ -165,6 +167,7 @@ extern const char * MapWidthTxt;
 extern const char * MapHeightTxt;
 static const char * TooltipZoom="By changing this slider you are changing the magnification of the tile for example if this slider was set to 10 that would mean that the tile is magnified by a factor of 10";
 extern const char*spriteDefName;
+extern const char*spritesName;
 void editor::_editor(){
 	//create the window
 	menu = new Fl_Menu_Bar(0,0,800,24);//Create menubar, items..
@@ -391,11 +394,8 @@ void editor::_editor(){
 			map_h->value("2");
 			map_h->align(FL_ALIGN_LEFT);
 			map_h->callback(callback_resize_map);
-			map_amt = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+136,312,24,"Blocks");
-			map_amt->minimum(1);
-			map_amt->maximum(8192);
-			map_amt->step(1);
-			map_amt->value(1);
+			map_amt = new Fl_Int_Input(480,default_palette_bar_offset_y+136,312,24,"Blocks");
+			map_amt->value("1");
 			map_amt->align(FL_ALIGN_LEFT);
 			map_amt->callback(blocksAmtCB);
 			map_amt->hide();
@@ -582,7 +582,7 @@ void editor::_editor(){
 			spritest->callback(setvalueSpriteCB,0);
 			spritest->labelsize(12);
 
-			spriteslat=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,292,168,22,"Loaded at:");
+			spriteslat=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,292,168,22,"Mapping tile");
 			spriteslat->step(1);
 			spriteslat->maximum(0);
 			spriteslat->align(FL_ALIGN_TOP);
@@ -654,18 +654,21 @@ void editor::_editor(){
 			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off+72, 522, 96, 28, "Delete group");
 			o->callback(delSpriteCB,(void*)1);
 			o->labelsize(12);}
-			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off, 552, 32, 28, "Left");
-			o->labelsize(12);
-			o->callback(alignSpriteCB,(void*)0);}
-			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off+34, 552, 40, 28, "Right");
-			o->labelsize(12);
-			o->callback(alignSpriteCB,(void*)1);}
-			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off+78, 552, 28, 28, "Top");
-			o->labelsize(12);
-			o->callback(alignSpriteCB,(void*)2);}
-			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off+112, 552, 48, 28, "Bottom");
-			o->labelsize(12);
-			o->callback(alignSpriteCB,(void*)3);}
+			spritealign[0] = new Fl_Button(tile_place_buttons_x_off, 552, 32, 28, "Left");
+			spritealign[0]->labelsize(12);
+			spritealign[0]->callback(alignSpriteCB,(void*)0);
+
+			spritealign[1] = new Fl_Button(tile_place_buttons_x_off+34, 552, 40, 28, "Right");
+			spritealign[1]->labelsize(12);
+			spritealign[1]->callback(alignSpriteCB,(void*)1);
+
+			spritealign[2] = new Fl_Button(tile_place_buttons_x_off+78, 552, 28, 28, "Top");
+			spritealign[2]->labelsize(12);
+			spritealign[2]->callback(alignSpriteCB,(void*)2);
+
+			spritealign[3] = new Fl_Button(tile_place_buttons_x_off+112, 552, 48, 28, "Bottom");
+			spritealign[3]->labelsize(12);
+			spritealign[3]->callback(alignSpriteCB,(void*)3);
 			TabsMain[spriteEditor]->end();
 		}
 		{TabsMain[settingsTab] = new Fl_Group(rx,ry,rw,rh,"Settings/projects");
@@ -724,6 +727,10 @@ void editor::_editor(){
 				shareWith[x]->align(FL_ALIGN_TOP);
 			}
 			
+			spriteglobaltxt = new Fl_Input(tile_place_buttons_x_off+616,56,168,24,"Global sprites name");
+			spriteglobaltxt->value(spritesName);
+			spriteglobaltxt->callback(assignSpriteglobalnameCB);
+
 			TxtBufProject = new Fl_Text_Buffer;
 			TxtEditProject = new Fl_Text_Editor(8, 184, 640, 370,"Description/Notes");
 			TxtEditProject->buffer(TxtBufProject);

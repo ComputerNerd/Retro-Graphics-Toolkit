@@ -27,7 +27,7 @@ static const char * defaultName="Add a description here.";
 uint32_t curProjectID;
 bool containsDataProj(uint32_t prj,uint32_t mask){
 	unsigned off=__builtin_ctz(mask);
-	return ((projects[prj]->useMask&pjHavePal)||(projects[prj]->share[off]>0))?true:false;
+	return ((projects[prj]->useMask&mask)||(projects[prj]->share[off]>0))?true:false;
 }
 bool containsDataCurProj(uint32_t mask){
 	return containsDataProj(curProjectID,mask);
@@ -96,9 +96,33 @@ void setHaveProject(uint32_t id,uint32_t mask,bool set){
 		if(set){
 			if(!(projects[id]->useMask&pjHavePal)){
 				projects[id]->rgbPal=(uint8_t*)calloc(1,256);
-				projects[id]->palDat=(uint8_t*)calloc(1,128);
 				projects[id]->palType=(uint8_t*)calloc(1,64);
 				projects[id]->useMask|=pjHavePal;
+				switch(projects[id]->gameSystem){
+					case sega_genesis:
+						projects[id]->palDat=(uint8_t*)calloc(1,128);
+						set_palette_type(0);
+					break;
+					case NES:
+						projects[id]->palDat=(uint8_t*)malloc(128);
+						memset(projects[id]->palDat,15,32);
+						updateNesTab(0,false);
+						updateNesTab(0,true);
+						for(int temp_entry=0;temp_entry<32;++temp_entry){
+							uint32_t rgb_out;
+							rgb_out=MakeRGBcolor(projects[id]->palDat[temp_entry]);
+							projects[id]->rgbPal[temp_entry*3+2]=rgb_out&255;//blue
+							projects[id]->rgbPal[temp_entry*3+1]=(rgb_out>>8)&255;//green
+							projects[id]->rgbPal[temp_entry*3]=(rgb_out>>16)&255;//red
+						}
+					break;
+				}
+				palEdit.changeSystem();
+				tileEdit_pal.changeSystem();
+				tileMap_pal.changeSystem();
+				spritePal.changeSystem();
+				if(projects[id]->gameSystem==NES)
+					update_emphesis(0,0);
 			}
 		}else{
 			if(projects[id]->useMask&pjHavePal){
@@ -145,6 +169,19 @@ void setHaveProject(uint32_t id,uint32_t mask,bool set){
 			if(projects[id]->useMask&pjHaveChunks){
 				delete projects[id]->Chunk;
 				projects[id]->useMask&=~pjHaveChunks;
+			}
+		}
+	}
+	if((mask&pjHaveSprites)&&(projects[id]->share[4]<0)){
+		if(set){
+			if(!(projects[id]->useMask&pjHaveSprites)){
+				projects[id]->spritesC=new sprites;
+				projects[id]->useMask|=pjHaveSprites;
+			}
+		}else{
+			if(projects[id]->useMask&pjHaveSprites){
+				delete projects[id]->spritesC;
+				projects[id]->useMask&=~pjHaveSprites;
 			}
 		}
 	}
@@ -291,40 +328,51 @@ void switchProject(uint32_t id){
 	window->GameSys[projects[id]->gameSystem]->setonly();
 	switch(projects[id]->gameSystem){
 		case sega_genesis:
-			projects[id]->tileC->tileSize=32;
+			if(containsDataProj(id,pjHaveTiles))
+				projects[id]->tileC->tileSize=32;
 			shadow_highlight_switch->show();
-			palEdit.changeSystem();
-			tileEdit_pal.changeSystem();
-			tileMap_pal.changeSystem();
-			spritePal.changeSystem();
-			set_palette_type(0);
+			if(containsDataProj(id,pjHavePal)){
+				palEdit.changeSystem();
+				tileEdit_pal.changeSystem();
+				tileMap_pal.changeSystem();
+				spritePal.changeSystem();
+				set_palette_type(0);
+			}
 		break;
 		case NES:
-			projects[id]->tileC->tileSize=16;
+			if(containsDataProj(id,pjHaveTiles))
+				projects[id]->tileC->tileSize=16;
 			shadow_highlight_switch->hide();
-			updateNesTab(0,false);
-			updateNesTab(0,true);
-			for(int temp_entry=0;temp_entry<64;++temp_entry){
-				uint32_t rgb_out;
-				uint8_t pal;
-				pal=projects[id]->palDat[temp_entry];
-				rgb_out=MakeRGBcolor(pal);
-				projects[id]->rgbPal[temp_entry*3+2]=rgb_out&255;//blue
-				projects[id]->rgbPal[temp_entry*3+1]=(rgb_out>>8)&255;//green
-				projects[id]->rgbPal[temp_entry*3]=(rgb_out>>16)&255;//red
+			if(containsDataProj(id,pjHavePal)){
+				updateNesTab(0,false);
+				updateNesTab(0,true);
+				for(int temp_entry=0;temp_entry<64;++temp_entry){
+					uint32_t rgb_out;
+					uint8_t pal;
+					pal=projects[id]->palDat[temp_entry];
+					rgb_out=MakeRGBcolor(pal);
+					projects[id]->rgbPal[temp_entry*3+2]=rgb_out&255;//blue
+					projects[id]->rgbPal[temp_entry*3+1]=(rgb_out>>8)&255;//green
+					projects[id]->rgbPal[temp_entry*3]=(rgb_out>>16)&255;//red
+				}
+				palEdit.changeSystem();
+				tileEdit_pal.changeSystem();
+				tileMap_pal.changeSystem();
+				spritePal.changeSystem();
+				update_emphesis(0,0);
 			}
-			palEdit.changeSystem();
-			tileEdit_pal.changeSystem();
-			tileMap_pal.changeSystem();
-			spritePal.changeSystem();
-			update_emphesis(0,0);
 			window->subSysC->value(currentProject->subSystem&1);
 		break;
 	}
 	//Make sure sliders have correct values
-	window->updateMapWH(projects[id]->tileMapC->mapSizeW,projects[id]->tileMapC->mapSizeH);
-	window->map_amt->value(projects[id]->tileMapC->amt);
-	updateTileSelectAmt(projects[id]->tileC->amt);
+	if(containsDataProj(id,pjHaveMap)){
+		window->updateMapWH(projects[id]->tileMapC->mapSizeW,projects[id]->tileMapC->mapSizeH);
+		char tmp[16];
+		snprintf(tmp,16,"%u",projects[id]->tileMapC->amt);
+		window->map_amt->value(tmp);
+	}
+	if(containsDataProj(id,pjHaveTiles))
+		updateTileSelectAmt(projects[id]->tileC->amt);
 	for(int x=0;x<shareAmtPj;++x){
 		window->sharePrj[x]->value(projects[id]->share[x]<0?0:1);
 		window->havePrj[x]->value(projects[id]->useMask>>x&1);
@@ -346,17 +394,22 @@ void switchProject(uint32_t id){
 			}
 		}
 	}
-	window->BlocksCBtn->value(projects[id]->tileMapC->isBlock?1:0);
-	window->chunk_select->maximum(projects[id]->Chunk->amt-1);
-	window->updateChunkSize(projects[id]->Chunk->wi,projects[id]->Chunk->hi);
-	projects[id]->tileMapC->toggleBlocks(projects[id]->tileMapC->isBlock);
-	//projects[id]->tileMapC->ScrollUpdate();//toggleBlocks calls this funciton
-	window->updateBlockTilesChunk(id);
+	if(containsDataProj(id,pjHaveMap))
+		window->BlocksCBtn->value(projects[id]->tileMapC->isBlock?1:0);
+	if(containsDataProj(id,pjHaveChunks)){
+		window->chunk_select->maximum(projects[id]->Chunk->amt-1);
+		window->updateChunkSize(projects[id]->Chunk->wi,projects[id]->Chunk->hi);
+	}
+	if(containsDataProj(id,pjHaveMap))
+		projects[id]->tileMapC->toggleBlocks(projects[id]->tileMapC->isBlock);
+	if(containsDataProj(id,pjHaveChunks))
+		window->updateBlockTilesChunk(id);
 	if(projects[id]->gameSystem==NES)
 		window->subSysC->show();
 	else
 		window->subSysC->hide();
-	window->updateSpriteSliders(id);
+	if(containsDataProj(id,pjHaveSprites))
+		window->updateSpriteSliders(id);
 	window->redraw();
 }
 static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t version=currentProjectVersionNUM){
@@ -372,6 +425,7 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 	}
 	char d=fgetc(fi);
 	if(d){
+		projects[id]->Name.clear();
 		do{
 			projects[id]->Name.push_back(d);
 		}while(d=fgetc(fi));

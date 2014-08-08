@@ -48,7 +48,7 @@ class editor : public Fl_Double_Window{
 	Fl_Int_Input* map_w;
 	Fl_Int_Input* map_h;
 	Fl_Int_Input* chunksize[2];//chunk width,height
-	Fl_Slider* map_amt;
+	Fl_Int_Input* map_amt;
 	Fl_Slider* rgb_red;
 	Fl_Slider* rgb_green;
 	Fl_Slider* rgb_blue;
@@ -71,6 +71,8 @@ class editor : public Fl_Double_Window{
 	Fl_Slider* spritepalrow;//selects palette row
 	Fl_Slider* spritezoom;
 	Fl_Input* spritegrouptxt;
+	Fl_Button*spritealign[4];
+	Fl_Input* spriteglobaltxt;
 	Fl_Slider* projectSelect;
 	Fl_Tabs* the_tabs;
 	Fl_Round_Button* palType[9];

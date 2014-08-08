@@ -32,6 +32,8 @@ class sprites{
 	private:
 		void mappingItem(void*in,uint32_t id,gameType_t game);
 		void DplcItem(void*in,uint32_t which,gameType_t game);
+		bool alreadyLoaded(uint32_t id,uint32_t subid);
+		bool checkDupdplc(uint32_t id,uint32_t&which);
 	public:
 		uint32_t amt;//The amount of sprites
 		std::string name;
@@ -39,6 +41,7 @@ class sprites{
 		sprites();
 		sprites(const sprites& other);
 		~sprites();
+		void exportDPLC(gameType_t game);
 		void importDPLC(gameType_t game);
 		void exportMapping(gameType_t game);
 		void importMapping(gameType_t game);

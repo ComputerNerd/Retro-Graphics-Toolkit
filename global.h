@@ -35,7 +35,7 @@ uint32_t cal_offset_truecolor(uint16_t x,uint16_t y,uint16_t rgb,uint32_t tile);
 uint8_t find_near_color_from_row(uint8_t row,uint8_t r,uint8_t g,uint8_t b);
 uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b);
 //map related functions
-uint32_t MakeRGBcolor(uint32_t pixel,float saturation = 1.1f, float hue_tweak = 0.0f,float contrast = 1.0f, float brightness = 1.0f,float gamma = 2.2f);
+uint32_t MakeRGBcolor(uint32_t pixel,float saturation = 1.2f, float hue_tweak = 0.0f,float contrast = 1.0f, float brightness = 1.0f,float gamma = 2.2f);
 //uint32_t MakeRGBcolor(uint32_t pixel,float saturation, float hue_tweak,float contrast, float brightness ,float gamma );
 //varibles and defines
 extern Fl_Group * shadow_highlight_switch;

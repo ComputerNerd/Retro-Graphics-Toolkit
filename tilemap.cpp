@@ -117,12 +117,15 @@ static void addHist(uint32_t cur_tile,int type,uint32_t*hist,unsigned sz){
 				++hist[unsigned(s*l*szz)];
 			break;
 			case 6:
+				szz/=2.0;
 				++hist[unsigned((h+s)*szz)];
 			break;
 			case 7:
+				szz/=2.0;
 				++hist[unsigned((h+l)*szz)];
 			break;
 			case 8:
+				szz/=2.0;
 				++hist[unsigned((s+l)*szz)];
 			break;
 		}
@@ -195,18 +198,18 @@ void tileMap::pickRow(uint8_t amount){
 		else
 			sz=1000;
 		hist=(uint32_t*)calloc(sz,sizeof(uint32_t));
-		for (y=0;y<mapSizeHA;y+=addBy){
-			for (x=0;x<mapSizeW;x+=addBy){
-				if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
-					addHist(get_tile(x,y),type,hist,sz);
-					addHist(get_tile(x+1,y),type,hist,sz);
-					addHist(get_tile(x,y+1),type,hist,sz);
-					addHist(get_tile(x+1,y+1),type,hist,sz);
-				}else
-					addHist(get_tile(x,y),type,hist,sz);
-			}
-		}
 		if(stretch){
+			for (y=0;y<mapSizeHA;y+=addBy){
+				for (x=0;x<mapSizeW;x+=addBy){
+					if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
+						addHist(get_tile(x,y),type,hist,sz);
+						addHist(get_tile(x+1,y),type,hist,sz);
+						addHist(get_tile(x,y+1),type,hist,sz);
+						addHist(get_tile(x+1,y+1),type,hist,sz);
+					}else
+						addHist(get_tile(x,y),type,hist,sz);
+				}
+			}
 			uint32_t*histp=hist;
 			while(!(*histp++));//Atleast one entry in the array will contain a nonzero value
 			minh=(histp-hist);

@@ -97,30 +97,65 @@ static void intstr(int x,char*tmp){
 	snprintf(tmp,16,"%d",x);
 }
 void editor::updateSpriteSliders(uint32_t prj){
+	bool haveSprite=(projects[prj]->spritesC->groups[curSpritegroup].list.size())?true:false;
 	spriteselgroup->maximum(projects[prj]->spritesC->amt-1);
 	if(spriteselgroup->value()>projects[prj]->spritesC->amt-1){
 		spriteselgroup->value(projects[prj]->spritesC->amt-1);
 		curSpritegroup=projects[prj]->spritesC->amt-1;
 	}
-	spritesel->maximum(projects[prj]->spritesC->groups[curSpritegroup].list.size()-1);
-	if(spritesel->value()>projects[prj]->spritesC->groups[curSpritegroup].list.size()-1){
-		spritesel->value(projects[prj]->spritesC->groups[curSpritegroup].list.size()-1);
-		curSprite=projects[prj]->spritesC->groups[curSpritegroup].list.size()-1;
+	if(haveSprite){
+		if(!spritesel->visible()){
+			spritesel->show();
+			spritest->show();
+			spriteslat->show();
+			spritesize[0]->show();
+			spritesize[1]->show();
+			spritepalrow->show();
+			spritesoff[0]->show();
+			spritesoff[1]->show();
+			spritehflip->show();
+			spritevflip->show();
+			spriteprio->show();
+			for(unsigned i=0;i<4;++i)
+				spritealign[i]->show();
+		}
+		spritesel->maximum(projects[prj]->spritesC->groups[curSpritegroup].list.size()-1);
+		if(spritesel->value()>projects[prj]->spritesC->groups[curSpritegroup].list.size()-1){
+			spritesel->value(projects[prj]->spritesC->groups[curSpritegroup].list.size()-1);
+			curSprite=projects[prj]->spritesC->groups[curSpritegroup].list.size()-1;
+		}
+		spritest->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].starttile);
+		spriteslat->value(projects[prj]->spritesC->groups[curSpritegroup].loadat[curSprite]);
+		spritesize[0]->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].w);
+		spritesize[1]->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].h);
+		spritepalrow->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].palrow);
+		char tmp[16];
+		intstr(projects[prj]->spritesC->groups[curSpritegroup].offx[curSprite],tmp);
+		spritesoff[0]->value(tmp);
+		intstr(projects[prj]->spritesC->groups[curSpritegroup].offy[curSprite],tmp);
+		spritesoff[1]->value(tmp);
+		spritehflip->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].hflip);
+		spritevflip->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].vflip);
+		spriteprio->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].prio);
+	}else{
+		curSprite=0;
+		if(spritesel->visible()){
+			spritesel->hide();
+			spritest->hide();
+			spriteslat->hide();
+			spritesize[0]->hide();
+			spritesize[1]->hide();
+			spritepalrow->hide();
+			spritesoff[0]->hide();
+			spritesoff[1]->hide();
+			spritehflip->hide();
+			spritevflip->hide();
+			spriteprio->hide();
+			for(unsigned i=0;i<4;++i)
+				spritealign[i]->hide();
+		}
 	}
-	spritest->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].starttile);
-	spriteslat->value(projects[prj]->spritesC->groups[curSpritegroup].loadat[curSprite]);
-	spritesize[0]->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].w);
-	spritesize[1]->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].h);
-	spritepalrow->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].palrow);
-	char tmp[16];
-	intstr(projects[prj]->spritesC->groups[curSpritegroup].offx[curSprite],tmp);
-	spritesoff[0]->value(tmp);
-	intstr(projects[prj]->spritesC->groups[curSpritegroup].offy[curSprite],tmp);
-	spritesoff[1]->value(tmp);
 	spritegrouptxt->value(projects[prj]->spritesC->groups[curSpritegroup].name.c_str());
-	spritehflip->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].hflip);
-	spritevflip->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].vflip);
-	spriteprio->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].prio);
 }
 void editor::updateSpriteSliders(void){
 	updateSpriteSliders(curProjectID);

@@ -22,6 +22,14 @@
 #include "undo.h"
 uint32_t curSprite;
 uint32_t curSpritegroup;
+void assignSpriteglobalnameCB(Fl_Widget*o,void*){
+	Fl_Input*i=(Fl_Input*)o;
+	currentProject->spritesC->groups[curSpritegroup].name.assign(i->value());
+	window->redraw();
+}
+void exportSonicDPLCCB(Fl_Widget*o,void*t){
+	currentProject->spritesC->exportDPLC((gameType_t)(uintptr_t)t);
+}
 void alignSpriteCB(Fl_Widget*,void*t){
 	uint32_t with;
 	if(currentProject->spritesC->groups[curSpritegroup].list.size()<=1){
@@ -116,12 +124,11 @@ void appendSpriteCB(Fl_Widget*,void*g){
 	if(g){
 		pushSpriteAppendgroup();
 		currentProject->spritesC->setAmt(currentProject->spritesC->amt+1);
-		window->spriteselgroup->maximum(currentProject->spritesC->amt-1);
 	}else{
 		pushSpriteAppend(curSpritegroup);
 		currentProject->spritesC->setAmtingroup(curSpritegroup,currentProject->spritesC->groups[curSpritegroup].list.size()+1);
-		window->spritesel->maximum(currentProject->spritesC->groups[curSpritegroup].list.size()-1);
 	}
+	window->updateSpriteSliders();
 	window->redraw();
 }
 void delSpriteCB(Fl_Widget*,void*group){
