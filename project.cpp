@@ -410,8 +410,13 @@ void switchProject(uint32_t id){
 		window->subSysC->show();
 	else
 		window->subSysC->hide();
-	if(containsDataProj(id,pjHaveSprites))
+	if(containsDataProj(id,pjHaveSprites)){
 		window->updateSpriteSliders(id);
+		window->spriteglobaltxt->show();
+		window->spriteglobaltxt->value(currentProject->spritesC->name.c_str());
+	}else{
+		window->spriteglobaltxt->hide();
+	}
 	window->redraw();
 }
 static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t version=currentProjectVersionNUM){

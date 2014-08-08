@@ -24,7 +24,7 @@ uint32_t curSprite;
 uint32_t curSpritegroup;
 void assignSpriteglobalnameCB(Fl_Widget*o,void*){
 	Fl_Input*i=(Fl_Input*)o;
-	currentProject->spritesC->groups[curSpritegroup].name.assign(i->value());
+	currentProject->spritesC->name.assign(i->value());
 	window->redraw();
 }
 void exportSonicDPLCCB(Fl_Widget*o,void*t){

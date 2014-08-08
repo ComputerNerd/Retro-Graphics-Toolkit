@@ -33,7 +33,6 @@ static inline uint16_t swap_word(uint16_t w){
 #define be16toh swap_word
 #define htobe16 swap_word
 #endif
-
 sprites::sprites(){
 	amt=1;
 	groups.push_back(spriteGroup());
@@ -762,6 +761,7 @@ bool sprites::load(FILE*fp,uint32_t version){
 				name.push_back(a);
 			}while(a=fgetc(fp));
 		}
+		window->spriteglobaltxt->value(name.c_str());
 		for(unsigned n=0;n<amt;++n){
 			uint32_t amtgroup;
 			fread(&amtgroup,sizeof(int32_t),1,fp);
