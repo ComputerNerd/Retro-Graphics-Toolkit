@@ -41,11 +41,12 @@ class sprites{
 		sprites();
 		sprites(const sprites& other);
 		~sprites();
+		void importSpriteSheet(void);
 		void exportDPLC(gameType_t game);
 		void importDPLC(gameType_t game);
 		void exportMapping(gameType_t game);
 		void importMapping(gameType_t game);
-		void draw(uint32_t id,uint32_t x,uint32_t y,int32_t zoom);
+		void draw(uint32_t id,uint32_t x,uint32_t y,int32_t zoom,bool mode,int32_t*outx=0,int32_t*outy=0);
 		void minmaxoffx(uint32_t id,int32_t&minx,int32_t&maxx);
 		void minmaxoffy(uint32_t id,int32_t&miny,int32_t&maxy);
 		void spriteGroupToImage(uint8_t*img,uint32_t id,int row=-1,bool alpha=true);

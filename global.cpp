@@ -211,17 +211,20 @@ uint32_t MakeRGBcolor(uint32_t pixel,float saturation, float hue_tweak,float con
 static inline uint32_t sq(uint32_t x){
 	return x*x;
 }
-uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b){
+uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b,bool alt){
 	unsigned i;
 	int bestIndex = 0;
 	unsigned max_rgb=palEdit.perRow*3;
 	row*=max_rgb;
 	uint32_t minerrori=0xFFFFFFFF;
 	double minerrord=100000.0;
+	uint8_t*rgbPtr=currentProject->rgbPal;
+	if((currentProject->gameSystem==NES)&&alt)
+		rgbPtr+=16*3;
 	for (i=row; i<max_rgb+row; i+=3){
 		switch(nearestAlg){
 			case 0:
-				{double distance=ciede2000rgb(r,g,b,currentProject->rgbPal[i],currentProject->rgbPal[i+1],currentProject->rgbPal[i+2]);
+				{double distance=ciede2000rgb(r,g,b,rgbPtr[i],rgbPtr[i+1],rgbPtr[i+2]);
 				if (distance <= minerrord){
 					if (currentProject->palType[i/3]!=2){
 						minerrord = distance;
@@ -230,7 +233,7 @@ uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b){
 				}}
 			break;
 			case 1:
-				{uint32_t distance=ColourDistance(r,g,b,currentProject->rgbPal[i],currentProject->rgbPal[i+1],currentProject->rgbPal[i+2]);
+				{uint32_t distance=ColourDistance(r,g,b,rgbPtr[i],rgbPtr[i+1],rgbPtr[i+2]);
 				if (distance <= minerrori){
 					if (currentProject->palType[i/3]!=2){
 						minerrori = distance;
@@ -239,7 +242,7 @@ uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b){
 				}}
 			break;
 			default:
-				{uint32_t distance=sq(currentProject->rgbPal[i]-r)+sq(currentProject->rgbPal[i+1]-g)+sq(currentProject->rgbPal[i+2]-b);
+				{uint32_t distance=sq(rgbPtr[i]-r)+sq(rgbPtr[i+1]-g)+sq(rgbPtr[i+2]-b);
 				if (distance <= minerrori){
 					if (currentProject->palType[i/3]!=2){
 						minerrori = distance;
@@ -250,10 +253,10 @@ uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b){
 	}
 	return bestIndex;
 }
-uint8_t find_near_color_from_row(uint8_t row,uint8_t r,uint8_t g,uint8_t b){
-	return (find_near_color_from_row_rgb(row,r,g,b)/3)-(row*palEdit.perRow);
+uint8_t find_near_color_from_row(uint8_t row,uint8_t r,uint8_t g,uint8_t b,bool alt){
+	return (find_near_color_from_row_rgb(row,r,g,b,alt)/3)-(row*palEdit.perRow);
 }
-uint32_t cal_offset_truecolor(uint16_t x,uint16_t y,uint16_t rgb,uint32_t tile){
+uint32_t cal_offset_truecolor(unsigned x,unsigned y,unsigned rgb,uint32_t tile){
 	/*!<
 	cal_offset_truecolor is made to help when accesing a true color tile array
 	an example of it would be

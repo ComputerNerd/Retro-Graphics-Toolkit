@@ -16,7 +16,49 @@
 */
 #include "global.h"
 #include "errorMsg.h"
+#include "color_convert.h"
+#include "undo.h"
 uint8_t palTypeGen=0;
+typedef std::pair<double,int> HLSpair;
+bool comparatorHLS(const HLSpair& l,const HLSpair& r)
+   { return l.first < r.first; }
+void sortBy(unsigned type,bool perRow){
+	pushPaletteAll();
+	HLSpair* MapHLS=new HLSpair[palEdit.perRow*4];//Remember to change if there is a palete with a different amount than 4 rows
+	for(unsigned x=0;x<palEdit.perRow*3*4;x+=3){
+		double h,l,s;
+		rgbToHls(currentProject->rgbPal[x],currentProject->rgbPal[x+1],currentProject->rgbPal[x+2],&h,&l,&s);
+		MapHLS[x/3].first=pickIt(h,l,s,type);
+		MapHLS[x/3].second=x/3;
+	}
+	if(perRow){
+		for(unsigned i=0;i<4;++i)
+			std::sort(MapHLS+(palEdit.perRow*i),MapHLS+(palEdit.perRow*(i+1)),comparatorHLS);
+	}else
+		std::sort(MapHLS,MapHLS+(palEdit.perRow*4),comparatorHLS);
+	unsigned eSize;
+	switch(currentProject->gameSystem){
+		case sega_genesis:
+			eSize=2;
+			break;
+		case NES:
+			eSize=1;
+			break;
+	}
+	uint8_t* newPal=(uint8_t*)alloca(palEdit.perRow*4*eSize);
+	uint8_t* newPalRgb=(uint8_t*)alloca(palEdit.perRow*4*eSize*3);
+	uint8_t* newPalType=(uint8_t*)alloca(palEdit.perRow*4);
+	for(unsigned x=0;x<palEdit.perRow*4;++x){
+		printf("%d with %d\n",MapHLS[x].second,x);
+		memcpy(newPal+(x*eSize),currentProject->palDat+(MapHLS[x].second*eSize),eSize);
+		memcpy(newPalRgb+(x*3),currentProject->rgbPal+(MapHLS[x].second*3),3);
+		newPalType[x]=currentProject->palType[MapHLS[x].second];
+	}
+	memcpy(currentProject->palDat,newPal,palEdit.perRow*4*eSize);
+	memcpy(currentProject->rgbPal,newPalRgb,palEdit.perRow*4*3);
+	memcpy(currentProject->palType,newPalType,palEdit.perRow*4);
+	delete[] MapHLS;
+}
 void swapEntry(uint8_t one,uint8_t two){
 	if(unlikely(one==two))
 		return;

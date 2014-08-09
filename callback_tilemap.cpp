@@ -20,6 +20,7 @@
 #include "callback_chunk.h"
 #include "callbacksprites.h"
 #include "undo.h"
+#include "image.h"
 void tileDPicker(Fl_Widget*,void*){
 	Fl_Window *win;
 	Fl_Progress *progress;
@@ -66,6 +67,7 @@ void toggleBlocksCB(Fl_Widget*o,void*){
 }
 void FixOutOfRangeCB(Fl_Widget*,void*){
 	//use current attributes
+	pushTilemapAll(false);
 	for(int y=0;y<currentProject->tileMapC->mapSizeHA;++y){
 		for(int x=0;x<currentProject->tileMapC->mapSizeW;++x){
 			if(currentProject->tileMapC->get_tile(x,y)>=currentProject->tileC->amt)
@@ -136,6 +138,7 @@ void save_tilemap_as_colspace(Fl_Widget*,void*){
 	}
 }
 void load_tile_map(Fl_Widget*,void*){
+	pushTilemapAll(false);
 	if(unlikely(!currentProject->tileMapC->loadFromFile()))
 		fl_alert("Error: Cannot load file %s",the_file.c_str());
 }
@@ -144,6 +147,7 @@ void save_map(Fl_Widget*,void*){
 		fl_alert("Error: can not save file %s\nTry making sure that you have permission to save the file here",the_file.c_str());
 }
 void fill_tile_map_with_tile(Fl_Widget*,void*){
+	pushTilemapAll(false);
 	if (mode_editor != tile_place){
 		fl_alert("To prevent accidental modification to the tile map be in plane editing mode");
 		return;
@@ -191,14 +195,14 @@ void dither_tilemap_as_image(Fl_Widget*,void*sprite){
 		ditherImage(image,w,h,true,false);
 		currentProject->tileMapC->truecolorimageToTiles(image,-1);
 	}else{
-		for (uint8_t rowz=0;rowz<4;++rowz){
+		for (unsigned rowz=0;rowz<4;++rowz){
+			printf("Row: %u\n",rowz);
 			if(isSprite){
 				currentProject->spritesC->spriteGroupToImage(image,curSpritegroup,rowz);
-				ditherImage(image,w,h,true,true);
-				ditherImage(image,w,h,true,false,true,rowz);
+				ditherImage(image,w,h,true,true,false,0,false,0,true);
+				ditherImage(image,w,h,true,false,true,rowz,false,0,true);
 				currentProject->spritesC->spriteImageToTiles(image,curSpritegroup,rowz);
 			}else{
-				printf("Row %d\n",(int)rowz);
 				currentProject->tileMapC->truecolor_to_image(image,rowz);
 				ditherImage(image,w,h,true,true);
 				ditherImage(image,w,h,true,false);
@@ -293,32 +297,14 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		center[1]=(ht-h)/2;
 		center[2]=wt-w-center[0];
 		uint8_t*palMap;
-		int grayscale;
-		int numcolors;
+		bool grayscale;
 		unsigned remap[256];
 		if(depth==1){
-			char*timgptr=(char*)imgptr;
-			//See if grayscale or colormapped xpm
-			if(isdigit(*timgptr)){
-				/*Checking to see if the first byte is a digit is not enough.
-				What if the first pixel just happen to fall in digit range?
-				Avoid this by verifing width and height*/
-				if(strtol(timgptr,&timgptr,10)==w){
-					if(strtol(timgptr,&timgptr,10)==h){
-						numcolors=abs(strtol(timgptr,&timgptr,10));
-						palMap=(uint8_t*)loaded_image->data()[1];
-						imgptr=(uint8_t*)loaded_image->data()[2];
-						grayscale=0;
-						std::fill(remap,remap+256,0);
-						for(unsigned xx=0;xx<numcolors*4;xx+=4)
-							remap[palMap[xx]]=xx;
-					}else
-						grayscale=1;
-				}else
-					grayscale=1;
-
-			}else
-				grayscale=1;
+			grayscale=handle1byteImg(loaded_image,remap);
+			if(!grayscale){
+				palMap=(uint8_t*)loaded_image->data()[1];
+				imgptr=(uint8_t*)loaded_image->data()[2];
+			}
 		}
 		for(uint32_t y=0,tcnt=0;y<ht;++y){
 			if(y%currentProject->tileC->sizeh)
@@ -508,7 +494,7 @@ void shadow_highligh_findout(Fl_Widget*,void*){
 				uint32_t errorSh=0,errorNorm=0;
 				uint8_t * ptrorgin=&currentProject->tileC->truetDat[(cur_tile*currentProject->tileC->tcSize)];
 				set_palette_type(0);//normal
-				currentProject->tileC->truecolor_to_tile(currentProject->tileMapC->get_palette_map(x,y),cur_tile);
+				currentProject->tileC->truecolor_to_tile(currentProject->tileMapC->get_palette_map(x,y),cur_tile,false);
 				tileToTrueCol(&currentProject->tileC->tDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tileMapC->get_palette_map(x,y));
 				for (xx=0;xx<256;xx+=4){
 					errorNorm+=abs(temp[xx]-ptrorgin[xx]);
@@ -516,7 +502,7 @@ void shadow_highligh_findout(Fl_Widget*,void*){
 					errorNorm+=abs(temp[xx+2]-ptrorgin[xx+2]);
 				}
 				set_palette_type(8);//shadow
-				currentProject->tileC->truecolor_to_tile(currentProject->tileMapC->get_palette_map(x,y),cur_tile);
+				currentProject->tileC->truecolor_to_tile(currentProject->tileMapC->get_palette_map(x,y),cur_tile,false);
 				tileToTrueCol(&currentProject->tileC->tDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tileMapC->get_palette_map(x,y));
 				for (xx=0;xx<256;xx+=4){
 					errorSh+=abs(temp[xx]-ptrorgin[xx]);

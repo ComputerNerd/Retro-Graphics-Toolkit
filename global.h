@@ -31,9 +31,9 @@ Header for globals included with all other files.
 uint8_t nearest_color_index(uint8_t val);
 void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha=true,bool alphaZero=false);
 bool verify_str_number_only(char * str);
-uint32_t cal_offset_truecolor(uint16_t x,uint16_t y,uint16_t rgb,uint32_t tile);
-uint8_t find_near_color_from_row(uint8_t row,uint8_t r,uint8_t g,uint8_t b);
-uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b);
+uint32_t cal_offset_truecolor(unsigned x,unsigned y,unsigned rgb,uint32_t tile);
+uint8_t find_near_color_from_row(uint8_t row,uint8_t r,uint8_t g,uint8_t b,bool alt);
+uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b,bool alt);
 //map related functions
 uint32_t MakeRGBcolor(uint32_t pixel,float saturation = 1.2f, float hue_tweak = 0.0f,float contrast = 1.0f, float brightness = 1.0f,float gamma = 2.2f);
 //uint32_t MakeRGBcolor(uint32_t pixel,float saturation, float hue_tweak,float contrast, float brightness ,float gamma );

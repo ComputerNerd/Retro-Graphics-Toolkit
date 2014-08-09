@@ -350,9 +350,7 @@ void switchProject(uint32_t id){
 				updateNesTab(0,true);
 				for(int temp_entry=0;temp_entry<64;++temp_entry){
 					uint32_t rgb_out;
-					uint8_t pal;
-					pal=projects[id]->palDat[temp_entry];
-					rgb_out=MakeRGBcolor(pal);
+					rgb_out=MakeRGBcolor(projects[id]->palDat[temp_entry]);
 					projects[id]->rgbPal[temp_entry*3+2]=rgb_out&255;//blue
 					projects[id]->rgbPal[temp_entry*3+1]=(rgb_out>>8)&255;//green
 					projects[id]->rgbPal[temp_entry*3]=(rgb_out>>16)&255;//red

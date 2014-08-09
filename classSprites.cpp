@@ -21,6 +21,7 @@
 #include "includes.h"
 #include "callback_tiles.h"
 #include "global.h"
+#include "image.h"
 const char*spriteDefName="DefaultGroupLabel";
 const char*spritesName="AllGroupsLabel";
 #if _WIN32
@@ -65,6 +66,49 @@ sprites::~sprites(){
 	}
 	name.clear();
 	groups.clear();
+}
+void sprites::importSpriteSheet(void){
+	if(load_file_generic("Load image")){
+		Fl_Shared_Image * loaded_image=Fl_Shared_Image::get(the_file.c_str());
+		if(!loaded_image){
+			fl_alert("Error loading image");
+			return;
+		}
+		unsigned depth=loaded_image->d();
+		if (unlikely(depth != 3 && depth != 4 && depth!=1)){
+			fl_alert("Please use color depth of 1,3 or 4\nYou Used %d",depth);
+			loaded_image->release();
+			return;
+		}else
+			printf("Image depth %d\n",depth);
+		uint32_t w,h;
+		w=loaded_image->w();
+		h=loaded_image->h();
+		uint32_t wmax,hmax;
+		switch(currentProject->gameSystem){
+			case sega_genesis:
+				wmax=hmax=32;
+			break;
+			case NES:
+				wmax=8;
+				hmax=16;
+			break;
+		}
+		bool grayscale;
+		uint8_t*palMap;
+		uint8_t*imgptr;
+		unsigned remap[256];
+		if(depth==1){
+			grayscale=handle1byteImg(loaded_image,remap);
+			if(!grayscale){
+				palMap=(uint8_t*)loaded_image->data()[1];
+				imgptr=(uint8_t*)loaded_image->data()[2];
+			}
+		}
+		uint8_t mask[3];
+		getMaskColorImg(loaded_image,grayscale,remap,palMap,mask);
+		loaded_image->release();
+	}
 }
 extern const char*rtVersionStr;
 void sprites::exportMapping(gameType_t game){
@@ -538,20 +582,47 @@ void sprites::importMapping(gameType_t game){
 		free(buf);
 	}
 }
-static uint8_t*rect2rect(uint8_t*in,uint8_t*out,unsigned xin,unsigned yin,unsigned win,unsigned wout,unsigned hout,bool alpha,bool reverse=false){
-	if(alpha)
-		in+=(yin*win*4)+(xin*4);
-	else
-		in+=(yin*win*3)+(xin*3);
+static uint8_t*rect2rect1byte(Fl_Shared_Image*loaded_image,uint8_t*out,unsigned xin,unsigned yin,unsigned win,unsigned wout,unsigned hout,bool grayscale,unsigned*remap,uint8_t*palMap){
+	uint8_t*in=(uint8_t*)loaded_image->data()[yin+2];
+	in+=xin;
 	while(hout--){
-		if(alpha){
+		for(unsigned i=0;i<wout;++i){
+			if(grayscale){
+				*out++=*in;
+				*out++=*in;
+				*out++=*in++;
+				*out++=255;
+			}else{
+				if(*in==' '){
+					memset(out,0,4);
+					out+=4;
+					++in;
+				}else{
+					unsigned p=(*in++);
+					*out++=palMap[remap[p]+1];
+					*out++=palMap[remap[p]+2];
+					*out++=palMap[remap[p]+3];
+					*out++=255;
+				}
+			}
+		}
+		++yin;
+		in=(uint8_t*)loaded_image->data()[yin+2];//Extra data is tacked on at the end meaning we cannot just acess as contiguous image
+		in+=xin;
+	}
+	return out;
+}
+static uint8_t*rect2rect(uint8_t*in,uint8_t*out,unsigned xin,unsigned yin,unsigned win,unsigned wout,unsigned hout,unsigned depth,bool reverse=false){
+	in+=(yin*win*depth)+(xin*depth);
+	while(hout--){
+		if(depth==4){
 			if(reverse)
 				memcpy(in,out,wout*4);
 			else
 				memcpy(out,in,wout*4);
 			in+=win*4;
 			out+=wout*4;
-		}else{
+		}else if(depth==3){
 			if(reverse){
 				for(unsigned i=0;i<wout;++i){
 					*in++=*out++;
@@ -595,7 +666,7 @@ void sprites::spriteGroupToImage(uint8_t*img,uint32_t id,int row,bool alpha){
 		for(uint32_t x=0;x<groups[id].list[i].w*currentProject->tileC->sizew;x+=currentProject->tileC->sizew){
 			for(uint32_t y=0;y<groups[id].list[i].h*currentProject->tileC->sizeh;y+=currentProject->tileC->sizeh,++ttile){
 				uint8_t*outptr=currentProject->tileC->truetDat.data()+(ttile*currentProject->tileC->tcSize);
-				rect2rect(img,outptr,xoff+x,yoff+y,w,currentProject->tileC->sizew,currentProject->tileC->sizeh,alpha,true);
+				rect2rect(img,outptr,xoff+x,yoff+y,w,currentProject->tileC->sizew,currentProject->tileC->sizeh,alpha?4:3,true);
 			}
 		}
 	}
@@ -617,8 +688,8 @@ void sprites::spriteImageToTiles(uint8_t*img,uint32_t id,int rowUsage,bool alpha
 			continue;//Skip if we only want a specific row
 		for(uint32_t x=0;x<groups[id].list[i].w*currentProject->tileC->sizew;x+=currentProject->tileC->sizew){
 			for(uint32_t y=0;y<groups[id].list[i].h*currentProject->tileC->sizeh;y+=currentProject->tileC->sizeh,++ttile){
-				rect2rect(img,tcTemp,xoff+x,yoff+y,w,currentProject->tileC->sizew,currentProject->tileC->sizeh,alpha,false);
-				currentProject->tileC->truecolor_to_tile_ptr(groups[id].list[i].palrow,ttile,tcTemp,false);
+				rect2rect(img,tcTemp,xoff+x,yoff+y,w,currentProject->tileC->sizew,currentProject->tileC->sizeh,alpha?4:3,false);
+				currentProject->tileC->truecolor_to_tile_ptr(groups[id].list[i].palrow,ttile,tcTemp,false,true);
 			}
 		}
 	}
@@ -653,23 +724,36 @@ uint32_t sprites::height(uint32_t id){
 	minmaxoffy(id,miny,maxy);
 	return abs(maxy-miny);
 }
-void sprites::draw(uint32_t id,uint32_t x,uint32_t y,int32_t zoom){
+void sprites::draw(uint32_t id,uint32_t x,uint32_t y,int32_t zoom,bool mode,int32_t*outx,int32_t*outy){
 	if(groups[id].list.size()){
 		int32_t minx,maxx;
 		int32_t miny,maxy;
-		minmaxoffx(id,minx,maxx);
-		minmaxoffy(id,miny,maxy);
+		if(!mode){
+			minmaxoffx(id,minx,maxx);
+			minmaxoffy(id,miny,maxy);
+		}
+		maxx=maxy=0;
 		for(uint32_t i=0;i<groups[id].list.size();++i){
 			int xoff=x+(groups[id].offx[i]*zoom);
-			xoff-=minx*zoom;
+			if(!mode)
+				xoff-=minx*zoom;
 			int yoff=y+(groups[id].offy[i]*zoom);
-			yoff-=miny*zoom;
+			if(!mode)
+				yoff-=miny*zoom;
+			if(maxx<(xoff+(groups[id].list[i].w*zoom*8)))
+				maxx=xoff+(groups[id].list[i].w*zoom*8);
+			if(maxy<(yoff+(groups[id].list[i].h*zoom*8)))
+				maxy=yoff+(groups[id].list[i].h*zoom*8);
 			if(xoff>=window->w())
 				continue;
 			if(yoff>=window->h())
 				continue;
 			groups[id].list[i].draw(xoff,yoff,zoom);
 		}
+		if(outx)
+			*outx=maxx;
+		if(outy)
+			*outy=maxy;
 	}
 }
 void sprites::setAmt(uint32_t amtnew){
@@ -844,8 +928,9 @@ void sprites::importImg(uint32_t to){
 		unsigned spritesnew=((wnew+wmax-8)/wmax)*((hnew+hmax-8)/hmax);
 		if(to>=amt)
 			setAmt(to+1);
-		if((loaded_image->d() != 3 && loaded_image->d() != 4)){
-			fl_alert("Please use color depth of 3 or 4\nYou Used %d",loaded_image->d());
+		unsigned depth=loaded_image->d();
+		if (unlikely(depth != 3 && depth != 4 && depth!=1)){
+			fl_alert("Please use color depth of 1,3 or 4\nYou Used %d",loaded_image->d());
 			loaded_image->release();
 			return;
 		}else
@@ -871,6 +956,18 @@ void sprites::importImg(uint32_t to){
 		uint8_t * img_ptr=(uint8_t *)loaded_image->data()[0];
 		setAmtingroup(to,spritesnew);
 		groups[to].name.assign(fl_filename_name(the_file.c_str()));
+		if(depth==1)
+			img_ptr=(uint8_t*)loaded_image->data()[2];
+		bool grayscale;
+		uint8_t*palMap;
+		unsigned remap[256];
+		if(depth==1){
+			grayscale=handle1byteImg(loaded_image,remap);
+			if(!grayscale){
+				palMap=(uint8_t*)loaded_image->data()[1];
+				img_ptr=(uint8_t*)loaded_image->data()[2];
+			}
+		}
 		for(unsigned y=0,cnt=0,tilecnt=startTile;y<hnew;y+=hmax){
 			for(unsigned x=0;x<wnew;x+=wmax,++cnt){
 				unsigned dimx,dimy;
@@ -884,8 +981,12 @@ void sprites::importImg(uint32_t to){
 				groups[to].loadat[cnt]=tilecnt;
 				tilecnt+=(dimx/8)*(dimy/8);
 				for(unsigned i=0;i<dimx;i+=8){
-					for(unsigned j=0;j<dimy;j+=8)
-						out=rect2rect(img_ptr,out,i+x,j+y,wnew,8,8,(loaded_image->d()==4)?true:false);
+					for(unsigned j=0;j<dimy;j+=8){
+						if(depth==1)
+							out=rect2rect1byte(loaded_image,out,i+x,j+y,wnew,8,8,grayscale,remap,palMap);
+						else
+							out=rect2rect(img_ptr,out,i+x,j+y,wnew,8,8,depth);
+					}
 				}
 			}
 		}

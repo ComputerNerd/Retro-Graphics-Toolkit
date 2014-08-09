@@ -22,6 +22,17 @@
 #include "undo.h"
 uint32_t curSprite;
 uint32_t curSpritegroup;
+int32_t spriteEndDraw[2];
+bool centerSpriteDraw_G;
+void setDrawSpriteCB(Fl_Widget*,void*m){
+	centerSpriteDraw_G=(m)?true:false;
+	window->redraw();
+}
+void SpriteSheetimportCB(Fl_Widget*o,void*){
+	currentProject->spritesC->importSpriteSheet();
+	window->updateSpriteSliders();
+	window->redraw();
+}
 void assignSpriteglobalnameCB(Fl_Widget*o,void*){
 	Fl_Input*i=(Fl_Input*)o;
 	currentProject->spritesC->name.assign(i->value());

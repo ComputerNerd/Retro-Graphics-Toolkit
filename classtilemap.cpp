@@ -874,7 +874,7 @@ void tileMap::truecolorimageToTiles(uint8_t * image,int rowusage,bool useAlpha){
 				tempSet=(get_prio(x_tile,y_tile)^1)*8;
 				set_palette_type(tempSet);
 			}
-			currentProject->tileC->truecolor_to_tile_ptr(get_palette_map(x_tile,y_tile),current_tile,truecolor_tile,false);
+			currentProject->tileC->truecolor_to_tile_ptr(get_palette_map(x_tile,y_tile),current_tile,truecolor_tile,false,false);
 dont_convert_tile:
 		++x_tile;
 		}

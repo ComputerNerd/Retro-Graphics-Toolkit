@@ -16,6 +16,10 @@
 */
 extern uint32_t curSprite;
 extern uint32_t curSpritegroup;
+extern int32_t spriteEndDraw[2];
+extern bool centerSpriteDraw_G;
+void setDrawSpriteCB(Fl_Widget*,void*m);
+void SpriteSheetimportCB(Fl_Widget*o,void*);
 void assignSpriteglobalnameCB(Fl_Widget*o,void*);
 void exportSonicDPLCCB(Fl_Widget*o,void*t);
 void alignSpriteCB(Fl_Widget*,void*t);

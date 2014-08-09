@@ -25,6 +25,70 @@ uint8_t nespaltab_b[64];
 uint8_t nespaltab_r_alt[64];
 uint8_t nespaltab_g_alt[64];
 uint8_t nespaltab_b_alt[64];
+static double max3(double a,double b,double c){
+	if ((a > b) && (a > c))
+		return a;
+	if (b > c)
+		return b;
+	return c;
+}
+static double min3(double a,double b,double c){
+	if ((a < b) && (a < c))
+		return a;
+	if (b < c)
+		return b;
+	return c;
+}
+/**
+ * Converts an RGB color value to HSL. Conversion formula
+ * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+ * Assumes r, g, and b are contained in the set [0, 255] and
+ * returns h, s, and l in the set [0, 1].
+ *
+ * @param   Number  r       The red color value
+ * @param   Number  g       The green color value
+ * @param   Number  b       The blue color value
+ * @return  Array           The HSL representation
+ */
+void rgbToHls(double r,double g,double b,double * hh,double * ll,double * ss){
+	r /= 255.0;
+	g /= 255.0;
+	b /= 255.0;
+	double max = max3(r, g, b);
+	double min = min3(r, g, b);
+	double h, s, l = (max + min) / 2.0;
+
+	if(max == min)
+		h = s = 0.0; // achromatic
+	else{
+		double d = max - min;
+		s = l > 0.5 ? d / (2.0 - max - min) : d / (max + min);
+		/*if (max == r)
+			h = (g - b) / d + (g < b ? 6 : 0);
+		else if (max == g)
+			h = (b - r) / d + 2.0;
+		else
+			h = (r - g) / d + 4.0;
+		h /= 6.0;*/
+
+		//From: http://easyrgb.com/index.php?X=MATH&H=18#text18
+		double del_R = ((( max - r )/6.0) + (d/2.0)) / d;
+		double del_G = ((( max - g )/6.0) + (d/2.0)) / d;
+		double del_B = ((( max - b )/6.0) + (d/2.0)) / d;
+
+		if      (r == max ) h = del_B - del_G;
+		else if (g == max ) h = (1.0/3.0) + del_R - del_B;
+		else if (b == max ) h = (2.0/3.0) + del_G - del_R;
+
+		if (h < 0.0) h += 1.0;
+		if (h > 1.0) h -= 1.0;
+	}
+	if(h>1.0)
+		printf("Warning %f\n",h);
+	*hh=h;
+	*ll=l;
+	*ss=s;
+}
 void updateRGBindex(unsigned index){
 	switch(currentProject->gameSystem){
 		case sega_genesis:

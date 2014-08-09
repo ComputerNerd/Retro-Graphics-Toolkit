@@ -26,70 +26,7 @@
 #include "wu.h"
 #include "callbacksprites.h"
 #include "undo.h"
-static double max3(double a,double b,double c){
-	if ((a > b) && (a > c))
-		return a;
-	if (b > c)
-		return b;
-	return c;
-}
-static double min3(double a,double b,double c){
-	if ((a < b) && (a < c))
-		return a;
-	if (b < c)
-		return b;
-	return c;
-}
-/**
- * Converts an RGB color value to HSL. Conversion formula
- * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
- * Assumes r, g, and b are contained in the set [0, 255] and
- * returns h, s, and l in the set [0, 1].
- *
- * @param   Number  r       The red color value
- * @param   Number  g       The green color value
- * @param   Number  b       The blue color value
- * @return  Array           The HSL representation
- */
-static void rgbToHls(double r,double g,double b,double * hh,double * ll,double * ss){
-	r /= 255.0;
-	g /= 255.0;
-	b /= 255.0;
-	double max = max3(r, g, b);
-	double min = min3(r, g, b);
-	double h, s, l = (max + min) / 2.0;
-
-	if(max == min)
-		h = s = 0.0; // achromatic
-	else{
-		double d = max - min;
-		s = l > 0.5 ? d / (2.0 - max - min) : d / (max + min);
-		/*if (max == r)
-			h = (g - b) / d + (g < b ? 6 : 0);
-		else if (max == g)
-			h = (b - r) / d + 2.0;
-		else
-			h = (r - g) / d + 4.0;
-		h /= 6.0;*/
-
-		//From: http://easyrgb.com/index.php?X=MATH&H=18#text18
-		double del_R = ((( max - r )/6.0) + (d/2.0)) / d;
-		double del_G = ((( max - g )/6.0) + (d/2.0)) / d;
-		double del_B = ((( max - b )/6.0) + (d/2.0)) / d;
-
-		if      (r == max ) h = del_B - del_G;
-		else if (g == max ) h = (1.0/3.0) + del_R - del_B;
-		else if (b == max ) h = (2.0/3.0) + del_G - del_R;
-
-		if (h < 0.0) h += 1.0;
-		if (h > 1.0) h -= 1.0;
-	}
-	if(h>1.0)
-		printf("Warning %f\n",h);
-	*hh=h;
-	*ll=l;
-	*ss=s;
-}
+#include "palette.h"
 static void addHist(uint32_t cur_tile,int type,uint32_t*hist,unsigned sz){
 	double szz=(double)sz;
 	uint8_t * truePtr=&currentProject->tileC->truetDat[cur_tile*256];
@@ -315,22 +252,6 @@ static inline uint8_t pick4Deltai(uint32_t * d){
 static inline uint32_t sqri(int x){
 	return x*x;
 }
-static inline double pickIt(double h,double l,double s,unsigned type){
-	switch(type){
-		case 0:
-			return h;
-		break;
-		case 1:
-			return l;
-		break;
-		case 2:
-			return s;
-		break;
-	}
-}
-typedef std::pair<double,int> HLSpair;
-bool comparatorHLS(const HLSpair& l,const HLSpair& r)
-   { return l.first < r.first; }
 void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	int alg=MenuPopup("Select picking algorithm","Pick which method you think works better for this image.",6,"ciede2000","Weighted","Mean squared error","Hue difference","Saturation difference","Lightness difference");
 	if(alg<0)
@@ -339,37 +260,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	pushTilesAll(tTypeTile);
 	if(fl_ask("Would you like the palette to be ordered by hue or light or saturation")){
 		unsigned type=fl_choice("What do you want it ordered by","Hue","Light","Saturation");
-		pushPaletteAll();
-		HLSpair* MapHLS=new HLSpair[palEdit.perRow*4];//Remember to change if there is a palete with a different amount than 4 rows
-		for(unsigned x=0;x<palEdit.perRow*3*4;x+=3){
-			double h,l,s;
-			rgbToHls(currentProject->rgbPal[x],currentProject->rgbPal[x+1],currentProject->rgbPal[x+2],&h,&l,&s);
-			MapHLS[x/3].first=pickIt(h,l,s,type);
-			MapHLS[x/3].second=x/3;
-		}
-		std::sort(MapHLS,MapHLS+(palEdit.perRow*4),comparatorHLS);
-		unsigned eSize;
-		switch(currentProject->gameSystem){
-			case sega_genesis:
-				eSize=2;
-			break;
-			case NES:
-				eSize=1;
-			break;
-		}
-		uint8_t* newPal=(uint8_t*)alloca(palEdit.perRow*4*eSize);
-		uint8_t* newPalRgb=(uint8_t*)alloca(palEdit.perRow*4*eSize*3);
-		uint8_t* newPalType=(uint8_t*)alloca(palEdit.perRow*4);
-		for(unsigned x=0;x<palEdit.perRow*4;++x){
-			printf("%d with %d\n",MapHLS[x].second,x);
-			memcpy(newPal+(x*eSize),currentProject->palDat+(MapHLS[x].second*eSize),eSize);
-			memcpy(newPalRgb+(x*3),currentProject->rgbPal+(MapHLS[x].second*3),3);
-			newPalType[x]=currentProject->palType[MapHLS[x].second];
-		}
-		memcpy(currentProject->palDat,newPal,palEdit.perRow*4*eSize);
-		memcpy(currentProject->rgbPal,newPalRgb,palEdit.perRow*4*3);
-		memcpy(currentProject->palType,newPalType,palEdit.perRow*4);
-		delete[] MapHLS;
+		sortBy(type,false);
 	}
 	uint8_t type_temp=palTypeGen;
 	uint8_t tempSet=0;
@@ -480,7 +371,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 						memcpy(&temp[truecolor_tile_ptr],&imageout[sillyrow][a+b+y+c+e],32);
 						truecolor_tile_ptr+=32;
 					}
-					currentProject->tileC->truecolor_to_tile_ptr(sillyrow,get_tile(xtile+j,ytile+i),temp,false);
+					currentProject->tileC->truecolor_to_tile_ptr(sillyrow,get_tile(xtile+j,ytile+i),temp,false,false);
 				}
 			}
 			xtile+=per;

@@ -1,4 +1,7 @@
 Most recent changes are placed at the top
+20140808
+Fixed a bug where sprite palette (NES only) was not used in sprites
+Added sort each palette row by (currently has hue,saturation,lightness)
 
 20140807
 Added sonic 2 mapping and dpcl export also improved sonic 1 dpcl export.

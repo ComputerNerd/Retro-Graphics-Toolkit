@@ -176,10 +176,10 @@ void tiles::remove_tile_at(uint32_t tileDel){
 	amt--;
 	updateTileSelectAmt(amt);
 }
-void tiles::truecolor_to_tile(uint8_t palette_row,uint32_t cur_tile){
-	truecolor_to_tile_ptr(palette_row,cur_tile,&truetDat[(cur_tile*tcSize)]);
+void tiles::truecolor_to_tile(uint8_t palette_row,uint32_t cur_tile,bool isSprite){
+	truecolor_to_tile_ptr(palette_row,cur_tile,&truetDat[(cur_tile*tcSize)],true,isSprite);
 }
-void tiles::truecolor_to_tile_ptr(uint8_t palette_row,uint32_t cur_tile,uint8_t * tileinput,bool Usedither){
+void tiles::truecolor_to_tile_ptr(uint8_t palette_row,uint32_t cur_tile,uint8_t * tileinput,bool Usedither,bool isSprite){
 	//dithers a truecolor tile to tile
 	uint_fast32_t tile_32=cur_tile*32;
 	uint_fast32_t tile_16=cur_tile*16;
@@ -195,7 +195,7 @@ void tiles::truecolor_to_tile_ptr(uint8_t palette_row,uint32_t cur_tile,uint8_t 
 	uint8_t * truePtr=true_color_temp;
 	for (unsigned y=0;y<8;++y){
 		for (unsigned x=0;x<8;++x){
-			uint8_t temp=find_near_color_from_row(palette_row,truePtr[0],truePtr[1],truePtr[2]);
+			uint8_t temp=find_near_color_from_row(palette_row,truePtr[0],truePtr[1],truePtr[2],(currentProject->gameSystem==NES)&&isSprite);
 			truePtr+=3;
 			//sega genesis tile format
 			//even pixel,odd pixel
@@ -301,7 +301,7 @@ void tiles::draw_truecolor(uint32_t tile_draw,unsigned x,unsigned y,bool usehfli
 static inline uint_fast32_t cal_offset_zoom_rgb(uint_fast16_t x,uint_fast16_t y,uint_fast16_t zoom,uint8_t channel){
 	return (y*(zoom*24))+(x*3)+channel;
 }
-void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,int zoom,uint8_t pal_row,bool Usehflip,bool Usevflip){
+void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,int zoom,uint8_t pal_row,bool Usehflip,bool Usevflip,bool isSprite){
 	static unsigned DontShow=0;
 	if (amt<=tile_draw){
 		if (unlikely(DontShow==0)){
@@ -356,8 +356,8 @@ void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,int zoom,uint8_t pa
 					red_temp=currentProject->rgbPal[(pal_row*48)+(temp_2*3)];
 					green_temp=currentProject->rgbPal[(pal_row*48)+(temp_2*3)+1];
 					blue_temp=currentProject->rgbPal[(pal_row*48)+(temp_2*3)+2];
-					for (c=0;c<zoom;c++){//ha ha c++ bad programming pun
-						for (d=0;d<zoom;d++){
+					for (c=0;c<zoom;++c){
+						for (d=0;d<zoom;++d){
 							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d+zoom,(y*zoom)+c,zoom,0)]=red_temp;
 							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d+zoom,(y*zoom)+c,zoom,1)]=green_temp;
 							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d+zoom,(y*zoom)+c,zoom,2)]=blue_temp;
@@ -372,11 +372,14 @@ void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,int zoom,uint8_t pa
 						uint8_t temp;
 						temp=(tileTemp[y]>>(7-x))&1;
 						temp|=((tileTemp[y+8]>>(7-x))&1)<<1;
-						red_temp=currentProject->rgbPal[(pal_row*12)+(temp*3)];
-						green_temp=currentProject->rgbPal[(pal_row*12)+(temp*3)+1];
-						blue_temp=currentProject->rgbPal[(pal_row*12)+(temp*3)+2];
-						for (c=0;c<zoom;c++){//yes the same old c++ joke I wonder how many program have it
-							for (d=0;d<zoom;d++){
+						uint8_t*rgbPtr=currentProject->rgbPal;
+						if(isSprite)
+							rgbPtr+=48;
+						red_temp=rgbPtr[(pal_row*12)+(temp*3)];
+						green_temp=rgbPtr[(pal_row*12)+(temp*3)+1];
+						blue_temp=rgbPtr[(pal_row*12)+(temp*3)+2];
+						for (c=0;c<zoom;++c){
+							for (d=0;d<zoom;++d){
 								temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+d,(y*zoom)+c,zoom,0)]=red_temp;
 								temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+d,(y*zoom)+c,zoom,1)]=green_temp;
 								temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+d,(y*zoom)+c,zoom,2)]=blue_temp;
@@ -489,7 +492,7 @@ void tiles::vflip_tile(uint32_t id,uint8_t * out){
 void tiles::blank_tile(uint32_t tileUsage){
 	if (mode_editor == tile_edit){
 		memset(&truetDat[tileUsage*tcSize],0,tcSize);
-		truecolor_to_tile(tileEdit_pal.theRow,tileUsage);
+		truecolor_to_tile(tileEdit_pal.theRow,tileUsage,false);
 	}else
 		memset(&tDat[tileUsage*tileSize],0,tileSize);
 }

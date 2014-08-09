@@ -21,6 +21,27 @@
 #include "filemisc.h"
 #include "undo.h"
 #include "errorMsg.h"
+void sortRowbyCB(Fl_Widget*,void*){
+	unsigned type=fl_choice("Sort each row by","Hue","Lightness","Saturation");
+	sortBy(type,true);
+	switch (mode_editor){
+		case pal_edit:
+			palEdit.updateSlider();
+		break;
+		case tile_edit:
+			tileEdit_pal.updateSlider();
+		break;
+		case tile_place:
+			tileMap_pal.updateSlider();
+		break;
+		case spriteEditor:
+			spritePal.updateSlider();
+		break;
+		default:
+			show_default_error
+	}
+	window->redraw();
+}
 void save_palette(Fl_Widget*, void* start_end){
 	char temp[4];
 	switch (currentProject->gameSystem){
@@ -214,7 +235,7 @@ void update_palette(Fl_Widget* o, void* v){
 		currentProject->rgbPal[temp_entry*3]=(rgb_out>>16)&255;//red
 	}
 	if (mode_editor == tile_edit)
-		currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);//update tile
+		currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile,false);//update tile
 	window->redraw();//update the palette
 }
 void loadPalette(Fl_Widget*, void*){
@@ -277,7 +298,7 @@ void set_tile_row(Fl_Widget*,void* row){
 	switch (mode_editor){
 		case tile_edit:
 			tileEdit_pal.changeRow(selrow);
-			currentProject->tileC->truecolor_to_tile(selrow,currentProject->tileC->current_tile);
+			currentProject->tileC->truecolor_to_tile(selrow,currentProject->tileC->current_tile,false);
 		break;
 		case tile_place:
 			tileMap_pal.changeRow(selrow);
@@ -345,7 +366,7 @@ void rgb_pal_to_entry(Fl_Widget*,void*){
 		break;
 	}
 	tileEdit_pal.updateSlider();
-	currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);
+	currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile,false);
 	window->redraw();
 }
 void entryToRgb(Fl_Widget*,void*){

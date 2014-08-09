@@ -707,7 +707,7 @@ MixingPlanTK DeviseBestMixingPlanTK(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t 
 	std::sort(result.colors, result.colors+64, PaletteCompareLuma);
 	return result;
 }
-void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpace,bool forceRow,uint8_t forcedrow,bool isChunk,uint32_t idChunk){
+void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpace,bool forceRow,uint8_t forcedrow,bool isChunk,uint32_t idChunk,bool isSprite){
 	/*!
 	this function will take an input with or without alpha and dither it
 	Also note that this function now has the option to first dither to color space
@@ -765,12 +765,17 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					tempPalSize=64;
 					palettesize=64;
 					colPtr=(uint8_t *)malloc(64*3);
-					for(rl=0;rl<16;++rl){
-						for(gl=0;gl<4;++gl){
-							uint8_t temp=rl|(gl<<4);
-							*colPtr++=nespaltab_r[temp];
-							*colPtr++=nespaltab_g[temp];
-							*colPtr++=nespaltab_b[temp];
+					if(isSprite){
+						for(rl=0;rl<64;++rl){
+							*colPtr++=nespaltab_r_alt[rl];
+							*colPtr++=nespaltab_g_alt[rl];
+							*colPtr++=nespaltab_b_alt[rl];
+						}
+					}else{
+						for(rl=0;rl<64;++rl){
+							*colPtr++=nespaltab_r[rl];
+							*colPtr++=nespaltab_g[rl];
+							*colPtr++=nespaltab_b[rl];
 						}
 					}
 					colPtr-=64*3;
@@ -786,6 +791,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				case NES:
 					tempPalSize=16;
 					palettesize=4;
+					colPtr+=16*3;
 				break;
 			}
 		}
@@ -972,10 +978,17 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 								a_old=addCheck(a_old,half);
 						}
 					}
-					temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old);
-					r_new=currentProject->rgbPal[temp];
-					g_new=currentProject->rgbPal[temp+1];
-					b_new=currentProject->rgbPal[temp+2];
+					if((currentProject->gameSystem==NES)&&isSprite){
+						temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old,true);
+						r_new=currentProject->rgbPal[temp+48];
+						g_new=currentProject->rgbPal[temp+49];
+						b_new=currentProject->rgbPal[temp+50];
+					}else{
+						temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old,false);
+						r_new=currentProject->rgbPal[temp];
+						g_new=currentProject->rgbPal[temp+1];
+						b_new=currentProject->rgbPal[temp+2];
+					}
 				}
 				if (useAlpha)
 					a_old=(a_old&128)?255:0;
@@ -1045,10 +1058,17 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 						break;
 					}
 				}else{
-					temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old);
-					r_new=currentProject->rgbPal[temp];
-					g_new=currentProject->rgbPal[temp+1];
-					b_new=currentProject->rgbPal[temp+2];
+					if((currentProject->gameSystem==NES)&&isSprite){
+						temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old,true);
+						r_new=currentProject->rgbPal[temp+48];
+						g_new=currentProject->rgbPal[temp+49];
+						b_new=currentProject->rgbPal[temp+50];
+					}else{
+						temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old,false);
+						r_new=currentProject->rgbPal[temp];
+						g_new=currentProject->rgbPal[temp+1];
+						b_new=currentProject->rgbPal[temp+2];
+					}
 				}
 				if (useAlpha){
 					a_new=(a_old&128)?255:0;
@@ -1059,7 +1079,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				error_rgb[0]=(int16_t)r_old-(int16_t)r_new;
 				error_rgb[1]=(int16_t)g_old-(int16_t)g_new;
 				error_rgb[2]=(int16_t)b_old-(int16_t)b_new;
-				for (uint8_t channel=0;channel<rgbPixelsize;channel++){
+				for (unsigned channel=0;channel<rgbPixelsize;channel++){
 					//add the offset
 					if (x+1 < w){
 						plus_truncate_uchar(image[((x+1)*rgbPixelsize)+(y*w*rgbPixelsize)+channel],(error_rgb[channel]*7) / ditherSetting);

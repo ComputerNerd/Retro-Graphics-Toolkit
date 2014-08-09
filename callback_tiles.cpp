@@ -146,8 +146,8 @@ void update_all_tiles(Fl_Widget*,void*){
 
 	pushTilesAll(tTypeTile);
 
-	for (uint32_t x=0;x<currentProject->tileC->amt;++x) {
-		currentProject->tileC->truecolor_to_tile(sel_pal,x);
+	for (uint32_t x=0;x<currentProject->tileC->amt;++x){
+		currentProject->tileC->truecolor_to_tile(sel_pal,x,mode_editor==spriteEditor);
 		if ((!(x&63))&&x)
 			printf("Progress: %f\r",((float)x/(float)currentProject->tileC->amt)*100.0);
 	}
@@ -304,7 +304,7 @@ void fill_tile(Fl_Widget* o, void*){
 			currentProject->tileC->truetDat[x+2]=truecolor_temp[2];//blue
 			currentProject->tileC->truetDat[x+3]=truecolor_temp[3];//alpha
 		}
-		currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);
+		currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile,false);
 	}else
 		fl_alert("To prevent accidental modification be in the Tile editor or Tile map editor to use this");
 	window->damage(FL_DAMAGE_USER1);

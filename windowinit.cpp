@@ -88,6 +88,7 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Sprites",0, 0, 0, FL_SUBMENU},
 			{"Import sprite from image",0,SpriteimportCB,0},
 			{"Import sprite from image (append)",0,SpriteimportCB,(void*)1},
+			{"Import sprite sheet",0,SpriteSheetimportCB,(void*)1},
 			{"Import sonic 1 mapping",0,importSonicMappingCB,(void*)tSonic1},
 			{"Import sonic 2 mapping",0,importSonicMappingCB,(void*)tSonic2},
 			{"Import sonic 1 DPLC",0,importSonicDPLCCB,(void*)tSonic1},
@@ -98,14 +99,15 @@ static const Fl_Menu_Item menuEditor[]={
 			{"Export sonic 2 DPLC",0,exportSonicDPLCCB,(void*)tSonic2},
 			{0},
 		{0},
-	{"Palette Actions",0, 0, 0, FL_SUBMENU},
+	{"Palette actions",0, 0, 0, FL_SUBMENU},
 		{"Generate optimal palette with x amount of colors",0,generate_optimal_palette,0},
 		{"Clear entire Palette",0,clearPalette,0},
 		{"Pick nearest color algorithm",0,pickNearAlg,0},
 		{"RGB color to entry",0,rgb_pal_to_entry,0},
 		{"Entry to RGB color",0,entryToRgb,0},
+		{"Sort each row by",0,sortRowbyCB,0},
 		{0},
-	{"Tile Actions",0, 0, 0, FL_SUBMENU},
+	{"Tile actions",0, 0, 0, FL_SUBMENU},
 		{"Append blank tile to end of buffer",0,new_tile,0},
 		{"Fill tile with selected color",0,fill_tile,0},
 		{"Fill tile with color 0",0,blank_tile,0},
@@ -115,13 +117,13 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Delete currently selected tile",0,delete_tile_at_location,0},
 		{"Create new tiles for flipped tiles",0,tilesnewfilppedCB},
 		{0},
-	{"TileMap Actions",0, 0, 0, FL_SUBMENU},
+	{"TileMap actions",0, 0, 0, FL_SUBMENU},
 		{"Remove tile from tilemap",0,tilemap_remove_callback,0},
 		{"Toggle TrueColor Viewing (defaults to off)",0,trueColTileToggle,0},
 		{"Pick Tile row based on delta",0,tileDPicker,0},
 		{"Auto determine if use shadow highlight",0,shadow_highligh_findout,0},
 		{"Dither tilemap as image",0,dither_tilemap_as_image,0},
-		{"File tile map with selection includeing attributes",0,fill_tile_map_with_tile,(void *)0},
+		{"File tile map with selection including attributes",0,fill_tile_map_with_tile,(void *)0},
 		{"Fix out of range tiles (replace with current attributes in plane editor)",0,FixOutOfRangeCB,0},
 		{0},
 	{"Sprite actions",0, 0, 0, FL_SUBMENU},
@@ -669,6 +671,24 @@ void editor::_editor(){
 			spritealign[3] = new Fl_Button(tile_place_buttons_x_off+112, 552, 48, 28, "Bottom");
 			spritealign[3]->labelsize(12);
 			spritealign[3]->callback(alignSpriteCB,(void*)3);
+
+
+			{
+				Fl_Group *o = new Fl_Group(tile_place_buttons_x_off, 572, 800, 480);
+				{
+					Fl_Round_Button*m = new Fl_Round_Button(tile_place_buttons_x_off, 572, 96, 32, "Top corner");
+					m->type(FL_RADIO_BUTTON);
+					m->callback(setDrawSpriteCB,(void *)0);
+					m->set();
+				} // Fl_Round_Button* o
+				{
+					Fl_Round_Button*m = new Fl_Round_Button(tile_place_buttons_x_off+96, 572, 64, 32, "Center");
+					m->type(FL_RADIO_BUTTON);
+					m->callback(setDrawSpriteCB,(void *)1);
+				} // Fl_Round_Button* o
+				o->end();
+			} // End of buttons
+
 			TabsMain[spriteEditor]->end();
 		}
 		{TabsMain[settingsTab] = new Fl_Group(rx,ry,rw,rh,"Settings/projects");

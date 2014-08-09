@@ -42,7 +42,7 @@ void sprite::draw(unsigned x,unsigned y,unsigned zoom){
 		if(vflip)
 			t+=h-1;
 		for(unsigned j=0;j<h;++j){
-			currentProject->tileC->draw_tile(x,yy,t,zoom,palrow,hflip,vflip);
+			currentProject->tileC->draw_tile(x,yy,t,zoom,palrow,hflip,vflip,true);
 			yy+=currentProject->tileC->sizeh*zoom;
 			if(vflip)
 				--t;

@@ -287,7 +287,7 @@ void editor::draw_non_gui(void){
 				xo=((selTileE_G[0]-map_scroll_pos_x)*currentProject->tileC->sizew*placer_tile_size)+map_off_x;
 				yo=((selTileE_G[1]-map_scroll_pos_y)*currentProject->tileC->sizeh*placer_tile_size)+map_off_y;
 				if((xo>=map_off_x)&&(yo>=map_off_y))
-					fl_rect(xo,yo,placer_tile_size*8+1,placer_tile_size*8+1,FL_BLUE);
+					fl_draw_box(FL_EMBOSSED_FRAME,xo,yo,placer_tile_size*8+1,placer_tile_size*8+1,0);
 			}
 		break;
 		case chunkEditor:
@@ -309,7 +309,7 @@ void editor::draw_non_gui(void){
 				xo+=ChunkOff[0];
 				yo+=ChunkOff[1];
 				if((xo>=ChunkOff[0])&&(yo>=ChunkOff[1]))
-					fl_rect(xo,yo,tsx+1,tsy+1,FL_BLUE);
+					fl_draw_box(FL_EMBOSSED_FRAME,xo,yo,tsx+1,tsy+1,0);
 			}
 		break;
 		case spriteEditor:
@@ -317,7 +317,38 @@ void editor::draw_non_gui(void){
 			spritePal.draw_boxes();
 			SpriteOff[0]=(double)((double)w()/800.0)*(double)defaultspritex;
 			SpriteOff[1]=(double)((double)w()/600.0)*(double)defaultspritey;
-			currentProject->spritesC->draw(curSpritegroup,SpriteOff[0],SpriteOff[1],spritezoom->value());
+			if(currentProject->spritesC->groups[curSpritegroup].list.size()){
+				if(centerSpriteDraw_G)
+					currentProject->spritesC->draw(curSpritegroup,w()/2,h()/2,spritezoom->value(),centerSpriteDraw_G,&spriteEndDraw[0],&spriteEndDraw[1]);
+				else
+					currentProject->spritesC->draw(curSpritegroup,SpriteOff[0],SpriteOff[1],spritezoom->value(),centerSpriteDraw_G,&spriteEndDraw[0],&spriteEndDraw[1]);
+				//Now draw the tile selection
+				if(spriteEndDraw[1]<(h()-48)){
+					unsigned perw=(w()-192)/16;
+					unsigned perh=(h()-(spriteEndDraw[1]+32))/16;
+					unsigned starttile=currentProject->spritesC->groups[curSpritegroup].list[curSprite].starttile;
+					if(starttile>((perw*perh)/2))
+						starttile-=(perw*perh)/2;
+					else
+						starttile=0;
+					unsigned looptile=starttile;
+					unsigned tileatx=0,tileaty=0;
+					for(unsigned y=spriteEndDraw[1]+32;y<h();y+=16){
+						for(unsigned x=192;x<w();x+=16,++looptile){
+							if(looptile>=currentProject->tileC->amt)
+								break;
+							currentProject->tileC->draw_tile(x,y,looptile,2,currentProject->spritesC->groups[curSpritegroup].list[curSprite].palrow,false,false);
+							if(looptile==currentProject->spritesC->groups[curSpritegroup].list[curSprite].starttile){
+								tileatx=x;
+								tileaty=y;
+							}
+						}
+						if(looptile>=currentProject->tileC->amt)
+							break;
+					}
+					fl_draw_box(FL_EMBOSSED_FRAME,tileatx,tileaty,(currentProject->spritesC->groups[curSpritegroup].list[curSprite].w*currentProject->spritesC->groups[curSpritegroup].list[curSprite].h*8*2)+1,17,0);
+				}
+			}
 		break;
 	}//end of switch statment
 }
@@ -431,7 +462,7 @@ int editor::handle(int event){
 						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,2,currentProject->tileC->current_tile)]=truecolor_temp[2];//blue
 						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,3,currentProject->tileC->current_tile)]=truecolor_temp[3];//alpha
 						pushTile(currentProject->tileC->current_tile,tTypeTile);
-						currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);
+						currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile,false);
 						damage(FL_DAMAGE_USER1);
 					}
 					if (Fl::event_x() > tile_edit_offset_x && Fl::event_y() > tile_edit_offset_y && Fl::event_x() < tile_edit_offset_x+(tiles_size*8) && Fl::event_y() < tile_edit_offset_y+(tiles_size*8)){
@@ -445,7 +476,7 @@ int editor::handle(int event){
 						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,2,currentProject->tileC->current_tile)]=currentProject->rgbPal[get_pal+2];//blue
 						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,3,currentProject->tileC->current_tile)]=255;
 						pushTile(currentProject->tileC->current_tile,tTypeTile);
-						currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile);
+						currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile,false);
 						damage(FL_DAMAGE_USER1);
 					}
 				break;
