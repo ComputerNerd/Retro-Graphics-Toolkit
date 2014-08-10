@@ -516,9 +516,12 @@ void tiles::remove_duplicate_tiles(){
 	int32_t cur_tile,curT;
 	uint8_t * tileTemp=(uint8_t *)alloca(tileSize);
 	std::vector<uint32_t> remap(amt);
+	time_t lastt=time(NULL);
 	for(uint32_t i=0;i<amt;++i)
 		remap[i]=i;
 	for (cur_tile=0;cur_tile<amt;++cur_tile){
+		snprintf(bufT,1024,"Comparing tiles with: %d",cur_tile);
+		win->copy_label(bufT);
 		for (curT=amt-1;curT>=0;curT--){
 			if (cur_tile == curT)//don't compare with itself
 				continue;
@@ -578,6 +581,13 @@ void tiles::remove_duplicate_tiles(){
 				remove_tile_at(curT);
 				tile_remove_c++;
 				continue;
+			}
+			if((time(NULL)-lastt)>1){
+				lastt=time(NULL);
+				progress->value((float)cur_tile/(float)amt);
+				snprintf(bufT,1024,"Removed %d tiles",tile_remove_c);
+				progress->label(bufT);
+				Fl::check();
 			}
 		}
 		progress->value((float)cur_tile/(float)amt);

@@ -120,7 +120,7 @@ static const Fl_Menu_Item menuEditor[]={
 	{"TileMap actions",0, 0, 0, FL_SUBMENU},
 		{"Remove tile from tilemap",0,tilemap_remove_callback,0},
 		{"Toggle TrueColor Viewing (defaults to off)",0,trueColTileToggle,0},
-		{"Pick Tile row based on delta",0,tileDPicker,0},
+		{"Pick Tile row based on color delta",0,tileDPicker,0},
 		{"Auto determine if use shadow highlight",0,shadow_highligh_findout,0},
 		{"Dither tilemap as image",0,dither_tilemap_as_image,0},
 		{"File tile map with selection including attributes",0,fill_tile_map_with_tile,(void *)0},

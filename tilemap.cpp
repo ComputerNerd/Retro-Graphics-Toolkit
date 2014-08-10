@@ -282,7 +282,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	}
 	for(x=0;x<4;++x){//This function has too many hard coded values The four should be a variable with the amount of palette rows
 		if(showProgress){
-			sprintf((char*)temp,"Dithering %d",x);
+			snprintf((char*)temp,256,"Dithering %d",x);
 			progress->label((char*)temp);
 			Fl::check();
 		}
@@ -713,7 +713,7 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	if((rows==1)&&(!isSprite))
 		rowAuto = fl_ask("Would you like all tiles on the tilemap to be set to row 0? (This is where all generated colors will apear)");
 	else if(!isSprite){
-		rowAuto = MenuPopup("Palette setting","How would you like the palette map to be handled",3,"Don't change anythin","Pick based on hue","Generate contiguous palette then pick based on delta");
+		rowAuto = MenuPopup("Palette setting","How would you like the palette map to be handled",4,"Don't change anythin","Pick based on hue","Generate contiguous palette then pick based on delta","Quantizer's choice");
 		if(rowAuto<0)
 			return;
 	}else
@@ -772,8 +772,10 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 			window->damage(FL_DAMAGE_USER1);
 			Fl::check();
 		}else{
-			if (rowAuto)
+			if (rowAuto==1)
 				currentProject->tileMapC->pickRow(rows);
+			else if(rowAuto==3)
+				currentProject->tileMapC->pickTileRowQuantChoice(rows);
 			for (uint8_t nerdL=0;nerdL<rows;nerdL++){
 				reduceImage(image,found_colors,nerdL,nerdL*fun_palette,progress,win,perRow[nerdL],yuv,alg);
 				window->damage(FL_DAMAGE_USER1);

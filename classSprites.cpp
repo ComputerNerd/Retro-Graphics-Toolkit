@@ -67,6 +67,66 @@ sprites::~sprites(){
 	name.clear();
 	groups.clear();
 }
+static bool isMask(int x,int y,Fl_Shared_Image*loaded_image,bool grayscale,bool useAlpha,uint8_t*mask){
+	uint8_t*imgptr;
+	int w=loaded_image->w(),h=loaded_image->h();
+	if(x>=w)
+		return false;
+	if(x<0)
+		return false;
+	if(y>=h)
+		return false;
+	if(y<0)
+		return false;
+	unsigned depth=loaded_image->d();
+	switch(depth){
+		case 1:
+			if(grayscale){
+				imgptr=(uint8_t*)loaded_image->data()[0];
+				imgptr+=(y*w)+x;
+				return ((*imgptr)==(*mask));
+			}else{
+				imgptr=(uint8_t*)loaded_image->data()[y+2];
+				imgptr+=x;
+				if(useAlpha)
+					return ((*imgptr)==' ');
+				else
+					return ((*imgptr)==(*mask));
+			}
+		break;
+		case 3:
+			imgptr=(uint8_t*)loaded_image->data()[0];
+			imgptr+=((y*w)+x)*3;
+			if(imgptr[0]==mask[0]){
+				if(imgptr[1]==mask[1]){
+					if(imgptr[2]==mask[2])
+						return true;
+				}
+			}
+			return false;
+		break;
+		case 4:
+			imgptr=(uint8_t*)loaded_image->data()[0];
+			imgptr+=((y*w)+x)*4;
+			if(useAlpha)
+				return (imgptr[3])?true:false;
+			else{
+				if(imgptr[3]){
+					if(imgptr[0]==mask[0]){
+						if(imgptr[1]==mask[1]){
+							if(imgptr[2]==mask[2])
+								return true;
+						}
+					}
+				}
+				return false;
+			}
+		break;
+	}
+}
+static bool inRange(int num,int min,int max){
+	return (num>=min)&&(num<=max);
+}
 void sprites::importSpriteSheet(void){
 	if(load_file_generic("Load image")){
 		Fl_Shared_Image * loaded_image=Fl_Shared_Image::get(the_file.c_str());
@@ -106,7 +166,9 @@ void sprites::importSpriteSheet(void){
 			}
 		}
 		uint8_t mask[3];
-		getMaskColorImg(loaded_image,grayscale,remap,palMap,mask);
+		bool useAlpha;
+		if(getMaskColorImg(loaded_image,grayscale,remap,palMap,mask,useAlpha)){
+		}
 		loaded_image->release();
 	}
 }

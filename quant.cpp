@@ -557,7 +557,7 @@ static int reduce_table3(int num_colors,bool showProgress,Fl_Progress *progress)
 	unsigned long err;
 	// Make the progress bar
 
-	if (progress==0)
+	if (!progress)
 		showProgress=false;
 	if (showProgress)
 		progress->label("Quantize Pass 1");

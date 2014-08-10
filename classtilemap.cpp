@@ -20,6 +20,7 @@
 #include "filemisc.h"
 #include "classtilemap.h"
 #include "compressionWrapper.h"
+#include "quant.h"
 tileMap::tileMap(){
 	amt=1;
 	mapSizeHA=mapSizeW=mapSizeH=2;
@@ -53,6 +54,79 @@ tileMap::tileMap(const tileMap& other){
 }
 tileMap::~tileMap(){
 	free(tileMapDat);
+}
+static void sumTile(uint8_t*tilePtr,uint32_t*sums){
+	uint32_t sum[3];//In hopes that the compiler is smart enough to keep these in registers
+	memset(sum,0,sizeof(sum));
+	for(unsigned j=0;j<256;++j){
+		if(tilePtr[3]){
+			sum[0]+=tilePtr[0];
+			sum[1]+=tilePtr[1];
+			sum[2]+=tilePtr[2];
+		}
+		tilePtr+=4;
+	}
+	sums[0]=sum[0];
+	sums[1]=sum[1];
+	sums[2]=sum[2];
+}
+bool tileMap::pickTileRowQuantChoice(unsigned rows){
+	unsigned w=mapSizeW,h=mapSizeHA;
+	unsigned char userpal[3][256];
+	if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
+		w/=2;
+		h/=2;
+	}
+	uint8_t*imgin=(uint8_t*)malloc(w*h*3);
+	uint8_t*imgout=(uint8_t*)malloc(w*h);
+	uint32_t sums[3];
+	uint8_t*imgptr=imgin;
+	if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
+		for(unsigned y=0;y<mapSizeHA;y+=2){
+			for(unsigned x=0;x<mapSizeW;x+=2){
+				memset(sums,0,sizeof(sums));
+				for(unsigned i=0;i<4;++i){
+					uint32_t sumtmp[3];
+					sumTile(currentProject->tileC->truetDat.data()+(get_tile(x+(i&1),y+(i/2))*currentProject->tileC->tcSize),sumtmp);
+					sums[0]+=sumtmp[0];
+					sums[1]+=sumtmp[1];
+					sums[2]+=sumtmp[2];
+				}
+				*imgptr++=sums[0]/256;
+				*imgptr++=sums[1]/256;
+				*imgptr++=sums[2]/256;
+			}
+		}
+	}else{
+		for(unsigned y=0;y<mapSizeHA;++y){
+			for(unsigned x=0;x<mapSizeW;++x){
+				sumTile(currentProject->tileC->truetDat.data()+(get_tile(x,y)*currentProject->tileC->tcSize),sums);
+				*imgptr++=sums[0]/64;
+				*imgptr++=sums[1]/64;
+				*imgptr++=sums[2]/64;
+			}
+		}
+	}
+	dl3quant(imgin,w,h,rows,userpal,false,0);
+	dl3floste(imgin,imgout,w,h,rows,0,userpal);
+	imgptr=imgout;
+	if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
+		for(unsigned y=0;y<mapSizeHA;y+=2){
+			for(unsigned x=0;x<mapSizeW;x+=2){
+				set_pal_row(x,y,(*imgptr)%rows);
+				set_pal_row(x+1,y,(*imgptr)%rows);
+				set_pal_row(x,y+1,(*imgptr)%rows);
+				set_pal_row(x+1,y+1,(*imgptr++)%rows);
+			}
+		}
+	}else{
+		for(unsigned y=0;y<mapSizeHA;++y){
+			for(unsigned x=0;x<mapSizeW;++x)
+				set_pal_row(x,y,(*imgptr++)%rows);
+		}
+	}
+	free(imgin);
+	free(imgout);
 }
 bool tileMap::inRange(uint32_t x,uint32_t y){
 	if (mapSizeW < x || mapSizeHA < y){

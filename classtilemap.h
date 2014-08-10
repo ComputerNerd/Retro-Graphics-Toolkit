@@ -27,6 +27,7 @@ public:
 	uint32_t mapSizeW,mapSizeH,mapSizeHA;
 	bool isBlock;
 	uint32_t amt;
+	bool pickTileRowQuantChoice(unsigned rows);
 	bool inRange(uint32_t x,uint32_t y);
 	void setRaw(uint32_t x,uint32_t y,uint32_t val);
 	uint32_t getRaw(uint32_t x,uint32_t y);
