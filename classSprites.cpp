@@ -237,14 +237,17 @@ void sprites::importSpriteSheet(void){
 			}
 			progress->maximum(rects.size());
 			progress->value(0);
-			Fl::check();
 			//Now combine the rectanges
 			//Start by combining rectanges by that touch with y values
 			bool canEnd;
 			int pass=0;
+			char txtbufstage[1024];
+			char txtbuf[1024];
 			do{
 			canEnd=true;
-			printf("%d\n",pass++);
+			snprintf(txtbufstage,1024,"Stage 1 pass %d\n",pass++);
+			winP->label(txtbufstage);
+			Fl::check();
 			for(int i=0;i<rects.size();i+=4){
 				for(int j=0;j<rects.size();j+=4){
 					//printf("%d %d\n",i,j);
@@ -306,7 +309,11 @@ void sprites::importSpriteSheet(void){
 			pass=0;
 			do{
 				canEnd=true;
-				printf("%d\n",pass++);
+				snprintf(txtbufstage,1024,"Stage 2 pass %d\n",pass++);
+				winP->label(txtbufstage);
+				progress->maximum(rects.size());
+				progress->value(0);
+				Fl::check();
 				for(int i=0;i<rects.size();i+=4){
 					for(int j=0;j<rects.size();j+=4){
 						//printf("%d %d\n",i,j);
