@@ -18,11 +18,10 @@
 #include "image.h"
 #include <FL/Fl_Color_Chooser.H>
 #include <FL/Fl_Scroll.H>
-#include <FL/Fl_Radio_Button.H>
 static Fl_Window * win;
 static bool useAlpha;
 static bool retOkay;
-void RetCB(Fl_Widget*,void*r){
+static void RetCB(Fl_Widget*,void*r){
 	retOkay=r?true:false;
 	win->hide();
 }
@@ -93,7 +92,7 @@ public:
 	}
 };
 static ScrollBox*box;
-void setAlphaCB(Fl_Widget*,void*a){
+static void setAlphaCB(Fl_Widget*,void*a){
 	if(a){
 		useAlpha=true;
 		box->colsel->hide();

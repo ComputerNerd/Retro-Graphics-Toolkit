@@ -1,4 +1,10 @@
 Most recent changes are placed at the top
+20140810
+Fixed a minor bug where area near tab space would not be redrawn
+
+20140809
+Added new tile row pick algorith Quantizer's choice
+
 20140808
 Fixed a bug where sprite palette (NES only) was not used in sprites
 Added sort each palette row by (currently has hue,saturation,lightness)

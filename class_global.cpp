@@ -361,7 +361,11 @@ void editor::draw(){
 	//menu->redraw();
 	//the_tabs->redraw();
 	//draw_children();
-	Fl_Group::draw();
+	if (damage() & ~FL_DAMAGE_CHILD) {	 // draw the entire thing
+		draw_box(box(),0,0,w(),h(),color()); // draw box with x/y = 0
+	}
+	draw_children();
+	//Fl_Group::draw();
 	draw_non_gui();
 }
 

@@ -19,6 +19,7 @@ int main(int argc, char **argv){
 	printf("Welcome to Retro graphics Toolkit\nWritten by sega16/nintendo8\nBuild %s %s\n",__DATE__,__TIME__);
 	window->resizable(window);
 	Fl::scheme("plastic");
+	window->box(FL_PLASTIC_UP_BOX);
 	fl_register_images();
 	updateTileSelectAmt();
 	//// For a nicer looking browser under linux, call Fl_File_Icon::load_system_icons();

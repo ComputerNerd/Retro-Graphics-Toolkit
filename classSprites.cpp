@@ -16,6 +16,7 @@
 */
 #include <stdlib.h>
 #include <string.h>
+#include <FL/Fl_Scroll.H>
 #include "classSprite.h"
 #include "classSprites.h"
 #include "includes.h"
@@ -71,13 +72,13 @@ static bool isMask(int x,int y,Fl_Shared_Image*loaded_image,bool grayscale,bool 
 	uint8_t*imgptr;
 	int w=loaded_image->w(),h=loaded_image->h();
 	if(x>=w)
-		return false;
+		return true;
 	if(x<0)
-		return false;
+		return true;
 	if(y>=h)
-		return false;
+		return true;
 	if(y<0)
-		return false;
+		return true;
 	unsigned depth=loaded_image->d();
 	switch(depth){
 		case 1:
@@ -109,7 +110,7 @@ static bool isMask(int x,int y,Fl_Shared_Image*loaded_image,bool grayscale,bool 
 			imgptr=(uint8_t*)loaded_image->data()[0];
 			imgptr+=((y*w)+x)*4;
 			if(useAlpha)
-				return (imgptr[3])?true:false;
+				return (imgptr[3])?false:true;
 			else{
 				if(imgptr[3]){
 					if(imgptr[0]==mask[0]){
@@ -126,6 +127,37 @@ static bool isMask(int x,int y,Fl_Shared_Image*loaded_image,bool grayscale,bool 
 }
 static bool inRange(int num,int min,int max){
 	return (num>=min)&&(num<=max);
+}
+class RectBox : public Fl_Box{
+public:
+	std::vector<int>*rects;
+	Fl_Scroll *scroll;
+	int handle(int e){
+		return(Fl_Box::handle(e));
+	}
+	void draw(void){
+		int minx=scroll->x()-x(),miny=scroll->y()-y();
+		int maxx=minx+scroll->w(),maxy=miny+scroll->h();
+		Fl_Box::draw();
+		//Now draw the rectanges
+		for(unsigned i=0;i<rects->size();i+=4){
+			if(((*rects)[i]>=minx)||((*rects)[i]<=maxx)){
+				if(((*rects)[i+2]>=miny)||((*rects)[i+2]<=maxy)){
+					fl_draw_box(FL_EMBOSSED_FRAME,(*rects)[i]+x(),(*rects)[i+2]+y(),(*rects)[i+1]-(*rects)[i]+1,(*rects)[i+3]-(*rects)[i+2]+1,0);
+				}
+			}
+		}
+	}
+	RectBox(int x,int y,int w,int h,const char*l=0) : Fl_Box(x,y,w,h,l){
+		box(FL_NO_BOX);
+	}
+};
+static RectBox*box;
+static bool retOkay;
+static Fl_Window * win;
+static void RetCB(Fl_Widget*,void*r){
+	retOkay=r?true:false;
+	win->hide();
 }
 void sprites::importSpriteSheet(void){
 	if(load_file_generic("Load image")){
@@ -168,6 +200,176 @@ void sprites::importSpriteSheet(void){
 		uint8_t mask[3];
 		bool useAlpha;
 		if(getMaskColorImg(loaded_image,grayscale,remap,palMap,mask,useAlpha)){
+			std::vector<int> rects;//x0,x1,y0,y1
+			Fl_Window *winP;
+			Fl_Progress *progress;
+			winP = new Fl_Window(400,45,"Progress");		// access parent window
+			winP->begin();					// add progress bar to it..
+			progress = new Fl_Progress(25,7,350,30);
+			progress->minimum(0.0);				// set progress range to be 0.0 ~ 1.0
+			progress->maximum(1.0);
+			progress->color(0x88888800);			// background color
+			progress->selection_color(0x4444ff00);		// progress bar color
+			progress->labelcolor(FL_WHITE);			// percent text color
+			progress->label("Please wait");
+			winP->end();					// end adding to window
+			winP->set_modal();
+			winP->show();
+			time_t lasttime=time(NULL);
+			progress->maximum(h);
+			Fl::check();
+			for(int y=0;y<h;++y){
+				for(int x=0;x<w;++x){
+					if(!isMask(x,y,loaded_image,grayscale,useAlpha,mask)){
+						rects.push_back(x);
+						while(!isMask(x+1,y,loaded_image,grayscale,useAlpha,mask))
+							++x;
+						rects.push_back(x);
+						rects.push_back(y);
+						rects.push_back(y);
+					}
+				}
+				if((time(NULL)-lasttime)>=1){
+					lasttime=time(NULL);
+					progress->value(h);
+					Fl::check();
+				}
+			}
+			progress->maximum(rects.size());
+			progress->value(0);
+			Fl::check();
+			//Now combine the rectanges
+			//Start by combining rectanges by that touch with y values
+			bool canEnd;
+			int pass=0;
+			do{
+			canEnd=true;
+			printf("%d\n",pass++);
+			for(int i=0;i<rects.size();i+=4){
+				for(int j=0;j<rects.size();j+=4){
+					//printf("%d %d\n",i,j);
+					if(i==j)
+						continue;
+					//See if rectanges are touching or overlap
+					//if((inRange(rects[j+2],rects[i+2]-1,rects[i+3]+1)||inRange(rects[i+2],rects[j+2]-1,rects[j+3]+1))&&(!((rects[i+2]==rects[j+2])||(rects[i+3]==rects[j+3])))){//Is rectange j directly above or below i
+					if((rects[j+3]-rects[i+2])==1){
+						if((inRange(rects[j],rects[i]-1,rects[i+1]+1)||inRange(rects[i],rects[j]-1,rects[j+1]+1))){
+							canEnd=false;
+							//Merge the two squares obtainting maximum size
+							/*if(pass>1){
+								if(rects[i+2]>1600){
+									printf("%d %d %d %d %d %d %d %d\n",rects[i],rects[i+1],rects[i+2],rects[i+3],rects[j],rects[j+1],rects[j+2],rects[j+3]);
+								}
+							}*/
+							//Now try and find the combination that results in the largest rectange
+							rects[i]=std::min(rects[i],rects[j]);
+							rects[i+1]=std::max(rects[i+1],rects[j+1]);
+							rects[i+2]=std::min(rects[i+2],rects[j+2]);
+							rects[i+3]=std::max(rects[i+3],rects[j+3]);
+							rects.erase(rects.begin()+j,rects.begin()+j+4);
+							/*if(pass>1){
+								if(rects[i+2]>1600){
+									printf("%d %d %d %d\n",rects[i],rects[i+1],rects[i+2],rects[i+3]);
+									win->redraw();
+									Fl::check();
+								}
+							}*/
+							//Now try to find next in sequence
+							bool foundit;
+							do{
+								foundit=false;
+								for(int a=0;a<rects.size();a+=4){
+									int look=rects[i+3]+1;
+									if(rects[a+2]==look){
+										if((inRange(rects[a],rects[i]-1,rects[i+1]+1)||inRange(rects[i],rects[a]-1,rects[a+1]+1))){
+											foundit=true;
+											rects[i]=std::min(rects[i],rects[a]);
+											rects[i+1]=std::max(rects[i+1],rects[a+1]);
+											rects[i+2]=std::min(rects[i+2],rects[a+2]);
+											rects[i+3]=std::max(rects[i+3],rects[a+3]);
+											rects.erase(rects.begin()+a,rects.begin()+a+4);
+										}
+									}
+								}
+							}while(foundit);
+						}
+					}
+				}
+				if((time(NULL)-lasttime)>=1){
+					lasttime=time(NULL);
+					progress->maximum(rects.size());
+					progress->value(i);
+					Fl::check();
+				}
+			}
+			}while(!canEnd);
+			pass=0;
+			do{
+				canEnd=true;
+				printf("%d\n",pass++);
+				for(int i=0;i<rects.size();i+=4){
+					for(int j=0;j<rects.size();j+=4){
+						//printf("%d %d\n",i,j);
+						if(i==j)
+							continue;
+						//Merdge overlapping rectangles
+						if((rects[i]<=rects[j+1])&&(rects[i+1]>=rects[j])&&(rects[i+2]<=rects[j+3])&&(rects[i+3]>=rects[j+2])){
+							canEnd=false;
+							rects[i]=std::min(rects[i],rects[j]);
+							rects[i+1]=std::max(rects[i+1],rects[j+1]);
+							rects[i+2]=std::min(rects[i+2],rects[j+2]);
+							rects[i+3]=std::max(rects[i+3],rects[j+3]);
+							rects.erase(rects.begin()+j,rects.begin()+j+4);
+						}
+						//Merdge touching rectanges
+						if(abs(rects[i+1]-rects[j])==1){
+							if((inRange(rects[j+2],rects[i+2]-1,rects[i+3]+1)||inRange(rects[i+2],rects[j+2]-1,rects[j+3]+1))){
+								canEnd=false;
+								rects[i]=std::min(rects[i],rects[j]);
+								rects[i+1]=std::max(rects[i+1],rects[j+1]);
+								rects[i+2]=std::min(rects[i+2],rects[j+2]);
+								rects[i+3]=std::max(rects[i+3],rects[j+3]);
+								rects.erase(rects.begin()+j,rects.begin()+j+4);
+							}
+						}
+					}
+					if((time(NULL)-lasttime)>=1){
+						lasttime=time(NULL);
+						progress->maximum(rects.size());
+						progress->value(i);
+						Fl::check();
+					}
+				}
+			}while(!canEnd);
+			winP->remove(progress);// remove progress bar from window
+			delete(progress);// deallocate it
+			delete winP;
+			//Now show the window allowing user to adjust sprite settings
+			win=new Fl_Double_Window(640,480,"Sprite selection");
+			win->begin();
+			win->resizable(win);
+			Fl_Button * Ok=new Fl_Button(256,448,64,24,"Okay");
+			Ok->callback(RetCB,(void*)1);
+			Fl_Button * Cancel=new Fl_Button(320,448,64,24,"Cancel");
+			Cancel->callback(RetCB,0);
+			Fl_Scroll*scroll=new Fl_Scroll(8,8,624,440);
+			box=new RectBox(8,8,w,h);
+			box->scroll=scroll;
+			box->rects=&rects;
+			box->image(loaded_image);
+			scroll->end();
+			win->end();
+			win->set_modal();
+			win->show();
+			Fl::check();
+
+			while(win->shown())
+				Fl::wait();
+			delete win;
+			if(retOkay){
+
+			}
+			rects.clear();
 		}
 		loaded_image->release();
 	}
@@ -347,7 +549,7 @@ void sprites::DplcItem(void*in,uint32_t which,gameType_t game){
 	 * for each of amount
 	 * uint8_t how many and offset high byte
 	 * The high nybles sigifies how many tiles to load - 1
-	 * uint8_t how many low byte
+	 * uint8_t offset low byte
 	 * */
 	//Just ignore the the high nyble on the high byte to get start tile
 	if(game==tSonic1){
