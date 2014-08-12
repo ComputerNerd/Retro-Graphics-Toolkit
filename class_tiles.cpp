@@ -156,9 +156,14 @@ uint32_t tiles::getPixelTc(uint32_t tile,uint32_t x,uint32_t y){
 	return*tt;
 }
 void tiles::resizeAmt(uint32_t amtnew){
+	try{
 	amt=amtnew;
 	tDat.resize(amt*tileSize);
 	truetDat.resize(amt*tcSize);
+	}catch(std::exception&e){
+		fl_alert("Error: cannot resize tiles to %d\nAdditional details %d",e.what());
+		exit(1);
+	}
 }
 void tiles::resizeAmt(void){
 	resizeAmt(amt);

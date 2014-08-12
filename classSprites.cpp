@@ -182,9 +182,9 @@ bool sprites::recttoSprite(int x0,int x1,int y0,int y1,int where,Fl_Shared_Image
 	wf=loaded_image->w();
 	hf=loaded_image->h();
 	w=x1-x0+1;
-	h=y1-x0+1;
-	wt=(w+7)&(~8);
-	ht=(h+7)&(~8);
+	h=y1-y0+1;
+	wt=(w+7)&(~7);
+	ht=(h+7)&(~7);
 	//Determin how many sprites will be created
 	unsigned spritesnew=((wt+wmax-8)/wmax)*((ht+hmax-8)/hmax);
 	if(where>=amt)
@@ -220,17 +220,17 @@ bool sprites::recttoSprite(int x0,int x1,int y0,int y1,int where,Fl_Shared_Image
 				for(unsigned j=0;j<dimy;j+=8){
 					for(unsigned b=0;b<8;++b){
 						for(unsigned a=0;a<8;++a){
-							unsigned xx=x0+x+i+a;
-							unsigned yy=y0+y+j+b;
+							unsigned xx=x+i+a;
+							unsigned yy=y+j+b;
 							//printf("%d %d\n",xx,yy);
 							if((!((yy<center[1])||(yy>=(h+center[1]))))&&(depth==1)&&(!grayscale))
-								imgptr=(uint8_t*)loaded_image->data()[yy+2-center[1]];
+								imgptr=(uint8_t*)loaded_image->data()[yy+y0+2-center[1]];
 							else if(!((yy<center[1])||(yy>=(ht+center[1])))){
 								imgptr=(uint8_t *)loaded_image->data()[0];
-								imgptr+=(yy-center[1])*wf*depth;
+								imgptr+=((yy+y0)-center[1])*wf*depth;
 							}
 							if((xx>center[0])&&(xx<=center[2]))
-								imgptr+=(xx-center[0])*depth;
+								imgptr+=((xx+x0)-center[0])*depth;
 							if((yy<center[1])||(yy>=(ht+center[1]))){
 								memset(out,0,4);
 							}else if(xx<center[0]){
