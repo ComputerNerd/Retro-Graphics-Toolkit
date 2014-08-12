@@ -131,6 +131,8 @@ static bool inRange(int num,int min,int max){
 class RectBox : public Fl_Box{
 public:
 	std::vector<int>*rects;
+	std::vector<bool>*deleted;
+	int sel;
 	Fl_Scroll *scroll;
 	int handle(int e){
 		return(Fl_Box::handle(e));
@@ -143,7 +145,8 @@ public:
 		for(unsigned i=0;i<rects->size();i+=4){
 			if(((*rects)[i]>=minx)||((*rects)[i]<=maxx)){
 				if(((*rects)[i+2]>=miny)||((*rects)[i+2]<=maxy)){
-					fl_draw_box(FL_EMBOSSED_FRAME,(*rects)[i]+x(),(*rects)[i+2]+y(),(*rects)[i+1]-(*rects)[i]+1,(*rects)[i+3]-(*rects)[i+2]+1,0);
+					if(!(*deleted)[i/4])
+						fl_draw_box(FL_EMBOSSED_FRAME,(*rects)[i]+x(),(*rects)[i+2]+y(),(*rects)[i+1]-(*rects)[i]+1,(*rects)[i+3]-(*rects)[i+2]+1,0);
 				}
 			}
 		}
@@ -158,6 +161,161 @@ static Fl_Window * win;
 static void RetCB(Fl_Widget*,void*r){
 	retOkay=r?true:false;
 	win->hide();
+}
+bool sprites::recttoSprite(int x0,int x1,int y0,int y1,int where,Fl_Shared_Image*loaded_image,bool grayscale,unsigned*remap,uint8_t*palMap,uint8_t*mask,bool useMask,bool useAlpha){
+	if(where<0){
+		where=amt;
+		setAmt(amt+1);
+	}
+	unsigned depth=loaded_image->d();
+	unsigned wmax,hmax;
+	switch(currentProject->gameSystem){
+		case sega_genesis:
+			wmax=hmax=32;
+		break;
+		case NES:
+			wmax=8;
+			hmax=16;
+		break;
+	}
+	unsigned wf,hf,w,h,wt,ht;
+	wf=loaded_image->w();
+	hf=loaded_image->h();
+	w=x1-x0+1;
+	h=y1-x0+1;
+	wt=(w+7)&(~8);
+	ht=(h+7)&(~8);
+	//Determin how many sprites will be created
+	unsigned spritesnew=((wt+wmax-8)/wmax)*((ht+hmax-8)/hmax);
+	if(where>=amt)
+		setAmt(where+1);
+	unsigned startTile=currentProject->tileC->amt;
+	uint8_t*out=currentProject->tileC->truetDat.data()+(startTile*256);
+	unsigned newTiles=(wt/8)*(ht/8);
+	currentProject->tileC->amt+=newTiles;
+	//set new amount
+	currentProject->tileC->resizeAmt();
+	out=currentProject->tileC->truetDat.data()+(startTile*currentProject->tileC->tcSize);
+	setAmtingroup(where,spritesnew);
+	unsigned center[3];
+	center[0]=(wt-w)/2;
+	center[1]=(ht-h)/2;
+	center[2]=w+center[0];
+	uint8_t * imgptr=(uint8_t *)loaded_image->data()[0];
+	printf("Center %d %d %d\n",center[0],center[1],center[2]);
+	printf("w: %d h: %d wt: %d ht: %d newtiles: %d\n",w,h,wt,ht,newTiles);
+	for(unsigned y=0,cnt=0,tilecnt=startTile;y<ht;y+=hmax){
+		for(unsigned x=0;x<wt;x+=wmax,++cnt){
+			unsigned dimx,dimy;
+			dimx=((wt-x)>=wmax)?wmax:(wt-x)%wmax;
+			dimy=((ht-y)>=hmax)?hmax:(ht-y)%hmax;
+			groups[where].list[cnt].w=dimx/8;
+			groups[where].list[cnt].h=dimy/8;
+			groups[where].list[cnt].starttile=tilecnt;
+			groups[where].offx[cnt]=x;
+			groups[where].offy[cnt]=y;
+			groups[where].loadat[cnt]=tilecnt;
+			tilecnt+=(dimx/8)*(dimy/8);
+			for(unsigned i=0;i<dimx;i+=8){
+				for(unsigned j=0;j<dimy;j+=8){
+					for(unsigned b=0;b<8;++b){
+						for(unsigned a=0;a<8;++a){
+							unsigned xx=x0+x+i+a;
+							unsigned yy=y0+y+j+b;
+							//printf("%d %d\n",xx,yy);
+							if((!((yy<center[1])||(yy>=(h+center[1]))))&&(depth==1)&&(!grayscale))
+								imgptr=(uint8_t*)loaded_image->data()[yy+2-center[1]];
+							else if(!((yy<center[1])||(yy>=(ht+center[1])))){
+								imgptr=(uint8_t *)loaded_image->data()[0];
+								imgptr+=(yy-center[1])*wf*depth;
+							}
+							if((xx>center[0])&&(xx<=center[2]))
+								imgptr+=(xx-center[0])*depth;
+							if((yy<center[1])||(yy>=(ht+center[1]))){
+								memset(out,0,4);
+							}else if(xx<center[0]){
+								memset(out,0,4);
+							}else if(xx>=center[2]){
+								memset(out,0,4);
+							}else{
+								//Can actully convert pixel to tile
+								if(useMask&&(!useAlpha)){
+									switch(depth){
+										case 1:
+											if(grayscale){
+												if((*imgptr)!=mask[0]){
+													memset(out,*imgptr,3);
+													out[3]=255;
+												}else{
+													memset(out,0,4);
+												}
+											}else{
+												if((*imgptr)==' '){
+													memset(out,0,4);
+												}else{
+													if((*imgptr)!=mask[0]){
+														unsigned p=(*imgptr++);
+														out[0]=palMap[remap[p]+1];
+														out[1]=palMap[remap[p]+2];
+														out[2]=palMap[remap[p]+3];
+														out[3]=255;
+													}else{
+														memset(out,0,4);
+													}
+												}
+											}
+										break;
+										case 3:
+											if((imgptr[0]==mask[0])&&(imgptr[1]==mask[1])&&(imgptr[2]==mask[2])){
+												memset(out,0,4);
+											}else{
+												memcpy(out,imgptr,3);
+												out[3]=255;
+											}
+										break;
+										case 4:
+											if((imgptr[0]==mask[0])&&(imgptr[1]==mask[1])&&(imgptr[2]==mask[2])&&(imgptr[3])){
+												memset(out,0,4);
+											}else{
+												memcpy(out,imgptr,4);
+											}
+										break;
+									}
+								}else{
+									switch(depth){
+										case 1:
+											if(grayscale){
+												memset(out,*imgptr,3);
+												out[3]=255;
+											}else{
+												if((*imgptr)==' '){
+													memset(out,0,4);
+												}else{
+													unsigned p=(*imgptr++);
+													out[0]=palMap[remap[p]+1];
+													out[1]=palMap[remap[p]+2];
+													out[2]=palMap[remap[p]+3];
+													out[3]=255;
+												}
+											}
+										break;
+										case 3:
+											memcpy(out,imgptr,3);
+											out[3]=255;
+										break;
+										case 4:
+											memcpy(out,imgptr,4);
+										break;
+									}
+								}
+							}
+							out+=4;
+						}
+					}
+				}
+			}
+		}
+	}
 }
 void sprites::importSpriteSheet(void){
 	if(load_file_generic("Load image")){
@@ -176,16 +334,6 @@ void sprites::importSpriteSheet(void){
 		uint32_t w,h;
 		w=loaded_image->w();
 		h=loaded_image->h();
-		uint32_t wmax,hmax;
-		switch(currentProject->gameSystem){
-			case sega_genesis:
-				wmax=hmax=32;
-			break;
-			case NES:
-				wmax=8;
-				hmax=16;
-			break;
-		}
 		bool grayscale;
 		uint8_t*palMap;
 		uint8_t*imgptr;
@@ -245,7 +393,7 @@ void sprites::importSpriteSheet(void){
 			char txtbuf[1024];
 			do{
 			canEnd=true;
-			snprintf(txtbufstage,1024,"Stage 1 pass %d\n",pass++);
+			snprintf(txtbufstage,1024,"Stage 1 pass %d",pass++);
 			winP->label(txtbufstage);
 			Fl::check();
 			for(int i=0;i<rects.size();i+=4){
@@ -259,24 +407,12 @@ void sprites::importSpriteSheet(void){
 						if((inRange(rects[j],rects[i]-1,rects[i+1]+1)||inRange(rects[i],rects[j]-1,rects[j+1]+1))){
 							canEnd=false;
 							//Merge the two squares obtainting maximum size
-							/*if(pass>1){
-								if(rects[i+2]>1600){
-									printf("%d %d %d %d %d %d %d %d\n",rects[i],rects[i+1],rects[i+2],rects[i+3],rects[j],rects[j+1],rects[j+2],rects[j+3]);
-								}
-							}*/
 							//Now try and find the combination that results in the largest rectange
 							rects[i]=std::min(rects[i],rects[j]);
 							rects[i+1]=std::max(rects[i+1],rects[j+1]);
 							rects[i+2]=std::min(rects[i+2],rects[j+2]);
 							rects[i+3]=std::max(rects[i+3],rects[j+3]);
 							rects.erase(rects.begin()+j,rects.begin()+j+4);
-							/*if(pass>1){
-								if(rects[i+2]>1600){
-									printf("%d %d %d %d\n",rects[i],rects[i+1],rects[i+2],rects[i+3]);
-									win->redraw();
-									Fl::check();
-								}
-							}*/
 							//Now try to find next in sequence
 							bool foundit;
 							do{
@@ -302,6 +438,8 @@ void sprites::importSpriteSheet(void){
 					lasttime=time(NULL);
 					progress->maximum(rects.size());
 					progress->value(i);
+					snprintf(txtbuf,1024,"Rectanges: %d",rects.size());
+					progress->label(txtbuf);
 					Fl::check();
 				}
 			}
@@ -309,7 +447,7 @@ void sprites::importSpriteSheet(void){
 			pass=0;
 			do{
 				canEnd=true;
-				snprintf(txtbufstage,1024,"Stage 2 pass %d\n",pass++);
+				snprintf(txtbufstage,1024,"Stage 2 pass %d",pass++);
 				winP->label(txtbufstage);
 				progress->maximum(rects.size());
 				progress->value(0);
@@ -344,6 +482,8 @@ void sprites::importSpriteSheet(void){
 						lasttime=time(NULL);
 						progress->maximum(rects.size());
 						progress->value(i);
+						snprintf(txtbuf,1024,"Rectanges: %d",rects.size());
+						progress->label(txtbuf);
 						Fl::check();
 					}
 				}
@@ -351,6 +491,8 @@ void sprites::importSpriteSheet(void){
 			winP->remove(progress);// remove progress bar from window
 			delete(progress);// deallocate it
 			delete winP;
+			std::vector<bool> deleted;
+			deleted.resize(rects.size()/4);
 			//Now show the window allowing user to adjust sprite settings
 			win=new Fl_Double_Window(640,480,"Sprite selection");
 			win->begin();
@@ -363,6 +505,7 @@ void sprites::importSpriteSheet(void){
 			box=new RectBox(8,8,w,h);
 			box->scroll=scroll;
 			box->rects=&rects;
+			box->deleted=&deleted;
 			box->image(loaded_image);
 			scroll->end();
 			win->end();
@@ -374,8 +517,11 @@ void sprites::importSpriteSheet(void){
 				Fl::wait();
 			delete win;
 			if(retOkay){
-
+				for(unsigned i=0;i<rects.size();i+=4){
+					recttoSprite(rects[i],rects[i+1],rects[i+2],rects[i+3],-1,loaded_image,grayscale,remap,palMap,mask,true,useAlpha);
+				}
 			}
+			deleted.clear();
 			rects.clear();
 		}
 		loaded_image->release();
@@ -853,36 +999,6 @@ void sprites::importMapping(gameType_t game){
 		free(buf);
 	}
 }
-static uint8_t*rect2rect1byte(Fl_Shared_Image*loaded_image,uint8_t*out,unsigned xin,unsigned yin,unsigned win,unsigned wout,unsigned hout,bool grayscale,unsigned*remap,uint8_t*palMap){
-	uint8_t*in=(uint8_t*)loaded_image->data()[yin+2];
-	in+=xin;
-	while(hout--){
-		for(unsigned i=0;i<wout;++i){
-			if(grayscale){
-				*out++=*in;
-				*out++=*in;
-				*out++=*in++;
-				*out++=255;
-			}else{
-				if(*in==' '){
-					memset(out,0,4);
-					out+=4;
-					++in;
-				}else{
-					unsigned p=(*in++);
-					*out++=palMap[remap[p]+1];
-					*out++=palMap[remap[p]+2];
-					*out++=palMap[remap[p]+3];
-					*out++=255;
-				}
-			}
-		}
-		++yin;
-		in=(uint8_t*)loaded_image->data()[yin+2];//Extra data is tacked on at the end meaning we cannot just acess as contiguous image
-		in+=xin;
-	}
-	return out;
-}
 static uint8_t*rect2rect(uint8_t*in,uint8_t*out,unsigned xin,unsigned yin,unsigned win,unsigned wout,unsigned hout,unsigned depth,bool reverse=false){
 	in+=(yin*win*depth)+(xin*depth);
 	while(hout--){
@@ -1163,13 +1279,6 @@ bool sprites::load(FILE*fp,uint32_t version){
 	}
 	return true;
 }
-static int numCmp(uint8_t*dat,unsigned n,uint8_t num){
-	while(n--){
-		if(*dat++!=num)
-			return 0;
-	}
-	return 1;
-}
 void sprites::importImg(uint32_t to){
 	if(load_file_generic("Load image")){
 		Fl_Shared_Image * loaded_image=Fl_Shared_Image::get(the_file.c_str());
@@ -1177,28 +1286,6 @@ void sprites::importImg(uint32_t to){
 			fl_alert("Error loading image");
 			return;
 		}
-		uint32_t wnew,hnew;
-		wnew=loaded_image->w();
-		hnew=loaded_image->h();
-		uint32_t wmax,hmax;
-		switch(currentProject->gameSystem){
-			case sega_genesis:
-				wmax=hmax=32;
-			break;
-			case NES:
-				wmax=8;
-				hmax=16;
-			break;
-		}
-		if((wnew&7)||(hnew&7)){
-			fl_alert("%d or %d are not a multiple of 8",wnew,hnew);
-			loaded_image->release();
-			return;
-		}
-		//Determin how many sprites will be created
-		unsigned spritesnew=((wnew+wmax-8)/wmax)*((hnew+hmax-8)/hmax);
-		if(to>=amt)
-			setAmt(to+1);
 		unsigned depth=loaded_image->d();
 		if (unlikely(depth != 3 && depth != 4 && depth!=1)){
 			fl_alert("Please use color depth of 1,3 or 4\nYou Used %d",loaded_image->d());
@@ -1206,26 +1293,7 @@ void sprites::importImg(uint32_t to){
 			return;
 		}else
 			printf("Image depth %d\n",loaded_image->d());
-		unsigned startTile=currentProject->tileC->amt-1;
-		uint8_t*out=currentProject->tileC->truetDat.data()+(startTile*256);
-		unsigned newTiles=(wnew/8)*(hnew/8);
-		//See if tile is blank
-		bool overwrite=false;//This is to avoid duplicate code otherwise there would be the need for two else statments with identical code
-		if(numCmp(out,256,0)){
-			if(fl_ask("Tile %d detected as blank overwrite?",startTile))
-				overwrite=true;
-		}
-		if(overwrite){
-			currentProject->tileC->amt+=newTiles-1;
-		}else{
-			currentProject->tileC->amt+=newTiles;
-			++startTile;
-		}
-		//set new amount
-		currentProject->tileC->resizeAmt();
-		out=currentProject->tileC->truetDat.data()+(startTile*currentProject->tileC->tcSize);
 		uint8_t * img_ptr=(uint8_t *)loaded_image->data()[0];
-		setAmtingroup(to,spritesnew);
 		groups[to].name.assign(fl_filename_name(the_file.c_str()));
 		if(depth==1)
 			img_ptr=(uint8_t*)loaded_image->data()[2];
@@ -1239,28 +1307,16 @@ void sprites::importImg(uint32_t to){
 				img_ptr=(uint8_t*)loaded_image->data()[2];
 			}
 		}
-		for(unsigned y=0,cnt=0,tilecnt=startTile;y<hnew;y+=hmax){
-			for(unsigned x=0;x<wnew;x+=wmax,++cnt){
-				unsigned dimx,dimy;
-				dimx=((wnew-x)>=wmax)?wmax:(wnew-x)%wmax;
-				dimy=((hnew-y)>=hmax)?hmax:(hnew-y)%hmax;
-				groups[to].list[cnt].w=dimx/8;
-				groups[to].list[cnt].h=dimy/8;
-				groups[to].list[cnt].starttile=tilecnt;
-				groups[to].offx[cnt]=x;
-				groups[to].offy[cnt]=y;
-				groups[to].loadat[cnt]=tilecnt;
-				tilecnt+=(dimx/8)*(dimy/8);
-				for(unsigned i=0;i<dimx;i+=8){
-					for(unsigned j=0;j<dimy;j+=8){
-						if(depth==1)
-							out=rect2rect1byte(loaded_image,out,i+x,j+y,wnew,8,8,grayscale,remap,palMap);
-						else
-							out=rect2rect(img_ptr,out,i+x,j+y,wnew,8,8,depth);
-					}
-				}
+		bool useMask=fl_ask("Use mask color?");
+		uint8_t mask[3];
+		bool useAlpha;
+		if(useMask){
+			if(!getMaskColorImg(loaded_image,grayscale,remap,palMap,mask,useAlpha)){
+				loaded_image->release();
+				return;
 			}
 		}
+		recttoSprite(0,loaded_image->w()-1,0,loaded_image->h()-1,to,loaded_image,grayscale,remap,palMap,mask,useMask,useAlpha);
 		loaded_image->release();
 		window->updateSpriteSliders();
 		updateTileSelectAmt();

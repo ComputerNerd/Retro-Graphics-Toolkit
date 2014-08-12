@@ -195,17 +195,19 @@ void editor::draw_non_gui(void){
 			currentProject->tileC->draw_truecolor(currentProject->tileC->current_tile,tile_edit_truecolor_off_x,tile_edit_truecolor_off_y,false,false,tiles_size);
 			//draw palette selection box
 			tileEdit_pal.draw_boxes();
-			currentProject->tileC->draw_tile(tile_edit_offset_x,tile_edit_offset_y,currentProject->tileC->current_tile,tiles_size,tileEdit_pal.theRow,false,false);
-			if (show_grid){
-				//draw the grid
-				if (tiles_size > 4){
-					for (y=0;y<8;y++){
-						for (x=0;x<8;x++)
-							fl_draw_box(FL_EMBOSSED_FRAME,(x*tiles_size)+tile_edit_offset_x,(y*tiles_size)+tile_edit_offset_y,tiles_size,tiles_size,0);
-					}
-					for (y=0;y<8;y++){
-						for (x=0;x<8;x++)
-							fl_draw_box(FL_EMBOSSED_FRAME,(x*tiles_size)+tile_edit_truecolor_off_x,(y*tiles_size)+tile_edit_truecolor_off_y,tiles_size,tiles_size,0);
+			if(currentProject->tileC->tDat.size()){
+				currentProject->tileC->draw_tile(tile_edit_offset_x,tile_edit_offset_y,currentProject->tileC->current_tile,tiles_size,tileEdit_pal.theRow,false,false);
+				if (show_grid){
+					//draw the grid
+					if (tiles_size > 4){
+						for (y=0;y<8;y++){
+							for (x=0;x<8;x++)
+								fl_draw_box(FL_EMBOSSED_FRAME,(x*tiles_size)+tile_edit_offset_x,(y*tiles_size)+tile_edit_offset_y,tiles_size,tiles_size,0);
+						}
+						for (y=0;y<8;y++){
+							for (x=0;x<8;x++)
+								fl_draw_box(FL_EMBOSSED_FRAME,(x*tiles_size)+tile_edit_truecolor_off_x,(y*tiles_size)+tile_edit_truecolor_off_y,tiles_size,tiles_size,0);
+						}
 					}
 				}
 			}

@@ -167,12 +167,17 @@ void tiles::appendTile(void){
 	resizeAmt(amt+1);
 }
 void tiles::remove_tile_at(uint32_t tileDel){
-	if(amt<2){
-		fl_alert("You must have atleast one tile");
+	if(!amt){
+		fl_alert("You already have no tiles");
 		return;
 	}
-	tDat.erase(tDat.begin()+(tileDel*tileSize),tDat.begin()+((tileDel+1)*tileSize));
-	truetDat.erase(truetDat.begin()+(tileDel*tcSize),truetDat.begin()+((tileDel+1)*tcSize));
+	if(amt==1){
+		tDat.clear();
+		truetDat.clear();
+	}else{
+		tDat.erase(tDat.begin()+(tileDel*tileSize),tDat.begin()+((tileDel+1)*tileSize));
+		truetDat.erase(truetDat.begin()+(tileDel*tcSize),truetDat.begin()+((tileDel+1)*tcSize));
+	}
 	amt--;
 	updateTileSelectAmt(amt);
 }

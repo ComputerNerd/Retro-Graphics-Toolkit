@@ -57,27 +57,44 @@ static void checkMaxSlider(uint32_t newMax,Fl_Slider*s){
 		s->value(newMax);
 }
 void updateTileSelectAmt(uint32_t newMax){
-	--newMax;
-	if(currentProject->tileC->current_tile>newMax)
-		currentProject->tileC->current_tile=newMax;
-	window->tile_select->maximum(newMax);
-	checkMaxSlider(newMax,window->tile_select);
-	window->tile_select_2->maximum(newMax);
-	checkMaxSlider(newMax,window->tile_select_2);
-	if(currentProject->Chunk->useBlocks){
-		window->tile_select_3->maximum(currentProject->tileMapC->amt-1);
-		checkMaxSlider(currentProject->tileMapC->amt-1,window->tile_select_3);
-	}else{
-		window->tile_select_3->maximum(newMax);
-		checkMaxSlider(newMax,window->tile_select_3);
-	}
-	window->spriteslat->maximum(newMax);
-	checkMaxSlider(newMax,window->spriteslat);
-	window->spritest->maximum(newMax);
-	checkMaxSlider(newMax,window->spritest);
 	char tmp[128];
-	snprintf(tmp,128,"Total tiles: %d",newMax+1);
+	snprintf(tmp,128,"Total tiles: %d",newMax);
 	window->totalTiles->copy_label(tmp);
+	if(newMax){
+		if(!window->tile_select->visible()){
+			window->tile_select->show();
+			window->tile_select_2->show();
+			window->tile_select_3->show();
+			window->spriteslat->show();
+			window->spritest->show();
+		}
+			--newMax;
+		if(currentProject->tileC->current_tile>newMax)
+			currentProject->tileC->current_tile=newMax;
+		window->tile_select->maximum(newMax);
+		checkMaxSlider(newMax,window->tile_select);
+		window->tile_select_2->maximum(newMax);
+		checkMaxSlider(newMax,window->tile_select_2);
+		if(currentProject->Chunk->useBlocks){
+			window->tile_select_3->maximum(currentProject->tileMapC->amt-1);
+			checkMaxSlider(currentProject->tileMapC->amt-1,window->tile_select_3);
+		}else{
+			window->tile_select_3->maximum(newMax);
+			checkMaxSlider(newMax,window->tile_select_3);
+		}
+		window->spriteslat->maximum(newMax);
+		checkMaxSlider(newMax,window->spriteslat);
+		window->spritest->maximum(newMax);
+		checkMaxSlider(newMax,window->spritest);
+	}else{
+		if(window->tile_select->visible()){
+			window->tile_select->hide();
+			window->tile_select_2->hide();
+			window->tile_select_3->hide();
+			window->spriteslat->hide();
+			window->spritest->hide();
+		}
+	}
 }
 void updateTileSelectAmt(void){
 	updateTileSelectAmt(currentProject->tileC->amt);

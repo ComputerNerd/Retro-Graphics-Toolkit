@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <vector>
 #include <string>
+#include <FL/Fl_Shared_Image.H>
 #include "classSprite.h"
 #include "gamedef.h"
 struct spriteGroup{
@@ -34,6 +35,7 @@ class sprites{
 		void DplcItem(void*in,uint32_t which,gameType_t game);
 		bool alreadyLoaded(uint32_t id,uint32_t subid);
 		bool checkDupdplc(uint32_t id,uint32_t&which);
+		bool recttoSprite(int x0,int x1,int y0,int y1,int where,Fl_Shared_Image*loaded_image,bool grayscale,unsigned*remap,uint8_t*palMap,uint8_t*mask,bool useMask,bool useAlpha);
 	public:
 		uint32_t amt;//The amount of sprites
 		std::string name;
