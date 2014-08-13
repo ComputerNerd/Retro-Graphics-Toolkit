@@ -18,7 +18,6 @@
 #include <cstdarg>
 #include <stdio.h>
 #include "gui.h"
-#include "includes.h"
 #include "project.h"
 uint32_t map_scroll_pos_x;
 uint32_t map_scroll_pos_y;
@@ -32,6 +31,20 @@ static int returnVal=0;
 static Fl_Choice*PopC;
 static Fl_Window * winP;
 unsigned SpriteOff[2];
+void mkProgress(Fl_Window**winP,Fl_Progress**progress){
+	(*winP) = new Fl_Window(400,45,"Progress");		// access parent window
+	(*winP)->begin();					// add progress bar to it..
+	(*progress) = new Fl_Progress(25,7,350,30);
+	(*progress)->minimum(0.0);				// set progress range to be 0.0 ~ 1.0
+	(*progress)->maximum(1.0);
+	(*progress)->color(0x88888800);			// background color
+	(*progress)->selection_color(0x4444ff00);		// progress bar color
+	(*progress)->labelcolor(FL_WHITE);			// percent text color
+	(*progress)->label("Please wait");
+	(*winP)->end();					// end adding to window
+	(*winP)->set_modal();
+	(*winP)->show();
+}
 static void zeroError(const char*more){
 	fl_alert("Please enter a value greater than zero\n%s",more);
 }

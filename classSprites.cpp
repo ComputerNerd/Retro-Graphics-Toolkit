@@ -68,6 +68,45 @@ sprites::~sprites(){
 	name.clear();
 	groups.clear();
 }
+static bool chkNotZero(uint8_t*dat,unsigned n){
+	while(n--){
+		if(*dat)
+			return true;
+	}
+	return false;
+}
+void sprites::fixDel(unsigned at,unsigned tamt){
+	for(unsigned i=0;i<amt;++i){
+		for(unsigned j=0;j<groups[i].list.size();++j){
+			if(groups[i].list[j].starttile>=at)
+				groups[i].list[j].starttile-=tamt;
+		}
+	}
+}
+void sprites::optimizeBlank(unsigned which){
+	//Check for blank collums
+	for(int i=groups[which].list.size()-1;i>=0;--i){
+		//First check if the sprite is completly blank
+		bool notBlank=false;
+		for(unsigned h=0,ctile=groups[which].list[i].starttile;h<groups[which].list[i].h;++h){
+			for(unsigned w=0;w<groups[which].list[i].w;++w,++ctile)
+				notBlank|=chkNotZero(currentProject->tileC->truetDat.data()+(ctile*256),256);
+		}
+		if(!notBlank){
+			//Completly remove the sprite
+			int tiledel=groups[which].list[i].starttile,tiledelamt=groups[which].list[i].h*groups[which].list[i].w;
+				if(groups[which].list.size()<=1)
+					del(which);
+				else
+					delingroup(which,i);
+			for(int td=tiledel+tiledelamt;td>=tiledel;--td)
+				currentProject->tileC->remove_tile_at(td);
+			fixDel(tiledel,tiledelamt);
+			if(groups[which].list.size()<1)
+				return;
+		}
+	}
+}
 static bool isMask(int x,int y,Fl_Shared_Image*loaded_image,bool grayscale,bool useAlpha,uint8_t*mask){
 	uint8_t*imgptr;
 	int w=loaded_image->w(),h=loaded_image->h();
@@ -228,9 +267,9 @@ bool sprites::recttoSprite(int x0,int x1,int y0,int y1,int where,Fl_Shared_Image
 							else if(!((yy<center[1])||(yy>=(ht+center[1])))){
 								imgptr=(uint8_t *)loaded_image->data()[0];
 								imgptr+=((yy+y0)-center[1])*wf*depth;
+								if((xx>center[0])&&(xx<=center[2]))
+									imgptr+=((xx+x0)-center[0])*depth;
 							}
-							if((xx>center[0])&&(xx<=center[2]))
-								imgptr+=((xx+x0)-center[0])*depth;
 							if((yy<center[1])||(yy>=(ht+center[1]))){
 								memset(out,0,4);
 							}else if(xx<center[0]){
@@ -351,18 +390,7 @@ void sprites::importSpriteSheet(void){
 			std::vector<int> rects;//x0,x1,y0,y1
 			Fl_Window *winP;
 			Fl_Progress *progress;
-			winP = new Fl_Window(400,45,"Progress");		// access parent window
-			winP->begin();					// add progress bar to it..
-			progress = new Fl_Progress(25,7,350,30);
-			progress->minimum(0.0);				// set progress range to be 0.0 ~ 1.0
-			progress->maximum(1.0);
-			progress->color(0x88888800);			// background color
-			progress->selection_color(0x4444ff00);		// progress bar color
-			progress->labelcolor(FL_WHITE);			// percent text color
-			progress->label("Please wait");
-			winP->end();					// end adding to window
-			winP->set_modal();
-			winP->show();
+			mkProgress(&winP,&progress);
 			time_t lasttime=time(NULL);
 			progress->maximum(h);
 			Fl::check();
@@ -520,6 +548,7 @@ void sprites::importSpriteSheet(void){
 				for(unsigned i=0;i<rects.size();i+=4){
 					recttoSprite(rects[i],rects[i+1],rects[i+2],rects[i+3],-1,loaded_image,grayscale,remap,palMap,mask,true,useAlpha);
 				}
+				updateTileSelectAmt();
 			}
 			deleted.clear();
 			rects.clear();

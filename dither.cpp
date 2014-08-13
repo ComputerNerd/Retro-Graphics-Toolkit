@@ -807,20 +807,8 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 		}
 		Fl_Window *win;
 		Fl_Progress *progress;
-		if(h>8){
-			win = new Fl_Window(400,45,"Progress");	// access parent window
-			win->begin();							// add progress bar to it..
-			progress = new Fl_Progress(25,7,350,30);
-			progress->minimum(0.0);					// set progress range to be 0.0 ~ 1.0
-			progress->maximum((double)h);
-			progress->color(0x88888800);			// background color
-			progress->selection_color(0x4444ff00);	// progress bar color
-			progress->labelcolor(FL_WHITE);			// percent text color
-			progress->value(0);
-			win->end();								// end adding to window
-			win->show();
-			Fl::check();
-		}
+		bool progressHave=false;
+		time_t lasttime=time(NULL);
 		for(y=0;y<h;++y){
 			for(x=0;x<w;++x){
 				r_old=image[(x*rgbPixelsize)+(y*w*rgbPixelsize)];
@@ -907,7 +895,14 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					Fl::check();
 				}*/
 			}
-			if((h>8)&&((y&7)==0)){
+			if((time(NULL)-lasttime)>=1){
+				lasttime=time(NULL);
+				if(!progressHave){
+					progressHave=true;
+					mkProgress(&win,&progress);
+					progress->maximum(h);
+					Fl::check();
+				}
 				char txtbuf[128];
 				sprintf(txtbuf,"%d/%d",y,h);
 				progress->copy_label(txtbuf);
@@ -915,7 +910,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				Fl::check();
 			}
 		}
-		if(h>8){
+		if(progressHave){
 			win->remove(progress);// remove progress bar from window
 			delete(progress);// deallocate it
 			delete win;

@@ -43,6 +43,8 @@ class sprites{
 		sprites();
 		sprites(const sprites& other);
 		~sprites();
+		void fixDel(unsigned at,unsigned amt);
+		void optimizeBlank(unsigned which);
 		void importSpriteSheet(void);
 		void exportDPLC(gameType_t game);
 		void importDPLC(gameType_t game);

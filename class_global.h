@@ -23,6 +23,7 @@ class editor : public Fl_Double_Window{
 	Fl_Menu_Bar *menu;
 	void _editor();
 	void draw_non_gui();
+	unsigned tilesSpriteOff[2];
 	public:
 	void updateChunkSel(void);
 	void updateMapWH(uint32_t w,uint32_t h);

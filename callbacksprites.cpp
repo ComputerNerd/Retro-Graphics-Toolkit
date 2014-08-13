@@ -20,10 +20,53 @@
 #include "project.h"
 #include "gamedef.h"
 #include "undo.h"
+#include "dither.h"
 uint32_t curSprite;
 uint32_t curSpritegroup;
 int32_t spriteEndDraw[2];
 bool centerSpriteDraw_G;
+static void ditherSpriteAsImage(unsigned which){
+	unsigned w,h;
+	w=currentProject->spritesC->width(which);
+	h=currentProject->spritesC->height(which);
+	uint8_t*image=(uint8_t*)malloc(w*h*4);
+	if (!image)
+		show_malloc_error(w*h*4)
+	pushTilesAll(tTypeTile);
+	for (unsigned row=0;row<4;++row){
+		currentProject->spritesC->spriteGroupToImage(image,which,row);
+		ditherImage(image,w,h,true,true,false,0,false,0,true);
+		ditherImage(image,w,h,true,false,true,row,false,0,true);
+		currentProject->spritesC->spriteImageToTiles(image,which,row);
+	}
+	Fl::check();
+	free(image);
+}
+void ditherSpriteAsImageAllCB(Fl_Widget*,void*){
+	Fl_Window *winP;
+	Fl_Progress *progress;
+	mkProgress(&winP,&progress);
+	progress->maximum(currentProject->spritesC->amt-1);
+	time_t lasttime=time(NULL);
+	Fl::check();
+	for(unsigned i=0;i<currentProject->spritesC->amt;++i){
+		ditherSpriteAsImage(i);
+		if((time(NULL)-lasttime)>=1){
+			lasttime=time(NULL);
+			progress->value(i);
+			Fl::check();
+		}
+	}
+	winP->remove(progress);// remove progress bar from window
+	delete(progress);// deallocate it
+	delete winP;
+	Fl::check();
+	window->redraw();
+}
+void ditherSpriteAsImageCB(Fl_Widget*,void*){
+	ditherSpriteAsImage(curSpritegroup);
+	window->redraw();
+}
 void setDrawSpriteCB(Fl_Widget*,void*m){
 	centerSpriteDraw_G=(m)?true:false;
 	window->redraw();

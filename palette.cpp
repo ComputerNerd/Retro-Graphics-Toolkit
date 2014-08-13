@@ -49,7 +49,6 @@ void sortBy(unsigned type,bool perRow){
 	uint8_t* newPalRgb=(uint8_t*)alloca(palEdit.perRow*4*eSize*3);
 	uint8_t* newPalType=(uint8_t*)alloca(palEdit.perRow*4);
 	for(unsigned x=0;x<palEdit.perRow*4;++x){
-		printf("%d with %d\n",MapHLS[x].second,x);
 		memcpy(newPal+(x*eSize),currentProject->palDat+(MapHLS[x].second*eSize),eSize);
 		memcpy(newPalRgb+(x*3),currentProject->rgbPal+(MapHLS[x].second*3),3);
 		newPalType[x]=currentProject->palType[MapHLS[x].second];

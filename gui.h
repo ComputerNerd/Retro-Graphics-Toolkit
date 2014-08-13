@@ -16,6 +16,7 @@
 */
 #pragma once
 #include <FL/Fl_Int_Input.H>
+#include "includes.h"
 #define default_map_off_x 256
 #define default_map_off_y 256
 #define defaultspritex 192
@@ -52,6 +53,7 @@ extern unsigned SpriteOff[2];
 #define spriteEditor 4
 #define settingsTab 5
 
+void mkProgress(Fl_Window**winP,Fl_Progress**progress);
 int SafeTxtInput(Fl_Int_Input*in);
 void updateTileSelectAmt(void);
 void updateTileSelectAmt(uint32_t newMax);

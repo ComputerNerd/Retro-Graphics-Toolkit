@@ -160,58 +160,39 @@ void fill_tile_map_with_tile(Fl_Widget*,void*){
 		window->damage(FL_DAMAGE_USER1);
 	}
 }
-void dither_tilemap_as_image(Fl_Widget*,void*sprite){
+void dither_tilemap_as_image(Fl_Widget*,void*){
 	//normally this program dithers all tiles individully this is not always desirable
 	//to fix this I created this function It convertes the tilemap to image and dithers all tiles
 	//so first create ram for image
-	bool isSprite=((uintptr_t)sprite)?true:false;
 	uint8_t * image;
 	uint32_t w,h;
-	if(isSprite){
-		w=currentProject->spritesC->width(curSpritegroup);
-		h=currentProject->spritesC->height(curSpritegroup);
-	}else{
-		w=currentProject->tileMapC->mapSizeW;
-		h=currentProject->tileMapC->mapSizeHA;
-		w*=currentProject->tileC->sizew;
-		h*=currentProject->tileC->sizeh;
-	}
+	w=currentProject->tileMapC->mapSizeW;
+	h=currentProject->tileMapC->mapSizeHA;
+	w*=currentProject->tileC->sizew;
+	h*=currentProject->tileC->sizeh;
 	unsigned method;
-	if(isSprite)
-		method=0;
-	else
-		method=fl_choice("How would you like this tilemap dithered?","Dither each palette row separately","Dither entire image at once","Cancel");
+	method=fl_choice("How would you like this tilemap dithered?","Dither each palette row separately","Dither entire image at once","Cancel");
 	if(method==2)
 		return;
 	image = (uint8_t *)malloc(w*h*4);
 	if (!image)
 		show_malloc_error(w*h*4)
-
-		pushTilesAll(tTypeTile);
-
+	pushTilesAll(tTypeTile);
 	if(method==1){
 		currentProject->tileMapC->truecolor_to_image(image,-1);
 		ditherImage(image,w,h,true,true);
 		ditherImage(image,w,h,true,false);
 		currentProject->tileMapC->truecolorimageToTiles(image,-1);
 	}else{
-		for (unsigned rowz=0;rowz<4;++rowz){
-			printf("Row: %u\n",rowz);
-			if(isSprite){
-				currentProject->spritesC->spriteGroupToImage(image,curSpritegroup,rowz);
-				ditherImage(image,w,h,true,true,false,0,false,0,true);
-				ditherImage(image,w,h,true,false,true,rowz,false,0,true);
-				currentProject->spritesC->spriteImageToTiles(image,curSpritegroup,rowz);
-			}else{
-				currentProject->tileMapC->truecolor_to_image(image,rowz);
-				ditherImage(image,w,h,true,true);
-				ditherImage(image,w,h,true,false);
-				//convert back to tiles
-				currentProject->tileMapC->truecolorimageToTiles(image,rowz);
-			}
+		for (unsigned row=0;row<4;++row){
+			printf("Row: %u\n",row);
+			currentProject->tileMapC->truecolor_to_image(image,row);
+			ditherImage(image,w,h,true,true);
+			ditherImage(image,w,h,true,false);
+			//convert back to tiles
+			currentProject->tileMapC->truecolorimageToTiles(image,row);
 		}
 	}
-	window->damage(FL_DAMAGE_USER1);
 	Fl::check();
 	free(image);
 	window->redraw();

@@ -192,10 +192,10 @@ void editor::draw_non_gui(void){
 			tile_edit_truecolor_off_y=(double)((double)h()/600.0)*(double)default_tile_edit_truecolor_off_y;
 			tile_edit_offset_y=(double)((double)h()/600.0)*(double)default_tile_edit_offset_y;
 			tile_edit_offset_x=(tiles_size*9)+tile_edit_truecolor_off_x;//I muliplyed it by 9 instead of 8 to give spacing between the tiles
-			currentProject->tileC->draw_truecolor(currentProject->tileC->current_tile,tile_edit_truecolor_off_x,tile_edit_truecolor_off_y,false,false,tiles_size);
 			//draw palette selection box
 			tileEdit_pal.draw_boxes();
 			if(currentProject->tileC->tDat.size()){
+				currentProject->tileC->draw_truecolor(currentProject->tileC->current_tile,tile_edit_truecolor_off_x,tile_edit_truecolor_off_y,false,false,tiles_size);
 				currentProject->tileC->draw_tile(tile_edit_offset_x,tile_edit_offset_y,currentProject->tileC->current_tile,tiles_size,tileEdit_pal.theRow,false,false);
 				if (show_grid){
 					//draw the grid
@@ -326,8 +326,10 @@ void editor::draw_non_gui(void){
 					currentProject->spritesC->draw(curSpritegroup,SpriteOff[0],SpriteOff[1],spritezoom->value(),centerSpriteDraw_G,&spriteEndDraw[0],&spriteEndDraw[1]);
 				//Now draw the tile selection
 				if(spriteEndDraw[1]<(h()-48)){
-					unsigned perw=(w()-192)/16;
-					unsigned perh=(h()-(spriteEndDraw[1]+32))/16;
+					tilesSpriteOff[0]=unsigned(double(192.0*(double)w()/800.0));
+					tilesSpriteOff[1]=spriteEndDraw[1]+unsigned(double(32.0*(double)h()/600.0));
+					unsigned perw=(w()-tilesSpriteOff[0])/16;
+					unsigned perh=(h()-(tilesSpriteOff[1]))/16;
 					unsigned starttile=currentProject->spritesC->groups[curSpritegroup].list[curSprite].starttile;
 					if(starttile>((perw*perh)/2))
 						starttile-=(perw*perh)/2;
@@ -335,8 +337,8 @@ void editor::draw_non_gui(void){
 						starttile=0;
 					unsigned looptile=starttile;
 					unsigned tileatx=0,tileaty=0;
-					for(unsigned y=spriteEndDraw[1]+32;y<h();y+=16){
-						for(unsigned x=192;x<w();x+=16,++looptile){
+					for(unsigned y=tilesSpriteOff[1];y<h();y+=16){
+						for(unsigned x=tilesSpriteOff[0];x<w();x+=16,++looptile){
 							if(looptile>=currentProject->tileC->amt)
 								break;
 							currentProject->tileC->draw_tile(x,y,looptile,2,currentProject->spritesC->groups[curSpritegroup].list[curSprite].palrow,false,false);
