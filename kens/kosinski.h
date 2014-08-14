@@ -1,40 +1,41 @@
-/*-----------------------------------------------------------------------------*\
-|																				|
-|	libkosinski: Compression / Decompression of data in Kosinski format		|
-|	Copyright  2002-2004 The KENS Project Development Team						|
-|																				|
-|	This library is free software; you can redistribute it and/or				|
-|	modify it under the terms of the GNU Lesser General Public					|
-|	License as published by the Free Software Foundation; either				|
-|	version 2.1 of the License, or (at your option) any later version.			|
-|																				|
-|	This library is distributed in the hope that it will be useful,				|
-|	but WITHOUT ANY WARRANTY; without even the implied warranty of				|
-|	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU			|
-|	Lesser General Public License for more details.								|
-|																				|
-|	You should have received a copy of the GNU Lesser General Public			|
-|	License along with this library; if not, write to the Free Software			|
-|	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA	|
-|																				|
-\*-----------------------------------------------------------------------------*/
+/* -*- Mode: C++; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*- */
+/*
+ * Copyright (C) Flamewing 2011-2013 <flamewing.sonic@gmail.com>
+ * Copyright (C) 2002-2004 The KENS Project Development Team
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef _KOSINSKI_H_
 #define _KOSINSKI_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-    
-long Comp(char *SrcFile, char *DstFile, bool Moduled);
-long CompEx(char *SrcFile, char *DstFile, long SlideWin, long RecLen, bool Moduled);
-long Decomp(char *SrcFile, char *DstFile, long Pointer, bool Moduled);
+#include <iosfwd>
+class kosinski {
+private:
+	static void decode_internal(std::istream &in, std::iostream &Dst, size_t &DecBytes);
+	static void encode_internal(std::ostream &Dst, unsigned char const *&Buffer,
+	                            std::streamoff SlideWin, std::streamoff RecLen,
+	                            std::streamsize const BSize,
+	                            std::streamsize const Padding);
+public:
+	static bool decode(std::istream &Src, std::iostream &Dst,
+	                   std::streampos Location = 0, bool Moduled = false,
+	                   std::streamsize const ModulePadding = 16u);
+	static bool encode(std::istream &Src, std::ostream &Dst,
+	                   std::streamoff SlideWin = 8192, std::streamoff RecLen = 256,
+	                   bool Moduled = false, std::streamoff ModuleSize = 0x1000,
+	                   std::streamsize const ModulePadding = 16u);
+};
 
-#ifdef __cplusplus
-long CompToBuf(char *SrcFile, char *&DstBuffer, long *BufSize , bool Moduled);
-long CompToBufEx(char *SrcFile, char *&DstBuffer, long *BufSize, long SlideWin, long RecLen, bool Moduled);
-long DecompToBuf(char *SrcFile, char *&DstBuffer, long *BufSize, long Pointer, bool Moduled);
-}
-#endif
-
-#endif /* _KOSINSKI_H_ */
+#endif // _KOSINSKI_H_

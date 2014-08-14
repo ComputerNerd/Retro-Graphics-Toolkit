@@ -1,5 +1,8 @@
 Most recent changes are placed at the top
 
+20140814
+Replace kens compression libray with code from Sonic 2 special stage editor brining better compression ratios
+
 20140813
 Change tilemap offset loading behavior now subtracts instead of adds. Also added offset for saving
 

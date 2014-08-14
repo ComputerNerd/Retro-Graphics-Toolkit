@@ -15,7 +15,6 @@
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
 #include "global.h"
-#include "kens.h"
 #include "filemisc.h"
 #include "compressionWrapper.h"
 void save_tiles(Fl_Widget*,void*){

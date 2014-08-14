@@ -15,9 +15,11 @@
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
 #include "includes.h"
-#include "kens.h"
 #include "gui.h"
 #include "errorMsg.h"
+#include "nemesis.h"
+#include "kosinski.h"
+#include "enigma.h"
 static const char*Uncomp="Uncompressed";
 static const char*NemTxt="Nemesis";
 static const char*KosTxt="Kosinski";
