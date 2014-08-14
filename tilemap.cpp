@@ -639,7 +639,10 @@ againNerd:
 		if(currentProject->gameSystem==NES)
 			update_emphesis(0,0);
 		if(alg==1){
-			currentProject->tileMapC->truecolorimageToTiles(output,row,false);
+			if(isSprite)
+				currentProject->spritesC->spriteImageToTiles(output,curSpritegroup,row,false);
+			else
+				currentProject->tileMapC->truecolorimageToTiles(output,row,false);
 			free(output);
 		}
 		if(yuv)

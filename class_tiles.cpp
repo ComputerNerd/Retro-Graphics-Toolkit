@@ -157,9 +157,9 @@ uint32_t tiles::getPixelTc(uint32_t tile,uint32_t x,uint32_t y){
 }
 void tiles::resizeAmt(uint32_t amtnew){
 	try{
-	amt=amtnew;
-	tDat.resize(amt*tileSize);
-	truetDat.resize(amt*tcSize);
+		amt=amtnew;
+		tDat.resize(amt*tileSize);
+		truetDat.resize(amt*tcSize);
 	}catch(std::exception&e){
 		fl_alert("Error: cannot resize tiles to %d\nAdditional details %d",e.what());
 		exit(1);
@@ -172,6 +172,10 @@ void tiles::appendTile(void){
 	resizeAmt(amt+1);
 }
 void tiles::remove_tile_at(uint32_t tileDel){
+	if(tileDel>=amt){
+		fl_alert("Cannot delete tile %d as there are only %d tiles",tileDel,amt);
+		return;
+	}
 	if(!amt){
 		fl_alert("You already have no tiles");
 		return;

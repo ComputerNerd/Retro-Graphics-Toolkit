@@ -50,6 +50,7 @@ class editor : public Fl_Double_Window{
 	Fl_Int_Input* map_h;
 	Fl_Int_Input* chunksize[2];//chunk width,height
 	Fl_Int_Input* map_amt;
+	Fl_Int_Input* tmapOffset;
 	Fl_Slider* rgb_red;
 	Fl_Slider* rgb_green;
 	Fl_Slider* rgb_blue;

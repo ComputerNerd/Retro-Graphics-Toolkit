@@ -1,4 +1,8 @@
 Most recent changes are placed at the top
+
+20140813
+Change tilemap offset loading behavior now subtracts instead of adds. Also added offset for saving
+
 20140810
 Fixed a minor bug where area near tab space would not be redrawn
 

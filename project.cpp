@@ -512,6 +512,10 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 				projects[id]->tileMapC->mapSizeHA=projects[id]->tileMapC->mapSizeH*projects[id]->tileMapC->amt;
 			}else
 				projects[id]->tileMapC->mapSizeHA=projects[id]->tileMapC->mapSizeH;
+			if(version>=8)
+				fread(&projects[id]->tileMapC->offset,1,sizeof(int32_t),fi);
+			else
+				projects[id]->tileMapC->offset=0;
 			projects[id]->tileMapC->tileMapDat=(uint8_t*)realloc(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeHA);
 			decompressFromFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeHA,fi);
 		}
@@ -574,6 +578,7 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 		if(isBlocks)
 			uint32_t blocks amount also treat w and h as width and height per block
 	}
+	if(version>=8) int32_t tilemap tile offset
 	uint32_t compressed size map
 	map data will decompress to map size w * map size h * 4 and is compressed with zlib
 	if(version>=3){
@@ -584,6 +589,7 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 		uint32_t compresssed Chunk map size
 		Chunk data (zlib compressed)
 	}
+	if(version>=5) sprite data (see documentation in classSprites.cpp
 	*/
 	fputc('R',fo);
 	fputc('P',fo);
@@ -636,6 +642,7 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 			fwrite(&isBlockTemp,1,sizeof(uint8_t),fo);
 			if(isBlockTemp)
 				fwrite(&projects[id]->tileMapC->amt,1,sizeof(uint32_t),fo);
+			fwrite(&projects[id]->tileMapC->offset,1,sizeof(int32_t),fo);
 			compressToFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeHA,fo);
 		}
 	}

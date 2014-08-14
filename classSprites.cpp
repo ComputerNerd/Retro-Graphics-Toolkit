@@ -70,7 +70,7 @@ sprites::~sprites(){
 }
 static bool chkNotZero(uint8_t*dat,unsigned n){
 	while(n--){
-		if(*dat)
+		if(*dat++)
 			return true;
 	}
 	return false;
@@ -78,8 +78,10 @@ static bool chkNotZero(uint8_t*dat,unsigned n){
 void sprites::fixDel(unsigned at,unsigned tamt){
 	for(unsigned i=0;i<amt;++i){
 		for(unsigned j=0;j<groups[i].list.size();++j){
-			if(groups[i].list[j].starttile>=at)
+			if(groups[i].list[j].starttile>=at){
 				groups[i].list[j].starttile-=tamt;
+				groups[i].loadat[j]-=tamt;
+			}
 		}
 	}
 }
@@ -99,7 +101,7 @@ void sprites::optimizeBlank(unsigned which){
 					del(which);
 				else
 					delingroup(which,i);
-			for(int td=tiledel+tiledelamt;td>=tiledel;--td)
+			for(int td=tiledel+tiledelamt-1;td>=tiledel;--td)
 				currentProject->tileC->remove_tile_at(td);
 			fixDel(tiledel,tiledelamt);
 			if(groups[which].list.size()<1)
@@ -264,13 +266,13 @@ bool sprites::recttoSprite(int x0,int x1,int y0,int y1,int where,Fl_Shared_Image
 							//printf("%d %d\n",xx,yy);
 							if((!((yy<center[1])||(yy>=(h+center[1]))))&&(depth==1)&&(!grayscale))
 								imgptr=(uint8_t*)loaded_image->data()[yy+y0+2-center[1]];
-							else if(!((yy<center[1])||(yy>=(ht+center[1])))){
+							else if(!((yy<center[1])||(yy>=(h+center[1])))){
 								imgptr=(uint8_t *)loaded_image->data()[0];
 								imgptr+=((yy+y0)-center[1])*wf*depth;
-								if((xx>center[0])&&(xx<=center[2]))
-									imgptr+=((xx+x0)-center[0])*depth;
 							}
-							if((yy<center[1])||(yy>=(ht+center[1]))){
+							if((xx>center[0])&&(xx<=center[2]))
+								imgptr+=((xx+x0)-center[0])*depth;
+							if((yy<center[1])||(yy>=(h+center[1]))){
 								memset(out,0,4);
 							}else if(xx<center[0]){
 								memset(out,0,4);

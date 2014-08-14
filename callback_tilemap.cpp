@@ -21,6 +21,10 @@
 #include "callbacksprites.h"
 #include "undo.h"
 #include "image.h"
+void setTmapOffsetCB(Fl_Widget*o,void*){
+	Fl_Int_Input*i=(Fl_Int_Input*)o;
+	currentProject->tileMapC->offset=atoi(i->value());
+}
 void tileDPicker(Fl_Widget*,void*){
 	Fl_Window *win;
 	Fl_Progress *progress;

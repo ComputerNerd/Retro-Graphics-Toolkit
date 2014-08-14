@@ -24,6 +24,7 @@ public:
 	tileMap(const tileMap& other);
 	~tileMap();
 	uint8_t * tileMapDat;/*!< Holds tilemap data*/
+	int32_t offset;
 	uint32_t mapSizeW,mapSizeH,mapSizeHA;
 	bool isBlock;
 	uint32_t amt;

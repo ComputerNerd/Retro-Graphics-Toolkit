@@ -25,6 +25,13 @@ uint32_t curSprite;
 uint32_t curSpritegroup;
 int32_t spriteEndDraw[2];
 bool centerSpriteDraw_G;
+void optimizeSpritesCB(Fl_Widget*,void*){
+	for(unsigned i=0;i<currentProject->spritesC->amt;++i){
+		currentProject->spritesC->optimizeBlank(i);
+	}
+	window->updateSpriteSliders();
+	window->redraw();
+}
 static void ditherSpriteAsImage(unsigned which){
 	unsigned w,h;
 	w=currentProject->spritesC->width(which);

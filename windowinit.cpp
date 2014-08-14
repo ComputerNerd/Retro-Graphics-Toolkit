@@ -130,6 +130,7 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Generate optimal palette for selected sprite",0,generate_optimal_palette,(void*)1},
 		{"Dither sprite as image",0,ditherSpriteAsImageCB,0},
 		{"Dither all sprites as image",0,ditherSpriteAsImageAllCB,0},
+		{"Optimize sprites",0,optimizeSpritesCB,0},
 		{0},
 	{"Undo/Redo",0, 0, 0, FL_SUBMENU},
 		{"Undo",FL_CTRL+'z',undoCB},
@@ -475,6 +476,12 @@ void editor::_editor(){
 			place_tile_size->align(FL_ALIGN_TOP);
 			place_tile_size->callback(update_map_size);
 			place_tile_size->tooltip(TooltipZoom);
+
+			tmapOffset = new Fl_Int_Input(tile_place_buttons_x_off,default_palette_bar_offset_y+552,312,24,"Tile offset");
+			tmapOffset->when(FL_WHEN_ENTER_KEY);
+			tmapOffset->value("0");
+			tmapOffset->align(FL_ALIGN_TOP);
+			tmapOffset->callback(setTmapOffsetCB);
 
 			cordDisp[0]=new Fl_Box(tile_place_buttons_x_off,556,128,64);
 			cordDisp[0]->labelsize(12);
