@@ -244,7 +244,7 @@ void editor::_editor(){
 				} // Fl_Round_Button* o
 				o->end();
 			} // End of buttons
-			{Fl_Choice *o = new Fl_Choice(64, 464, 128, 24);
+			{Fl_Choice *o = new Fl_Choice(64, 464, 144, 24);
 			o->copy(ditherChoices);}
 			subSysC=new Fl_Choice(208, 464, 128, 24);
 			subSysC->copy(subSysNES);
@@ -477,7 +477,7 @@ void editor::_editor(){
 			place_tile_size->callback(update_map_size);
 			place_tile_size->tooltip(TooltipZoom);
 
-			tmapOffset = new Fl_Int_Input(tile_place_buttons_x_off,default_palette_bar_offset_y+552,312,24,"Tile offset");
+			tmapOffset = new Fl_Int_Input(tile_place_buttons_x_off,560,160,24,"Tile offset");
 			tmapOffset->when(FL_WHEN_ENTER_KEY);
 			tmapOffset->value("0");
 			tmapOffset->align(FL_ALIGN_TOP);

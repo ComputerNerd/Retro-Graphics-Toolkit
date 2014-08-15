@@ -115,6 +115,21 @@ void switchShareCB(Fl_Widget*o,void*mask){
 	if(share)
 		shareProject(curProjectID,s->value(),m,true);
 	updateShareHave();
+	if(m&pjHaveTiles)
+		updateTileSelectAmt();
+	if(m&pjHaveMap){
+		window->updateMapWH();
+		char tmp[16];
+		snprintf(tmp,16,"%d",currentProject->tileMapC->offset);
+		window->tmapOffset->value(tmp);
+	}
+	if(m&pjHaveChunks){
+		window->updateBlockTilesChunk();
+		window->updateChunkSize();
+	}
+	if(m&pjHaveSprites)
+		window->updateSpriteSliders();
+	window->redraw();
 }
 void shareProjectCB(Fl_Widget*o,void*mask){
 	Fl_Check_Button* b=(Fl_Check_Button*)o;

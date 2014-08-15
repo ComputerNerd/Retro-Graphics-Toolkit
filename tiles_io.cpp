@@ -57,7 +57,7 @@ void save_tiles(Fl_Widget*,void*){
 						return;
 					}
 				}else{
-					if(saveBinAsText(currentProject->tileC->tDat.data(),(currentProject->tileC->amt)*currentProject->tileC->tileSize,myfile,type,comment,"tileDat",32)==false){
+					if(!saveBinAsText(currentProject->tileC->tDat.data(),(currentProject->tileC->amt)*currentProject->tileC->tileSize,myfile,type,comment,"tileDat",32)){
 						fl_alert("Error: can not save file %s",the_file.c_str());
 						return;
 					}

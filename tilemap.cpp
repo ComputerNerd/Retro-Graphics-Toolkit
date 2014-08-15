@@ -27,6 +27,7 @@
 #include "callbacksprites.h"
 #include "undo.h"
 #include "palette.h"
+#include "classtilemap.h"
 static void addHist(uint32_t cur_tile,int type,uint32_t*hist,unsigned sz){
 	double szz=(double)sz;
 	uint8_t * truePtr=&currentProject->tileC->truetDat[cur_tile*256];
@@ -223,13 +224,6 @@ void tileMap::pickRow(uint8_t amount){
 	}
 	if(method)
 		free(hist);
-}
-void tileMap::allRowZero(void){
-	uint32_t x,y;
-	for (y=0;y<mapSizeHA;++y){
-		for (x=0;x<mapSizeW;++x)
-			set_pal_row(x,y,0);
-	}
 }
 static inline uint8_t pick4Delta(double * d){
 	if ((d[0] <= d[1]) && (d[0] <= d[2]) && (d[0] <= d[3]))
@@ -651,50 +645,81 @@ againNerd:
 }
 void generate_optimal_palette(Fl_Widget*,void*sprite){
 	bool isSprite=((uintptr_t)sprite)?true:false;
-	uint8_t perRow[4];
-	char temp[4];
+	unsigned perRow[4];
+	char temp[16];
 	unsigned rowSize;
 	unsigned rows;
+	int maxCol,maxColt;
 	switch (currentProject->gameSystem){
 		case sega_genesis:
 			if(isSprite)
-				strcpy(temp,"16");
+				maxCol=16;
 			else
-				strcpy(temp,"64");
+				maxCol=64;
+			maxColt=64;
 			rowSize=16;
 		break;
 		case NES:
 			if(isSprite)
-				strcpy(temp,"4");
+				maxCol=4;
 			else
-				strcpy(temp,"16");
+				maxCol=16;
+			maxColt=16;
 			rowSize=4;
 		break;
 	}
-	char * returned=(char *)fl_input("How many colors would you like?",temp);
+	char*returned=(char*)fl_input("Start palette at (counting from zero)","0");
+	if(!returned)
+		return;
+	if(!verify_str_number_only(returned))
+		return;
+	int offset=atoi(returned);
+	if((offset<0)||(offset>=maxColt)){
+		fl_alert("Invalid offset");
+		return;
+	}
+	snprintf(temp,sizeof(temp),"%d",maxCol-offset);
+	returned=(char*)fl_input("How many colors would you like?",temp);
 	if(!returned)
 		return;
 	if(!verify_str_number_only(returned))
 		return;
 	int colors=atoi(returned);
+	if((colors<0)||(colors>maxCol)){
+		fl_alert("Invalid color amount");
+		return;
+	}
 	int colorstotal=colors;
+	unsigned firstRow=0;
 	if(isSprite){
 		rows=1;
 		perRow[0]=colors > rowSize ? rowSize:colors;
 	}else{
-		uint8_t asdf;
-		for(asdf=0;asdf<4;++asdf){
-			perRow[asdf]=colors > rowSize ? rowSize:colors;
-			colors-=rowSize;
-			printf("Colors %d\n",colors);
+		unsigned i,offtmp=offset;
+		for(i=0;i<4;++i){
+			if(offtmp>=rowSize){
+				offtmp-=rowSize;
+				++firstRow;
+				perRow[i]=0;
+			}else{
+				if(offtmp){
+					perRow[i]=(colors+offtmp) > rowSize ? rowSize-offset:colors;
+					colors-=rowSize-offset;
+					offtmp=0;
+				}else{
+					perRow[i]=colors > rowSize ? rowSize:colors;
+					colors-=rowSize;
+				}
+			}
+			printf("Colors %d perRow[%d]=%d\n",colors,i,perRow[i]);
 			if (colors <= 0)
 				break;
 		}
-		rows=asdf+1;
+		rows=i+1;
 	}
 	printf("Using %d rows\n",rows);
 	/*
-	This function is one of the more importan features of the program
+	This function is one of the more important features of the program
 	This will look at the tile map and based on that find an optimal palette
 	*/
 	uint8_t * image;
@@ -714,14 +739,13 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	uint8_t found_colors[768];
 	int rowAuto;
 	if((rows==1)&&(!isSprite))
-		rowAuto = fl_ask("Would you like all tiles on the tilemap to be set to row 0? (This is where all generated colors will apear)");
+		rowAuto = fl_ask("Would you like all tiles on the tilemap to be set to row %d? (This is where all generated colors will apear)",firstRow);
 	else if(!isSprite){
 		rowAuto = MenuPopup("Palette setting","How would you like the palette map to be handled",4,"Don't change anythin","Pick based on hue","Generate contiguous palette then pick based on delta","Quantizer's choice");
 		if(rowAuto<0)
 			return;
 	}else
 		rowAuto=0;
-	uint8_t fun_palette;
 	int alg=MenuPopup("Pick an algorithm","What color reduction algorithm would you like used?",5,"Dennis Lee v3","scolorq","Neuquant","Wu","Dennis Lee v1");
 	if(alg<0)
 		return;
@@ -742,30 +766,17 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	progress->labelcolor(FL_WHITE);			// percent text color
 	win->end();					// end adding to window
 	win->show();
-	switch (currentProject->gameSystem){
-		case sega_genesis:
-			fun_palette=16;
-		break;
-		case NES:
-			fun_palette=4;
-		break;
-		default:
-			show_default_error
-		break;
-	}
 	image = (uint8_t *)malloc(w*h*3);
 	if (rows==1){
 		if (rowAuto)
-			currentProject->tileMapC->allRowZero();
+			currentProject->tileMapC->allRowSet(firstRow);
 		if(isSprite){
-			unsigned off;
+			unsigned off=offset;
 			if(currentProject->gameSystem==NES)
-				off=16;
-			else
-				off=0;
-			reduceImage(image,found_colors,-1,off,progress,win,perRow[0],yuv,alg,true);
+				off+=16;
+			reduceImage(image,found_colors,-1,off,progress,win,perRow[firstRow],yuv,alg,true);
 		}else
-			reduceImage(image,found_colors,-1,0,progress,win,perRow[0],yuv,alg);
+			reduceImage(image,found_colors,-1,firstRow*rowSize+offset,progress,win,perRow[firstRow],yuv,alg);
 		window->damage(FL_DAMAGE_USER1);
 		Fl::check();
 	}else{
@@ -779,8 +790,10 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 				currentProject->tileMapC->pickRow(rows);
 			else if(rowAuto==3)
 				currentProject->tileMapC->pickTileRowQuantChoice(rows);
-			for (uint8_t nerdL=0;nerdL<rows;nerdL++){
-				reduceImage(image,found_colors,nerdL,nerdL*fun_palette,progress,win,perRow[nerdL],yuv,alg);
+
+			reduceImage(image,found_colors,firstRow,firstRow*rowSize+offset,progress,win,perRow[firstRow],yuv,alg);//Keep in sync with similar call in loop
+			for (unsigned nerdL=firstRow+1;nerdL<rows;++nerdL){
+				reduceImage(image,found_colors,nerdL,nerdL*rowSize,progress,win,perRow[nerdL],yuv,alg);
 				window->damage(FL_DAMAGE_USER1);
 				Fl::check();
 			}

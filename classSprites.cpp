@@ -51,8 +51,13 @@ sprites::sprites(const sprites& other){
 	for(uint32_t i=0;i<other.groups.size();++i)
 		groups.push_back(spriteGroup());
 	for(uint32_t j=0;j<other.groups.size();++j){
-		groups[j].list.reserve(other.groups[j].list.size());
-		for(uint32_t i=0;i<other.groups[j].list.size();++i)
+		unsigned sz=other.groups[j].list.size();
+		groups[j].list.reserve(sz);
+		groups[j].offx=other.groups[j].offx;
+		groups[j].offy=other.groups[j].offy;
+		groups[j].loadat=other.groups[j].loadat;
+		groups[j].name=other.groups[j].name;
+		for(uint32_t i=0;i<sz;++i)
 			groups[j].list.push_back(sprite(other.groups[j].list[i].w,other.groups[j].list[i].h,other.groups[j].list[i].palrow,other.groups[j].list[i].starttile,other.groups[j].list[i].hflip,other.groups[j].list[i].vflip));
 	}
 	amt=other.amt;

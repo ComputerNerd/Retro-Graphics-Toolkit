@@ -57,6 +57,13 @@ tileMap::tileMap(const tileMap& other){
 tileMap::~tileMap(){
 	free(tileMapDat);
 }
+void tileMap::allRowSet(unsigned row){
+	uint32_t x,y;
+	for (y=0;y<mapSizeHA;++y){
+		for (x=0;x<mapSizeW;++x)
+			set_pal_row(x,y,row);
+	}
+}
 static void sumTile(uint8_t*tilePtr,uint32_t*sums){
 	uint32_t sum[3];//In hopes that the compiler is smart enough to keep these in registers
 	memset(sum,0,sizeof(sum));

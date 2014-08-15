@@ -904,7 +904,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					Fl::check();
 				}
 				char txtbuf[128];
-				sprintf(txtbuf,"%d/%d",y,h);
+				snprintf(txtbuf,sizeof(txtbuf),"%d/%d",y,h);
 				progress->copy_label(txtbuf);
 				progress->value(y);
 				Fl::check();
