@@ -904,8 +904,14 @@ void sprites::exportDPLC(gameType_t game){
 		fclose(fp);
 	}
 }
-static char*findLabel(char*txt,char*label){
-	
+static char*findLabel(char*txt,const char*label){
+searchagain:
+	if(txt=strstr(txt,label)){
+		txt+=strlen(label);
+		if((*txt++)!=':')
+			goto searchagain;
+	}
+	return txt;
 }
 void sprites::importDPLC(gameType_t game){
 	if(load_file_generic("Load DPLC")){
@@ -935,8 +941,8 @@ void sprites::importDPLC(gameType_t game){
 					if(!minus)
 						break;
 					*minus=0;
-					
-					DplcItem(strstr(minus+1,bufp)+strlen(bufp),sp++,game);
+
+					DplcItem(findLabel(minus+1,bufp),sp++,game);
 					bufp=minus+1;
 				}else
 					break;
@@ -987,7 +993,7 @@ void sprites::importMapping(gameType_t game){
 					*minus=0;
 					++amtnew;
 					setAmt(amtnew);
-					mappingItem(strstr(minus+1,bufp)+strlen(bufp),amt-1,game);
+					mappingItem(findLabel(minus+1,bufp),amt-1,game);
 					groups[amtnew-1].name.assign(bufp);
 					bufp=minus+1;
 					//The dc.w psuedo-op can contain multiple words

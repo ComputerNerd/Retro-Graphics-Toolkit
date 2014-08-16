@@ -1,11 +1,15 @@
 Most recent changes are placed at the top
+
+20140816
+Fixed a bug where the first instance of sonic float was loaded incorrectly due repeat lables not fully taken into account
+
 20140815
 Fixed a bug where priority was unitilized in constructor and not copied in copy construtor
 
 20140814
 Added palette generation with offset
 Fix sprite copy constructor thus eliminated crash when uncheck sharing
-Replace kens compression libray with code from Sonic 2 special stage editor brining better compression ratios
+Replace kens compression libray with code from Sonic 2 special stage editor bringing better compression ratios
 
 20140813
 Change tilemap offset loading behavior now subtracts instead of adds. Also added offset for saving
