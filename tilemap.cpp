@@ -643,8 +643,20 @@ againNerd:
 			free(imageuse);
 	}
 }
-void generate_optimal_palette(Fl_Widget*,void*sprite){
-	bool isSprite=((uintptr_t)sprite)?true:false;
+struct settings{
+	bool sprite;//Are we generating the palette for a sprite
+	unsigned off[4];//Offsets for each row
+	unsigned col;//How many colors are to be generated
+	unsigned alg;//Which algorithm should be used
+	bool ditherAfter;//After color quanization should the image be dithered
+	unsigned colSpace;//Which colorspace should the image be quantized in
+	unsigned maxPerRow[4];//What is the maximum amount of colors that can be generated per row
+	unsigned firstRow;//What is the first row that is to get generated colors
+	unsigned rows;//How many rows will get generated colors
+	unsigned sysMaxRow;//The maximum colors the system can support in one row
+};
+static void generate_optimal_paletteapply(Fl_Widget*,void*s){
+	struct settings*set=(struct settings*)s;
 	unsigned perRow[4];
 	char temp[16];
 	unsigned rowSize;
@@ -652,7 +664,7 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	int maxCol,maxColt;
 	switch (currentProject->gameSystem){
 		case sega_genesis:
-			if(isSprite)
+			if(set->sprite)
 				maxCol=16;
 			else
 				maxCol=64;
@@ -660,7 +672,7 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 			rowSize=16;
 		break;
 		case NES:
-			if(isSprite)
+			if(set->sprite)
 				maxCol=4;
 			else
 				maxCol=16;
@@ -691,7 +703,7 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	}
 	int colorstotal=colors;
 	unsigned firstRow=0;
-	if(isSprite){
+	if(set->sprite){
 		rows=1;
 		perRow[0]=colors > rowSize ? rowSize:colors;
 	}else{
@@ -725,7 +737,7 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	uint8_t * image;
 	//uint8_t * colors;
 	uint32_t w,h;
-	if(isSprite){
+	if(set->sprite){
 		w=currentProject->spritesC->width(curSpritegroup);
 		h=currentProject->spritesC->height(curSpritegroup);
 	}else{
@@ -738,9 +750,9 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	//uint8_t * found_colors;
 	uint8_t found_colors[768];
 	int rowAuto;
-	if((rows==1)&&(!isSprite))
+	if((rows==1)&&(!set->sprite))
 		rowAuto = fl_ask("Would you like all tiles on the tilemap to be set to row %d? (This is where all generated colors will apear)",firstRow);
-	else if(!isSprite){
+	else if(!set->sprite){
 		rowAuto = MenuPopup("Palette setting","How would you like the palette map to be handled",4,"Don't change anythin","Pick based on hue","Generate contiguous palette then pick based on delta","Quantizer's choice");
 		if(rowAuto<0)
 			return;
@@ -755,22 +767,22 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 		return;
 	pushPaletteAll();//Save the old palette
 	Fl_Window *win;
-	Fl_Progress *progress;
 	win = new Fl_Window(400,45,"Progress");		// access parent window
 	win->begin();					// add progress bar to it..
+	Fl_Progress *progress;
 	progress = new Fl_Progress(25,7,350,30);
-	progress->minimum(0.0);				// set progress range to be 0.0 ~ 1.0
-	progress->maximum(1.0);
 	progress->color(0x88888800);			// background color
 	progress->selection_color(0x4444ff00);		// progress bar color
 	progress->labelcolor(FL_WHITE);			// percent text color
+	progress->minimum(0.0);				// set progress range to be 0.0 ~ 1.0
+	progress->maximum(1.0);
 	win->end();					// end adding to window
 	win->show();
 	image = (uint8_t *)malloc(w*h*3);
 	if (rows==1){
 		if (rowAuto)
 			currentProject->tileMapC->allRowSet(firstRow);
-		if(isSprite){
+		if(set->sprite){
 			unsigned off=offset;
 			if(currentProject->gameSystem==NES)
 				off+=16;
@@ -810,4 +822,59 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	spritePal.updateSlider();
 	window->redraw();
 	Fl::check();
+}
+/*struct settings{
+	bool sprite;//Are we generating the palette for a sprite
+	unsigned off[4];//Offsets for each row
+	unsigned col;//How many colors are to be generated
+	unsigned alg;//Which algorithm should be used
+	bool ditherAfter;//After color quanization should the image be dithered
+	unsigned colSpace;//Which colorspace should the image be quantized in
+	unsigned maxPerRow[4];//What is the maximum amount of colors that can be generated per row
+	unsigned firstRow;//What is the first row that is to get generated colors
+	unsigned rows;//How many rows will get generated colors
+	unsigned sysMaxRow;//The maximum colors the system can support in one row
+};*/
+static Fl_Window*winG;
+static void perRowCheck(Fl_Int_Input*i,unsigned*val){
+	if(*val>palEdit.perRow){
+		fl_alert("Maximum per row is %d",palEdit.perRow);
+		char tmp[16];
+		snprintf(tmp,16,"%d",palEdit.perRow);
+		i->value(tmp);
+		*val=palEdit.perRow;
+		winG->redraw();
+	}
+}
+static void setPerRow(Fl_Widget*w,void*v){
+	unsigned*val=(unsigned*)v;
+	*val=SafeTxtInput((Fl_Int_Input*)w);
+	perRowCheck((Fl_Int_Input*)w,val);
+}
+void generate_optimal_palette(Fl_Widget*,void*sprite){
+	struct settings set;
+	memset(&set,0,sizeof(struct settings));
+	set.sprite=sprite?true:false;
+	winG = new Fl_Window(400,300,"Palette generation settings");
+	winG->begin();
+	Fl_Int_Input*perrow[4];
+	Fl_Box*rowlabel1=new Fl_Box(8,8,96,12,"Colors per row:");
+	for(unsigned i=0;i<4;++i){
+		perrow[i]=new Fl_Int_Input(16,24+(i*24),64,24);
+		char tmp[16];
+		snprintf(tmp,sizeof(tmp),"%d",i);
+		perrow[i]->copy_label(tmp);
+		perrow[i]->callback(setPerRow,&set.maxPerRow[i]);
+		snprintf(tmp,sizeof(tmp),"%d",palEdit.perRow);
+		perrow[i]->value(tmp);
+		perrow[i]->when(FL_WHEN_RELEASE|FL_WHEN_ENTER_KEY);
+		if(set.sprite&&i)
+			perrow[i]->hide();
+	}
+	winG->end();
+	winG->set_modal();
+	winG->show();
+	while(winG->shown())
+		Fl::wait();
+	delete winG;
 }

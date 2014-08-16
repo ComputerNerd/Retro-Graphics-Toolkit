@@ -24,14 +24,16 @@ sprite::sprite(){
 	starttile=0;
 	palrow=0;
 	hflip=vflip=false;
+	prio=false;
 }
-sprite::sprite(uint32_t wi,uint32_t hi,uint32_t palrowset,uint32_t settile,bool hf,bool vf){
+sprite::sprite(uint32_t wi,uint32_t hi,uint32_t palrowset,uint32_t settile,bool hf,bool vf,bool pri){
 	w=wi;
 	h=hi;
 	palrow=palrowset;
 	starttile=settile;
 	hflip=hf;
 	vflip=vf;
+	prio=pri;
 }
 void sprite::draw(unsigned x,unsigned y,unsigned zoom){
 	unsigned yy=y;

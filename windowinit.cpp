@@ -74,11 +74,11 @@ static const Fl_Menu_Item menuEditor[]={
 			{"Save tile map and if nes attributes",0,save_map,0},
 			{0},
 		{"Projects",0, 0, 0, FL_SUBMENU},
-			{"Load project",0,loadProjectCB,0},
-			{"Save project",0,saveProjectCB,0},
-			{"Load project group",0,loadAllProjectsCB,0},
+			{"Load project",FL_CTRL+FL_SHIFT+'o',loadProjectCB,0},
+			{"Save project",FL_CTRL+FL_SHIFT+'s',saveProjectCB,0},
+			{"Load project group",FL_CTRL+'o',loadAllProjectsCB,0},
 			{"Load project group (File creatd before 2014-02-23)",0,loadAllProjectsCB,(void*)1},
-			{"Save project group",0,saveAllProjectsCB,0},
+			{"Save project group",FL_CTRL+'s',saveAllProjectsCB,0},
 			{0},
 		{"Chunks",0, 0, 0, FL_SUBMENU},
 			{"Import sonic 1 chunks",0,ImportS1CBChunks,0},
@@ -118,7 +118,7 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Create new tiles for flipped tiles",0,tilesnewfilppedCB},
 		{0},
 	{"TileMap actions",0, 0, 0, FL_SUBMENU},
-		{"Remove tile from tilemap",0,tilemap_remove_callback,0},
+		{"Fix tile delete on tilemap",0,tilemap_remove_callback,0},
 		{"Toggle TrueColor Viewing (defaults to off)",0,trueColTileToggle,0},
 		{"Pick Tile row based on color delta",0,tileDPicker,0},
 		{"Auto determine if use shadow highlight",0,shadow_highligh_findout,0},
@@ -468,7 +468,7 @@ void editor::_editor(){
 				o->callback(toggleRowSolo);
 				o->tooltip("When checked tiles that do not use the selected row will not be drawn");
 			}
-			place_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,512,160,24,"Tile zoom factor:");
+			place_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,512,168,24,"Tile zoom factor:");
 			place_tile_size->minimum(1);
 			place_tile_size->maximum(16);
 			place_tile_size->step(1);
@@ -477,7 +477,7 @@ void editor::_editor(){
 			place_tile_size->callback(update_map_size);
 			place_tile_size->tooltip(TooltipZoom);
 
-			tmapOffset = new Fl_Int_Input(tile_place_buttons_x_off,560,160,24,"Tile offset");
+			tmapOffset = new Fl_Int_Input(tile_place_buttons_x_off,552,168,24,"Tile offset");
 			tmapOffset->when(FL_WHEN_ENTER_KEY);
 			tmapOffset->value("0");
 			tmapOffset->align(FL_ALIGN_TOP);

@@ -1,4 +1,6 @@
 Most recent changes are placed at the top
+20140815
+Fixed a bug where priority was unitilized in constructor and not copied in copy construtor
 
 20140814
 Added palette generation with offset

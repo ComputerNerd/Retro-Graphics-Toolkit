@@ -341,7 +341,10 @@ void editor::draw_non_gui(void){
 						for(unsigned x=tilesSpriteOff[0];x<w();x+=16,++looptile){
 							if(looptile>=currentProject->tileC->amt)
 								break;
-							currentProject->tileC->draw_tile(x,y,looptile,2,currentProject->spritesC->groups[curSpritegroup].list[curSprite].palrow,false,false);
+							unsigned palrow=currentProject->spritesC->groups[curSpritegroup].list[curSprite].palrow;
+							if(currentProject->gameSystem==NES)
+								palrow+=4;
+							currentProject->tileC->draw_tile(x,y,looptile,2,palrow,false,false);
 							if(looptile==currentProject->spritesC->groups[curSpritegroup].list[curSprite].starttile){
 								tileatx=x;
 								tileaty=y;

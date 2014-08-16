@@ -58,7 +58,7 @@ sprites::sprites(const sprites& other){
 		groups[j].loadat=other.groups[j].loadat;
 		groups[j].name=other.groups[j].name;
 		for(uint32_t i=0;i<sz;++i)
-			groups[j].list.push_back(sprite(other.groups[j].list[i].w,other.groups[j].list[i].h,other.groups[j].list[i].palrow,other.groups[j].list[i].starttile,other.groups[j].list[i].hflip,other.groups[j].list[i].vflip));
+			groups[j].list.push_back(sprite(other.groups[j].list[i].w,other.groups[j].list[i].h,other.groups[j].list[i].palrow,other.groups[j].list[i].starttile,other.groups[j].list[i].hflip,other.groups[j].list[i].vflip,other.groups[j].list[i].prio));
 	}
 	amt=other.amt;
 }
@@ -732,6 +732,22 @@ void sprites::mappingItem(void*in,uint32_t id,gameType_t game){
 		}
 	}
 }
+void sprites::guessDPLC(unsigned which,unsigned i){
+	//Resort to guessing	
+	//Try finding one with same width and height
+	unsigned j;
+	for(j=0;j<groups[which].list.size();++j){
+		if(i==j)
+			continue;
+		if(groups[which].list[i].w==groups[which].list[j].w){
+			if(groups[which].list[i].h==groups[which].list[j].h)
+				break;
+		}
+	}
+	if(j>=groups[which].list.size())
+		j=groups[which].list.size()-1;
+	groups[which].list[i].starttile=groups[which].list[j].starttile;
+}
 void sprites::DplcItem(void*in,uint32_t which,gameType_t game){
 	/*Sonic 1 format:
 	 * uint8_t amount
@@ -752,14 +768,18 @@ void sprites::DplcItem(void*in,uint32_t which,gameType_t game){
 				amtd=strtol(txt+1,&txt,16);
 			else
 				amtd=strtol(txt,&txt,0);
-			for(uint32_t i=0;i<amtd;++i){
+			for(unsigned i=0;i<std::max(amtd,(unsigned)groups[which].list.size());++i){
 				if(i>=groups[which].list.size())//Avoid writting to nonexistent sprites
 					break;
-				//Read the two bytes
-				uint8_t buf[2];
-				txt=readNbytesAsm(buf,txt,2);
-				uint16_t tile=((buf[0]&15)<<8)|buf[1];
-				groups[which].list[i].starttile=tile;
+				if(i>=amtd){
+					guessDPLC(which,i);
+				}else{
+					//Read the two bytes
+					uint8_t buf[2];
+					txt=readNbytesAsm(buf,txt,2);
+					uint16_t tile=((buf[0]&15)<<8)|buf[1];
+					groups[which].list[i].starttile=tile;
+				}
 			}
 		}
 	}else{
@@ -770,20 +790,7 @@ void sprites::DplcItem(void*in,uint32_t which,gameType_t game){
 			if(i>=groups[which].list.size())//Avoid writting to nonexistent sprites
 				break;
 			if(i>=amtd){
-				//Resort to guessing	
-				//Try finding one with same width and height
-				unsigned j;
-				for(j=0;j<groups[which].list.size();++j){
-					if(i==j)
-						continue;
-					if(groups[which].list[i].w==groups[which].list[j].w){
-						if(groups[which].list[i].h==groups[which].list[j].h)
-							break;
-					}
-				}
-				if(j>=groups[which].list.size())
-					j=groups[which].list.size()-1;
-				groups[which].list[i].starttile=groups[which].list[j].starttile;
+				guessDPLC(which,i);
 			}else{
 				unsigned tile=be16toh(*buf++)&4095;
 				groups[which].list[i].starttile=tile;
@@ -897,6 +904,9 @@ void sprites::exportDPLC(gameType_t game){
 		fclose(fp);
 	}
 }
+static char*findLabel(char*txt,char*label){
+	
+}
 void sprites::importDPLC(gameType_t game){
 	if(load_file_generic("Load DPLC")){
 		FILE*fp;
@@ -925,6 +935,7 @@ void sprites::importDPLC(gameType_t game){
 					if(!minus)
 						break;
 					*minus=0;
+					
 					DplcItem(strstr(minus+1,bufp)+strlen(bufp),sp++,game);
 					bufp=minus+1;
 				}else
@@ -1391,11 +1402,41 @@ void sprites::delingroup(uint32_t id,uint32_t subid){
 }
 void sprites::enforceMax(unsigned wmax,unsigned hmax){
 	for(unsigned j=0;j<amt;++j){
-		for(unsigned i=0;i<groups[j].list.size();++i){
-		if(groups[j].list[i].w>wmax)
-			groups[j].list[i].w=wmax;
-		if(groups[j].list[i].h>hmax)
-			groups[j].list[i].h=hmax;
+		unsigned told=groups[j].list.size();
+		for(unsigned i=0;i<told;++i){
+			if((groups[j].list[i].w>wmax)||(groups[j].list[i].h>hmax)){
+				//Divde it up into more sprites
+				unsigned w=groups[j].list[i].w,h=groups[j].list[i].h;
+				unsigned snew=((w+(wmax/2))/wmax)*((h+(hmax/2))/hmax)-1,start=groups[j].list.size(),st=groups[j].list[i].starttile,la=groups[j].loadat[i];
+				if(groups[j].list[i].w>wmax)
+					groups[j].list[i].w=wmax;
+				if(groups[j].list[i].h>hmax)
+					groups[j].list[i].h=hmax;
+				st+=groups[j].list[i].h*groups[j].list[i].w;
+				la+=groups[j].list[i].h*groups[j].list[i].w;
+				setAmtingroup(j,start+snew);
+				for(unsigned x=0,a=start;x<(w+(wmax/2))/wmax;++x){
+					for(unsigned y=0;y<(h+(hmax/2))/hmax;++y){
+						if((!x)&&(!y))
+							continue;
+						if(x==(w/wmax))
+							groups[j].list[a].w=w%wmax;
+						else
+							groups[j].list[a].w=wmax;
+						if(y==(h/hmax))
+							groups[j].list[a].h=h%hmax;
+						else
+							groups[j].list[a].h=hmax;
+						groups[j].offx[a]=groups[j].offx[i]+(x*wmax*8);
+						groups[j].offy[a]=groups[j].offy[i]+(y*hmax*8);
+						groups[j].list[a].starttile=st;
+						groups[j].loadat[a]=la;
+						st+=groups[j].list[a].w*groups[j].list[a].h;
+						la+=groups[j].list[a].w*groups[j].list[a].h;
+						++a;
+					}
+				}
+			}
 		}
 	}
 }
