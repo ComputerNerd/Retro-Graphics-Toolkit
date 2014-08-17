@@ -338,7 +338,30 @@ void switchProject(uint32_t id){
 				tileEdit_pal.changeSystem();
 				tileMap_pal.changeSystem();
 				spritePal.changeSystem();
-				set_palette_type(0);
+				unsigned paltype;
+				switch(projects[id]->subSystem&sgSHmask){
+					case 0:
+						paltype=0;
+						window->genSHbtns[0]->set();
+						window->genSHbtns[1]->clear();
+						window->genSHbtns[2]->clear();
+					break;
+					case sgSon:
+						paltype=8;
+						window->genSHbtns[0]->clear();
+						window->genSHbtns[1]->set();
+						window->genSHbtns[2]->clear();
+					break;
+					case sgSHmask:
+						paltype=16;
+						window->genSHbtns[0]->clear();
+						window->genSHbtns[1]->clear();
+						window->genSHbtns[2]->set();
+					break;
+					default:
+						show_default_error
+				}
+				set_palette_type(paltype);
 			}
 		break;
 		case NES:

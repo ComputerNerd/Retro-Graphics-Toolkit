@@ -48,20 +48,33 @@ void mkProgress(Fl_Window**winP,Fl_Progress**progress){
 static void zeroError(const char*more){
 	fl_alert("Please enter a value greater than zero\n%s",more);
 }
-int SafeTxtInput(Fl_Int_Input*in){
+static void fixVal(Fl_Int_Input*in,int val,bool redraw){
+	char tmp[16];
+	snprintf(tmp,16,"%d",val);
+	in->value(tmp);
+	if(redraw)
+		window->redraw();
+}
+int SafeTxtInput(Fl_Int_Input*in,bool redraw){
 	int val=atoi(in->value());
 	if(val<=0){
 		if(val==0){
 			zeroError("Defaulting to one");
 			val=1;
 		}else{
-			zeroError("Defaulting to absoulute value");
+			zeroError("Defaulting to absolute value");
 			val=-val;
 		}
-		char tmp[16];
-		snprintf(tmp,16,"%d",val);
-		in->value(tmp);
-		window->redraw();
+		fixVal(in,val,redraw);
+	}
+	return val;
+}
+int SafeTxtInputZeroAllowed(Fl_Int_Input*in,bool redraw){
+	int val=atoi(in->value());
+	if(val<0){
+		zeroError("Defaulting to absolute value");
+		val=-val;
+		fixVal(in,val,redraw);
 	}
 	return val;
 }

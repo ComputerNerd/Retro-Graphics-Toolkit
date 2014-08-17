@@ -18,7 +18,7 @@
 #include "errorMsg.h"
 #include "color_convert.h"
 #include "undo.h"
-uint8_t palTypeGen=0;
+unsigned palTypeGen;
 typedef std::pair<double,int> HLSpair;
 bool comparatorHLS(const HLSpair& l,const HLSpair& r)
    { return l.first < r.first; }
@@ -83,8 +83,22 @@ void swapEntry(uint8_t one,uint8_t two){
 }
 const uint8_t palTab[]=   {0,49,87,119,146,174,206,255,0,27,49,71,87,103,119,130,130,146,157,174,190,206,228,255};//from http://gendev.spritesmind.net/forum/viewtopic.php?t=1389
 const uint8_t palTabEmu[]={0,36,72,108,144,180,216,252,0,18,36,54,72, 90,108,126,126,144,162,180,198,216,234,252};
-void set_palette_type(uint8_t type){
+void set_palette_type(unsigned type){
 	palTypeGen=type;
+	switch(type){
+		case 0:
+			currentProject->subSystem&=~sgSHmask;
+		break;
+		case 8:
+			currentProject->subSystem&=~sgHon;
+			currentProject->subSystem|=sgSon;
+		break;
+		case 16:
+			currentProject->subSystem|=sgSHmask;
+		break;
+		default:
+			show_default_error
+	}
 	//now reconvert all the colors
 	for (unsigned pal=0; pal < 128;pal+=2){
 		//to convert to rgb first get value of color then multiply it by 16 to get rgb

@@ -89,14 +89,26 @@ static const Fl_Menu_Item menuEditor[]={
 			{"Import sprite from image",0,SpriteimportCB,0},
 			{"Import sprite from image (append)",0,SpriteimportCB,(void*)1},
 			{"Import sprite sheet",0,SpriteSheetimportCB,(void*)1},
-			{"Import sonic 1 mapping",0,importSonicMappingCB,(void*)tSonic1},
-			{"Import sonic 2 mapping",0,importSonicMappingCB,(void*)tSonic2},
-			{"Import sonic 1 DPLC",0,importSonicDPLCCB,(void*)tSonic1},
-			{"Import sonic 2 DPLC",0,importSonicDPLCCB,(void*)tSonic2},
-			{"Export sonic 1 mapping",0,exportSonicMappingCB,(void*)tSonic1},
-			{"Export sonic 2 mapping",0,exportSonicMappingCB,(void*)tSonic2},
-			{"Export sonic 1 DPLC",0,exportSonicDPLCCB,(void*)tSonic1},
-			{"Export sonic 2 DPLC",0,exportSonicDPLCCB,(void*)tSonic2},
+			{"Import mapping",0, 0, 0, FL_SUBMENU},
+				{"Sonic 1",0,importSonicMappingCB,(void*)tSonic1},
+				{"Sonic 2",0,importSonicMappingCB,(void*)tSonic2},
+				{"Sonic 3",0,importSonicMappingCB,(void*)tSonic3},
+				{0},
+			{"Import DPLC",0, 0, 0, FL_SUBMENU},
+				{"Sonic 1",0,importSonicDPLCCB,(void*)tSonic1},
+				{"Sonic 2 (or sonic 3 character)",0,importSonicDPLCCB,(void*)tSonic2},
+				{"Sonic 3",0,importSonicDPLCCB,(void*)tSonic3},
+				{0},
+			{"Export mapping",0, 0, 0, FL_SUBMENU},
+				{"Sonic 1",0,exportSonicMappingCB,(void*)tSonic1},
+				{"Sonic 2",0,exportSonicMappingCB,(void*)tSonic2},
+				{"Sonic 3",0,exportSonicMappingCB,(void*)tSonic3},
+				{0},
+			{"Export DPLC",0, 0, 0, FL_SUBMENU},
+				{"Sonic 1",0,exportSonicDPLCCB,(void*)tSonic1},
+				{"Sonic 2 (or sonic 3 character)",0,exportSonicDPLCCB,(void*)tSonic2},
+				{"Sonic 3",0,exportSonicDPLCCB,(void*)tSonic3},
+				{0},
 			{0},
 		{0},
 	{"Palette actions",0, 0, 0, FL_SUBMENU},
@@ -130,7 +142,7 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Generate optimal palette for selected sprite",0,generate_optimal_palette,(void*)1},
 		{"Dither sprite as image",0,ditherSpriteAsImageCB,0},
 		{"Dither all sprites as image",0,ditherSpriteAsImageAllCB,0},
-		{"Optimize sprites",0,optimizeSpritesCB,0},
+		{"Remove blank and duplicate tiles without affect sprite amount",0,optimizeSpritesCB,0},
 		{0},
 	{"Undo/Redo",0, 0, 0, FL_SUBMENU},
 		{"Undo",FL_CTRL+'z',undoCB},
@@ -207,23 +219,23 @@ void editor::_editor(){
 			{
 				shadow_highlight_switch = new Fl_Group(112, 288, 800, 480);
 				{
-					Fl_Round_Button* o = new Fl_Round_Button(96, 280, 64, 32, "Normal");
-					o->type(FL_RADIO_BUTTON);
-					o->tooltip("This is the regular sega genesis color space. When shadow/highlight mode is disabled all tiles will look like this however when enabling shadow higligh mode and a tile is set to high prioraty you will the tile will use these set of colors");
-					o->callback((Fl_Callback*) set_palette_type_callback,(void *)0);
-					o->set();
+					genSHbtns[0] = new Fl_Round_Button(96, 280, 64, 32, "Normal");
+					genSHbtns[0]->type(FL_RADIO_BUTTON);
+					genSHbtns[0]->tooltip("This is the regular sega genesis color space. When shadow/highlight mode is disabled all tiles will look like this however when enabling shadow higligh mode and a tile is set to high prioraty you will the tile will use these set of colors");
+					genSHbtns[0]->callback((Fl_Callback*) set_palette_type_callback,(void *)0);
+					genSHbtns[0]->set();
 				} // Fl_Round_Button* o
 				{
-					Fl_Round_Button* o = new Fl_Round_Button(164, 280, 64, 32, "Shadow");
-					o->tooltip("This mode uses the color sets that the vdp uses when shadow highlight mode is enabled by setting bit 3 (the LSB being bit 0) to 1 in the vdp register 0C also for the tile to be shadowed the tile's priority must be set at 0 or low priority");
-					o->type(FL_RADIO_BUTTON);
-					o->callback((Fl_Callback*) set_palette_type_callback,(void *)8);
+					genSHbtns[1] = new Fl_Round_Button(164, 280, 64, 32, "Shadow");
+					genSHbtns[1]->tooltip("This mode uses the color sets that the vdp uses when shadow highlight mode is enabled by setting bit 3 (the LSB being bit 0) to 1 in the vdp register 0C also for the tile to be shadowed the tile's priority must be set at 0 or low priority");
+					genSHbtns[1]->type(FL_RADIO_BUTTON);
+					genSHbtns[1]->callback((Fl_Callback*) set_palette_type_callback,(void *)8);
 				} // Fl_Round_Button* o
 				{
-					Fl_Round_Button* o = new Fl_Round_Button(240, 280, 64, 32, "Highlight");
-					o->tooltip("This mode uses the color sets that a highlighted sprite or tile uses. To make a tile highlighted use a mask sprite");
-					o->type(FL_RADIO_BUTTON);
-					o->callback((Fl_Callback*) set_palette_type_callback,(void *)16);
+					genSHbtns[2] = new Fl_Round_Button(240, 280, 64, 32, "Highlight");
+					genSHbtns[2]->tooltip("This mode uses the color sets that a highlighted sprite or tile uses. To make a tile highlighted use a mask sprite");
+					genSHbtns[2]->type(FL_RADIO_BUTTON);
+					genSHbtns[2]->callback((Fl_Callback*) set_palette_type_callback,(void *)16);
 				} // Fl_Round_Button* o
 				shadow_highlight_switch->end();
 			}

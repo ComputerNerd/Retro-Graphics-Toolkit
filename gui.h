@@ -54,7 +54,8 @@ extern unsigned SpriteOff[2];
 #define settingsTab 5
 
 void mkProgress(Fl_Window**winP,Fl_Progress**progress);
-int SafeTxtInput(Fl_Int_Input*in);
+int SafeTxtInput(Fl_Int_Input*in,bool redraw=true);
+int SafeTxtInputZeroAllowed(Fl_Int_Input*in,bool redraw=true);
 void updateTileSelectAmt(void);
 void updateTileSelectAmt(uint32_t newMax);
 int MenuPopup(const char * title,const char * text,unsigned num,...);

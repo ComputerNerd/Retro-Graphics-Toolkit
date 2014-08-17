@@ -15,8 +15,8 @@
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
 #pragma once
-extern uint8_t palTypeGen;
+extern unsigned palTypeGen;
 extern const uint8_t palTab[];
 void sortBy(unsigned type,bool perRow);
 void swapEntry(uint8_t one,uint8_t two);
-void set_palette_type(uint8_t type);
+void set_palette_type(unsigned type);

@@ -24,6 +24,7 @@
  * Subsystem as the name implies depends on which system is selected
  * These are not compatible when switching systems
  * For the sega geneis bits 1-0 contain bit depth 0 means 1 bit
+ * bit 2 sets if shadow highlight is enabled and bit 3 sets if highlight should be displayed instead of shadow
  * For the NES bit 1 contains bit depth 1 if 2 bit 0 if 1 bit
  * For palette framebuffer bits 2-0 contain bit depth add 1 to get actual just like the others
  * Bits 6-2 contain screen depth for example if set to 15 (16 remember alwasy +1) that would mean palette is based on rgb565 colors
@@ -39,6 +40,9 @@
  * When 24 bit or 32 stores as bgr or rgb
  * if bit depth is 32 bit then bit 5 is used to determin if alpha value should be before or after rgb/bgr
  * */
+#define sgSHmask (3<<2)
+#define sgSon (1<<2)
+#define sgHon (2<<2)
 #define NES2x2 1//Note for version 4 or eariler projects and hence in eariler versions of Retro Graphics Toolkit bit 0 was inverted
 #define NES1x1 0
 #define NES2bit 2

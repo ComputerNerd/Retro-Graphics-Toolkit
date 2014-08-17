@@ -1,6 +1,6 @@
 Most recent changes are placed at the top
-
 20140816
+Shadow highlight settings are now saved in project file
 Fixed a bug where the first instance of sonic float was loaded incorrectly due repeat lables not fully taken into account
 
 20140815

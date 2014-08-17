@@ -650,7 +650,7 @@ struct settings{
 	unsigned alg;//Which algorithm should be used
 	bool ditherAfter;//After color quanization should the image be dithered
 	unsigned colSpace;//Which colorspace should the image be quantized in
-	unsigned maxPerRow[4];//What is the maximum amount of colors that can be generated per row
+	unsigned perRow[4];//What is the maximum amount of colors that can be generated per row
 	unsigned firstRow;//What is the first row that is to get generated colors
 	unsigned rows;//How many rows will get generated colors
 	unsigned sysMaxRow;//The maximum colors the system can support in one row
@@ -830,46 +830,69 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 	unsigned alg;//Which algorithm should be used
 	bool ditherAfter;//After color quanization should the image be dithered
 	unsigned colSpace;//Which colorspace should the image be quantized in
-	unsigned maxPerRow[4];//What is the maximum amount of colors that can be generated per row
+	unsigned perRow[4];//What is the maximum amount of colors that can be generated per row
 	unsigned firstRow;//What is the first row that is to get generated colors
 	unsigned rows;//How many rows will get generated colors
 	unsigned sysMaxRow;//The maximum colors the system can support in one row
 };*/
 static Fl_Window*winG;
-static void perRowCheck(Fl_Int_Input*i,unsigned*val){
-	if(*val>palEdit.perRow){
-		fl_alert("Maximum per row is %d",palEdit.perRow);
-		char tmp[16];
-		snprintf(tmp,16,"%d",palEdit.perRow);
-		i->value(tmp);
-		*val=palEdit.perRow;
-		winG->redraw();
-	}
+struct settings*setG;
+static Fl_Int_Input*perrow[4];
+static Fl_Int_Input*perrowoffset[4];
+static void setValInt(Fl_Int_Input*i,unsigned val){
+	char tmp[16];
+	snprintf(tmp,16,"%d",val);
+	i->value(tmp);
+	winG->redraw();
 }
-static void setPerRow(Fl_Widget*w,void*v){
-	unsigned*val=(unsigned*)v;
-	*val=SafeTxtInput((Fl_Int_Input*)w);
-	perRowCheck((Fl_Int_Input*)w,val);
+static void setPerRow(Fl_Widget*w,void*x){
+	uintptr_t which=(uintptr_t)x;
+	unsigned val=SafeTxtInput((Fl_Int_Input*)w,false);
+	if((val+setG->off[which])>palEdit.perRow){
+		val=palEdit.perRow-setG->off[which];
+		setValInt((Fl_Int_Input*)w,val);
+	}
+	setG->perRow[which]=val;
+}
+static void setPerRowoff(Fl_Widget*w,void*x){
+	uintptr_t which=(uintptr_t)x;
+	unsigned val=SafeTxtInputZeroAllowed((Fl_Int_Input*)w,false);
+	if(val>=palEdit.perRow){
+		val=palEdit.perRow-1;
+		setValInt((Fl_Int_Input*)w,val);
+	}
+	setG->off[which]=val;
+	if((val+setG->perRow[which])>palEdit.perRow){
+		setG->perRow[which]=palEdit.perRow-val;
+		setValInt(perrow[which],setG->perRow[which]);
+	}
 }
 void generate_optimal_palette(Fl_Widget*,void*sprite){
 	struct settings set;
+	setG=&set;
 	memset(&set,0,sizeof(struct settings));
 	set.sprite=sprite?true:false;
 	winG = new Fl_Window(400,300,"Palette generation settings");
 	winG->begin();
-	Fl_Int_Input*perrow[4];
 	Fl_Box*rowlabel1=new Fl_Box(8,8,96,12,"Colors per row:");
-	for(unsigned i=0;i<4;++i){
-		perrow[i]=new Fl_Int_Input(16,24+(i*24),64,24);
+	rowlabel1->labelsize(12);
+	Fl_Box*rowlabel2=new Fl_Box(104,8,96,12,"Offset per row:");
+	rowlabel2->labelsize(12);
+	for(uintptr_t i=0;i<4;++i){
 		char tmp[16];
+		perrow[i]=new Fl_Int_Input(24,24+(i*24),64,24);
+		perrowoffset[i]=new Fl_Int_Input(120,24+(i*24),64,24);
 		snprintf(tmp,sizeof(tmp),"%d",i);
 		perrow[i]->copy_label(tmp);
-		perrow[i]->callback(setPerRow,&set.maxPerRow[i]);
+		perrowoffset[i]->copy_label(tmp);
+		perrow[i]->callback(setPerRow,(void*)i);
+		perrowoffset[i]->callback(setPerRowoff,(void*)i);
 		snprintf(tmp,sizeof(tmp),"%d",palEdit.perRow);
+		set.perRow[i]=palEdit.perRow;
 		perrow[i]->value(tmp);
+		perrowoffset[i]->value("0");
 		perrow[i]->when(FL_WHEN_RELEASE|FL_WHEN_ENTER_KEY);
-		if(set.sprite&&i)
-			perrow[i]->hide();
+		perrowoffset[i]->when(FL_WHEN_RELEASE|FL_WHEN_ENTER_KEY);
 	}
 	winG->end();
 	winG->set_modal();
