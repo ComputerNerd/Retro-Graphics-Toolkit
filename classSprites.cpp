@@ -171,8 +171,8 @@ static bool isMask(int x,int y,Fl_Shared_Image*loaded_image,bool grayscale,bool 
 		break;
 	}
 }
-static bool inRange(int num,int min,int max){
-	return (num>=min)&&(num<=max);
+static bool inRange(int num,int x,int y){
+	return (num>=std::min(x,y))&&(num<=std::max(x,y));
 }
 class RectBox : public Fl_Box{
 public:
@@ -918,6 +918,81 @@ bool sprites::checkDupmapping(uint32_t id,uint32_t&which){
 	}
 	return false;
 }
+
+std::vector<uint8_t> sprites::optDPLC(unsigned which){
+	printf("%u\n",which);
+	std::vector<unsigned> tmp;//amount,offset
+	tmp.reserve(groups[which].list.size());
+	for(unsigned i=0;i<groups[which].list.size();++i){
+		tmp.push_back(groups[which].list[i].w*groups[which].list[i].h);
+		tmp.push_back(groups[which].list[i].starttile);
+	}
+	//Remove duplicates
+dupIt:
+	for(unsigned i=0;i<tmp.size();i+=2){
+		for(unsigned j=tmp.size();j-=2;){
+			if(i==j)
+				continue;
+			if((tmp[i]==tmp[j])&&(tmp[i+1]==tmp[j+1])){
+				printf("Duplicate %d %d\n",i/2,j/2);
+				tmp.erase(tmp.begin()+j,tmp.begin()+j+2);
+				goto dupIt;
+			}
+		}
+	}
+	//Merge if possible
+	for(int i=0;i<tmp.size();i+=2){
+mergeIt:
+		for(unsigned j=tmp.size();j-=2;){
+			if(i==j)
+				continue;
+			if(inRange(tmp[j+1],tmp[i+1],tmp[i+1]+tmp[i])){
+				unsigned amtnew=std::max(tmp[i]+tmp[i+1],tmp[j]+tmp[j+1])-std::min(tmp[i+1],tmp[j+1]);
+				printf("Found merdge canidate: %d %d %d %d amout: %u\n",tmp[i],tmp[i+1],tmp[j],tmp[j+1],amtnew);
+				unsigned st=std::min(tmp[i+1],tmp[j+1]);
+				bool swapped;
+				if(i>j){
+					swapped=true;
+					unsigned sw=i;
+					i=j;
+					j=sw;
+				}else
+					swapped=false;
+				while(amtnew>16){
+					tmp[i]=16;
+					tmp[i+1]=st;
+					i+=2;
+					j+=2;
+					st+=16;
+					tmp.insert(tmp.begin()+i+2,2,0);
+					amtnew-=16;
+				}
+				if(amtnew){
+					tmp[i]=amtnew;
+					tmp[i+1]=st;
+				}
+				tmp.erase(tmp.begin()+j,tmp.begin()+j+2);
+				if(swapped){
+					i=i>j?j:i;
+				}
+				goto mergeIt;
+			}
+		}
+	}
+	std::vector<uint8_t> out;
+	out.reserve(tmp.size());
+	for(unsigned i=0;i<tmp.size();i+=2){
+		unsigned tile=tmp[i+1];
+		if(tile>4095){
+			printf("Tile overflow in sprite group %d tile value was %d\n",which,tile);
+			tile=4095;
+		}
+		out.push_back(((tmp[i]-1)<<4)|(tile>>8));
+		out.push_back(tile&255);
+	}
+	tmp.clear();
+	return out;
+}
 void sprites::exportDPLC(gameType_t game){
 	if(load_file_generic("Save DPLC",true)){
 		FILE*fp;
@@ -940,7 +1015,7 @@ void sprites::exportDPLC(gameType_t game){
 						fprintf(fp,"%s:\n\tdc.b %d\n",groups[i].name.c_str(),groups[i].list.size());
 						for(unsigned j=0;j<groups[i].list.size();++j){
 							if(!alreadyLoaded(i,j))
-								fprintf(fp,"\tdc.b %d,%d\n",(((groups[i].list[j].w*groups[i].list[j].h)-1)<<4)|((groups[i].list[j].starttile&2047)>>8),groups[i].list[j].starttile&255);
+								fprintf(fp,"\tdc.b %d,%d\n",(((groups[i].list[j].w*groups[i].list[j].h)-1)<<4)|((groups[i].list[j].starttile&4095)>>8),groups[i].list[j].starttile&255);
 							else
 								printf("Already loaded group: %d sprite: %d\n",i,j);
 						}
@@ -963,22 +1038,13 @@ void sprites::exportDPLC(gameType_t game){
 				}else{
 					tmpbuf[i*2]=acum>>8;
 					tmpbuf[i*2+1]=acum&255;
-					unsigned amtg=0;
-					for(unsigned j=0;j<groups[i].list.size();++j){
-						if(!alreadyLoaded(i,j))
-							++amtg;
-					}
+					std::vector<uint8_t> out=optDPLC(i);
+					unsigned amtg=out.size()/2;
 					tmpbuf.push_back(amtg>>8);
 					tmpbuf.push_back(amtg&255);
-					acum+=2;
-					for(unsigned j=0;j<groups[i].list.size();++j){
-						if(!alreadyLoaded(i,j)){
-							tmpbuf.push_back((((groups[i].list[j].w*groups[i].list[j].h)-1)<<4)|((groups[i].list[j].starttile&4095)>>8));
-							tmpbuf.push_back(groups[i].list[j].starttile&255);
-							acum+=2;
-						}else
-							printf("Already loaded group: %d sprite: %d\n",i,j);
-					}
+					tmpbuf.insert(tmpbuf.end(),out.begin(),out.end());
+					acum+=out.size()+2;
+					out.clear();
 				}
 			}
 			fwrite(tmpbuf.data(),1,tmpbuf.size(),fp);
@@ -1312,10 +1378,6 @@ void sprites::setAmtingroup(uint32_t id,uint32_t amtnew){
 	groups[id].offx.resize(amtnew);
 	groups[id].offy.resize(amtnew);
 	groups[id].loadat.resize(amtnew);
-	if(amtnew>amtold){
-		for(unsigned i=amtold;i<amtnew;++i)
-			groups[id].name.assign(spriteDefName);
-	}
 }
 bool sprites::save(FILE*fp){
 	/* Format:

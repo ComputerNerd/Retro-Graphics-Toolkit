@@ -34,6 +34,7 @@ struct Project{/*!<Holds all data needed for a project based system for examaple
 	std::string Name;
 	uint32_t gameSystem;
 	uint32_t subSystem;
+	uint32_t settings;
 	uint32_t useMask;/*!<Sharing can be used regardless of use mask*/
 	tileMap* tileMapC;
 	tiles* tileC;

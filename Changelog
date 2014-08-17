@@ -1,4 +1,6 @@
 Most recent changes are placed at the top
+20140817
+
 20140816
 Shadow highlight settings are now saved in project file
 Fixed a bug where the first instance of sonic float was loaded incorrectly due repeat lables not fully taken into account
@@ -25,9 +27,9 @@ Fixed a bug where sprite palette (NES only) was not used in sprites
 Added sort each palette row by (currently has hue,saturation,lightness)
 
 20140807
+Release v0.7
 Added sonic 2 mapping and dpcl export also improved sonic 1 dpcl export.
 Testing with sonic 2 sonic mapping and dpcl both resulted in a bit per bit match.
-
 Fixed crash when trying to switch project that does not have all data
 
 20140806

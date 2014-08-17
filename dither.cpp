@@ -7,7 +7,7 @@
 #define LEFT 2
 #define DOWN 3
 #define RIGHT 4
-static uint8_t useHiL;//no use for these varibles outside of this file
+static unsigned useHiL;//no use for these varibles outside of this file
 static uint8_t useMode;
 static uint8_t rgbPixelsize;
 static bool USEofColGlob;
@@ -100,7 +100,7 @@ static int32_t error[SIZE]; /* queue with error
 		pvalue=*pixel + err/MAX;
   //pvalue = (pvalue>=128) ? 255 : 0;
 	if ((currentProject->gameSystem == sega_genesis) && (useHiL == 9)){
-		uint8_t tempSet;
+		unsigned tempSet;
 		if(isChunkD_G)
 			tempSet=(currentProject->Chunk->getPrio_t(idChunk_G,cur_x/8,cur_y/8)^1)*8;
 		else
