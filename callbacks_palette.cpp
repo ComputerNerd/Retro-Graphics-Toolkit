@@ -82,7 +82,7 @@ void save_palette(Fl_Widget*, void* start_end){
 		}
 	}else
 		skipzero=false;
-	int type=askSaveType();
+	fileType_t type=askSaveType();
 	int clipboard;
 	if(type){
 		clipboard=clipboardAsk();

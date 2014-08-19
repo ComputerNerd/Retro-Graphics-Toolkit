@@ -51,7 +51,8 @@ extern unsigned SpriteOff[2];
 #define tile_place 2
 #define chunkEditor 3
 #define spriteEditor 4
-#define settingsTab 5
+#define levelEditor 5
+#define settingsTab 6
 
 void mkProgress(Fl_Window**winP,Fl_Progress**progress);
 int SafeTxtInput(Fl_Int_Input*in,bool redraw=true);

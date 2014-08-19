@@ -357,9 +357,8 @@ void ChunkClass::importSonic1(const char * filename,bool append){
 }
 void ChunkClass::exportSonic1(void){
 	FILE*fp;
-	int type,compression;
-	type=askSaveType();
-	int clipboard;
+	int compression,clipboard;
+	fileType_t type=askSaveType();
 	size_t fileSize;
 	if(type){
 		clipboard=clipboardAsk();

@@ -22,10 +22,10 @@
 int clipboardAsk(void){
 	return fl_choice("File or clipboard?","File","Clipboard","Cancel");
 }
-int askSaveType(void){
-	return MenuPopup("How would you like the file saved?","Set if the file is saved as binary C header bex or asm",4,"Binary","C header","Asm","BEX");
+fileType_t askSaveType(void){
+	return (fileType_t)MenuPopup("How would you like the file saved?","Set if the file is saved as binary C header bex or asm",4,"Binary","C header","Asm","BEX");
 }
-bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,int type,const char*comment,const char*label,int bits){
+bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,fileType_t type,const char*comment,const char*label,int bits){
 	/*!
 	This function saves binary data as plain text useful for c headers each byte is seperated by a comma
 	To use the clipboard specify file as NULL
@@ -77,7 +77,7 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,int type,const char*comme
 		temp.push_back('\n');
 	}
 	switch(type){
-		case 1:
+		case tCheader:
 			temp.append("const uint");
 			snprintf(tmp,16,"%d",bits);
 			temp.append(tmp);
@@ -85,8 +85,8 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,int type,const char*comme
 			temp.append(label);
 			temp.append("[]={");
 		break;
-		case 2:
-		case 3:
+		case tAsm:
+		case tBex:
 			temp.append(label);
 			temp.push_back(':');
 		break;

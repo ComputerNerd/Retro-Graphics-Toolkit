@@ -391,9 +391,9 @@ bool tileMap::saveToFile(){
 	uint32_t x,y;
 	FILE * myfile;
 	size_t fileSize;
-	int type,compression;
+	int compression;
 	uint8_t* mapptr;
-	type=askSaveType();
+	fileType_t type=askSaveType();
 	int clipboard;
 	if(type){
 		clipboard=clipboardAsk();

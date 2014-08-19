@@ -18,7 +18,7 @@
 #include "filemisc.h"
 #include "compressionWrapper.h"
 void save_tiles(Fl_Widget*,void*){
-	int type=askSaveType();
+	fileType_t type=askSaveType();
 	int clipboard;
 	if(type){
 		clipboard=clipboardAsk();

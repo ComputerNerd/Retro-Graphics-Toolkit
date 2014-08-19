@@ -18,7 +18,7 @@
 This is where all "project" releated stuff goes
 For example the save project file function goes here
 */
-#define shareAmtPj 5
+#define shareAmtPj 6
 #ifndef _PROJECT_H
 #define _PROJECT_H 1
 #include "global.h"
@@ -67,6 +67,7 @@ bool loadAllProjects(bool Old);
 #define pjHaveMap 4
 #define pjHaveChunks 8
 #define pjHaveSprites 16
-#define pjDefaultMask (pjHavePal|pjHaveTiles|pjHaveMap|pjHaveChunks|pjHaveSprites)
+#define pjHaveLevel 32
+#define pjDefaultMask (pjHavePal|pjHaveTiles|pjHaveMap|pjHaveChunks|pjHaveSprites|pjHaveLevel)
 #define pjAllMask pjDefaultMask
 #endif

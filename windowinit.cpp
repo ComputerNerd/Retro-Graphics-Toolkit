@@ -28,14 +28,14 @@
 #include "gamedef.h"
 void set_mode_tabs(Fl_Widget* o, void*){
 	Fl_Group * val=(Fl_Group*)(Fl_Tabs*)window->the_tabs->value();
-	if (val==window->TabsMain[pal_edit]){
+	if(val==window->TabsMain[pal_edit]){
 		mode_editor=pal_edit;
 		palEdit.updateSlider();
-	}else if (val==window->TabsMain[tile_edit]){
+	}else if(val==window->TabsMain[tile_edit]){
 		currentProject->tileC->current_tile=window->tile_select->value();
 		mode_editor=tile_edit;
 		tileEdit_pal.updateSlider();
-	}else if (val==window->TabsMain[tile_place]){
+	}else if(val==window->TabsMain[tile_place]){
 		currentProject->tileC->current_tile=window->tile_select_2->value();
 		mode_editor=tile_place;
 		tileMap_pal.updateSlider();
@@ -44,7 +44,9 @@ void set_mode_tabs(Fl_Widget* o, void*){
 	}else if(val==window->TabsMain[spriteEditor]){
 		mode_editor=spriteEditor;
 		spritePal.updateSlider();
-	}else if (val==window->TabsMain[settingsTab]){
+	}else if(val==window->TabsMain[levelEditor]){
+		mode_editor=levelEditor;
+	}else if(val==window->TabsMain[settingsTab]){
 		mode_editor=settingsTab;
 	}
 }
@@ -711,6 +713,9 @@ void editor::_editor(){
 
 			TabsMain[spriteEditor]->end();
 		}
+		{TabsMain[levelEditor] = new Fl_Group(rx,ry,rw,rh,"Level editor");
+			TabsMain[levelEditor]->end();
+		}
 		{TabsMain[settingsTab] = new Fl_Group(rx,ry,rw,rh,"Settings/projects");
 			projectSelect=new Fl_Hor_Value_Slider(112,56,128,24,"Current project");
 			projectSelect->minimum(0);
@@ -736,6 +741,8 @@ void editor::_editor(){
 			sharePrj[3]->callback(shareProjectCB,(void*)pjHaveChunks);
 			sharePrj[4]=new Fl_Check_Button(456,112,120,16,"Share sprites");
 			sharePrj[4]->callback(shareProjectCB,(void*)pjHaveSprites);
+			sharePrj[5]=new Fl_Check_Button(576,112,120,16,"Share level");
+			sharePrj[5]->callback(shareProjectCB,(void*)pjHaveLevel);
 			
 			havePrj[0]=new Fl_Check_Button(8,88,112,16,"Have palette");
 			havePrj[0]->callback(haveCB,(void*)pjHavePal);
@@ -747,6 +754,8 @@ void editor::_editor(){
 			havePrj[3]->callback(haveCB,(void*)pjHaveChunks);
 			havePrj[4]=new Fl_Check_Button(456,88,120,16,"Have sprites");
 			havePrj[4]->callback(haveCB,(void*)pjHaveSprites);
+			havePrj[5]=new Fl_Check_Button(568,88,120,16,"Have level");
+			havePrj[5]->callback(haveCB,(void*)pjHaveLevel);
 			
 			shareWith[0]=new Fl_Hor_Value_Slider(8,142,128,24,"Share palette with:");
 			shareWith[0]->callback(switchShareCB,(void*)pjHavePal);
@@ -758,7 +767,9 @@ void editor::_editor(){
 			shareWith[3]->callback(switchShareCB,(void*)pjHaveChunks);
 			shareWith[4]=new Fl_Hor_Value_Slider(536,142,128,24,"Share sprites with:");
 			shareWith[4]->callback(switchShareCB,(void*)pjHaveSprites);
-			for(int x=0;x<shareAmtPj;++x){
+			shareWith[5]=new Fl_Hor_Value_Slider(672,142,128,24,"Share level with:");
+			shareWith[5]->callback(switchShareCB,(void*)pjHaveLevel);
+			for(unsigned x=0;x<shareAmtPj;++x){
 				havePrj[x]->value(1);
 				shareWith[x]->minimum(0);
 				shareWith[x]->maximum(0);
@@ -767,7 +778,7 @@ void editor::_editor(){
 				shareWith[x]->align(FL_ALIGN_TOP);
 			}
 			
-			spriteglobaltxt = new Fl_Input(tile_place_buttons_x_off+616,72,168,24,"Global sprites name");
+			spriteglobaltxt = new Fl_Input(tile_place_buttons_x_off+616,64,168,24,"Global sprites name");
 			spriteglobaltxt->value(spritesName);
 			spriteglobaltxt->callback(assignSpriteglobalnameCB);
 			spriteglobaltxt->align(FL_ALIGN_TOP);

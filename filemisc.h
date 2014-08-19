@@ -14,6 +14,14 @@
    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
+#pragma once
+enum fileType_t{
+	tCancle=-1,
+	tBinary,
+	tCheader,
+	tAsm,
+	tBex,
+};
 int clipboardAsk(void);
-int askSaveType(void);
-bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,int type,const char*comment,const char*label,int bits);
+fileType_t askSaveType(void);
+bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,fileType_t type,const char*comment,const char*label,int bits);
