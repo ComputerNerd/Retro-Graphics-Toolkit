@@ -643,97 +643,20 @@ againNerd:
 			free(imageuse);
 	}
 }
-struct settings{
+struct settings{//TODO avoid hardcoding palette row amount
 	bool sprite;//Are we generating the palette for a sprite
 	unsigned off[4];//Offsets for each row
 	unsigned col;//How many colors are to be generated
 	unsigned alg;//Which algorithm should be used
 	bool ditherAfter;//After color quanization should the image be dithered
+	bool entireRow;//If true dither entire tilemap at once or false dither each row sepeartly
 	unsigned colSpace;//Which colorspace should the image be quantized in
-	unsigned perRow[4];//What is the maximum amount of colors that can be generated per row
-	unsigned firstRow;//What is the first row that is to get generated colors
-	unsigned rows;//How many rows will get generated colors
-	unsigned sysMaxRow;//The maximum colors the system can support in one row
+	unsigned perRow[4];//How many colors will be generated per row
+	bool useRow[4];
 };
 static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 	struct settings*set=(struct settings*)s;
-	unsigned perRow[4];
 	char temp[16];
-	unsigned rowSize;
-	unsigned rows;
-	int maxCol,maxColt;
-	switch (currentProject->gameSystem){
-		case sega_genesis:
-			if(set->sprite)
-				maxCol=16;
-			else
-				maxCol=64;
-			maxColt=64;
-			rowSize=16;
-		break;
-		case NES:
-			if(set->sprite)
-				maxCol=4;
-			else
-				maxCol=16;
-			maxColt=16;
-			rowSize=4;
-		break;
-	}
-	char*returned=(char*)fl_input("Start palette at (counting from zero)","0");
-	if(!returned)
-		return;
-	if(!verify_str_number_only(returned))
-		return;
-	int offset=atoi(returned);
-	if((offset<0)||(offset>=maxColt)){
-		fl_alert("Invalid offset");
-		return;
-	}
-	snprintf(temp,sizeof(temp),"%d",maxCol-offset);
-	returned=(char*)fl_input("How many colors would you like?",temp);
-	if(!returned)
-		return;
-	if(!verify_str_number_only(returned))
-		return;
-	int colors=atoi(returned);
-	if((colors<0)||(colors>maxCol)){
-		fl_alert("Invalid color amount");
-		return;
-	}
-	int colorstotal=colors;
-	unsigned firstRow=0;
-	if(set->sprite){
-		rows=1;
-		perRow[0]=colors > rowSize ? rowSize:colors;
-	}else{
-		unsigned i,offtmp=offset;
-		for(i=0;i<4;++i){
-			if(offtmp>=rowSize){
-				offtmp-=rowSize;
-				++firstRow;
-				perRow[i]=0;
-			}else{
-				if(offtmp){
-					perRow[i]=(colors+offtmp) > rowSize ? rowSize-offset:colors;
-					colors-=rowSize-offset;
-					offtmp=0;
-				}else{
-					perRow[i]=colors > rowSize ? rowSize:colors;
-					colors-=rowSize;
-				}
-			}
-			printf("Colors %d perRow[%d]=%d\n",colors,i,perRow[i]);
-			if (colors <= 0)
-				break;
-		}
-		rows=i+1;
-	}
-	printf("Using %d rows\n",rows);
-	/*
-	This function is one of the more important features of the program
-	This will look at the tile map and based on that find an optimal palette
-	*/
 	uint8_t * image;
 	//uint8_t * colors;
 	uint32_t w,h;
@@ -746,6 +669,18 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 		w*=currentProject->tileC->sizew;
 		h*=currentProject->tileC->sizeh;
 	}
+	unsigned firstRow=0;
+	for(;(firstRow<4)&&(!set->useRow[firstRow]);++firstRow);
+	if(firstRow>=4){
+		fl_alert("No rows specified");
+		return;
+	}
+	unsigned rows=0;
+	for(unsigned i=firstRow;i<4;++i){
+		if(set->useRow[i])
+			++rows;
+	}
+	printf("First row: %u\n",firstRow);
 	uint32_t colors_found;
 	//uint8_t * found_colors;
 	uint8_t found_colors[768];
@@ -758,13 +693,6 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 			return;
 	}else
 		rowAuto=0;
-	int alg=MenuPopup("Pick an algorithm","What color reduction algorithm would you like used?",5,"Dennis Lee v3","scolorq","Neuquant","Wu","Dennis Lee v1");
-	if(alg<0)
-		return;
-	int yuv;
-	yuv=MenuPopup("Color space selection","What color space would you like to use?",3,"rgb","yuv","YCbCr");
-	if(yuv<0)
-		return;
 	pushPaletteAll();//Save the old palette
 	Fl_Window *win;
 	win = new Fl_Window(400,45,"Progress");		// access parent window
@@ -783,31 +711,31 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 		if (rowAuto)
 			currentProject->tileMapC->allRowSet(firstRow);
 		if(set->sprite){
-			unsigned off=offset;
+			unsigned off=set->off[firstRow]+(firstRow*palEdit.perRow);
 			if(currentProject->gameSystem==NES)
 				off+=16;
-			reduceImage(image,found_colors,-1,off,progress,win,perRow[firstRow],yuv,alg,true);
+			reduceImage(image,found_colors,-1,off,progress,win,set->perRow[firstRow],set->colSpace,set->alg,true);
 		}else
-			reduceImage(image,found_colors,-1,firstRow*rowSize+offset,progress,win,perRow[firstRow],yuv,alg);
+			reduceImage(image,found_colors,-1,firstRow*palEdit.perRow+set->off[firstRow],progress,win,set->perRow[firstRow],set->colSpace,set->alg);
 		window->damage(FL_DAMAGE_USER1);
 		Fl::check();
 	}else{
 		if(rowAuto==2){
-			reduceImage(image,found_colors,-1,0,progress,win,colorstotal,yuv,alg);
+			reduceImage(image,found_colors,-1,0,progress,win,set->perRow[0]+set->perRow[1]+set->perRow[2]+set->perRow[3],set->colSpace,set->alg);
 			currentProject->tileMapC->pickRowDelta(true,progress);
 			window->damage(FL_DAMAGE_USER1);
 			Fl::check();
 		}else{
 			if (rowAuto==1)
-				currentProject->tileMapC->pickRow(rows);
+				currentProject->tileMapC->pickRow(4-firstRow);
 			else if(rowAuto==3)
-				currentProject->tileMapC->pickTileRowQuantChoice(rows);
-
-			reduceImage(image,found_colors,firstRow,firstRow*rowSize+offset,progress,win,perRow[firstRow],yuv,alg);//Keep in sync with similar call in loop
-			for (unsigned nerdL=firstRow+1;nerdL<rows;++nerdL){
-				reduceImage(image,found_colors,nerdL,nerdL*rowSize,progress,win,perRow[nerdL],yuv,alg);
-				window->damage(FL_DAMAGE_USER1);
-				Fl::check();
+				currentProject->tileMapC->pickTileRowQuantChoice(4-firstRow);
+			for (unsigned i=firstRow;i<4;++i){
+				if(set->useRow[i]){
+					reduceImage(image,found_colors,i,(i*palEdit.perRow)+set->off[i],progress,win,set->perRow[i],set->colSpace,set->alg);
+					window->damage(FL_DAMAGE_USER1);
+					Fl::check();
+				}
 			}
 		}
 	}
@@ -820,36 +748,42 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 	tileEdit_pal.updateSlider();
 	tileMap_pal.updateSlider();
 	spritePal.updateSlider();
+	if(set->ditherAfter){
+		if(set->sprite){
+			ditherSpriteAsImage(curSpritegroup);
+		}else{
+			pushTilesAll(tTypeTile);
+			currentProject->tileMapC->ditherAsImage(set->entireRow);
+		}
+	}
 	window->redraw();
 	Fl::check();
 }
-/*struct settings{
-	bool sprite;//Are we generating the palette for a sprite
-	unsigned off[4];//Offsets for each row
-	unsigned col;//How many colors are to be generated
-	unsigned alg;//Which algorithm should be used
-	bool ditherAfter;//After color quanization should the image be dithered
-	unsigned colSpace;//Which colorspace should the image be quantized in
-	unsigned perRow[4];//What is the maximum amount of colors that can be generated per row
-	unsigned firstRow;//What is the first row that is to get generated colors
-	unsigned rows;//How many rows will get generated colors
-	unsigned sysMaxRow;//The maximum colors the system can support in one row
-};*/
 static Fl_Window*winG;
 struct settings*setG;
 static Fl_Int_Input*perrow[4];
 static Fl_Int_Input*perrowoffset[4];
+static Fl_Check_Button*useRowCbtn[4];
 static void setValInt(Fl_Int_Input*i,unsigned val){
 	char tmp[16];
 	snprintf(tmp,16,"%d",val);
 	i->value(tmp);
 	winG->redraw();
 }
+static unsigned calMaxPerRow(unsigned row){
+	row*=palEdit.perRow;
+	unsigned max=palEdit.perRow;
+	for(unsigned i=row;i<palEdit.perRow+row;++i){
+		if(currentProject->palType[i]&&max)//Locked or reserved colors cannot be changed
+			--max;
+	}
+	return max;
+}
 static void setPerRow(Fl_Widget*w,void*x){
 	uintptr_t which=(uintptr_t)x;
 	unsigned val=SafeTxtInput((Fl_Int_Input*)w,false);
-	if((val+setG->off[which])>palEdit.perRow){
-		val=palEdit.perRow-setG->off[which];
+	if((val+setG->off[which])>calMaxPerRow(which)){
+		val=calMaxPerRow(which)-setG->off[which];
 		setValInt((Fl_Int_Input*)w,val);
 	}
 	setG->perRow[which]=val;
@@ -857,45 +791,112 @@ static void setPerRow(Fl_Widget*w,void*x){
 static void setPerRowoff(Fl_Widget*w,void*x){
 	uintptr_t which=(uintptr_t)x;
 	unsigned val=SafeTxtInputZeroAllowed((Fl_Int_Input*)w,false);
-	if(val>=palEdit.perRow){
-		val=palEdit.perRow-1;
+	if(val>=calMaxPerRow(which)){
+		val=calMaxPerRow(which)-1;
 		setValInt((Fl_Int_Input*)w,val);
 	}
 	setG->off[which]=val;
-	if((val+setG->perRow[which])>palEdit.perRow){
-		setG->perRow[which]=palEdit.perRow-val;
+	if((val+setG->perRow[which])>calMaxPerRow(which)){
+		setG->perRow[which]=calMaxPerRow(which)-val;
 		setValInt(perrow[which],setG->perRow[which]);
 	}
 }
+static void doneCB(Fl_Widget*,void*){
+	winG->hide();
+}
+static void toggleBoolCB(Fl_Widget*,void*ptr){
+	bool*val=(bool*)ptr;
+	*val^=true;
+}
+static void rowShowCB(Fl_Widget*,void*x){
+	uintptr_t which=(uintptr_t)x;
+	setG->useRow[which]^=true;
+	if(setG->useRow[which]){
+		perrow[which]->show();
+		perrowoffset[which]->show();
+	}else{
+		perrow[which]->hide();
+		perrowoffset[which]->hide();
+	}
+}
+static const Fl_Menu_Item colorReducationChoices[]={
+	{"Dennis Lee v3",0,0,0},
+	{"Scolorq",0,0,0},
+	{"Neuquant",0,0,0},
+	{"Wu",0,0,0},
+	{"Dennis Lee v1",0,0,0},
+	{0}
+};
+static const Fl_Menu_Item colorSpaceChoices[]={
+	{"RGB",0,0,0},
+	{"YUV",0,0,0},
+	{"YCbCr",0,0,0},
+	{0}
+};
+static void setParmChoiceCB(Fl_Widget*w,void*in){
+	unsigned*val=(unsigned*)in;
+	Fl_Choice*c=(Fl_Choice*)w;
+	*val=c->value();
+}
+/*struct settings{//TODO avoid hardcoding palette row amount
+	bool sprite;//Are we generating the palette for a sprite
+	unsigned off[4];//Offsets for each row
+	unsigned col;//How many colors are to be generated
+	unsigned alg;//Which algorithm should be used
+	bool ditherAfter;//After color quanization should the image be dithered
+	bool entireRow;//If true dither entire tilemap at once or false dither each row sepeartly
+	unsigned colSpace;//Which colorspace should the image be quantized in
+	unsigned perRow[4];//How many colors will be generated per row
+	bool useRow[4];
+};*/
 void generate_optimal_palette(Fl_Widget*,void*sprite){
 	struct settings set;
 	setG=&set;
 	memset(&set,0,sizeof(struct settings));
 	set.sprite=sprite?true:false;
+	set.ditherAfter=set.entireRow=true;
 	winG = new Fl_Window(400,300,"Palette generation settings");
 	winG->begin();
-	Fl_Box*rowlabel1=new Fl_Box(8,8,96,12,"Colors per row:");
+	Fl_Box*rowlabel1=new Fl_Box(24,8,96,12,"Colors per row:");
 	rowlabel1->labelsize(12);
-	Fl_Box*rowlabel2=new Fl_Box(104,8,96,12,"Offset per row:");
+	Fl_Box*rowlabel2=new Fl_Box(120,8,96,12,"Offset per row:");
 	rowlabel2->labelsize(12);
 	for(uintptr_t i=0;i<4;++i){
+		set.useRow[i]=true;
 		char tmp[16];
-		perrow[i]=new Fl_Int_Input(24,24+(i*24),64,24);
-		perrowoffset[i]=new Fl_Int_Input(120,24+(i*24),64,24);
+		useRowCbtn[i]=new Fl_Check_Button(8,28+(i*24),24,16);
+		useRowCbtn[i]->set();
+		useRowCbtn[i]->callback(rowShowCB,(void*)i);
+		perrow[i]=new Fl_Int_Input(40,24+(i*24),64,24);
+		perrowoffset[i]=new Fl_Int_Input(136,24+(i*24),64,24);
 		snprintf(tmp,sizeof(tmp),"%d",i);
 		perrow[i]->copy_label(tmp);
 		perrowoffset[i]->copy_label(tmp);
 		perrow[i]->callback(setPerRow,(void*)i);
 		perrowoffset[i]->callback(setPerRowoff,(void*)i);
-		snprintf(tmp,sizeof(tmp),"%d",palEdit.perRow);
-		set.perRow[i]=palEdit.perRow;
+		snprintf(tmp,sizeof(tmp),"%d",calMaxPerRow(i));
+		set.perRow[i]=calMaxPerRow(i);
 		perrow[i]->value(tmp);
 		perrowoffset[i]->value("0");
 		perrow[i]->when(FL_WHEN_RELEASE|FL_WHEN_ENTER_KEY);
 		perrowoffset[i]->when(FL_WHEN_RELEASE|FL_WHEN_ENTER_KEY);
 	}
+	Fl_Button*preview=new Fl_Button(86,268,56,24,"Preview");
+	preview->callback(generate_optimal_paletteapply,(void*)&set);
+	Fl_Button*done=new Fl_Button(264,268,48,24,"Done");
+	done->callback(doneCB,(void*)&set);
+	Fl_Check_Button*dit=new Fl_Check_Button(216,2,176,24,"Dither after completion");
+	dit->set();
+	dit->callback(toggleBoolCB,&set.ditherAfter);
+	Fl_Choice*algsel=new Fl_Choice(240,40,128,24,"Color reducation algorithm:");
+	algsel->align(FL_ALIGN_TOP);
+	algsel->copy(colorReducationChoices);
+	algsel->callback(setParmChoiceCB,(void*)&set.alg);
+	Fl_Choice*colsel=new Fl_Choice(240,80,128,24,"Using colorspace:");
+	colsel->align(FL_ALIGN_TOP);
+	colsel->copy(colorSpaceChoices);
+	colsel->callback(setParmChoiceCB,(void*)&set.colSpace);
 	winG->end();
-	winG->set_modal();
 	winG->show();
 	while(winG->shown())
 		Fl::wait();

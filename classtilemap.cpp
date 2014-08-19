@@ -20,6 +20,7 @@
 #include "classtilemap.h"
 #include "compressionWrapper.h"
 #include "quant.h"
+#include "dither.h"
 tileMap::tileMap(){
 	amt=1;
 	mapSizeHA=mapSizeW=mapSizeH=2;
@@ -56,6 +57,34 @@ tileMap::tileMap(const tileMap& other){
 }
 tileMap::~tileMap(){
 	free(tileMapDat);
+}
+
+void tileMap::ditherAsImage(bool entire){
+	uint8_t*image;
+	uint32_t w,h;
+	w=currentProject->tileMapC->mapSizeW;
+	h=currentProject->tileMapC->mapSizeHA;
+	w*=currentProject->tileC->sizew;
+	h*=currentProject->tileC->sizeh;
+	image = (uint8_t *)malloc(w*h*4);
+	if(!image)
+		show_malloc_error(w*h*4)
+	if(entire){
+		currentProject->tileMapC->truecolor_to_image(image,-1);
+		ditherImage(image,w,h,true,true);
+		ditherImage(image,w,h,true,false);
+		currentProject->tileMapC->truecolorimageToTiles(image,-1);
+	}else{
+		for(unsigned row=0;row<4;++row){
+			printf("Row: %u\n",row);
+			currentProject->tileMapC->truecolor_to_image(image,row);
+			ditherImage(image,w,h,true,true);
+			ditherImage(image,w,h,true,false);
+			//convert back to tiles
+			currentProject->tileMapC->truecolorimageToTiles(image,row);
+		}
+	}
+	free(image);
 }
 void tileMap::allRowSet(unsigned row){
 	uint32_t x,y;

@@ -164,41 +164,17 @@ void fill_tile_map_with_tile(Fl_Widget*,void*){
 		window->damage(FL_DAMAGE_USER1);
 	}
 }
-void dither_tilemap_as_image(Fl_Widget*,void*){
+void dither_tilemap_as_imageCB(Fl_Widget*,void*){
 	//normally this program dithers all tiles individully this is not always desirable
 	//to fix this I created this function It convertes the tilemap to image and dithers all tiles
 	//so first create ram for image
-	uint8_t * image;
-	uint32_t w,h;
-	w=currentProject->tileMapC->mapSizeW;
-	h=currentProject->tileMapC->mapSizeHA;
-	w*=currentProject->tileC->sizew;
-	h*=currentProject->tileC->sizeh;
 	unsigned method;
 	method=fl_choice("How would you like this tilemap dithered?","Dither each palette row separately","Dither entire image at once","Cancel");
 	if(method==2)
 		return;
-	image = (uint8_t *)malloc(w*h*4);
-	if (!image)
-		show_malloc_error(w*h*4)
 	pushTilesAll(tTypeTile);
-	if(method==1){
-		currentProject->tileMapC->truecolor_to_image(image,-1);
-		ditherImage(image,w,h,true,true);
-		ditherImage(image,w,h,true,false);
-		currentProject->tileMapC->truecolorimageToTiles(image,-1);
-	}else{
-		for (unsigned row=0;row<4;++row){
-			printf("Row: %u\n",row);
-			currentProject->tileMapC->truecolor_to_image(image,row);
-			ditherImage(image,w,h,true,true);
-			ditherImage(image,w,h,true,false);
-			//convert back to tiles
-			currentProject->tileMapC->truecolorimageToTiles(image,row);
-		}
-	}
+	currentProject->tileMapC->ditherAsImage(method);
 	Fl::check();
-	free(image);
 	window->redraw();
 }
 void load_image_to_tilemap(Fl_Widget*,void*o){

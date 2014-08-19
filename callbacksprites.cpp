@@ -32,7 +32,7 @@ void optimizeSpritesCB(Fl_Widget*,void*){
 	window->updateSpriteSliders();
 	window->redraw();
 }
-static void ditherSpriteAsImage(unsigned which){
+void ditherSpriteAsImage(unsigned which){
 	unsigned w,h;
 	w=currentProject->spritesC->width(which);
 	h=currentProject->spritesC->height(which);

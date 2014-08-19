@@ -919,7 +919,7 @@ bool sprites::checkDupmapping(uint32_t id,uint32_t&which){
 	return false;
 }
 
-std::vector<uint8_t> sprites::optDPLC(unsigned which){
+std::vector<uint8_t> sprites::optDPLC(unsigned which,gameType_t game){
 	printf("%u\n",which);
 	std::vector<unsigned> tmp;//amount,offset
 	tmp.reserve(groups[which].list.size());
@@ -987,8 +987,13 @@ mergeIt:
 			printf("Tile overflow in sprite group %d tile value was %d\n",which,tile);
 			tile=4095;
 		}
-		out.push_back(((tmp[i]-1)<<4)|(tile>>8));
-		out.push_back(tile&255);
+		if(game==tSonic3){
+			out.push_back((tile>>4));
+			out.push_back(((tile&15)<<4)|((tmp[i]-1)));
+		}else{
+			out.push_back(((tmp[i]-1)<<4)|(tile>>8));
+			out.push_back(tile&255);
+		}
 	}
 	tmp.clear();
 	return out;
@@ -1029,17 +1034,26 @@ void sprites::exportDPLC(gameType_t game){
 			tmpbuf.resize(acum);
 			for(unsigned i=0;i<amt;++i){
 				uint32_t dup;
-				if(!groups[i].list.size())
+				if(!groups[i].list.size()){
+					if(game==tSonic3)
+						printf("Null frame sonic 3 warning group %u\n",i);
 					tmpbuf[i*2]=tmpbuf[i*2+1]=0;
-				else if(checkDupdplc(i,dup)){
+				}else if(checkDupdplc(i,dup)){
 					printf("Table entry can be optimzed: %d %d\n",i,dup);
 					tmpbuf[i*2]=tmpbuf[dup*2];
 					tmpbuf[i*2+1]=tmpbuf[dup*2+1];
 				}else{
 					tmpbuf[i*2]=acum>>8;
 					tmpbuf[i*2+1]=acum&255;
-					std::vector<uint8_t> out=optDPLC(i);
+					std::vector<uint8_t> out=optDPLC(i,game);
 					unsigned amtg=out.size()/2;
+					if(game==tSonic3){
+						if(amtg){
+							--amtg;
+						}else{
+							printf("Null frame sonic 3 warning group %u\n",i);
+						}
+					}
 					tmpbuf.push_back(amtg>>8);
 					tmpbuf.push_back(amtg&255);
 					tmpbuf.insert(tmpbuf.end(),out.begin(),out.end());

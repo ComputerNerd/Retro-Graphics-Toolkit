@@ -51,7 +51,7 @@ Vectors:
     dc.l Error, Error, Error, Error
 Header:
     dc.b "SEGA MEGA DRIVE " ; Console name
-    dc.b "(C) Sega 16 2012" ; Copyright/Date
+    dc.b "(C) Sega 16 2014" ; Copyright/Date
 DomesticName:
     dc.b "Code template by drx - www.hacking-cult.org     " ; Domestic Name
     dc.b "Code template by drx - www.hacking-cult.org     " ; International Name

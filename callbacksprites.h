@@ -19,6 +19,7 @@ extern uint32_t curSpritegroup;
 extern int32_t spriteEndDraw[2];
 extern bool centerSpriteDraw_G;
 void optimizeSpritesCB(Fl_Widget*,void*);
+void ditherSpriteAsImage(unsigned which);
 void ditherSpriteAsImageAllCB(Fl_Widget*,void*);
 void ditherSpriteAsImageCB(Fl_Widget*,void*);
 void setDrawSpriteCB(Fl_Widget*,void*m);
