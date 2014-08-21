@@ -47,7 +47,7 @@ public:
 	bool saveToFile();
 	bool loadFromFile();
 	void sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vflip);
-	void pickRow(uint8_t amount);
+	void pickRow(unsigned amount);
 	void pickRowDelta(bool showProgress=false,Fl_Progress *progress=0);
 	void allRowSet(unsigned row);
 	void set_tile_full(uint32_t tile,uint32_t x,uint32_t y,uint8_t palette_row,bool use_hflip,bool use_vflip,bool highorlow_prio);

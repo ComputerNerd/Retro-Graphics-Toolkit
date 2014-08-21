@@ -108,7 +108,7 @@ static double getHH(uint32_t cur_tile,int type){
 	}
 	return hh;
 }
-void tileMap::pickRow(uint8_t amount){
+void tileMap::pickRow(unsigned amount){
 	int type=MenuPopup("Pick tile row based on...","Please pick what most defines the image",9,"Hue","Brightness","Saturation","Hue*satuaration","Hue*Brightness","Brightness*saturation","Hue+satuaration","Hue+Brightness","Brightness+saturation");
 	if(type<0)
 		return;
@@ -414,13 +414,13 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 #define CYCbCr2R(Y, Cb, Cr) CLIP( Y + ( 91881 * Cr >> 16 ) - 179 )
 #define CYCbCr2G(Y, Cb, Cr) CLIP( Y - (( 22544 * Cb + 46793 * Cr ) >> 16) + 135)
 #define CYCbCr2B(Y, Cb, Cr) CLIP( Y + (116129 * Cb >> 16 ) - 226 )
-static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,unsigned offsetPal,Fl_Progress *progress,Fl_Window*pwin,uint8_t maxCol,unsigned yuv,unsigned alg,bool isSprite=false){
+static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,unsigned offsetPal,Fl_Progress *progress,Fl_Window*pwin,unsigned maxCol,unsigned yuv,unsigned alg,bool isSprite=false){
 	progress->maximum(1.0);
 	unsigned off2=offsetPal*2;
 	unsigned off3=offsetPal*3;
 	uint32_t colors_found;
 	uint32_t w,h;
-	uint8_t maxPal;
+	unsigned maxPal;
 	switch(currentProject->gameSystem){
 		case sega_genesis:
 			maxPal=64;
@@ -578,8 +578,8 @@ try_again_color:
 				break;
 			}
 		}
-		uint8_t new_colors = count_colors(rgb_pal2,colorz,1,&rgb_pal3[off3]);
-		printf("Unique colors in palette %d\n",new_colors);
+		unsigned new_colors = count_colors(rgb_pal2,colorz,1,&rgb_pal3[off3]);
+		printf("Unique colors in palette %u\n",new_colors);
 			if (new_colors < maxCol){
 				if (can_go_again == true){
 					if (colorz != 512)
@@ -596,12 +596,12 @@ try_again_color:
 			}
 		if (new_colors > maxCol){
 			can_go_again=false;
-			puts("Woops too many colors");
+			pwin->label("Too many colors");
 			colorz--;
 			goto try_again_color;
 		}
-		uint8_t off3o=off3;
-		for (uint8_t x=0;x<maxCol;x++){
+		unsigned off3o=off3;
+		for (unsigned x=0;x<maxCol;x++){
 			uint8_t r,g,b;
 againNerd:
 			if (currentProject->palType[x+offsetPal]){

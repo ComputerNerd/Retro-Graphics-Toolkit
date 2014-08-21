@@ -87,76 +87,75 @@ SramEnd:
 
 Entrypoint:
 
-    tst.l ($A10008).l ;Test Port A control
-    bne PortA_Ok
+	tst.l ($A10008).l ;Test Port A control
+	bne PortA_Ok
 
-    tst.w ($A1000C).l ;Test Port C control
+	tst.w ($A1000C).l ;Test Port C control
 
 PortA_Ok:
-    bne SkipSetup
+	bne SkipSetup
 
-    move.b ($A10001).l,d0 ;version
-    andi.b #$F,d0
-    beq SkipSecurity ;if the smd/gen model is 1, skip the security
-    move.l #'SEGA',($A14000).l
+	move.b ($A10001).l,d0 ;version
+	andi.b #$F,d0
+	beq SkipSecurity ;if the smd/gen model is 1, skip the security
+	move.l #'SEGA',($A14000).l
 
 SkipSecurity:
 
-    move.w ($C00004).l,d0 ;hang if VDP locked due to security failure
+	move.w ($C00004).l,d0 ;hang if VDP locked due to security failure
 
-    moveq #0,d0
-    movea.l d0,a6
-    move.l a6,usp ;set usp to $0
+	moveq #0,d0
+	movea.l d0,a6
+	move.l a6,usp ;set usp to $0
 
 ;---------------------
 ; Setup VDP registers
 ;---------------------
-    lea (VDPSetupArray,pc),a0
-    move.w #(VDPSetupArrayEnd-VDPSetupArray)/2,d1 ;$18 VDP registers
+	lea (VDPSetupArray,pc),a0
+	move.w #(VDPSetupArrayEnd-VDPSetupArray)/2,d1 ;$18 VDP registers
 
 VDPSetupLoop:
-    move.w (a0)+,($C00004).l
-    dbra d1,VDPSetupLoop
+	move.w (a0)+,($C00004).l
+	dbra d1,VDPSetupLoop
 
-
-    move.l #$40000080,($C00004).l
-    move.w #0,($C00000).l ;clean the screen
+	move.l #$40000080,($C00004).l
+	move.w #0,($C00000).l ;clean the screen
 
 
 ;---------------------
 ; Init the Z80
 ;---------------------
 
-    move.w #$100,($A11100).l ;Stop the Z80
-    move.w #$100,($A11200).l ;Deassert reset to the Z80
+	move.w #$100,($A11100).l ;Stop the Z80
+	move.w #$100,($A11200).l ;Deassert reset to the Z80
 
 Waitforz80:
-    btst #0,($A11100).l
-    bne Waitforz80 ;Wait for z80 to halt
+	btst #0,($A11100).l
+	bne Waitforz80 ;Wait for z80 to halt
 
-    lea (Z80Init,pc),a0
-    lea ($A00000).l,a1
-    move.w #Z80InitEnd-Z80Init,d1
+	lea (Z80Init,pc),a0
+	lea ($A00000).l,a1
+	move.w #Z80InitEnd-Z80Init,d1
 
 InitZ80:
-    move.b (a0)+,(a1)+
-    dbra d1,InitZ80
+	move.b (a0)+,(a1)+
+	dbra d1,InitZ80
 
-    move.w #0,($A11200).l ;Assert reset to the Z80
-    move.w #0,($A11100).l ;Start the Z80
-    move.w #$100,($A11200).l ;Deassert reset to the Z80
+	move.w #0,($A11200).l ;Assert reset to the Z80
+	move.w #0,($A11100).l ;Start the Z80
+	move.w #$100,($A11200).l ;Deassert reset to the Z80
 
 
 ;---------------------
 ; Reset the RAM
 ;---------------------
 
-    lea ($FFFF0000).l,a0
-    move.w #$3fff,d1
+	lea ($FFFF0000).l,a0
+	move.w #$3fff,d1
 
 ClearRAM:
-    move.l #0,(a0)+
-    dbra d1,ClearRAM
+	move.l #0,(a0)+
+	dbra d1,ClearRAM
 
 
 ;---------------------
@@ -172,66 +171,66 @@ ClearRAM:
 ; Clear the CRAM
 ;---------------------
 
-    move.l #$C0000000,($C00004).l ;Set VDP ctrl to CRAM write
-    move.w #$3f,d1
+	move.l #$C0000000,($C00004).l ;Set VDP ctrl to CRAM write
+	move.w #$3f,d1
 
 ClearCRAM:
-    move.w #0,($C00000).l
-    dbra d1,ClearCRAM
+	move.w #0,($C00000).l
+	dbra d1,ClearCRAM
 
 
 ;---------------------
 ; Clear the VDP stuff
 ;---------------------
 
-    move.l #$40000010,($C00004).l
-    move.w #$13,d1
+	move.l #$40000010,($C00004).l
+	move.w #$13,d1
 
 ClearStuff:
-    move.l #0,($C00000).l
-    dbra d1,ClearStuff
+	move.l #0,($C00000).l
+	dbra d1,ClearStuff
 
 
 ;---------------------
 ; Init the PSG
 ;---------------------
 
-    move.b #$9F,($C00011).l
-    move.b #$BF,($C00011).l
-    move.b #$DF,($C00011).l
-    move.b #$FF,($C00011).l
+	move.b #$9F,($C00011).l
+	move.b #$BF,($C00011).l
+	move.b #$DF,($C00011).l
+	move.b #$FF,($C00011).l
 
 ;---------------------
 ; Load the z80 driver
 ;---------------------
 
-    move.w #$100,($A11100).l ;Stop the Z80
-    move.w #$100,($A11200).l ;Deassert reset to the Z80
+	move.w #$100,($A11100).l ;Stop the Z80
+	move.w #$100,($A11200).l ;Deassert reset to the Z80
 
 Waitforz80a:
-    btst #0,($A11100).l
-    bne Waitforz80a ;Wait for z80 to halt
+	btst #0,($A11100).l
+	bne Waitforz80a ;Wait for z80 to halt
 
-    lea (Z80Driver,pc),a0
-    lea ($A00000).l,a1
-    move.w #Z80DriverEnd-Z80Driver,d1
+	lea (Z80Driver,pc),a0
+	lea ($A00000).l,a1
+	move.w #Z80DriverEnd-Z80Driver,d1
 
 LoadZ80Driver:
-    move.b (a0)+,(a1)+
-    dbra d1,LoadZ80Driver
+	move.b (a0)+,(a1)+
+	dbra d1,LoadZ80Driver
 
-    move.w #0,($A11200).l ;Assert reset to the Z80
-    move.w #0,($A11100).l ;Start the Z80
-    move.w #$100,($A11200).l ;Deassert reset to the Z80
+	move.w #0,($A11200).l ;Assert reset to the Z80
+	move.w #0,($A11100).l ;Start the Z80
+	move.w #$100,($A11200).l ;Deassert reset to the Z80
 
 ;---------------------
 ; Clear the registers
 ; and set the SR
 ;---------------------
 
-    movem.l ($FF0000).l,d0-a6
-    lea ($FFFE00).l,a7
-    move #$2700,sr
+	movem.l ($FF0000).l,d0-a6
+	lea ($FFFE00).l,a7
+	move #$2700,sr
 SkipSetup:
 
 

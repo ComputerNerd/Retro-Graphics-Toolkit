@@ -44,6 +44,7 @@ sprites::sprites(){
 	groups[0].offy.push_back(0);
 	groups[0].loadat.push_back(0);
 	name.assign(spritesName);
+	extraOptDPLC=false;
 }
 sprites::sprites(const sprites& other){
 	groups.reserve(other.groups.size());
@@ -1396,6 +1397,7 @@ void sprites::setAmtingroup(uint32_t id,uint32_t amtnew){
 bool sprites::save(FILE*fp){
 	/* Format:
 	 * uint32_t group amount
+	 * uint8_t extra DPLC optimization
 	 * Null terminated string containing name (all sprites)
 	 * for each group
 	 * uint32_t sprite amount
@@ -1411,6 +1413,8 @@ bool sprites::save(FILE*fp){
 	 * uint8_t hvflip flags bit 0 hflip bit 1 vflip bit 2 priority
 	 */
 	fwrite(&amt,sizeof(uint32_t),1,fp);
+	uint8_t tmpOpt=extraOptDPLC;
+	fwrite(&tmpOpt,sizeof(uint8_t),1,fp);
 	if(strcmp(name.c_str(),spritesName))
 		fputs(name.c_str(),fp);
 	fputc(0,fp);
@@ -1438,6 +1442,13 @@ bool sprites::load(FILE*fp,uint32_t version){
 	if(version>=7){
 		uint32_t amtnew;
 		fread(&amtnew,sizeof(uint32_t),1,fp);
+		if(version>=8){
+			uint8_t tmpOpt;
+			fwrite(&tmpOpt,sizeof(uint8_t),1,fp);
+			extraOptDPLC=tmpOpt;
+		}else{
+			extraOptDPLC=false;
+		}
 		setAmt(amtnew);
 		char a=fgetc(fp);
 		if(a){
