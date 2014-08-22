@@ -850,6 +850,12 @@ static void setParmChoiceCB(Fl_Widget*w,void*in){
 	bool useRow[4];
 };*/
 void generate_optimal_palette(Fl_Widget*,void*sprite){
+	static bool openAlready;
+	if(openAlready){
+		fl_alert("Window already open");
+		return;
+	}
+	openAlready=true;
 	struct settings set;
 	setG=&set;
 	memset(&set,0,sizeof(struct settings));
@@ -901,4 +907,5 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	while(winG->shown())
 		Fl::wait();
 	delete winG;
+	openAlready=false;
 }

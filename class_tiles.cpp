@@ -14,13 +14,13 @@
    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
+#include <exception>
 #include "global.h"
 #include "class_tiles.h"
 #include "dither.h"
 #include "tilemap.h"
 #include "errorMsg.h"
 #include "undo.h"
-#include <exception>
 tiles::tiles(){
 	current_tile=0;
 	amt=1;
@@ -187,7 +187,7 @@ void tiles::remove_tile_at(uint32_t tileDel){
 		tDat.erase(tDat.begin()+(tileDel*tileSize),tDat.begin()+((tileDel+1)*tileSize));
 		truetDat.erase(truetDat.begin()+(tileDel*tcSize),truetDat.begin()+((tileDel+1)*tcSize));
 	}
-	amt--;
+	--amt;
 	updateTileSelectAmt(amt);
 }
 void tiles::truecolor_to_tile(uint8_t palette_row,uint32_t cur_tile,bool isSprite){
@@ -243,8 +243,7 @@ void tiles::draw_truecolor(uint32_t tile_draw,unsigned x,unsigned y,bool usehfli
 		if (unlikely(!DontShow)) {
 			fl_alert("Warning tried to draw truecolor tile # %d at X: %d y: %d\nBut there is only %d tiles.\nNote that this message will not be shown again.\n Instead it will be outputed to stdout",tile_draw,x,y,amt);
 			DontShow=1;
-		}
-		else
+		}else
 			printf("Warning tried to draw truecolor tile # %d at X: %d y: %d\nBut there is only %d tiles.\n",tile_draw,x,y,amt);
 		return;
 	}

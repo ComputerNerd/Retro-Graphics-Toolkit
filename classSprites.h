@@ -37,7 +37,7 @@ class sprites{
 		bool checkDupmapping(uint32_t id,uint32_t&which);
 		bool checkDupdplc(uint32_t id,uint32_t&which);
 		bool recttoSprite(int x0,int x1,int y0,int y1,int where,Fl_Shared_Image*loaded_image,bool grayscale,unsigned*remap,uint8_t*palMap,uint8_t*mask,bool useMask,bool useAlpha);
-		void guessDPLC(unsigned which,unsigned i);
+		void handleDPLC(unsigned which,void*buf,unsigned n);
 		std::vector<uint8_t> optDPLC(unsigned which,gameType_t game);
 		bool extraOptDPLC;
 	public:
@@ -48,7 +48,7 @@ class sprites{
 		sprites(const sprites& other);
 		~sprites();
 		void fixDel(unsigned at,unsigned amt);
-		void optimizeBlank(unsigned which);
+		void freeOptmizations(unsigned which);
 		void importSpriteSheet(void);
 		void exportDPLC(gameType_t game);
 		void importDPLC(gameType_t game);

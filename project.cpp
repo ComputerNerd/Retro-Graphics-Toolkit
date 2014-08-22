@@ -764,10 +764,16 @@ bool loadAllProjects(bool Old){
 		}
 	}
 	for(unsigned x=0;x<projects_count;++x){
-		if(Old){
+		if(Old)
 			readShare(3,fi,x);
-		}else
-			readShare((version==4)?4:shareAmtPj,fi,x);
+		else if(version<4)
+			readShare(3,fi,x);
+		else if(version==4)
+			readShare(4,fi,x);
+		else if(version<8)
+			readShare(5,fi,x);
+		else
+			readShare(shareAmtPj,fi,x);
 		if(Old){
 			if(!(loadProjectFile(x,fi,true,3)))
 				return false;

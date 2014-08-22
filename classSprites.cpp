@@ -91,8 +91,7 @@ void sprites::fixDel(unsigned at,unsigned tamt){
 		}
 	}
 }
-void sprites::optimizeBlank(unsigned which){
-	//Check for blank collums
+void sprites::freeOptmizations(unsigned which){
 	for(int i=groups[which].list.size()-1;i>=0;--i){
 		//First check if the sprite is completly blank
 		bool notBlank=false;
@@ -112,6 +111,52 @@ void sprites::optimizeBlank(unsigned which){
 			fixDel(tiledel,tiledelamt);
 			if(groups[which].list.size()<1)
 				return;
+			printf("Removed %u %d\n",which,i);
+		}
+	}
+	for(int i=groups[which].list.size()-1;i>=0;--i){
+		bool notBlank=false;
+		//Check for blank collums at the end
+		for(unsigned w=groups[which].list[i].w,ctile=groups[which].list[i].starttile+(groups[which].list[i].h*groups[which].list[i].w)-1;w--;){
+			notBlank=false;
+			for(unsigned h=groups[which].list[i].h;h--;--ctile){
+				if(ctile>=currentProject->tileC->amt){
+					printf("Tile %u exceeded %u\n",ctile,currentProject->tileC->amt-1);
+					continue;
+				}else
+					notBlank|=chkNotZero(currentProject->tileC->truetDat.data()+(ctile*256),256);
+
+			}
+			if(notBlank){
+				break;
+			}else{
+				--groups[which].list[i].w;
+				int tiledel=ctile,tiledelamt=groups[which].list[i].h;
+				printf("Removed blank collum %u %d tiledel: %d tiledelamt: %d maxtiles %d\n",which,i,tiledel,tiledelamt,currentProject->tileC->amt-1);
+				for(int td=tiledel+tiledelamt;td>tiledel;--td)
+					currentProject->tileC->remove_tile_at(td);
+				fixDel(tiledel,tiledelamt);
+			}
+		}
+	}
+	//More blank collum removal this time when a blank collum is detect the sprite's offset will be adjusted
+	for(int i=groups[which].list.size()-1;i>=0;--i){
+		for(unsigned w=0,ctile=groups[which].list[i].starttile;w<groups[which].list[i].w;++w){
+			bool notBlank=false;
+			for(unsigned h=0;h<groups[which].list[i].h;++h,++ctile)
+				notBlank|=chkNotZero(currentProject->tileC->truetDat.data()+(ctile*256),256);
+			if(notBlank){
+				break;
+			}else{
+				--groups[which].list[i].w;
+				groups[which].offx[i]+=8;
+				printf("Remove blank collum at begining %u %d\n",which,i);
+				for(int td=ctile-1;td>=ctile-groups[which].list[i].h;--td)
+					currentProject->tileC->remove_tile_at(td);
+				fixDel(ctile-groups[which].list[i].h,groups[which].list[i].h);
+				groups[which].list[i].starttile+=groups[which].list[i].h;
+				ctile-=groups[which].list[i].h;
+			}
 		}
 	}
 }
@@ -758,21 +803,27 @@ void sprites::mappingItem(void*in,uint32_t id,gameType_t game){
 		}
 	}
 }
-void sprites::guessDPLC(unsigned which,unsigned i){
-	//Resort to guessing	
-	//Try finding one with same width and height
-	unsigned j;
-	for(j=0;j<groups[which].list.size();++j){
-		if(i==j)
-			continue;
-		if(groups[which].list[i].w==groups[which].list[j].w){
-			if(groups[which].list[i].h==groups[which].list[j].h)
-				break;
-		}
+void sprites::handleDPLC(unsigned which,void*buf,unsigned n){
+	unsigned range=0;
+	uint8_t*b8=(uint8_t*)buf;
+	for(unsigned i=n;i--;){
+		range+=((*b8)>>4)+1;
+		b8+=2;
 	}
-	if(j>=groups[which].list.size())
-		j=groups[which].list.size()-1;
-	groups[which].list[i].starttile=groups[which].list[j].starttile;
+	uint32_t*vram=(uint32_t*)malloc(range*sizeof(uint32_t));
+	uint32_t*v=vram;
+	b8=(uint8_t*)buf;
+	for(unsigned i=n;i--;){
+		for(unsigned i=((*b8)>>4)+1,t=((*b8&15)<<8)|(b8[1]);i--;*v++=t++);
+		b8+=2;
+	}
+	for(unsigned i=0;i<groups[which].list.size();++i){
+		if(groups[which].loadat[i]<range)
+			groups[which].list[i].starttile=vram[groups[which].loadat[i]];
+		else
+			printf("Out of bounds %u %u\n",which,i);
+	}
+	free(vram);
 }
 void sprites::DplcItem(void*in,uint32_t which,gameType_t game){
 	/*Sonic 1 format:
@@ -794,34 +845,18 @@ void sprites::DplcItem(void*in,uint32_t which,gameType_t game){
 				amtd=strtol(txt+1,&txt,16);
 			else
 				amtd=strtol(txt,&txt,0);
-			for(unsigned i=0;i<std::max(amtd,(unsigned)groups[which].list.size());++i){
-				if(i>=groups[which].list.size())//Avoid writting to nonexistent sprites
-					break;
-				if(i>=amtd){
-					guessDPLC(which,i);
-				}else{
-					//Read the two bytes
-					uint8_t buf[2];
-					txt=readNbytesAsm(buf,txt,2);
-					uint16_t tile=((buf[0]&15)<<8)|buf[1];
-					groups[which].list[i].starttile=tile;
-				}
+			uint8_t*buf=(uint8_t*)malloc(amtd*2);
+			for(unsigned i=0;i<amtd*2;i+=2){
+				txt=readNbytesAsm(buf+i,txt,2);
 			}
+			handleDPLC(which,buf,amtd);
+			free(buf);
 		}
 	}else{
 		//The format is pretty much the same as sonic 1 except amount is now a word instead of a byte
 		uint16_t*buf=(uint16_t*)in;
 		unsigned amtd=be16toh(*buf++);
-		for(unsigned i=0;i<std::max(amtd,(unsigned)groups[which].list.size());++i){
-			if(i>=groups[which].list.size())//Avoid writting to nonexistent sprites
-				break;
-			if(i>=amtd){
-				guessDPLC(which,i);
-			}else{
-				unsigned tile=be16toh(*buf++)&4095;
-				groups[which].list[i].starttile=tile;
-			}
-		}
+		handleDPLC(which,buf,amtd);
 	}
 }
 bool sprites::alreadyLoaded(uint32_t id,uint32_t subid){
@@ -1444,7 +1479,7 @@ bool sprites::load(FILE*fp,uint32_t version){
 		fread(&amtnew,sizeof(uint32_t),1,fp);
 		if(version>=8){
 			uint8_t tmpOpt;
-			fwrite(&tmpOpt,sizeof(uint8_t),1,fp);
+			fread(&tmpOpt,sizeof(uint8_t),1,fp);
 			extraOptDPLC=tmpOpt;
 		}else{
 			extraOptDPLC=false;

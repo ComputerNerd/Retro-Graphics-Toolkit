@@ -145,6 +145,7 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Dither sprite as image",0,ditherSpriteAsImageCB,0},
 		{"Dither all sprites as image",0,ditherSpriteAsImageAllCB,0},
 		{"Remove blank and duplicate tiles without affect sprite amount",0,optimizeSpritesCB,0},
+		{"Set all sprites with same start tile to currently selected palette row",0,palRowstCB,0},
 		{0},
 	{"Undo/Redo",0, 0, 0, FL_SUBMENU},
 		{"Undo",FL_CTRL+'z',undoCB},

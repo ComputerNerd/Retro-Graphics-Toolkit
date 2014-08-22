@@ -25,9 +25,21 @@ uint32_t curSprite;
 uint32_t curSpritegroup;
 int32_t spriteEndDraw[2];
 bool centerSpriteDraw_G;
+void palRowstCB(Fl_Widget*,void*){
+	unsigned st=currentProject->spritesC->groups[curSpritegroup].list[curSprite].starttile;
+	unsigned palrow=currentProject->spritesC->groups[curSpritegroup].list[curSprite].palrow;
+	for(unsigned j=0;j<currentProject->spritesC->amt;++j){
+		for(unsigned i=0;i<currentProject->spritesC->groups[j].list.size();++i){
+			if(st==currentProject->spritesC->groups[j].list[i].starttile)
+				currentProject->spritesC->groups[j].list[i].palrow=palrow;
+		}
+	}
+	window->updateSpriteSliders();
+	window->redraw();
+}
 void optimizeSpritesCB(Fl_Widget*,void*){
 	for(unsigned i=0;i<currentProject->spritesC->amt;++i){
-		currentProject->spritesC->optimizeBlank(i);
+		currentProject->spritesC->freeOptmizations(i);
 	}
 	window->updateSpriteSliders();
 	window->redraw();
