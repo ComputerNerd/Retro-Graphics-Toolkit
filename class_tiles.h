@@ -47,7 +47,7 @@ public:
 	void vflip_tile(uint32_t,uint8_t *);
 	void vflip_tile_ptr(uint8_t *,uint8_t *);
 	void blank_tile(uint32_t);/*!<This makes the tile use color 0*/ 
-	void remove_duplicate_tiles();
+	void remove_duplicate_tiles(bool tColor);
 #if __LP64__
 	bool cmp_trueC(uint32_t one,uint64_t * two);/*!<Used to compare two truecolor tiles returns true if the same*/
 #else

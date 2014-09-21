@@ -31,6 +31,7 @@ struct spriteGroup{
 };
 class sprites{
 	private:
+		bool extraOptDPLC;
 		void mappingItem(void*in,uint32_t id,gameType_t game);
 		void DplcItem(void*in,uint32_t which,gameType_t game);
 		bool alreadyLoaded(uint32_t id,uint32_t subid);
@@ -39,7 +40,7 @@ class sprites{
 		bool recttoSprite(int x0,int x1,int y0,int y1,int where,Fl_Shared_Image*loaded_image,bool grayscale,unsigned*remap,uint8_t*palMap,uint8_t*mask,bool useMask,bool useAlpha);
 		void handleDPLC(unsigned which,void*buf,unsigned n);
 		std::vector<uint8_t> optDPLC(unsigned which,gameType_t game);
-		bool extraOptDPLC;
+		uint32_t getTileOnSprite(unsigned x,unsigned y,unsigned which,unsigned i);
 	public:
 		uint32_t amt;//The amount of sprites
 		std::string name;

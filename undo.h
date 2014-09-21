@@ -15,6 +15,8 @@
 */
 #pragma once
 #include "classChunks.h"
+#include "classSprite.h"
+#include "classSprites.h"
 enum undoTypes_t{
 	uTile=0,
 	uTileAll,
@@ -51,6 +53,8 @@ enum undoTypes_t{
 	uSpriteprio,
 	uSpritehflip,
 	uSpritevflip,
+	uSpriteGroupDel,
+	uSpriteDel,
 	uSpriteAll,
 	uSwitchSys,
 	uSwitchPrj,//No struct reuses ptr
@@ -134,6 +138,15 @@ struct undoSpriteVal{
 struct undoSpriteValbool{
 	uint32_t id,subid;
 	bool val,valnew;
+};
+struct undoSpriteDel{
+	uint32_t id,subid;
+	class sprite sp;
+	int32_t offx,offy;
+	uint32_t loadat;
+};
+struct undoSpriteGroupDel{
+	struct spriteGroup;
 };
 
 void clearUndoCB(Fl_Widget*,void*);

@@ -91,16 +91,19 @@ void sprites::fixDel(unsigned at,unsigned tamt){
 		}
 	}
 }
+uint32_t sprites::getTileOnSprite(unsigned x,unsigned y,unsigned which,unsigned i){
+	return groups[which].list[i].starttile+(x*groups[which].list[i].h)+y;
+}
 void sprites::freeOptmizations(unsigned which){
 	for(int i=groups[which].list.size()-1;i>=0;--i){
-		//First check if the sprite is completly blank
+		//First check if the sprite is completely blank
 		bool notBlank=false;
 		for(unsigned h=0,ctile=groups[which].list[i].starttile;h<groups[which].list[i].h;++h){
 			for(unsigned w=0;w<groups[which].list[i].w;++w,++ctile)
 				notBlank|=chkNotZero(currentProject->tileC->truetDat.data()+(ctile*256),256);
 		}
 		if(!notBlank){
-			//Completly remove the sprite
+			//Completely remove the sprite
 			int tiledel=groups[which].list[i].starttile,tiledelamt=groups[which].list[i].h*groups[which].list[i].w;
 				if(groups[which].list.size()<=1)
 					del(which);
@@ -111,12 +114,11 @@ void sprites::freeOptmizations(unsigned which){
 			fixDel(tiledel,tiledelamt);
 			if(groups[which].list.size()<1)
 				return;
-			printf("Removed %u %d\n",which,i);
 		}
 	}
 	for(int i=groups[which].list.size()-1;i>=0;--i){
 		bool notBlank=false;
-		//Check for blank collums at the end
+		//Check for blank columns at the end
 		for(unsigned w=groups[which].list[i].w,ctile=groups[which].list[i].starttile+(groups[which].list[i].h*groups[which].list[i].w)-1;w--;){
 			notBlank=false;
 			for(unsigned h=groups[which].list[i].h;h--;--ctile){
@@ -132,14 +134,13 @@ void sprites::freeOptmizations(unsigned which){
 			}else{
 				--groups[which].list[i].w;
 				int tiledel=ctile,tiledelamt=groups[which].list[i].h;
-				printf("Removed blank collum %u %d tiledel: %d tiledelamt: %d maxtiles %d\n",which,i,tiledel,tiledelamt,currentProject->tileC->amt-1);
 				for(int td=tiledel+tiledelamt;td>tiledel;--td)
 					currentProject->tileC->remove_tile_at(td);
 				fixDel(tiledel,tiledelamt);
 			}
 		}
 	}
-	//More blank collum removal this time when a blank collum is detect the sprite's offset will be adjusted
+	//More blank column removal this time when a blank column is detect the sprite's offset will be adjusted
 	for(int i=groups[which].list.size()-1;i>=0;--i){
 		for(unsigned w=0,ctile=groups[which].list[i].starttile;w<groups[which].list[i].w;++w){
 			bool notBlank=false;
@@ -150,12 +151,50 @@ void sprites::freeOptmizations(unsigned which){
 			}else{
 				--groups[which].list[i].w;
 				groups[which].offx[i]+=8;
-				printf("Remove blank collum at begining %u %d\n",which,i);
 				for(int td=ctile-1;td>=ctile-groups[which].list[i].h;--td)
 					currentProject->tileC->remove_tile_at(td);
 				fixDel(ctile-groups[which].list[i].h,groups[which].list[i].h);
 				groups[which].list[i].starttile+=groups[which].list[i].h;
 				ctile-=groups[which].list[i].h;
+				w=0;
+			}
+		}
+	}
+	//Remove blank rows starting at the bottom
+	for(int i=groups[which].list.size()-1;i>=0;--i){
+		for(unsigned h=groups[which].list[i].h;h--;){
+			bool notBlank=false;
+			for(unsigned w=0;w<groups[which].list[i].w;++w)
+				notBlank|=chkNotZero(currentProject->tileC->truetDat.data()+(getTileOnSprite(w,h,which,i))*256,256);
+			if(notBlank){
+				break;
+			}else{
+				for(unsigned w=groups[which].list[i].w;w--;){
+					unsigned delWhich=getTileOnSprite(w,h,which,i);
+					currentProject->tileC->remove_tile_at(delWhich);
+					fixDel(delWhich,1);
+				}
+				--groups[which].list[i].h;
+			}
+		}
+	}
+	//Remove blank rows start at top and adjust offset
+	for(int i=groups[which].list.size()-1;i>=0;--i){
+		for(unsigned h=0;h<groups[which].list[i].h;++h){
+			bool notBlank=false;
+			for(unsigned w=0;w<groups[which].list[i].w;++w)
+				notBlank|=chkNotZero(currentProject->tileC->truetDat.data()+(getTileOnSprite(w,h,which,i))*256,256);
+			if(notBlank){
+				break;
+			}else{
+				for(unsigned w=groups[which].list[i].w;w--;){
+					unsigned delWhich=getTileOnSprite(w,h,which,i);
+					currentProject->tileC->remove_tile_at(delWhich);
+					fixDel(delWhich+1,1);
+				}
+				groups[which].offy[i]+=8;
+				--groups[which].list[i].h;
+				h=0;
 			}
 		}
 	}

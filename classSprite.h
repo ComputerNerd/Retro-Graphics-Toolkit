@@ -26,4 +26,5 @@ class sprite{
 		sprite();
 		sprite(uint32_t wi,uint32_t hi,uint32_t palrowset,uint32_t settile,bool hf,bool vf,bool pri);
 		void draw(unsigned x,unsigned y,unsigned zoom);
+		void toImage(uint8_t*img);
 };

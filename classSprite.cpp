@@ -59,3 +59,12 @@ void sprite::draw(unsigned x,unsigned y,unsigned zoom){
 		yy=y;
 	}
 }
+void sprite::toImage(uint8_t*img){
+	for(unsigned y=0,ctile=starttile;y<h;++y){
+		for(unsigned x=0;x<w;++x,++ctile){
+			uint8_t*outptr=currentProject->tileC->truetDat.data()+(ctile*currentProject->tileC->tcSize);
+			for(unsigned i=0;i<8;++i)
+				memcpy(img+(x*8*4)+(y*w*8*4)+(i*w*4),outptr+(i*8*4),8*4);
+		}
+	}
+}

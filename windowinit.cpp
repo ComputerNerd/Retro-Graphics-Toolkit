@@ -472,14 +472,14 @@ void editor::_editor(){
 			prioCB[0] = new Fl_Check_Button(tile_place_buttons_x_off,368,72,32,"Priority");
 			prioCB[0]->callback(set_prioCB,(void*)0);
 			prioCB[0]->tooltip("If checked tile is high priority");
-			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,400,96,32,"Show grid?");
+			{Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,400,96,32,"Show grid?");
 				o->callback(set_grid_placer);
 				o->tooltip("This button toggles whether or not a grid is visible over the tilemap this will allow you to easily see were each tile is");
 			}
 			BlocksCBtn = new Fl_Check_Button(tile_place_buttons_x_off,432,96,32,"Blocks?");
 			BlocksCBtn->callback(toggleBlocksCB);
 			BlocksCBtn->tooltip("Toggles if tilemap is treated as blocks");
-			{ Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,464,192,32,"Show only selected row");
+			{Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,464,192,32,"Show only selected row");
 				o->callback(toggleRowSolo);
 				o->tooltip("When checked tiles that do not use the selected row will not be drawn");
 			}

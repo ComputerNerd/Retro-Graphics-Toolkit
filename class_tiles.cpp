@@ -509,7 +509,7 @@ void tiles::blank_tile(uint32_t tileUsage){
 	}else
 		memset(&tDat[tileUsage*tileSize],0,tileSize);
 }
-void tiles::remove_duplicate_tiles(){
+void tiles::remove_duplicate_tiles(bool tColor){
 	pushTilemapAll(false);
 	pushTileGroupPrepare(tTypeDelete);
 	char bufT[1024];
@@ -527,7 +527,11 @@ void tiles::remove_duplicate_tiles(){
 	win->show();
 	uint32_t tile_remove_c=0;
 	int32_t cur_tile,curT;
-	uint8_t * tileTemp=(uint8_t *)alloca(tileSize);
+	uint8_t*tileTemp;
+	if(tColor)
+		tileTemp=(uint8_t *)alloca(tcSize);
+	else
+		tileTemp=(uint8_t *)alloca(tileSize);
 	std::vector<uint32_t> remap(amt);
 	time_t lastt=time(NULL);
 	for(uint32_t i=0;i<amt;++i)
@@ -538,12 +542,21 @@ void tiles::remove_duplicate_tiles(){
 		for (curT=amt-1;curT>=0;curT--){
 			if (cur_tile == curT)//don't compare with itself
 				continue;
-			#if __LP64__
-			if (cmp_tiles(cur_tile,(uint64_t *)&tDat[curT*tileSize]))
-			#else
-			if (cmp_tiles(cur_tile,(uint32_t *)&tDat[curT*tileSize]))
-			#endif
-			{
+			bool rm;
+			if(tColor){
+				#if __LP64__
+					rm=cmp_trueC(cur_tile,(uint64_t*)&truetDat[curT*tcSize]);
+				#else
+					rm=cmp_trueC(cur_tile,(uint32_t*)&truetDat[curT*tcSize]);
+				#endif
+			}else{
+				#if __LP64__
+					rm=cmp_tiles(cur_tile,(uint64_t*)&tDat[curT*tileSize]);
+				#else
+					rm=cmp_tiles(cur_tile,(uint32_t*)&tDat[curT*tileSize]);
+				#endif
+			}
+			if(rm){
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,false,false);
 				addTileGroup(curT,remap[curT]);
 				remap.erase(remap.begin()+curT);
@@ -551,13 +564,22 @@ void tiles::remove_duplicate_tiles(){
 				tile_remove_c++;
 				continue;//curT does not exist anymore useless to do more comparasions
 			}
-			hflip_tile(curT,tileTemp);
-			#if __LP64__
-			if (cmp_tiles(cur_tile,(uint64_t *)tileTemp))
-			#else
-			if (cmp_tiles(cur_tile,(uint32_t *)tileTemp))
-			#endif
-			{
+			if(tColor){
+				hflip_truecolor(curT,(uint32_t*)tileTemp);			
+				#if __LP64__
+					rm=cmp_trueC(cur_tile,(uint64_t*)tileTemp);
+				#else
+					rm=cmp_trueC(cur_tile,(uint32_t*)tileTemp);
+				#endif
+			}else{
+				hflip_tile(curT,tileTemp);
+				#if __LP64__
+					rm=cmp_tiles(cur_tile,(uint64_t*)tileTemp);
+				#else
+					rm=cmp_tiles(cur_tile,(uint32_t*)tileTemp);
+				#endif
+			}
+			if(rm){
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,true,false);
 				addTileGroup(curT,remap[curT]);
 				remap.erase(remap.begin()+curT);
@@ -565,14 +587,22 @@ void tiles::remove_duplicate_tiles(){
 				tile_remove_c++;
 				continue;
 			}
-			//hflip_tile(curT,tileTemp);//Already done
-			vflip_tile_ptr(tileTemp,tileTemp);
-			#if __LP64__
-			if (cmp_tiles(cur_tile,(uint64_t *)tileTemp))
-			#else
-			if (cmp_tiles(cur_tile,(uint32_t *)tileTemp))
-			#endif
-			{
+			if(tColor){
+				vflip_truecolor_ptr(tileTemp,tileTemp);
+				#if __LP64__
+					rm=cmp_trueC(cur_tile,(uint64_t*)tileTemp);
+				#else
+					rm=cmp_trueC(cur_tile,(uint32_t*)tileTemp);
+				#endif
+			}else{
+				vflip_tile_ptr(tileTemp,tileTemp);
+				#if __LP64__
+					rm=cmp_tiles(cur_tile,(uint64_t*)tileTemp);
+				#else
+					rm=cmp_tiles(cur_tile,(uint32_t*)tileTemp);
+				#endif
+			}
+			if(rm){
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,true,true);
 				addTileGroup(curT,remap[curT]);
 				remap.erase(remap.begin()+curT);
@@ -581,13 +611,22 @@ void tiles::remove_duplicate_tiles(){
 				continue;
 				//printf("Deleted tile %d\nRemoved %d tiles\n",curT,tile_remove_c);
 			}
-			vflip_tile(curT,tileTemp);
-			#if __LP64__
-			if (cmp_tiles(cur_tile,(uint64_t *)tileTemp))
-			#else
-			if (cmp_tiles(cur_tile,(uint32_t *)tileTemp))
-			#endif
-			{
+			if(tColor){
+				vflip_truecolor(curT,tileTemp);
+				#if __LP64__
+					rm=cmp_trueC(cur_tile,(uint64_t*)tileTemp);
+				#else
+					rm=cmp_trueC(cur_tile,(uint32_t*)tileTemp);
+				#endif
+			}else{
+				vflip_tile(curT,tileTemp);
+				#if __LP64__
+					rm=cmp_tiles(cur_tile,(uint64_t*)tileTemp);
+				#else
+					rm=cmp_tiles(cur_tile,(uint32_t*)tileTemp);
+				#endif
+			}
+			if(rm){
 				currentProject->tileMapC->sub_tile_map(curT,cur_tile,false,true);
 				addTileGroup(curT,remap[curT]);
 				remap.erase(remap.begin()+curT);
