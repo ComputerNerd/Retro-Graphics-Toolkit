@@ -204,7 +204,7 @@ void editor::_editor(){
 		the_tabs->client_area(rx,ry,rw,rh);
 		{
 			TabsMain[pal_edit] = new Fl_Group(rx, ry, rw, rh, "Palette editor");
-			//stuff realed to this group should go here
+			//stuff related to this group should go here
 			palEdit.more_init(4);
 			pal_size = new Fl_Hor_Value_Slider(128,384,320,24,"Palette box size");
 			pal_size->minimum(1); pal_size->maximum(42);
@@ -213,7 +213,7 @@ void editor::_editor(){
 			pal_size->align(FL_ALIGN_LEFT);
 			pal_size->callback(redrawOnlyCB);
 			ditherPower = new Fl_Hor_Value_Slider(128,416,320,24,"Dither Power");
-			ditherPower->tooltip("A lower value results in more dithering artifacts a higer value results in less artifacts");
+			ditherPower->tooltip("A lower value results in more dithering artifacts a higher value results in less artifacts");
 			ditherPower->minimum(1);
 			ditherPower->maximum(255);
 			ditherPower->step(1);
@@ -224,7 +224,7 @@ void editor::_editor(){
 				{
 					genSHbtns[0] = new Fl_Round_Button(96, 280, 64, 32, "Normal");
 					genSHbtns[0]->type(FL_RADIO_BUTTON);
-					genSHbtns[0]->tooltip("This is the regular sega genesis color space. When shadow/highlight mode is disabled all tiles will look like this however when enabling shadow higligh mode and a tile is set to high prioraty you will the tile will use these set of colors");
+					genSHbtns[0]->tooltip("This is the regular sega genesis color space. When shadow/highlight mode is disabled all tiles will look like this however when enabling shadow highlight mode and a tile is set to high priority you will the tile will use these set of colors");
 					genSHbtns[0]->callback((Fl_Callback*) set_palette_type_callback,(void *)0);
 					genSHbtns[0]->set();
 				} // Fl_Round_Button* o
@@ -253,7 +253,7 @@ void editor::_editor(){
 				} // Fl_Round_Button* o
 				{
 					GameSys[NES] = new Fl_Round_Button(224, 312, 64, 32, "NES");
-					GameSys[NES]->tooltip("Sets the editing mode to Nintendo Entertamint System or Famicon");
+					GameSys[NES]->tooltip("Sets the editing mode to Nintendo Entertainment System or Famicon");
 					GameSys[NES]->type(FL_RADIO_BUTTON);
 					GameSys[NES]->callback((Fl_Callback*) set_game_system,(void *)NES);
 				} // Fl_Round_Button* o
@@ -364,7 +364,7 @@ void editor::_editor(){
 			}//end of group
 			{ Fl_Check_Button* o = new Fl_Check_Button(694,default_palette_bar_offset_y+68,100,32,"Show grid?");
 				o->callback(set_grid);
-				o->tooltip("This button Toggles wheater or not you which to see a grid while editing your tiles. A grid can help you see the spacing betwen each pixel.");
+				o->tooltip("This button Toggles weather or not you which to see a grid while editing your tiles. A grid can help you see the spacing between each pixel.");
 			}
 			tile_edit_offset_x=default_tile_edit_offset_x;
 			tile_edit_offset_y=default_tile_edit_offset_y;

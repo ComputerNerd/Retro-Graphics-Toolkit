@@ -272,7 +272,7 @@ public:
 		int minx=scroll->x()-x(),miny=scroll->y()-y();
 		int maxx=minx+scroll->w(),maxy=miny+scroll->h();
 		Fl_Box::draw();
-		//Now draw the rectanges
+		//Now draw the rectangles
 		for(unsigned i=0;i<rects->size();i+=4){
 			if(((*rects)[i]>=minx)||((*rects)[i]<=maxx)){
 				if(((*rects)[i+2]>=miny)||((*rects)[i+2]<=maxy)){
@@ -316,7 +316,7 @@ bool sprites::recttoSprite(int x0,int x1,int y0,int y1,int where,Fl_Shared_Image
 	h=y1-y0+1;
 	wt=(w+7)&(~7);
 	ht=(h+7)&(~7);
-	//Determin how many sprites will be created
+	//Determine how many sprites will be created
 	unsigned spritesnew=((wt+wmax-8)/wmax)*((ht+hmax-8)/hmax);
 	if(where>=amt)
 		setAmt(where+1);
@@ -334,7 +334,7 @@ bool sprites::recttoSprite(int x0,int x1,int y0,int y1,int where,Fl_Shared_Image
 	center[2]=w+center[0];
 	uint8_t * imgptr=(uint8_t *)loaded_image->data()[0];
 	printf("Center %d %d %d\n",center[0],center[1],center[2]);
-	printf("w: %d h: %d wt: %d ht: %d newtiles: %d\n",w,h,wt,ht,newTiles);
+	printf("w: %d h: %d wt: %d ht: %d new tiles: %d\n",w,h,wt,ht,newTiles);
 	for(unsigned y=0,cnt=0,tilecnt=startTile;y<ht;y+=hmax){
 		for(unsigned x=0;x<wt;x+=wmax,++cnt){
 			unsigned dimx,dimy;
@@ -353,7 +353,6 @@ bool sprites::recttoSprite(int x0,int x1,int y0,int y1,int where,Fl_Shared_Image
 						for(unsigned a=0;a<8;++a){
 							unsigned xx=x+i+a;
 							unsigned yy=y+j+b;
-							//printf("%d %d\n",xx,yy);
 							if((!((yy<center[1])||(yy>=(h+center[1]))))&&(depth==1)&&(!grayscale))
 								imgptr=(uint8_t*)loaded_image->data()[yy+y0+2-center[1]];
 							else if(!((yy<center[1])||(yy>=(h+center[1])))){
@@ -369,7 +368,7 @@ bool sprites::recttoSprite(int x0,int x1,int y0,int y1,int where,Fl_Shared_Image
 							}else if(xx>=center[2]){
 								memset(out,0,4);
 							}else{
-								//Can actully convert pixel to tile
+								//Can actually convert pixel to tile
 								if(useMask&&(!useAlpha)){
 									switch(depth){
 										case 1:
@@ -505,8 +504,8 @@ void sprites::importSpriteSheet(void){
 			}
 			progress->maximum(rects.size());
 			progress->value(0);
-			//Now combine the rectanges
-			//Start by combining rectanges by that touch with y values
+			//Now combine the rectangles
+			//Start by combining rectangles by that touch with y values
 			bool canEnd;
 			int pass=0;
 			char txtbufstage[1024];
@@ -518,16 +517,15 @@ void sprites::importSpriteSheet(void){
 			Fl::check();
 			for(int i=0;i<rects.size();i+=4){
 				for(int j=0;j<rects.size();j+=4){
-					//printf("%d %d\n",i,j);
 					if(i==j)
 						continue;
-					//See if rectanges are touching or overlap
+					//See if rectangles are touching or overlap
 					//if((inRange(rects[j+2],rects[i+2]-1,rects[i+3]+1)||inRange(rects[i+2],rects[j+2]-1,rects[j+3]+1))&&(!((rects[i+2]==rects[j+2])||(rects[i+3]==rects[j+3])))){//Is rectange j directly above or below i
 					if((rects[j+3]-rects[i+2])==1){
 						if((inRange(rects[j],rects[i]-1,rects[i+1]+1)||inRange(rects[i],rects[j]-1,rects[j+1]+1))){
 							canEnd=false;
-							//Merge the two squares obtainting maximum size
-							//Now try and find the combination that results in the largest rectange
+							//Merge the two squares obtaining maximum size
+							//Now try and find the combination that results in the largest rectangle
 							rects[i]=std::min(rects[i],rects[j]);
 							rects[i+1]=std::max(rects[i+1],rects[j+1]);
 							rects[i+2]=std::min(rects[i+2],rects[j+2]);
@@ -558,7 +556,7 @@ void sprites::importSpriteSheet(void){
 					lasttime=time(NULL);
 					progress->maximum(rects.size());
 					progress->value(i);
-					snprintf(txtbuf,1024,"Rectanges: %d",rects.size());
+					snprintf(txtbuf,1024,"Rectangles: %d",rects.size());
 					progress->label(txtbuf);
 					Fl::check();
 				}
@@ -574,10 +572,9 @@ void sprites::importSpriteSheet(void){
 				Fl::check();
 				for(int i=0;i<rects.size();i+=4){
 					for(int j=0;j<rects.size();j+=4){
-						//printf("%d %d\n",i,j);
 						if(i==j)
 							continue;
-						//Merdge overlapping rectangles
+						//Merge overlapping rectangles
 						if((rects[i]<=rects[j+1])&&(rects[i+1]>=rects[j])&&(rects[i+2]<=rects[j+3])&&(rects[i+3]>=rects[j+2])){
 							canEnd=false;
 							rects[i]=std::min(rects[i],rects[j]);
@@ -586,7 +583,7 @@ void sprites::importSpriteSheet(void){
 							rects[i+3]=std::max(rects[i+3],rects[j+3]);
 							rects.erase(rects.begin()+j,rects.begin()+j+4);
 						}
-						//Merdge touching rectanges
+						//Merge touching rectangles
 						if(abs(rects[i+1]-rects[j])==1){
 							if((inRange(rects[j+2],rects[i+2]-1,rects[i+3]+1)||inRange(rects[i+2],rects[j+2]-1,rects[j+3]+1))){
 								canEnd=false;
@@ -602,7 +599,7 @@ void sprites::importSpriteSheet(void){
 						lasttime=time(NULL);
 						progress->maximum(rects.size());
 						progress->value(i);
-						snprintf(txtbuf,1024,"Rectanges: %d",rects.size());
+						snprintf(txtbuf,1024,"Rectangles: %d",rects.size());
 						progress->label(txtbuf);
 						Fl::check();
 					}
@@ -869,10 +866,10 @@ void sprites::DplcItem(void*in,uint32_t which,gameType_t game){
 	 * uint8_t amount
 	 * for each of amount
 	 * uint8_t how many and offset high byte
-	 * The high nybles sigifies how many tiles to load - 1
+	 * The high nibbles signifies how many tiles to load - 1
 	 * uint8_t offset low byte
 	 * */
-	//Just ignore the the high nyble on the high byte to get start tile
+	//Just ignore the high nibble on the high byte to get start tile
 	if(game==tSonic1){
 		char*txt=(char*)in;
 		unsigned amtd;
@@ -916,7 +913,7 @@ bool sprites::alreadyLoaded(uint32_t id,uint32_t subid){
 bool sprites::checkDupdplc(uint32_t id,uint32_t&which){
 	if(!id)
 		return false;
-	for(uint32_t i=0;i<id;++i){//We only search before id in question so later dplc enteries will refer to dplc enteries before
+	for(uint32_t i=0;i<id;++i){//We only search before id in question so later dplc entries will refer to dplc entries before
 		if(groups[i].list.size()==groups[id].list.size()){
 			bool match=true;
 			for(uint32_t j=0;j<groups[i].list.size();++j){
@@ -1023,7 +1020,7 @@ mergeIt:
 				continue;
 			if(inRange(tmp[j+1],tmp[i+1],tmp[i+1]+tmp[i])){
 				unsigned amtnew=std::max(tmp[i]+tmp[i+1],tmp[j]+tmp[j+1])-std::min(tmp[i+1],tmp[j+1]);
-				printf("Found merdge canidate: %d %d %d %d amout: %u\n",tmp[i],tmp[i+1],tmp[j],tmp[j+1],amtnew);
+				printf("Found merge candidate: %d %d %d %d amount: %u\n",tmp[i],tmp[i+1],tmp[j],tmp[j+1],amtnew);
 				unsigned st=std::min(tmp[i+1],tmp[j+1]);
 				bool swapped;
 				if(i>j){
@@ -1085,7 +1082,7 @@ void sprites::exportDPLC(gameType_t game){
 					fputs("\tdc.w 0\n",fp);
 				else if(checkDupdplc(i,dup)){
 					fprintf(fp,"\tdc.w %s-%s\n",groups[dup].name.c_str(),name.c_str());
-					printf("Table entry can be optimzed: %d %d\n",i,dup);
+					printf("Table entry can be optimized: %d %d\n",i,dup);
 				}else
 					fprintf(fp,"\tdc.w %s-%s\n",groups[i].name.c_str(),name.c_str());
 			}
@@ -1114,7 +1111,7 @@ void sprites::exportDPLC(gameType_t game){
 						printf("Null frame sonic 3 warning group %u\n",i);
 					tmpbuf[i*2]=tmpbuf[i*2+1]=0;
 				}else if(checkDupdplc(i,dup)){
-					printf("Table entry can be optimzed: %d %d\n",i,dup);
+					printf("Table entry can be optimized: %d %d\n",i,dup);
 					tmpbuf[i*2]=tmpbuf[dup*2];
 					tmpbuf[i*2+1]=tmpbuf[dup*2+1];
 				}else{
@@ -1235,7 +1232,7 @@ void sprites::importMapping(gameType_t game){
 					mappingItem(findLabel(minus+1,bufp),amt-1,game);
 					groups[amtnew-1].name.assign(bufp);
 					bufp=minus+1;
-					//The dc.w psuedo-op can contain multiple words
+					//The dc.w pseudo-op can contain multiple words
 					char*end=bufp;
 					while((isalnum(*end))||(*end=='_'))
 						++end;
@@ -1273,7 +1270,7 @@ void sprites::importMapping(gameType_t game){
 					break;
 			}
 		}else{
-			//Sonic 2 and Sonic 3's mapping is usally stored in binary
+			//Sonic 2 and Sonic 3's mapping is usually stored in binary
 			name.assign(fl_filename_name(the_file.c_str()));
 			uint16_t*ptr=(uint16_t*)buf;
 			unsigned off;
@@ -1438,7 +1435,7 @@ void sprites::draw(uint32_t id,uint32_t x,uint32_t y,int32_t zoom,bool mode,int3
 }
 void sprites::setAmt(uint32_t amtnew){
 	if(amtnew>amt){
-		//Create more sprites with default paramater
+		//Create more sprites with default parameter
 		groups.resize(amtnew);
 		for(unsigned n=amt;n<amtnew;++n){
 			groups[n].list.push_back(sprite());
@@ -1657,7 +1654,7 @@ void sprites::enforceMax(unsigned wmax,unsigned hmax){
 		unsigned told=groups[j].list.size();
 		for(unsigned i=0;i<told;++i){
 			if((groups[j].list[i].w>wmax)||(groups[j].list[i].h>hmax)){
-				//Divde it up into more sprites
+				//Divide it up into more sprites
 				unsigned w=groups[j].list[i].w,h=groups[j].list[i].h;
 				unsigned snew=((w+(wmax/2))/wmax)*((h+(hmax/2))/hmax)-1,start=groups[j].list.size(),st=groups[j].list[i].starttile,la=groups[j].loadat[i];
 				if(groups[j].list[i].w>wmax)
