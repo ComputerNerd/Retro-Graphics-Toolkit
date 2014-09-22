@@ -298,7 +298,7 @@ bool appendProject(void){
 bool removeProject(uint32_t id){
 	//removes selected project
 	if (projects_count<=1){
-		fl_alert("You must have atleast one project.");
+		fl_alert("You must have at least one project.");
 		return false;
 	}
 	if((projects[id]->share[tile_edit]<0)&&(projects[id]->useMask&pjHaveTiles))
@@ -325,10 +325,10 @@ bool removeProject(uint32_t id){
 	return true;
 }
 static void invaildProject(void){
-	fl_alert("This is not a vaild Retro Graphics Toolkit project");
+	fl_alert("This is not a valid Retro Graphics Toolkit project");
 }
 void switchProject(uint32_t id){
-	window->TxtBufProject->text(projects[id]->Name.c_str());//Make editor displys new text
+	window->TxtBufProject->text(projects[id]->Name.c_str());//Make editor displays new text
 	window->GameSys[projects[id]->gameSystem]->setonly();
 	switch(projects[id]->gameSystem){
 		case sega_genesis:
@@ -586,12 +586,12 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 	char R
 	char P
 	Null terminated project description or just 0 if default string
-	uint32_t version the reason this is stored is for backwards compability if I change the file format starts at version 0
+	uint32_t version the reason this is stored is for backwards compatibility if I change the file format starts at version 0
 	if (version >= 1) uint32_t have mask
 	You can find the format in project.h
 	if these bits are zero skip it 
 	uint32_t game system
-	if(version >= 4) uint32_t sub System requires special handeling for version==4
+	if(version >= 4) uint32_t sub System requires special handling for version==4
 	if(version>=8) settings
 	palette data (128 bytes if sega genesis or 16 bytes if NES)
 	if((version>=7)&&(gameSystem==NES)) 16 bytes for sprite specific palette
@@ -616,7 +616,7 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 		uint32_t width per chunk
 		uint32_t height per chunk
 		uint32_t amount of chunks
-		uint32_t compresssed Chunk map size
+		uint32_t compressed Chunk map size
 		Chunk data (zlib compressed)
 	}
 	if(version>=5) sprite data (see documentation in classSprites.cpp
