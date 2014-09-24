@@ -695,17 +695,8 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 		rowAuto=0;
 	pushPaletteAll();//Save the old palette
 	Fl_Window *win;
-	win = new Fl_Window(400,45,"Progress");		// access parent window
-	win->begin();					// add progress bar to it..
 	Fl_Progress *progress;
-	progress = new Fl_Progress(25,7,350,30);
-	progress->color(0x88888800);			// background color
-	progress->selection_color(0x4444ff00);		// progress bar color
-	progress->labelcolor(FL_WHITE);			// percent text color
-	progress->minimum(0.0);				// set progress range to be 0.0 ~ 1.0
-	progress->maximum(1.0);
-	win->end();					// end adding to window
-	win->show();
+	mkProgress(&win,&progress);
 	image = (uint8_t *)malloc(w*h*3);
 	if (rows==1){
 		if (rowAuto)

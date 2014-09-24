@@ -515,16 +515,7 @@ void tiles::remove_duplicate_tiles(bool tColor){
 	char bufT[1024];
 	Fl_Window *win;
 	Fl_Progress *progress;
-	win = new Fl_Window(250,45,"Progress");		// access parent window
-	win->begin();					// add progress bar to it..
-	progress = new Fl_Progress(25,7,200,30);
-	progress->minimum(0);				// set progress range to be 0.0 ~ 1.0
-	progress->maximum(1);
-	progress->color(0x88888800);			// background color
-	progress->selection_color(0x4444ff00);		// progress bar color
-	progress->labelcolor(FL_WHITE);			// percent text color
-	win->end();					// end adding to window
-	win->show();
+	mkProgress(&win,&progress);
 	uint32_t tile_remove_c=0;
 	int32_t cur_tile,curT;
 	uint8_t*tileTemp;
