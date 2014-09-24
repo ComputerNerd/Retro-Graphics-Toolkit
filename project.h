@@ -34,7 +34,7 @@ struct Project{/*!<Holds all data needed for a project based system for examaple
 	std::string Name;
 	uint32_t gameSystem;
 	uint32_t subSystem;
-	uint32_t settings;
+	uint32_t settings;//Stores dither algorithm and engine settings such as sonic 1 and such.
 	uint32_t useMask;/*!<Sharing can be used regardless of use mask*/
 	tileMap* tileMapC;
 	tiles* tileC;
@@ -70,4 +70,9 @@ bool loadAllProjects(bool Old);
 #define pjHaveLevel 32
 #define pjDefaultMask (pjHavePal|pjHaveTiles|pjHaveMap|pjHaveChunks|pjHaveSprites|pjHaveLevel)
 #define pjAllMask pjDefaultMask
+
+#define settingsDitherMask 255
+#define subsettingsDitherMask 255
+#define subsettingsDitherShift 8
+
 #endif

@@ -52,7 +52,6 @@ extern bool G_hflip[2];
 extern bool G_vflip[2];
 extern bool G_highlow_p[2];
 //extern uint8_t palette_adder;
-extern uint8_t ditherAlg;
 
 extern bool showTrueColor;
 extern bool rowSolo;

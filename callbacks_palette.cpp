@@ -291,7 +291,8 @@ void set_ditherAlg(Fl_Widget*,void* typeset){
 		window->ditherPower->show();
 	else
 		window->ditherPower->hide();//imagine the user trying to change the power and nothing happening not fun at all
-	ditherAlg=(uintptr_t)typeset;
+	currentProject->settings&=~settingsDitherMask;
+	currentProject->settings|=(uintptr_t)typeset&settingsDitherMask;
 }
 void set_tile_row(Fl_Widget*,void* row){
 	uint8_t selrow=(uintptr_t)row;

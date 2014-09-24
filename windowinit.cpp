@@ -219,6 +219,7 @@ void editor::_editor(){
 			ditherPower->step(1);
 			ditherPower->value(16);
 			ditherPower->align(FL_ALIGN_LEFT);
+			ditherPower->callback(setSubditherSetting);
 			{
 				shadow_highlight_switch = new Fl_Group(112, 288, 800, 480);
 				{
@@ -259,8 +260,8 @@ void editor::_editor(){
 				} // Fl_Round_Button* o
 				o->end();
 			} // End of buttons
-			{Fl_Choice *o = new Fl_Choice(64, 464, 144, 24);
-			o->copy(ditherChoices);}
+			ditherAlgSel=new Fl_Choice(64, 464, 144, 24);
+			ditherAlgSel->copy(ditherChoices);
 			subSysC=new Fl_Choice(208, 464, 128, 24);
 			subSysC->copy(subSysNES);
 			subSysC->value(1);

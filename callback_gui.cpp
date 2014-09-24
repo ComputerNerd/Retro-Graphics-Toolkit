@@ -28,6 +28,11 @@ static const char* GPLv3="This program is free software: you can redistribute it
 	"GNU General Public License for more details.\n\n"
 	"You should have received a copy of the GNU General Public License\n"
 	"along with this program.  If not, see <http://www.gnu.org/licenses/>.\n";
+void setSubditherSetting(Fl_Widget*w, void*){
+	Fl_Slider*s=(Fl_Slider*)w;
+	currentProject->settings&=~(subsettingsDitherMask<<subsettingsDitherShift);
+	currentProject->settings|=((uint32_t)s->value()&subsettingsDitherMask)<<subsettingsDitherShift;
+}
 void redrawOnlyCB(Fl_Widget*, void*){
 	window->redraw();
 }

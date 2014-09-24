@@ -20,6 +20,7 @@
 #include "callback_chunk.h"
 #include "filemisc.h"
 #include "undo.h"
+#include "gamedef.h"
 ChunkClass::ChunkClass(void){
 	chunks.resize(256);
 	amt=1;
@@ -52,7 +53,7 @@ struct ChunkAttrs ChunkClass::getElm(uint32_t id,uint32_t x,uint32_t y){
 }
 void ChunkClass::removeAt(uint32_t at){
 	if(amt<2){
-		fl_alert("If you don't want chunks uncheck have chunks instead of deleteing");
+		fl_alert("If you don't want chunks uncheck have chunks instead of deleting");
 		return;
 	}
 	try{
@@ -132,7 +133,7 @@ void ChunkClass::setFlag(uint32_t id,uint32_t x,uint32_t y,uint32_t flag){
 	bit 1 vflip
 	bit 2 prioity
 	bit 3,4 palette row
-	All other bits are unsued and can be used for video game usage
+	All other bits are unused and can be used for video game usage
 	If using blocks flags will simply contain video game settings
 	Here are video game settings used. If using tiles instead of blocks add 3 to bit count and ignore x and y flip
 	bit 0 x-flip
@@ -283,7 +284,7 @@ static void errorNum(void){
 	fl_alert("Please enter a value greater than zero");
 }
 void ChunkClass::importSonic1(const char * filename,bool append){
-	if(fl_ask("Custome width and height?")){
+	if(fl_ask("Custom width and height?")){
 		char*ptr=(char*)fl_input("Width");
 		if(!ptr)
 			return;

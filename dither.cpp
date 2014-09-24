@@ -712,11 +712,12 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 	this function will take an input with or without alpha and dither it
 	Also note that this function now has the option to first dither to color space
 	*/
-	uint8_t ditherSetting=window->ditherPower->value();
-	uint8_t type_temp=palTypeGen;
-	uint8_t temp=0;
-	uint8_t rgbRowsize;
-	uint32_t x,y;
+	unsigned ditherAlg=currentProject->settings&settingsDitherMask;
+	int ditherSetting=(currentProject->settings>>subsettingsDitherShift)&subsettingsDitherMask;
+	unsigned type_temp=palTypeGen;
+	unsigned temp=0;
+	unsigned rgbRowsize;
+	unsigned x,y;
 	if (useAlpha){
 		rgbPixelsize=4;
 		rgbRowsize=32;
@@ -729,7 +730,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 	uint8_t r_new,g_new,b_new,a_new;
 	unsigned pal_row;
 	int16_t error_rgb[4];
-	switch (ditherAlg){
+	switch (currentProject->settings&settingsDitherMask){
 	case 7:
 	case 6:
 	case 5://Yliluoma's ordered dithering algorithm

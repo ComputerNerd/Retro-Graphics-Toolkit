@@ -70,24 +70,27 @@ void compactPrjMem(void){
 	}
 	printf("Old capacity: %d New capacity: %d saved %d bytes\n",Cold,Cnew,Cold-Cnew);
 }
+static void initNewProject(unsigned at){
+	projects[at]->gameSystem=sega_genesis;
+	projects[at]->subSystem=3;
+	projects[at]->settings=16<<subsettingsDitherShift;
+	projects[at]->tileC=new tiles;
+	projects[at]->tileMapC=new tileMap;
+	projects[at]->Chunk=new ChunkClass;
+	projects[at]->spritesC=new sprites;
+	projects[at]->Name.assign(defaultName);
+	projects[at]->rgbPal=(uint8_t*)calloc(1,256);
+	projects[at]->palDat=(uint8_t*)calloc(1,128);
+	projects[at]->palType=(uint8_t*)calloc(1,64);
+	std::fill(projects[at]->share,&projects[at]->share[shareAmtPj],-1);
+	projects[at]->useMask=pjDefaultMask;
+}
 void initProject(void){
 	projects = (struct Project **) malloc(sizeof(void *));
-	projects[0] = new struct Project;
+	projects[0]= new struct Project;
 	currentProject=projects[0];
 	projects_count=1;
-	currentProject->gameSystem=sega_genesis;
-	currentProject->subSystem=3;
-	currentProject->settings=0;
-	currentProject->tileC=new tiles;
-	currentProject->tileMapC=new tileMap;
-	currentProject->Chunk=new ChunkClass;
-	currentProject->spritesC=new sprites;
-	currentProject->rgbPal=(uint8_t*)calloc(1,256);
-	currentProject->palDat=(uint8_t*)calloc(1,128);
-	currentProject->palType=(uint8_t*)calloc(1,64);
-	currentProject->Name.assign(defaultName);
-	std::fill(currentProject->share,&currentProject->share[shareAmtPj],-1);//Note always check to see if less than 0 do not use == -1
-	currentProject->useMask=pjDefaultMask;
+	initNewProject(0);
 }
 void setHaveProject(uint32_t id,uint32_t mask,bool set){
 	/*This function will allocate/free data if and only if it is not being shared
@@ -274,22 +277,8 @@ bool appendProject(void){
 		return false;
 	}
 	projects[projects_count]= new struct Project;
-	projects[projects_count]->tileC=new tiles;
-	projects[projects_count]->tileMapC=new tileMap;
-	projects[projects_count]->Chunk=new ChunkClass;
-	projects[projects_count]->spritesC=new sprites;
-	projects[projects_count]->Name.assign(defaultName);
-	projects[projects_count]->rgbPal=(uint8_t*)calloc(1,256);
-	projects[projects_count]->palDat=(uint8_t*)calloc(1,128);
-	projects[projects_count]->palType=(uint8_t*)calloc(1,64);
-	projects[projects_count]->gameSystem=sega_genesis;
-	projects[projects_count]->subSystem=3;
-	projects[projects_count]->settings=0;
-	std::fill(projects[projects_count]->share,&projects[projects_count]->share[shareAmtPj],-1);
-	projects[projects_count]->useMask=pjDefaultMask;
-	++projects_count;
-	//Realloc could have changed address
-	currentProject=projects[curProjectID];
+	initNewProject(projects_count++);
+	currentProject=projects[curProjectID];//Realloc could have changed address so update currentProject to reflect the potentially new address
 	window->projectSelect->maximum(projects_count-1);
 	for(int x=0;x<shareAmtPj;++x)
 		window->shareWith[x]->maximum(projects_count-1);
@@ -330,6 +319,12 @@ static void invaildProject(void){
 void switchProject(uint32_t id){
 	window->TxtBufProject->text(projects[id]->Name.c_str());//Make editor displays new text
 	window->GameSys[projects[id]->gameSystem]->setonly();
+	window->ditherPower->value((projects[id]->settings>>subsettingsDitherShift)&subsettingsDitherMask);
+	window->ditherAlgSel->value(projects[id]->settings&subsettingsDitherMask);
+	if((projects[id]->settings&subsettingsDitherMask))
+		window->ditherPower->hide();
+	else
+		window->ditherPower->show();
 	switch(projects[id]->gameSystem){
 		case sega_genesis:
 			if(containsDataProj(id,pjHaveTiles))
@@ -487,7 +482,7 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 	if(version>=8)
 		fread(&projects[id]->settings,1,sizeof(uint32_t),fi);
 	else
-		projects[id]->settings=0;
+		projects[id]->settings=16<<subsettingsDitherShift;
 	int entries,eSize;
 	switch(projects[id]->gameSystem){
 		case sega_genesis:
