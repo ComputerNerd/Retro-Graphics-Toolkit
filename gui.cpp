@@ -19,14 +19,14 @@
 #include <stdio.h>
 #include "gui.h"
 #include "project.h"
-uint32_t map_scroll_pos_x;
-uint32_t map_scroll_pos_y;
-uint32_t map_off_x,map_off_y;
-uint16_t tile_edit_offset_x;
-uint16_t tile_edit_offset_y;
-uint16_t tile_placer_tile_offset_y;
-uint16_t tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
-uint16_t true_color_box_x,true_color_box_y;
+unsigned map_scroll_pos_x;
+unsigned map_scroll_pos_y;
+unsigned map_off_x,map_off_y;
+unsigned tile_edit_offset_x;
+unsigned tile_edit_offset_y;
+unsigned tile_placer_tile_offset_y;
+unsigned tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
+unsigned true_color_box_x,true_color_box_y;
 static int returnVal=0;
 static Fl_Choice*PopC;
 static Fl_Window * winP;
@@ -37,11 +37,11 @@ void mkProgress(Fl_Window**winP,Fl_Progress**progress){
 	(*progress) = new Fl_Progress(25,7,350,30);
 	(*progress)->minimum(0.0);				// set progress range to be 0.0 ~ 1.0
 	(*progress)->maximum(1.0);
-	(*progress)->color(0x88888800);			// background color
+	(*progress)->color(0x88888800);				// background color
 	(*progress)->selection_color(0x4444ff00);		// progress bar color
 	(*progress)->labelcolor(FL_WHITE);			// percent text color
 	(*progress)->label("Please wait");
-	(*winP)->end();					// end adding to window
+	(*winP)->end();						// end adding to window
 	(*winP)->set_modal();
 	(*winP)->show();
 }

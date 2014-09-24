@@ -28,20 +28,10 @@ void setTmapOffsetCB(Fl_Widget*o,void*){
 void tileDPicker(Fl_Widget*,void*){
 	Fl_Window *win;
 	Fl_Progress *progress;
-	win = new Fl_Window(250,45,"Progress");		// access parent window
-	win->begin();                                // add progress bar to it..
-	progress = new Fl_Progress(25,7,200,30);
-	progress->minimum(0.0);                      // set progress range to be 0.0 ~ 1.0
-	progress->maximum(1.0);
-	progress->color(0x88888800);               // background color
-	progress->selection_color(0x4444ff00);     // progress bar color
-	progress->labelcolor(FL_WHITE);            // percent text color
-	win->end();                                  // end adding to window
-	win->show();
+	mkProgress(&win,&progress);
 	currentProject->tileMapC->pickRowDelta(true,progress);
 	win->remove(progress);// remove progress bar from window
 	delete(progress);// deallocate it
-	//w->draw();
 	delete win;
 	window->damage(FL_DAMAGE_USER1);
 }
@@ -90,7 +80,7 @@ void callback_resize_map(Fl_Widget* o,void*){
 }
 void set_grid(Fl_Widget*,void*){
 	/*this function will only be trigger when the check button is pressed
-	so we just need to invert the bool using xor to avoid if statments*/
+	so we just need to invert the bool using xor to avoid if statements*/
 	show_grid^=true;
 	window->redraw();//redraw to reflect the updated statues of the grid
 }
@@ -165,8 +155,8 @@ void fill_tile_map_with_tile(Fl_Widget*,void*){
 	}
 }
 void dither_tilemap_as_imageCB(Fl_Widget*,void*){
-	//normally this program dithers all tiles individully this is not always desirable
-	//to fix this I created this function It convertes the tilemap to image and dithers all tiles
+	//normally this program dithers all tiles individually this is not always desirable
+	//to fix this I created this function It converts the tilemap to image and dithers all tiles
 	//so first create ram for image
 	unsigned method;
 	method=fl_choice("How would you like this tilemap dithered?","Dither each palette row separately","Dither entire image at once","Cancel");
@@ -185,7 +175,7 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 	if(over)
 		append=false;
 	else
-		append=fl_choice("Append tiles or overwite starting at 0?","Overwrite","Append",0);
+		append=fl_choice("Append tiles or overwrite starting at 0?","Overwrite","Append",0);
 	if (load_file_generic("Load image")){
 		loaded_image=Fl_Shared_Image::get(the_file.c_str());
 		if(!loaded_image){
@@ -278,7 +268,7 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 					ctile=currentProject->tileMapC->get_tile(x/currentProject->tileC->sizew,y/currentProject->tileC->sizeh);
 					//See if ctile is allocated
 					if(ctile>=currentProject->tileC->amt){
-						//tile on map but not a tile assoicated with it
+						//tile on map but not a tile associated with it
 						imgptr+=currentProject->tileC->sizew*depth;
 						continue;
 					}
@@ -423,11 +413,11 @@ void tilemap_remove_callback(Fl_Widget*,void*){
 }
 void shadow_highligh_findout(Fl_Widget*,void*){
 	if (unlikely(currentProject->gameSystem != sega_genesis)){
-		fl_alert("Only the Sega Genesis/Mega Drive supports shadow highligh mode\n");
+		fl_alert("Only the Sega Genesis/Mega Drive supports shadow highlight mode\n");
 		return;
 	}
 	uint8_t type=fl_choice("How will it be determined if the tile is shadowed or not?","Tile brightness","Delta",0);
-	//this function will see if 3 or less pixels are above 125 and if so set prioity to low or set priority to high if bright tile
+	//this function will see if 3 or less pixels are above 125 and if so set priority to low or set priority to high if bright tile
 	uint16_t x,y;
 	uint32_t xx;
 	if (type==0){

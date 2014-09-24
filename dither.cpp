@@ -11,47 +11,58 @@ static unsigned useHiL;//no use for these varibles outside of this file
 static uint8_t useMode;
 static uint8_t rgbPixelsize;
 static bool USEofColGlob;
+static bool isSpriteG;
 static bool forcedfun;
 static uint8_t theforcedfun;
 static uint8_t *img_ptr_dither;
 static bool isChunkD_G;
 static uint32_t idChunk_G;
+uint8_t nearest_color_chanColSpace(uint8_t val,uint8_t chan){
+	switch (useMode){
+		case sega_genesis:
+			return palTab[nearest_color_index(val)];
+		break;
+		case NES:
+			{img_ptr_dither-=chan;
+			uint8_t returnme=toNesChan(*img_ptr_dither,img_ptr_dither[1],img_ptr_dither[2],chan);
+			img_ptr_dither+=chan;
+			return returnme;}
+		break;
+		case 255://alpha
+			return (val&128)?255:0;
+		break;
+	}
+}
 uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row){
 	//returns closest value
 	//palette_muliplier
-	uint8_t i;
-	int32_t distanceSquared, minDistanceSquared, bestIndex = 0;
+	unsigned i;
+	int_fast32_t distanceSquared, minDistanceSquared, bestIndex = 0;
 	minDistanceSquared = 255*255 + 1;
-	uint8_t max_rgb=0;
+	unsigned max_rgb=0;
 	switch (useMode){
 		case sega_genesis:
-			if(USEofColGlob)
-				return palTab[nearest_color_index(val)];
 			max_rgb=48;//16*3=48
 		break;
 		case NES:
-			if(USEofColGlob){
-				img_ptr_dither-=chan;
-				uint8_t returnme=toNesChan(*img_ptr_dither,img_ptr_dither[1],img_ptr_dither[2],chan);
-				img_ptr_dither+=chan;
-				return returnme;
-			}
 			max_rgb=12;//4*3=12
+			if(isSpriteG)
+				row+=4;
 		break;
 		case 255://alpha
 			return (val&128)?255:0;
 		break;
 	}
 	row*=max_rgb;
-	for (i=0; i<max_rgb; i+=3){
-		int32_t Rdiff = (int) val - (int)currentProject->rgbPal[i+row+chan];
+	for (i=row; i<max_rgb+row; i+=3){
+		int_fast32_t Rdiff = (int_fast32_t) val - (int_fast32_t)currentProject->rgbPal[i+chan];
 		distanceSquared = Rdiff*Rdiff;
 		if (distanceSquared < minDistanceSquared){
 			minDistanceSquared = distanceSquared;
 			bestIndex = i;
 		}
 	}
-	return currentProject->rgbPal[bestIndex+row+chan];
+	return currentProject->rgbPal[bestIndex+chan];
 }
 /* variables needed for the Riemersma
  * dither algorithm */ 
@@ -107,13 +118,17 @@ static int32_t error[SIZE]; /* queue with error
 			tempSet=(currentProject->tileMapC->get_prio(cur_x/8,cur_y/8)^1)*8;
 		set_palette_type(tempSet);
 	}
-	if(forcedfun)
-		pvalue=nearest_color_chan(pvalue,rgb_select,theforcedfun);
+	if(USEofColGlob)
+		pvalue=nearest_color_chanColSpace(pvalue,rgb_select);
 	else{
-		if(isChunkD_G)
-			pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->Chunk->getTileRow_t(idChunk_G,cur_x/8,cur_y/8));
-		else
-			pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->tileMapC->get_palette_map(cur_x/8,cur_y/8));
+		if(forcedfun)
+			pvalue=nearest_color_chan(pvalue,rgb_select,theforcedfun);
+		else{
+			if(isChunkD_G)
+				pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->Chunk->getTileRow_t(idChunk_G,cur_x/8,cur_y/8));
+			else
+				pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->tileMapC->get_palette_map(cur_x/8,cur_y/8));
+		}
 	}
   /* shift queue */ 
 	memmove(error, error+1,(SIZE-1)*sizeof error[0]); 
@@ -707,9 +722,9 @@ MixingPlanTK DeviseBestMixingPlanTK(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t 
 	std::sort(result.colors, result.colors+64, PaletteCompareLuma);
 	return result;
 }
-void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpace,bool forceRow,uint8_t forcedrow,bool isChunk,uint32_t idChunk,bool isSprite){
+void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpace,bool forceRow,unsigned forcedrow,bool isChunk,uint32_t idChunk,bool isSprite){
 	/*!
-	this function will take an input with or without alpha and dither it
+	This function will take an input with or without alpha and dither it
 	Also note that this function now has the option to first dither to color space
 	*/
 	unsigned ditherAlg=currentProject->settings&settingsDitherMask;
@@ -999,6 +1014,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 	case 1:
 		useMode=currentProject->gameSystem;
 		USEofColGlob=colSpace;
+		isSpriteG=isSprite;
 		forcedfun=forceRow;
 		theforcedfun=forcedrow;
 		isChunkD_G=isChunk;

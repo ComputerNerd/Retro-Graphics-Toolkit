@@ -38,12 +38,12 @@
 #define DefaultChunkX 208
 #define DefaultChunkY 80
 
-extern uint32_t map_scroll_pos_x,map_scroll_pos_y;
-extern uint32_t map_off_x,map_off_y;
-extern uint16_t tile_edit_offset_x,tile_edit_offset_y;
-extern uint16_t tile_placer_tile_offset_y;
-extern uint16_t tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
-extern uint16_t true_color_box_x,true_color_box_y;
+extern unsigned map_scroll_pos_x,map_scroll_pos_y;
+extern unsigned map_off_x,map_off_y;
+extern unsigned tile_edit_offset_x,tile_edit_offset_y;
+extern unsigned tile_placer_tile_offset_y;
+extern unsigned tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
+extern unsigned true_color_box_x,true_color_box_y;
 extern unsigned SpriteOff[2];
 //These values below must corespond with array offsets for tabs
 #define pal_edit 0
