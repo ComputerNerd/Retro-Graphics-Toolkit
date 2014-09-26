@@ -256,7 +256,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 		unsigned type=fl_choice("What do you want it ordered by","Hue","Light","Saturation");
 		sortBy(type,false);
 	}
-	uint8_t type_temp=palTypeGen;
+	unsigned type_temp=palTypeGen;
 	uint8_t tempSet=0;
 	double d[4];//Delta
 	uint32_t di[4];//Delta integer
@@ -316,7 +316,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 			}
 			if ((type_temp != 0) && (currentProject->gameSystem == sega_genesis)){
 				tempSet=(currentProject->tileMapC->get_prio(xtile,ytile)^1)*8;
-				set_palette_type(tempSet);
+				set_palette_type_force(tempSet);
 			}
 			for(t=0;t<4;++t){
 				for(unsigned c=0;c<per*w*4*8;c+=w*4*8){
@@ -386,8 +386,8 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	free(imageout[2]);
 	free(imageout[3]);
 	free(imageout);
-	if (currentProject->gameSystem == sega_genesis)
-		set_palette_type(type_temp);
+	if(currentProject->gameSystem == sega_genesis)
+		set_palette_type();
 }
 #define CLIP(X) ( (X) > 255 ? 255 : (X) < 0 ? 0 : X)
 
@@ -420,15 +420,7 @@ static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,unsigned 
 	unsigned off3=offsetPal*3;
 	uint32_t colors_found;
 	uint32_t w,h;
-	unsigned maxPal;
-	switch(currentProject->gameSystem){
-		case sega_genesis:
-			maxPal=64;
-		break;
-		case NES:
-			maxPal=16;
-		break;
-	}
+	unsigned maxPal=(1<<getBitdepthcurSys())*4;
 	if(isSprite){
 		w=currentProject->spritesC->width(curSpritegroup);
 		h=currentProject->spritesC->height(curSpritegroup);

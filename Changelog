@@ -1,4 +1,9 @@
 Most recent changes are placed at the top
+
+20140925
+Project now stores shadow highlight settings.
+Shadow highlight selection is now done the same as it would be to do NES 2x2 or 1x1 tile selection.
+
 20140924
 Fixed rimerisha dither bug relating to sprites. There were two bugs addressed
 First of all the terminal would be spammed with out of range errors.

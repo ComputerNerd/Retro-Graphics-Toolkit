@@ -170,11 +170,6 @@ static const Fl_Menu_Item ditherChoices[]={
 	{"Thomas Knoll",0,set_ditherAlg,(void *)7},
 	{0}
 };
-static const Fl_Menu_Item subSysNES[]={
-	{"1x1 tile palette",0,setSubSysCB,(void*)NES1x1},
-	{"2x2 tile palette",0,setSubSysCB,(void*)NES2x2},
-	{0}
-};
 static const Fl_Menu_Item SolidMenu[]={
 	{"Not solid",0,solidCB,(void*)0},
 	{"Top solid",0,solidCB,(void*)1},
@@ -182,6 +177,7 @@ static const Fl_Menu_Item SolidMenu[]={
 	{"All solid",0,solidCB,(void*)3},
 	{0}
 };
+extern Fl_Menu_Item subSysGenesis[];
 extern const char * MapWidthTxt;
 extern const char * MapHeightTxt;
 static const char * TooltipZoom="By changing this slider you are changing the magnification of the tile for example if this slider was set to 10 that would mean that the tile is magnified by a factor of 10";
@@ -215,34 +211,11 @@ void editor::_editor(){
 			ditherPower = new Fl_Hor_Value_Slider(128,416,320,24,"Dither Power");
 			ditherPower->tooltip("A lower value results in more dithering artifacts a higher value results in less artifacts");
 			ditherPower->minimum(1);
-			ditherPower->maximum(255);
+			ditherPower->maximum(256);
 			ditherPower->step(1);
 			ditherPower->value(16);
 			ditherPower->align(FL_ALIGN_LEFT);
 			ditherPower->callback(setSubditherSetting);
-			{
-				shadow_highlight_switch = new Fl_Group(112, 288, 800, 480);
-				{
-					genSHbtns[0] = new Fl_Round_Button(96, 280, 64, 32, "Normal");
-					genSHbtns[0]->type(FL_RADIO_BUTTON);
-					genSHbtns[0]->tooltip("This is the regular sega genesis color space. When shadow/highlight mode is disabled all tiles will look like this however when enabling shadow highlight mode and a tile is set to high priority you will the tile will use these set of colors");
-					genSHbtns[0]->callback((Fl_Callback*) set_palette_type_callback,(void *)0);
-					genSHbtns[0]->set();
-				} // Fl_Round_Button* o
-				{
-					genSHbtns[1] = new Fl_Round_Button(164, 280, 64, 32, "Shadow");
-					genSHbtns[1]->tooltip("This mode uses the color sets that the vdp uses when shadow highlight mode is enabled by setting bit 3 (the LSB being bit 0) to 1 in the vdp register 0C also for the tile to be shadowed the tile's priority must be set at 0 or low priority");
-					genSHbtns[1]->type(FL_RADIO_BUTTON);
-					genSHbtns[1]->callback((Fl_Callback*) set_palette_type_callback,(void *)8);
-				} // Fl_Round_Button* o
-				{
-					genSHbtns[2] = new Fl_Round_Button(240, 280, 64, 32, "Highlight");
-					genSHbtns[2]->tooltip("This mode uses the color sets that a highlighted sprite or tile uses. To make a tile highlighted use a mask sprite");
-					genSHbtns[2]->type(FL_RADIO_BUTTON);
-					genSHbtns[2]->callback((Fl_Callback*) set_palette_type_callback,(void *)16);
-				} // Fl_Round_Button* o
-				shadow_highlight_switch->end();
-			}
 			{
 				Fl_Group *o = new Fl_Group(96, 312, 800, 480);
 				{
@@ -263,9 +236,8 @@ void editor::_editor(){
 			ditherAlgSel=new Fl_Choice(64, 464, 144, 24);
 			ditherAlgSel->copy(ditherChoices);
 			subSysC=new Fl_Choice(208, 464, 128, 24);
-			subSysC->copy(subSysNES);
-			subSysC->value(1);
-			subSysC->hide();
+			subSysC->copy(subSysGenesis);
+			subSysC->value(0);
 			{ Fl_Group *o = new Fl_Group(306, 188, 88, 96);
 				{
 					palType[0] = new Fl_Round_Button(306, 188, 64, 32, "Free");

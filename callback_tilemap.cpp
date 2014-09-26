@@ -438,13 +438,12 @@ void shadow_highligh_findout(Fl_Widget*,void*){
 	}else{
 		uint8_t temp[256];
 		//uint8_t useHiL=palette_muliplier;
-		uint8_t type_temp=palTypeGen;
 		for (y=0;y<currentProject->tileMapC->mapSizeHA;++y){
 			for (x=0;x<currentProject->tileMapC->mapSizeW;++x){
 				uint32_t cur_tile=currentProject->tileMapC->get_tile(x,y);
 				uint32_t errorSh=0,errorNorm=0;
 				uint8_t * ptrorgin=&currentProject->tileC->truetDat[(cur_tile*currentProject->tileC->tcSize)];
-				set_palette_type(0);//normal
+				set_palette_type_force(0);//normal
 				currentProject->tileC->truecolor_to_tile(currentProject->tileMapC->get_palette_map(x,y),cur_tile,false);
 				tileToTrueCol(&currentProject->tileC->tDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tileMapC->get_palette_map(x,y));
 				for (xx=0;xx<256;xx+=4){
@@ -452,7 +451,7 @@ void shadow_highligh_findout(Fl_Widget*,void*){
 					errorNorm+=abs(temp[xx+1]-ptrorgin[xx+1]);
 					errorNorm+=abs(temp[xx+2]-ptrorgin[xx+2]);
 				}
-				set_palette_type(8);//shadow
+				set_palette_type_force(8);//shadow
 				currentProject->tileC->truecolor_to_tile(currentProject->tileMapC->get_palette_map(x,y),cur_tile,false);
 				tileToTrueCol(&currentProject->tileC->tDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tileMapC->get_palette_map(x,y));
 				for (xx=0;xx<256;xx+=4){
@@ -466,7 +465,7 @@ void shadow_highligh_findout(Fl_Widget*,void*){
 					currentProject->tileMapC->set_prio(x,y,true);//normal
 			}
 		}
-		set_palette_type(type_temp);//0 normal 8 shadow 16 highlight		
+		set_palette_type();//0 normal 8 shadow 16 highlight		
 	}
 	window->redraw();
 }

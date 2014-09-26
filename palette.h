@@ -19,4 +19,5 @@ extern unsigned palTypeGen;
 extern const uint8_t palTab[];
 void sortBy(unsigned type,bool perRow);
 void swapEntry(uint8_t one,uint8_t two);
-void set_palette_type(unsigned type);
+void set_palette_type(void);
+void set_palette_type_force(unsigned type);

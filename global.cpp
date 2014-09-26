@@ -21,8 +21,6 @@
 #include "class_tiles.h"
 #include "color_convert.h"
 #include "color_compare.h"
-//fltk widget realted stuff
-Fl_Group * shadow_highlight_switch;
 //bools used to toggle stuff
 bool show_grid;
 bool G_hflip[2];

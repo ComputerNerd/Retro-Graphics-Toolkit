@@ -73,7 +73,7 @@ void compactPrjMem(void){
 static void initNewProject(unsigned at){
 	projects[at]->gameSystem=sega_genesis;
 	projects[at]->subSystem=3;
-	projects[at]->settings=16<<subsettingsDitherShift;
+	projects[at]->settings=15<<subsettingsDitherShift;
 	projects[at]->tileC=new tiles;
 	projects[at]->tileMapC=new tileMap;
 	projects[at]->Chunk=new ChunkClass;
@@ -105,7 +105,7 @@ void setHaveProject(uint32_t id,uint32_t mask,bool set){
 				switch(projects[id]->gameSystem){
 					case sega_genesis:
 						projects[id]->palDat=(uint8_t*)calloc(1,128);
-						set_palette_type(0);
+						set_palette_type();
 					break;
 					case NES:
 						projects[id]->palDat=(uint8_t*)malloc(128);
@@ -316,6 +316,8 @@ bool removeProject(uint32_t id){
 static void invaildProject(void){
 	fl_alert("This is not a valid Retro Graphics Toolkit project");
 }
+extern Fl_Menu_Item subSysNES[];
+extern Fl_Menu_Item subSysGenesis[];
 void switchProject(uint32_t id){
 	window->TxtBufProject->text(projects[id]->Name.c_str());//Make editor displays new text
 	window->GameSys[projects[id]->gameSystem]->setonly();
@@ -327,44 +329,23 @@ void switchProject(uint32_t id){
 		window->ditherPower->show();
 	switch(projects[id]->gameSystem){
 		case sega_genesis:
+			window->subSysC->copy(subSysGenesis);
+			window->subSysC->value((currentProject->subSystem&sgSHmask)>>sgSHshift);
 			if(containsDataProj(id,pjHaveTiles))
 				projects[id]->tileC->tileSize=32;
-			shadow_highlight_switch->show();
 			if(containsDataProj(id,pjHavePal)){
 				palEdit.changeSystem();
 				tileEdit_pal.changeSystem();
 				tileMap_pal.changeSystem();
 				spritePal.changeSystem();
-				unsigned paltype;
-				switch(projects[id]->subSystem&sgSHmask){
-					case 0:
-						paltype=0;
-						window->genSHbtns[0]->set();
-						window->genSHbtns[1]->clear();
-						window->genSHbtns[2]->clear();
-					break;
-					case sgSon:
-						paltype=8;
-						window->genSHbtns[0]->clear();
-						window->genSHbtns[1]->set();
-						window->genSHbtns[2]->clear();
-					break;
-					case sgSHmask:
-						paltype=16;
-						window->genSHbtns[0]->clear();
-						window->genSHbtns[1]->clear();
-						window->genSHbtns[2]->set();
-					break;
-					default:
-						show_default_error
-				}
-				set_palette_type(paltype);
+				set_palette_type();
 			}
 		break;
 		case NES:
+			window->subSysC->copy(subSysNES);
+			window->subSysC->value(currentProject->subSystem&1);
 			if(containsDataProj(id,pjHaveTiles))
 				projects[id]->tileC->tileSize=16;
-			shadow_highlight_switch->hide();
 			if(containsDataProj(id,pjHavePal)){
 				updateNesTab(0,false);
 				updateNesTab(0,true);
@@ -381,7 +362,6 @@ void switchProject(uint32_t id){
 				spritePal.changeSystem();
 				update_emphesis(0,0);
 			}
-			window->subSysC->value(currentProject->subSystem&1);
 		break;
 	}
 	//Make sure sliders have correct values
@@ -424,10 +404,6 @@ void switchProject(uint32_t id){
 		projects[id]->tileMapC->toggleBlocks(projects[id]->tileMapC->isBlock);
 	if(containsDataProj(id,pjHaveChunks))
 		window->updateBlockTilesChunk(id);
-	if(projects[id]->gameSystem==NES)
-		window->subSysC->show();
-	else
-		window->subSysC->hide();
 	if(containsDataProj(id,pjHaveSprites)){
 		window->updateSpriteSliders(id);
 		window->spriteglobaltxt->show();
@@ -482,7 +458,7 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 	if(version>=8)
 		fread(&projects[id]->settings,1,sizeof(uint32_t),fi);
 	else
-		projects[id]->settings=16<<subsettingsDitherShift;
+		projects[id]->settings=15<<subsettingsDitherShift;
 	int entries,eSize;
 	switch(projects[id]->gameSystem){
 		case sega_genesis:

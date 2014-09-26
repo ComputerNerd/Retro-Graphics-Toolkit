@@ -251,17 +251,16 @@ void editor::draw_non_gui(void){
 					}
 				}
 			}else{
-				uint8_t type_temp=palTypeGen;
 				for (y=0;y<std::min((currentProject->tileMapC->mapSizeHA)-map_scroll_pos_y,max_map_h);++y){
 					for (x=0;x<std::min(currentProject->tileMapC->mapSizeW-map_scroll_pos_x,max_map_w);++x){
 						uint32_t tempx,tempy;
 						tempx=x+map_scroll_pos_x;
 						tempy=y+map_scroll_pos_y;
-						uint8_t temp=(currentProject->tileMapC->get_prio(x+map_scroll_pos_x,y+map_scroll_pos_y)^1)*8;
-						set_palette_type(temp);
-						if (rowSolo){
+						unsigned temp=(currentProject->tileMapC->get_prio(x+map_scroll_pos_x,y+map_scroll_pos_y)^1)*8;
+						set_palette_type_force(temp);
+						if(rowSolo){
 							int32_t tileTemp = currentProject->tileMapC->get_tileRow(tempx,tempy,tileMap_pal.theRow);
-							if (temp!=-1){
+							if (tileTemp!=-1){
 								if (showTrueColor)
 									currentProject->tileC->draw_truecolor(tileTemp,tempx,tempy,currentProject->tileMapC->get_hflip(tempx,tempy),currentProject->tileMapC->get_vflip(tempx,tempy),placer_tile_size);
 								else
@@ -275,7 +274,7 @@ void editor::draw_non_gui(void){
 						}
 					}
 				}
-				set_palette_type(type_temp);
+				set_palette_type();
 			}
 			if (show_grid_placer){
 				//draw box over tiles

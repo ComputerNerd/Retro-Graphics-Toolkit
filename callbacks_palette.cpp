@@ -275,7 +275,7 @@ void loadPalette(Fl_Widget*, void*){
 			//now convert each value to rgb
 			switch (currentProject->gameSystem){
 				case sega_genesis:
-					set_palette_type(palTypeGen);
+					set_palette_type();
 				break;
 				case NES:
 					update_emphesis(0,0);
@@ -332,10 +332,6 @@ void setPalType(Fl_Widget*,void*type){
 }
 void pickNearAlg(Fl_Widget*,void*){
 	nearestAlg=fl_choice("Which nearest color algorithm would you like to use?","ciede2000","Weighted http://www.compuphase.com/cmetric.htm","Euclidean distance");
-}
-void set_palette_type_callback(Fl_Widget*,void* type){//Specific to sega genesis
-	set_palette_type((uintptr_t)type);
-	window->redraw();
 }
 void rgb_pal_to_entry(Fl_Widget*,void*){
 	//this function will convert a rgb value to the nearst palette entry

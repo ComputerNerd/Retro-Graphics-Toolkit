@@ -8,12 +8,12 @@
 #define DOWN 3
 #define RIGHT 4
 static unsigned useHiL;//no use for these varibles outside of this file
-static uint8_t useMode;
-static uint8_t rgbPixelsize;
+static unsigned useMode;
+static unsigned rgbPixelsize;
 static bool USEofColGlob;
 static bool isSpriteG;
 static bool forcedfun;
-static uint8_t theforcedfun;
+static unsigned theforcedfun;
 static uint8_t *img_ptr_dither;
 static bool isChunkD_G;
 static uint32_t idChunk_G;
@@ -116,7 +116,7 @@ static int32_t error[SIZE]; /* queue with error
 			tempSet=(currentProject->Chunk->getPrio_t(idChunk_G,cur_x/8,cur_y/8)^1)*8;
 		else
 			tempSet=(currentProject->tileMapC->get_prio(cur_x/8,cur_y/8)^1)*8;
-		set_palette_type(tempSet);
+		set_palette_type_force(tempSet);
 	}
 	if(USEofColGlob)
 		pvalue=nearest_color_chanColSpace(pvalue,rgb_select);
@@ -271,7 +271,7 @@ static const uint8_t mapY3[8*8] = {
 static float GammaCorrect(float v)   {return powf(v, GammaAmt);}
 static float GammaUncorrect(float v) {return powf(v, 1.0f / GammaAmt);}
 
-/* CIE C illuminant */
+/* CIE C illuminate */
 static const double illum[3*3] ={0.488718, 0.176204, 0.000000,
 0.310680, 0.812985, 0.0102048,
 0.200602, 0.0108109, 0.989795};
@@ -313,7 +313,7 @@ static double ColorCompare(const LabItem& lab1, const LabItem& lab2){
 	//return ciede2000(lab1.L,lab1.a,lab1.b,lab2.L,lab2.a,lab2.b,1.0,1.0,1.0);
 	#define RAD2DEG(xx) (180.0/M_PI * (xx))
 	#define DEG2RAD(xx) (M_PI/180.0 * (xx))
-	/* Compute Cromanance and Hue angles */
+	/* Compute Chrominance and Hue angles */
 	double C1,C2, h1,h2;
 	{
 		double Cab = 0.5 * (lab1.C + lab2.C);
@@ -728,7 +728,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 	Also note that this function now has the option to first dither to color space
 	*/
 	unsigned ditherAlg=currentProject->settings&settingsDitherMask;
-	int ditherSetting=(currentProject->settings>>subsettingsDitherShift)&subsettingsDitherMask;
+	int ditherSetting=((currentProject->settings>>subsettingsDitherShift)&subsettingsDitherMask)+1;
 	unsigned type_temp=palTypeGen;
 	unsigned temp=0;
 	unsigned rgbRowsize;
@@ -833,12 +833,12 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				if (useAlpha)
 					a_old=image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+3];
 				if (currentProject->gameSystem == sega_genesis && type_temp != 0){
-					uint8_t tempSet;
+					unsigned tempSet;
 					if(isChunk)
 						tempSet=(currentProject->Chunk->getPrio_t(idChunk,x/8,y/8)^1)*8;
 					else
 						tempSet=(currentProject->tileMapC->get_prio(x/8,y/8)^1)*8;
-					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted
+					set_palette_type_force(tempSet);//0 normal 8 shadowed 16 highlighted
 				}
 				unsigned tempPalOff;
 				if(forceRow)
@@ -957,12 +957,12 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				//find nearest color
 				uint8_t half=18;
 				if(currentProject->gameSystem == sega_genesis && type_temp != 0){
-					uint8_t tempSet;
+					unsigned tempSet;
 					if(isChunk)
 						tempSet=(currentProject->Chunk->getPrio_t(idChunk,x/rgbRowsize,y/8)^1)*8;
 					else
 						tempSet=(currentProject->tileMapC->get_prio(x/rgbRowsize,y/8)^1)*8;
-					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted
+					set_palette_type_force(tempSet);//0 normal 8 shadowed 16 highlighted
 					half=(tempSet==0)?18:9;
 				}
 				if(colSpace){
@@ -1048,12 +1048,12 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				}
 				//find nearest color
 				if (currentProject->gameSystem == sega_genesis && type_temp != 0){
-					uint8_t tempSet;
+					unsigned tempSet;
 					if(isChunk)
 						tempSet=(currentProject->Chunk->getPrio_t(idChunk,x/8,y/8)^1)*8;
 					else
 						tempSet=(currentProject->tileMapC->get_prio(x/8,y/8)^1)*8;
-					set_palette_type(tempSet);//0 normal 8 shadowed 16 highlighted
+					set_palette_type_force(tempSet);//0 normal 8 shadowed 16 highlighted
 				}
 				if(colSpace){
 					switch (currentProject->gameSystem){
@@ -1113,7 +1113,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 		}
 	break;
 	}
-	if (currentProject->gameSystem == sega_genesis)
-		set_palette_type(type_temp);
+	if(currentProject->gameSystem == sega_genesis)
+		set_palette_type();
 
 }

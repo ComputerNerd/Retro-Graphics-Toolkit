@@ -990,7 +990,7 @@ void tileMap::truecolorimageToTiles(uint8_t * image,int rowusage,bool useAlpha){
 			//convert back to tile
 			if ((type_temp != 0) && (currentProject->gameSystem == sega_genesis)){
 				tempSet=(get_prio(x_tile,y_tile)^1)*8;
-				set_palette_type(tempSet);
+				set_palette_type_force(tempSet);
 			}
 			currentProject->tileC->truecolor_to_tile_ptr(get_palette_map(x_tile,y_tile),current_tile,truecolor_tile,false,false);
 dont_convert_tile:
@@ -999,6 +999,6 @@ dont_convert_tile:
 	x_tile=0;
 	++y_tile;
 	}
-	if (currentProject->gameSystem == sega_genesis)
-		set_palette_type(type_temp);
+	if(currentProject->gameSystem==sega_genesis)
+		set_palette_type();
 }

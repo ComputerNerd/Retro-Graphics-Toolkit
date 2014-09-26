@@ -16,10 +16,20 @@
 */
 #include "global.h"
 #include "project.h"
-static const char * warningDelete="Warning this will delete this project's data\nDo you wish to countinue?";
-void setSubSysCB(Fl_Widget*o,void*){
+static const char * warningDelete="Warning this will delete this project's data\nDo you wish to continue?";
+void setSegaPalType(Fl_Widget*,void*x){
+	currentProject->subSystem&=~sgSHmask;
+	currentProject->subSystem|=(uintptr_t)x;
+	set_palette_type();
+	window->redraw();
+}
+void setNesTile(Fl_Widget*o,void*){
 	Fl_Choice *c=(Fl_Choice*)o;
-	currentProject->subSystem=c->value();
+	bool t=c->value();
+	if(t)
+		currentProject->subSystem|=NES2x2;
+	else
+		currentProject->subSystem&=~NES2x2;
 }
 void saveAllProjectsCB(Fl_Widget*,void*){
 	saveAllProjects();
@@ -41,8 +51,8 @@ void haveCB(Fl_Widget*o,void*mask){
 	}
 	if((m&pjHavePal)&&(!set)){//cannot have tiles without a palette
 		if(((currentProject->useMask&pjAllMask)&(~pjHavePal))){
-			/*the (above) if statment is based on the observation that all other have settings involve tiles
-			be sure to change this if another function not involving tiles arries*/
+			/*the (above) if statement is based on the observation that all other have settings involve tiles
+			be sure to change this if another function not involving tiles arises*/
 			if((currentProject->share[1]<0)&&(currentProject->share[2]<0)){
 				fl_alert("You cannot have tiles without a palette");
 				b->value(1);
@@ -180,7 +190,7 @@ void appendProjectCB(Fl_Widget*,void*){
 }
 void deleteProjectCB(Fl_Widget*,void*){
 	if (projects_count<=1){
-		fl_alert("You must have atleast one project.");
+		fl_alert("You must have at least one project.");
 		return;
 	}
 	removeProject(curProjectID);

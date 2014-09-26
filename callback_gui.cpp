@@ -18,6 +18,7 @@
 #include "color_compare.h"
 #include "color_convert.h"
 #include "system.h"
+#include "callback_project.h"
 static const char* GPLv3="This program is free software: you can redistribute it and/or modify\n"
 	"it under the terms of the GNU General Public License as published by\n"
 	"the Free Software Foundation, either version 3 of the License, or\n"
@@ -28,10 +29,10 @@ static const char* GPLv3="This program is free software: you can redistribute it
 	"GNU General Public License for more details.\n\n"
 	"You should have received a copy of the GNU General Public License\n"
 	"along with this program.  If not, see <http://www.gnu.org/licenses/>.\n";
-void setSubditherSetting(Fl_Widget*w, void*){
+void setSubditherSetting(Fl_Widget*w,void*){
 	Fl_Slider*s=(Fl_Slider*)w;
 	currentProject->settings&=~(subsettingsDitherMask<<subsettingsDitherShift);
-	currentProject->settings|=((uint32_t)s->value()&subsettingsDitherMask)<<subsettingsDitherShift;
+	currentProject->settings|=(((uint32_t)s->value()-1)&subsettingsDitherMask)<<subsettingsDitherShift;
 }
 void redrawOnlyCB(Fl_Widget*, void*){
 	window->redraw();
@@ -39,6 +40,17 @@ void redrawOnlyCB(Fl_Widget*, void*){
 void showAbout(Fl_Widget*,void*){
 	fl_alert("Retro Graphics Toolkit is written by sega16/nintendo8/sonic master or whatever username you know me as\nhttps://github.com/ComputerNerd/Retro-Graphics-Toolkit\nThis program was built on %s %s\n\n%s",__DATE__,__TIME__,GPLv3);
 }
+Fl_Menu_Item subSysNES[]={
+	{"1x1 tile palette",0,setNesTile,(void*)NES1x1},
+	{"2x2 tile palette",0,setNesTile,(void*)NES2x2},
+	{0}
+};
+Fl_Menu_Item subSysGenesis[]={
+	{"Normal",0,setSegaPalType,(void*)0},
+	{"Shadow",0,setSegaPalType,(void*)sgSon},
+	{"Highlight",0,setSegaPalType,(void*)sgSHmask},
+	{0}
+};
 void set_game_system(Fl_Widget*,void* selection){
 	uint32_t sel=(uintptr_t)selection;
 	if (unlikely(sel == currentProject->gameSystem)){
@@ -54,7 +66,6 @@ void set_game_system(Fl_Widget*,void* selection){
 			currentProject->gameSystem=sega_genesis;
 			currentProject->subSystem=0;
 			setBitdepthcurSys(bd);
-			shadow_highlight_switch->show();
 			if(containsDataCurProj(pjHavePal)){
 				if(oldSys==NES){
 					uint8_t pal_temp[128];
@@ -80,7 +91,10 @@ void set_game_system(Fl_Widget*,void* selection){
 				window->spritesize[1]->maximum(4);
 				currentProject->spritesC->enforceMax(4,4);
 				window->updateSpriteSliders();
-			}}
+			}
+			window->subSysC->copy(subSysGenesis);
+			window->subSysC->value((currentProject->subSystem&sgSHmask)>>sgSHshift);
+			}
 		break;
 		case NES:
 			bd=getBitdepthcurSys();
@@ -89,7 +103,6 @@ void set_game_system(Fl_Widget*,void* selection){
 			currentProject->gameSystem=NES;
 			currentProject->subSystem=0;
 			setBitdepthcurSys(bd);
-			shadow_highlight_switch->hide();
 			updateNesTab(0,false);
 			updateNesTab(0,true);
 			if(containsDataCurProj(pjHavePal)){
@@ -122,6 +135,8 @@ void set_game_system(Fl_Widget*,void* selection){
 				currentProject->spritesC->enforceMax(1,2);
 				window->updateSpriteSliders();
 			}
+			window->subSysC->copy(subSysNES);
+			window->subSysC->value(currentProject->subSystem&NES2x2);
 		break;
 		case frameBuffer_pal:
 			{currentProject->gameSystem=frameBuffer_pal;
@@ -129,7 +144,6 @@ void set_game_system(Fl_Widget*,void* selection){
 			if(bd>8)
 				bd=8;
 			setBitdepthcurSys(bd);
-			shadow_highlight_switch->hide();
 			}
 		break;
 		default:
@@ -137,11 +151,6 @@ void set_game_system(Fl_Widget*,void* selection){
 			return;
 		break;
 	}
-	if(currentProject->gameSystem==NES){
-		window->subSysC->show();
-		window->subSysC->value(currentProject->subSystem&1);
-	}else
-		window->subSysC->hide();
 	window->redraw();
 }
 void trueColTileToggle(Fl_Widget*,void*){
