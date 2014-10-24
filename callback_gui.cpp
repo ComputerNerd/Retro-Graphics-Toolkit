@@ -39,7 +39,7 @@ void redrawOnlyCB(Fl_Widget*, void*){
 	window->redraw();
 }
 void showAbout(Fl_Widget*,void*){
-	fl_alert("Retro Graphics Toolkit is written by sega16/nintendo8/sonic master or whatever username you know me as\nhttps://github.com/ComputerNerd/Retro-Graphics-Toolkit\nThis program was built on %s %s\n\n%s\nUses lua version: " LUA_VERSION_MAJOR,__DATE__,__TIME__,GPLv3);
+	fl_alert("Retro Graphics Toolkit is written by sega16/nintendo8/sonic master or whatever username you know me as\nhttps://github.com/ComputerNerd/Retro-Graphics-Toolkit\nThis program was built on %s %s\n\n%s\nUses lua version: " LUA_RELEASE "\n" LUA_COPYRIGHT "\n" LUA_AUTHORS,__DATE__,__TIME__,GPLv3);
 }
 Fl_Menu_Item subSysNES[]={
 	{"1x1 tile palette",0,setNesTile,(void*)NES1x1},
