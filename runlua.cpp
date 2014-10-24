@@ -41,11 +41,25 @@ void runLua(Fl_Widget*,void*){
 			luaL_openlibs(L);
 			try{
 				int s = luaL_loadfile(L, scriptname.c_str());
-				if(s)
-					fl_alert("Error loading lua file error code %d",s);
-				else{
+				if(s){
+					if (s != LUA_OK && !lua_isnil(L, -1)) {
+						const char *msg = lua_tostring(L, -1);
+						if (msg == NULL) msg = "(error object is not a string)";
+						fl_alert(msg);
+						lua_pop(L, 1);
+						/* force a complete garbage collection in case of errors */
+						lua_gc(L, LUA_GCCOLLECT, 0);
+					}
+				}else{
 					// execute Lua program
 					s = lua_pcall(L, 0, LUA_MULTRET, 0);
+					if (s != LUA_OK){
+						const char *msg = (lua_type(L, -1) == LUA_TSTRING) ? lua_tostring(L, -1)
+							: NULL;
+						if (msg == NULL) msg = "(error object is not a string)";
+						fl_alert(msg);
+						lua_pop(L, 1);
+					}
 				}
 			}catch(...){
 				fl_alert("Lua error while running script");
