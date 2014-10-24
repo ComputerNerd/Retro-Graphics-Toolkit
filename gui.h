@@ -61,3 +61,4 @@ void updateTileSelectAmt(void);
 void updateTileSelectAmt(uint32_t newMax);
 int MenuPopup(const char * title,const char * text,unsigned num,...);
 bool load_file_generic(const char * the_tile="Pick a file",bool save_file=false);
+bool loadsavefile(std::string&fn,const char * the_tile="Pick a file",bool save_file=false);

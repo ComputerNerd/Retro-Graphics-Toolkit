@@ -1,0 +1,14 @@
+If you are a windows user and want to build this you will need mingw.
+First of all in the Retro Graphics Toolkit directory create a folder called lua
+Then extract all files from the src folder into the folder you just created.
+Then rename all *.c files to *.cpp
+HINT: Don't do this manually on *unix you can just run:
+rename .c .cpp *.c
+The reason lua is built even though many distributions already provide lua is so that the latest version is used and so that this version which may be built with a different configuration does not overwrite your system's instillation of lua.
+(Windows only on other systems your distribution of choice should already have provided fltk) you will now need to build fltk to do this download fltk-1.3.2 and extract it into the Retro Graphics Toolkit project folder and build it using
+either ./configure if you are on windows or if you are cross compiling you need to something like this ./configure --host=i686-pc-mingw32 --build=x86_64-unknown-linux-gnu
+Regardless of how ./configure is ran you will just need to run make and you are done building fltk.
+
+Now on linux run make or on windows run make -f make_win note that you may need to modify the CXX and CC variables if on windows.
+
+You should now have a compiled version of Retro Graphics Toolkit.

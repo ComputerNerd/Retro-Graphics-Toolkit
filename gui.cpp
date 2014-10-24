@@ -187,3 +187,31 @@ bool load_file_generic(const char * the_tile,bool save_file){//Warning this func
 	}
 	return false;//if an error happened or the user did not pick a file the function returns false
 }
+bool loadsavefile(std::string&fn,const char * the_tile,bool save_file){
+	// Create native chooser
+	Fl_Native_File_Chooser native;
+	native.title(the_tile);
+	if(save_file)
+		native.type(Fl_Native_File_Chooser::BROWSE_SAVE_FILE);
+	else
+		native.type(Fl_Native_File_Chooser::BROWSE_FILE);
+	// Show native chooser
+	switch (native.show()){
+		case -1:
+			//fprintf(stderr, "ERROR: %s\n", native.errmsg());
+			fl_alert("Error %s",native.errmsg());
+		break;	// ERROR
+		case  1:
+			fprintf(stderr, "*** CANCEL\n");
+			//fl_beep();
+		break;		// CANCEL
+		default:// Picked File
+			if (native.filename()){
+				fn=native.filename();
+				return true;
+			}
+		break;
+	}
+	return false;
+}
+

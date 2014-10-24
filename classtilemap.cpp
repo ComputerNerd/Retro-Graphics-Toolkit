@@ -246,7 +246,7 @@ void tileMap::toggleBlocks(bool set){
 				return;
 			}
 			if((mapSizeW!=w)||(mapSizeH!=h)){
-				//The tiles will need to be rearagned
+				//The tiles will need to be rearranged
 				uint8_t*tmp=(uint8_t*)malloc(mapSizeW*mapSizeH*TileMapSizePerEntry);
 				uint8_t*out=tmp;
 				for(uint_fast32_t y=0;y<mapSizeH;y+=h){
@@ -747,24 +747,20 @@ void tileMap::set_tile_full(uint32_t tile,uint32_t x,uint32_t y,uint8_t palette_
 	h = Horizontal flip
 	n = Pattern name
 	*/
-	//the exteneded tile maping format is a generic format it goes like this
+	//the extended tile mapping format is a generic format it goes like this
 	//The first byte stores attributes in sega genesis format except with no tile data
 	//the next two bytes store the tile number
-	//the_tiles=tile&0xFF; //get lower part in litle edian least signficant
-	//flags=tile>>8;   //get higher part of int16_t most signifactn in little endain
-	flags=0;
-	flags|=palette_row<<5;
+	flags=palette_row<<5;
 	flags|=use_hflip<<3;
 	flags|=use_vflip<<4;
 	flags|=highorlow_prio<<7;
 	tileMapDat[selected_tile]=flags;
-	//in little endain the least sigficant byte is stored in the lowest address
+	//in little endian the least significant byte is stored in the lowest address
 	tileMapDat[selected_tile+1]=(tile>>16)&255;
 	tileMapDat[selected_tile+2]=(tile>>8)&255;
 	tileMapDat[selected_tile+3]=tile&255;
 }
 void tileMap::set_tile(uint32_t tile,uint32_t x,uint32_t y){
-	//we must split into two varibles
 	if (mapSizeW < x || (mapSizeH*amt) < y) {
 		printf("Error (%d,%d) cannot be set to a tile as it is not on the map",x,y);
 		return;

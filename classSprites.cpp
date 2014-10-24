@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <FL/Fl_Scroll.H>
+#include <ctime>
 #include "classSprite.h"
 #include "classSprites.h"
 #include "includes.h"

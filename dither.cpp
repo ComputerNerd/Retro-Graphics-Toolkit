@@ -1,4 +1,5 @@
 #include <inttypes.h>
+#include <ctime>
 #include "dither.h"
 #include "global.h"
 #include "color_convert.h"

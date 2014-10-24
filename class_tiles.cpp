@@ -15,6 +15,7 @@
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
 #include <exception>
+#include <ctime>
 #include "global.h"
 #include "class_tiles.h"
 #include "dither.h"

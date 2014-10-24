@@ -26,6 +26,7 @@
 #include "undocallback.h"
 #include "undo.h"
 #include "gamedef.h"
+#include "runlua.h"
 void set_mode_tabs(Fl_Widget* o, void*){
 	Fl_Group * val=(Fl_Group*)(Fl_Tabs*)window->the_tabs->value();
 	if(val==window->TabsMain[pal_edit]){
@@ -111,6 +112,9 @@ static const Fl_Menu_Item menuEditor[]={
 				{"Sonic 2 (or sonic 3 character)",0,exportSonicDPLCCB,(void*)tSonic2},
 				{"Sonic 3",0,exportSonicDPLCCB,(void*)tSonic3},
 				{0},
+			{0},
+		{"Scripts",0,0,0,FL_SUBMENU},
+			{"Run lua script",FL_CTRL+'r',runLua,0},	
 			{0},
 		{0},
 	{"Palette actions",0, 0, 0, FL_SUBMENU},

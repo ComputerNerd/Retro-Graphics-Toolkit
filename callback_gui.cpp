@@ -19,6 +19,7 @@
 #include "color_convert.h"
 #include "system.h"
 #include "callback_project.h"
+#include "lua/lua.h"
 static const char* GPLv3="This program is free software: you can redistribute it and/or modify\n"
 	"it under the terms of the GNU General Public License as published by\n"
 	"the Free Software Foundation, either version 3 of the License, or\n"
@@ -38,7 +39,7 @@ void redrawOnlyCB(Fl_Widget*, void*){
 	window->redraw();
 }
 void showAbout(Fl_Widget*,void*){
-	fl_alert("Retro Graphics Toolkit is written by sega16/nintendo8/sonic master or whatever username you know me as\nhttps://github.com/ComputerNerd/Retro-Graphics-Toolkit\nThis program was built on %s %s\n\n%s",__DATE__,__TIME__,GPLv3);
+	fl_alert("Retro Graphics Toolkit is written by sega16/nintendo8/sonic master or whatever username you know me as\nhttps://github.com/ComputerNerd/Retro-Graphics-Toolkit\nThis program was built on %s %s\n\n%s\nUses lua version: " LUA_VERSION_MAJOR,__DATE__,__TIME__,GPLv3);
 }
 Fl_Menu_Item subSysNES[]={
 	{"1x1 tile palette",0,setNesTile,(void*)NES1x1},
