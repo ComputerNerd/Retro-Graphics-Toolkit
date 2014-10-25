@@ -1,11 +1,21 @@
 If you are a windows user and want to build this you will need mingw.
-First of all in the Retro Graphics Toolkit directory create a folder called lua
-Then extract all files from the src folder into the folder you just created.
-Then rename all *.c files to *.cpp
-HINT: Don't do this manually on *unix you can just run:
-rename .c .cpp *.c
-The reason lua is built even though many distributions already provide lua is so that the latest version is used and so that this version which may be built with a different configuration does not overwrite your system's instillation of lua.
-(Windows only on other systems your distribution of choice should already have provided fltk) you will now need to build fltk to do this download fltk-1.3.2 and extract it into the Retro Graphics Toolkit project folder and build it using
+
+First of all in the Retro Graphics Toolkit directory create a folder called lua or luawin on windows.
+Note the only reason for creating a separate folder is to accommodate for the fact that I do all my development on GNU/Linux and have a separate instillation of GCC as a cross compiler. This allows me to quickly test the windows build and *unix build simultaneously.
+Extract the latest version of Lua in the newly created folder.
+Now edit the makefile in src
+edit CC=gcc to say CC=g++
+If you are using a cross compiler make sure to take into account it's prefix also you will need to modify the AR and RANLIB variables if such is the case.
+Also if you are building on windows you must replace this line in the Makefile
+	"AR=$(CC) -shared -o" "RANLIB=strip --strip-unneeded" \
+with
+	"AR=$(CC) -shared -static-libgcc -static-libstdc++ -o" "RANLIB=strip --strip-all" \
+Lua can be build using c++ which is what we are doing this is to take advantage of GCC's support for zero cost exception handling using throw.
+The reason Lua is built even though many distributions already provide Lua is so that the latest version is used and so that this version which may be built with a different configuration does not overwrite your system's instillation of Lua.
+Now run make linux or make mingw depending on your system platform.
+DO NOT RUN MAKE INSTALL.
+
+(Windows only. On other systems your distribution of choice should already have provided fltk) you will now need to build fltk to do this download fltk-1.3.2 and extract it into the Retro Graphics Toolkit project folder and build it using
 either ./configure if you are on windows or if you are cross compiling you need to something like this ./configure --host=i686-pc-mingw32 --build=x86_64-unknown-linux-gnu
 Regardless of how ./configure is ran you will just need to run make and you are done building fltk.
 

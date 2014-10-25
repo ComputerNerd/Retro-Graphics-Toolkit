@@ -17,9 +17,9 @@
 #include <string>
 #include "includes.h"
 #include "gui.h"
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
+#include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
 static int panic(lua_State *L){
 	fl_alert("PANIC: unprotected error in call to Lua API (%s)\n",lua_tostring(L, -1));
 	throw 0;//Otherwise abort() would be called when not needed
@@ -38,18 +38,14 @@ void runLua(Fl_Widget*,void*){
 		lua_State *L = lua_newstate(l_alloc, NULL);
   		if(L){
 			lua_atpanic(L, &panic);
-			luaL_openlibs(L);
 			try{
+				luaL_openlibs(L);
 				int s = luaL_loadfile(L, scriptname.c_str());
-				if(s){
-					if (s != LUA_OK && !lua_isnil(L, -1)) {
-						const char *msg = lua_tostring(L, -1);
-						if (msg == NULL) msg = "(error object is not a string)";
-						fl_alert(msg);
-						lua_pop(L, 1);
-						/* force a complete garbage collection in case of errors */
-						lua_gc(L, LUA_GCCOLLECT, 0);
-					}
+				if(s != LUA_OK && !lua_isnil(L, -1)){
+					const char *msg = lua_tostring(L, -1);
+					if (msg == NULL) msg = "(error object is not a string)";
+					fl_alert(msg);
+					lua_pop(L, 1);
 				}else{
 					// execute Lua program
 					s = lua_pcall(L, 0, LUA_MULTRET, 0);

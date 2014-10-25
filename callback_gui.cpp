@@ -19,7 +19,7 @@
 #include "color_convert.h"
 #include "system.h"
 #include "callback_project.h"
-#include "lua/lua.h"
+#include "lua.h"
 static const char* GPLv3="This program is free software: you can redistribute it and/or modify\n"
 	"it under the terms of the GNU General Public License as published by\n"
 	"the Free Software Foundation, either version 3 of the License, or\n"
