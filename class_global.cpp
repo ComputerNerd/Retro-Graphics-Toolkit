@@ -479,7 +479,7 @@ int editor::handle(int event){
 						unsigned temp_two,temp_one;
 						temp_one=(Fl::event_x()-tile_edit_offset_x)/tiles_size;
 						temp_two=(Fl::event_y()-tile_edit_offset_y)/tiles_size;
-						unsigned get_pal=(tileEdit_pal.theRow*tileEdit_pal.perRow*3)+(tileEdit_pal.box_sel*3);
+						unsigned get_pal=tileEdit_pal.getEntry()*3;
 						pushTilePixel(currentProject->tileC->current_tile,temp_one,temp_two,tTypeTruecolor);
 						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,0,currentProject->tileC->current_tile)]=currentProject->rgbPal[get_pal];//red
 						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,1,currentProject->tileC->current_tile)]=currentProject->rgbPal[get_pal+1];//green

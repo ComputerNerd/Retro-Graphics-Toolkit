@@ -17,19 +17,20 @@
 #pragma once
 #include "global.h"
 class palette_bar{
-	uint8_t rows;//tells how many rows there are in the palette
-	uint16_t offx,offy;//the offset in which the palette selection boxes will appear
-	uint16_t offxx,offyy;//the offset in which the palette selection boxes will appear
+	unsigned rows;//tells how many rows there are in the palette
+	unsigned offx,offy;//the offset in which the palette selection boxes will appear
+	unsigned offxx,offyy;//the offset in which the palette selection boxes will appear
 	uint32_t sysCache;
-public:
 	bool alt;
+	void setSysColCnt(void);
+public:
 	Fl_Slider* pal_r;
 	Fl_Slider* pal_g;
 	Fl_Slider* pal_b;
-	uint8_t box_sel;/*!< tells what palette entry is selected*/
-	uint8_t theRow;/*!< tells what row in the palette is selected*/
-	uint8_t perRow;
-	uint8_t getEntry(void);
+	unsigned box_sel;/*!< tells what palette entry is selected*/
+	unsigned theRow;/*!< tells what row in the palette is selected*/
+	unsigned perRow;
+	unsigned getEntry(void);
 	void check_box(int,int);
 	void draw_boxes(void);
 	void more_init(uint8_t x=1,uint16_t offsetx=16,uint16_t offsety=56,bool altset=false,unsigned ln=256,bool tiny=false);//this one should be called in a function that creates the gui elements

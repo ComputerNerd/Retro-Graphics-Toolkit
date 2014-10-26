@@ -25,6 +25,49 @@ uint8_t nespaltab_b[64];
 uint8_t nespaltab_r_alt[64];
 uint8_t nespaltab_g_alt[64];
 uint8_t nespaltab_b_alt[64];
+
+void rgbToEntry(unsigned r,unsigned g,unsigned b,unsigned ent){
+	unsigned maxent=currentProject->colorCnt+currentProject->colorCntalt;
+	if(ent>maxent){
+		fl_alert("Attempted access for color %d but there is only %d colors",ent,maxent);
+		return;
+	}
+	switch(currentProject->gameSystem){
+		case sega_genesis:
+			{uint16_t temp=to_sega_genesis_colorRGB(r,g,b,ent);
+			ent*=2;
+			currentProject->palDat[ent]=temp>>8;
+			currentProject->palDat[ent+1]=temp&255;}
+		break;
+		case NES:
+			currentProject->palDat[ent]=to_nes_color_rgb(r,g,b);
+			updateRGBindex(ent);
+		break;
+		default:
+			show_default_error
+	}
+}
+
+uint8_t nearest_color_index(uint8_t val,unsigned startindex){
+	int32_t distanceSquared, minDistanceSquared, bestIndex = 0;
+	minDistanceSquared = 255*255 + 1;
+	if (currentProject->gameSystem!=sega_genesis){
+		fl_alert("This function is for use with sega genesis/mega drive only");
+		return 0;
+	}
+	for(unsigned i=startindex;i<8+startindex;++i){
+		int32_t Rdiff = (int) val - (int)palTab[i];
+		distanceSquared = Rdiff*Rdiff;
+		if(distanceSquared<minDistanceSquared){
+			minDistanceSquared = distanceSquared;
+			bestIndex = i;
+		}
+	}
+	return bestIndex;
+}
+uint8_t nearest_color_index(uint8_t val){
+	return nearest_color_index(val,palTypeGen);
+}
 static double max3(double a,double b,double c){
 	if ((a > b) && (a > c))
 		return a;
@@ -167,14 +210,14 @@ uint8_t toNesChan(uint8_t ri,uint8_t gi,uint8_t bi,uint8_t chan){
 uint16_t to_sega_genesis_colorRGB(uint8_t r,uint8_t g,uint8_t b,uint16_t pal_index){
 	//note this function only set the new rgb colors not the outputed sega genesis palette format
 	pal_index*=3;
-	r=nearest_color_index(r);
-	g=nearest_color_index(g);
-	b=nearest_color_index(b);
+	r=nearest_color_index(r,0);
+	g=nearest_color_index(g,0);
+	b=nearest_color_index(b,0);
 	currentProject->rgbPal[pal_index]=palTab[r];
 	currentProject->rgbPal[pal_index+1]=palTab[g];
 	currentProject->rgbPal[pal_index+2]=palTab[b];
 	//bgr format
-	return ((r-palTypeGen)<<1)|((g-palTypeGen)<<5)|((b-palTypeGen)<<9);
+	return (r<<1)|(g<<5)|(b<<9);
 }
 uint16_t to_sega_genesis_color(uint16_t pal_index){
 	//note this function only set the new rgb colors not the outputed sega genesis palette format

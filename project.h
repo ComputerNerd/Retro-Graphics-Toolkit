@@ -44,6 +44,11 @@ struct Project{/*!<Holds all data needed for a project based system for examaple
 	uint8_t* palDat;
 	uint8_t* palType;/*!<Sets 3 different types for each palette entry free locked and reserved*/
 	int32_t share[shareAmtPj];/*!<Negative if not sharing or project id (which is always positive) if sharing*/
+	unsigned colorCnt;//Total entries in palette for project
+	unsigned colorCntalt;//Alternative palette color count
+	unsigned rowCntPal;
+	unsigned rowCntPalalt;
+	bool haveAltspritePal;
 };
 extern struct Project ** projects;
 extern uint32_t projects_count;//holds how many projects there are this is needed for realloc when adding or removing function

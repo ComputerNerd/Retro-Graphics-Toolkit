@@ -156,18 +156,18 @@ void update_palette(Fl_Widget* o, void* v){
 	unsigned temp_entry=0;
 	switch (mode_editor){
 		case pal_edit:
-			temp_entry=palEdit.box_sel+(palEdit.theRow*palEdit.perRow);
+			temp_entry=palEdit.getEntry();
 		break;
 		case tile_edit:
-			temp_entry=tileEdit_pal.box_sel+(tileEdit_pal.theRow*tileEdit_pal.perRow);
+			temp_entry=tileEdit_pal.getEntry();
 		break;
 		case tile_place:
-			temp_entry=tileMap_pal.box_sel+(tileMap_pal.theRow*tileMap_pal.perRow);
+			temp_entry=tileMap_pal.getEntry();
 		break;
 		case spriteEditor:
-			temp_entry=spritePal.box_sel+(spritePal.theRow*spritePal.perRow);
-			if(currentProject->gameSystem==NES)
-				temp_entry+=16;
+			temp_entry=spritePal.getEntry();
+			if(currentProject->haveAltspritePal)
+				temp_entry+=currentProject->colorCnt;
 		break;
 		default:
 			show_default_error
@@ -339,29 +339,9 @@ void rgb_pal_to_entry(Fl_Widget*,void*){
 		fl_alert("Be in Tile editor to use this");
 		return;
 	}
-	uint8_t rgb[3];
-	rgb[0]=window->rgb_red->value();
-	rgb[1]=window->rgb_green->value();
-	rgb[2]=window->rgb_blue->value();
-	switch(currentProject->gameSystem){
-		case sega_genesis:
-			{unsigned en=tileEdit_pal.getEntry();
-			uint16_t temp=to_sega_genesis_colorRGB(rgb[0],rgb[1],rgb[2],en);
-			en*=2;
-			currentProject->palDat[en]=temp>>8;
-			currentProject->palDat[en+1]=temp&255;}
-		break;
-		case NES:
-			{uint8_t bestCol=to_nes_color_rgb(rgb[0],rgb[1],rgb[2]);
-			unsigned en=tileEdit_pal.getEntry();
-			currentProject->palDat[en]=bestCol;
-			en*=3;
-			uint32_t rgb_out=MakeRGBcolor(bestCol);
-			currentProject->rgbPal[en+2]=rgb_out&255;
-			currentProject->rgbPal[en+1]=(rgb_out>>8)&255;
-			currentProject->rgbPal[en]=(rgb_out>>16)&255;}
-		break;
-	}
+	unsigned ent=tileEdit_pal.getEntry();
+	pushPaletteEntry(ent);
+	rgbToEntry(window->rgb_red->value(),window->rgb_green->value(),window->rgb_blue->value(),ent);
 	tileEdit_pal.updateSlider();
 	currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile,false);
 	window->redraw();

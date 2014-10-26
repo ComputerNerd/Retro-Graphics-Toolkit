@@ -32,6 +32,15 @@ static void *l_alloc (void *ud, void *ptr, size_t osize, size_t nsize){
 		return 0;
 	}
 }
+static int luafl_alert(lua_State*L){
+	size_t unused;
+	fl_alert(luaL_checklstring(L,-1,&unused));
+	return 0;
+}
+static const luaL_Reg RGTapiLua[]={
+	{"fl_alert",luafl_alert},
+	{0,0}
+};
 void runLua(Fl_Widget*,void*){
 	std::string scriptname;
 	if(loadsavefile(scriptname,"Select a lua script")){
@@ -40,6 +49,8 @@ void runLua(Fl_Widget*,void*){
 			lua_atpanic(L, &panic);
 			try{
 				luaL_openlibs(L);
+				luaL_newlib(L,RGTapiLua);
+				lua_setglobal(L, "RGT");
 				int s = luaL_loadfile(L, scriptname.c_str());
 				if(s != LUA_OK && !lua_isnil(L, -1)){
 					const char *msg = lua_tostring(L, -1);
@@ -58,7 +69,7 @@ void runLua(Fl_Widget*,void*){
 					}
 				}
 			}catch(...){
-				fl_alert("Lua error while running script");
+				fl_alert("Lua error while running script\nthrow was called");
 			}
 			lua_close(L);
 		}else

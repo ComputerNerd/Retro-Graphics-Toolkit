@@ -23,8 +23,27 @@ palette_bar palEdit;
 palette_bar tileEdit_pal;
 palette_bar tileMap_pal;
 palette_bar spritePal;
-uint8_t palette_bar::getEntry(void){
+unsigned palette_bar::getEntry(void){
 	return box_sel+(theRow*perRow);
+}
+void palette_bar::setSysColCnt(void){
+	switch (currentProject->gameSystem){
+		case sega_genesis:
+			perRow=16;
+			currentProject->colorCnt=64;
+			currentProject->colorCntalt=currentProject->rowCntPalalt=0;
+			currentProject->rowCntPal=4;
+			currentProject->haveAltspritePal=false;
+		break;
+		case NES:
+			perRow=4;
+			currentProject->colorCnt=currentProject->colorCntalt=16;
+			currentProject->rowCntPal=currentProject->rowCntPalalt=4;
+			currentProject->haveAltspritePal=true;
+		break;
+		default:
+			show_default_error
+	}
 }
 void palette_bar::more_init(uint8_t x,uint16_t offsetx,uint16_t offsety,bool altset,unsigned ln,bool tiny){
 	alt=altset;
@@ -34,16 +53,7 @@ void palette_bar::more_init(uint8_t x,uint16_t offsetx,uint16_t offsety,bool alt
 	else
 		sz=24;
 	sysCache=currentProject->gameSystem;
-	switch (currentProject->gameSystem){
-		case sega_genesis:
-			perRow=16;
-		break;
-		case NES:
-			perRow=4;
-		break;
-		default:
-			show_default_error
-	}
+	setSysColCnt();
 	rows=x;
 	offxx=offsetx;
 	offyy=offsety;
@@ -127,7 +137,7 @@ void palette_bar::draw_boxes(void){
 	if (theRow >= rows){
 		uint8_t*rgbPtr=currentProject->rgbPal+(a*theRow);
 		if(alt&&(currentProject->gameSystem==NES))
-			rgbPtr+=perRow*3*4;
+			rgbPtr+=currentProject->colorCnt*3;
 		for (x=0;x<perRow;++x){
 			fl_rectf(offx+(x*box_size),offy,box_size,box_size,*rgbPtr,*(rgbPtr+1),*(rgbPtr+2));
 			rgbPtr+=3;
@@ -136,7 +146,7 @@ void palette_bar::draw_boxes(void){
 	}else{
 		uint8_t*rgbPtr=currentProject->rgbPal;
 		if(alt&&(currentProject->gameSystem==NES))
-			rgbPtr+=perRow*3*4;
+			rgbPtr+=currentProject->colorCnt*3;
 		for (y=0;y<rows;++y){
 			for (x=0;x<perRow;++x){
 				fl_rectf(offx+(x*box_size),offy+(y*box_size),box_size,box_size,*rgbPtr,*(rgbPtr+1),*(rgbPtr+2));
@@ -184,9 +194,9 @@ void palette_bar::updateSlider(){
 }
 void palette_bar::changeSystem(){
 	if(sysCache!=currentProject->gameSystem){
+		setSysColCnt();
 		switch (currentProject->gameSystem){
 			case sega_genesis:
-				perRow=16;
 				pal_r->label("Red");
 				pal_g->label("Green");
 				pal_g->labelsize(13);
@@ -202,7 +212,6 @@ void palette_bar::changeSystem(){
 				pal_b->callback(update_palette, (void*)2);
 			break;
 			case NES:
-				perRow=4;
 				pal_r->label("Hue");
 				pal_g->label("Value");
 				pal_g->labelsize(14);

@@ -28,36 +28,16 @@ bool G_vflip[2];
 bool G_highlow_p[2];
 bool show_grid_placer;
 //moveable offsets
-uint8_t tile_zoom_edit;
+unsigned tile_zoom_edit;
 uint8_t truecolor_temp[4];/*!< This stores the rgba data selected with the truecolor sliders*/
 std::string the_file;//this is for tempory use only
-uint8_t mode_editor;//this is used to determin which thing to draw
+unsigned mode_editor;//this is used to determin which thing to draw
 #define PIf 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491298336733624406566430860213949463952247371907021798609437027705392171762931767523846748184676694051320005681271452635608277857713427577896091736371787214684409012249534301465495853710507922796892589235420199561121290219608640344181598136297747713099605187072113499999983729780499510597317328160963185950244594553469083026425223082533446850352619311881710100031378387528865875332083814206171776691473035982534904287554687311595628638823537875937519577818577805321712268066130019278766111959092164201989f
 bool showTrueColor;
 bool rowSolo;
 bool tileEditModePlace_G;
 uint32_t selTileE_G[2];
-uint8_t nearestAlg=1;
-uint8_t nearest_color_index(uint8_t val){
-	//returns closest value
-	//palette_muliplier
-	uint8_t i;
-    int32_t distanceSquared, minDistanceSquared, bestIndex = 0;
-    minDistanceSquared = 255*255 + 1;
-	if (currentProject->gameSystem!=sega_genesis){
-		fl_alert("This function is for use with sega genesis/mega drive only");
-		return 0;
-	}
-    for (i=palTypeGen; i<8+palTypeGen;++i){
-        int32_t Rdiff = (int) val - (int)palTab[i];
-        distanceSquared = Rdiff*Rdiff;
-        if (distanceSquared < minDistanceSquared){
-            minDistanceSquared = distanceSquared;
-            bestIndex = i;
-        }
-    }
-    return bestIndex;
-}
+unsigned nearestAlg=1;
 void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha,bool alphaZero){
 	switch (currentProject->gameSystem){
 		case sega_genesis:
