@@ -27,6 +27,7 @@
 #include "project.h"
 #include "color_convert.h"
 #include "callback_gui.h"
+#include "callbacksprites.h"
 static int panic(lua_State *L){
 	fl_alert("PANIC: unprotected error in call to Lua API (%s)\n",lua_tostring(L, -1));
 	throw 0;//Otherwise abort() would be called when not needed
@@ -226,6 +227,29 @@ static const luaL_Reg lua_tileAPI[]={
 	{"resize",lua_tile_resize},
 	{0,0}
 };
+static int lua_tilemap_dither(lua_State*L){
+	unsigned method=luaL_optunsigned(L,1,1);
+	currentProject->tileMapC->ditherAsImage(method);
+	return 0;
+}
+static const luaL_Reg lua_tilemapAPI[]={
+	{"dither",lua_tilemap_dither},
+	{0,0}
+};
+static int lua_sprite_dither(lua_State*L){
+	unsigned which=luaL_optunsigned(L,1,0);
+	ditherSpriteAsImage(which);
+	return 0;
+}
+static int lua_sprite_ditherAll(lua_State*L){
+	ditherSpriteAsImageAllCB(0,0);
+	return 0;
+}
+static const luaL_Reg lua_spriteAPI[]={
+	{"dither",lua_sprite_dither},
+	{"ditherAll",lua_sprite_ditherAll},
+	{0,0}
+};
 static int lua_rgt_redraw(lua_State*L){
 	window->redraw();
 	return 0;
@@ -279,6 +303,29 @@ void runLua(Fl_Widget*,void*){
 				lua_rawset(L, -3);
 
 				lua_setglobal(L, "tile");
+
+
+  				lua_createtable(L, 0,(sizeof(lua_paletteAPI)/sizeof((lua_paletteAPI)[0]) - 1)+2);
+				luaL_setfuncs(L,lua_tilemapAPI,0);
+
+				lua_pushstring(L,"width");
+				lua_pushunsigned(L, currentProject->tileMapC->mapSizeW);
+				lua_rawset(L, -3);
+
+				lua_pushstring(L,"height");
+				lua_pushunsigned(L, currentProject->tileMapC->mapSizeH);
+				lua_rawset(L, -3);
+
+				lua_setglobal(L, "tilemap");
+
+  				lua_createtable(L, 0,(sizeof(lua_paletteAPI)/sizeof((lua_paletteAPI)[0]) - 1)+1);
+				luaL_setfuncs(L,lua_spriteAPI,0);
+
+				lua_pushstring(L,"amt");
+				lua_pushunsigned(L, currentProject->spritesC->amt);
+				lua_rawset(L, -3);
+
+				lua_setglobal(L, "sprite");
 
 
 				luaL_newlib(L,lua_rgtAPI);

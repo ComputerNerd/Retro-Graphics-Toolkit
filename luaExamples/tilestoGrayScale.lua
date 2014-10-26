@@ -14,6 +14,7 @@
 				tile.setPixelRGBA(i,x,y,gray,gray,gray,a)
 			end
 		end
-		tile.dither(i)
 	end
+	tilemap.dither()
+	sprite.ditherAll()
 	palette.fixSliders()
