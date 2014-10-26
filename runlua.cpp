@@ -16,11 +16,15 @@
 */
 #include <string>
 #include <FL/Fl_Color_Chooser.H>
-#include "includes.h"
-#include "gui.h"
+#include <libgen.h>
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
+#include "includes.h"
+#include "gui.h"
+#include "project.h"
+#include "color_convert.h"
+#include "callback_gui.h"
 static int panic(lua_State *L){
 	fl_alert("PANIC: unprotected error in call to Lua API (%s)\n",lua_tostring(L, -1));
 	throw 0;//Otherwise abort() would be called when not needed
@@ -99,6 +103,41 @@ static const luaL_Reg lua_flAPI[]={
 	{"password",luafl_password},
 	{0,0}
 };
+static unsigned inRangeEnt(unsigned ent){
+	if(ent>=(currentProject->colorCnt+currentProject->colorCntalt)){
+		fl_alert("Error tried to access out of bound palette entry %u",ent);
+		return 0;
+	}
+	return 1;
+}
+static int lua_palette_getRGB(lua_State*L){
+	unsigned ent=luaL_optunsigned(L,1,0);
+	if(inRangeEnt(ent)){
+		ent*=3;
+		lua_pushunsigned(L,currentProject->rgbPal[ent]);
+		lua_pushunsigned(L,currentProject->rgbPal[ent+1]);
+		lua_pushunsigned(L,currentProject->rgbPal[ent+2]);
+		return 3;
+	}else
+		return 0;
+}
+static int lua_palette_setRGB(lua_State*L){
+	unsigned ent=luaL_optunsigned(L,1,0);
+	if(inRangeEnt(ent))
+		rgbToEntry(luaL_optunsigned(L,2,0),luaL_optunsigned(L,3,0),luaL_optunsigned(L,4,0),ent);
+	return 0;
+}
+static int lua_palette_fixSliders(lua_State*L){
+	set_mode_tabs(0,0);
+	window->redraw();
+	return 0;
+}
+static const luaL_Reg lua_paletteAPI[]={
+	{"getRGB",lua_palette_getRGB},
+	{"setRGB",lua_palette_setRGB},
+	{"fixSliders",lua_palette_fixSliders},
+	{0,0}
+};
 void runLua(Fl_Widget*,void*){
 	std::string scriptname;
 	if(loadsavefile(scriptname,"Select a lua script")){
@@ -109,6 +148,31 @@ void runLua(Fl_Widget*,void*){
 				luaL_openlibs(L);
 				luaL_newlib(L,lua_flAPI);
 				lua_setglobal(L, "fl");
+  				lua_createtable(L, 0,(sizeof(lua_paletteAPI)/sizeof((lua_paletteAPI)[0]) - 1)+5);
+				luaL_setfuncs(L,lua_paletteAPI,0);
+				
+				lua_pushstring(L,"cnt");
+				lua_pushunsigned(L, currentProject->colorCnt);
+				lua_rawset(L, -3);
+
+				lua_pushstring(L,"cntAlt");
+				lua_pushunsigned(L, currentProject->colorCntalt);
+				lua_rawset(L, -3);
+
+				lua_pushstring(L,"rowCnt");
+				lua_pushunsigned(L, currentProject->rowCntPal);
+				lua_rawset(L, -3);
+
+				lua_pushstring(L,"rowCntAlt");
+				lua_pushunsigned(L, currentProject->rowCntPalalt);
+				lua_rawset(L, -3);
+
+				lua_pushstring(L,"haveAlt");
+				lua_pushboolean(L, currentProject->haveAltspritePal);
+				lua_rawset(L, -3);
+				std::string scriptnamecopy=scriptname.c_str();
+				lua_setglobal(L, "palette");
+				chdir(dirname((char*)scriptnamecopy.c_str()));
 				int s = luaL_loadfile(L, scriptname.c_str());
 				if(s != LUA_OK && !lua_isnil(L, -1)){
 					const char *msg = lua_tostring(L, -1);
