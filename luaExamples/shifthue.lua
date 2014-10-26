@@ -69,6 +69,7 @@ function rgb_to_hsl(r, g, b)
 
    return h * 360, s, l
 end
+if project.have(project.palMask) then
 	shift=tonumber(fl.input("Shift hue by","0"))
 	if shift~=nil then
 		for ent=0,palette.cnt+palette.cntAlt-1,1 do
@@ -79,3 +80,6 @@ end
 		end
 		palette.fixSliders()
 	end
+else
+	project.haveMessage(project.palMask)
+end

@@ -254,6 +254,20 @@ static int lua_rgt_redraw(lua_State*L){
 	window->redraw();
 	return 0;
 }
+static int lua_project_rgt_have(lua_State*L){
+	lua_pushboolean(L,containsDataCurProj(luaL_optunsigned(L,1,pjHavePal)));
+	return 1;
+}
+static int lua_project_rgt_haveMessage(lua_State*L){
+	unsigned mask=luaL_optunsigned(L,1,pjHavePal);
+	fl_alert("Current project %s %s",containsDataCurProj(mask)?"Has":"does not have",maskToName(mask));
+	return 0;
+}
+static const luaL_Reg lua_projectAPI[]={
+	{"have",lua_project_rgt_have},
+	{"haveMessage",lua_project_rgt_haveMessage},
+	{0,0}
+};
 static const luaL_Reg lua_rgtAPI[]={
 	{"redraw",lua_rgt_redraw},
 	{0,0}
@@ -269,67 +283,97 @@ void runLua(Fl_Widget*,void*){
 				luaL_newlib(L,lua_flAPI);
 				lua_setglobal(L, "fl");
 
-  				lua_createtable(L, 0,(sizeof(lua_paletteAPI)/sizeof((lua_paletteAPI)[0]) - 1)+5);
-				luaL_setfuncs(L,lua_paletteAPI,0);
-				
-				lua_pushstring(L,"cnt");
-				lua_pushunsigned(L, currentProject->colorCnt);
+				if(containsDataCurProj(pjHavePal)){
+					lua_createtable(L, 0,(sizeof(lua_paletteAPI)/sizeof((lua_paletteAPI)[0]) - 1)+5);
+					luaL_setfuncs(L,lua_paletteAPI,0);
+
+					lua_pushstring(L,"cnt");
+					lua_pushunsigned(L, currentProject->colorCnt);
+					lua_rawset(L, -3);
+
+					lua_pushstring(L,"cntAlt");
+					lua_pushunsigned(L, currentProject->colorCntalt);
+					lua_rawset(L, -3);
+
+					lua_pushstring(L,"rowCnt");
+					lua_pushunsigned(L, currentProject->rowCntPal);
+					lua_rawset(L, -3);
+
+					lua_pushstring(L,"rowCntAlt");
+					lua_pushunsigned(L, currentProject->rowCntPalalt);
+					lua_rawset(L, -3);
+
+					lua_pushstring(L,"haveAlt");
+					lua_pushboolean(L, currentProject->haveAltspritePal);
+					lua_rawset(L, -3);
+
+					lua_setglobal(L, "palette");
+				}
+
+				if(containsDataCurProj(pjHaveTiles)){
+					lua_createtable(L, 0,(sizeof(lua_tileAPI)/sizeof((lua_tileAPI)[0]) - 1)+1);
+					luaL_setfuncs(L,lua_tileAPI,0);
+
+					lua_pushstring(L,"amt");
+					lua_pushunsigned(L, currentProject->tileC->amt);
+					lua_rawset(L, -3);
+
+					lua_setglobal(L, "tile");
+				}
+
+				if(containsDataCurProj(pjHaveMap)){
+					lua_createtable(L, 0,(sizeof(lua_tilemapAPI)/sizeof((lua_tilemapAPI)[0]) - 1)+2);
+					luaL_setfuncs(L,lua_tilemapAPI,0);
+
+					lua_pushstring(L,"width");
+					lua_pushunsigned(L, currentProject->tileMapC->mapSizeW);
+					lua_rawset(L, -3);
+
+					lua_pushstring(L,"height");
+					lua_pushunsigned(L, currentProject->tileMapC->mapSizeH);
+					lua_rawset(L, -3);
+
+					lua_setglobal(L, "tilemap");
+				}
+
+				if(containsDataCurProj(pjHaveSprites)){
+					lua_createtable(L, 0,(sizeof(lua_spriteAPI)/sizeof((lua_spriteAPI)[0]) - 1)+1);
+					luaL_setfuncs(L,lua_spriteAPI,0);
+
+					lua_pushstring(L,"amt");
+					lua_pushunsigned(L, currentProject->spritesC->amt);
+					lua_rawset(L, -3);
+
+					lua_setglobal(L, "sprite");
+				}
+
+
+  				lua_createtable(L, 0,(sizeof(lua_projectAPI)/sizeof((lua_projectAPI)[0]) - 1)+6);
+				luaL_setfuncs(L,lua_projectAPI,0);
+				lua_pushstring(L,"palMask");
+				lua_pushunsigned(L,pjHavePal);
 				lua_rawset(L, -3);
-
-				lua_pushstring(L,"cntAlt");
-				lua_pushunsigned(L, currentProject->colorCntalt);
+				lua_pushstring(L,"tilesMask");
+				lua_pushunsigned(L,pjHaveTiles);
 				lua_rawset(L, -3);
-
-				lua_pushstring(L,"rowCnt");
-				lua_pushunsigned(L, currentProject->rowCntPal);
+				lua_pushstring(L,"mapMask");
+				lua_pushunsigned(L,pjHaveMap);
 				lua_rawset(L, -3);
-
-				lua_pushstring(L,"rowCntAlt");
-				lua_pushunsigned(L, currentProject->rowCntPalalt);
+				lua_pushstring(L,"chunksMask");
+				lua_pushunsigned(L,pjHaveChunks);
 				lua_rawset(L, -3);
-
-				lua_pushstring(L,"haveAlt");
-				lua_pushboolean(L, currentProject->haveAltspritePal);
+				lua_pushstring(L,"spritesMask");
+				lua_pushunsigned(L,pjHaveSprites);
 				lua_rawset(L, -3);
-
-				lua_setglobal(L, "palette");
-
-
-  				lua_createtable(L, 0,(sizeof(lua_paletteAPI)/sizeof((lua_paletteAPI)[0]) - 1)+1);
-				luaL_setfuncs(L,lua_tileAPI,0);
-
-				lua_pushstring(L,"amt");
-				lua_pushunsigned(L, currentProject->tileC->amt);
+				lua_pushstring(L,"levelMask");
+				lua_pushunsigned(L,pjHaveLevel);
 				lua_rawset(L, -3);
-
-				lua_setglobal(L, "tile");
-
-
-  				lua_createtable(L, 0,(sizeof(lua_paletteAPI)/sizeof((lua_paletteAPI)[0]) - 1)+2);
-				luaL_setfuncs(L,lua_tilemapAPI,0);
-
-				lua_pushstring(L,"width");
-				lua_pushunsigned(L, currentProject->tileMapC->mapSizeW);
-				lua_rawset(L, -3);
-
-				lua_pushstring(L,"height");
-				lua_pushunsigned(L, currentProject->tileMapC->mapSizeH);
-				lua_rawset(L, -3);
-
-				lua_setglobal(L, "tilemap");
-
-  				lua_createtable(L, 0,(sizeof(lua_paletteAPI)/sizeof((lua_paletteAPI)[0]) - 1)+1);
-				luaL_setfuncs(L,lua_spriteAPI,0);
-
-				lua_pushstring(L,"amt");
-				lua_pushunsigned(L, currentProject->spritesC->amt);
-				lua_rawset(L, -3);
-
-				lua_setglobal(L, "sprite");
+				lua_setglobal(L, "project");
 
 
 				luaL_newlib(L,lua_rgtAPI);
 				lua_setglobal(L, "rgt");
+
 
 				std::string scriptnamecopy=scriptname.c_str();
 				chdir(dirname((char*)scriptnamecopy.c_str()));

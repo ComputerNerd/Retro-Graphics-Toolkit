@@ -1,4 +1,5 @@
-	-- Multiplies all pixels in all tiles by m
+-- Multiplies all pixels in all tiles by m
+if project.have(project.tilesMask) then
 	m=tonumber(fl.input("Enter a multiplier m>1 brightens m<1 darkens","1"))
 	if m~=nil then
 		for i=0,tile.amt-1,1 do
@@ -11,3 +12,6 @@
 		end
 		rgt.redraw()
 	end
+else
+	project.haveMessage(project.tilesMask)
+end

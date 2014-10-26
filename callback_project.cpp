@@ -50,15 +50,11 @@ void haveCB(Fl_Widget*o,void*mask){
 		}
 	}
 	if((m&pjHavePal)&&(!set)){//cannot have tiles without a palette
-		if(((currentProject->useMask&pjAllMask)&(~pjHavePal))){
-			/*the (above) if statement is based on the observation that all other have settings involve tiles
-			be sure to change this if another function not involving tiles arises*/
-			if((currentProject->share[1]<0)&&(currentProject->share[2]<0)){
-				fl_alert("You cannot have tiles without a palette");
-				b->value(1);
-				window->redraw();
-				return;
-			}
+		if(containsDataCurProj(pjHaveTiles)){
+			fl_alert("You cannot have tiles without a palette");
+			b->value(1);
+			window->redraw();
+			return;
 		}
 	}
 	//Can not have tilemap without tiles

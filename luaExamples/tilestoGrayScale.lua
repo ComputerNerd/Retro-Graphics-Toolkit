@@ -1,10 +1,13 @@
-	local index=0
-	for gray=0,255,255/(palette.cnt/palette.rowCnt-1) do
-		palette.setRGB(index,gray,gray,gray)
-		if palette.haveAlt then
-			palette.setRGB(index+palette.cnt,gray,gray,gray)
+if project.have(project.tilesMask) then
+	if project.have(project.palMask) then
+		local index=0
+		for gray=0,255,255/(palette.cnt/palette.rowCnt-1) do
+			palette.setRGB(index,gray,gray,gray)
+			if palette.haveAlt then
+				palette.setRGB(index+palette.cnt,gray,gray,gray)
+			end
+			index=index+1;
 		end
-		index=index+1;
 	end
 	for i=0,tile.amt-1,1 do
 		for y=0,7,1 do
@@ -15,6 +18,15 @@
 			end
 		end
 	end
-	tilemap.dither()
-	sprite.ditherAll()
-	palette.fixSliders()
+	if project.have(project.mapMask) then
+		tilemap.dither()
+	end
+	if project.have(project.spritesMask) then
+		sprite.ditherAll()
+	end
+	if project.have(project.palMask) then
+		palette.fixSliders()
+	end
+else
+	project.haveMessage(project.tilesMask)
+end

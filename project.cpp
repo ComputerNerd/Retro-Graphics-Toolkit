@@ -25,6 +25,14 @@ struct Project * currentProject;
 Fl_Slider* curPrj;
 static const char * defaultName="Add a description here.";
 uint32_t curProjectID;
+static const char*const maskNames[]={"palette","tiles","tilemap","chunks","sprites","level","{Undefined}"};
+const char*maskToName(unsigned mask){
+	unsigned off=__builtin_ctz(mask);
+	if(off>=6)
+		return maskNames[6];
+	else
+		return maskNames[off];
+}
 bool containsDataProj(uint32_t prj,uint32_t mask){
 	unsigned off=__builtin_ctz(mask);
 	return ((projects[prj]->useMask&mask)||(projects[prj]->share[off]>0))?true:false;

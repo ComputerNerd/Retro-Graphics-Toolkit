@@ -33,7 +33,7 @@ void sortBy(unsigned type,bool perRow){
 		MapHLS[x/3].second=x/3;
 	}
 	if(perRow){
-		for(unsigned i=0;i<4;++i)
+		for(unsigned i=0;i<currentProject->rowCntPal+currentProject->rowCntPalalt;++i)
 			std::sort(MapHLS+(palEdit.perRow*i),MapHLS+(palEdit.perRow*(i+1)),comparatorHLS);
 	}else
 		std::sort(MapHLS,MapHLS+(totalCol),comparatorHLS);

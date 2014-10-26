@@ -54,6 +54,7 @@ extern struct Project ** projects;
 extern uint32_t projects_count;//holds how many projects there are this is needed for realloc when adding or removing function
 extern struct Project * currentProject;
 extern Fl_Slider* curPrj;
+const char*maskToName(unsigned mask);
 bool containsDataProj(uint32_t prj,uint32_t mask);
 bool containsDataCurProj(uint32_t mask);
 void compactPrjMem(void);
