@@ -40,10 +40,10 @@ void sortBy(unsigned type,bool perRow){
 	switch(currentProject->gameSystem){
 		case sega_genesis:
 			eSize=2;
-			break;
+		break;
 		case NES:
 			eSize=1;
-			break;
+		break;
 	}
 	uint8_t* newPal=(uint8_t*)alloca(currentProject->colorCnt+currentProject->colorCntalt*eSize);
 	uint8_t* newPalRgb=(uint8_t*)alloca(currentProject->colorCnt+currentProject->colorCntalt*eSize*3);

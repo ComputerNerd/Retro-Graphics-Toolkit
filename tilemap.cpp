@@ -414,6 +414,9 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 #define CYCbCr2R(Y, Cb, Cr) CLIP( Y + ( 91881 * Cr >> 16 ) - 179 )
 #define CYCbCr2G(Y, Cb, Cr) CLIP( Y - (( 22544 * Cb + 46793 * Cr ) >> 16) + 135)
 #define CYCbCr2B(Y, Cb, Cr) CLIP( Y + (116129 * Cb >> 16 ) - 226 )
+static void colorAmtExceed(void){
+	fl_alert("No more room for colors\nYou should not be seeing this message please report this.");
+}
 static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,unsigned offsetPal,Fl_Progress *progress,Fl_Window*pwin,unsigned maxCol,unsigned yuv,unsigned alg,bool isSprite=false){
 	progress->maximum(1.0);
 	unsigned off2=offsetPal*2;
@@ -446,41 +449,20 @@ static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,unsigned 
 			uint8_t r,g,b;
 againFun:
 			if (currentProject->palType[x+offsetPal]){
-				offsetPal++;
+				++offsetPal;
 				off3+=3;
 				off2+=2;
-				if (offsetPal >= maxPal)
+				if(offsetPal>=maxPal){
+					colorAmtExceed();
 					break;
+				}
 				goto againFun;
 			}
 			r=found_colors[(x*3)];
 			g=found_colors[(x*3)+1];
 			b=found_colors[(x*3)+2];
-			switch(currentProject->gameSystem){
-				case sega_genesis:
-					printf("R=%d G=%d B=%d\n",r,g,b);
-					r=nearest_color_index(r);
-					g=nearest_color_index(g);
-					b=nearest_color_index(b);
-					currentProject->rgbPal[(x*3)+off3]=palTab[r];
-					currentProject->rgbPal[(x*3)+1+off3]=palTab[g];
-					currentProject->rgbPal[(x*3)+2+off3]=palTab[b];
-					//bgr
-					r-=palTypeGen;
-					g-=palTypeGen;
-					b-=palTypeGen;
-					currentProject->palDat[(x*2)+off2]=b<<1;
-					currentProject->palDat[(x*2)+1+off2]=(r<<1)|(g<<5);
-				break;
-				case NES:
-					printf("R=%d G=%d B=%d\n",r,g,b);
-					{uint8_t temp = to_nes_color_rgb(r,g,b);
-					currentProject->palDat[x+offsetPal]=temp;}
-				break;
-				default:
-					show_default_error
-				break;
-			}
+			printf("R=%d G=%d B=%d\n",r,g,b);
+			rgbToEntry(r,g,b,x+offsetPal);
 		}
 		if(currentProject->gameSystem==NES)
 			update_emphesis(0,0);
@@ -535,8 +517,8 @@ try_again_color:
 			default:
 				dl3quant(imageuse,w,h,colorz,user_pal,true,progress);/*this uses denesis lee's v3 color quant which is fonund at http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c*/
 		}
-		for (uint16_t x=0;x<colorz;x++){
-			uint8_t r,g,b;
+		for (unsigned x=0;x<colorz;x++){
+			unsigned r,g,b;
 			if(yuv){
 				if(yuv==2){
 					r=CYCbCr2R(user_pal[0][x],user_pal[1][x],user_pal[2][x]);
@@ -597,11 +579,13 @@ try_again_color:
 			uint8_t r,g,b;
 againNerd:
 			if (currentProject->palType[x+offsetPal]){
-				offsetPal++;
+				++offsetPal;
 				off3+=3;
 				off2+=2;
-				if (offsetPal >= maxPal)
+				if(offsetPal>=maxPal){
+					colorAmtExceed();
 					break;
+				}
 				//printf("%d %d %d\n",offsetPal,off2,off3);
 				goto againNerd;
 			}
@@ -821,17 +805,6 @@ static void setParmChoiceCB(Fl_Widget*w,void*in){
 	Fl_Choice*c=(Fl_Choice*)w;
 	*val=c->value();
 }
-/*struct settings{//TODO avoid hardcoding palette row amount
-	bool sprite;//Are we generating the palette for a sprite
-	unsigned off[4];//Offsets for each row
-	unsigned col;//How many colors are to be generated
-	unsigned alg;//Which algorithm should be used
-	bool ditherAfter;//After color quanization should the image be dithered
-	bool entireRow;//If true dither entire tilemap at once or false dither each row sepeartly
-	unsigned colSpace;//Which colorspace should the image be quantized in
-	unsigned perRow[4];//How many colors will be generated per row
-	bool useRow[4];
-};*/
 void generate_optimal_palette(Fl_Widget*,void*sprite){
 	static bool openAlready;
 	if(openAlready){
