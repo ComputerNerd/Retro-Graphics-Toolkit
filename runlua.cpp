@@ -194,7 +194,7 @@ static int lua_tile_setPixelRGBA(lua_State*L){
 	}
 	return 0;
 }
-static int lua_tile_ditherTile(lua_State*L){
+static int lua_tile_dither(lua_State*L){
 	unsigned tile=luaL_optunsigned(L,1,0);
 	unsigned row=luaL_optunsigned(L,2,0);
 	bool useAlt=luaL_optunsigned(L,3,0);
@@ -221,7 +221,7 @@ static int lua_tile_resize(lua_State*L){
 static const luaL_Reg lua_tileAPI[]={
 	{"getPixelRGBA",lua_tile_getPixelRGBA},
 	{"setPixelRGBA",lua_tile_setPixelRGBA},
-	{"ditherTile",lua_tile_ditherTile},
+	{"dither",lua_tile_dither},
 	{"append",lua_tile_append},
 	{"resize",lua_tile_resize},
 	{0,0}
