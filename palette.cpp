@@ -86,25 +86,8 @@ const uint8_t palTabEmu[]={0,36,72,108,144,180,216,252,0,18,36,54,72, 90,108,126
 void set_palette_type_force(unsigned type){
 	palTypeGen=type;
 	//now reconvert all the colors
-	for (unsigned pal=0; pal < 128;pal+=2){
-		//to convert to rgb first get value of color then multiply it by 16 to get rgb
-		//first get blue value
-		//the rgb array is in rgb format and the genesis palette is bgr format
-		uint8_t rgb_array = pal+(pal/2);//multiply pal by 1.5
-		uint8_t temp_var = currentProject->palDat[pal];
-		temp_var>>=1;
-		currentProject->rgbPal[rgb_array+2]=palTab[temp_var+type];
-		//seperating the gr values will require some bitwise operations
-		//to get g shift to the right by 4
-		temp_var = currentProject->palDat[pal+1];
-		temp_var>>=5;
-		currentProject->rgbPal[rgb_array+1]=palTab[temp_var+type];
-		//to get r value apply the and opperation by 0xF or 15
-		temp_var = currentProject->palDat[pal+1];
-		temp_var&=0xF;
-		temp_var>>=1;
-		currentProject->rgbPal[rgb_array]=palTab[temp_var+type];
-	}
+	for(unsigned pal=0; pal<64;++pal)
+		updateRGBindex(pal);
 }
 void set_palette_type(void){
 	if(currentProject->subSystem&sgSon){
