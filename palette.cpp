@@ -24,8 +24,9 @@ bool comparatorHLS(const HLSpair& l,const HLSpair& r)
    { return l.first < r.first; }
 void sortBy(unsigned type,bool perRow){
 	pushPaletteAll();
-	HLSpair* MapHLS=new HLSpair[currentProject->colorCnt+currentProject->colorCntalt];
-	for(unsigned x=0;x<currentProject->colorCnt+currentProject->colorCntalt*3;x+=3){
+	unsigned totalCol=currentProject->colorCnt+currentProject->colorCntalt;
+	HLSpair* MapHLS=new HLSpair[totalCol];
+	for(unsigned x=0;x<totalCol*3;x+=3){
 		double h,l,s;
 		rgbToHls(currentProject->rgbPal[x],currentProject->rgbPal[x+1],currentProject->rgbPal[x+2],&h,&l,&s);
 		MapHLS[x/3].first=pickIt(h,l,s,type);
@@ -35,7 +36,7 @@ void sortBy(unsigned type,bool perRow){
 		for(unsigned i=0;i<4;++i)
 			std::sort(MapHLS+(palEdit.perRow*i),MapHLS+(palEdit.perRow*(i+1)),comparatorHLS);
 	}else
-		std::sort(MapHLS,MapHLS+(currentProject->colorCnt+currentProject->colorCntalt),comparatorHLS);
+		std::sort(MapHLS,MapHLS+(totalCol),comparatorHLS);
 	unsigned eSize;
 	switch(currentProject->gameSystem){
 		case sega_genesis:
@@ -45,17 +46,17 @@ void sortBy(unsigned type,bool perRow){
 			eSize=1;
 		break;
 	}
-	uint8_t* newPal=(uint8_t*)alloca(currentProject->colorCnt+currentProject->colorCntalt*eSize);
-	uint8_t* newPalRgb=(uint8_t*)alloca(currentProject->colorCnt+currentProject->colorCntalt*eSize*3);
-	uint8_t* newPalType=(uint8_t*)alloca(currentProject->colorCnt+currentProject->colorCntalt);
-	for(unsigned x=0;x<currentProject->colorCnt+currentProject->colorCntalt;++x){
+	uint8_t* newPal=(uint8_t*)alloca((totalCol)*eSize);
+	uint8_t* newPalRgb=(uint8_t*)alloca(totalCol*eSize*3);
+	uint8_t* newPalType=(uint8_t*)alloca(totalCol);
+	for(unsigned x=0;x<totalCol;++x){
 		memcpy(newPal+(x*eSize),currentProject->palDat+(MapHLS[x].second*eSize),eSize);
 		memcpy(newPalRgb+(x*3),currentProject->rgbPal+(MapHLS[x].second*3),3);
 		newPalType[x]=currentProject->palType[MapHLS[x].second];
 	}
-	memcpy(currentProject->palDat,newPal,currentProject->colorCnt+currentProject->colorCntalt*eSize);
-	memcpy(currentProject->rgbPal,newPalRgb,currentProject->colorCnt+currentProject->colorCntalt*3);
-	memcpy(currentProject->palType,newPalType,currentProject->colorCnt+currentProject->colorCntalt);
+	memcpy(currentProject->palDat,newPal,totalCol*eSize);
+	memcpy(currentProject->rgbPal,newPalRgb,totalCol*3);
+	memcpy(currentProject->palType,newPalType,totalCol);
 	delete[] MapHLS;
 }
 void swapEntry(uint8_t one,uint8_t two){
