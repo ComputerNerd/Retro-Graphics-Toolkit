@@ -16,6 +16,8 @@
 */
 #include <string>
 #include <FL/Fl_Color_Chooser.H>
+#include <cmath>//Mingw workaround
+#include <FL/Fl_File_Chooser.H>
 #include <libgen.h>
 #include "lua.h"
 #include "lualib.h"
@@ -103,9 +105,12 @@ static const luaL_Reg lua_flAPI[]={
 	{"password",luafl_password},
 	{0,0}
 };
+static void outofBoundsAlert(const char*what,unsigned val){
+	fl_alert("Error tried to access out of bound %s %u",what,val);
+}
 static unsigned inRangeEnt(unsigned ent){
 	if(ent>=(currentProject->colorCnt+currentProject->colorCntalt)){
-		fl_alert("Error tried to access out of bound palette entry %u",ent);
+		outofBoundsAlert("palette entry",ent);
 		return 0;
 	}
 	return 1;
@@ -138,6 +143,97 @@ static const luaL_Reg lua_paletteAPI[]={
 	{"fixSliders",lua_palette_fixSliders},
 	{0,0}
 };
+static unsigned inRangeTile(unsigned tile){
+	if(tile>=currentProject->tileC->amt){
+		outofBoundsAlert("tile",tile);
+		return 0;
+	}
+	return 1;
+}
+static unsigned inXYbound(unsigned x,unsigned y){
+	if(x>=currentProject->tileC->sizew){
+		outofBoundsAlert("X",x);
+		return 0;
+	}
+	if(y>=currentProject->tileC->sizeh){
+		outofBoundsAlert("Y",y);
+		return 0;
+	}
+	return 1;
+}
+static int lua_tile_getPixelRGBA(lua_State*L){
+	unsigned tile=luaL_optunsigned(L,1,0);
+	unsigned x=luaL_optunsigned(L,2,0);
+	unsigned y=luaL_optunsigned(L,3,0);
+	if(inRangeTile(tile)){
+		if(inXYbound(x,y)){
+			uint8_t*tptr=((uint8_t*)currentProject->tileC->truetDat.data()+(tile*currentProject->tileC->tcSize));
+			tptr+=(y*currentProject->tileC->sizew+x)*4;
+			for(unsigned i=0;i<4;++i)
+				lua_pushunsigned(L,*tptr++);
+			return 4;
+		}
+	}
+	return 0;
+}
+static int lua_tile_setPixelRGBA(lua_State*L){
+	unsigned tile=luaL_optunsigned(L,1,0);
+	unsigned x=luaL_optunsigned(L,2,0);
+	unsigned y=luaL_optunsigned(L,3,0);
+	if(inRangeTile(tile)){
+		if(inXYbound(x,y)){
+			uint8_t*tptr=((uint8_t*)currentProject->tileC->truetDat.data()+(tile*currentProject->tileC->tcSize));
+			tptr+=(y*currentProject->tileC->sizew+x)*4;
+			for(unsigned i=4;i<8;++i){
+				unsigned tmp=luaL_optunsigned(L,i,0);
+				if(tmp>255)
+					tmp=255;
+				*tptr++=tmp;
+			}
+		}
+	}
+	return 0;
+}
+static int lua_tile_ditherTile(lua_State*L){
+	unsigned tile=luaL_optunsigned(L,1,0);
+	unsigned row=luaL_optunsigned(L,2,0);
+	bool useAlt=luaL_optunsigned(L,3,0);
+	if(inRangeTile(tile))
+		currentProject->tileC->truecolor_to_tile(row,tile,useAlt);
+	return 0;
+}
+static void syncTileAmt(lua_State*L){
+	lua_getglobal(L, "tile");
+	lua_pushstring(L,"amt");
+	lua_pushunsigned(L, currentProject->tileC->amt);
+	lua_rawset(L, -3);
+}
+static int lua_tile_append(lua_State*L){
+	currentProject->tileC->appendTile(luaL_optunsigned(L,1,1));
+	syncTileAmt(L);
+	return 0;
+}
+static int lua_tile_resize(lua_State*L){
+	currentProject->tileC->resizeAmt(luaL_optunsigned(L,1,1));
+	syncTileAmt(L);
+	return 0;
+}
+static const luaL_Reg lua_tileAPI[]={
+	{"getPixelRGBA",lua_tile_getPixelRGBA},
+	{"setPixelRGBA",lua_tile_setPixelRGBA},
+	{"ditherTile",lua_tile_ditherTile},
+	{"append",lua_tile_append},
+	{"resize",lua_tile_resize},
+	{0,0}
+};
+static int lua_rgt_redraw(lua_State*L){
+	window->redraw();
+	return 0;
+}
+static const luaL_Reg lua_rgtAPI[]={
+	{"redraw",lua_rgt_redraw},
+	{0,0}
+};
 void runLua(Fl_Widget*,void*){
 	std::string scriptname;
 	if(loadsavefile(scriptname,"Select a lua script")){
@@ -148,6 +244,7 @@ void runLua(Fl_Widget*,void*){
 				luaL_openlibs(L);
 				luaL_newlib(L,lua_flAPI);
 				lua_setglobal(L, "fl");
+
   				lua_createtable(L, 0,(sizeof(lua_paletteAPI)/sizeof((lua_paletteAPI)[0]) - 1)+5);
 				luaL_setfuncs(L,lua_paletteAPI,0);
 				
@@ -170,8 +267,24 @@ void runLua(Fl_Widget*,void*){
 				lua_pushstring(L,"haveAlt");
 				lua_pushboolean(L, currentProject->haveAltspritePal);
 				lua_rawset(L, -3);
-				std::string scriptnamecopy=scriptname.c_str();
+
 				lua_setglobal(L, "palette");
+
+
+  				lua_createtable(L, 0,(sizeof(lua_paletteAPI)/sizeof((lua_paletteAPI)[0]) - 1)+1);
+				luaL_setfuncs(L,lua_tileAPI,0);
+
+				lua_pushstring(L,"amt");
+				lua_pushunsigned(L, currentProject->tileC->amt);
+				lua_rawset(L, -3);
+
+				lua_setglobal(L, "tile");
+
+
+				luaL_newlib(L,lua_rgtAPI);
+				lua_setglobal(L, "rgt");
+
+				std::string scriptnamecopy=scriptname.c_str();
 				chdir(dirname((char*)scriptnamecopy.c_str()));
 				int s = luaL_loadfile(L, scriptname.c_str());
 				if(s != LUA_OK && !lua_isnil(L, -1)){

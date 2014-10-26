@@ -136,7 +136,7 @@ void set_tile_currentTP(Fl_Widget* o,void*){
 	window->redraw();
 }
 void update_all_tiles(Fl_Widget*,void*){
-	uint8_t sel_pal;
+	unsigned sel_pal;
 	if (mode_editor == tile_place)
 		sel_pal=tileMap_pal.theRow;
 	else

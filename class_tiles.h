@@ -34,7 +34,7 @@ public:
 	uint32_t getPixelTc(uint32_t tile,uint32_t x,uint32_t y);
 	void resizeAmt(uint32_t amtnew);//Resizes array to hold enough for set amount
 	void resizeAmt(void);
-	void appendTile(void);
+	void appendTile(unsigned many=1);
 	void remove_tile_at(uint32_t);
 	void truecolor_to_tile_ptr(uint8_t palette_row,uint32_t cur_tile,uint8_t * tileinput,bool Usedither,bool isSprite);
 	void truecolor_to_tile(uint8_t,uint32_t,bool isSprite);/*!< truecolor_to_tile will update/dither the selected tile*/

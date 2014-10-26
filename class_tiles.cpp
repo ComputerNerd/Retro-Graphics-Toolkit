@@ -169,8 +169,8 @@ void tiles::resizeAmt(uint32_t amtnew){
 void tiles::resizeAmt(void){
 	resizeAmt(amt);
 }
-void tiles::appendTile(void){
-	resizeAmt(amt+1);
+void tiles::appendTile(unsigned many){
+	resizeAmt(amt+many);
 }
 void tiles::remove_tile_at(uint32_t tileDel){
 	if(tileDel>=amt){
