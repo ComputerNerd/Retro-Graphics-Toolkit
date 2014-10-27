@@ -56,7 +56,9 @@ extern struct Project * currentProject;
 extern Fl_Slider* curPrj;
 const char*maskToName(unsigned mask);
 bool containsDataProj(uint32_t prj,uint32_t mask);
+bool containsDataProjOR(uint32_t prj,uint32_t mask);
 bool containsDataCurProj(uint32_t mask);
+bool containsDataCurProjOR(uint32_t mask);
 void compactPrjMem(void);
 void initProject(void) __attribute__((constructor(101)));/*!< this needs to be ran before class constructors*/
 void setHaveProject(uint32_t id,uint32_t mask,bool set);
@@ -74,6 +76,9 @@ bool loadAllProjects(bool Old);
 #define pjHaveChunks 8
 #define pjHaveSprites 16
 #define pjHaveLevel 32
+#define pjNeedsTiles (pjHaveMap|pjHaveChunks|pjHaveSprites|pjHaveLevel) //Needs refers to what else needs it and does not include itself
+#define pjNeedsPalette (pjNeedsTiles|pjHaveTiles)
+#define pjMaxMaskBit 5
 #define pjDefaultMask (pjHavePal|pjHaveTiles|pjHaveMap|pjHaveChunks|pjHaveSprites|pjHaveLevel)
 #define pjAllMask pjDefaultMask
 

@@ -258,13 +258,27 @@ static int lua_project_rgt_have(lua_State*L){
 	lua_pushboolean(L,containsDataCurProj(luaL_optunsigned(L,1,pjHavePal)));
 	return 1;
 }
+static int lua_project_rgt_haveOR(lua_State*L){
+	lua_pushboolean(L,containsDataCurProjOR(luaL_optunsigned(L,1,pjHavePal)));
+	return 1;
+}
 static int lua_project_rgt_haveMessage(lua_State*L){
 	unsigned mask=luaL_optunsigned(L,1,pjHavePal);
-	fl_alert("Current project %s %s",containsDataCurProj(mask)?"Has":"does not have",maskToName(mask));
+	std::string msg="Current project:";
+	for(unsigned x=0;x<=pjMaxMaskBit;++x){
+		if(mask&(1<<x)){
+			msg.push_back('\n');
+			msg.append(containsDataCurProj(1<<x)?"has":"does not have");
+			msg.push_back(' ');
+			msg.append(maskToName(1<<x));
+		}
+	}
+	fl_alert(msg.c_str());
 	return 0;
 }
 static const luaL_Reg lua_projectAPI[]={
 	{"have",lua_project_rgt_have},
+	{"haveOR",lua_project_rgt_haveOR},
 	{"haveMessage",lua_project_rgt_haveMessage},
 	{0,0}
 };
@@ -348,7 +362,7 @@ void runLua(Fl_Widget*,void*){
 				}
 
 
-  				lua_createtable(L, 0,(sizeof(lua_projectAPI)/sizeof((lua_projectAPI)[0]) - 1)+6);
+  				lua_createtable(L, 0,(sizeof(lua_projectAPI)/sizeof((lua_projectAPI)[0]) - 1)+7);
 				luaL_setfuncs(L,lua_projectAPI,0);
 				lua_pushstring(L,"palMask");
 				lua_pushunsigned(L,pjHavePal);
@@ -367,6 +381,9 @@ void runLua(Fl_Widget*,void*){
 				lua_rawset(L, -3);
 				lua_pushstring(L,"levelMask");
 				lua_pushunsigned(L,pjHaveLevel);
+				lua_rawset(L, -3);
+				lua_pushstring(L,"allMask");
+				lua_pushunsigned(L,pjAllMask);
 				lua_rawset(L, -3);
 				lua_setglobal(L, "project");
 

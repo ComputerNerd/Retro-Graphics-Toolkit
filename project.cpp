@@ -33,12 +33,30 @@ const char*maskToName(unsigned mask){
 	else
 		return maskNames[off];
 }
-bool containsDataProj(uint32_t prj,uint32_t mask){
-	unsigned off=__builtin_ctz(mask);
-	return ((projects[prj]->useMask&mask)||(projects[prj]->share[off]>0))?true:false;
+bool containsDataProj(uint32_t prj,uint32_t mask){//OR to require multiple types of data
+	bool andIt=true;
+	for(unsigned m=0;m<=pjMaxMaskBit;++m){
+		if(mask&(1<<m)){
+			andIt&=((projects[prj]->useMask&(1<<m))||(projects[prj]->share[m]>0));
+			if(!andIt)
+				break;
+		}
+	}
+	return andIt;
 }
 bool containsDataCurProj(uint32_t mask){
 	return containsDataProj(curProjectID,mask);
+}
+bool containsDataProjOR(uint32_t prj,uint32_t mask){//OR to require multiple types of data
+	bool orIt=false;
+	for(unsigned m=0;m<=pjMaxMaskBit;++m){
+		if(mask&(1<<m))
+			orIt|=((projects[prj]->useMask&(1<<m))||(projects[prj]->share[m]>0));
+	}
+	return orIt;
+}
+bool containsDataCurProjOR(uint32_t mask){
+	return containsDataProjOR(curProjectID,mask);
 }
 void compactPrjMem(void){
 	int Cold=0,Cnew=0;//Old and new capacity

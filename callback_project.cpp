@@ -50,42 +50,35 @@ void haveCB(Fl_Widget*o,void*mask){
 		}
 	}
 	if((m&pjHavePal)&&(!set)){//cannot have tiles without a palette
-		if(containsDataCurProj(pjHaveTiles)){
-			fl_alert("You cannot have tiles without a palette");
+		if(containsDataCurProjOR(pjNeedsPalette)){
+			fl_alert("You cannot have these/this without a palette");
 			b->value(1);
 			window->redraw();
 			return;
 		}
 	}
-	//Can not have tilemap without tiles
 	if((m&pjHaveTiles)&&(!set)){
-		if(currentProject->useMask&pjHaveMap){
-			if(currentProject->share[1]<0){
-				fl_alert("You cannot have tile map without tiles.");
-				b->value(1);
-				window->redraw();
-				return;
-			}
+		if(containsDataCurProjOR(pjNeedsTiles)){
+			fl_alert("You cannot have these/this without tiles");
+			b->value(1);
+			window->redraw();
+			return;
 		}
 	}
 	if((m&(~pjHavePal))&&set){//Ensure that a palette exists before enabling anything else
-		if(!(currentProject->useMask&pjHavePal)){
-			if(currentProject->share[0]<0){
-				fl_alert("You need a palette to do this");
-				b->value(0);
-				window->redraw();
-				return;
-			}
+		if(!containsDataCurProj(pjHavePal)){
+			fl_alert("You need a palette to do this");
+			b->value(0);
+			window->redraw();
+			return;
 		}
 	}
-	if((m&pjHaveMap)&&set){//Are we trying to enable tilemap?
-		if(!(currentProject->useMask&pjHaveTiles)){
-			if(currentProject->share[1]<0){
-				fl_alert("You cannot have tile map without tiles.");
-				b->value(0);
-				window->redraw();
-				return;
-			}
+	if((m&pjNeedsTiles)&&set){//Are we trying to enable something that needs tiles?
+		if(!containsDataCurProj(pjHaveTiles)){
+			fl_alert("You cannot have that without tiles");
+			b->value(0);
+			window->redraw();
+			return;
 		}
 	}
 	setHaveProject(curProjectID,m,set);
