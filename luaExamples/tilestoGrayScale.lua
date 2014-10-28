@@ -1,5 +1,8 @@
 if project.have(project.tilesMask) then
-	if project.have(project.palMask) then
+-- Although as of writing this comment Retro Graphics Toolkit uses only tiles that use a palette
+-- meaning that having tiles implies a palette this could change latter
+-- that is I add tiles that do not use a palette.
+	if project.have(project.palMask) then 
 		local index=0
 		for gray=0,255,255/(palette.cnt/palette.rowCnt-1) do
 			palette.setRGB(index,gray,gray,gray)

@@ -195,6 +195,42 @@ static int lua_tile_setPixelRGBA(lua_State*L){
 	}
 	return 0;
 }
+static int lua_tile_getTileRGBA(lua_State*L){
+	unsigned tile=luaL_optunsigned(L,1,0);
+	if(inRangeTile(tile)){
+		uint8_t*tptr=((uint8_t*)currentProject->tileC->truetDat.data()+(tile*currentProject->tileC->tcSize));
+		lua_newtable(L);
+		for(unsigned i=1;i<=currentProject->tileC->tcSize;++i){
+			lua_pushunsigned(L,*tptr++);
+			lua_rawseti(L,-2,i);
+		}
+		return 1;
+	}
+	return 0;
+}
+static int lua_tile_setTileRGBA(lua_State*L){
+	unsigned tile=luaL_optunsigned(L,1,0);
+	if(inRangeTile(tile)){
+		uint8_t*tptr=((uint8_t*)currentProject->tileC->truetDat.data()+(tile*currentProject->tileC->tcSize));
+		unsigned len=lua_rawlen(L,2);
+		if(!len){
+			fl_alert("setTileRGBA error: parameter 2 must be a table");
+			return 0;
+		}
+		unsigned to=std::min(currentProject->tileC->tcSize,len);
+		for(unsigned i=1;i<=to;++i){
+			lua_rawgeti(L,2,i);
+			unsigned tmp=lua_tounsigned(L,-1);
+			if(tmp>255)
+				tmp=255;
+			*tptr++=tmp;
+			lua_pop(L,1);
+		}
+		if(to<currentProject->tileC->tcSize)
+			memset(tptr,0,currentProject->tileC->tcSize-to);
+	}
+	return 0;
+}
 static int lua_tile_dither(lua_State*L){
 	unsigned tile=luaL_optunsigned(L,1,0);
 	unsigned row=luaL_optunsigned(L,2,0);
@@ -222,6 +258,8 @@ static int lua_tile_resize(lua_State*L){
 static const luaL_Reg lua_tileAPI[]={
 	{"getPixelRGBA",lua_tile_getPixelRGBA},
 	{"setPixelRGBA",lua_tile_setPixelRGBA},
+	{"getTileRGBA",lua_tile_getTileRGBA},
+	{"setTileRGBA",lua_tile_setTileRGBA},
 	{"dither",lua_tile_dither},
 	{"append",lua_tile_append},
 	{"resize",lua_tile_resize},
@@ -325,11 +363,17 @@ void runLua(Fl_Widget*,void*){
 				}
 
 				if(containsDataCurProj(pjHaveTiles)){
-					lua_createtable(L, 0,(sizeof(lua_tileAPI)/sizeof((lua_tileAPI)[0]) - 1)+1);
+					lua_createtable(L, 0,(sizeof(lua_tileAPI)/sizeof((lua_tileAPI)[0]) - 1)+3);
 					luaL_setfuncs(L,lua_tileAPI,0);
 
 					lua_pushstring(L,"amt");
 					lua_pushunsigned(L, currentProject->tileC->amt);
+					lua_rawset(L, -3);
+					lua_pushstring(L,"width");
+					lua_pushunsigned(L, currentProject->tileC->sizew);
+					lua_rawset(L, -3);
+					lua_pushstring(L,"height");
+					lua_pushunsigned(L, currentProject->tileC->sizeh);
 					lua_rawset(L, -3);
 
 					lua_setglobal(L, "tile");
