@@ -128,7 +128,6 @@ void set_game_system(Fl_Widget*,void* selection){
 					currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeHA);
 				if((currentProject->tileMapC->mapSizeHA)&1)
 					currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeHA+1);
-				window->updateMapWH();
 			}
 			if(containsDataCurProj(pjHaveSprites)){
 				window->spritesize[0]->maximum(1);

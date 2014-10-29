@@ -220,7 +220,9 @@ static int lua_tile_setTileRGBA(lua_State*L){
 		unsigned to=std::min(currentProject->tileC->tcSize,len);
 		for(unsigned i=1;i<=to;++i){
 			lua_rawgeti(L,2,i);
-			unsigned tmp=lua_tounsigned(L,-1);
+			int tmp=lua_tointeger(L,-1);
+			if(tmp<0)
+				tmp=0;
 			if(tmp>255)
 				tmp=255;
 			*tptr++=tmp;
@@ -244,6 +246,7 @@ static void syncTileAmt(lua_State*L){
 	lua_pushstring(L,"amt");
 	lua_pushunsigned(L, currentProject->tileC->amt);
 	lua_rawset(L, -3);
+	updateTileSelectAmt();
 }
 static int lua_tile_append(lua_State*L){
 	currentProject->tileC->appendTile(luaL_optunsigned(L,1,1));
@@ -271,14 +274,134 @@ static int lua_tilemap_dither(lua_State*L){
 	return 0;
 }
 static int lua_tilemap_resize(lua_State*L){
-	unsigned x=luaL_optunsigned(L,1,1);
-	unsigned y=luaL_optunsigned(L,2,1);
-	currentProject->tileMapC->resize_tile_map(x,y);
+	currentProject->tileMapC->resize_tile_map(luaL_optunsigned(L,1,1),luaL_optunsigned(L,2,1));
+	return 0;
+}
+static int lua_tilemap_getHflip(lua_State*L){
+	lua_pushboolean(L,currentProject->tileMapC->get_hflip(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0)));
+	return 1;
+}
+static int lua_tilemap_getVflip(lua_State*L){
+	lua_pushboolean(L,currentProject->tileMapC->get_vflip(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0)));
+	return 1;
+}
+static int lua_tilemap_getPrio(lua_State*L){
+	lua_pushboolean(L,currentProject->tileMapC->get_prio(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0)));
+	return 1;
+}
+static int lua_tilemap_getTile(lua_State*L){
+	lua_pushunsigned(L,currentProject->tileMapC->get_tile(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0)));
+	return 1;
+}
+static int lua_tilemap_getTileRow(lua_State*L){
+	lua_pushinteger(L,currentProject->tileMapC->get_tileRow(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0),luaL_optunsigned(L,3,0)));
+	return 1;
+}
+static int lua_tilemap_getRow(lua_State*L){
+	lua_pushunsigned(L,currentProject->tileMapC->get_palette_map(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0)));
+	return 1;
+}
+static int lua_tilemap_setHflip(lua_State*L){
+	currentProject->tileMapC->set_hflip(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0),luaL_optunsigned(L,3,0));
+	return 0;
+}
+static int lua_tilemap_setVflip(lua_State*L){
+	currentProject->tileMapC->set_vflip(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0),luaL_optunsigned(L,3,0));
+	return 0;
+}
+static int lua_tilemap_setRow(lua_State*L){
+	currentProject->tileMapC->set_pal_row(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0),luaL_optunsigned(L,3,0));
+	return 0;
+}
+static int lua_tilemap_setFull(lua_State*L){
+	currentProject->tileMapC->set_tile_full(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0),luaL_optunsigned(L,3,0),luaL_optunsigned(L,4,0),luaL_optunsigned(L,5,0),luaL_optunsigned(L,6,0),luaL_optunsigned(L,7,0));
+	return 0;
+}
+static int lua_tilemap_setTile(lua_State*L){
+	currentProject->tileMapC->set_tile(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0),luaL_optunsigned(L,3,0));
+	return 0;
+}
+static int lua_tilemap_setPrio(lua_State*L){
+	currentProject->tileMapC->set_prio(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0),luaL_optunsigned(L,3,0));
+	return 0;
+}
+static int lua_tilemap_allToRow(lua_State*L){
+	currentProject->tileMapC->allRowSet(luaL_optunsigned(L,1,0));
+	return 0;
+}
+static int lua_tilemap_toImage(lua_State*L){
+	int row=luaL_optinteger(L,1,-1);
+	bool useAlpha=luaL_optunsigned(L,2,0);
+	uint32_t w,h;
+	w=currentProject->tileMapC->mapSizeW*currentProject->tileC->sizew;
+	h=currentProject->tileMapC->mapSizeHA*currentProject->tileC->sizeh;
+	unsigned bpp=useAlpha+3;
+	uint8_t*image=(uint8_t *)malloc(w*h*bpp);
+	if(!image){
+		show_malloc_error(w*h*bpp)
+		return 0;
+	}
+	currentProject->tileMapC->truecolor_to_image(image,row,useAlpha);
+	uint8_t*imgptr=image;
+	lua_newtable(L);
+	for(unsigned i=1;i<=w*h*bpp;++i){
+		lua_pushunsigned(L,*imgptr++);
+		lua_rawseti(L,-2,i);
+	}
+	free(image);
+	return 1;
+}
+static int lua_tilemap_imageToTiles(lua_State*L){
+	unsigned len=lua_rawlen(L,1);
+	if(!len){
+		fl_alert("imageToTiles error: parameter 1 must be a table");
+		return 0;
+	}
+	int row=luaL_optinteger(L,2,-1);
+	bool useAlpha=luaL_optunsigned(L,3,0);
+	bool copyToTruecol=luaL_optunsigned(L,4,0);
+	unsigned bpp=useAlpha+3;
+	uint32_t w,h;
+	w=currentProject->tileMapC->mapSizeW*currentProject->tileC->sizew;
+	h=currentProject->tileMapC->mapSizeHA*currentProject->tileC->sizeh;
+	unsigned sz=w*h*bpp;
+	uint8_t*image=(uint8_t*)malloc(sz);
+	uint8_t*imgptr=image;
+	unsigned to=std::min(sz,len);
+	for(unsigned i=1;i<=to;++i){
+		lua_rawgeti(L,1,i);
+		int tmp=lua_tointeger(L,-1);
+		if(tmp<0)
+			tmp=0;
+		if(tmp>255)
+			tmp=255;
+		*imgptr++=tmp;
+		lua_pop(L,1);
+	}
+	if(to<sz)
+		memset(imgptr,0,sz-to);
+	currentProject->tileMapC->truecolorimageToTiles(image,row,useAlpha,copyToTruecol);
+	free(image);
 	return 0;
 }
 static const luaL_Reg lua_tilemapAPI[]={
 	{"dither",lua_tilemap_dither},
 	{"resize",lua_tilemap_resize},
+	{"getHflip",lua_tilemap_getHflip},
+	{"getVflip",lua_tilemap_getVflip},
+	{"getPrio",lua_tilemap_getPrio},
+	{"getTile",lua_tilemap_getTile},
+	{"getTileRow",lua_tilemap_getTileRow},
+	{"getRow",lua_tilemap_getRow},
+	{"setHflip",lua_tilemap_setHflip},
+	{"setVflip",lua_tilemap_setVflip},
+	{"setRow",lua_tilemap_setRow},
+	{"setFull",lua_tilemap_setFull},
+	{"setTile",lua_tilemap_setTile},
+	{"setPrio",lua_tilemap_setPrio},
+	{"allToRow",lua_tilemap_allToRow},
+	{"toImage",lua_tilemap_toImage},
+	{"imageToTiles",lua_tilemap_imageToTiles},
 	{0,0}
 };
 static int lua_sprite_dither(lua_State*L){
@@ -387,7 +510,7 @@ void runLua(Fl_Widget*,void*){
 				}
 
 				if(containsDataCurProj(pjHaveMap)){
-					lua_createtable(L, 0,(sizeof(lua_tilemapAPI)/sizeof((lua_tilemapAPI)[0]) - 1)+2);
+					lua_createtable(L, 0,(sizeof(lua_tilemapAPI)/sizeof((lua_tilemapAPI)[0]) - 1)+3);
 					luaL_setfuncs(L,lua_tilemapAPI,0);
 
 					lua_pushstring(L,"width");
@@ -396,6 +519,10 @@ void runLua(Fl_Widget*,void*){
 
 					lua_pushstring(L,"height");
 					lua_pushunsigned(L, currentProject->tileMapC->mapSizeH);
+					lua_rawset(L, -3);
+
+					lua_pushstring(L,"heightA");
+					lua_pushunsigned(L, currentProject->tileMapC->mapSizeHA);
 					lua_rawset(L, -3);
 
 					lua_setglobal(L, "tilemap");

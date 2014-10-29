@@ -503,7 +503,7 @@ int editor::handle(int event){
 						if (Fl::event_button()==FL_LEFT_MOUSE){
 							if(!((selTileE_G[0]==temp_one)&&(selTileE_G[1]==temp_two)&&tileEditModePlace_G)){
 								pushTilemapEdit(temp_one,temp_two);
-								currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,temp_one,temp_two,tileMap_pal.theRow,G_hflip[0],G_vflip[0],G_highlow_p[0]);
+								currentProject->tileMapC->set_tile_full(temp_one,temp_two,currentProject->tileC->current_tile,tileMap_pal.theRow,G_hflip[0],G_vflip[0],G_highlow_p[0]);
 								setXYdispBlock(temp_one,temp_two);
 							}
 							tileEditModePlace_G=false;

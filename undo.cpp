@@ -537,8 +537,7 @@ void UndoRedo(bool redo){
 				currentProject->tileMapC->resize_tile_map(um->w,um->h);
 				if(um->ptr)
 					cpyResizeGeneric((uint8_t*)um->ptr,currentProject->tileMapC->tileMapDat,um->w,um->h,um->wnew,um->hnew,4,1,true);
-			}
-			window->updateMapWH();}
+			}}
 		break;
 		case uTilemapBlocksAmt:
 			{struct undoResize*um=(struct undoResize*)uptr->ptr;

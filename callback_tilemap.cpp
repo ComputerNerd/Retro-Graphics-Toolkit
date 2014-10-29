@@ -65,7 +65,7 @@ void FixOutOfRangeCB(Fl_Widget*,void*){
 	for(int y=0;y<currentProject->tileMapC->mapSizeHA;++y){
 		for(int x=0;x<currentProject->tileMapC->mapSizeW;++x){
 			if(currentProject->tileMapC->get_tile(x,y)>=currentProject->tileC->amt)
-				currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,x,y,tileMap_pal.theRow,G_hflip[0],G_vflip[0],G_highlow_p[0]);
+				currentProject->tileMapC->set_tile_full(x,y,currentProject->tileC->current_tile,tileMap_pal.theRow,G_hflip[0],G_vflip[0],G_highlow_p[0]);
 		}
 	}
 	window->damage(FL_DAMAGE_USER1);
@@ -149,7 +149,7 @@ void fill_tile_map_with_tile(Fl_Widget*,void*){
 	if(fl_ask("This will erase the entire tilemap and fill it with the currently selected tile\nAre you sure you want to do this?")){
 		for (uint32_t y=0;y<currentProject->tileMapC->mapSizeHA;++y){
 			for (uint32_t x=0;x<currentProject->tileMapC->mapSizeW;++x)
-				currentProject->tileMapC->set_tile_full(currentProject->tileC->current_tile,x,y,tileMap_pal.theRow,G_hflip[0],G_vflip[0],G_highlow_p[0]);
+				currentProject->tileMapC->set_tile_full(x,y,currentProject->tileC->current_tile,tileMap_pal.theRow,G_hflip[0],G_vflip[0],G_highlow_p[0]);
 		}
 		window->damage(FL_DAMAGE_USER1);
 	}
@@ -333,11 +333,10 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		if((!over)&&(!tilesonly)){
 			pushTilemapAll(false);
 			currentProject->tileMapC->resize_tile_map(w8,h8);
-			window->updateMapWH();
 			uint32_t tilecounter=appendoff;
 			for (uint32_t y=0;y<h8;++y){
 				for (uint32_t x=0;x<w8;++x){
-					currentProject->tileMapC->set_tile_full(tilecounter,x,y,0,false,false,false);
+					currentProject->tileMapC->set_tile_full(x,y,tilecounter,0,false,false,false);
 					++tilecounter;
 				}
 			}
