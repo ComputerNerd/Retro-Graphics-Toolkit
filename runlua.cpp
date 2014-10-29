@@ -270,8 +270,15 @@ static int lua_tilemap_dither(lua_State*L){
 	currentProject->tileMapC->ditherAsImage(method);
 	return 0;
 }
+static int lua_tilemap_resize(lua_State*L){
+	unsigned x=luaL_optunsigned(L,1,1);
+	unsigned y=luaL_optunsigned(L,2,1);
+	currentProject->tileMapC->resize_tile_map(x,y);
+	return 0;
+}
 static const luaL_Reg lua_tilemapAPI[]={
 	{"dither",lua_tilemap_dither},
+	{"resize",lua_tilemap_resize},
 	{0,0}
 };
 static int lua_sprite_dither(lua_State*L){
@@ -288,10 +295,6 @@ static const luaL_Reg lua_spriteAPI[]={
 	{"ditherAll",lua_sprite_ditherAll},
 	{0,0}
 };
-static int lua_rgt_redraw(lua_State*L){
-	window->redraw();
-	return 0;
-}
 static int lua_project_rgt_have(lua_State*L){
 	lua_pushboolean(L,containsDataCurProj(luaL_optunsigned(L,1,pjHavePal)));
 	return 1;
@@ -320,6 +323,10 @@ static const luaL_Reg lua_projectAPI[]={
 	{"haveMessage",lua_project_rgt_haveMessage},
 	{0,0}
 };
+static int lua_rgt_redraw(lua_State*L){
+	window->redraw();
+	return 0;
+}
 static const luaL_Reg lua_rgtAPI[]={
 	{"redraw",lua_rgt_redraw},
 	{0,0}

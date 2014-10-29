@@ -51,7 +51,7 @@ public:
 	void pickRowDelta(bool showProgress=false,Fl_Progress *progress=0);
 	void allRowSet(unsigned row);
 	void set_tile_full(uint32_t tile,uint32_t x,uint32_t y,uint8_t palette_row,bool use_hflip,bool use_vflip,bool highorlow_prio);
-	void set_tile(uint32_t tile,uint32_t x,uint32_t y);
+	void set_tile(uint32_t x,uint32_t y,uint32_t tile);
 	void set_prio(uint32_t x,uint32_t y,bool prio_set);
 	void set_hflip(uint32_t x,uint32_t y,bool hflip_set);
 	void ScrollUpdate(void);

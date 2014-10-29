@@ -48,7 +48,7 @@ void tilesnewfilppedCB(Fl_Widget*,void*){
 					memcpy(currentProject->tileC->truetDat.data()+((amt+acum)*currentProject->tileC->tcSize),tcTemp,currentProject->tileC->tcSize);
 					++acum;
 				}
-				currentProject->tileMapC->set_tile(hvflip[t],x,y);
+				currentProject->tileMapC->set_tile(x,y,hvflip[t]);
 				currentProject->tileMapC->set_hflip(x,y,false);
 				currentProject->tileMapC->set_vflip(x,y,false);
 			}else if(hf){
@@ -62,7 +62,7 @@ void tilesnewfilppedCB(Fl_Widget*,void*){
 					memcpy(currentProject->tileC->truetDat.data()+((amt+acum)*currentProject->tileC->tcSize),tcTemp,currentProject->tileC->tcSize);
 					++acum;
 				}
-				currentProject->tileMapC->set_tile(hflip[t],x,y);
+				currentProject->tileMapC->set_tile(x,y,hflip[t]);
 				currentProject->tileMapC->set_hflip(x,y,false);
 			}else if(vf){
 				if(!(vflip[t])){
@@ -75,7 +75,7 @@ void tilesnewfilppedCB(Fl_Widget*,void*){
 					memcpy(currentProject->tileC->truetDat.data()+((amt+acum)*currentProject->tileC->tcSize),tcTemp,currentProject->tileC->tcSize);
 					++acum;
 				}
-				currentProject->tileMapC->set_tile(vflip[t],x,y);
+				currentProject->tileMapC->set_tile(x,y,vflip[t]);
 				currentProject->tileMapC->set_vflip(x,y,false);
 			}
 		}
@@ -131,7 +131,7 @@ void set_tile_currentTP(Fl_Widget* o,void*){
 	currentProject->tileC->current_tile=s->value();
 	if(tileEditModePlace_G){
 		pushTilemapEdit(selTileE_G[0],selTileE_G[1]);
-		currentProject->tileMapC->set_tile(currentProject->tileC->current_tile,selTileE_G[0],selTileE_G[1]);
+		currentProject->tileMapC->set_tile(selTileE_G[0],selTileE_G[1],currentProject->tileC->current_tile);
 	}
 	window->redraw();
 }

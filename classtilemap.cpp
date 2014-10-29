@@ -650,11 +650,11 @@ bool tileMap::loadFromFile(){
 							temp<<=8;
 							temp|=*tempMap++;
 							if (temp-offset > 0)
-								set_tile((int32_t)temp-offset,x,y);
+								set_tile(x,y,(int32_t)temp-offset);
 							else
-								set_tile(0,x,y);
+								set_tile(x,y,0);
 						}else
-							set_tile(0,x,y);
+							set_tile(x,y,0);
 					}
 				}
 			break;
@@ -664,11 +664,11 @@ bool tileMap::loadFromFile(){
 						if ((x+(y*w)+1) <= file_size){
 							int temp=*tempMap++;
 							if (temp-offset > 0)
-								set_tile((int32_t)temp-offset,x,y);
+								set_tile(x,y,(int32_t)temp-offset);
 							else
-								set_tile(0,x,y);
+								set_tile(x,y,0);
 						}else
-							set_tile(0,x,y);
+							set_tile(x,y,0);
 					}
 				}
 				//now load attributes
@@ -713,7 +713,7 @@ void tileMap::sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vfl
 		for (x=0;x<mapSizeW;x++){
 			temp=get_tile(x,y);
 			if (temp == oldTile){
-				set_tile(newTile,x,y);
+				set_tile(x,y,newTile);
 				if (hflip == true)
 					set_hflip(x,y,true);
 				if (vflip)
@@ -723,7 +723,7 @@ void tileMap::sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vfl
 				temp--;
 				if (temp < 0)
 					temp=0;
-				set_tile(temp,x,y);
+				set_tile(x,y,temp);
 			}
 		}
 	}
@@ -760,7 +760,7 @@ void tileMap::set_tile_full(uint32_t tile,uint32_t x,uint32_t y,uint8_t palette_
 	tileMapDat[selected_tile+2]=(tile>>8)&255;
 	tileMapDat[selected_tile+3]=tile&255;
 }
-void tileMap::set_tile(uint32_t tile,uint32_t x,uint32_t y){
+void tileMap::set_tile(uint32_t x,uint32_t y,uint32_t tile){
 	if (mapSizeW < x || (mapSizeH*amt) < y) {
 		printf("Error (%d,%d) cannot be set to a tile as it is not on the map",x,y);
 		return;
