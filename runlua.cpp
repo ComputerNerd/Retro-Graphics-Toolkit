@@ -28,6 +28,7 @@
 #include "color_convert.h"
 #include "callback_gui.h"
 #include "callbacksprites.h"
+#include "dither.h"
 static int panic(lua_State *L){
 	fl_alert("PANIC: unprotected error in call to Lua API (%s)\n",lua_tostring(L, -1));
 	throw 0;//Otherwise abort() would be called when not needed
@@ -208,6 +209,21 @@ static int lua_tile_getTileRGBA(lua_State*L){
 	}
 	return 0;
 }
+static void fillucharFromTab(lua_State*L,unsigned index,unsigned len,unsigned sz,uint8_t*ptr){//len amount in table sz expected size
+	unsigned to=std::min(len,sz);
+	for(unsigned i=1;i<=to;++i){
+		lua_rawgeti(L,index,i);
+		int tmp=lua_tointeger(L,-1);
+		if(tmp<0)
+			tmp=0;
+		if(tmp>255)
+			tmp=255;
+		*ptr++=tmp;
+		lua_pop(L,1);
+	}
+	if(sz>len)
+		memset(ptr,0,sz-len);
+}
 static int lua_tile_setTileRGBA(lua_State*L){
 	unsigned tile=luaL_optunsigned(L,1,0);
 	if(inRangeTile(tile)){
@@ -217,19 +233,7 @@ static int lua_tile_setTileRGBA(lua_State*L){
 			fl_alert("setTileRGBA error: parameter 2 must be a table");
 			return 0;
 		}
-		unsigned to=std::min(currentProject->tileC->tcSize,len);
-		for(unsigned i=1;i<=to;++i){
-			lua_rawgeti(L,2,i);
-			int tmp=lua_tointeger(L,-1);
-			if(tmp<0)
-				tmp=0;
-			if(tmp>255)
-				tmp=255;
-			*tptr++=tmp;
-			lua_pop(L,1);
-		}
-		if(to<currentProject->tileC->tcSize)
-			memset(tptr,0,currentProject->tileC->tcSize-to);
+		fillucharFromTab(L,2,len,currentProject->tileC->tcSize,tptr);
 	}
 	return 0;
 }
@@ -241,11 +245,14 @@ static int lua_tile_dither(lua_State*L){
 		currentProject->tileC->truecolor_to_tile(row,tile,useAlt);
 	return 0;
 }
-static void syncTileAmt(lua_State*L){
-	lua_getglobal(L, "tile");
-	lua_pushstring(L,"amt");
-	lua_pushunsigned(L, currentProject->tileC->amt);
+static void setUnsignedLua(lua_State*L,const char*tab,const char*var,unsigned val){
+	lua_getglobal(L,tab);
+	lua_pushstring(L,var);
+	lua_pushunsigned(L,val);
 	lua_rawset(L, -3);
+}
+static void syncTileAmt(lua_State*L){
+	setUnsignedLua(L,"tile","amt",currentProject->tileC->amt);
 	updateTileSelectAmt();
 }
 static int lua_tile_append(lua_State*L){
@@ -275,6 +282,9 @@ static int lua_tilemap_dither(lua_State*L){
 }
 static int lua_tilemap_resize(lua_State*L){
 	currentProject->tileMapC->resize_tile_map(luaL_optunsigned(L,1,1),luaL_optunsigned(L,2,1));
+	setUnsignedLua(L,"tilemap","width",currentProject->tileMapC->mapSizeW);
+	setUnsignedLua(L,"tilemap","height",currentProject->tileMapC->mapSizeH);
+	setUnsignedLua(L,"tilemap","heightA",currentProject->tileMapC->mapSizeHA);
 	return 0;
 }
 static int lua_tilemap_getHflip(lua_State*L){
@@ -360,27 +370,15 @@ static int lua_tilemap_imageToTiles(lua_State*L){
 	int row=luaL_optinteger(L,2,-1);
 	bool useAlpha=luaL_optunsigned(L,3,0);
 	bool copyToTruecol=luaL_optunsigned(L,4,0);
+	bool convert=luaL_optunsigned(L,4,1);
 	unsigned bpp=useAlpha+3;
 	uint32_t w,h;
 	w=currentProject->tileMapC->mapSizeW*currentProject->tileC->sizew;
 	h=currentProject->tileMapC->mapSizeHA*currentProject->tileC->sizeh;
 	unsigned sz=w*h*bpp;
 	uint8_t*image=(uint8_t*)malloc(sz);
-	uint8_t*imgptr=image;
-	unsigned to=std::min(sz,len);
-	for(unsigned i=1;i<=to;++i){
-		lua_rawgeti(L,1,i);
-		int tmp=lua_tointeger(L,-1);
-		if(tmp<0)
-			tmp=0;
-		if(tmp>255)
-			tmp=255;
-		*imgptr++=tmp;
-		lua_pop(L,1);
-	}
-	if(to<sz)
-		memset(imgptr,0,sz-to);
-	currentProject->tileMapC->truecolorimageToTiles(image,row,useAlpha,copyToTruecol);
+	fillucharFromTab(L,1,len,sz,image);
+	currentProject->tileMapC->truecolorimageToTiles(image,row,useAlpha,copyToTruecol,convert);
 	free(image);
 	return 0;
 }
@@ -432,8 +430,7 @@ static int lua_project_rgt_haveMessage(lua_State*L){
 	for(unsigned x=0;x<=pjMaxMaskBit;++x){
 		if(mask&(1<<x)){
 			msg.push_back('\n');
-			msg.append(containsDataCurProj(1<<x)?"has":"does not have");
-			msg.push_back(' ');
+			msg.append(containsDataCurProj(1<<x)?"has ":"does not have ");
 			msg.append(maskToName(1<<x));
 		}
 	}
@@ -450,8 +447,38 @@ static int lua_rgt_redraw(lua_State*L){
 	window->redraw();
 	return 0;
 }
+static int lua_rgt_ditherImage(lua_State*L){
+	/*
+void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha=false,bool colSpace=false,bool forceRow=false,unsigned forcedrow=0,bool isChunk=false,uint32_t idChunk=0,bool isSprite=false);
+	*/
+	unsigned len=lua_rawlen(L,1);
+	if(!len){
+		fl_alert("ditherImage error: parameter 1 must be a table");
+		return 0;
+	}
+	unsigned w=luaL_optunsigned(L,2,0);
+	unsigned h=luaL_optunsigned(L,3,0);
+	if(!w||!h){
+		fl_alert("Invalid width/height");
+		return 0;
+	}
+	bool useAlpha=luaL_optunsigned(L,4,0);
+	unsigned bpp=useAlpha+3;
+	unsigned sz=w*h*bpp;
+	uint8_t*image=(uint8_t*)malloc(sz);
+	fillucharFromTab(L,1,len,sz,image);
+	ditherImage(image,w,h,useAlpha,luaL_optunsigned(L,5,0),luaL_optunsigned(L,6,0),luaL_optunsigned(L,7,0),luaL_optunsigned(L,8,0),luaL_optunsigned(L,9,0),luaL_optunsigned(L,10,0));
+	uint8_t*imgptr=image;
+	for(unsigned i=1;i<=std::min(len,sz);++i){
+		lua_pushunsigned(L,*imgptr++);
+		lua_rawseti(L,1,i);
+	}
+	free(image);
+	return 0;
+}
 static const luaL_Reg lua_rgtAPI[]={
 	{"redraw",lua_rgt_redraw},
+	{"ditherImage",lua_rgt_ditherImage},
 	{0,0}
 };
 void runLua(Fl_Widget*,void*){

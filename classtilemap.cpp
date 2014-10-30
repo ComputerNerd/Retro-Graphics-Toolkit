@@ -911,7 +911,7 @@ bool tileMap::truecolor_to_image(uint8_t * the_image,int useRow,bool useAlpha){
 	}
 	return true;
 }
-void tileMap::truecolorimageToTiles(uint8_t * image,int rowusage,bool useAlpha,bool copyToTruecolor){
+void tileMap::truecolorimageToTiles(uint8_t * image,int rowusage,bool useAlpha,bool copyToTruecolor,bool convert){
 	unsigned type_temp=palTypeGen;
 	unsigned tempSet=0;
 	uint8_t truecolor_tile[256];//TODO avoid hard coding tile size
@@ -925,7 +925,7 @@ void tileMap::truecolorimageToTiles(uint8_t * image,int rowusage,bool useAlpha,b
 	for (uint_fast32_t a=0;a<(h*w*pSize)-w*pSize;a+=w*pSize*8){//a tiles y
 		for (uint_fast32_t b=0;b<w*pSize;b+=pTile){//b tiles x
 			int32_t current_tile;
-			if(rowusage==-1){
+			if(rowusage<0){
 				current_tile=get_tile(x_tile,y_tile);
 				if(current_tile>=currentProject->tileC->amt)
 					goto dont_convert_tile;
@@ -958,7 +958,8 @@ void tileMap::truecolorimageToTiles(uint8_t * image,int rowusage,bool useAlpha,b
 			}
 			if(copyToTruecolor)
 				memcpy(currentProject->tileC->truetDat.data()+(current_tile*currentProject->tileC->tcSize),truecolor_tile,currentProject->tileC->tcSize);
-			currentProject->tileC->truecolor_to_tile_ptr(get_palette_map(x_tile,y_tile),current_tile,truecolor_tile,false,false);
+			if(convert)
+				currentProject->tileC->truecolor_to_tile_ptr(get_palette_map(x_tile,y_tile),current_tile,truecolor_tile,false,false);
 dont_convert_tile:
 		++x_tile;
 		}

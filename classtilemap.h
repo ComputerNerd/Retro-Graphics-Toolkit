@@ -57,5 +57,5 @@ public:
 	void ScrollUpdate(void);
 	void resize_tile_map(uint32_t new_x,uint32_t new_y);
 	bool truecolor_to_image(uint8_t * the_image,int useRow=-1,bool useAlpha=true);
-	void truecolorimageToTiles(uint8_t * image,int rowusage,bool useAlpha=true,bool copyToTruecolor=false);
+	void truecolorimageToTiles(uint8_t * image,int rowusage,bool useAlpha=true,bool copyToTruecolor=false,bool convert=true);
 };
