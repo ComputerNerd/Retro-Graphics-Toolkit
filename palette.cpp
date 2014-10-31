@@ -18,6 +18,15 @@
 #include "errorMsg.h"
 #include "color_convert.h"
 #include "undo.h"
+unsigned calMaxPerRow(unsigned row){
+	row*=palEdit.perRow;
+	unsigned max=palEdit.perRow;
+	for(unsigned i=row;i<palEdit.perRow+row;++i){
+		if(currentProject->palType[i]&&max)//Locked or reserved colors cannot be changed
+			--max;
+	}
+	return max;
+}
 unsigned palTypeGen;
 typedef std::pair<double,int> HLSpair;
 bool comparatorHLS(const HLSpair& l,const HLSpair& r)

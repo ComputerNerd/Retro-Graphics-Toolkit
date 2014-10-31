@@ -4,12 +4,22 @@ if project.have(project.tilesMask) then
 -- that is I add tiles that do not use a palette.
 	if project.have(project.palMask) then 
 		local index=0
-		for gray=0,255,255/(palette.cnt/palette.rowCnt-1) do
-			palette.setRGB(index,gray,gray,gray)
-			if palette.haveAlt then
-				palette.setRGB(index+palette.cnt,gray,gray,gray)
+		for gray=0,255,255/(palette.maxInRow(0)-1) do
+			while palette.getType(index)~=0 do
+				index=index+1;
 			end
+			palette.setRGB(index,gray,gray,gray)
 			index=index+1;
+		end
+		if palette.haveAlt then
+			index=palette.cnt
+			for gray=0,255,255/(palette.maxInRow(palette.rowCnt)-1) do
+				while palette.getType(index)~=0 do
+					index=index+1;
+				end
+				palette.setRGB(index,gray,gray,gray)
+				index=index+1;
+			end
 		end
 	end
 	for i=0,tile.amt-1,1 do

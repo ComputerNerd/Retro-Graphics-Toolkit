@@ -139,10 +139,20 @@ static int lua_palette_fixSliders(lua_State*L){
 	window->redraw();
 	return 0;
 }
+static int lua_palette_maxInRow(lua_State*L){
+	lua_pushunsigned(L,calMaxPerRow(luaL_optunsigned(L,1,0)));
+	return 1;
+}
+static int lua_palette_getType(lua_State*L){
+	lua_pushunsigned(L,currentProject->palType[luaL_optunsigned(L,1,0)]);
+	return 1;
+}
 static const luaL_Reg lua_paletteAPI[]={
 	{"getRGB",lua_palette_getRGB},
 	{"setRGB",lua_palette_setRGB},
 	{"fixSliders",lua_palette_fixSliders},
+	{"maxInRow",lua_palette_maxInRow},
+	{"getType",lua_palette_getType},
 	{0,0}
 };
 static unsigned inRangeTile(unsigned tile){
@@ -448,9 +458,6 @@ static int lua_rgt_redraw(lua_State*L){
 	return 0;
 }
 static int lua_rgt_ditherImage(lua_State*L){
-	/*
-void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha=false,bool colSpace=false,bool forceRow=false,unsigned forcedrow=0,bool isChunk=false,uint32_t idChunk=0,bool isSprite=false);
-	*/
 	unsigned len=lua_rawlen(L,1);
 	if(!len){
 		fl_alert("ditherImage error: parameter 1 must be a table");

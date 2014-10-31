@@ -737,15 +737,6 @@ static void setValInt(Fl_Int_Input*i,unsigned val){
 	i->value(tmp);
 	winG->redraw();
 }
-static unsigned calMaxPerRow(unsigned row){
-	row*=palEdit.perRow;
-	unsigned max=palEdit.perRow;
-	for(unsigned i=row;i<palEdit.perRow+row;++i){
-		if(currentProject->palType[i]&&max)//Locked or reserved colors cannot be changed
-			--max;
-	}
-	return max;
-}
 static void setPerRow(Fl_Widget*w,void*x){
 	uintptr_t which=(uintptr_t)x;
 	unsigned val=SafeTxtInput((Fl_Int_Input*)w,false);
