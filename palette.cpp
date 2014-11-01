@@ -28,24 +28,24 @@ unsigned calMaxPerRow(unsigned row){
 	return max;
 }
 unsigned palTypeGen;
-typedef std::pair<double,int> HLSpair;
-bool comparatorHLS(const HLSpair& l,const HLSpair& r)
+typedef std::pair<double,int> HSLpair;
+bool comparatorHSL(const HSLpair& l,const HSLpair& r)
    { return l.first < r.first; }
 void sortBy(unsigned type,bool perRow){
 	pushPaletteAll();
 	unsigned totalCol=currentProject->colorCnt+currentProject->colorCntalt;
-	HLSpair* MapHLS=new HLSpair[totalCol];
+	HSLpair* MapHSL=new HSLpair[totalCol];
 	for(unsigned x=0;x<totalCol*3;x+=3){
 		double h,l,s;
-		rgbToHls(currentProject->rgbPal[x],currentProject->rgbPal[x+1],currentProject->rgbPal[x+2],&h,&l,&s);
-		MapHLS[x/3].first=pickIt(h,l,s,type);
-		MapHLS[x/3].second=x/3;
+		rgbToHsl(currentProject->rgbPal[x],currentProject->rgbPal[x+1],currentProject->rgbPal[x+2],&h,&s,&l);
+		MapHSL[x/3].first=pickIt(h,s,l,type);
+		MapHSL[x/3].second=x/3;
 	}
 	if(perRow){
 		for(unsigned i=0;i<currentProject->rowCntPal+currentProject->rowCntPalalt;++i)
-			std::sort(MapHLS+(palEdit.perRow*i),MapHLS+(palEdit.perRow*(i+1)),comparatorHLS);
+			std::sort(MapHSL+(palEdit.perRow*i),MapHSL+(palEdit.perRow*(i+1)),comparatorHSL);
 	}else
-		std::sort(MapHLS,MapHLS+(totalCol),comparatorHLS);
+		std::sort(MapHSL,MapHSL+(totalCol),comparatorHSL);
 	unsigned eSize;
 	switch(currentProject->gameSystem){
 		case sega_genesis:
@@ -59,14 +59,14 @@ void sortBy(unsigned type,bool perRow){
 	uint8_t* newPalRgb=(uint8_t*)alloca(totalCol*eSize*3);
 	uint8_t* newPalType=(uint8_t*)alloca(totalCol);
 	for(unsigned x=0;x<totalCol;++x){
-		memcpy(newPal+(x*eSize),currentProject->palDat+(MapHLS[x].second*eSize),eSize);
-		memcpy(newPalRgb+(x*3),currentProject->rgbPal+(MapHLS[x].second*3),3);
-		newPalType[x]=currentProject->palType[MapHLS[x].second];
+		memcpy(newPal+(x*eSize),currentProject->palDat+(MapHSL[x].second*eSize),eSize);
+		memcpy(newPalRgb+(x*3),currentProject->rgbPal+(MapHSL[x].second*3),3);
+		newPalType[x]=currentProject->palType[MapHSL[x].second];
 	}
 	memcpy(currentProject->palDat,newPal,totalCol*eSize);
 	memcpy(currentProject->rgbPal,newPalRgb,totalCol*3);
 	memcpy(currentProject->palType,newPalType,totalCol);
-	delete[] MapHLS;
+	delete[] MapHSL;
 }
 void swapEntry(unsigned one,unsigned two){
 	if(unlikely(one==two))

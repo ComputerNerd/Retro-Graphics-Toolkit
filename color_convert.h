@@ -26,7 +26,7 @@ extern uint8_t nespaltab_b_alt[];
 void rgbToEntry(unsigned r,unsigned g,unsigned b,unsigned ent);
 uint8_t nearest_color_index(uint8_t val,unsigned startindex);
 uint8_t nearest_color_index(uint8_t val);
-void rgbToHls(double r,double g,double b,double * hh,double * ll,double * ss);
+void rgbToHsl(double r,double g,double b,double * hh,double * ll,double * ss);
 void updateRGBindex(unsigned index);
 void swapEntry(uint8_t one,uint8_t two);
 uint8_t to_nes_color_rgb(uint8_t red,uint8_t green,uint8_t blue);
@@ -41,16 +41,16 @@ static inline uint32_t toNesRgb(uint8_t ri,uint8_t gi,uint8_t bi){
 	return MakeRGBcolor(to_nes_color_rgb(ri,gi,bi));
 }
 void updateNesTab(unsigned emps,bool alt);
-static inline double pickIt(double h,double l,double s,unsigned type){
+static inline double pickIt(double h,double s,double l,unsigned type){
 	switch(type){
 		case 0:
 			return h;
 		break;
 		case 1:
-			return l;
+			return s;
 		break;
 		case 2:
-			return s;
+			return l;
 		break;
 	}
 }

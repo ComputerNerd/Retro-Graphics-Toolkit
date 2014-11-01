@@ -33,17 +33,17 @@ static void addHist(uint32_t cur_tile,int type,uint32_t*hist,unsigned sz){
 	uint8_t * truePtr=&currentProject->tileC->truetDat[cur_tile*256];
 	double h,l,s;
 	for(unsigned z=0;z<256;z+=4){
-		rgbToHls(truePtr[0],truePtr[1],truePtr[2],&h,&l,&s);
+		rgbToHsl(truePtr[0],truePtr[1],truePtr[2],&h,&s,&l);
 		truePtr+=4;
 		switch(type){
 			case 0:
 				++hist[unsigned(h*szz)];
 			break;
 			case 1:
-				++hist[unsigned(l*szz)];
+				++hist[unsigned(s*szz)];
 			break;
 			case 2:
-				++hist[unsigned(s*szz)];
+				++hist[unsigned(l*szz)];
 			break;
 			case 3:
 				++hist[unsigned(h*s*szz)];
@@ -74,17 +74,17 @@ static double getHH(uint32_t cur_tile,int type){
 	uint8_t * truePtr=&currentProject->tileC->truetDat[cur_tile*256];
 	double h,l,s;
 	for(unsigned z=0;z<256;z+=4){
-		rgbToHls(truePtr[0],truePtr[1],truePtr[2],&h,&l,&s);
+		rgbToHsl(truePtr[0],truePtr[1],truePtr[2],&h,&s,&l);
 		truePtr+=4;
 		switch(type){
 			case 0:
 				hh+=h;
 			break;
 			case 1:
-				hh+=l;
+				hh+=s;
 			break;
 			case 2:
-				hh+=s;
+				hh+=l;
 			break;
 			case 3:
 				hh+=h*s;
@@ -109,7 +109,7 @@ static double getHH(uint32_t cur_tile,int type){
 	return hh;
 }
 void tileMap::pickRow(unsigned amount){
-	int type=MenuPopup("Pick tile row based on...","Please pick what most defines the image",9,"Hue","Brightness","Saturation","Hue*satuaration","Hue*Brightness","Brightness*saturation","Hue+satuaration","Hue+Brightness","Brightness+saturation");
+	int type=MenuPopup("Pick tile row based on...","Please pick what most defines the image",9,"Hue","Saturation","Lightness","Hue*satuaration","Hue*Lightness","Lightness*saturation","Hue+satuaration","Hue+lightness","Lightness+saturation");
 	if(type<0)
 		return;
 	int method=MenuPopup("Select a method","This depends on the image",3,"Average","Histogram section with most occurances","Histogram peak");
@@ -253,7 +253,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	pushTilemapAll(true);
 	pushTilesAll(tTypeTile);
 	if(fl_ask("Would you like the palette to be ordered by hue or light or saturation")){
-		unsigned type=fl_choice("What do you want it ordered by","Hue","Light","Saturation");
+		unsigned type=fl_choice("What do you want it ordered by","Hue","Saturation","Lightness");
 		sortBy(type,false);
 	}
 	unsigned type_temp=palTypeGen;
@@ -337,9 +337,9 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 									case 5:
 										for(x=0;x<32;x+=4){
 											double h[2],l[2],s[2];
-											rgbToHls(imagein[a+b+y+x+c+e],imagein[a+b+y+x+1+c+e],imagein[a+b+y+x+2+c+e],h,l,s);
-											rgbToHls(imageout[t][a+b+y+x+c+e],imageout[t][a+b+y+x+1+c+e],imageout[t][a+b+y+x+2+c+e],h+1,l+1,s+1);
-											d[t]+=std::abs(pickIt(h[0],l[0],s[0],alg-3)-pickIt(h[1],l[1],s[1],alg-3));
+											rgbToHsl(imagein[a+b+y+x+c+e],imagein[a+b+y+x+1+c+e],imagein[a+b+y+x+2+c+e],h,s,l);
+											rgbToHsl(imageout[t][a+b+y+x+c+e],imageout[t][a+b+y+x+1+c+e],imageout[t][a+b+y+x+2+c+e],h+1,s+1,l+1);
+											d[t]+=std::abs(pickIt(h[0],s[0],l[0],alg-3)-pickIt(h[1],s[1],l[1],alg-3));
 										}
 										//printf("d[%d]=%f\n",t,d[t]);
 										break;

@@ -22,7 +22,7 @@
 #include "undo.h"
 #include "errorMsg.h"
 void sortRowbyCB(Fl_Widget*,void*){
-	unsigned type=fl_choice("Sort each row by","Hue","Lightness","Saturation");
+	unsigned type=fl_choice("Sort each row by","Hue","Saturation","Lightness");
 	sortBy(type,true);
 	switch (mode_editor){
 		case pal_edit:

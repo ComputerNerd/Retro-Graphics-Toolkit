@@ -93,7 +93,7 @@ static double min3(double a,double b,double c){
  * @param   Number  b       The blue color value
  * @return  Array           The HSL representation
  */
-void rgbToHls(double r,double g,double b,double * hh,double * ll,double * ss){
+void rgbToHsl(double r,double g,double b,double * hh,double * ss,double * ll){
 	r /= 255.0;
 	g /= 255.0;
 	b /= 255.0;

@@ -153,9 +153,8 @@ static int lua_palette_setRaw(lua_State*L){
 		unsigned val=luaL_optunsigned(L,2,0);
 		switch(currentProject->gameSystem){
 			case sega_genesis:
-				ent*=2;
-				currentProject->palDat[ent]=val&255;
-				currentProject->palDat[ent+1]=val>>8;
+				currentProject->palDat[ent*2]=val&255;
+				currentProject->palDat[ent*2+1]=val>>8;
 			break;
 			case NES:
 				currentProject->palDat[ent]=val;
@@ -188,6 +187,10 @@ static int lua_palette_getType(lua_State*L){
 	lua_pushunsigned(L,currentProject->palType[luaL_optunsigned(L,1,0)]);
 	return 1;
 }
+static int lua_palette_sortByHSL(lua_State*L){
+	sortBy(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0));
+	return 0;
+}
 static const luaL_Reg lua_paletteAPI[]={
 	{"getRGB",lua_palette_getRGB},
 	{"setRGB",lua_palette_setRGB},
@@ -196,6 +199,7 @@ static const luaL_Reg lua_paletteAPI[]={
 	{"fixSliders",lua_palette_fixSliders},
 	{"maxInRow",lua_palette_maxInRow},
 	{"getType",lua_palette_getType},
+	{"sortByHSL",lua_palette_sortByHSL},
 	{0,0}
 };
 static unsigned inRangeTile(unsigned tile){

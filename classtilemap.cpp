@@ -727,7 +727,7 @@ void tileMap::sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vfl
 		}
 	}
 }
-void tileMap::set_tile_full(uint32_t tile,uint32_t x,uint32_t y,unsigned palette_row,bool use_hflip,bool use_vflip,bool highorlow_prio){
+void tileMap::set_tile_full(uint32_t x,uint32_t y,uint32_t tile,unsigned palette_row,bool use_hflip,bool use_vflip,bool highorlow_prio){
 	if (mapSizeW < x || (mapSizeHA) < y) {
 		printf("Error (%d,%d) cannot be set to a tile as it is not on the map",x,y);
 		return;
