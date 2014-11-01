@@ -68,7 +68,7 @@ void sortBy(unsigned type,bool perRow){
 	memcpy(currentProject->palType,newPalType,totalCol);
 	delete[] MapHLS;
 }
-void swapEntry(uint8_t one,uint8_t two){
+void swapEntry(unsigned one,unsigned two){
 	if(unlikely(one==two))
 		return;
 	switch(currentProject->gameSystem){
@@ -79,8 +79,8 @@ void swapEntry(uint8_t one,uint8_t two){
 			memcpy(currentProject->palDat+one+one,palOld,2);}
 		break;
 		case NES:
-			{uint8_t palOld=currentProject->palDat[two+two];
-			memcpy(currentProject->palDat+two,currentProject->palDat+one,1);
+			{uint8_t palOld=currentProject->palDat[two];
+			currentProject->palDat[two]=currentProject->palDat[one];
 			currentProject->palDat[one]=palOld;}
 		break;
 		default:

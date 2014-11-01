@@ -295,7 +295,7 @@ void set_ditherAlg(Fl_Widget*,void* typeset){
 	currentProject->settings|=(uintptr_t)typeset&settingsDitherMask;
 }
 void set_tile_row(Fl_Widget*,void* row){
-	uint8_t selrow=(uintptr_t)row;
+	unsigned selrow=(uintptr_t)row;
 	switch (mode_editor){
 		case tile_edit:
 			tileEdit_pal.changeRow(selrow);

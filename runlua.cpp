@@ -128,6 +128,17 @@ static int lua_palette_getRGB(lua_State*L){
 	}else
 		return 0;
 }
+static int lua_palette_getRaw(lua_State*L){
+	unsigned ent=luaL_optunsigned(L,1,0);
+	if(inRangeEnt(ent)){
+		ent*=3;
+		lua_pushunsigned(L,currentProject->rgbPal[ent]);
+		lua_pushunsigned(L,currentProject->rgbPal[ent+1]);
+		lua_pushunsigned(L,currentProject->rgbPal[ent+2]);
+		return 3;
+	}else
+		return 0;
+}
 static int lua_palette_setRGB(lua_State*L){
 	unsigned ent=luaL_optunsigned(L,1,0);
 	if(inRangeEnt(ent))
@@ -150,6 +161,7 @@ static int lua_palette_getType(lua_State*L){
 static const luaL_Reg lua_paletteAPI[]={
 	{"getRGB",lua_palette_getRGB},
 	{"setRGB",lua_palette_setRGB},
+	{"getRaw",lua_palette_getRaw},
 	{"fixSliders",lua_palette_fixSliders},
 	{"maxInRow",lua_palette_maxInRow},
 	{"getType",lua_palette_getType},
@@ -488,6 +500,11 @@ static const luaL_Reg lua_rgtAPI[]={
 	{"ditherImage",lua_rgt_ditherImage},
 	{0,0}
 };
+static void mkKeyunsigned(lua_State*L,const char*str,unsigned val){
+	lua_pushstring(L,str);
+	lua_pushunsigned(L,val);
+	lua_rawset(L, -3);
+}
 void runLua(Fl_Widget*,void*){
 	std::string scriptname;
 	if(loadsavefile(scriptname,"Select a lua script")){
@@ -503,25 +520,11 @@ void runLua(Fl_Widget*,void*){
 					lua_createtable(L, 0,(sizeof(lua_paletteAPI)/sizeof((lua_paletteAPI)[0]) - 1)+5);
 					luaL_setfuncs(L,lua_paletteAPI,0);
 
-					lua_pushstring(L,"cnt");
-					lua_pushunsigned(L, currentProject->colorCnt);
-					lua_rawset(L, -3);
-
-					lua_pushstring(L,"cntAlt");
-					lua_pushunsigned(L, currentProject->colorCntalt);
-					lua_rawset(L, -3);
-
-					lua_pushstring(L,"rowCnt");
-					lua_pushunsigned(L, currentProject->rowCntPal);
-					lua_rawset(L, -3);
-
-					lua_pushstring(L,"rowCntAlt");
-					lua_pushunsigned(L, currentProject->rowCntPalalt);
-					lua_rawset(L, -3);
-
-					lua_pushstring(L,"haveAlt");
-					lua_pushboolean(L, currentProject->haveAltspritePal);
-					lua_rawset(L, -3);
+					mkKeyunsigned(L,"cnt",currentProject->colorCnt);
+					mkKeyunsigned(L,"cntAlt",currentProject->colorCntalt);
+					mkKeyunsigned(L,"rowCnt",currentProject->rowCntPal);
+					mkKeyunsigned(L,"rowCntAlt",currentProject->rowCntPalalt);
+					mkKeyunsigned(L,"haveAlt",currentProject->haveAltspritePal);
 
 					lua_setglobal(L, "palette");
 				}
@@ -530,15 +533,9 @@ void runLua(Fl_Widget*,void*){
 					lua_createtable(L, 0,(sizeof(lua_tileAPI)/sizeof((lua_tileAPI)[0]) - 1)+3);
 					luaL_setfuncs(L,lua_tileAPI,0);
 
-					lua_pushstring(L,"amt");
-					lua_pushunsigned(L, currentProject->tileC->amt);
-					lua_rawset(L, -3);
-					lua_pushstring(L,"width");
-					lua_pushunsigned(L, currentProject->tileC->sizew);
-					lua_rawset(L, -3);
-					lua_pushstring(L,"height");
-					lua_pushunsigned(L, currentProject->tileC->sizeh);
-					lua_rawset(L, -3);
+					mkKeyunsigned(L,"amt",currentProject->tileC->amt);
+					mkKeyunsigned(L,"width",currentProject->tileC->sizew);
+					mkKeyunsigned(L,"height",currentProject->tileC->sizeh);
 
 					lua_setglobal(L, "tile");
 				}
@@ -547,17 +544,9 @@ void runLua(Fl_Widget*,void*){
 					lua_createtable(L, 0,(sizeof(lua_tilemapAPI)/sizeof((lua_tilemapAPI)[0]) - 1)+3);
 					luaL_setfuncs(L,lua_tilemapAPI,0);
 
-					lua_pushstring(L,"width");
-					lua_pushunsigned(L, currentProject->tileMapC->mapSizeW);
-					lua_rawset(L, -3);
-
-					lua_pushstring(L,"height");
-					lua_pushunsigned(L, currentProject->tileMapC->mapSizeH);
-					lua_rawset(L, -3);
-
-					lua_pushstring(L,"heightA");
-					lua_pushunsigned(L, currentProject->tileMapC->mapSizeHA);
-					lua_rawset(L, -3);
+					mkKeyunsigned(L,"width",currentProject->tileMapC->mapSizeW);
+					mkKeyunsigned(L,"height",currentProject->tileMapC->mapSizeH);
+					mkKeyunsigned(L,"heightA",currentProject->tileMapC->mapSizeHA);
 
 					lua_setglobal(L, "tilemap");
 				}
@@ -566,39 +555,25 @@ void runLua(Fl_Widget*,void*){
 					lua_createtable(L, 0,(sizeof(lua_spriteAPI)/sizeof((lua_spriteAPI)[0]) - 1)+1);
 					luaL_setfuncs(L,lua_spriteAPI,0);
 
-					lua_pushstring(L,"amt");
-					lua_pushunsigned(L, currentProject->spritesC->amt);
-					lua_rawset(L, -3);
+					mkKeyunsigned(L,"amt",currentProject->spritesC->amt);
 
 					lua_setglobal(L, "sprite");
 				}
 
 
-  				lua_createtable(L, 0,(sizeof(lua_projectAPI)/sizeof((lua_projectAPI)[0]) - 1)+7);
+  				lua_createtable(L, 0,(sizeof(lua_projectAPI)/sizeof((lua_projectAPI)[0]) - 1)+10);
 				luaL_setfuncs(L,lua_projectAPI,0);
-				lua_pushstring(L,"palMask");
-				lua_pushunsigned(L,pjHavePal);
-				lua_rawset(L, -3);
-				lua_pushstring(L,"tilesMask");
-				lua_pushunsigned(L,pjHaveTiles);
-				lua_rawset(L, -3);
-				lua_pushstring(L,"mapMask");
-				lua_pushunsigned(L,pjHaveMap);
-				lua_rawset(L, -3);
-				lua_pushstring(L,"chunksMask");
-				lua_pushunsigned(L,pjHaveChunks);
-				lua_rawset(L, -3);
-				lua_pushstring(L,"spritesMask");
-				lua_pushunsigned(L,pjHaveSprites);
-				lua_rawset(L, -3);
-				lua_pushstring(L,"levelMask");
-				lua_pushunsigned(L,pjHaveLevel);
-				lua_rawset(L, -3);
-				lua_pushstring(L,"allMask");
-				lua_pushunsigned(L,pjAllMask);
-				lua_rawset(L, -3);
+				mkKeyunsigned(L,"palMask",pjHavePal);
+				mkKeyunsigned(L,"tilesMask",pjHaveTiles);
+				mkKeyunsigned(L,"mapMask",pjHaveMap);
+				mkKeyunsigned(L,"chunksMask",pjHaveChunks);
+				mkKeyunsigned(L,"spritesMask",pjHaveSprites);
+				mkKeyunsigned(L,"levelMask",pjHaveLevel);
+				mkKeyunsigned(L,"allMask",pjAllMask);
+				mkKeyunsigned(L,"gameSystem",currentProject->gameSystem);
+				mkKeyunsigned(L,"segaGenesis",sega_genesis);
+				mkKeyunsigned(L,"NES",NES);
 				lua_setglobal(L, "project");
-
 
 				luaL_newlib(L,lua_rgtAPI);
 				lua_setglobal(L, "rgt");

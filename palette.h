@@ -19,6 +19,6 @@ extern unsigned palTypeGen;
 extern const uint8_t palTab[];
 unsigned calMaxPerRow(unsigned row);
 void sortBy(unsigned type,bool perRow);
-void swapEntry(uint8_t one,uint8_t two);
+void swapEntry(unsigned one,unsigned two);
 void set_palette_type(void);
 void set_palette_type_force(unsigned type);
