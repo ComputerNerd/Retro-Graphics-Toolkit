@@ -75,21 +75,10 @@ double ciede2000(double L1,double a1,double b1,double L2,double a2,double b2,dou
 	double Rt=-1.0*sin(2.0*dtheta)*Rc;
 	return sqrt(square(dL/(Kl*Sl))+square(dC/(Kc*Sc))+square(dH/(Kh*Sh))+(Rt*(dC/(Kc*Sc))*(dH/(Kh*Sh))));
 }
-/*void Rgb2Lch(double *L, double *C, double *H, uint8_t RI, uint8_t GI, uint8_t BI){
-	double X,Y,Z;
-	Rgb2Xyz(&X, &Y, &Z, RI, GI, BI);
-	Xyz2Lch(L, C, H, X, Y, Z);
-}*/
-void Rgb2Lab(uint8_t ri,uint8_t gi,uint8_t bi,double * L,double * a,double * b){
-	//conversion code from http://www.getreuer.info/home/colorspace
-	double X, Y, Z;
-	Rgb2Xyz(&X,&Y,&Z,ri,gi,bi);
-	Xyz2Lab(L, a, b, X, Y, Z);
-}
 double ciede2000rgb(uint8_t R1,uint8_t G1,uint8_t B1,uint8_t R2,uint8_t G2,uint8_t B2){
 	double L1,a1,b1,L2,a2,b2;
-	Rgb2Lab(R1,G1,B1,&L1,&a1,&b1);
-	Rgb2Lab(R2,G2,B2,&L2,&a2,&b2);
+	Rgb2Lab255(R1,G1,B1,&L1,&a1,&b1);
+	Rgb2Lab255(R2,G2,B2,&L2,&a2,&b2);
 	return ciede2000(L1,a1,b1,L2,a2,b2,1.0,1.0,1.0);
 
 }

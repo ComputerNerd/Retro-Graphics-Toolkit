@@ -1,6 +1,6 @@
 #include "CIE.h"
 #include <cmath>
-//macros from http://www.getreuer.info/home/colorspace
+//Conversion code from http://www.getreuer.info/home/colorspace
 /** 
  * @brief Inverse sRGB gamma correction, transforms R' to R 
  */
@@ -24,8 +24,7 @@
  * Wikipedia: http://en.wikipedia.org/wiki/SRGB
  * Wikipedia: http://en.wikipedia.org/wiki/CIE_1931_color_space
  */
-void Rgb2Xyz(double *X, double *Y, double *Z, uint8_t RI, uint8_t GI, uint8_t BI){
-	double R=double(RI)/255.0,G=double(GI)/255.0,B=double(BI)/255.0;
+static void Rgb2Xyz(double*X,double*Y,double*Z,double R,double G,double B){
 	R = INVGAMMACORRECTION(R);
 	G = INVGAMMACORRECTION(G);
 	B = INVGAMMACORRECTION(B);
@@ -41,7 +40,7 @@ void Rgb2Xyz(double *X, double *Y, double *Z, uint8_t RI, uint8_t GI, uint8_t BI
  *
  * Wikipedia: http://en.wikipedia.org/wiki/Lab_color_space
  */
-void Xyz2Lab(double *L, double *a, double *b, double X, double Y, double Z){
+static void Xyz2Lab(double *L, double *a, double *b, double X, double Y, double Z){
 	X /= WHITEPOINT_X;
 	Y /= WHITEPOINT_Y;
 	Z /= WHITEPOINT_Z;
@@ -52,20 +51,12 @@ void Xyz2Lab(double *L, double *a, double *b, double X, double Y, double Z){
 	*a = 500.0*(X - Y);
 	*b = 200.0*(Y - Z);
 }
-/**
- * Convert CIE XYZ to CIE L*C*H* with the D65 white point
- *
- * @param L, C, H pointers to hold the result
- * @param X, Y, Z the input XYZ values
- *
- * CIE L*C*H* is related to CIE L*a*b* by
- *    a* = C* cos(H* pi/180),
- *    b* = C* sin(H* pi/180).
- */
-void Lab2Lch(double *C, double *H,double a, double b){
-	*C = sqrt(a*a + b*b);
-	*H = atan2(b, a)*180.0/M_PI;
-	
-	if(*H < 0)
-		*H += 360;
+void Rgb2Lab(double R,double G,double B,double * L,double * a,double * b){
+	double X, Y, Z;
+	Rgb2Xyz(&X,&Y,&Z,R,G,B);
+	Xyz2Lab(L, a, b, X, Y, Z);
+}
+void Rgb2Lab255(uint8_t ri,uint8_t gi,uint8_t bi,double * L,double * a,double * b){
+	double R=double(ri)/255.0,G=double(gi)/255.0,B=double(bi)/255.0;
+	Rgb2Lab(R,G,B,L,a,b);
 }

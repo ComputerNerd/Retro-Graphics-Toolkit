@@ -29,6 +29,7 @@
 #include "callback_gui.h"
 #include "callbacksprites.h"
 #include "dither.h"
+#include "CIE.h"
 static int panic(lua_State *L){
 	fl_alert("PANIC: unprotected error in call to Lua API (%s)\n",lua_tostring(L, -1));
 	throw 0;//Otherwise abort() would be called when not needed
@@ -530,9 +531,27 @@ static int lua_rgt_ditherImage(lua_State*L){
 	free(image);
 	return 0;
 }
+static int lua_rgt_rgbToLab(lua_State*L){
+	double l,a,b;
+	Rgb2Lab(luaL_optnumber(L,1,0.0),luaL_optnumber(L,2,0.0),luaL_optnumber(L,3,0.0),&l,&a,&b);
+	lua_pushnumber(L,l);
+	lua_pushnumber(L,a);
+	lua_pushnumber(L,b);
+	return 3;
+}
+static int lua_rgt_rgbToHsl(lua_State*L){
+	double h,s,l;
+	rgbToHsl(luaL_optnumber(L,1,0.0),luaL_optnumber(L,2,0.0),luaL_optnumber(L,3,0.0),&h,&s,&l);
+	lua_pushnumber(L,h);
+	lua_pushnumber(L,s);
+	lua_pushnumber(L,l);
+	return 3;
+}
 static const luaL_Reg lua_rgtAPI[]={
 	{"redraw",lua_rgt_redraw},
 	{"ditherImage",lua_rgt_ditherImage},
+	{"rgbToLab",lua_rgt_rgbToLab},
+	{"rgbToHsl",lua_rgt_rgbToHsl},
 	{0,0}
 };
 static void mkKeyunsigned(lua_State*L,const char*str,unsigned val){

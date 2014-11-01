@@ -33,7 +33,7 @@ static void addHist(uint32_t cur_tile,int type,uint32_t*hist,unsigned sz){
 	uint8_t * truePtr=&currentProject->tileC->truetDat[cur_tile*256];
 	double h,l,s;
 	for(unsigned z=0;z<256;z+=4){
-		rgbToHsl(truePtr[0],truePtr[1],truePtr[2],&h,&s,&l);
+		rgbToHsl255(truePtr[0],truePtr[1],truePtr[2],&h,&s,&l);
 		truePtr+=4;
 		switch(type){
 			case 0:
@@ -74,7 +74,7 @@ static double getHH(uint32_t cur_tile,int type){
 	uint8_t * truePtr=&currentProject->tileC->truetDat[cur_tile*256];
 	double h,l,s;
 	for(unsigned z=0;z<256;z+=4){
-		rgbToHsl(truePtr[0],truePtr[1],truePtr[2],&h,&s,&l);
+		rgbToHsl255(truePtr[0],truePtr[1],truePtr[2],&h,&s,&l);
 		truePtr+=4;
 		switch(type){
 			case 0:
@@ -337,8 +337,8 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 									case 5:
 										for(x=0;x<32;x+=4){
 											double h[2],l[2],s[2];
-											rgbToHsl(imagein[a+b+y+x+c+e],imagein[a+b+y+x+1+c+e],imagein[a+b+y+x+2+c+e],h,s,l);
-											rgbToHsl(imageout[t][a+b+y+x+c+e],imageout[t][a+b+y+x+1+c+e],imageout[t][a+b+y+x+2+c+e],h+1,s+1,l+1);
+											rgbToHsl255(imagein[a+b+y+x+c+e],imagein[a+b+y+x+1+c+e],imagein[a+b+y+x+2+c+e],h,s,l);
+											rgbToHsl255(imageout[t][a+b+y+x+c+e],imageout[t][a+b+y+x+1+c+e],imageout[t][a+b+y+x+2+c+e],h+1,s+1,l+1);
 											d[t]+=std::abs(pickIt(h[0],s[0],l[0],alg-3)-pickIt(h[1],s[1],l[1],alg-3));
 										}
 										//printf("d[%d]=%f\n",t,d[t]);

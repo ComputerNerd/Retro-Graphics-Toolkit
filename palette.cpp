@@ -37,7 +37,7 @@ void sortBy(unsigned type,bool perRow){
 	HSLpair* MapHSL=new HSLpair[totalCol];
 	for(unsigned x=0;x<totalCol*3;x+=3){
 		double h,l,s;
-		rgbToHsl(currentProject->rgbPal[x],currentProject->rgbPal[x+1],currentProject->rgbPal[x+2],&h,&s,&l);
+		rgbToHsl255(currentProject->rgbPal[x],currentProject->rgbPal[x+1],currentProject->rgbPal[x+2],&h,&s,&l);
 		MapHSL[x/3].first=pickIt(h,s,l,type);
 		MapHSL[x/3].second=x/3;
 	}

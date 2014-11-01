@@ -22,6 +22,7 @@ extern uint8_t nespaltab_alt[];
 void rgbToEntry(unsigned r,unsigned g,unsigned b,unsigned ent);
 uint8_t nearest_color_index(uint8_t val,unsigned startindex);
 uint8_t nearest_color_index(uint8_t val);
+void rgbToHsl255(unsigned r,unsigned g,unsigned b,double * hh,double * ll,double * ss);
 void rgbToHsl(double r,double g,double b,double * hh,double * ll,double * ss);
 void updateRGBindex(unsigned index);
 void swapEntry(uint8_t one,uint8_t two);

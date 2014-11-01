@@ -58,8 +58,8 @@ unsigned nearestColIndex(int red,int green,int blue,uint8_t*pal,unsigned amt,boo
 				double minerrord=1e99;
 				for(int i=(amt-1)*3;i>=0;i-=3){
 					double L1,L2,a1,a2,b1,b2;
-					Rgb2Lab(red,green,blue,&L1,&a1,&b1);
-					Rgb2Lab(pal[i],pal[i+1],pal[i+2],&L2,&a2,&b2);
+					Rgb2Lab255(red,green,blue,&L1,&a1,&b1);
+					Rgb2Lab255(pal[i],pal[i+1],pal[i+2],&L2,&a2,&b2);
 					double distance=sqd(L1-L2)+sqd(a1-a2)+sqd(b1-b2);
 					if(!checkType||(currentProject->palType[i/3+off]!=2)){
 						if (distance < minerrord){

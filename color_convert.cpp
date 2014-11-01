@@ -90,10 +90,11 @@ static double min3(double a,double b,double c){
  * @param   Number  b       The blue color value
  * @return  Array           The HSL representation
  */
+void rgbToHsl255(unsigned r,unsigned g,unsigned b,double * hh,double * ss,double * ll){
+	double rd=double(r)/255.0,gd=double(g)/255.0,bd=double(b)/255.0;
+	rgbToHsl(rd,gd,bd,hh,ss,ll);
+}
 void rgbToHsl(double r,double g,double b,double * hh,double * ss,double * ll){
-	r /= 255.0;
-	g /= 255.0;
-	b /= 255.0;
 	double max = max3(r, g, b);
 	double min = min3(r, g, b);
 	double h, s, l = (max + min) / 2.0;

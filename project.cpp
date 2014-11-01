@@ -617,7 +617,7 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 		uint32_t compressed Chunk map size
 		Chunk data (zlib compressed)
 	}
-	if(version>=5) sprite data (see documentation in classSprites.cpp
+	if(version>=5) sprite data (see documentation in classSprites.cpp)
 	*/
 	fputc('R',fo);
 	fputc('P',fo);

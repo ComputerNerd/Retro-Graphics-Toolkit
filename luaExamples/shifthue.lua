@@ -36,45 +36,13 @@ function hsl_to_rgb(h, s, L)
    return _h2rgb(m1, m2, h+1/3), _h2rgb(m1, m2, h), _h2rgb(m1, m2, h-1/3)
 end
 
------------------------------------------------------------------------------
--- Converts an RGB triplet to HSL.
--- (see http://easyrgb.com)
--- 
--- @param r              red (0.0-1.0)
--- @param g              green (0.0-1.0)
--- @param b              blue (0.0-1.0)
--- @return               corresponding H, S and L components
------------------------------------------------------------------------------
-
-function rgb_to_hsl(r, g, b)
-   --r, g, b = r/255, g/255, b/255
-   local min = math.min(r, g, b)
-   local max = math.max(r, g, b)
-   local delta = max - min
-
-   local h, s, l = 0, 0, ((min+max)/2)
-
-   if l > 0 and l < 0.5 then s = delta/(max+min) end
-   if l >= 0.5 and l < 1 then s = delta/(2-max-min) end
-
-   if delta > 0 then
-      if max == r and max ~= g then h = h + (g-b)/delta end
-      if max == g and max ~= b then h = h + 2 + (b-r)/delta end
-      if max == b and max ~= r then h = h + 4 + (r-g)/delta end
-      h = h / 6;
-   end
-
-   if h < 0 then h = h + 1 end
-   if h > 1 then h = h - 1 end
-
-   return h * 360, s, l
-end
 if project.have(project.palMask) then
 	shift=tonumber(fl.input("Shift hue by","0"))
 	if shift~=nil then
 		for ent=0,palette.cnt+palette.cntAlt-1,1 do
 			local r,g,b=palette.getRGB(ent)
-			local h,s,l=rgb_to_hsl(r/255,g/255,b/255)
+			local h,s,l=rgt.rgbToHsl(r/255,g/255,b/255)
+			h=h*360
 			r,g,b=hsl_to_rgb((h+shift)%360,s,l)
 			palette.setRGB(ent,r*255,g*255,b*255)
 		end
