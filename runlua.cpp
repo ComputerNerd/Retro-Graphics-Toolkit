@@ -131,11 +131,41 @@ static int lua_palette_getRGB(lua_State*L){
 static int lua_palette_getRaw(lua_State*L){
 	unsigned ent=luaL_optunsigned(L,1,0);
 	if(inRangeEnt(ent)){
-		ent*=3;
-		lua_pushunsigned(L,currentProject->rgbPal[ent]);
-		lua_pushunsigned(L,currentProject->rgbPal[ent+1]);
-		lua_pushunsigned(L,currentProject->rgbPal[ent+2]);
-		return 3;
+		switch(currentProject->gameSystem){
+			case sega_genesis:
+				ent*=2;
+				lua_pushunsigned(L,currentProject->palDat[ent]|(currentProject->palDat[ent+1]<<8));
+			break;
+			case NES:
+				lua_pushunsigned(L,currentProject->palDat[ent]);
+			break;
+			default:
+				show_default_error
+				return 0;
+		}
+		return 1;
+	}else
+		return 0;
+}
+static int lua_palette_setRaw(lua_State*L){
+	unsigned ent=luaL_optunsigned(L,1,0);
+	if(inRangeEnt(ent)){
+		unsigned val=luaL_optunsigned(L,2,0);
+		switch(currentProject->gameSystem){
+			case sega_genesis:
+				ent*=2;
+				currentProject->palDat[ent]=val&255;
+				currentProject->palDat[ent+1]=val>>8;
+			break;
+			case NES:
+				currentProject->palDat[ent]=val;
+			break;
+			default:
+				show_default_error
+				return 0;
+		}
+		updateRGBindex(ent);
+		return 1;
 	}else
 		return 0;
 }
@@ -162,6 +192,7 @@ static const luaL_Reg lua_paletteAPI[]={
 	{"getRGB",lua_palette_getRGB},
 	{"setRGB",lua_palette_setRGB},
 	{"getRaw",lua_palette_getRaw},
+	{"setRaw",lua_palette_setRaw},
 	{"fixSliders",lua_palette_fixSliders},
 	{"maxInRow",lua_palette_maxInRow},
 	{"getType",lua_palette_getType},
