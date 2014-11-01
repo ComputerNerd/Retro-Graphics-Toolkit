@@ -19,12 +19,9 @@
 #include "color_convert.h"
 #include "system.h"
 #include "palette.h"
-uint8_t nespaltab_r[64];
-uint8_t nespaltab_g[64];
-uint8_t nespaltab_b[64];
-uint8_t nespaltab_r_alt[64];
-uint8_t nespaltab_g_alt[64];
-uint8_t nespaltab_b_alt[64];
+#include "nearestColor.h"
+uint8_t nespaltab[64*3];
+uint8_t nespaltab_alt[64*3];
 
 void rgbToEntry(unsigned r,unsigned g,unsigned b,unsigned ent){
 	unsigned maxent=currentProject->colorCnt+currentProject->colorCntalt;
@@ -155,34 +152,7 @@ static inline uint32_t sq(uint32_t x){
 }
 uint8_t to_nes_color_rgb(uint8_t red,uint8_t green,uint8_t blue){
 	//this function does not set any values to global palette it is done in other functions
-	uint32_t minerrori =(255*255) +(255*255) +(255*255) +1;
-	double minerrord=100000.0;
-	unsigned bestcolor=0;
-	for (unsigned temp=0;temp<64;++temp){
-		switch(nearestAlg){
-		case 0:
-			{double distance=ciede2000rgb(red,green,blue,nespaltab_r[temp],nespaltab_g[temp],nespaltab_b[temp]);
-			if (distance <= minerrord){
-				minerrord = distance;
-				bestcolor = temp;
-			}}
-		break;
-		case 1:
-			{uint32_t distance=ColourDistance(red,green,blue,nespaltab_r[temp],nespaltab_g[temp],nespaltab_b[temp]);
-			if (distance <= minerrori){
-				minerrori = distance;
-				bestcolor = temp;
-			}}
-		break;
-		default:
-			{uint32_t distance=sq(nespaltab_r[temp]-red)+sq(nespaltab_g[temp]-green)+sq(nespaltab_b[temp]-blue);
-			if (distance <= minerrori){
-				minerrori = distance;
-				bestcolor = temp;
-			}}
-		}
-	}
-	return bestcolor;
+	return nearestColIndex(red,green,blue,nespaltab,64);
 }
 uint8_t to_nes_color(uint8_t pal_index){
 	//this function does not set any values to global palette it is done in other functions
@@ -274,7 +244,7 @@ uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_
 			//update progress
 			//printf("counting colors %% %f Colors Found: %d\r",((float)y/(float)h)*100.0,colors_amount/3);
 	}
-	printf("\n");
+	putchar('\n');
 	return colors_amount/3;
 }
 void updateNesTab(unsigned emps,bool alt){
@@ -282,16 +252,16 @@ void updateNesTab(unsigned emps,bool alt){
 	if(alt){
 		for(unsigned temp=0;temp<64;++temp){
 			rgb_out=MakeRGBcolor(temp|emps);
-			nespaltab_r_alt[temp]=(rgb_out>>16)&255;//red
-			nespaltab_g_alt[temp]=(rgb_out>>8)&255;//green
-			nespaltab_b_alt[temp]=rgb_out&255;//blue
+			nespaltab_alt[temp*3]=(rgb_out>>16)&255;//red
+			nespaltab_alt[temp*3+1]=(rgb_out>>8)&255;//green
+			nespaltab_alt[temp*3+2]=rgb_out&255;//blue
 		}
 	}else{
 		for(unsigned temp=0;temp<64;++temp){
 			rgb_out=MakeRGBcolor(temp|emps);
-			nespaltab_r[temp]=(rgb_out>>16)&255;//red
-			nespaltab_g[temp]=(rgb_out>>8)&255;//green
-			nespaltab_b[temp]=rgb_out&255;//blue
+			nespaltab[temp*3]=(rgb_out>>16)&255;//red
+			nespaltab[temp*3+1]=(rgb_out>>8)&255;//green
+			nespaltab[temp*3+2]=rgb_out&255;//blue
 		}
 	}
 }

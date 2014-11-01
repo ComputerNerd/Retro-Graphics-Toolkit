@@ -17,12 +17,8 @@
 //Color conversion functions should go here
 #pragma once
 #include <stdint.h>
-extern uint8_t nespaltab_r[];
-extern uint8_t nespaltab_g[];
-extern uint8_t nespaltab_b[];
-extern uint8_t nespaltab_r_alt[];
-extern uint8_t nespaltab_g_alt[];
-extern uint8_t nespaltab_b_alt[];
+extern uint8_t nespaltab[];
+extern uint8_t nespaltab_alt[];
 void rgbToEntry(unsigned r,unsigned g,unsigned b,unsigned ent);
 uint8_t nearest_color_index(uint8_t val,unsigned startindex);
 uint8_t nearest_color_index(uint8_t val);
@@ -36,7 +32,6 @@ uint16_t to_sega_genesis_color(uint16_t pal_index);
 uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_found,bool useAlpha=false);
 void update_emphesis(Fl_Widget*,void*);
 uint8_t toNesChan(uint8_t ri,uint8_t gi,uint8_t bi,uint8_t chan);
-//uint32_t toNesRgb(uint8_t ri,uint8_t gi,uint8_t bi);
 static inline uint32_t toNesRgb(uint8_t ri,uint8_t gi,uint8_t bi){
 	return MakeRGBcolor(to_nes_color_rgb(ri,gi,bi));
 }

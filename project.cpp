@@ -110,6 +110,7 @@ static void initNewProject(unsigned at){
 	projects[at]->palType=(uint8_t*)calloc(1,64);
 	std::fill(projects[at]->share,&projects[at]->share[shareAmtPj],-1);
 	projects[at]->useMask=pjDefaultMask;
+	projects[at]->nearestAlg=aWeighted;
 }
 void initProject(void){
 	projects = (struct Project **) malloc(sizeof(void *));

@@ -783,16 +783,12 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					palettesize=64;
 					colPtr=(uint8_t *)malloc(64*3);
 					if(isSprite){
-						for(rl=0;rl<64;++rl){
-							*colPtr++=nespaltab_r_alt[rl];
-							*colPtr++=nespaltab_g_alt[rl];
-							*colPtr++=nespaltab_b_alt[rl];
+						for(rl=0;rl<64*3;++rl){
+							*colPtr++=nespaltab_alt[rl];
 						}
 					}else{
-						for(rl=0;rl<64;++rl){
-							*colPtr++=nespaltab_r[rl];
-							*colPtr++=nespaltab_g[rl];
-							*colPtr++=nespaltab_b[rl];
+						for(rl=0;rl<64*3;++rl){
+							*colPtr++=nespaltab[rl];
 						}
 					}
 					colPtr-=64*3;

@@ -28,6 +28,7 @@ For example the save project file function goes here
 #include "classtilemap.h"
 #include "classChunks.h"
 #include "classSprites.h"
+#include "color_compare.h"
 #define currentProjectVersionNUM 8
 extern uint32_t curProjectID;
 struct Project{/*!<Holds all data needed for a project based system for examaple tile screen and level 1 are 2 seperate projects*/
@@ -49,6 +50,7 @@ struct Project{/*!<Holds all data needed for a project based system for examaple
 	unsigned rowCntPal;
 	unsigned rowCntPalalt;
 	bool haveAltspritePal;
+	nearestAlgs_t nearestAlg;
 };
 extern struct Project ** projects;
 extern uint32_t projects_count;//holds how many projects there are this is needed for realloc when adding or removing function

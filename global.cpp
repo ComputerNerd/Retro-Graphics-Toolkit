@@ -21,6 +21,7 @@
 #include "class_tiles.h"
 #include "color_convert.h"
 #include "color_compare.h"
+#include "nearestColor.h"
 //bools used to toggle stuff
 bool show_grid;
 bool G_hflip[2];
@@ -37,7 +38,6 @@ bool showTrueColor;
 bool rowSolo;
 bool tileEditModePlace_G;
 uint32_t selTileE_G[2];
-unsigned nearestAlg=1;
 void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha,bool alphaZero){
 	switch (currentProject->gameSystem){
 		case sega_genesis:
@@ -188,49 +188,14 @@ uint32_t MakeRGBcolor(uint32_t pixel,float saturation, float hue_tweak,float con
 static inline uint32_t sq(uint32_t x){
 	return x*x;
 }
-uint8_t find_near_color_from_row_rgb(uint8_t row,uint8_t r,uint8_t g,uint8_t b,bool alt){
-	unsigned i;
-	int bestIndex = 0;
-	unsigned max_rgb=palEdit.perRow*3;
-	row*=max_rgb;
-	uint32_t minerrori=0xFFFFFFFF;
-	double minerrord=100000.0;
-	uint8_t*rgbPtr=currentProject->rgbPal;
+uint8_t find_near_color_from_row_rgb(unsigned row,uint8_t r,uint8_t g,uint8_t b,bool alt){
+	row*=palEdit.perRow;
+	uint8_t*rgbPtr=currentProject->rgbPal+(row*3);
 	if((currentProject->gameSystem==NES)&&alt)
 		rgbPtr+=16*3;
-	for (i=row; i<max_rgb+row; i+=3){
-		switch(nearestAlg){
-			case 0:
-				{double distance=ciede2000rgb(r,g,b,rgbPtr[i],rgbPtr[i+1],rgbPtr[i+2]);
-				if (distance <= minerrord){
-					if (currentProject->palType[i/3]!=2){
-						minerrord = distance;
-						bestIndex = i;
-					}
-				}}
-			break;
-			case 1:
-				{uint32_t distance=ColourDistance(r,g,b,rgbPtr[i],rgbPtr[i+1],rgbPtr[i+2]);
-				if (distance <= minerrori){
-					if (currentProject->palType[i/3]!=2){
-						minerrori = distance;
-						bestIndex = i;
-					}
-				}}
-			break;
-			default:
-				{uint32_t distance=sq(rgbPtr[i]-r)+sq(rgbPtr[i+1]-g)+sq(rgbPtr[i+2]-b);
-				if (distance <= minerrori){
-					if (currentProject->palType[i/3]!=2){
-						minerrori = distance;
-						bestIndex = i;
-					}
-				}}
-		}
-	}
-	return bestIndex;
+	return (nearestColIndex(r,g,b,rgbPtr,palEdit.perRow,true,row)+row)*3;//Yes this function does return three times the value TODO refractor
 }
-uint8_t find_near_color_from_row(uint8_t row,uint8_t r,uint8_t g,uint8_t b,bool alt){
+uint8_t find_near_color_from_row(unsigned row,uint8_t r,uint8_t g,uint8_t b,bool alt){
 	return (find_near_color_from_row_rgb(row,r,g,b,alt)/3)-(row*palEdit.perRow);
 }
 uint32_t cal_offset_truecolor(unsigned x,unsigned y,unsigned rgb,uint32_t tile){

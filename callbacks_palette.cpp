@@ -14,7 +14,7 @@
    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
-//this is were all the callbacks for palette realted functions go
+//this is were all the callbacks for palette related functions go
 #include "global.h"
 #include "class_global.h"
 #include "color_convert.h"
@@ -110,7 +110,7 @@ void save_palette(Fl_Widget*, void* start_end){
 				snprintf(comment,512,"Colors %d-%d",start,end-1);
 				int bits;
 				if(currentProject->gameSystem==sega_genesis){
-					start*=2;//Be sure to keep this in sync with the other if statment shortly below
+					start*=2;//Be sure to keep this in sync with the other if statement shortly below
 					end*=2;
 					bits=16;
 				}else
@@ -199,7 +199,7 @@ void update_palette(Fl_Widget* o, void* v){
 				currentProject->rgbPal[(temp_entry*3)+1]=palTab[(temp2>>1)+palTypeGen];
 			break;
 			case 2:
-				//blue is the most trival conversion to do
+				//blue is the most trivial conversion to do
 				currentProject->palDat[temp_entry*2]=temp2;
 				currentProject->rgbPal[(temp_entry*3)+2]=palTab[(temp2>>1)+palTypeGen];
 			break;
@@ -266,7 +266,7 @@ void loadPalette(Fl_Widget*, void*){
 			if (file_size > palSize-offset){
 				fl_alert("Error: The file size is bigger than %d (%d-%d) bytes\nMaybe there is extra data or you loaded the wrong file?",palSize-offset,palSize,offset);
 				fclose(fi);
-				return;//end function due to errrors
+				return;//end function due to errors
 			}
 			//read the palette to the buffer
 			rewind(fi);
@@ -331,10 +331,10 @@ void setPalType(Fl_Widget*,void*type){
 	window->redraw();
 }
 void pickNearAlg(Fl_Widget*,void*){
-	nearestAlg=fl_choice("Which nearest color algorithm would you like to use?","ciede2000","Weighted http://www.compuphase.com/cmetric.htm","Euclidean distance");
+	currentProject->nearestAlg=(nearestAlgs_t)MenuPopup("Nearest color algorithm selection","Select an algorithm",4,"ciede2000","Weighted","Euclidean distance","CIE76");
 }
 void rgb_pal_to_entry(Fl_Widget*,void*){
-	//this function will convert a rgb value to the nearst palette entry
+	//this function will convert a rgb value to the nearest palette entry
 	if (mode_editor != tile_edit){
 		fl_alert("Be in Tile editor to use this");
 		return;

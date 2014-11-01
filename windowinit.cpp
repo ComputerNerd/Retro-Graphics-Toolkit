@@ -263,7 +263,7 @@ void editor::_editor(){
       			TabsMain[pal_edit]->end();
 		} // Fl_Group* o
 		{TabsMain[tile_edit] = new Fl_Group(rx, ry, rw, rh, "Tile editor");
-			//stuff realed to this group should go here
+			//stuff related to this group should go here
 			{ Fl_Group* o = new Fl_Group(0, 0, 800, 567);
 				palRTE[0] = new Fl_Round_Button(384, default_palette_bar_offset_y+40, 56, 32, "Row 0");
 				palRTE[0]->type(FL_RADIO_BUTTON);
