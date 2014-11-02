@@ -354,8 +354,13 @@ uint32_t tileMap::get_tile(uint32_t x,uint32_t y){
 int32_t tileMap::get_tileRow(uint32_t x,uint32_t y,unsigned useRow){
 	//first calculate which tile we want
 	uint32_t selected_tile=((y*mapSizeW)+x)*4;
+	if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
+		x&=~1;
+		y&=~1;
+	}
+	uint32_t selected_tile_pal=((y*mapSizeW)+x)*4;
 	//get both bytes
-	if (((tileMapDat[selected_tile]>>5)&3) == useRow) {
+	if (((tileMapDat[selected_tile_pal]>>5)&3) == useRow) {
 		uint8_t temp_1,temp_2,temp_3;
 		temp_1=tileMapDat[selected_tile+1];//least significant is stored in the lowest address
 		temp_2=tileMapDat[selected_tile+2];

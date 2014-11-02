@@ -53,7 +53,6 @@ static void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y){
 	double percent=rgba[3]/255.0;
 	for (uint16_t c=0;c<32*32;++c){
 		for (uint8_t e=0;e<3;++e){
-			//*ptr_grid++=((double)rgba[e]*percent)+((double)*ptr_grid*(1.0-percent));//undefined
 			uint8_t gridNerd=*ptr_grid;
 			*ptr_grid++=((double)rgba[e]*percent)+((double)gridNerd*(1.0-percent));
 		}
@@ -186,12 +185,11 @@ void editor::draw_non_gui(void){
 			//draw truecolor preview box
 			true_color_box_y=(double)((double)h()/600.0)*(double)default_true_color_box_y;
 			true_color_box_x=(double)((double)w()/800.0)*(double)default_true_color_box_x;
-			//fl_rectf(true_color_box_x,true_color_box_y,true_color_box_size,true_color_box_size,truecolor_temp[0],truecolor_temp[1],truecolor_temp[2]);
 			rect_alpha_grid(truecolor_temp,true_color_box_x,true_color_box_y);
 			tile_edit_truecolor_off_x=(double)((double)w()/800.0)*(double)default_tile_edit_truecolor_off_x;
 			tile_edit_truecolor_off_y=(double)((double)h()/600.0)*(double)default_tile_edit_truecolor_off_y;
 			tile_edit_offset_y=(double)((double)h()/600.0)*(double)default_tile_edit_offset_y;
-			tile_edit_offset_x=(tiles_size*9)+tile_edit_truecolor_off_x;//I muliplyed it by 9 instead of 8 to give spacing between the tiles
+			tile_edit_offset_x=(tiles_size*9)+tile_edit_truecolor_off_x;//I multiplied it by 9 instead of 8 to give spacing between the tiles
 			//draw palette selection box
 			tileEdit_pal.draw_boxes();
 			if(currentProject->tileC->tDat.size()){
@@ -218,12 +216,12 @@ void editor::draw_non_gui(void){
 			tileMap_pal.draw_boxes();
 			//now draw the tile
 			currentProject->tileC->draw_tile(tile_placer_tile_offset_x,tile_placer_tile_offset_y,currentProject->tileC->current_tile,placer_tile_size,tileMap_pal.theRow,G_hflip[0],G_vflip[0]);
-			//convert posistion
+			//convert position
 			map_off_y=(double)((double)h()/600.0)*(double)default_map_off_y;
 			map_off_x=(double)((double)w()/800.0)*(double)default_map_off_x;
 			//draw tile map
-			uint32_t max_map_w,max_map_h;//used to calulate the displayable tiles
-			max_map_w=((placer_tile_size*8)+w()-map_off_x)/(placer_tile_size*8);//this will puroposly allow one tile to go partly off screen that is normal I added that on purpose
+			uint32_t max_map_w,max_map_h;//used to calculate the displayable tiles
+			max_map_w=((placer_tile_size*8)+w()-map_off_x)/(placer_tile_size*8);//this will allow one tile to go partly off screen
 			max_map_h=((placer_tile_size*8)+h()-map_off_y)/(placer_tile_size*8);
 			//see if shadow highlight is enabled
 			if ((palTypeGen==0) || (currentProject->gameSystem != sega_genesis) || (showTrueColor==true)){
@@ -356,7 +354,7 @@ void editor::draw_non_gui(void){
 				}
 			}
 		break;
-	}//end of switch statment
+	}//end of switch statement
 }
 
 void editor::draw(){
@@ -458,14 +456,13 @@ int editor::handle(int event){
 					tileEdit_pal.check_box(Fl::event_x(),Fl::event_y());
 					//first see if we are in a "valid" range
 					tiles_size=tile_size->value();
-					//start by handiling true color
+					//start by handling true color
 					if ((Fl::event_x() > tile_edit_truecolor_off_x) && (Fl::event_y() > tile_edit_truecolor_off_y) && (Fl::event_x() < tile_edit_truecolor_off_x+(tiles_size*8))  && (Fl::event_y() < tile_edit_truecolor_off_y+(tiles_size*8))){
 						//if all conditions have been met that means we are able to edit the truecolor tile
-						unsigned temp_two,temp_one;//geting the mouse posision is the same as with tile editing just different varibles that happens alot in c++ the same thing just slightly different
+						unsigned temp_two,temp_one;
 						temp_one=(Fl::event_x()-tile_edit_truecolor_off_x)/tiles_size;
 						temp_two=(Fl::event_y()-tile_edit_truecolor_off_y)/tiles_size;
 						//true color tiles are slightly easier to edit
-						//I now have a proper function to calulate the offset so I am using that
 						pushTilePixel(currentProject->tileC->current_tile,temp_one,temp_two,tTypeTruecolor);
 						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,0,currentProject->tileC->current_tile)]=truecolor_temp[0];//red
 						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,1,currentProject->tileC->current_tile)]=truecolor_temp[1];//green
@@ -509,7 +506,6 @@ int editor::handle(int event){
 							tileEditModePlace_G=false;
 							damage(FL_DAMAGE_USER1);
 						}else{
-							//fl_alert("Tile attributes id: %d h-flip: %d v-flip %d priority: %d pal row: %d\nAt location x: %d y: %d",currentProject->tileMapC->get_tile(temp_one,temp_two),currentProject->tileMapC->get_hflip(temp_one,temp_two),currentProject->tileMapC->get_vflip(temp_one,temp_two),currentProject->tileMapC->get_prio(temp_one,temp_two),currentProject->tileMapC->get_palette_map(temp_one,temp_two),temp_one,temp_two);
 							if(((tileEditModePlace_G)&&(selTileE_G[0]==temp_one)&&(selTileE_G[1]==temp_two))){
 								tileEditModePlace_G=false;
 								damage(FL_DAMAGE_USER1);

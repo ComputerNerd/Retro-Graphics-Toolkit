@@ -723,6 +723,22 @@ MixingPlanTK DeviseBestMixingPlanTK(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t 
 	std::sort(result.colors, result.colors+64, PaletteCompareLuma);
 	return result;
 }
+static void progressUpdate(Fl_Window**win,Fl_Progress**progress,time_t&lasttime,bool&progressHave,unsigned cur,unsigned total){
+	if((time(NULL)-lasttime)>=1){
+		lasttime=time(NULL);
+		if(!progressHave){
+			progressHave=true;
+			mkProgress(win,progress);
+			(*progress)->maximum(total);
+			Fl::check();
+		}
+		char txtbuf[128];
+		snprintf(txtbuf,sizeof(txtbuf),"%d/%d",cur,total);
+		(*progress)->copy_label(txtbuf);
+		(*progress)->value(cur);
+		Fl::check();
+	}
+}
 void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpace,bool forceRow,unsigned forcedrow,bool isChunk,uint32_t idChunk,bool isSprite){
 	/*!
 	This function will take an input with or without alpha and dither it
@@ -746,6 +762,10 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 	uint8_t r_new,g_new,b_new,a_new;
 	unsigned pal_row;
 	int16_t error_rgb[4];
+	Fl_Window *win;
+	Fl_Progress *progress;
+	bool progressHave=false;
+	time_t lasttime=time(NULL);
 	switch (currentProject->settings&settingsDitherMask){
 	case 7:
 	case 6:
@@ -753,7 +773,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 	case 4:
 	{
 		if(colSpace){
-			//if(!fl_ask("Dither to colorspace? WARNING SLOW!"))//I have found that this results in worse quality anyways
+			//if(!fl_ask("Dither to colorspace? WARNING SLOW!"))//I have found that this results in worse quality anyway
 				return;
 		}
 		uint16_t tempPalSize;
@@ -818,10 +838,6 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 			pal_g[c][1] = GammaCorrect(g/255.0);
 			pal_g[c][2] = GammaCorrect(b/255.0);
 		}
-		Fl_Window *win;
-		Fl_Progress *progress;
-		bool progressHave=false;
-		time_t lasttime=time(NULL);
 		for(y=0;y<h;++y){
 			for(x=0;x<w;++x){
 				r_old=image[(x*rgbPixelsize)+(y*w*rgbPixelsize)];
@@ -908,25 +924,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					Fl::check();
 				}*/
 			}
-			if((time(NULL)-lasttime)>=1){
-				lasttime=time(NULL);
-				if(!progressHave){
-					progressHave=true;
-					mkProgress(&win,&progress);
-					progress->maximum(h);
-					Fl::check();
-				}
-				char txtbuf[128];
-				snprintf(txtbuf,sizeof(txtbuf),"%d/%d",y,h);
-				progress->copy_label(txtbuf);
-				progress->value(y);
-				Fl::check();
-			}
-		}
-		if(progressHave){
-			win->remove(progress);// remove progress bar from window
-			delete(progress);// deallocate it
-			delete win;
+			progressUpdate(&win,&progress,lasttime,progressHave,y,h);
 		}
 		if(colSpace)
 			free(colPtr);
@@ -1006,6 +1004,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				if (useAlpha)
 					image[x+(y*w*rgbPixelsize)+3]=a_old;
 			}
+			progressUpdate(&win,&progress,lasttime,progressHave,y,h);
 		}
 	break;
 	case 1:
@@ -1017,8 +1016,11 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 		isChunkD_G=isChunk;
 		idChunk_G=idChunk;
 		Riemersma(image,w,h,0);
+		progressUpdate(&win,&progress,lasttime,progressHave,1,useAlpha?4:3);
 		Riemersma(image,w,h,1);
+		progressUpdate(&win,&progress,lasttime,progressHave,2,useAlpha?4:3);
 		Riemersma(image,w,h,2);
+		progressUpdate(&win,&progress,lasttime,progressHave,3,useAlpha?4:3);
 		if (useAlpha){
 			useMode=255;
 			Riemersma(image,w,h,3);
@@ -1107,10 +1109,15 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+1]=g_new;
 				image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2]=b_new;
 			}
+			progressUpdate(&win,&progress,lasttime,progressHave,y,h);
 		}
 	break;
 	}
 	if(currentProject->gameSystem == sega_genesis)
 		set_palette_type();
-
+	if(progressHave){
+		win->remove(progress);// remove progress bar from window
+		delete(progress);// deallocate it
+		delete win;
+	}
 }

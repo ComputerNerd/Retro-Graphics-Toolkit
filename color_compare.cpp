@@ -77,8 +77,8 @@ double ciede2000(double L1,double a1,double b1,double L2,double a2,double b2,dou
 }
 double ciede2000rgb(uint8_t R1,uint8_t G1,uint8_t B1,uint8_t R2,uint8_t G2,uint8_t B2){
 	double L1,a1,b1,L2,a2,b2;
-	Rgb2Lab255(R1,G1,B1,&L1,&a1,&b1);
-	Rgb2Lab255(R2,G2,B2,&L2,&a2,&b2);
+	Rgb2Lab255(&L1,&a1,&b1,R1,G1,B1);
+	Rgb2Lab255(&L2,&a2,&b2,R2,G2,B2);
 	return ciede2000(L1,a1,b1,L2,a2,b2,1.0,1.0,1.0);
 
 }

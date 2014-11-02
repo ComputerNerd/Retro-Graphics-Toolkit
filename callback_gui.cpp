@@ -20,6 +20,7 @@
 #include "system.h"
 #include "callback_project.h"
 #include "lua.h"
+#include "CIE.h"
 static const char* GPLv3="This program is free software: you can redistribute it and/or modify\n"
 	"it under the terms of the GNU General Public License as published by\n"
 	"the Free Software Foundation, either version 3 of the License, or\n"
@@ -59,25 +60,78 @@ void set_game_system(Fl_Widget*,void* selection){
 		return;
 	}
 	unsigned bd=getBitdepthcurSys();
+	unsigned bdold=bd;
+	unsigned perRow,rows;
 	switch(sel){
 		case sega_genesis:
-			if(bd>4)
-				bd=4;
-			{uint32_t oldSys=currentProject->gameSystem;
+			perRow=16;
+			rows=4;
+		break;
+		case NES:
+			perRow=4;
+			rows=4;
+		break;
+		default:
+			show_default_error
+			return;
+	}
+	perRow=perRow*rows/currentProject->rowCntPal;//Handle unequal row amounts
+	memset(currentProject->palType,0,perRow*rows);
+	uint8_t*tmpPalRGB=(uint8_t*)alloca(perRow*rows*3);
+	if(perRow>=palEdit.perRow){
+		for(unsigned i=0,j=0;i<currentProject->colorCnt*3;i+=palEdit.perRow*3,j+=perRow*3){
+			memcpy(tmpPalRGB+j,currentProject->rgbPal+i,palEdit.perRow*3);
+			memset(tmpPalRGB+j+((palEdit.perRow)*3),0,(perRow-palEdit.perRow)*3);
+		}
+	}else{
+		uint8_t*nPtr=tmpPalRGB;
+		uint8_t*rgbPtr=currentProject->rgbPal;
+		for(unsigned k=0;k<rows;++k){
+			//Preserve background color
+			*nPtr++=rgbPtr[0];
+			*nPtr++=rgbPtr[1];
+			*nPtr++=rgbPtr[2];
+			rgbPtr+=palEdit.perRow/perRow*3;
+			for(unsigned j=(palEdit.perRow/perRow)*3;j<palEdit.perRow*3;j+=(palEdit.perRow/perRow)*3){
+				unsigned type=0;
+				double Lv,Cv,Hv;
+				Rgb2Lch255(&Lv,&Cv,&Hv,rgbPtr[0],rgbPtr[1],rgbPtr[2]);
+				rgbPtr+=3;
+				for(unsigned i=1;i<palEdit.perRow/perRow;++i){
+					double L,C,H;
+					Rgb2Lch255(&L,&C,&H,rgbPtr[0],rgbPtr[1],rgbPtr[2]);
+					if(type){
+						if(C*L>Cv*Lv){
+							Lv=L;
+							Cv=C;
+							Hv=H;
+						}
+					}else{
+						if(C>Cv){
+							Lv=L;
+							Cv=C;
+							Hv=H;
+						}
+
+					}
+					rgbPtr+=3;
+				}
+				Lch2Rgb255(nPtr,nPtr+1,nPtr+2,Lv,Cv,Hv);
+				nPtr+=3;
+				type^=1;
+			}
+		}
+	}
+	tiles tilesOld=tiles(*currentProject->tileC);
+	uint32_t gold=currentProject->gameSystem;
+	uint32_t sold=currentProject->subSystem;
+	switch(sel){
+		case sega_genesis:
+			bd=4;
 			currentProject->gameSystem=sega_genesis;
 			currentProject->subSystem=0;
 			setBitdepthcurSys(bd);
 			if(containsDataCurProj(pjHavePal)){
-				if(oldSys==NES){
-					uint8_t pal_temp[128];
-					unsigned c;
-					for (c=0;c<128;c+=2){
-						uint16_t temp=to_sega_genesis_color(c/2);
-						pal_temp[c]=temp>>8;
-						pal_temp[c+1]=temp&255;
-					}
-					memcpy(currentProject->palDat,pal_temp,128);
-				}
 				palEdit.changeSystem();
 				tileEdit_pal.changeSystem();
 				tileMap_pal.changeSystem();
@@ -95,20 +149,15 @@ void set_game_system(Fl_Widget*,void* selection){
 			}
 			window->subSysC->copy(subSysGenesis);
 			window->subSysC->value((currentProject->subSystem&sgSHmask)>>sgSHshift);
-			}
 		break;
 		case NES:
-			bd=getBitdepthcurSys();
-			if(bd>2)
-				bd=2;
+			bd=2;
 			currentProject->gameSystem=NES;
 			currentProject->subSystem=0;
 			setBitdepthcurSys(bd);
 			updateNesTab(0,false);
 			updateNesTab(0,true);
 			if(containsDataCurProj(pjHavePal)){
-				for (unsigned c=0;c<32;++c)
-					currentProject->palDat[c]=to_nes_color(c);
 				palEdit.changeSystem();
 				tileEdit_pal.changeSystem();
 				tileMap_pal.changeSystem();
@@ -148,10 +197,42 @@ void set_game_system(Fl_Widget*,void* selection){
 		break;
 		default:
 			show_default_error
-			return;
 		break;
 	}
+	uint8_t*nPtr=tmpPalRGB;
+	for(unsigned i=0;i<currentProject->colorCnt;++i,nPtr+=3)
+		rgbToEntry(nPtr[0],nPtr[1],nPtr[2],i);
+	if(currentProject->haveAltspritePal){
+		memcpy(currentProject->rgbPal+(currentProject->colorCnt*3),currentProject->rgbPal,std::min(currentProject->colorCnt,currentProject->colorCntalt)*3);
+		unsigned esize;
+		switch(currentProject->gameSystem){
+			case sega_genesis:
+				fl_alert("Error the sega genesis does not support an alternative sprite palette");
+				esize=0;
+			break;
+			case NES:
+				esize=1;
+			break;
+		}
+		memcpy(currentProject->palDat+(currentProject->colorCnt*esize),currentProject->palDat,std::min(currentProject->colorCnt,currentProject->colorCntalt)*esize);
+	}
 	window->redraw();
+	uint32_t gnew=currentProject->gameSystem;
+	uint32_t snew=currentProject->subSystem;
+	for(unsigned i=0;i<tilesOld.amt;++i){
+		for(unsigned y=0;y<std::min(currentProject->tileC->sizeh,tilesOld.sizeh);++y){
+			for(unsigned x=0;x<std::min(currentProject->tileC->sizew,tilesOld.sizew);++x){
+				currentProject->gameSystem=gold;
+				currentProject->subSystem=sold;
+				uint32_t px=tilesOld.getPixel(i,x,y);
+				if(bdold>bd)
+					px>>=bdold-bd;
+				currentProject->gameSystem=gnew;
+				currentProject->subSystem=snew;
+				currentProject->tileC->setPixel(i,x,y,px);
+			}
+		}
+	}
 }
 void trueColTileToggle(Fl_Widget*,void*){
 	showTrueColor^=1;

@@ -95,6 +95,10 @@ static int luafl_password(lua_State*L){
 	fl_password(luaL_optstring(L,1,"Enter text"),luaL_optstring(L,2,NULL));
 	return 0;
 }
+static int luafl_check(lua_State*L){
+	Fl::check();
+	return 0;
+}
 static const luaL_Reg lua_flAPI[]={
 	{"alert",luafl_alert},
 	{"ask",luafl_ask},
@@ -106,6 +110,7 @@ static const luaL_Reg lua_flAPI[]={
 	{"input",luafl_input},
 	{"message",luafl_message},
 	{"password",luafl_password},
+	{"check",luafl_check},
 	{0,0}
 };
 static void outofBoundsAlert(const char*what,unsigned val){
@@ -533,7 +538,7 @@ static int lua_rgt_ditherImage(lua_State*L){
 }
 static int lua_rgt_rgbToLab(lua_State*L){
 	double l,a,b;
-	Rgb2Lab(luaL_optnumber(L,1,0.0),luaL_optnumber(L,2,0.0),luaL_optnumber(L,3,0.0),&l,&a,&b);
+	Rgb2Lab(&l,&a,&b,luaL_optnumber(L,1,0.0),luaL_optnumber(L,2,0.0),luaL_optnumber(L,3,0.0));
 	lua_pushnumber(L,l);
 	lua_pushnumber(L,a);
 	lua_pushnumber(L,b);

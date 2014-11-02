@@ -109,10 +109,10 @@ static double getHH(uint32_t cur_tile,int type){
 	return hh;
 }
 void tileMap::pickRow(unsigned amount){
-	int type=MenuPopup("Pick tile row based on...","Please pick what most defines the image",9,"Hue","Saturation","Lightness","Hue*satuaration","Hue*Lightness","Lightness*saturation","Hue+satuaration","Hue+lightness","Lightness+saturation");
+	int type=MenuPopup("Pick tile row based on...","Please pick what most defines the image",9,"Hue","Saturation","Lightness","Hue*saturation","Hue*Lightness","Lightness*saturation","Hue+saturation","Hue+lightness","Lightness+saturation");
 	if(type<0)
 		return;
-	int method=MenuPopup("Select a method","This depends on the image",3,"Average","Histogram section with most occurances","Histogram peak");
+	int method=MenuPopup("Select a method","This depends on the image",3,"Average","Histogram section with most occurrences","Histogram peak");
 	if(method<0)
 		return;
 	pushTilemapAll(true);
@@ -149,7 +149,7 @@ void tileMap::pickRow(unsigned amount){
 				}
 			}
 			uint32_t*histp=hist;
-			while(!(*histp++));//Atleast one entry in the array will contain a nonzero value
+			while(!(*histp++));//At least one entry in the array will contain a nonzero value
 			minh=(histp-hist);
 			--minh;
 			histp=hist+sz-1;
@@ -308,7 +308,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 		per=1;
 	for (uint_fast32_t a=0;a<(h*w*4)-(w*4*per);a+=w*4*8*per){//a tiles y
 		for (uint_fast32_t b=0;b<w*4;b+=32*per){//b tiles x
-			if(alg==2)
+			if(alg==2||alg==1)
 				memset(di,0,4*sizeof(uint32_t));
 			else{
 				for (t=0;t<4;t++)
@@ -322,16 +322,16 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 				for(unsigned c=0;c<per*w*4*8;c+=w*4*8){
 					for(uint32_t y=0;y<w*4*8;y+=w*4){//pixels y
 						for(unsigned e=0;e<per*32;e+=32){
-							if(imagein[a+b+y+x+3+c+e]!=0){//Avoid checking transperency
+							if(imagein[a+b+y+x+3+c+e]!=0){//Avoid checking transparency
 								switch(alg){
 									case 0:
 										for(x=0;x<32;x+=4)
 											d[t]+=std::abs(ciede2000rgb(imagein[a+b+y+x+c+e],imagein[a+b+y+x+1+c+e],imagein[a+b+y+x+2+c+e],imageout[t][a+b+y+x+c+e],imageout[t][a+b+y+x+1+c+e],imageout[t][a+b+y+x+2+c+e]));
-										break;
+									break;
 									case 1:
 										for(x=0;x<32;x+=4)
-											d[t]+=std::abs(ColourDistance(imagein[a+b+y+x+c+e],imagein[a+b+y+x+1+c+e],imagein[a+b+y+x+2+c+e],imageout[t][a+b+y+x+c+e],imageout[t][a+b+y+x+1+c+e],imageout[t][a+b+y+x+2+c+e]));
-										break;
+											di[t]+=ColourDistance(imagein[a+b+y+x+c+e],imagein[a+b+y+x+1+c+e],imagein[a+b+y+x+2+c+e],imageout[t][a+b+y+x+c+e],imageout[t][a+b+y+x+1+c+e],imageout[t][a+b+y+x+2+c+e]);
+									break;
 									case 3:
 									case 4:
 									case 5:
@@ -341,9 +341,8 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 											rgbToHsl255(imageout[t][a+b+y+x+c+e],imageout[t][a+b+y+x+1+c+e],imageout[t][a+b+y+x+2+c+e],h+1,s+1,l+1);
 											d[t]+=std::abs(pickIt(h[0],s[0],l[0],alg-3)-pickIt(h[1],s[1],l[1],alg-3));
 										}
-										//printf("d[%d]=%f\n",t,d[t]);
-										break;
-									default://Usally case 2
+									break;
+									default://Usually case 2
 										for(x=0;x<32;x+=4)
 											di[t]+=sqri(imagein[a+b+y+x+c+e]-imageout[t][a+b+y+x+c+e])+sqri(imagein[a+b+y+x+1+c+e]-imageout[t][a+b+y+x+1+c+e])+sqri(imagein[a+b+y+x+2+c+e]-imageout[t][a+b+y+x+2+c+e]);
 								}
@@ -352,8 +351,8 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 					}
 				}
 			}
-			uint8_t sillyrow;
-			if(alg==2)
+			unsigned sillyrow;
+			if(alg==2||alg==1)
 				sillyrow=pick4Deltai(di);
 			else
 				sillyrow=pick4Delta(d);
@@ -515,7 +514,7 @@ try_again_color:
 				scolorq_wrapper(imageuse,output,user_pal,w,h,colorz);
 			break;
 			default:
-				dl3quant(imageuse,w,h,colorz,user_pal,true,progress);/*this uses denesis lee's v3 color quant which is fonund at http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c*/
+				dl3quant(imageuse,w,h,colorz,user_pal,true,progress);/*this uses denesis lee's v3 color quant which is found at http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c*/
 		}
 		for (unsigned x=0;x<colorz;x++){
 			unsigned r,g,b;
@@ -586,7 +585,6 @@ againNerd:
 					colorAmtExceed();
 					break;
 				}
-				//printf("%d %d %d\n",offsetPal,off2,off3);
 				goto againNerd;
 			}
 			memcpy(currentProject->rgbPal+off3+(x*3),&rgb_pal3[off3o+(x*3)],3);
@@ -624,8 +622,8 @@ struct settings{//TODO avoid hardcoding palette row amount
 	unsigned off[4];//Offsets for each row
 	unsigned col;//How many colors are to be generated
 	unsigned alg;//Which algorithm should be used
-	bool ditherAfter;//After color quanization should the image be dithered
-	bool entireRow;//If true dither entire tilemap at once or false dither each row sepeartly
+	bool ditherAfter;//After color quantization should the image be dithered
+	bool entireRow;//If true dither entire tilemap at once or false dither each row separately
 	unsigned colSpace;//Which colorspace should the image be quantized in
 	unsigned perRow[4];//How many colors will be generated per row
 	bool useRow[4];
@@ -634,7 +632,6 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 	struct settings*set=(struct settings*)s;
 	char temp[16];
 	uint8_t * image;
-	//uint8_t * colors;
 	uint32_t w,h;
 	if(set->sprite){
 		w=currentProject->spritesC->width(curSpritegroup);
@@ -658,13 +655,12 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 	}
 	printf("First row: %u\n",firstRow);
 	uint32_t colors_found;
-	//uint8_t * found_colors;
 	uint8_t found_colors[768];
 	int rowAuto;
 	if((rows==1)&&(!set->sprite))
-		rowAuto = fl_ask("Would you like all tiles on the tilemap to be set to row %d? (This is where all generated colors will apear)",firstRow);
+		rowAuto = fl_ask("Would you like all tiles on the tilemap to be set to row %d? (This is where all generated colors will appear)",firstRow);
 	else if(!set->sprite){
-		rowAuto = MenuPopup("Palette setting","How would you like the palette map to be handled",4,"Don't change anythin","Pick based on hue","Generate contiguous palette then pick based on delta","Quantizer's choice");
+		rowAuto = MenuPopup("Palette setting","How would you like the palette map to be handled",4,"Don't change anything","Pick based on hue","Generate contiguous palette then pick based on delta","Quantizer's choice");
 		if(rowAuto<0)
 			return;
 	}else
