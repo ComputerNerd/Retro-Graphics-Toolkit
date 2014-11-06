@@ -62,6 +62,8 @@ void set_game_system(Fl_Widget*,void* selection){
 	unsigned bd=getBitdepthcurSys();
 	unsigned bdold=bd;
 	unsigned perRow,rows;
+	uint32_t gold=currentProject->gameSystem;
+	uint32_t sold=currentProject->subSystem;
 	switch(sel){
 		case sega_genesis:
 			perRow=16;
@@ -123,8 +125,6 @@ void set_game_system(Fl_Widget*,void* selection){
 		}
 	}
 	tiles tilesOld=tiles(*currentProject->tileC);
-	uint32_t gold=currentProject->gameSystem;
-	uint32_t sold=currentProject->subSystem;
 	switch(sel){
 		case sega_genesis:
 			bd=4;

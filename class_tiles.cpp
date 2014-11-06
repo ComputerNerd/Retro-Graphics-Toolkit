@@ -85,7 +85,7 @@ void tiles::setPixel(uint32_t tile,uint32_t x,uint32_t y,uint32_t val){
 		else
 			*ptr&=~(1<<x);
 		ptr+=8;
-		if(val&2)//First plane
+		if(val&2)//Second plane
 			*ptr|=1<<x;
 		else
 			*ptr&=~(1<<x);
@@ -125,13 +125,13 @@ uint32_t tiles::getPixel(uint32_t tile,uint32_t x,uint32_t y){
 	if((currentProject->gameSystem==NES)&&bdr){//NES stores planar tiles
 		x=7-x;
 		ptr+=y;
-		return ((*ptr&(1<<x))>>x)|(((*(ptr+8)&(1<<x))>>x)<<1);
+		return ((*ptr)>>x&1)|(((*(ptr+8))>>x&1)<<1);
 	}else{
 		switch(bdr){
 			case 0:
 				x=7-x;
 				ptr+=y*sizew/8;
-				return (*ptr&(1<<x))>>x;
+				return (*ptr)>>x&1;
 			break;
 			case 3:
 				ptr+=((y*sizew)/2)+(x/2);
@@ -140,6 +140,8 @@ uint32_t tiles::getPixel(uint32_t tile,uint32_t x,uint32_t y){
 				else
 					return *ptr>>4;
 			break;
+			default:
+				show_default_error
 		}
 	}
 	return 0;
@@ -162,7 +164,7 @@ void tiles::resizeAmt(uint32_t amtnew){
 		tDat.resize(amt*tileSize);
 		truetDat.resize(amt*tcSize);
 	}catch(std::exception&e){
-		fl_alert("Error: cannot resize tiles to %d\nAdditional details %d",e.what());
+		fl_alert("Error: cannot resize tiles to %u\nAdditional details %s",amtnew,e.what());
 		exit(1);
 	}
 }

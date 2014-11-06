@@ -892,8 +892,6 @@ static void spatial_color_quant(array2d< vector_fixed<double, 3> >& image,
 				// and maybe a palette preview.
 				step_counter++;
 				if ((step_counter % 10000) == 0) {
-					/*cout << "."; sega16: too much overhead
-					  cout.flush();*/
 					putchar('.');
 					fflush(stdout);
 #if TRACE
@@ -1099,7 +1097,7 @@ int scolorq_wrapper(uint8_t*in255,uint8_t*out,uint8_t user_pal[3][256],uint32_t 
 		}
 	}
 	printf("Palette size %d\n",palette.size());
-	for(uint8_t x=0;x<palette.size();++x){//sega16: coppy palette
+	for(unsigned x=0;x<palette.size();++x){//sega16: coppy palette
 		user_pal[0][x]=palette[x](0)*255.0;
 		user_pal[1][x]=palette[x](1)*255.0;
 		user_pal[2][x]=palette[x](2)*255.0;
