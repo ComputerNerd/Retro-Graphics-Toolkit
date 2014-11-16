@@ -14,10 +14,6 @@
    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
-/*!
-This is where all "project" releated stuff goes
-For example the save project file function goes here
-*/
 #define shareAmtPj 6
 #ifndef _PROJECT_H
 #define _PROJECT_H 1
@@ -47,6 +43,7 @@ struct Project{/*!<Holds all data needed for a project based system for examaple
 	int32_t share[shareAmtPj];/*!<Negative if not sharing or project id (which is always positive) if sharing*/
 	unsigned colorCnt;//Total entries in palette for project
 	unsigned colorCntalt;//Alternative palette color count
+	unsigned altOff;
 	unsigned rowCntPal;
 	unsigned rowCntPalalt;
 	bool haveAltspritePal;

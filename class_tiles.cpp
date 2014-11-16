@@ -244,7 +244,7 @@ void tiles::draw_truecolor(uint32_t tile_draw,unsigned x,unsigned y,bool usehfli
 	static uint8_t DontShow=0;
 	if (amt<=tile_draw){
 		if (unlikely(!DontShow)) {
-			fl_alert("Warning tried to draw truecolor tile # %d at X: %d y: %d\nBut there is only %d tiles.\nNote that this message will not be shown again.\n Instead it will be outputed to stdout",tile_draw,x,y,amt);
+			fl_alert("Warning tried to draw truecolor tile # %d at X: %d y: %d\nBut there is only %d tiles.\nNote that this message will not be shown again.\n Instead it will be outputted to stdout",tile_draw,x,y,amt);
 			DontShow=1;
 		}else
 			printf("Warning tried to draw truecolor tile # %d at X: %d y: %d\nBut there is only %d tiles.\n",tile_draw,x,y,amt);
@@ -321,13 +321,12 @@ void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,int zoom,uint8_t pa
 	static unsigned DontShow=0;
 	if (amt<=tile_draw){
 		if (unlikely(DontShow==0)){
-			fl_alert("Warning tried to draw tile # %d at X: %d y: %d\nBut there is only %d tiles.\nNote that this message will not be shown again.\n Instead it will be outputed to stdout",tile_draw,x_off,y_off,amt);
+			fl_alert("Warning tried to draw tile # %d at X: %d y: %d\nBut there is only %d tiles.\nNote that this message will not be shown again.\n Instead it will be outputted to stdout",tile_draw,x_off,y_off,amt);
 			DontShow=1;
 		}else
 			printf("Warning tried to draw tile # %d at X: %d y: %d\nBut there is only %d tiles.\n",tile_draw,x_off,y_off,amt);
 		return;
 	}
-	//uint8_t a;
 	int x,y;
 	uint8_t * temp_img_ptr = (uint8_t *)malloc(((8*zoom)*(8*zoom))*3);
 	if(!temp_img_ptr){
@@ -335,9 +334,8 @@ void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,int zoom,uint8_t pa
 	}
 	uint8_t c,d;//used for drawing pixels to buffer
 	uint8_t red_temp,green_temp,blue_temp;
-	//uint8_t tileTemp[32];
 	uint8_t * tileTemp=(uint8_t *)alloca(tileSize);//Nes tiles are 16 bytes and sega genesis tiles are 32 bytes
-	if (Usehflip == true && Usevflip == false)//it is importan to make sure vflip is false or else this could be ran when vflip==true
+	if (Usehflip == true && Usevflip == false)//it is important to make sure vflip is false or else this could be ran when vflip==true
 		hflip_tile(tile_draw,tileTemp);
 	else if (Usehflip == false && Usevflip == true)
 		vflip_tile(tile_draw,tileTemp);
@@ -409,7 +407,7 @@ void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,int zoom,uint8_t pa
 	free(temp_img_ptr);
 }
 void tiles::hflip_truecolor(uint32_t id,uint32_t * out){
-	//out must contaian at least 256 bytes
+	//out must contain at least 256 bytes
 	uint8_t y;
 	uint32_t * trueColPtr=(uint32_t *)&truetDat[id*tcSize];
 	trueColPtr+=7;//32-4 28/4
@@ -426,7 +424,7 @@ void tiles::hflip_truecolor(uint32_t id,uint32_t * out){
 	}
 }
 void tiles::vflip_truecolor_ptr(uint8_t * in,uint8_t * out){
-/*!this needs to be a seperate function as the output of hflip may be inputted here to form vhfliped tile*/
+/*!this needs to be a separate function as the output of hflip may be inputted here to form vhfliped tile*/
 	uint16_t y;
 	uint8_t temp[256];
 	memcpy(temp,in,256);
@@ -482,7 +480,7 @@ void tiles::vflip_tile_ptr(uint8_t * in,uint8_t * out){
 	uint8_t y;
 	switch (currentProject->gameSystem){
 		case sega_genesis:
-		{//brackts are used so compiler knows how long they are in scope
+		{
 			uint8_t temp[32];
 			memcpy(temp,in,32);
 			for (y=0;y<32;y+=4)
@@ -493,7 +491,7 @@ void tiles::vflip_tile_ptr(uint8_t * in,uint8_t * out){
 		{
 			uint8_t temp[16];
 			memcpy(temp,in,16);
-			//NES uses different format seperated into 2 peices
+			//NES uses different format separated into 2 pieces
 			for (y=0;y<8;y++)
 				out[y]=temp[7-y];
 			for (y=0;y<8;y++)
@@ -533,7 +531,7 @@ void tiles::remove_duplicate_tiles(bool tColor){
 	for (cur_tile=0;cur_tile<amt;++cur_tile){
 		snprintf(bufT,1024,"Comparing tiles with: %d",cur_tile);
 		win->copy_label(bufT);
-		for (curT=amt-1;curT>=0;curT--){
+		for (curT=amt-1;curT>=cur_tile;curT--){
 			if (cur_tile == curT)//don't compare with itself
 				continue;
 			bool rm;
@@ -556,7 +554,7 @@ void tiles::remove_duplicate_tiles(bool tColor){
 				remap.erase(remap.begin()+curT);
 				remove_tile_at(curT);
 				tile_remove_c++;
-				continue;//curT does not exist anymore useless to do more comparasions
+				continue;//curT does not exist anymore useless to do more comparisons
 			}
 			if(tColor){
 				hflip_truecolor(curT,(uint32_t*)tileTemp);			
@@ -603,7 +601,6 @@ void tiles::remove_duplicate_tiles(bool tColor){
 				remove_tile_at(curT);
 				tile_remove_c++;
 				continue;
-				//printf("Deleted tile %d\nRemoved %d tiles\n",curT,tile_remove_c);
 			}
 			if(tColor){
 				vflip_truecolor(curT,tileTemp);
@@ -628,7 +625,7 @@ void tiles::remove_duplicate_tiles(bool tColor){
 				tile_remove_c++;
 				continue;
 			}
-			if((time(NULL)-lastt)>1){
+			if((time(NULL)-lastt)>=1){
 				lastt=time(NULL);
 				progress->value((float)cur_tile/(float)amt);
 				snprintf(bufT,1024,"Removed %d tiles",tile_remove_c);

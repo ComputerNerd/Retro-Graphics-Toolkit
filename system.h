@@ -20,7 +20,7 @@
 #define NES 1
 #define frameBuffer_pal 2
 #define frameBuffer 3//For example rgb565 would be here instead of frameBuffer_pal because the colors are fixed and all can be used
-/*Subsystem declarations
+/* Subsystem declarations
  * Subsystem as the name implies depends on which system is selected
  * These are not compatible when switching systems
  * For the sega genesis bits 1-0 contain bit depth 0 means 1 bit

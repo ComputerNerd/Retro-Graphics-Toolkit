@@ -23,8 +23,8 @@ if project.have(project.tilesMask) then
 		end
 	end
 	for i=0,tile.amt-1,1 do
-		for y=0,7,1 do
-			for x=0,7,1 do
+		for y=0,tile.height-1,1 do
+			for x=0,tile.width-1,1 do
 				local r,g,b,a=tile.getPixelRGBA(i,x,y)
 				local gray=0.2126*r+0.7152*g+0.0722*b; -- BT.709
 				tile.setPixelRGBA(i,x,y,gray,gray,gray,a)
@@ -38,7 +38,9 @@ if project.have(project.tilesMask) then
 		sprite.ditherAll()
 	end
 	if project.have(project.palMask) then
-		palette.fixSliders()
+		palette.fixSliders() --calls redraw
+	else
+		rgt.redraw()
 	end
 else
 	project.haveMessage(project.tilesMask)

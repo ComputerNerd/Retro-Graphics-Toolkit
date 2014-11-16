@@ -95,8 +95,102 @@ static int luafl_password(lua_State*L){
 	fl_password(luaL_optstring(L,1,"Enter text"),luaL_optstring(L,2,NULL));
 	return 0;
 }
-static int luafl_check(lua_State*L){
-	Fl::check();
+static int luafl_eventnames(lua_State*L){
+	lua_pushstring(L,fl_eventnames[luaL_checkunsigned(L,1)]);
+	return 1;
+}
+static int luafl_point(lua_State*L){
+	fl_point(luaL_optint(L,1,0),luaL_optint(L,2,0));
+	return 0;
+}
+static int luafl_rect(lua_State*L){
+	int x=luaL_optint(L,1,0),y=luaL_optint(L,2,0),w=luaL_optint(L,3,0),h=luaL_optint(L,4,0);
+	if(lua_type(L,5)==LUA_TNUMBER)
+		fl_rect(x,y,w,h,luaL_optunsigned(L,5,0));
+	else
+		fl_rect(x,y,w,h);
+	return 0;
+}
+static int luafl_color(lua_State*L){
+	if(lua_type(L,2)==LUA_TNUMBER&&lua_type(L,3)==LUA_TNUMBER)
+		fl_color(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0),luaL_optunsigned(L,3,0));
+	else
+		fl_color(luaL_optunsigned(L,1,0));
+	return 0;
+}
+static int luafl_arc(lua_State*L){
+	if(lua_type(L,6)==LUA_TNUMBER)
+		fl_arc(luaL_optint(L,1,0),luaL_optint(L,2,0),luaL_optint(L,3,0),luaL_optint(L,4,0),luaL_optnumber(L,5,0),luaL_optnumber(L,6,0));
+	else
+		fl_arc(luaL_optnumber(L,1,0.0),luaL_optnumber(L,2,0.0),luaL_optnumber(L,3,0.0),luaL_optnumber(L,4,0.0),luaL_optnumber(L,5,0.0));
+	return 0;
+}
+static int luafl_begin_complex_polygon(lua_State*L){
+	fl_begin_complex_polygon();
+	return 0;
+}
+static int luafl_begin_line(lua_State*L){
+	fl_begin_line();
+	return 0;
+}
+static int luafl_begin_loop(lua_State*L){
+	fl_begin_loop();
+	return 0;
+}
+static int luafl_begin_points(lua_State*L){
+	fl_begin_points();
+	return 0;
+}
+static int luafl_begin_polygon(lua_State*L){
+	fl_begin_polygon();
+	return 0;
+}
+static int luafl_circle(lua_State*L){
+	fl_circle(luaL_optnumber(L,1,0.0),luaL_optnumber(L,2,0.0),luaL_optnumber(L,3,0.0));
+	return 0;
+}
+static int luafl_end_complex_polygon(lua_State*L){
+	fl_end_complex_polygon();
+	return 0;
+}
+static int luafl_end_line(lua_State*L){
+	fl_end_line();
+	return 0;
+}
+static int luafl_end_loop(lua_State*L){
+	fl_end_loop();
+	return 0;
+}
+static int luafl_end_points(lua_State*L){
+	fl_end_points();
+	return 0;
+}
+static int luafl_end_polygon(lua_State*L){
+	fl_end_polygon();
+	return 0;
+}
+static int luafl_draw(lua_State*L){
+	if(lua_type(L,1)==LUA_TNUMBER){
+		int parm[3];
+		parm[0]=luaL_optint(L,1,0);
+		parm[1]=luaL_optint(L,3,0);
+		parm[2]=luaL_optint(L,4,0);
+		const char*str=lua_tostring(L,2);
+		if(lua_type(L,5)==LUA_TNUMBER)//n specified
+			fl_draw(parm[0],str,parm[1],parm[2],luaL_optint(L,5,0));
+		else
+			fl_draw(parm[0],str,parm[1],parm[2]);
+			
+	}else{
+		const char*str=lua_tostring(L,1);
+		int parm[2];
+		parm[0]=luaL_optint(L,2,0);
+		parm[1]=luaL_optint(L,3,0);
+		if(lua_type(L,4)==LUA_TNUMBER)//n specified
+			fl_draw(str,parm[0],parm[1],luaL_optint(L,4,0));
+		else
+			fl_draw(str,parm[0],parm[1]);
+	}
 	return 0;
 }
 static const luaL_Reg lua_flAPI[]={
@@ -110,7 +204,49 @@ static const luaL_Reg lua_flAPI[]={
 	{"input",luafl_input},
 	{"message",luafl_message},
 	{"password",luafl_password},
-	{"check",luafl_check},
+	{"eventnames",luafl_eventnames},
+	{"point",luafl_point},
+	{"rect",luafl_rect},
+	{"color",luafl_color},
+	{"arc",luafl_arc},
+	{"begin_complex_polygon",luafl_begin_complex_polygon},
+	{"begin_line",luafl_begin_line},
+	{"begin_loop",luafl_begin_loop},
+	{"begin_points",luafl_begin_points},
+	{"begin_polygon",luafl_begin_polygon},
+	{"circle",luafl_circle},
+	{"end_complex_polygon",luafl_end_complex_polygon},
+	{"end_line",luafl_end_line},
+	{"end_loop",luafl_end_loop},
+	{"end_points",luafl_end_points},
+	{"end_polygon",luafl_end_polygon},
+	{"draw",luafl_draw},
+	{0,0}
+};
+static int luaFl_check(lua_State*L){
+	lua_pushinteger(L,Fl::check());
+	return 1;
+}
+static int luaFl_wait(lua_State*L){
+	if(lua_type(L,1)==LUA_TNUMBER)
+		lua_pushinteger(L,Fl::wait(luaL_checknumber(L,1)));
+	else
+		lua_pushinteger(L,Fl::wait());
+	return 1;
+}
+static int luaFl_event_x(lua_State*L){
+	lua_pushinteger(L,Fl::event_x());
+	return 1;
+}
+static int luaFl_event_y(lua_State*L){
+	lua_pushinteger(L,Fl::event_y());
+	return 1;
+}
+static const luaL_Reg lua_FlAPI[]={
+	{"check",luaFl_check},
+	{"wait",luaFl_wait},
+	{"event_x",luaFl_event_x},
+	{"event_y",luaFl_event_y},
 	{0,0}
 };
 static void outofBoundsAlert(const char*what,unsigned val){
@@ -544,6 +680,30 @@ static int lua_rgt_rgbToLab(lua_State*L){
 	lua_pushnumber(L,b);
 	return 3;
 }
+static int lua_rgt_labToRgb(lua_State*L){
+	double r,g,b;
+	Lab2Rgb(&r,&g,&b,luaL_optnumber(L,1,0.0),luaL_optnumber(L,2,0.0),luaL_optnumber(L,3,0.0));
+	lua_pushnumber(L,r);
+	lua_pushnumber(L,g);
+	lua_pushnumber(L,b);
+	return 3;
+}
+static int lua_rgt_rgbToLch(lua_State*L){
+	double l,c,h;
+	Rgb2Lch(&l,&c,&h,luaL_optnumber(L,1,0.0),luaL_optnumber(L,2,0.0),luaL_optnumber(L,3,0.0));
+	lua_pushnumber(L,l);
+	lua_pushnumber(L,c);
+	lua_pushnumber(L,h);
+	return 3;
+}
+static int lua_rgt_lchToRgb(lua_State*L){
+	double r,g,b;
+	Lch2Rgb(&r,&g,&b,luaL_optnumber(L,1,0.0),luaL_optnumber(L,2,0.0),luaL_optnumber(L,3,0.0));
+	lua_pushnumber(L,r);
+	lua_pushnumber(L,g);
+	lua_pushnumber(L,b);
+	return 3;
+}
 static int lua_rgt_rgbToHsl(lua_State*L){
 	double h,s,l;
 	rgbToHsl(luaL_optnumber(L,1,0.0),luaL_optnumber(L,2,0.0),luaL_optnumber(L,3,0.0),&h,&s,&l);
@@ -556,7 +716,159 @@ static const luaL_Reg lua_rgtAPI[]={
 	{"redraw",lua_rgt_redraw},
 	{"ditherImage",lua_rgt_ditherImage},
 	{"rgbToLab",lua_rgt_rgbToLab},
+	{"labToRgb",lua_rgt_labToRgb},
+	{"rgbToLch",lua_rgt_rgbToLch},
+	{"lchToRgb",lua_rgt_lchToRgb},
 	{"rgbToHsl",lua_rgt_rgbToHsl},
+	{0,0}
+};
+static void runFunc(lua_State*L,unsigned args,unsigned results){
+	if (lua_pcall(L, args, results, 0) != LUA_OK)
+		luaL_error(L, "error: %s",lua_tostring(L, -1));
+}
+class Fl_Lua_Window : public Fl_Window{
+public:
+	char*drawFunc=0;
+	char*handleFunc=0;
+	lua_State*L;
+	int baseHandle(int e){
+		return Fl_Window::handle(e);
+	}
+	int handle(int e){
+		if(handleFunc){
+			lua_getglobal(L,handleFunc);
+			lua_pushnumber(L,e);
+			runFunc(L,1,1);
+			int ret=luaL_checkint(L,-1);
+			lua_pop(L,1);
+			return ret;
+		}else
+			return baseHandle(e);
+	}
+	void baseDraw(){
+		Fl_Window::draw();
+	}
+	void draw(){
+		if(drawFunc){
+			lua_getglobal(L,drawFunc);
+			runFunc(L,0,0);
+		}else
+			baseDraw();
+	}
+	Fl_Lua_Window(int X, int Y, int W, int H, const char *L=0)
+		: Fl_Window(X, Y, W, H, L){
+		}
+	Fl_Lua_Window(int W, int H, const char *L=0)
+		: Fl_Window(W, H, L) {
+		}
+};
+static int lua_Fl_Window_new(lua_State*L){
+	unsigned width=luaL_checkunsigned(L,1);
+	unsigned height=luaL_checkunsigned(L,2);
+	bool useXY=false;
+	unsigned x,y;
+	const char*title;
+	if(lua_type(L,3)==LUA_TNUMBER&&lua_type(L,4)==LUA_TNUMBER){
+		unsigned x=luaL_checkunsigned(L,3);
+		unsigned y=luaL_checkunsigned(L,4);
+		useXY=true;
+		title=luaL_optstring(L,5,0);
+	}else
+		title=luaL_optstring(L,3,0);
+	void*ptr=lua_newuserdata(L,sizeof(void*));
+	Fl_Lua_Window**win=(Fl_Lua_Window**)ptr;
+	luaL_getmetatable(L, "FLTKmeta.Fl_Window");
+	lua_setmetatable(L, -2);
+	if(useXY)
+		*win=new Fl_Lua_Window(x,y,width,height);
+	else
+		*win=new Fl_Lua_Window(width,height);
+	if(title&&title[0])
+		(*win)->copy_label(title);
+	(*win)->L=L;
+	return 1;
+}
+static Fl_Lua_Window*getWin(lua_State*L){
+	Fl_Lua_Window *win = *(Fl_Lua_Window**)luaL_checkudata(L,1,"FLTKmeta.Fl_Window");
+	if(!win)
+		fl_alert("Fl_Window null");
+	return win;
+}
+static int lua_Fl_Window_show(lua_State*L){
+	Fl_Lua_Window*win=getWin(L);
+	if(win)
+		win->show();
+	return 0;
+}
+static int lua_Fl_Window_shown(lua_State*L){
+	Fl_Lua_Window*win=getWin(L);
+	if(win)
+		lua_pushinteger(L,win->shown());
+	return 1;
+}
+static int lua_Fl_Window_gc(lua_State*L){
+	Fl_Lua_Window*win=getWin(L);
+	if(win){
+		if(win->drawFunc)
+			free(win->drawFunc);
+		if(win->handleFunc)
+			free(win->handleFunc);
+		delete win;
+	}
+	return 0;
+}
+static int lua_Fl_Window_end(lua_State*L){
+	Fl_Lua_Window*win=getWin(L);
+	if(win)
+		win->end();
+	return 0;
+}
+static void cpyAndSet(lua_State*L,char**what){
+	if(*what)
+		free(*what);
+	const char*str=luaL_optstring(L,2,0);
+	if(str&&str[0]){
+		*what=strdup(str);
+	}else
+		*what=0;
+}
+static int lua_Fl_Window_setDrawFunction(lua_State*L){
+	Fl_Lua_Window*win=getWin(L);
+	if(win)
+		cpyAndSet(L,&win->drawFunc);
+	return 0;
+}
+static int lua_Fl_Window_setHandleFunction(lua_State*L){
+	Fl_Lua_Window*win=getWin(L);
+	if(win)
+		cpyAndSet(L,&win->handleFunc);
+	return 0;
+}
+static int lua_Fl_Window_baseHandle(lua_State*L){
+	Fl_Lua_Window*win=getWin(L);
+	lua_pushinteger(L,win->baseHandle(luaL_checkint(L,2)));
+	return 1;
+}
+static int lua_Fl_Window_baseDraw(lua_State*L){
+	Fl_Lua_Window*win=getWin(L);
+	win->baseDraw();
+	return 0;
+}
+static int lua_Fl_Window_redraw(lua_State*L){
+	Fl_Lua_Window*win=getWin(L);
+	win->redraw();
+	return 0;
+}
+static const luaL_Reg lua_Fl_Window[]={
+	{"new",lua_Fl_Window_new},
+	{"show",lua_Fl_Window_show},
+	{"shown",lua_Fl_Window_shown},
+	{"End",lua_Fl_Window_end},
+	{"baseHandle",lua_Fl_Window_baseHandle},
+	{"baseDraw",lua_Fl_Window_baseDraw},
+	{"setDrawFunction",lua_Fl_Window_setDrawFunction},
+	{"setHandleFunction",lua_Fl_Window_setHandleFunction},
+	{"redraw",lua_Fl_Window_redraw},
 	{0,0}
 };
 static void mkKeyunsigned(lua_State*L,const char*str,unsigned val){
@@ -572,9 +884,25 @@ void runLua(Fl_Widget*,void*){
 			lua_atpanic(L, &panic);
 			try{
 				luaL_openlibs(L);
+				//FLTK bindings
 				luaL_newlib(L,lua_flAPI);
 				lua_setglobal(L, "fl");
 
+				luaL_newlib(L,lua_FlAPI);
+				lua_setglobal(L, "Fl");
+
+				lua_createtable(L,0,FL_FULLSCREEN);
+				for(unsigned x=0;x<=FL_FULLSCREEN;++x)
+					mkKeyunsigned(L,fl_eventnames[x]+3,x);
+				lua_setglobal(L, "FL");
+
+				luaL_newmetatable(L,"FLTKmeta.Fl_Window");
+				lua_pushcfunction(L,lua_Fl_Window_gc);
+				lua_setfield(L, -2, "__gc");
+				luaL_newlib(L,lua_Fl_Window);
+				lua_setglobal(L, "Fl_Window");
+
+				//Retro Graphics Toolkit bindings
 				if(containsDataCurProj(pjHavePal)){
 					lua_createtable(L, 0,(sizeof(lua_paletteAPI)/sizeof((lua_paletteAPI)[0]) - 1)+5);
 					luaL_setfuncs(L,lua_paletteAPI,0);

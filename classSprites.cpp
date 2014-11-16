@@ -118,17 +118,15 @@ void sprites::freeOptmizations(unsigned which){
 		}
 	}
 	for(int i=groups[which].list.size()-1;i>=0;--i){
-		bool notBlank=false;
 		//Check for blank columns at the end
 		for(unsigned w=groups[which].list[i].w,ctile=groups[which].list[i].starttile+(groups[which].list[i].h*groups[which].list[i].w)-1;w--;){
-			notBlank=false;
+			bool notBlank=false;
 			for(unsigned h=groups[which].list[i].h;h--;--ctile){
 				if(ctile>=currentProject->tileC->amt){
 					printf("Tile %u exceeded %u\n",ctile,currentProject->tileC->amt-1);
 					continue;
 				}else
 					notBlank|=chkNotZero(currentProject->tileC->truetDat.data()+(ctile*256),256);
-
 			}
 			if(notBlank){
 				break;
