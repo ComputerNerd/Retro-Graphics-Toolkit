@@ -1,12 +1,24 @@
 def toTex(basename):
-    print('Converting '+basename+'.md')
-    if subprocess.call(['pandoc','-S','--listings','-f','markdown_github','-V geometry:margin=.5in','-o',basename+'.tex',basename+'.md']):
-        print('Failue pandoc')
+    print('Converting to latex '+basename+'.md')
+    if subprocess.call(['pandoc','-S','--listings','-f','markdown','-V geometry:margin=.5in','-o',basename+'.tex',basename+'.md']):
+        print('Faille pandoc')
+def toGithub(inmd,outmd):
+    print('Converting to github markdown '+inmd+'.md')
+    if subprocess.call(['pandoc','-S','-f','markdown','-t','markdown_github','-o',outmd,inmd]):
+        print('Faille pandoc')
 import os
 import glob
 import subprocess
 import fileinput
-for name in glob.glob('Retro-Graphics-Toolkit.wiki/*.md'):
+#for name in glob.glob('Retro-Graphics-Toolkit.wiki/*.md'):
+for name in glob.glob('Pandoc/*.md'):
+    githubPath='Retro-Graphics-Toolkit.wiki/'+os.path.basename(name)
+    if os.path.isfile(githubPath):
+        if os.stat(name).st_mtime>os.stat(githubPath).st_mtime:
+            toGithub(name,githubPath)
+    else:
+        toGithub(name,githubPath)
+for name in glob.glob('Pandoc/*.md'):
     basename=extension = os.path.splitext(name)[0]
     texname=basename
     texname+='.tex'
@@ -16,15 +28,13 @@ for name in glob.glob('Retro-Graphics-Toolkit.wiki/*.md'):
             toTex(basename)
     else:
         toTex(basename)
-if not os.path.isfile('Retro-Graphics-Toolkit.wiki/Home.md'):
-    print('Need a home file')
-    quit()
 concat=""
 concat += open('header.tex').read()
 concat+='\chapter{Introduction}\n'
 concat += open('Home-offline.tex').read()
-for name in glob.glob('Retro-Graphics-Toolkit.wiki/*.tex'):
-    if 'Retro-Graphics-Toolkit.wiki/Home.tex'!=name:
+concat+='\mainmatter\n'
+for name in glob.glob('Pandoc/*.tex'):
+    if 'Pandoc/Home.tex'!=name:
         basename=os.path.basename(os.path.splitext(name)[0])
         basename=basename.replace('-',' ')
         concat+='\chapter{'+basename+'}\n'
