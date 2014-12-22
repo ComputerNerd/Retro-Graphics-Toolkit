@@ -3,7 +3,7 @@ def toTex(basename):
     if subprocess.call(['pandoc','-S','--listings','-f','markdown','-V geometry:margin=.5in','-o',basename+'.tex',basename+'.md']):
         print('Faille pandoc')
 def toGithub(inmd,outmd):
-    print('Converting to github markdown '+inmd+'.md')
+    print('Converting to github markdown '+inmd)
     if subprocess.call(['pandoc','-S','-f','markdown','-t','markdown_github','-o',outmd,inmd]):
         print('Faille pandoc')
 import os
