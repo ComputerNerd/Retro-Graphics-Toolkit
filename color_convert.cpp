@@ -20,9 +20,9 @@
 #include "system.h"
 #include "palette.h"
 #include "nearestColor.h"
+#include "classpalettebar.h"
 uint8_t nespaltab[64*3];
 uint8_t nespaltab_alt[64*3];
-
 
 uint8_t nearest_color_index(uint8_t val,unsigned startindex){
 	int32_t distanceSquared, minDistanceSquared, bestIndex = 0;
@@ -178,20 +178,7 @@ void updateNesTab(unsigned emps,bool alt){
 void update_emphesis(Fl_Widget*,void*){
 	unsigned emps;
 	unsigned empsSprite;
-	switch (mode_editor){
-		case pal_edit:
-			emps=palEdit.pal_b->value();
-		break;
-		case tile_edit:
-			emps=tileEdit_pal.pal_b->value();
-		break;
-		case tile_place:
-			emps=tileMap_pal.pal_b->value();
-		break;
-		case spriteEditor:
-			empsSprite=spritePal.pal_b->value();
-		break;
-	}
+	emps=palBar.slide[palBar.toTab(mode_editor)][2]->value();
 	/*76543210
 	  ||||||||
 	  ||||++++- Hue (phase)

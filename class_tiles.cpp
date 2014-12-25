@@ -22,6 +22,7 @@
 #include "tilemap.h"
 #include "errorMsg.h"
 #include "undo.h"
+#include "classpalettebar.h"
 tiles::tiles(){
 	current_tile=0;
 	amt=1;
@@ -506,7 +507,7 @@ void tiles::vflip_tile(uint32_t id,uint8_t * out){
 void tiles::blank_tile(uint32_t tileUsage){
 	if (mode_editor == tile_edit){
 		memset(&truetDat[tileUsage*tcSize],0,tcSize);
-		truecolor_to_tile(tileEdit_pal.theRow,tileUsage,false);
+		truecolor_to_tile(palBar.selRow[1],tileUsage,false);
 	}else
 		memset(&tDat[tileUsage*tileSize],0,tileSize);
 }

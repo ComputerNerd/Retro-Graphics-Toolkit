@@ -18,6 +18,7 @@
 #include "class_global.h"
 #include "tilemap.h"
 #include "undo.h"
+#include "classpalettebar.h"
 void tilesnewfilppedCB(Fl_Widget*,void*){
 	pushTilemapAll(false);
 	pushTileappendGroupPrepare();
@@ -138,9 +139,9 @@ void set_tile_currentTP(Fl_Widget* o,void*){
 void update_all_tiles(Fl_Widget*,void*){
 	unsigned sel_pal;
 	if (mode_editor == tile_place)
-		sel_pal=tileMap_pal.theRow;
+		sel_pal=palBar.selRow[2];
 	else
-		sel_pal=tileEdit_pal.theRow;
+		sel_pal=palBar.selRow[1];
 	if (currentProject->tileC->amt>=63)
 		putchar('\n');
 
@@ -163,8 +164,8 @@ void fill_tile(Fl_Widget* o, void*){
 	//fills tile with currently selected color
 	if (mode_editor == tile_place){
 		pushTile(currentProject->tileC->current_tile,tTypeTile);
-		uint8_t color;
-		color=tileMap_pal.box_sel;
+		unsigned color;
+		color=palBar.selBox[2];
 		uint8_t * tile_ptr_temp;
 		switch (currentProject->gameSystem){
 			case sega_genesis:
@@ -198,7 +199,7 @@ void fill_tile(Fl_Widget* o, void*){
 			currentProject->tileC->truetDat[x+2]=truecolor_temp[2];//blue
 			currentProject->tileC->truetDat[x+3]=truecolor_temp[3];//alpha
 		}
-		currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile,false);
+		currentProject->tileC->truecolor_to_tile(palBar.selRow[1],currentProject->tileC->current_tile,false);
 	}else
 		fl_alert("To prevent accidental modification be in the Tile editor or Tile map editor to use this");
 	window->damage(FL_DAMAGE_USER1);

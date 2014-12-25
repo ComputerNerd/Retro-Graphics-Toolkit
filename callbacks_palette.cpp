@@ -21,25 +21,11 @@
 #include "filemisc.h"
 #include "undo.h"
 #include "errorMsg.h"
+#include "classpalettebar.h"
 void sortRowbyCB(Fl_Widget*,void*){
 	unsigned type=fl_choice("Sort each row by","Hue","Saturation","Lightness");
 	sortBy(type,true);
-	switch (mode_editor){
-		case pal_edit:
-			palEdit.updateSlider();
-		break;
-		case tile_edit:
-			tileEdit_pal.updateSlider();
-		break;
-		case tile_place:
-			tileMap_pal.updateSlider();
-		break;
-		case spriteEditor:
-			spritePal.updateSlider();
-		break;
-		default:
-			show_default_error
-	}
+	palBar.updateSlider(palBar.toTab(mode_editor));
 	window->redraw();
 }
 void save_palette(Fl_Widget*, void* start_end){
@@ -153,32 +139,17 @@ void update_palette(Fl_Widget* o, void* v){
 	//first get the color and draw the box
 	Fl_Slider* s = (Fl_Slider*)o;
 	//now we need to update the entry we are editing
-	unsigned temp_entry=0;
-	switch (mode_editor){
-		case pal_edit:
-			temp_entry=palEdit.getEntry();
-		break;
-		case tile_edit:
-			temp_entry=tileEdit_pal.getEntry();
-		break;
-		case tile_place:
-			temp_entry=tileMap_pal.getEntry();
-		break;
-		case spriteEditor:
-			temp_entry=spritePal.getEntry();
-			if(currentProject->pal->haveAlt)
-				temp_entry+=currentProject->pal->colorCnt;
-		break;
-		default:
-			show_default_error
-	}
+	unsigned temp_entry=palBar.getEntry(palBar.toTab(mode_editor));
+	if(mode_editor==spriteEditor)
+		if(currentProject->pal->haveAlt)
+			temp_entry+=currentProject->pal->colorCnt;
 	if(pushed_g||(Fl::event()==FL_KEYDOWN)){
 		pushed_g=0;
 		pushPaletteEntry(temp_entry);
 	}
 	if (currentProject->gameSystem == sega_genesis){
-		uint8_t temp_var=0;
-		uint8_t temp2=(uint8_t)s->value();
+		unsigned temp_var=0;
+		unsigned temp2=(unsigned)s->value()*2;
 		switch ((uintptr_t)v){
 			case 0://red
 				temp_var=currentProject->pal->palDat[(temp_entry*2)+1];//get the green value we need to save it for later
@@ -235,7 +206,7 @@ void update_palette(Fl_Widget* o, void* v){
 		currentProject->pal->rgbPal[temp_entry*3]=(rgb_out>>16)&255;//red
 	}
 	if (mode_editor == tile_edit)
-		currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile,false);//update tile
+		currentProject->tileC->truecolor_to_tile(palBar.selRow[1],currentProject->tileC->current_tile,false);//update tile
 	window->redraw();//update the palette
 }
 void loadPalette(Fl_Widget*, void*){
@@ -298,11 +269,11 @@ void set_tile_row(Fl_Widget*,void* row){
 	unsigned selrow=(uintptr_t)row;
 	switch (mode_editor){
 		case tile_edit:
-			tileEdit_pal.changeRow(selrow);
+			palBar.changeRow(selrow,1);
 			currentProject->tileC->truecolor_to_tile(selrow,currentProject->tileC->current_tile,false);
 		break;
 		case tile_place:
-			tileMap_pal.changeRow(selrow);
+			palBar.changeRow(selrow,2);
 			if(tileEditModePlace_G){
 				pushTilemapEdit(selTileE_G[0],selTileE_G[1]);
 				currentProject->tileMapC->set_pal_row(selTileE_G[0],selTileE_G[1],selrow);
@@ -312,22 +283,9 @@ void set_tile_row(Fl_Widget*,void* row){
 	window->redraw();//trigger a redraw so that the new row is displayed
 }
 void setPalType(Fl_Widget*,void*type){
-	switch (mode_editor){
-		case pal_edit:
-			currentProject->pal->palType[palEdit.getEntry()]=(uintptr_t)type;
-			palEdit.updateSlider();
-		break;
-		case tile_edit:
-			currentProject->pal->palType[tileEdit_pal.getEntry()]=(uintptr_t)type;
-			tileEdit_pal.updateSlider();
-		break;
-		case tile_place:
-			currentProject->pal->palType[tileMap_pal.getEntry()]=(uintptr_t)type;
-			tileMap_pal.updateSlider();
-		break;
-		default:
-			show_default_error
-	}
+	unsigned palTab=palBar.toTab(mode_editor);
+	currentProject->pal->palType[palBar.getEntry(palTab)]=(uintptr_t)type;
+	palBar.updateSlider(palTab);
 	window->redraw();
 }
 void pickNearAlg(Fl_Widget*,void*){
@@ -339,15 +297,15 @@ void rgb_pal_to_entry(Fl_Widget*,void*){
 		fl_alert("Be in Tile editor to use this");
 		return;
 	}
-	unsigned ent=tileEdit_pal.getEntry();
+	unsigned ent=palBar.getEntry(1);
 	pushPaletteEntry(ent);
 	currentProject->pal->rgbToEntry(window->rgb_red->value(),window->rgb_green->value(),window->rgb_blue->value(),ent);
-	tileEdit_pal.updateSlider();
-	currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile,false);
+	palBar.updateSlider(1);
+	currentProject->tileC->truecolor_to_tile(palBar.selRow[1],currentProject->tileC->current_tile,false);
 	window->redraw();
 }
 void entryToRgb(Fl_Widget*,void*){
-	unsigned en=tileEdit_pal.getEntry()*3;
+	unsigned en=palBar.getEntry(1)*3;
 	truecolor_temp[0]=currentProject->pal->rgbPal[en];
 	truecolor_temp[1]=currentProject->pal->rgbPal[en+1];
 	truecolor_temp[2]=currentProject->pal->rgbPal[en+2];
@@ -361,9 +319,6 @@ void clearPalette(Fl_Widget*,void*){
 		pushPaletteAll();
 		currentProject->pal->clear();
 		window->damage(FL_DAMAGE_USER1);
-		palEdit.updateSlider();
-		tileEdit_pal.updateSlider();
-		tileMap_pal.updateSlider();
-		spritePal.updateSlider();
+		palBar.updateSliders();
 	}
 }

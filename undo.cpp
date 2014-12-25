@@ -23,6 +23,7 @@
 #include "color_convert.h"
 #include "callback_chunk.h"
 #include "callbacksprites.h"
+#include "classpalettebar.h"
 static struct undoEvent*undoBuf;
 static uint_fast32_t amount;
 static uint_fast32_t memUsed;
@@ -578,10 +579,7 @@ void UndoRedo(bool redo){
 			for(unsigned i=0;i<el;++i)
 				currentProject->pal->updateRGBindex(i);
 			}
-			palEdit.updateSlider();
-			tileEdit_pal.updateSlider();
-			tileMap_pal.updateSlider();
-			spritePal.updateSlider();
+			palBar.updateSliders();
 		break;
 		case uPaletteEntry:
 			{struct undoPaletteEntry*up=(struct undoPaletteEntry*)uptr->ptr;
@@ -607,37 +605,37 @@ void UndoRedo(bool redo){
 			currentProject->pal->updateRGBindex(up->id);
 			switch (mode_editor){
 				case pal_edit:
-					palEdit.box_sel=up->id%palEdit.perRow;
-					palEdit.changeRow(up->id/palEdit.perRow);
+					palBar.selBox[0]=up->id%currentProject->pal->perRow;
+					palBar.changeRow(up->id/currentProject->pal->perRow,0);
 				break;
 				case tile_edit:
-					tileEdit_pal.box_sel=up->id%palEdit.perRow;
-					tileEdit_pal.changeRow(up->id/tileEdit_pal.perRow);
+					palBar.selBox[1]=up->id%currentProject->pal->perRow;
+					palBar.changeRow(up->id/currentProject->pal->perRow,1);
 					{unsigned focus=0;
 					for(unsigned i=0;i<4;++i)
 						focus|=Fl::focus()==window->palRTE[i];
 					for(unsigned i=0;i<4;++i){
-						if(focus&&(i==tileEdit_pal.theRow))
+						if(focus&&(i==palBar.selRow[1]))
 							Fl::focus(window->palRTE[i]);
-						window->palRTE[i]->value(i==tileEdit_pal.theRow);
+						window->palRTE[i]->value(i==palBar.selRow[1]);
 					}}
 				break;
 				case tile_place:
-					tileMap_pal.box_sel=up->id%tileMap_pal.perRow;
-					tileMap_pal.changeRow(up->id/tileMap_pal.perRow);
+					palBar.selBox[2]=up->id%currentProject->pal->perRow;
+					palBar.changeRow(up->id/currentProject->pal->perRow,2);
 					{unsigned focus=0;
 					for(unsigned i=0;i<4;++i)
 						focus|=Fl::focus()==window->palRTE[i+4];
 					for(unsigned i=0;i<4;++i){
-						if(focus&&(i==tileMap_pal.theRow))
+						if(focus&&(i==palBar.selRow[2]))
 							Fl::focus(window->palRTE[i+4]);
-						window->palRTE[i+4]->value(i==tileMap_pal.theRow);
+						window->palRTE[i+4]->value(i==palBar.selRow[2]);
 					}}
 				break;
 				case spriteEditor:
-					spritePal.box_sel=up->id%spritePal.perRow;
-					spritePal.changeRow(up->id/spritePal.perRow);
-					window->spritepalrow->value(spritePal.theRow);
+					palBar.selBox[3]=up->id%currentProject->pal->perRow;
+					palBar.changeRow(up->id/currentProject->pal->perRow,3);
+					window->spritepalrow->value(palBar.selRow[3]);
 				break;
 			}}
 		break;

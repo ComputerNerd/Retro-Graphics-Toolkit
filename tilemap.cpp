@@ -29,6 +29,7 @@
 #include "palette.h"
 #include "classtilemap.h"
 #include "classpalette.h"
+#include "classpalettebar.h"
 static void addHist(uint32_t cur_tile,int type,uint32_t*hist,unsigned sz){
 	double szz=(double)sz;
 	uint8_t * truePtr=&currentProject->tileC->truetDat[cur_tile*256];
@@ -675,12 +676,12 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 		if (rowAuto)
 			currentProject->tileMapC->allRowSet(firstRow);
 		if(set->sprite){
-			unsigned off=set->off[firstRow]+(firstRow*palEdit.perRow);
+			unsigned off=set->off[firstRow]+(firstRow*currentProject->pal->perRow);
 			if(currentProject->gameSystem==NES)
 				off+=16;
 			reduceImage(image,found_colors,-1,off,progress,win,set->perRow[firstRow],set->colSpace,set->alg,true);
 		}else
-			reduceImage(image,found_colors,-1,firstRow*palEdit.perRow+set->off[firstRow],progress,win,set->perRow[firstRow],set->colSpace,set->alg);
+			reduceImage(image,found_colors,-1,firstRow*currentProject->pal->perRow+set->off[firstRow],progress,win,set->perRow[firstRow],set->colSpace,set->alg);
 		window->damage(FL_DAMAGE_USER1);
 		Fl::check();
 	}else{
@@ -696,7 +697,7 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 				currentProject->tileMapC->pickTileRowQuantChoice(4-firstRow);
 			for (unsigned i=firstRow;i<4;++i){
 				if(set->useRow[i]){
-					reduceImage(image,found_colors,i,(i*palEdit.perRow)+set->off[i],progress,win,set->perRow[i],set->colSpace,set->alg);
+					reduceImage(image,found_colors,i,(i*currentProject->pal->perRow)+set->off[i],progress,win,set->perRow[i],set->colSpace,set->alg);
 					window->damage(FL_DAMAGE_USER1);
 					Fl::check();
 				}
@@ -708,10 +709,7 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 	delete(progress);// deallocate it
 	//w->draw();
 	delete win;
-	palEdit.updateSlider();
-	tileEdit_pal.updateSlider();
-	tileMap_pal.updateSlider();
-	spritePal.updateSlider();
+	palBar.updateSliders();
 	if(set->ditherAfter){
 		if(set->sprite){
 			ditherSpriteAsImage(curSpritegroup);

@@ -22,6 +22,7 @@
 #include "color_convert.h"
 #include "color_compare.h"
 #include "nearestColor.h"
+#include "classpalettebar.h"
 //bools used to toggle stuff
 bool show_grid;
 bool G_hflip[2];
@@ -189,18 +190,18 @@ static inline uint32_t sq(uint32_t x){
 	return x*x;
 }
 uint8_t find_near_color_from_row_rgb(unsigned row,uint8_t r,uint8_t g,uint8_t b,bool alt){
-	row*=palEdit.perRow;
+	row*=currentProject->pal->perRow;
 	uint8_t*rgbPtr=currentProject->pal->rgbPal+(row*3);
 	if((currentProject->gameSystem==NES)&&alt)
 		rgbPtr+=16*3;
-	return (nearestColIndex(r,g,b,rgbPtr,palEdit.perRow,true,row)+row)*3;//Yes this function does return three times the value TODO refractor
+	return (nearestColIndex(r,g,b,rgbPtr,currentProject->pal->perRow,true,row)+row)*3;//Yes this function does return three times the value TODO refractor
 }
 uint8_t find_near_color_from_row(unsigned row,uint8_t r,uint8_t g,uint8_t b,bool alt){
-	return (find_near_color_from_row_rgb(row,r,g,b,alt)/3)-(row*palEdit.perRow);
+	return (find_near_color_from_row_rgb(row,r,g,b,alt)/3)-(row*currentProject->pal->perRow);
 }
 uint32_t cal_offset_truecolor(unsigned x,unsigned y,unsigned rgb,uint32_t tile){
 	/*!<
-	cal_offset_truecolor is made to help when accesing a true color tile array
+	cal_offset_truecolor is made to help when accessing a true color tile array
 	an example of it would be
 	red_temp=truecolor_data[cal_offset_truecolor(0,0,0,0)]//get the red pixel at pixel 0,0 at tile 0
 	green_temp=truecolor_data[cal_offset_truecolor(0,0,1,0)]//get the green pixel at pixel 0,0 at tile 0

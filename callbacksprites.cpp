@@ -22,6 +22,7 @@
 #include "gamedef.h"
 #include "undo.h"
 #include "dither.h"
+#include "classpalettebar.h"
 uint32_t curSprite;
 uint32_t curSpritegroup;
 int32_t spriteEndDraw[2];
@@ -241,7 +242,7 @@ void setvalueSpriteCB(Fl_Widget*o,void*which){
 		break;
 		case 3:
 			pushSpriteItem(Palrow)
-			spritePal.changeRow(val);
+			palBar.changeRow(val,3);
 			currentProject->spritesC->groups[curSpritegroup].list[curSprite].palrow=val;
 		break;
 		case 4:

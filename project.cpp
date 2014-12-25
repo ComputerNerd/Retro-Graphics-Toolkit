@@ -19,6 +19,7 @@
 #include <FL/Fl_Hor_Value_Slider.H>
 #include "color_convert.h"
 #include "zlibwrapper.h"
+#include "classpalettebar.h"
 struct Project ** projects;
 uint32_t projects_count;//holds how many projects there are this is needed for realloc when adding or removing function
 struct Project * currentProject;
@@ -126,10 +127,7 @@ void setHaveProject(uint32_t id,uint32_t mask,bool set){
 			if(!(projects[id]->useMask&pjHavePal)){
 				projects[id]->pal=new palette;
 				projects[id]->useMask|=pjHavePal;
-				palEdit.changeSystem();
-				tileEdit_pal.changeSystem();
-				tileMap_pal.changeSystem();
-				spritePal.changeSystem();
+				palBar.setSys();
 				if(projects[id]->gameSystem==NES)
 					update_emphesis(0,0);
 			}
@@ -325,10 +323,7 @@ void switchProject(uint32_t id){
 			if(containsDataProj(id,pjHaveTiles))
 				projects[id]->tileC->tileSize=32;
 			if(containsDataProj(id,pjHavePal)){
-				palEdit.changeSystem();
-				tileEdit_pal.changeSystem();
-				tileMap_pal.changeSystem();
-				spritePal.changeSystem();
+				palBar.setSys();
 				set_palette_type();
 			}
 		break;
@@ -340,10 +335,7 @@ void switchProject(uint32_t id){
 			if(containsDataProj(id,pjHavePal)){
 				updateNesTab(0,false);
 				updateNesTab(0,true);
-				palEdit.changeSystem();
-				tileEdit_pal.changeSystem();
-				tileMap_pal.changeSystem();
-				spritePal.changeSystem();
+				palBar.setSys();
 				update_emphesis(0,0);
 			}
 		break;

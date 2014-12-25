@@ -21,6 +21,7 @@
 #include "callback_project.h"
 #include "lua.h"
 #include "CIE.h"
+#include "classpalettebar.h"
 static const char* GPLv3="This program is free software: you can redistribute it and/or modify\n"
 	"it under the terms of the GNU General Public License as published by\n"
 	"the Free Software Foundation, either version 3 of the License, or\n"
@@ -80,7 +81,7 @@ void set_game_system(Fl_Widget*,void* selection){
 			*nPtr++=rgbPtr[0];
 			*nPtr++=rgbPtr[1];
 			*nPtr++=rgbPtr[2];
-			rgbPtr+=palEdit.perRow/perRow*3;
+			rgbPtr+=currentProject->pal->perRow/perRow*3;
 			for(unsigned j=(currentProject->pal->perRow/perRow)*3;j<currentProject->pal->perRow*3;j+=(currentProject->pal->perRow/perRow)*3){
 				unsigned type=0;
 				double Lv,Cv,Hv;
@@ -119,10 +120,7 @@ void set_game_system(Fl_Widget*,void* selection){
 			currentProject->subSystem=0;
 			setBitdepthcurSys(bd);
 			if(containsDataCurProj(pjHavePal)){
-				palEdit.changeSystem();
-				tileEdit_pal.changeSystem();
-				tileMap_pal.changeSystem();
-				spritePal.changeSystem();
+				palBar.setSys();
 			}
 			if(containsDataCurProj(pjHaveTiles)){
 				currentProject->tileC->tileSize=32;
@@ -145,10 +143,7 @@ void set_game_system(Fl_Widget*,void* selection){
 			updateNesTab(0,false);
 			updateNesTab(0,true);
 			if(containsDataCurProj(pjHavePal)){
-				palEdit.changeSystem();
-				tileEdit_pal.changeSystem();
-				tileMap_pal.changeSystem();
-				spritePal.changeSystem();
+				palBar.setSys();
 				update_emphesis(0,0);
 			}
 			if(containsDataCurProj(pjHaveTiles)){

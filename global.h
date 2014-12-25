@@ -22,7 +22,6 @@ Header for globals included with all other files.
 #define unlikely(x)     __builtin_expect((x),0)
 #include "includes.h"
 #include "class_global.h"
-#include "class_palette.h"
 #include "errorMsg.h"
 #include "class_tiles.h"
 #include "palette.h"

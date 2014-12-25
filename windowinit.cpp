@@ -27,24 +27,25 @@
 #include "undo.h"
 #include "gamedef.h"
 #include "runlua.h"
+#include "classpalettebar.h"
 void set_mode_tabs(Fl_Widget* o, void*){
 	Fl_Group * val=(Fl_Group*)(Fl_Tabs*)window->the_tabs->value();
 	if(val==window->TabsMain[pal_edit]){
 		mode_editor=pal_edit;
-		palEdit.updateSlider();
+		palBar.updateSlider(0);
 	}else if(val==window->TabsMain[tile_edit]){
 		currentProject->tileC->current_tile=window->tile_select->value();
 		mode_editor=tile_edit;
-		tileEdit_pal.updateSlider();
+		palBar.updateSlider(1);
 	}else if(val==window->TabsMain[tile_place]){
 		currentProject->tileC->current_tile=window->tile_select_2->value();
 		mode_editor=tile_place;
-		tileMap_pal.updateSlider();
+		palBar.updateSlider(2);
 	}else if(val==window->TabsMain[chunkEditor]){
 		mode_editor=chunkEditor;
 	}else if(val==window->TabsMain[spriteEditor]){
 		mode_editor=spriteEditor;
-		spritePal.updateSlider();
+		palBar.updateSlider(3);
 	}else if(val==window->TabsMain[levelEditor]){
 		mode_editor=levelEditor;
 	}else if(val==window->TabsMain[settingsTab]){
@@ -205,7 +206,7 @@ void editor::_editor(){
 		{
 			TabsMain[pal_edit] = new Fl_Group(rx, ry, rw, rh, "Palette editor");
 			//stuff related to this group should go here
-			palEdit.more_init(4);
+			palBar.addTab(0,true);
 			pal_size = new Fl_Hor_Value_Slider(128,384,320,24,"Palette box size");
 			pal_size->minimum(1); pal_size->maximum(42);
 			pal_size->step(1);
@@ -292,7 +293,7 @@ void editor::_editor(){
 			{ Fl_Button *o = new Fl_Button(656, default_palette_bar_offset_y+34,140, 32,"Insert after tile");
 				o->callback(insertTileCB);
 			}
-			tileEdit_pal.more_init();
+			palBar.addTab(1);
 			rgb_red = new Fl_Hor_Value_Slider(64,default_palette_bar_offset_y+136,128,24,"RGB red");
 			rgb_red->minimum(0);
 			rgb_red->maximum(255);
@@ -419,7 +420,7 @@ void editor::_editor(){
 			tile_select_2->callback(set_tile_currentTP);
 			totalTiles=new Fl_Box(536,default_palette_bar_offset_y,128,64);
 			totalTiles->labelsize(12);
-			tileMap_pal.more_init();
+			palBar.addTab(2);
 			//buttons for tile settings
 			{ Fl_Group *o = new Fl_Group(304, 96, 88, 96);
 				{
@@ -558,7 +559,7 @@ void editor::_editor(){
 			TabsMain[chunkEditor]->end();
 		}
 		{TabsMain[spriteEditor] = new Fl_Group(rx,ry,rw,rh,"Sprites");
-			spritePal.more_init(1,16,54,true,128,true);
+			palBar.addTab(3,false,true,true);
 
 			spritegrouptxt = new Fl_Input(tile_place_buttons_x_off+616,56,168,24,"Group name");
 			spritegrouptxt->value(spriteDefName);
