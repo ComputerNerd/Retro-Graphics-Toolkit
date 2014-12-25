@@ -19,22 +19,14 @@
 #include <stdint.h>
 extern uint8_t nespaltab[];
 extern uint8_t nespaltab_alt[];
-void rgbToEntry(unsigned r,unsigned g,unsigned b,unsigned ent);
 uint8_t nearest_color_index(uint8_t val,unsigned startindex);
 uint8_t nearest_color_index(uint8_t val);
 void rgbToHsl255(unsigned r,unsigned g,unsigned b,double * hh,double * ll,double * ss);
 void rgbToHsl(double r,double g,double b,double * hh,double * ll,double * ss);
-void updateRGBindex(unsigned index);
-void swapEntry(uint8_t one,uint8_t two);
-uint8_t to_nes_color_rgb(uint8_t red,uint8_t green,uint8_t blue);
-uint8_t to_nes_color(uint8_t pal_index);
-uint16_t to_sega_genesis_colorRGB(uint8_t r,uint8_t g,uint8_t b,uint16_t pal_index);
-uint16_t to_sega_genesis_color(uint16_t pal_index);
 uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_found,bool useAlpha=false);
 void update_emphesis(Fl_Widget*,void*);
-uint8_t toNesChan(uint8_t ri,uint8_t gi,uint8_t bi,uint8_t chan);
 static inline uint32_t toNesRgb(uint8_t ri,uint8_t gi,uint8_t bi){
-	return MakeRGBcolor(to_nes_color_rgb(ri,gi,bi));
+	return MakeRGBcolor(currentProject->pal->to_nes_color_rgb(ri,gi,bi));
 }
 void updateNesTab(unsigned emps,bool alt);
 static inline double pickIt(double h,double s,double l,unsigned type){

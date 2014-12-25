@@ -75,7 +75,7 @@ void save_palette(Fl_Widget*, void* start_end){
 			uint8_t*bufptr=bufskip;
 			for(unsigned i=start;i<end;++i){
 				if((i&3)||(i==0)){
-					*bufptr++=currentProject->palDat[i];
+					*bufptr++=currentProject->pal->palDat[i];
 					++szskip;
 				}
 			}
@@ -121,7 +121,7 @@ void save_palette(Fl_Widget*, void* start_end){
 						return;
 					}
 				}else{
-					if (!saveBinAsText(currentProject->palDat+start,end-start,myfile,type,comment,"palDat",bits)){
+					if (!saveBinAsText(currentProject->pal->palDat+start,end-start,myfile,type,comment,"palDat",bits)){
 						fl_alert("Error: can not save file %s",the_file.c_str());
 						return;
 					}
@@ -137,7 +137,7 @@ void save_palette(Fl_Widget*, void* start_end){
 						return;
 					}
 				}else{
-					if (fwrite(currentProject->palDat+start,1,end-start,myfile)==0){
+					if (fwrite(currentProject->pal->palDat+start,1,end-start,myfile)==0){
 						fl_alert("Error: can not save file %s",the_file.c_str());
 						return;
 					}
@@ -166,8 +166,8 @@ void update_palette(Fl_Widget* o, void* v){
 		break;
 		case spriteEditor:
 			temp_entry=spritePal.getEntry();
-			if(currentProject->haveAltspritePal)
-				temp_entry+=currentProject->colorCnt;
+			if(currentProject->pal->haveAlt)
+				temp_entry+=currentProject->pal->colorCnt;
 		break;
 		default:
 			show_default_error
@@ -181,27 +181,27 @@ void update_palette(Fl_Widget* o, void* v){
 		uint8_t temp2=(uint8_t)s->value();
 		switch ((uintptr_t)v){
 			case 0://red
-				temp_var=currentProject->palDat[(temp_entry*2)+1];//get the green value we need to save it for later
+				temp_var=currentProject->pal->palDat[(temp_entry*2)+1];//get the green value we need to save it for later
 				temp_var&=0xF0;
 				temp_var|=temp2;
-				currentProject->palDat[(temp_entry*2)+1]=temp_var;
+				currentProject->pal->palDat[(temp_entry*2)+1]=temp_var;
 				//now convert the new red value
-				currentProject->rgbPal[temp_entry*3]=palTab[(temp2>>1)+palTypeGen];
+				currentProject->pal->rgbPal[temp_entry*3]=palTab[(temp2>>1)+palTypeGen];
 			break;
 			case 1://green
 				//this is very similar to what I just did above
-				temp_var=currentProject->palDat[(temp_entry*2)+1];
+				temp_var=currentProject->pal->palDat[(temp_entry*2)+1];
 				temp_var&=15;//get only the red value
 				//now OR the new green value to it
 				temp_var|=temp2<<4;
-				currentProject->palDat[(temp_entry*2)+1]=temp_var;
+				currentProject->pal->palDat[(temp_entry*2)+1]=temp_var;
 				//now convert the new green value
-				currentProject->rgbPal[(temp_entry*3)+1]=palTab[(temp2>>1)+palTypeGen];
+				currentProject->pal->rgbPal[(temp_entry*3)+1]=palTab[(temp2>>1)+palTypeGen];
 			break;
 			case 2:
 				//blue is the most trivial conversion to do
-				currentProject->palDat[temp_entry*2]=temp2;
-				currentProject->rgbPal[(temp_entry*3)+2]=palTab[(temp2>>1)+palTypeGen];
+				currentProject->pal->palDat[temp_entry*2]=temp2;
+				currentProject->pal->rgbPal[(temp_entry*3)+2]=palTab[(temp2>>1)+palTypeGen];
 			break;
 		}
 	}
@@ -218,21 +218,21 @@ void update_palette(Fl_Widget* o, void* v){
 			*/
 			case 0://Hue
 				//first read out value
-				pal=currentProject->palDat[temp_entry];
+				pal=currentProject->pal->palDat[temp_entry];
 				pal&=48;
 				pal|=(uint8_t)s->value();
 			break;
 			case 1://Value
-				pal=currentProject->palDat[temp_entry];
+				pal=currentProject->pal->palDat[temp_entry];
 				pal&=15;
 				pal|=((uint8_t)s->value())<<4;
 			break;
 		}
-		currentProject->palDat[temp_entry]=pal;
+		currentProject->pal->palDat[temp_entry]=pal;
 		rgb_out=MakeRGBcolor(pal);
-		currentProject->rgbPal[temp_entry*3+2]=rgb_out&255;//blue
-		currentProject->rgbPal[temp_entry*3+1]=(rgb_out>>8)&255;//green
-		currentProject->rgbPal[temp_entry*3]=(rgb_out>>16)&255;//red
+		currentProject->pal->rgbPal[temp_entry*3+2]=rgb_out&255;//blue
+		currentProject->pal->rgbPal[temp_entry*3+1]=(rgb_out>>8)&255;//green
+		currentProject->pal->rgbPal[temp_entry*3]=(rgb_out>>16)&255;//red
 	}
 	if (mode_editor == tile_edit)
 		currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile,false);//update tile
@@ -270,7 +270,7 @@ void loadPalette(Fl_Widget*, void*){
 			}
 			//read the palette to the buffer
 			rewind(fi);
-			fread(currentProject->palDat+offset,1,file_size,fi);
+			fread(currentProject->pal->palDat+offset,1,file_size,fi);
 			fclose(fi);
 			//now convert each value to rgb
 			switch (currentProject->gameSystem){
@@ -314,15 +314,15 @@ void set_tile_row(Fl_Widget*,void* row){
 void setPalType(Fl_Widget*,void*type){
 	switch (mode_editor){
 		case pal_edit:
-			currentProject->palType[palEdit.getEntry()]=(uintptr_t)type;
+			currentProject->pal->palType[palEdit.getEntry()]=(uintptr_t)type;
 			palEdit.updateSlider();
 		break;
 		case tile_edit:
-			currentProject->palType[tileEdit_pal.getEntry()]=(uintptr_t)type;
+			currentProject->pal->palType[tileEdit_pal.getEntry()]=(uintptr_t)type;
 			tileEdit_pal.updateSlider();
 		break;
 		case tile_place:
-			currentProject->palType[tileMap_pal.getEntry()]=(uintptr_t)type;
+			currentProject->pal->palType[tileMap_pal.getEntry()]=(uintptr_t)type;
 			tileMap_pal.updateSlider();
 		break;
 		default:
@@ -341,16 +341,16 @@ void rgb_pal_to_entry(Fl_Widget*,void*){
 	}
 	unsigned ent=tileEdit_pal.getEntry();
 	pushPaletteEntry(ent);
-	rgbToEntry(window->rgb_red->value(),window->rgb_green->value(),window->rgb_blue->value(),ent);
+	currentProject->pal->rgbToEntry(window->rgb_red->value(),window->rgb_green->value(),window->rgb_blue->value(),ent);
 	tileEdit_pal.updateSlider();
 	currentProject->tileC->truecolor_to_tile(tileEdit_pal.theRow,currentProject->tileC->current_tile,false);
 	window->redraw();
 }
 void entryToRgb(Fl_Widget*,void*){
 	unsigned en=tileEdit_pal.getEntry()*3;
-	truecolor_temp[0]=currentProject->rgbPal[en];
-	truecolor_temp[1]=currentProject->rgbPal[en+1];
-	truecolor_temp[2]=currentProject->rgbPal[en+2];
+	truecolor_temp[0]=currentProject->pal->rgbPal[en];
+	truecolor_temp[1]=currentProject->pal->rgbPal[en+1];
+	truecolor_temp[2]=currentProject->pal->rgbPal[en+2];
 	window->rgb_red->value(truecolor_temp[0]);
 	window->rgb_green->value(truecolor_temp[1]);
 	window->rgb_blue->value(truecolor_temp[2]);
@@ -359,8 +359,7 @@ void entryToRgb(Fl_Widget*,void*){
 void clearPalette(Fl_Widget*,void*){
 	if(fl_ask("This will set all colors to 0 are you sure you want to do this?\nYou can undo this by pressing pressing CTRL+Z")){
 		pushPaletteAll();
-		memset(currentProject->palDat,0,128);
-		memset(currentProject->rgbPal,0,192);
+		currentProject->pal->clear();
 		window->damage(FL_DAMAGE_USER1);
 		palEdit.updateSlider();
 		tileEdit_pal.updateSlider();

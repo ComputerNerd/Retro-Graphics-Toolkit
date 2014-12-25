@@ -253,7 +253,7 @@ static void outofBoundsAlert(const char*what,unsigned val){
 	fl_alert("Error tried to access out of bound %s %u",what,val);
 }
 static unsigned inRangeEnt(unsigned ent){
-	if(ent>=(currentProject->colorCnt+currentProject->colorCntalt)){
+	if(ent>=(currentProject->pal->colorCnt+currentProject->pal->colorCntalt)){
 		outofBoundsAlert("palette entry",ent);
 		return 0;
 	}
@@ -263,9 +263,9 @@ static int lua_palette_getRGB(lua_State*L){
 	unsigned ent=luaL_optunsigned(L,1,0);
 	if(inRangeEnt(ent)){
 		ent*=3;
-		lua_pushunsigned(L,currentProject->rgbPal[ent]);
-		lua_pushunsigned(L,currentProject->rgbPal[ent+1]);
-		lua_pushunsigned(L,currentProject->rgbPal[ent+2]);
+		lua_pushunsigned(L,currentProject->pal->rgbPal[ent]);
+		lua_pushunsigned(L,currentProject->pal->rgbPal[ent+1]);
+		lua_pushunsigned(L,currentProject->pal->rgbPal[ent+2]);
 		return 3;
 	}else
 		return 0;
@@ -276,10 +276,10 @@ static int lua_palette_getRaw(lua_State*L){
 		switch(currentProject->gameSystem){
 			case sega_genesis:
 				ent*=2;
-				lua_pushunsigned(L,currentProject->palDat[ent]|(currentProject->palDat[ent+1]<<8));
+				lua_pushunsigned(L,currentProject->pal->palDat[ent]|(currentProject->pal->palDat[ent+1]<<8));
 			break;
 			case NES:
-				lua_pushunsigned(L,currentProject->palDat[ent]);
+				lua_pushunsigned(L,currentProject->pal->palDat[ent]);
 			break;
 			default:
 				show_default_error
@@ -295,17 +295,17 @@ static int lua_palette_setRaw(lua_State*L){
 		unsigned val=luaL_optunsigned(L,2,0);
 		switch(currentProject->gameSystem){
 			case sega_genesis:
-				currentProject->palDat[ent*2]=val&255;
-				currentProject->palDat[ent*2+1]=val>>8;
+				currentProject->pal->palDat[ent*2]=val&255;
+				currentProject->pal->palDat[ent*2+1]=val>>8;
 			break;
 			case NES:
-				currentProject->palDat[ent]=val;
+				currentProject->pal->palDat[ent]=val;
 			break;
 			default:
 				show_default_error
 				return 0;
 		}
-		updateRGBindex(ent);
+		currentProject->pal->updateRGBindex(ent);
 		return 1;
 	}else
 		return 0;
@@ -313,7 +313,7 @@ static int lua_palette_setRaw(lua_State*L){
 static int lua_palette_setRGB(lua_State*L){
 	unsigned ent=luaL_optunsigned(L,1,0);
 	if(inRangeEnt(ent))
-		rgbToEntry(luaL_optunsigned(L,2,0),luaL_optunsigned(L,3,0),luaL_optunsigned(L,4,0),ent);
+		currentProject->pal->rgbToEntry(luaL_optunsigned(L,2,0),luaL_optunsigned(L,3,0),luaL_optunsigned(L,4,0),ent);
 	return 0;
 }
 static int lua_palette_fixSliders(lua_State*L){
@@ -322,11 +322,11 @@ static int lua_palette_fixSliders(lua_State*L){
 	return 0;
 }
 static int lua_palette_maxInRow(lua_State*L){
-	lua_pushunsigned(L,calMaxPerRow(luaL_optunsigned(L,1,0)));
+	lua_pushunsigned(L,currentProject->pal->calMaxPerRow(luaL_optunsigned(L,1,0)));
 	return 1;
 }
 static int lua_palette_getType(lua_State*L){
-	lua_pushunsigned(L,currentProject->palType[luaL_optunsigned(L,1,0)]);
+	lua_pushunsigned(L,currentProject->pal->palType[luaL_optunsigned(L,1,0)]);
 	return 1;
 }
 static int lua_palette_sortByHSL(lua_State*L){
@@ -907,11 +907,11 @@ void runLua(Fl_Widget*,void*){
 					lua_createtable(L, 0,(sizeof(lua_paletteAPI)/sizeof((lua_paletteAPI)[0]) - 1)+5);
 					luaL_setfuncs(L,lua_paletteAPI,0);
 
-					mkKeyunsigned(L,"cnt",currentProject->colorCnt);
-					mkKeyunsigned(L,"cntAlt",currentProject->colorCntalt);
-					mkKeyunsigned(L,"rowCnt",currentProject->rowCntPal);
-					mkKeyunsigned(L,"rowCntAlt",currentProject->rowCntPalalt);
-					mkKeyunsigned(L,"haveAlt",currentProject->haveAltspritePal);
+					mkKeyunsigned(L,"cnt",currentProject->pal->colorCnt);
+					mkKeyunsigned(L,"cntAlt",currentProject->pal->colorCntalt);
+					mkKeyunsigned(L,"rowCnt",currentProject->pal->rowCntPal);
+					mkKeyunsigned(L,"rowCntAlt",currentProject->pal->rowCntPalalt);
+					mkKeyunsigned(L,"haveAlt",currentProject->pal->haveAlt);
 
 					lua_setglobal(L, "palette");
 				}

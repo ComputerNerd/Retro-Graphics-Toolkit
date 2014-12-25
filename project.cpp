@@ -105,9 +105,7 @@ static void initNewProject(unsigned at){
 	projects[at]->Chunk=new ChunkClass;
 	projects[at]->spritesC=new sprites;
 	projects[at]->Name.assign(defaultName);
-	projects[at]->rgbPal=(uint8_t*)calloc(1,256);
-	projects[at]->palDat=(uint8_t*)calloc(1,128);
-	projects[at]->palType=(uint8_t*)calloc(1,64);
+	projects[at]->pal=new palette;
 	std::fill(projects[at]->share,&projects[at]->share[shareAmtPj],-1);
 	projects[at]->useMask=pjDefaultMask;
 	projects[at]->nearestAlg=aWeighted;
@@ -126,28 +124,8 @@ void setHaveProject(uint32_t id,uint32_t mask,bool set){
 	if((mask&pjHavePal)&&(projects[id]->share[0]<0)){
 		if(set){
 			if(!(projects[id]->useMask&pjHavePal)){
-				projects[id]->rgbPal=(uint8_t*)calloc(1,256);
-				projects[id]->palType=(uint8_t*)calloc(1,64);
+				projects[id]->pal=new palette;
 				projects[id]->useMask|=pjHavePal;
-				switch(projects[id]->gameSystem){
-					case sega_genesis:
-						projects[id]->palDat=(uint8_t*)calloc(1,128);
-						set_palette_type();
-					break;
-					case NES:
-						projects[id]->palDat=(uint8_t*)malloc(128);
-						memset(projects[id]->palDat,15,32);
-						updateNesTab(0,false);
-						updateNesTab(0,true);
-						for(int temp_entry=0;temp_entry<32;++temp_entry){
-							uint32_t rgb_out;
-							rgb_out=MakeRGBcolor(projects[id]->palDat[temp_entry]);
-							projects[id]->rgbPal[temp_entry*3+2]=rgb_out&255;//blue
-							projects[id]->rgbPal[temp_entry*3+1]=(rgb_out>>8)&255;//green
-							projects[id]->rgbPal[temp_entry*3]=(rgb_out>>16)&255;//red
-						}
-					break;
-				}
 				palEdit.changeSystem();
 				tileEdit_pal.changeSystem();
 				tileMap_pal.changeSystem();
@@ -157,9 +135,7 @@ void setHaveProject(uint32_t id,uint32_t mask,bool set){
 			}
 		}else{
 			if(projects[id]->useMask&pjHavePal){
-				free(projects[id]->rgbPal);
-				free(projects[id]->palDat);
-				free(projects[id]->palType);
+				delete projects[id]->pal;
 				projects[id]->useMask&=~pjHavePal;
 			}
 		}
@@ -229,15 +205,10 @@ void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable){
 	}
 	if(enable){
 		if(what&pjHavePal){
-			if((projects[share]->share[0]<0)&&(projects[share]->useMask&pjHavePal)){
-				free(projects[share]->rgbPal);
-				free(projects[share]->palDat);
-				free(projects[share]->palType);
-			}
+			if((projects[share]->share[0]<0)&&(projects[share]->useMask&pjHavePal))
+				delete projects[share]->pal;
 			projects[share]->share[0]=with;
-			projects[share]->rgbPal=projects[with]->rgbPal;
-			projects[share]->palDat=projects[with]->palDat;
-			projects[share]->palType=projects[with]->palType;
+			projects[share]->pal=projects[with]->pal;
 		}
 		if(what&pjHaveTiles){
 			if((projects[share]->share[1]<0)&&(projects[share]->useMask&pjHaveTiles))
@@ -265,14 +236,8 @@ void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable){
 		}
 	}else{
 		if(what&pjHavePal){
-			if((projects[share]->share[0]>=0)&&(projects[share]->useMask&pjHavePal)){
-				projects[share]->rgbPal=(uint8_t*)malloc(256);
-				projects[share]->palDat=(uint8_t*)malloc(128);
-				projects[share]->palType=(uint8_t*)malloc(64);
-				memcpy(projects[share]->rgbPal,projects[with]->rgbPal,256);
-				memcpy(projects[share]->palDat,projects[with]->palDat,128);
-				memcpy(projects[share]->palType,projects[with]->palType,64);
-			}
+			if((projects[share]->share[0]>=0)&&(projects[share]->useMask&pjHavePal))
+				projects[share]->pal = new palette(*projects[with]->pal);
 			projects[share]->share[0]=-1;
 		}
 		if(what&pjHaveTiles){
@@ -325,11 +290,8 @@ bool removeProject(uint32_t id){
 		delete projects[id]->Chunk;
 	if((projects[id]->share[spriteEditor]<0)&&(projects[id]->useMask&pjHaveSprites))
 		delete projects[id]->spritesC;
-	if((projects[id]->share[pal_edit]<0)&&(projects[id]->useMask&pjHavePal)){
-		free(projects[id]->rgbPal);
-		free(projects[id]->palDat);
-		free(projects[id]->palType);
-	}
+	if((projects[id]->share[pal_edit]<0)&&(projects[id]->useMask&pjHavePal))
+		delete projects[id]->pal;
 	delete projects[id];
 	if((id+1)!=projects_count)//Are we not removing the project last on the list?
 		memmove(projects+id,projects+id+1,sizeof(void*)*(projects_count-id-1));
@@ -354,6 +316,8 @@ void switchProject(uint32_t id){
 		window->ditherPower->hide();
 	else
 		window->ditherPower->show();
+	if(containsDataProj(id,pjHavePal))
+		projects[id]->pal->setVars(projects[id]->gameSystem);
 	switch(projects[id]->gameSystem){
 		case sega_genesis:
 			window->subSysC->copy(subSysGenesis);
@@ -376,13 +340,6 @@ void switchProject(uint32_t id){
 			if(containsDataProj(id,pjHavePal)){
 				updateNesTab(0,false);
 				updateNesTab(0,true);
-				for(int temp_entry=0;temp_entry<64;++temp_entry){
-					uint32_t rgb_out;
-					rgb_out=MakeRGBcolor(projects[id]->palDat[temp_entry]);
-					projects[id]->rgbPal[temp_entry*3+2]=rgb_out&255;//blue
-					projects[id]->rgbPal[temp_entry*3+1]=(rgb_out>>8)&255;//green
-					projects[id]->rgbPal[temp_entry*3]=(rgb_out>>16)&255;//red
-				}
 				palEdit.changeSystem();
 				tileEdit_pal.changeSystem();
 				tileMap_pal.changeSystem();
@@ -486,32 +443,20 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 		fread(&projects[id]->settings,1,sizeof(uint32_t),fi);
 	else
 		projects[id]->settings=15<<subsettingsDitherShift;
-	int entries,eSize;
 	switch(projects[id]->gameSystem){
 		case sega_genesis:
-			entries=64;
-			eSize=2;
 			projects[id]->tileC->tileSize=32;
 			projects[id]->tileC->tcSize=256;
 		break;
 		case NES:
-			if(version>=7)
-				entries=32;
-			else
-				entries=16;
-			eSize=1;
 			projects[id]->tileC->tileSize=16;
 			projects[id]->tileC->tcSize=256;
 		break;
 	}
 	if(projects[id]->useMask&pjHavePal){
 		if(projects[id]->share[0]<0){
-			fread(projects[id]->palDat,eSize,entries,fi);
-			fread(projects[id]->palType,1,entries,fi);
-			if((projects[id]->gameSystem==NES)&&(version<7)){
-				memset(projects[id]->palDat+16,0,16);
-				memset(projects[id]->palType+16,0,16);
-			}
+			projects[id]->pal->setVars(projects[id]->gameSystem);
+			projects[id]->pal->read(fi,version>=7);
 		}
 	}
 	if(projects[id]->useMask&pjHaveTiles){
@@ -639,22 +584,9 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 	fwrite(&projects[id]->gameSystem,sizeof(uint32_t),1,fo);
 	fwrite(&projects[id]->subSystem,sizeof(uint32_t),1,fo);
 	fwrite(&projects[id]->settings,sizeof(uint32_t),1,fo);
-	int entries,eSize;
-	switch(projects[id]->gameSystem){
-		case sega_genesis:
-			entries=64;
-			eSize=2;
-		break;
-		case NES:
-			entries=32;
-			eSize=1;
-		break;
-	}
 	if(haveTemp&pjHavePal){
-		if(saveShared||(projects[id]->share[0]<0)){
-			fwrite(projects[id]->palDat,eSize,entries,fo);
-			fwrite(projects[id]->palType,1,entries,fo);
-		}
+		if(saveShared||(projects[id]->share[0]<0))
+			projects[id]->pal->write(fo);
 	}
 	if(haveTemp&pjHaveTiles){
 		if(saveShared||(projects[id]->share[1]<0)){

@@ -357,9 +357,9 @@ void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,int zoom,uint8_t pa
 					temp_1=temp>>4;//first pixel
 					temp_2=temp&15;//second pixel
 					//now based on the temp_1 and temp_2 get the two colors
-					red_temp=currentProject->rgbPal[(pal_row*48)+(temp_1*3)];
-					green_temp=currentProject->rgbPal[(pal_row*48)+(temp_1*3)+1];
-					blue_temp=currentProject->rgbPal[(pal_row*48)+(temp_1*3)+2];
+					red_temp=currentProject->pal->rgbPal[(pal_row*48)+(temp_1*3)];
+					green_temp=currentProject->pal->rgbPal[(pal_row*48)+(temp_1*3)+1];
+					blue_temp=currentProject->pal->rgbPal[(pal_row*48)+(temp_1*3)+2];
 					for (c=0;c<zoom;c++){//ha ha c++ bad programming pun
 						for (d=0;d<zoom;d++){
 							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d,(y*zoom)+c,zoom,0)]=red_temp;
@@ -367,9 +367,9 @@ void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,int zoom,uint8_t pa
 							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d,(y*zoom)+c,zoom,2)]=blue_temp;
 						}
 					}
-					red_temp=currentProject->rgbPal[(pal_row*48)+(temp_2*3)];
-					green_temp=currentProject->rgbPal[(pal_row*48)+(temp_2*3)+1];
-					blue_temp=currentProject->rgbPal[(pal_row*48)+(temp_2*3)+2];
+					red_temp=currentProject->pal->rgbPal[(pal_row*48)+(temp_2*3)];
+					green_temp=currentProject->pal->rgbPal[(pal_row*48)+(temp_2*3)+1];
+					blue_temp=currentProject->pal->rgbPal[(pal_row*48)+(temp_2*3)+2];
 					for (c=0;c<zoom;++c){
 						for (d=0;d<zoom;++d){
 							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d+zoom,(y*zoom)+c,zoom,0)]=red_temp;
@@ -386,7 +386,7 @@ void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,int zoom,uint8_t pa
 						uint8_t temp;
 						temp=(tileTemp[y]>>(7-x))&1;
 						temp|=((tileTemp[y+8]>>(7-x))&1)<<1;
-						uint8_t*rgbPtr=currentProject->rgbPal;
+						uint8_t*rgbPtr=currentProject->pal->rgbPal;
 						if(isSprite)
 							rgbPtr+=48;
 						red_temp=rgbPtr[(pal_row*12)+(temp*3)];

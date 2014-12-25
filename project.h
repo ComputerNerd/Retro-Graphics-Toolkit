@@ -25,28 +25,21 @@
 #include "classChunks.h"
 #include "classSprites.h"
 #include "color_compare.h"
+#include "classpalette.h"
 #define currentProjectVersionNUM 8
 extern uint32_t curProjectID;
-struct Project{/*!<Holds all data needed for a project based system for examaple tile screen and level 1 are 2 seperate projects*/
+struct Project{/*!<Holds all data needed for a project based system for example tile screen and level 1 are 2 separate projects*/
 	std::string Name;
 	uint32_t gameSystem;
 	uint32_t subSystem;
 	uint32_t settings;//Stores dither algorithm and engine settings such as sonic 1 and such.
 	uint32_t useMask;/*!<Sharing can be used regardless of use mask*/
-	tileMap* tileMapC;
-	tiles* tileC;
+	tileMap*tileMapC;
+	tiles*tileC;
 	ChunkClass*Chunk;
+	palette*pal;
 	sprites*spritesC;
-	uint8_t* rgbPal;
-	uint8_t* palDat;
-	uint8_t* palType;/*!<Sets 3 different types for each palette entry free locked and reserved*/
 	int32_t share[shareAmtPj];/*!<Negative if not sharing or project id (which is always positive) if sharing*/
-	unsigned colorCnt;//Total entries in palette for project
-	unsigned colorCntalt;//Alternative palette color count
-	unsigned altOff;
-	unsigned rowCntPal;
-	unsigned rowCntPalalt;
-	bool haveAltspritePal;
 	nearestAlgs_t nearestAlg;
 };
 extern struct Project ** projects;

@@ -61,45 +61,32 @@ void set_game_system(Fl_Widget*,void* selection){
 	}
 	unsigned bd=getBitdepthcurSys();
 	unsigned bdold=bd;
-	unsigned perRow,rows;
+	unsigned perRow=currentProject->pal->perRow,rows=currentProject->pal->rowCntPal+currentProject->pal->rowCntPalalt;
 	uint32_t gold=currentProject->gameSystem;
 	uint32_t sold=currentProject->subSystem;
-	switch(sel){
-		case sega_genesis:
-			perRow=16;
-			rows=4;
-		break;
-		case NES:
-			perRow=4;
-			rows=4;
-		break;
-		default:
-			show_default_error
-			return;
-	}
-	perRow=perRow*rows/currentProject->rowCntPal;//Handle unequal row amounts
-	memset(currentProject->palType,0,perRow*rows);
+	perRow=perRow*rows/(currentProject->pal->rowCntPal+currentProject->pal->rowCntPalalt);//Handle unequal row amounts
+	memset(currentProject->pal->palType,0,perRow*rows);
 	uint8_t*tmpPalRGB=(uint8_t*)alloca(perRow*rows*3);
-	if(perRow>=palEdit.perRow){
-		for(unsigned i=0,j=0;i<currentProject->colorCnt*3;i+=palEdit.perRow*3,j+=perRow*3){
-			memcpy(tmpPalRGB+j,currentProject->rgbPal+i,palEdit.perRow*3);
-			memset(tmpPalRGB+j+((palEdit.perRow)*3),0,(perRow-palEdit.perRow)*3);
+	if(perRow>=currentProject->pal->perRow){
+		for(unsigned i=0,j=0;i<currentProject->pal->colorCnt*3;i+=currentProject->pal->perRow*3,j+=perRow*3){
+			memcpy(tmpPalRGB+j,currentProject->pal->rgbPal+i,currentProject->pal->perRow*3);
+			memset(tmpPalRGB+j+((currentProject->pal->perRow)*3),0,(perRow-currentProject->pal->perRow)*3);
 		}
 	}else{
 		uint8_t*nPtr=tmpPalRGB;
-		uint8_t*rgbPtr=currentProject->rgbPal;
+		uint8_t*rgbPtr=currentProject->pal->rgbPal;
 		for(unsigned k=0;k<rows;++k){
 			//Preserve background color
 			*nPtr++=rgbPtr[0];
 			*nPtr++=rgbPtr[1];
 			*nPtr++=rgbPtr[2];
 			rgbPtr+=palEdit.perRow/perRow*3;
-			for(unsigned j=(palEdit.perRow/perRow)*3;j<palEdit.perRow*3;j+=(palEdit.perRow/perRow)*3){
+			for(unsigned j=(currentProject->pal->perRow/perRow)*3;j<currentProject->pal->perRow*3;j+=(currentProject->pal->perRow/perRow)*3){
 				unsigned type=0;
 				double Lv,Cv,Hv;
 				Rgb2Lch255(&Lv,&Cv,&Hv,rgbPtr[0],rgbPtr[1],rgbPtr[2]);
 				rgbPtr+=3;
-				for(unsigned i=1;i<palEdit.perRow/perRow;++i){
+				for(unsigned i=1;i<currentProject->pal->perRow/perRow;++i){
 					double L,C,H;
 					Rgb2Lch255(&L,&C,&H,rgbPtr[0],rgbPtr[1],rgbPtr[2]);
 					if(type){
@@ -200,21 +187,11 @@ void set_game_system(Fl_Widget*,void* selection){
 		break;
 	}
 	uint8_t*nPtr=tmpPalRGB;
-	for(unsigned i=0;i<currentProject->colorCnt;++i,nPtr+=3)
-		rgbToEntry(nPtr[0],nPtr[1],nPtr[2],i);
-	if(currentProject->haveAltspritePal){
-		memcpy(currentProject->rgbPal+(currentProject->colorCnt*3),currentProject->rgbPal,std::min(currentProject->colorCnt,currentProject->colorCntalt)*3);
-		unsigned esize;
-		switch(currentProject->gameSystem){
-			case sega_genesis:
-				fl_alert("Error the sega genesis does not support an alternative sprite palette");
-				esize=0;
-			break;
-			case NES:
-				esize=1;
-			break;
-		}
-		memcpy(currentProject->palDat+(currentProject->colorCnt*esize),currentProject->palDat,std::min(currentProject->colorCnt,currentProject->colorCntalt)*esize);
+	for(unsigned i=0;i<currentProject->pal->colorCnt;++i,nPtr+=3)
+		currentProject->pal->rgbToEntry(nPtr[0],nPtr[1],nPtr[2],i);
+	if(currentProject->pal->haveAlt){
+		memcpy(currentProject->pal->rgbPal+(currentProject->pal->colorCnt*3),currentProject->pal->rgbPal,std::min(currentProject->pal->colorCnt,currentProject->pal->colorCntalt)*3);
+		memcpy(currentProject->pal->palDat+(currentProject->pal->colorCnt*currentProject->pal->esize),currentProject->pal->palDat,std::min(currentProject->pal->colorCnt,currentProject->pal->colorCntalt)*currentProject->pal->esize);
 	}
 	window->redraw();
 	uint32_t gnew=currentProject->gameSystem;

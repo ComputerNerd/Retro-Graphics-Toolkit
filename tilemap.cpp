@@ -28,6 +28,7 @@
 #include "undo.h"
 #include "palette.h"
 #include "classtilemap.h"
+#include "classpalette.h"
 static void addHist(uint32_t cur_tile,int type,uint32_t*hist,unsigned sz){
 	double szz=(double)sz;
 	uint8_t * truePtr=&currentProject->tileC->truetDat[cur_tile*256];
@@ -447,7 +448,7 @@ static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,unsigned 
 		for (unsigned x=0;x<colors_found;x++){
 			uint8_t r,g,b;
 againFun:
-			if (currentProject->palType[x+offsetPal]){
+			if (currentProject->pal->palType[x+offsetPal]){
 				++offsetPal;
 				off3+=3;
 				off2+=2;
@@ -461,7 +462,7 @@ againFun:
 			g=found_colors[(x*3)+1];
 			b=found_colors[(x*3)+2];
 			printf("R=%d G=%d B=%d\n",r,g,b);
-			rgbToEntry(r,g,b,x+offsetPal);
+			currentProject->pal->rgbToEntry(r,g,b,x+offsetPal);
 		}
 		if(currentProject->gameSystem==NES)
 			update_emphesis(0,0);
@@ -543,7 +544,7 @@ try_again_color:
 					rgb_pal2[(x*3)+2]=palTab[b];
 				break;
 				case NES:
-					uint8_t temp=to_nes_color_rgb(r,g,b);
+					uint8_t temp=currentProject->pal->to_nes_color_rgb(r,g,b);
 					uint32_t temp_rgb = MakeRGBcolor(temp);
 					rgb_pal2[(x*3)]=(temp_rgb>>16)&255;
 					rgb_pal2[(x*3)+1]=(temp_rgb>>8)&255;
@@ -577,7 +578,7 @@ try_again_color:
 		for (unsigned x=0;x<maxCol;x++){
 			uint8_t r,g,b;
 againNerd:
-			if (currentProject->palType[x+offsetPal]){
+			if (currentProject->pal->palType[x+offsetPal]){
 				++offsetPal;
 				off3+=3;
 				off2+=2;
@@ -587,20 +588,20 @@ againNerd:
 				}
 				goto againNerd;
 			}
-			memcpy(currentProject->rgbPal+off3+(x*3),&rgb_pal3[off3o+(x*3)],3);
+			memcpy(currentProject->pal->rgbPal+off3+(x*3),&rgb_pal3[off3o+(x*3)],3);
 			switch(currentProject->gameSystem){
 				case sega_genesis:
-					r=currentProject->rgbPal[(x*3)+off3];
-					g=currentProject->rgbPal[(x*3)+1+off3];
-					b=currentProject->rgbPal[(x*3)+2+off3];
+					r=currentProject->pal->rgbPal[(x*3)+off3];
+					g=currentProject->pal->rgbPal[(x*3)+1+off3];
+					b=currentProject->pal->rgbPal[(x*3)+2+off3];
 					r=nearest_color_index(r)-palTypeGen;
 					g=nearest_color_index(g)-palTypeGen;
 					b=nearest_color_index(b)-palTypeGen;
-					currentProject->palDat[(x*2)+off2]=b<<1;
-					currentProject->palDat[(x*2)+1+off2]=(r<<1)|(g<<5);
+					currentProject->pal->palDat[(x*2)+off2]=b<<1;
+					currentProject->pal->palDat[(x*2)+1+off2]=(r<<1)|(g<<5);
 				break;
 				case NES:
-					currentProject->palDat[x+offsetPal]=to_nes_color(x+offsetPal);
+					currentProject->pal->palDat[x+offsetPal]=currentProject->pal->to_nes_color(x+offsetPal);
 				break;
 			}
 		}
@@ -736,8 +737,8 @@ static void setValInt(Fl_Int_Input*i,unsigned val){
 static void setPerRow(Fl_Widget*w,void*x){
 	uintptr_t which=(uintptr_t)x;
 	unsigned val=SafeTxtInput((Fl_Int_Input*)w,false);
-	if((val+setG->off[which])>calMaxPerRow(which)){
-		val=calMaxPerRow(which)-setG->off[which];
+	if((val+setG->off[which])>currentProject->pal->calMaxPerRow(which)){
+		val=currentProject->pal->calMaxPerRow(which)-setG->off[which];
 		setValInt((Fl_Int_Input*)w,val);
 	}
 	setG->perRow[which]=val;
@@ -745,13 +746,13 @@ static void setPerRow(Fl_Widget*w,void*x){
 static void setPerRowoff(Fl_Widget*w,void*x){
 	uintptr_t which=(uintptr_t)x;
 	unsigned val=SafeTxtInputZeroAllowed((Fl_Int_Input*)w,false);
-	if(val>=calMaxPerRow(which)){
-		val=calMaxPerRow(which)-1;
+	if(val>=currentProject->pal->calMaxPerRow(which)){
+		val=currentProject->pal->calMaxPerRow(which)-1;
 		setValInt((Fl_Int_Input*)w,val);
 	}
 	setG->off[which]=val;
-	if((val+setG->perRow[which])>calMaxPerRow(which)){
-		setG->perRow[which]=calMaxPerRow(which)-val;
+	if((val+setG->perRow[which])>currentProject->pal->calMaxPerRow(which)){
+		setG->perRow[which]=currentProject->pal->calMaxPerRow(which)-val;
 		setValInt(perrow[which],setG->perRow[which]);
 	}
 }
@@ -823,8 +824,8 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 		perrowoffset[i]->copy_label(tmp);
 		perrow[i]->callback(setPerRow,(void*)i);
 		perrowoffset[i]->callback(setPerRowoff,(void*)i);
-		snprintf(tmp,sizeof(tmp),"%d",calMaxPerRow(i));
-		set.perRow[i]=calMaxPerRow(i);
+		snprintf(tmp,sizeof(tmp),"%d",currentProject->pal->calMaxPerRow(i));
+		set.perRow[i]=currentProject->pal->calMaxPerRow(i);
 		perrow[i]->value(tmp);
 		perrowoffset[i]->value("0");
 		perrow[i]->when(FL_WHEN_RELEASE|FL_WHEN_ENTER_KEY);

@@ -27,23 +27,7 @@ unsigned palette_bar::getEntry(void){
 	return box_sel+(theRow*perRow);
 }
 void palette_bar::setSysColCnt(void){
-	switch (currentProject->gameSystem){
-		case sega_genesis:
-			perRow=16;
-			currentProject->colorCnt=64;
-			currentProject->colorCntalt=currentProject->rowCntPalalt=0;
-			currentProject->rowCntPal=4;
-			currentProject->haveAltspritePal=false;
-		break;
-		case NES:
-			perRow=4;
-			currentProject->colorCnt=currentProject->colorCntalt=16;
-			currentProject->rowCntPal=currentProject->rowCntPalalt=4;
-			currentProject->haveAltspritePal=true;
-		break;
-		default:
-			show_default_error
-	}
+	currentProject->pal->setVars(currentProject->gameSystem);
 }
 void palette_bar::more_init(uint8_t x,uint16_t offsetx,uint16_t offsety,bool altset,unsigned ln,bool tiny){
 	alt=altset;
@@ -102,7 +86,7 @@ void palette_bar::updateSize(void){
 void palette_bar::check_box(int x,int y){
 	/*!
 	This function is in charge of seeing if the mouse click is on a box and what box it is
-	for x and y pass the mouser cordinace
+	for x and y pass the mouser coordinate
 	*/
 	unsigned boxSize=window->pal_size->value();
 	x-=offx;
@@ -132,21 +116,21 @@ void palette_bar::draw_boxes(void){
 		uint16_t loc_x,loc_y;
 		loc_x=(double)((double)window->w()/800.0)*(double)palette_preview_box_x;
 		loc_y=(double)((double)window->h()/600.0)*(double)palette_preview_box_y;
-		fl_rectf(loc_x,loc_y,box_size*4,box_size*4,currentProject->rgbPal[(box_sel*3)+(theRow*a)],currentProject->rgbPal[(box_sel*3)+(theRow*a)+1],currentProject->rgbPal[(box_sel*3)+(theRow*a)+2]);//this will show larger preview of current color
+		fl_rectf(loc_x,loc_y,box_size*4,box_size*4,currentProject->pal->rgbPal[(box_sel*3)+(theRow*a)],currentProject->pal->rgbPal[(box_sel*3)+(theRow*a)+1],currentProject->pal->rgbPal[(box_sel*3)+(theRow*a)+2]);//this will show larger preview of current color
 	}
 	if (theRow >= rows){
-		uint8_t*rgbPtr=currentProject->rgbPal+(a*theRow);
+		uint8_t*rgbPtr=currentProject->pal->rgbPal+(a*theRow);
 		if(alt&&(currentProject->gameSystem==NES))
-			rgbPtr+=currentProject->colorCnt*3;
+			rgbPtr+=currentProject->pal->colorCnt*3;
 		for (x=0;x<perRow;++x){
 			fl_rectf(offx+(x*box_size),offy,box_size,box_size,*rgbPtr,*(rgbPtr+1),*(rgbPtr+2));
 			rgbPtr+=3;
 		}
 		fl_draw_box(FL_EMBOSSED_FRAME,box_sel*box_size+offx,offy,box_size,box_size,0);
 	}else{
-		uint8_t*rgbPtr=currentProject->rgbPal;
+		uint8_t*rgbPtr=currentProject->pal->rgbPal;
 		if(alt&&(currentProject->gameSystem==NES))
-			rgbPtr+=currentProject->colorCnt*3;
+			rgbPtr+=currentProject->pal->colorCnt*3;
 		for (y=0;y<rows;++y){
 			for (x=0;x<perRow;++x){
 				fl_rectf(offx+(x*box_size),offy+(y*box_size),box_size,box_size,*rgbPtr,*(rgbPtr+1),*(rgbPtr+2));
@@ -161,7 +145,7 @@ void palette_bar::changeRow(uint8_t r){
 	updateSlider();
 }
 void palette_bar::updateSlider(){
-	if (currentProject->palType[box_sel+(theRow*perRow)]){
+	if (currentProject->pal->palType[box_sel+(theRow*perRow)]){
 		pal_b->hide();
 		pal_g->hide();
 		pal_r->hide();
@@ -171,26 +155,26 @@ void palette_bar::updateSlider(){
 		pal_r->show();
 		switch (currentProject->gameSystem){
 			case sega_genesis:
-				pal_b->value(currentProject->palDat[(box_sel*2)+(theRow*32)]);
-				pal_g->value(currentProject->palDat[1+(box_sel*2)+(theRow*32)]>>4);
-				pal_r->value(currentProject->palDat[1+(box_sel*2)+(theRow*32)]&15);		
+				pal_b->value(currentProject->pal->palDat[(box_sel*2)+(theRow*32)]);
+				pal_g->value(currentProject->pal->palDat[1+(box_sel*2)+(theRow*32)]>>4);
+				pal_r->value(currentProject->pal->palDat[1+(box_sel*2)+(theRow*32)]&15);		
 			break;
 			case NES:
 				if(alt){
-					pal_r->value(currentProject->palDat[box_sel+(theRow*4)+16]&15);
-					pal_g->value((currentProject->palDat[box_sel+(theRow*4)+16]>>4)&3);
+					pal_r->value(currentProject->pal->palDat[box_sel+(theRow*4)+16]&15);
+					pal_g->value((currentProject->pal->palDat[box_sel+(theRow*4)+16]>>4)&3);
 				}else{
-					pal_r->value(currentProject->palDat[box_sel+(theRow*4)]&15);
-					pal_g->value((currentProject->palDat[box_sel+(theRow*4)]>>4)&3);
+					pal_r->value(currentProject->pal->palDat[box_sel+(theRow*4)]&15);
+					pal_g->value((currentProject->pal->palDat[box_sel+(theRow*4)]>>4)&3);
 				}
 			break;
 			default:
 				show_default_error
 		}
 	}
-	window->palType[currentProject->palType[box_sel+(theRow*perRow)]]->setonly();
-	window->palType[currentProject->palType[box_sel+(theRow*perRow)]+3]->setonly();
-	window->palType[currentProject->palType[box_sel+(theRow*perRow)]+6]->setonly();
+	window->palType[currentProject->pal->palType[box_sel+(theRow*perRow)]]->setonly();
+	window->palType[currentProject->pal->palType[box_sel+(theRow*perRow)]+3]->setonly();
+	window->palType[currentProject->pal->palType[box_sel+(theRow*perRow)]+6]->setonly();
 }
 void palette_bar::changeSystem(){
 	if(sysCache!=currentProject->gameSystem){

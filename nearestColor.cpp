@@ -30,7 +30,7 @@ unsigned nearestColIndex(int red,int green,int blue,uint8_t*pal,unsigned amt,boo
 				double minerrord=1e99;
 				for(int i=(amt-1)*3;i>=0;i-=3){
 					double distance=ciede2000rgb(red,green,blue,pal[i],pal[i+1],pal[i+2]);
-					if(!checkType||(currentProject->palType[i/3+off]!=2)){
+					if(!checkType||(currentProject->pal->palType[i/3+off]!=2)){
 						if (distance < minerrord){
 							minerrord = distance;
 							bestcolor = i;
@@ -44,7 +44,7 @@ unsigned nearestColIndex(int red,int green,int blue,uint8_t*pal,unsigned amt,boo
 				uint32_t minerrori=0xFFFFFFFF;
 				for(int i=(amt-1)*3;i>=0;i-=3){
 					uint32_t distance=ColourDistance(red,green,blue,pal[i],pal[i+1],pal[i+2]);
-					if(!checkType||(currentProject->palType[i/3+off]!=2)){
+					if(!checkType||(currentProject->pal->palType[i/3+off]!=2)){
 						if (distance < minerrori){
 							minerrori = distance;
 							bestcolor = i;
@@ -61,7 +61,7 @@ unsigned nearestColIndex(int red,int green,int blue,uint8_t*pal,unsigned amt,boo
 					Rgb2Lab255(&L1,&a1,&b1,red,green,blue);
 					Rgb2Lab255(&L2,&a2,&b2,pal[i],pal[i+1],pal[i+2]);
 					double distance=sqd(L1-L2)+sqd(a1-a2)+sqd(b1-b2);
-					if(!checkType||(currentProject->palType[i/3+off]!=2)){
+					if(!checkType||(currentProject->pal->palType[i/3+off]!=2)){
 						if (distance < minerrord){
 							minerrord = distance;
 							bestcolor = i;
@@ -75,7 +75,7 @@ unsigned nearestColIndex(int red,int green,int blue,uint8_t*pal,unsigned amt,boo
 				int minerrori=(255*255)+(255*255)+(255*255)+1;
 				for(int i=(amt-1)*3;i>=0;i-=3){
 					int distance=sq((int)pal[i]-red)+sq((int)pal[i+1]-green)+sq((int)pal[i+2]-blue);
-					if(!checkType||(currentProject->palType[i/3+off]!=2)){
+					if(!checkType||(currentProject->pal->palType[i/3+off]!=2)){
 						if (distance < minerrori){
 							minerrori = distance;
 							bestcolor = i;

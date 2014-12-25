@@ -8,7 +8,7 @@
 #define LEFT 2
 #define DOWN 3
 #define RIGHT 4
-static unsigned useHiL;//no use for these varibles outside of this file
+static unsigned useHiL;//no use for these variables outside of this file
 static unsigned useMode;
 static unsigned rgbPixelsize;
 static bool USEofColGlob;
@@ -25,7 +25,7 @@ uint8_t nearest_color_chanColSpace(uint8_t val,uint8_t chan){
 		break;
 		case NES:
 			{img_ptr_dither-=chan;
-			uint8_t returnme=toNesChan(*img_ptr_dither,img_ptr_dither[1],img_ptr_dither[2],chan);
+			uint8_t returnme=currentProject->pal->toNesChan(*img_ptr_dither,img_ptr_dither[1],img_ptr_dither[2],chan);
 			img_ptr_dither+=chan;
 			return returnme;}
 		break;
@@ -36,7 +36,7 @@ uint8_t nearest_color_chanColSpace(uint8_t val,uint8_t chan){
 }
 uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row){
 	//returns closest value
-	//palette_muliplier
+	//palette_multiplier
 	unsigned i;
 	int_fast32_t distanceSquared, minDistanceSquared, bestIndex = 0;
 	minDistanceSquared = 255*255 + 1;
@@ -56,14 +56,14 @@ uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row){
 	}
 	row*=max_rgb;
 	for (i=row; i<max_rgb+row; i+=3){
-		int_fast32_t Rdiff = (int_fast32_t) val - (int_fast32_t)currentProject->rgbPal[i+chan];
+		int_fast32_t Rdiff = (int_fast32_t) val - (int_fast32_t)currentProject->pal->rgbPal[i+chan];
 		distanceSquared = Rdiff*Rdiff;
 		if (distanceSquared < minDistanceSquared){
 			minDistanceSquared = distanceSquared;
 			bestIndex = i;
 		}
 	}
-	return currentProject->rgbPal[bestIndex+chan];
+	return currentProject->pal->rgbPal[bestIndex+chan];
 }
 /* variables needed for the Riemersma
  * dither algorithm */ 
@@ -815,7 +815,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				break;
 			}
 		}else{
-			colPtr=currentProject->rgbPal;
+			colPtr=currentProject->pal->rgbPal;
 			switch(currentProject->gameSystem){
 				case sega_genesis:
 					tempPalSize=64;
@@ -869,7 +869,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 						plan=DeviseBestMixingPlanTK(r_old,g_old,b_old,colPtr,0);
 						tempPalOff=plan.colors[map_value]*3;
 					}else{
-						plan=DeviseBestMixingPlanTK(r_old,g_old,b_old,currentProject->rgbPal,pal_row*palettesize);
+						plan=DeviseBestMixingPlanTK(r_old,g_old,b_old,currentProject->pal->rgbPal,pal_row*palettesize);
 						tempPalOff=(plan.colors[map_value]+(pal_row*palettesize))*3;
 					}
 				}else if(ditherAlg==4){
@@ -879,7 +879,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 						plan = DeviseBestMixingPlanY1(r_old,g_old,b_old,colPtr,0);
 						tempPalOff=(plan.colors[map_value < plan.ratio ? 1 : 0])*3;
 					}else{
-						plan = DeviseBestMixingPlanY1(r_old,g_old,b_old,currentProject->rgbPal,pal_row*palettesize);
+						plan = DeviseBestMixingPlanY1(r_old,g_old,b_old,currentProject->pal->rgbPal,pal_row*palettesize);
 						tempPalOff=(plan.colors[map_value < plan.ratio ? 1 : 0]+(pal_row*palettesize))*3;
 					}
 				}else{
@@ -895,9 +895,9 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 						tempPalOff=plan[map_value]*3;
 					}else{
 						if(ditherAlg==5)
-							plan = DeviseBestMixingPlanY2(r_old,g_old,b_old,currentProject->rgbPal,pal_row*palettesize, 16);
+							plan = DeviseBestMixingPlanY2(r_old,g_old,b_old,currentProject->pal->rgbPal,pal_row*palettesize, 16);
 						else
-							plan = DeviseBestMixingPlanY3(r_old,g_old,b_old,currentProject->rgbPal,pal_row*palettesize, 16);
+							plan = DeviseBestMixingPlanY3(r_old,g_old,b_old,currentProject->pal->rgbPal,pal_row*palettesize, 16);
 						
 						//unsigned color = gdImageGetTrueColorPixel(srcim, x, y);
 						map_value = map_value * plan.size() / 64;
@@ -910,9 +910,9 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+1]=colPtr[tempPalOff+1];
 					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2]=colPtr[tempPalOff+2];
 				}else{
-					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)]=currentProject->rgbPal[tempPalOff];
-					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+1]=currentProject->rgbPal[tempPalOff+1];
-					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2]=currentProject->rgbPal[tempPalOff+2];
+					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)]=currentProject->pal->rgbPal[tempPalOff];
+					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+1]=currentProject->pal->rgbPal[tempPalOff+1];
+					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2]=currentProject->pal->rgbPal[tempPalOff+2];
 				}
 				//puts("x");
 				/*if(colSpace&&((x&31)==0)){
@@ -986,14 +986,14 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					}
 					if((currentProject->gameSystem==NES)&&isSprite){
 						temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old,true);
-						r_new=currentProject->rgbPal[temp+48];
-						g_new=currentProject->rgbPal[temp+49];
-						b_new=currentProject->rgbPal[temp+50];
+						r_new=currentProject->pal->rgbPal[temp+48];
+						g_new=currentProject->pal->rgbPal[temp+49];
+						b_new=currentProject->pal->rgbPal[temp+50];
 					}else{
 						temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old,false);
-						r_new=currentProject->rgbPal[temp];
-						g_new=currentProject->rgbPal[temp+1];
-						b_new=currentProject->rgbPal[temp+2];
+						r_new=currentProject->pal->rgbPal[temp];
+						g_new=currentProject->pal->rgbPal[temp+1];
+						b_new=currentProject->pal->rgbPal[temp+2];
 					}
 				}
 				if (useAlpha)
@@ -1071,14 +1071,14 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				}else{
 					if((currentProject->gameSystem==NES)&&isSprite){
 						temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old,true);
-						r_new=currentProject->rgbPal[temp+48];
-						g_new=currentProject->rgbPal[temp+49];
-						b_new=currentProject->rgbPal[temp+50];
+						r_new=currentProject->pal->rgbPal[temp+48];
+						g_new=currentProject->pal->rgbPal[temp+49];
+						b_new=currentProject->pal->rgbPal[temp+50];
 					}else{
 						temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old,false);
-						r_new=currentProject->rgbPal[temp];
-						g_new=currentProject->rgbPal[temp+1];
-						b_new=currentProject->rgbPal[temp+2];
+						r_new=currentProject->pal->rgbPal[temp];
+						g_new=currentProject->pal->rgbPal[temp+1];
+						b_new=currentProject->pal->rgbPal[temp+2];
 					}
 				}
 				if (useAlpha){

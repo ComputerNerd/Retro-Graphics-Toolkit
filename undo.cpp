@@ -566,17 +566,17 @@ void UndoRedo(bool redo){
 				break;
 			}
 			if(redo)
-				memcpy(currentProject->palDat,up->ptrnew,sz);
+				memcpy(currentProject->pal->palDat,up->ptrnew,sz);
 			else{
 				if(!up->ptrnew){
 					up->ptrnew=malloc(sz);
 					memUsed+=sz;
 				}
-				memcpy(up->ptrnew,currentProject->palDat,sz);
-				memcpy(currentProject->palDat,up->ptr,sz);
+				memcpy(up->ptrnew,currentProject->pal->palDat,sz);
+				memcpy(currentProject->pal->palDat,up->ptr,sz);
 			}
 			for(unsigned i=0;i<el;++i)
-				updateRGBindex(i);
+				currentProject->pal->updateRGBindex(i);
 			}
 			palEdit.updateSlider();
 			tileEdit_pal.updateSlider();
@@ -587,7 +587,7 @@ void UndoRedo(bool redo){
 			{struct undoPaletteEntry*up=(struct undoPaletteEntry*)uptr->ptr;
 			switch(currentProject->gameSystem){
 				case sega_genesis:
-					{uint16_t*ptr=(uint16_t*)currentProject->palDat+up->id;
+					{uint16_t*ptr=(uint16_t*)currentProject->pal->palDat+up->id;
 					if(redo)
 						*ptr=up->valnew;
 					else{
@@ -597,14 +597,14 @@ void UndoRedo(bool redo){
 				break;
 				case NES:
 					if(redo)
-						currentProject->palDat[up->id]=up->valnew;
+						currentProject->pal->palDat[up->id]=up->valnew;
 					else{
-						up->valnew=currentProject->palDat[up->id];
-						currentProject->palDat[up->id]=up->val;
+						up->valnew=currentProject->pal->palDat[up->id];
+						currentProject->pal->palDat[up->id]=up->val;
 					}
 				break;
 			}
-			updateRGBindex(up->id);
+			currentProject->pal->updateRGBindex(up->id);
 			switch (mode_editor){
 				case pal_edit:
 					palEdit.box_sel=up->id%palEdit.perRow;
@@ -926,12 +926,12 @@ void pushPaletteAll(void){
 	switch(currentProject->gameSystem){
 		case sega_genesis:
 			up->ptr=malloc(128);
-			memcpy(up->ptr,currentProject->palDat,128);
+			memcpy(up->ptr,currentProject->pal->palDat,128);
 			memUsed+=128;
 		break;
 		case NES:
 			up->ptr=malloc(32);
-			memcpy(up->ptr,currentProject->palDat,32);
+			memcpy(up->ptr,currentProject->pal->palDat,32);
 			memUsed+=32;
 		break;
 	}
@@ -947,11 +947,11 @@ void pushPaletteEntry(uint32_t id){
 	up->id=id;
 	switch(currentProject->gameSystem){
 		case sega_genesis:
-			{uint16_t*ptr=(uint16_t*)currentProject->palDat+id;
+			{uint16_t*ptr=(uint16_t*)currentProject->pal->palDat+id;
 			up->val=*ptr;}
 		break;
 		case NES:
-			up->val=(int32_t)currentProject->palDat[id];
+			up->val=(int32_t)currentProject->pal->palDat[id];
 		break;
 	}
 }

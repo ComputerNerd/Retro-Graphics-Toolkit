@@ -31,8 +31,8 @@ bool show_grid_placer;
 //moveable offsets
 unsigned tile_zoom_edit;
 uint8_t truecolor_temp[4];/*!< This stores the rgba data selected with the truecolor sliders*/
-std::string the_file;//this is for tempory use only
-unsigned mode_editor;//this is used to determin which thing to draw
+std::string the_file;//this is for temporary use only
+unsigned mode_editor;//this is used to determine which thing to draw
 #define PIf 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491298336733624406566430860213949463952247371907021798609437027705392171762931767523846748184676694051320005681271452635608277857713427577896091736371787214684409012249534301465495853710507922796892589235420199561121290219608640344181598136297747713099605187072113499999983729780499510597317328160963185950244594553469083026425223082533446850352619311881710100031378387528865875332083814206171776691473035982534904287554687311595628638823537875937519577818577805321712268066130019278766111959092164201989f
 bool showTrueColor;
 bool rowSolo;
@@ -49,9 +49,9 @@ void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha,bo
 					uint8_t temp_1,temp_2;
 					temp_1=temp>>4;//first pixel
 					temp_2=temp&15;//second pixel
-					*output++=currentProject->rgbPal[row+(temp_1*3)];
-					*output++=currentProject->rgbPal[row+(temp_1*3)+1];
-					*output++=currentProject->rgbPal[row+(temp_1*3)+2];
+					*output++=currentProject->pal->rgbPal[row+(temp_1*3)];
+					*output++=currentProject->pal->rgbPal[row+(temp_1*3)+1];
+					*output++=currentProject->pal->rgbPal[row+(temp_1*3)+2];
 					if(useAlpha){
 						if(alphaZero){
 							if(temp_1)
@@ -61,9 +61,9 @@ void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha,bo
 						}else
 							*output++=255;
 					}
-					*output++=currentProject->rgbPal[row+(temp_2*3)];
-					*output++=currentProject->rgbPal[row+(temp_2*3)+1];
-					*output++=currentProject->rgbPal[row+(temp_2*3)+2];
+					*output++=currentProject->pal->rgbPal[row+(temp_2*3)];
+					*output++=currentProject->pal->rgbPal[row+(temp_2*3)+1];
+					*output++=currentProject->pal->rgbPal[row+(temp_2*3)+2];
 					if(useAlpha){
 						if(alphaZero){
 							if(temp_2)
@@ -83,9 +83,9 @@ void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha,bo
 					uint8_t temp;
 					temp=(input[y]>>x)&1;
 					temp|=((input[y+8]>>x)&1)<<1;
-					*output++=currentProject->rgbPal[row+(temp*3)];
-					*output++=currentProject->rgbPal[row+(temp*3)+1];
-					*output++=currentProject->rgbPal[row+(temp*3)+2];
+					*output++=currentProject->pal->rgbPal[row+(temp*3)];
+					*output++=currentProject->pal->rgbPal[row+(temp*3)+1];
+					*output++=currentProject->pal->rgbPal[row+(temp*3)+2];
 					if(useAlpha){
 						if(alphaZero){
 							if(temp)
@@ -190,7 +190,7 @@ static inline uint32_t sq(uint32_t x){
 }
 uint8_t find_near_color_from_row_rgb(unsigned row,uint8_t r,uint8_t g,uint8_t b,bool alt){
 	row*=palEdit.perRow;
-	uint8_t*rgbPtr=currentProject->rgbPal+(row*3);
+	uint8_t*rgbPtr=currentProject->pal->rgbPal+(row*3);
 	if((currentProject->gameSystem==NES)&&alt)
 		rgbPtr+=16*3;
 	return (nearestColIndex(r,g,b,rgbPtr,palEdit.perRow,true,row)+row)*3;//Yes this function does return three times the value TODO refractor

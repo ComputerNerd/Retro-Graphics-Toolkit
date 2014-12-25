@@ -5,7 +5,7 @@ STRIP=i686-pc-mingw32-strip
 #to compile on windows you must compile fltk
 #I compiled fltk in a folder named fltk-1.3.2 which is in the Retro Graphics tookit directory
 #if that is not the case for you edit the makefile changing paths
-CFLAGS=-Ifltk-1.3.2/ -Ikens/ -Ifltk-1.3.2/zlib -I fltk-1.3.2/png -Iluawin/src -c -Wall -O2 -s -ffunction-sections -fdata-sections -mwindows -fomit-frame-pointer -pipe -Wl,--gc-sections
+CFLAGS=-Ifltk-1.3.3/ -Ikens/ -Ifltk-1.3.3/zlib -I fltk-1.3.3/png -Iluawin/src -c -Wall -O2 -s -ffunction-sections -fdata-sections -mwindows -fomit-frame-pointer -pipe -Wl,--gc-sections
 CXXFLAGS=$(CFLAGS) -std=gnu++11 -fno-rtti -std=gnu++11
 LDFLAGS= -O2 -s -fomit-frame-pointer -Wl,--as-needed -Wl,--gc-sections
 OBJECTS= project.o main.o callbacks_palette.o callback_tiles.o class_global.o global.o quant.o tilemap.o color_convert.o \
@@ -15,7 +15,7 @@ OBJECTS= project.o main.o callbacks_palette.o callback_tiles.o class_global.o gl
 	callback_project.o callback_tilemap.o callback_gui.o classChunks.o compressionWrapper.o callback_chunk.o gui.o \
 	wu.o system.o filemisc.o classSprite.o classSprites.o callbacksprites.o undo.o undocallback.o image.o \
 	classlevel.o runlua.o nearestColor.o CIE.o
-LINKER=-Lfltk-1.3.2/lib -s -static-libgcc -static-libstdc++ -lfltk_images -lfltk -lfltk_jpeg -lfltk_png -lfltk_z -mwindows -lole32 -luuid -lcomctl32 -Lluawin/src -llua52
+LINKER=-Lfltk-1.3.3/lib -s -static-libgcc -static-libstdc++ -lfltk_images -lfltk -lfltk_jpeg -lfltk_png -lfltk_z -mwindows -lole32 -luuid -lcomctl32 -Lluawin/src -llua52
 EXECUTABLE=RetroGraphicsToolkit.exe
 
 all: $(EXECUTABLE)

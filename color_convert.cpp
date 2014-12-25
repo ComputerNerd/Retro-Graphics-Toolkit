@@ -23,27 +23,6 @@
 uint8_t nespaltab[64*3];
 uint8_t nespaltab_alt[64*3];
 
-void rgbToEntry(unsigned r,unsigned g,unsigned b,unsigned ent){
-	unsigned maxent=currentProject->colorCnt+currentProject->colorCntalt;
-	if(ent>maxent){
-		fl_alert("Attempted access for color %d but there is only %d colors",ent,maxent);
-		return;
-	}
-	switch(currentProject->gameSystem){
-		case sega_genesis:
-			{uint16_t temp=to_sega_genesis_colorRGB(r,g,b,ent);
-			ent*=2;
-			currentProject->palDat[ent]=temp>>8;
-			currentProject->palDat[ent+1]=temp&255;}
-		break;
-		case NES:
-			currentProject->palDat[ent]=to_nes_color_rgb(r,g,b);
-			updateRGBindex(ent);
-		break;
-		default:
-			show_default_error
-	}
-}
 
 uint8_t nearest_color_index(uint8_t val,unsigned startindex){
 	int32_t distanceSquared, minDistanceSquared, bestIndex = 0;
@@ -130,78 +109,8 @@ void rgbToHsl(double r,double g,double b,double * hh,double * ss,double * ll){
 	*ll=l;
 	*ss=s;
 }
-void updateRGBindex(unsigned index){
-	switch(currentProject->gameSystem){
-		case sega_genesis:
-			{uint16_t*ptr=(uint16_t*)currentProject->palDat+index;
-			currentProject->rgbPal[index*3+2]=palTab[((*ptr>>1)&7)+palTypeGen];//Blue note that bit shifting is different due to little endian
-			currentProject->rgbPal[index*3+1]=palTab[((*ptr>>13)&7)+palTypeGen];//Green
-			currentProject->rgbPal[index*3]=palTab[((*ptr>>9)&7)+palTypeGen];//Red
-			}
-		break;
-		case NES:
-			{uint32_t rgb_out=MakeRGBcolor(currentProject->palDat[index]);
-			currentProject->rgbPal[index*3+2]=rgb_out&255;//blue
-			currentProject->rgbPal[index*3+1]=(rgb_out>>8)&255;//green
-			currentProject->rgbPal[index*3]=(rgb_out>>16)&255;//red
-			}
-		break;
-	}
-}
 static inline uint32_t sq(uint32_t x){
 	return x*x;
-}
-uint8_t to_nes_color_rgb(uint8_t red,uint8_t green,uint8_t blue){
-	//this function does not set any values to global palette it is done in other functions
-	return nearestColIndex(red,green,blue,nespaltab,64);
-}
-uint8_t to_nes_color(uint8_t pal_index){
-	//this function does not set any values to global palette it is done in other functions
-	pal_index*=3;
-	return to_nes_color_rgb(currentProject->rgbPal[pal_index],currentProject->rgbPal[pal_index+1],currentProject->rgbPal[pal_index+2]);
-}
-uint8_t toNesChan(uint8_t ri,uint8_t gi,uint8_t bi,uint8_t chan){
-	uint32_t rgb_out=toNesRgb(ri,gi,bi);
-	uint8_t b=rgb_out&255;
-	uint8_t g=(rgb_out>>8)&255;
-	uint8_t r=(rgb_out>>16)&255;
-	switch (chan){
-		case 0:
-			return r;
-		break;
-		case 1:
-			return g;
-		break;
-		case 2:
-			return b;
-		break;
-	}
-	return 0;
-}
-uint16_t to_sega_genesis_colorRGB(uint8_t r,uint8_t g,uint8_t b,uint16_t pal_index){
-	//note this function only set the new rgb colors not the outputed sega genesis palette format
-	pal_index*=3;
-	r=nearest_color_index(r,0);
-	g=nearest_color_index(g,0);
-	b=nearest_color_index(b,0);
-	currentProject->rgbPal[pal_index]=palTab[r];
-	currentProject->rgbPal[pal_index+1]=palTab[g];
-	currentProject->rgbPal[pal_index+2]=palTab[b];
-	//bgr format
-	return (r<<1)|(g<<5)|(b<<9);
-}
-uint16_t to_sega_genesis_color(uint16_t pal_index){
-	//note this function only set the new rgb colors not the outputed sega genesis palette format
-	pal_index*=3;
-	uint8_t r,g,b;
-	r=nearest_color_index(currentProject->rgbPal[pal_index]);
-	g=nearest_color_index(currentProject->rgbPal[pal_index+1]);
-	b=nearest_color_index(currentProject->rgbPal[pal_index+2]);
-	currentProject->rgbPal[pal_index]=palTab[r];
-	currentProject->rgbPal[pal_index+1]=palTab[g];
-	currentProject->rgbPal[pal_index+2]=palTab[b];
-	//bgr format
-	return ((r-palTypeGen)<<1)|((g-palTypeGen)<<5)|((b-palTypeGen)<<9);
 }
 uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_found,bool useAlpha){
 	/*!
@@ -293,16 +202,16 @@ void update_emphesis(Fl_Widget*,void*){
 	updateNesTab(emps,false);
 	updateNesTab(empsSprite,true);
 	for(unsigned c=0;c<48;c+=3){
-		rgb_out=MakeRGBcolor(currentProject->palDat[c/3]|emps);
-		currentProject->rgbPal[c]=(rgb_out>>16)&255;//red
-		currentProject->rgbPal[c+1]=(rgb_out>>8)&255;//green
-		currentProject->rgbPal[c+2]=rgb_out&255;//blue
+		rgb_out=MakeRGBcolor(currentProject->pal->palDat[c/3]|emps);
+		currentProject->pal->rgbPal[c]=(rgb_out>>16)&255;//red
+		currentProject->pal->rgbPal[c+1]=(rgb_out>>8)&255;//green
+		currentProject->pal->rgbPal[c+2]=rgb_out&255;//blue
 	}
 	for(unsigned c=48;c<96;c+=3){
-		rgb_out=MakeRGBcolor(currentProject->palDat[c/3]|empsSprite);
-		currentProject->rgbPal[c]=(rgb_out>>16)&255;//red
-		currentProject->rgbPal[c+1]=(rgb_out>>8)&255;//green
-		currentProject->rgbPal[c+2]=rgb_out&255;//blue
+		rgb_out=MakeRGBcolor(currentProject->pal->palDat[c/3]|empsSprite);
+		currentProject->pal->rgbPal[c]=(rgb_out>>16)&255;//red
+		currentProject->pal->rgbPal[c+1]=(rgb_out>>8)&255;//green
+		currentProject->pal->rgbPal[c+2]=rgb_out&255;//blue
 	}
 	window->redraw();
 }
