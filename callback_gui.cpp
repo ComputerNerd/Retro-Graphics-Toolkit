@@ -55,73 +55,94 @@ Fl_Menu_Item subSysGenesis[]={
 	{0}
 };
 void set_game_system(Fl_Widget*,void* selection){
-	uint32_t sel=(uintptr_t)selection;
-	if (unlikely(sel == currentProject->gameSystem)){
+	unsigned sel=(uintptr_t)selection;
+	if(unlikely(sel == currentProject->gameSystem)){
 		fl_alert("You are already in that mode");
 		return;
 	}
-	unsigned bd=getBitdepthcurSys();
-	unsigned bdold=bd;
-	unsigned perRow=currentProject->pal->perRow,rows=currentProject->pal->rowCntPal+currentProject->pal->rowCntPalalt;
 	uint32_t gold=currentProject->gameSystem;
 	uint32_t sold=currentProject->subSystem;
-	perRow=perRow*rows/(currentProject->pal->rowCntPal+currentProject->pal->rowCntPalalt);//Handle unequal row amounts
-	memset(currentProject->pal->palType,0,perRow*rows);
-	uint8_t*tmpPalRGB=(uint8_t*)alloca(perRow*rows*3);
-	if(perRow>=currentProject->pal->perRow){
-		for(unsigned i=0,j=0;i<currentProject->pal->colorCnt*3;i+=currentProject->pal->perRow*3,j+=perRow*3){
-			memcpy(tmpPalRGB+j,currentProject->pal->rgbPal+i,currentProject->pal->perRow*3);
-			memset(tmpPalRGB+j+((currentProject->pal->perRow)*3),0,(perRow-currentProject->pal->perRow)*3);
-		}
-	}else{
-		uint8_t*nPtr=tmpPalRGB;
-		uint8_t*rgbPtr=currentProject->pal->rgbPal;
-		for(unsigned k=0;k<rows;++k){
-			//Preserve background color
-			*nPtr++=rgbPtr[0];
-			*nPtr++=rgbPtr[1];
-			*nPtr++=rgbPtr[2];
-			rgbPtr+=currentProject->pal->perRow/perRow*3;
-			for(unsigned j=(currentProject->pal->perRow/perRow)*3;j<currentProject->pal->perRow*3;j+=(currentProject->pal->perRow/perRow)*3){
-				unsigned type=0;
-				double Lv,Cv,Hv;
-				Rgb2Lch255(&Lv,&Cv,&Hv,rgbPtr[0],rgbPtr[1],rgbPtr[2]);
-				rgbPtr+=3;
-				for(unsigned i=1;i<currentProject->pal->perRow/perRow;++i){
-					double L,C,H;
-					Rgb2Lch255(&L,&C,&H,rgbPtr[0],rgbPtr[1],rgbPtr[2]);
-					if(type){
-						if(C*L>Cv*Lv){
-							Lv=L;
-							Cv=C;
-							Hv=H;
-						}
-					}else{
-						if(C>Cv){
-							Lv=L;
-							Cv=C;
-							Hv=H;
-						}
-
+	unsigned bd=getBitdepthcurSys();
+	unsigned bdold=bd;
+	if(containsDataCurProj(pjHavePal)){
+		switch(sel){
+			case sega_genesis:
+				if(currentProject->gameSystem==NES){
+					uint8_t rgbTmp[32*3];
+					uint8_t palTypeTmp[32];
+					memcpy(rgbTmp,currentProject->pal->rgbPal,32*3);
+					memcpy(palTypeTmp,currentProject->pal->palType,32);
+					currentProject->gameSystem=sel;
+					palBar.setSys(false);
+					for(unsigned i=0;i<4;++i){
+						memcpy(currentProject->pal->rgbPal+(i*16*3),rgbTmp+(i*4*3),4*3);
+						memcpy(currentProject->pal->rgbPal+(i*16*3)+(4*3),rgbTmp+(i*4*3)+(4*3*4),4*3);
+						memset(currentProject->pal->rgbPal+(i*16*3)+(8*3),0,(16-8)*3);
+						memcpy(currentProject->pal->palType+(i*16),palTypeTmp+(i*4),4);
+						memcpy(currentProject->pal->palType+(i*16)+4,palTypeTmp+(i*4)+(4*4),4);
+						memset(currentProject->pal->palType+(i*16)+8,0,(16-8));
 					}
-					rgbPtr+=3;
-				}
-				Lch2Rgb255(nPtr,nPtr+1,nPtr+2,Lv,Cv,Hv);
-				nPtr+=3;
-				type^=1;
-			}
+					uint8_t*nPtr=currentProject->pal->rgbPal;
+					for(unsigned i=0;i<currentProject->pal->colorCnt;++i,nPtr+=3)
+						currentProject->pal->rgbToEntry(nPtr[0],nPtr[1],nPtr[2],i);
+				}else
+					fl_alert("TODO");
+			break;
+			case NES:
+				if(currentProject->gameSystem==sega_genesis){
+					sortBy(2,true);
+					uint8_t rgbTmp[64*3];
+					memcpy(rgbTmp,currentProject->pal->rgbPal,64*3);
+					currentProject->gameSystem=sel;
+					palBar.setSys(false);
+					update_emphesis(0,0);
+					updateNesTab(0,false);
+					updateNesTab(0,true);
+					uint8_t*nPtr=currentProject->pal->rgbPal;
+					uint8_t*rgbPtr=rgbTmp;
+					for(unsigned k=0;k<4;++k){
+						//Preserve background color
+						*nPtr++=rgbPtr[0];
+						*nPtr++=rgbPtr[1];
+						*nPtr++=rgbPtr[2];
+						rgbPtr+=4*3;
+						for(unsigned j=4*3;j<16*3;j+=4*3){
+							double Lv,Cv,Hv;
+							Rgb2Lch255(&Lv,&Cv,&Hv,rgbPtr[0],rgbPtr[1],rgbPtr[2]);
+							rgbPtr+=3;
+							for(unsigned i=1;i<4;++i){
+								double L,C,H;
+								Rgb2Lch255(&L,&C,&H,rgbPtr[0],rgbPtr[1],rgbPtr[2]);
+								if(C>Cv){
+									Lv=L;
+									Cv=C;
+									Hv=H;
+								}
+								rgbPtr+=3;
+							}
+							Lch2Rgb255(nPtr,nPtr+1,nPtr+2,Lv,Cv,Hv);
+							nPtr+=3;
+						}
+					}
+					memset(currentProject->pal->palType,0,currentProject->pal->colorCnt+currentProject->pal->colorCntalt);
+					nPtr=currentProject->pal->rgbPal;
+					for(unsigned i=0;i<16;++i,nPtr+=3)
+						currentProject->pal->rgbToEntry(nPtr[0],nPtr[1],nPtr[2],i);
+				}else
+					fl_alert("TODO");
+			break;
 		}
+		palBar.updateSliders();
 	}
-	tiles tilesOld=tiles(*currentProject->tileC);
+	tiles*tilesOld=0;
+	if(containsDataCurProj(pjHaveTiles))
+		tilesOld=new tiles(*currentProject->tileC);
 	switch(sel){
 		case sega_genesis:
 			bd=4;
 			currentProject->gameSystem=sega_genesis;
 			currentProject->subSystem=0;
 			setBitdepthcurSys(bd);
-			if(containsDataCurProj(pjHavePal)){
-				palBar.setSys();
-			}
 			if(containsDataCurProj(pjHaveTiles)){
 				currentProject->tileC->tileSize=32;
 				currentProject->tileC->resizeAmt();
@@ -140,11 +161,9 @@ void set_game_system(Fl_Widget*,void* selection){
 			currentProject->gameSystem=NES;
 			currentProject->subSystem=0;
 			setBitdepthcurSys(bd);
-			updateNesTab(0,false);
-			updateNesTab(0,true);
-			if(containsDataCurProj(pjHavePal)){
-				palBar.setSys();
-				update_emphesis(0,0);
+			if(!containsDataCurProj(pjHavePal)){
+				updateNesTab(0,false);//Incase the user enables palette later
+				updateNesTab(0,true);
 			}
 			if(containsDataCurProj(pjHaveTiles)){
 				currentProject->tileC->tileSize=16;
@@ -155,9 +174,9 @@ void set_game_system(Fl_Widget*,void* selection){
 				//on the NES tilemaps need to be a multiple of 2
 				if(((currentProject->tileMapC->mapSizeW)&1) && ((currentProject->tileMapC->mapSizeHA)&1))
 					currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeHA+1);
-				if((currentProject->tileMapC->mapSizeW)&1)
+				else if((currentProject->tileMapC->mapSizeW)&1)
 					currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeHA);
-				if((currentProject->tileMapC->mapSizeHA)&1)
+				else if((currentProject->tileMapC->mapSizeHA)&1)
 					currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeHA+1);
 			}
 			if(containsDataCurProj(pjHaveSprites)){
@@ -181,30 +200,32 @@ void set_game_system(Fl_Widget*,void* selection){
 			show_default_error
 		break;
 	}
-	uint8_t*nPtr=tmpPalRGB;
-	for(unsigned i=0;i<currentProject->pal->colorCnt;++i,nPtr+=3)
-		currentProject->pal->rgbToEntry(nPtr[0],nPtr[1],nPtr[2],i);
-	if(currentProject->pal->haveAlt){
-		memcpy(currentProject->pal->rgbPal+(currentProject->pal->colorCnt*3),currentProject->pal->rgbPal,std::min(currentProject->pal->colorCnt,currentProject->pal->colorCntalt)*3);
-		memcpy(currentProject->pal->palDat+(currentProject->pal->colorCnt*currentProject->pal->esize),currentProject->pal->palDat,std::min(currentProject->pal->colorCnt,currentProject->pal->colorCntalt)*currentProject->pal->esize);
-	}
-	window->redraw();
-	uint32_t gnew=currentProject->gameSystem;
-	uint32_t snew=currentProject->subSystem;
-	for(unsigned i=0;i<tilesOld.amt;++i){
-		for(unsigned y=0;y<std::min(currentProject->tileC->sizeh,tilesOld.sizeh);++y){
-			for(unsigned x=0;x<std::min(currentProject->tileC->sizew,tilesOld.sizew);++x){
-				currentProject->gameSystem=gold;
-				currentProject->subSystem=sold;
-				uint32_t px=tilesOld.getPixel(i,x,y);
-				if(bdold>bd)
-					px>>=bdold-bd;
-				currentProject->gameSystem=gnew;
-				currentProject->subSystem=snew;
-				currentProject->tileC->setPixel(i,x,y,px);
-			}
+	if(containsDataCurProj(pjHavePal)){
+		if(currentProject->pal->haveAlt){
+			memcpy(currentProject->pal->rgbPal+(currentProject->pal->colorCnt*3),currentProject->pal->rgbPal,std::min(currentProject->pal->colorCnt,currentProject->pal->colorCntalt)*3);
+			memcpy(currentProject->pal->palDat+(currentProject->pal->colorCnt*currentProject->pal->esize),currentProject->pal->palDat,std::min(currentProject->pal->colorCnt,currentProject->pal->colorCntalt)*currentProject->pal->esize);
 		}
 	}
+	if(containsDataCurProj(pjHaveTiles)){
+		uint32_t gnew=currentProject->gameSystem;
+		uint32_t snew=currentProject->subSystem;
+		for(unsigned i=0;i<tilesOld->amt;++i){
+			for(unsigned y=0;y<std::min(currentProject->tileC->sizeh,tilesOld->sizeh);++y){
+				for(unsigned x=0;x<std::min(currentProject->tileC->sizew,tilesOld->sizew);++x){
+					currentProject->gameSystem=gold;
+					currentProject->subSystem=sold;
+					uint32_t px=tilesOld->getPixel(i,x,y);
+					if(bdold>bd)
+						px>>=bdold-bd;
+					currentProject->gameSystem=gnew;
+					currentProject->subSystem=snew;
+					currentProject->tileC->setPixel(i,x,y,px);
+				}
+			}
+		}
+		delete tilesOld;
+	}
+	window->redraw();
 }
 void trueColTileToggle(Fl_Widget*,void*){
 	showTrueColor^=1;

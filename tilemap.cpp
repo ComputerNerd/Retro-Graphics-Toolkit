@@ -14,7 +14,6 @@
    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
-/* Stuff related to tilemap operations goes here*/
 #include "global.h"
 #include "quant.h"
 #include "color_compare.h"
@@ -422,9 +421,13 @@ static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,unsigned 
 	progress->maximum(1.0);
 	unsigned off2=offsetPal*2;
 	unsigned off3=offsetPal*3;
-	uint32_t colors_found;
-	uint32_t w,h;
-	unsigned maxPal=(1<<getBitdepthcurSys())*4;
+	unsigned colors_found;
+	unsigned w,h;
+	unsigned maxPal;
+	if(isSprite&&currentProject->pal->haveAlt)
+		maxPal=currentProject->pal->colorCntalt;
+	else
+		maxPal=currentProject->pal->colorCnt;
 	if(isSprite){
 		w=currentProject->spritesC->width(curSpritegroup);
 		h=currentProject->spritesC->height(curSpritegroup);
@@ -447,7 +450,7 @@ static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,unsigned 
 	if (colors_found <= maxCol){
 		printf("%d colors\n",colors_found);
 		for (unsigned x=0;x<colors_found;x++){
-			uint8_t r,g,b;
+			uint_fast8_t r,g,b;
 againFun:
 			if (currentProject->pal->palType[x+offsetPal]){
 				++offsetPal;
@@ -473,7 +476,7 @@ againFun:
 		uint8_t user_pal[3][256];			
 		uint8_t rgb_pal2[768];
 		uint8_t rgb_pal3[768];
-		uint16_t colorz=maxCol;
+		unsigned colorz=maxCol;
 		bool can_go_again=true;
 		uint8_t*imageuse;
 		uint8_t*output;
@@ -577,7 +580,7 @@ try_again_color:
 		}
 		unsigned off3o=off3;
 		for (unsigned x=0;x<maxCol;x++){
-			uint8_t r,g,b;
+			uint_fast8_t r,g,b;
 againNerd:
 			if (currentProject->pal->palType[x+offsetPal]){
 				++offsetPal;
@@ -589,7 +592,7 @@ againNerd:
 				}
 				goto againNerd;
 			}
-			memcpy(currentProject->pal->rgbPal+off3+(x*3),&rgb_pal3[off3o+(x*3)],3);
+			memcpy(currentProject->pal->rgbPal+off3+(x*3),rgb_pal3+off3o+(x*3),3);
 			switch(currentProject->gameSystem){
 				case sega_genesis:
 					r=currentProject->pal->rgbPal[(x*3)+off3];

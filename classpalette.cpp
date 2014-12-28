@@ -1,3 +1,19 @@
+/*
+   This file is part of Retro Graphics Toolkit
+
+   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or any later version.
+
+   Retro Graphics Toolkit is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+*/
 #include "project.h"
 #include "classpalette.h"
 #include "system.h"
@@ -7,27 +23,17 @@
 #include <stdio.h>
 #include <stdint.h>
 palette::palette(void){
-	allocate(currentProject->gameSystem);
-	memset(rgbPal,0,(colorCnt+colorCntalt)*3);
-	memset(palDat,0,(colorCnt+colorCntalt)*esize);
-	memset(palType,0,colorCnt+colorCntalt);
+	rgbPal=0;
+	setVars(currentProject->gameSystem);
+	memset(rgbPal,0,(colorCnt+colorCntalt)*(4+esize));
 }
 palette::~palette(void){
 	free(rgbPal);
-	free(palDat);
-	free(palType);
 }
 palette::palette(const palette& other,uint32_t gameSystem){
-	allocate(gameSystem);
-	memcpy(rgbPal,other.rgbPal,(colorCnt+colorCntalt)*3);
-	memcpy(palDat,other.palDat,(colorCnt+colorCntalt)*esize);
-	memcpy(palType,other.palType,colorCnt+colorCntalt);
-}
-void palette::allocate(uint32_t gameSystem){
+	rgbPal=0;
 	setVars(gameSystem);
-	rgbPal=(uint8_t*)malloc((colorCnt+colorCntalt)*3);
-	palDat=(uint8_t*)malloc((colorCnt+colorCntalt)*esize);
-	palType=(uint8_t*)malloc(colorCnt+colorCntalt);
+	memcpy(rgbPal,other.rgbPal,(colorCnt+colorCntalt)*(4+esize));
 }
 void palette::setVars(uint32_t gameSystem){
 	rowCntPal=4;
@@ -49,6 +55,9 @@ void palette::setVars(uint32_t gameSystem){
 			esize=1;
 		break;
 	}
+	rgbPal=(uint8_t*)realloc(rgbPal,(colorCnt+colorCntalt)*(4+esize));//Yes this is correct when rgbPal is NULL realloc will behave the same as malloc
+	palDat=rgbPal+((colorCnt+colorCntalt)*3);
+	palType=rgbPal+((colorCnt+colorCntalt)*(3+esize));
 }
 void palette::read(FILE*fp,bool supportsAlt){
 	if(supportsAlt){
@@ -86,8 +95,7 @@ void palette::updateRGBindex(unsigned index){
 	}
 }
 void palette::clear(void){
-	memset(rgbPal,0,(colorCnt+colorCntalt)*3);
-	memset(palDat,0,(colorCnt+colorCntalt)*esize);
+	memset(rgbPal,0,(colorCnt+colorCntalt)*(3+esize));
 }
 void palette::rgbToEntry(unsigned r,unsigned g,unsigned b,unsigned ent){
 	unsigned maxent=colorCnt+colorCntalt;
