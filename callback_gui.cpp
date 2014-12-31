@@ -162,7 +162,7 @@ void set_game_system(Fl_Widget*,void* selection){
 			currentProject->subSystem=0;
 			setBitdepthcurSys(bd);
 			if(!containsDataCurProj(pjHavePal)){
-				updateNesTab(0,false);//Incase the user enables palette later
+				updateNesTab(0,false);//In case the user enables palette later
 				updateNesTab(0,true);
 			}
 			if(containsDataCurProj(pjHaveTiles)){

@@ -552,7 +552,7 @@ MixingPlan DeviseBestMixingPlanY2(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * 
 }
 MixingPlan DeviseBestMixingPlanY3(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * pal,uint16_t offset,size_t limit){
 	// Input color in RGB
-	float input_rgb[3] = {rIn,gIn,bIn};
+	float input_rgb[3] = {(float)rIn,(float)gIn,(float)bIn};
 	pal+=offset*3;
 	offsetGloablY3=offset;
 	// Input color in CIE L*a*b*
@@ -686,17 +686,15 @@ struct MixingPlanTK{
 };
 MixingPlanTK DeviseBestMixingPlanTK(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * pal,uint16_t offset){
 	// Input color in RGB
-	float input_rgb[3] = {rIn,gIn,bIn};
 	pal+=offset*3;
 	offsetGloablY3=offset;
 	MixingPlanTK result = { {0} };
 	const int src[3] = {rIn,gIn,bIn};
 
-	const double X = 0.09;  // Error multiplier
 	int e[3] = { 0, 0, 0 }; // Error accumulator
 	for(unsigned c=0; c<64; ++c){
 		// Current temporary value
-		int t[3] = { src[0] + e[0] * X, src[1] + e[1] * X, src[2] + e[2] * X };
+		int t[3] = { src[0] + e[0] * 9/100, src[1] + e[1] * 9/100, src[2] + e[2] * 9/100 };
 		// Clamp it in the allowed RGB range
 		if(t[0]<0) t[0]=0; else if(t[0]>255) t[0]=255;
 		if(t[1]<0) t[1]=0; else if(t[1]>255) t[1]=255;
