@@ -42,6 +42,7 @@ class editor : public Fl_Double_Window{
 	Fl_Choice*subSysC;
 	Fl_Choice*solidChunkMenu;
 	Fl_Choice*ditherAlgSel;
+	Fl_Choice*planeSelect;
 	Fl_Group* TabsMain[shareAmtPj+1];
 	Fl_Scrollbar * map_x_scroll;
 	Fl_Scrollbar * map_y_scroll;
@@ -73,6 +74,7 @@ class editor : public Fl_Double_Window{
 	Fl_Slider* spritesize[2];//sprite width,height
 	Fl_Slider* spritepalrow;//selects palette row
 	Fl_Slider* spritezoom;
+	Fl_Input*curPlaneName;
 	Fl_Input* spritegrouptxt;
 	Fl_Button*spritealign[4];
 	Fl_Input* spriteglobaltxt;

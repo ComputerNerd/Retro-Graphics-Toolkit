@@ -64,6 +64,9 @@ void set_game_system(Fl_Widget*,void* selection){
 	uint32_t sold=currentProject->subSystem;
 	unsigned bd=getBitdepthcurSys();
 	unsigned bdold=bd;
+	tiles*tilesOld=0;
+	if(containsDataCurProj(pjHaveTiles))
+		tilesOld=new tiles(*currentProject->tileC);
 	if(containsDataCurProj(pjHavePal)){
 		switch(sel){
 			case sega_genesis:
@@ -134,9 +137,6 @@ void set_game_system(Fl_Widget*,void* selection){
 		}
 		palBar.updateSliders();
 	}
-	tiles*tilesOld=0;
-	if(containsDataCurProj(pjHaveTiles))
-		tilesOld=new tiles(*currentProject->tileC);
 	switch(sel){
 		case sega_genesis:
 			bd=4;
@@ -172,12 +172,12 @@ void set_game_system(Fl_Widget*,void* selection){
 			currentProject->subSystem|=NES2x2;
 			if(containsDataCurProj(pjHaveMap)){
 				//on the NES tilemaps need to be a multiple of 2
-				if(((currentProject->tileMapC->mapSizeW)&1) && ((currentProject->tileMapC->mapSizeHA)&1))
-					currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeHA+1);
-				else if((currentProject->tileMapC->mapSizeW)&1)
-					currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW+1,currentProject->tileMapC->mapSizeHA);
-				else if((currentProject->tileMapC->mapSizeHA)&1)
-					currentProject->tileMapC->resize_tile_map(currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeHA+1);
+				if(((currentProject->tms->maps[currentProject->curPlane].mapSizeW)&1) && ((currentProject->tms->maps[currentProject->curPlane].mapSizeHA)&1))
+					currentProject->tms->maps[currentProject->curPlane].resize_tile_map(currentProject->tms->maps[currentProject->curPlane].mapSizeW+1,currentProject->tms->maps[currentProject->curPlane].mapSizeHA+1);
+				else if((currentProject->tms->maps[currentProject->curPlane].mapSizeW)&1)
+					currentProject->tms->maps[currentProject->curPlane].resize_tile_map(currentProject->tms->maps[currentProject->curPlane].mapSizeW+1,currentProject->tms->maps[currentProject->curPlane].mapSizeHA);
+				else if((currentProject->tms->maps[currentProject->curPlane].mapSizeHA)&1)
+					currentProject->tms->maps[currentProject->curPlane].resize_tile_map(currentProject->tms->maps[currentProject->curPlane].mapSizeW,currentProject->tms->maps[currentProject->curPlane].mapSizeHA+1);
 			}
 			if(containsDataCurProj(pjHaveSprites)){
 				window->spritesize[0]->maximum(1);

@@ -116,7 +116,7 @@ static int32_t error[SIZE]; /* queue with error
 		if(isChunkD_G)
 			tempSet=(currentProject->Chunk->getPrio_t(idChunk_G,cur_x/8,cur_y/8)^1)*8;
 		else
-			tempSet=(currentProject->tileMapC->get_prio(cur_x/8,cur_y/8)^1)*8;
+			tempSet=(currentProject->tms->maps[currentProject->curPlane].get_prio(cur_x/8,cur_y/8)^1)*8;
 		set_palette_type_force(tempSet);
 	}
 	if(USEofColGlob)
@@ -128,7 +128,7 @@ static int32_t error[SIZE]; /* queue with error
 			if(isChunkD_G)
 				pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->Chunk->getTileRow_t(idChunk_G,cur_x/8,cur_y/8));
 			else
-				pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->tileMapC->get_palette_map(cur_x/8,cur_y/8));
+				pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->tms->maps[currentProject->curPlane].getPalRow(cur_x/8,cur_y/8));
 		}
 	}
   /* shift queue */ 
@@ -848,7 +848,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					if(isChunk)
 						tempSet=(currentProject->Chunk->getPrio_t(idChunk,x/8,y/8)^1)*8;
 					else
-						tempSet=(currentProject->tileMapC->get_prio(x/8,y/8)^1)*8;
+						tempSet=(currentProject->tms->maps[currentProject->curPlane].get_prio(x/8,y/8)^1)*8;
 					set_palette_type_force(tempSet);//0 normal 8 shadowed 16 highlighted
 				}
 				unsigned tempPalOff;
@@ -858,7 +858,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					if(isChunk)
 						pal_row=currentProject->Chunk->getTileRow_t(idChunk,x/8,y/8);
 					else
-						pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
+						pal_row=currentProject->tms->maps[currentProject->curPlane].getPalRow(x/8,y/8);
 				}
 				if(ditherAlg==7){
 					unsigned map_value = mapTK[(x & 7) + ((y & 7) << 3)];
@@ -944,7 +944,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 						if(isChunk)
 							pal_row=currentProject->Chunk->getTileRow_t(idChunk,x/rgbRowsize,y/8);
 						else
-							pal_row=currentProject->tileMapC->get_palette_map(x/rgbRowsize,y/8);
+							pal_row=currentProject->tms->maps[currentProject->curPlane].getPalRow(x/rgbRowsize,y/8);
 					}
 				}
 				//find nearest color
@@ -954,7 +954,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					if(isChunk)
 						tempSet=(currentProject->Chunk->getPrio_t(idChunk,x/rgbRowsize,y/8)^1)*8;
 					else
-						tempSet=(currentProject->tileMapC->get_prio(x/rgbRowsize,y/8)^1)*8;
+						tempSet=(currentProject->tms->maps[currentProject->curPlane].get_prio(x/rgbRowsize,y/8)^1)*8;
 					set_palette_type_force(tempSet);//0 normal 8 shadowed 16 highlighted
 					half=(tempSet==0)?18:9;
 				}
@@ -1040,7 +1040,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 						if(isChunk)
 							pal_row=currentProject->Chunk->getTileRow_t(idChunk,x/8,y/8);
 						else
-							pal_row=currentProject->tileMapC->get_palette_map(x/8,y/8);
+							pal_row=currentProject->tms->maps[currentProject->curPlane].getPalRow(x/8,y/8);
 					}
 				}
 				//find nearest color
@@ -1049,7 +1049,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					if(isChunk)
 						tempSet=(currentProject->Chunk->getPrio_t(idChunk,x/8,y/8)^1)*8;
 					else
-						tempSet=(currentProject->tileMapC->get_prio(x/8,y/8)^1)*8;
+						tempSet=(currentProject->tms->maps[currentProject->curPlane].get_prio(x/8,y/8)^1)*8;
 					set_palette_type_force(tempSet);//0 normal 8 shadowed 16 highlighted
 				}
 				if(colSpace){

@@ -32,10 +32,10 @@ void tilesnewfilppedCB(Fl_Widget*,void*){
 	uint32_t acum=0;
 	uint8_t * tileTemp=(uint8_t *)alloca(currentProject->tileC->tileSize);
 	uint8_t * tcTemp=(uint8_t *)alloca(currentProject->tileC->tcSize);
-	for(uint32_t y=0;y<currentProject->tileMapC->mapSizeHA;++y){
-		for(uint32_t x=0;x<currentProject->tileMapC->mapSizeW;++x){
-			bool hf=currentProject->tileMapC->get_hflip(x,y),vf=currentProject->tileMapC->get_vflip(x,y);
-			uint32_t t=currentProject->tileMapC->get_tile(x,y);
+	for(uint32_t y=0;y<currentProject->tms->maps[currentProject->curPlane].mapSizeHA;++y){
+		for(uint32_t x=0;x<currentProject->tms->maps[currentProject->curPlane].mapSizeW;++x){
+			bool hf=currentProject->tms->maps[currentProject->curPlane].get_hflip(x,y),vf=currentProject->tms->maps[currentProject->curPlane].get_vflip(x,y);
+			uint32_t t=currentProject->tms->maps[currentProject->curPlane].get_tile(x,y);
 			if(hf&&vf){
 				if(!(hvflip[t])){
 					currentProject->tileC->hflip_tile(t,tileTemp);
@@ -49,9 +49,9 @@ void tilesnewfilppedCB(Fl_Widget*,void*){
 					memcpy(currentProject->tileC->truetDat.data()+((amt+acum)*currentProject->tileC->tcSize),tcTemp,currentProject->tileC->tcSize);
 					++acum;
 				}
-				currentProject->tileMapC->set_tile(x,y,hvflip[t]);
-				currentProject->tileMapC->set_hflip(x,y,false);
-				currentProject->tileMapC->set_vflip(x,y,false);
+				currentProject->tms->maps[currentProject->curPlane].set_tile(x,y,hvflip[t]);
+				currentProject->tms->maps[currentProject->curPlane].set_hflip(x,y,false);
+				currentProject->tms->maps[currentProject->curPlane].set_vflip(x,y,false);
 			}else if(hf){
 				if(!(hflip[t])){
 					currentProject->tileC->hflip_tile(t,tileTemp);
@@ -63,8 +63,8 @@ void tilesnewfilppedCB(Fl_Widget*,void*){
 					memcpy(currentProject->tileC->truetDat.data()+((amt+acum)*currentProject->tileC->tcSize),tcTemp,currentProject->tileC->tcSize);
 					++acum;
 				}
-				currentProject->tileMapC->set_tile(x,y,hflip[t]);
-				currentProject->tileMapC->set_hflip(x,y,false);
+				currentProject->tms->maps[currentProject->curPlane].set_tile(x,y,hflip[t]);
+				currentProject->tms->maps[currentProject->curPlane].set_hflip(x,y,false);
 			}else if(vf){
 				if(!(vflip[t])){
 					currentProject->tileC->vflip_tile(t,tileTemp);
@@ -76,8 +76,8 @@ void tilesnewfilppedCB(Fl_Widget*,void*){
 					memcpy(currentProject->tileC->truetDat.data()+((amt+acum)*currentProject->tileC->tcSize),tcTemp,currentProject->tileC->tcSize);
 					++acum;
 				}
-				currentProject->tileMapC->set_tile(x,y,vflip[t]);
-				currentProject->tileMapC->set_vflip(x,y,false);
+				currentProject->tms->maps[currentProject->curPlane].set_tile(x,y,vflip[t]);
+				currentProject->tms->maps[currentProject->curPlane].set_vflip(x,y,false);
 			}
 		}
 	}
@@ -132,7 +132,7 @@ void set_tile_currentTP(Fl_Widget* o,void*){
 	currentProject->tileC->current_tile=s->value();
 	if(tileEditModePlace_G){
 		pushTilemapEdit(selTileE_G[0],selTileE_G[1]);
-		currentProject->tileMapC->set_tile(selTileE_G[0],selTileE_G[1],currentProject->tileC->current_tile);
+		currentProject->tms->maps[currentProject->curPlane].set_tile(selTileE_G[0],selTileE_G[1],currentProject->tileC->current_tile);
 	}
 	window->redraw();
 }

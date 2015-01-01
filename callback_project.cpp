@@ -119,7 +119,7 @@ void switchShareCB(Fl_Widget*o,void*mask){
 	if(m&pjHaveMap){
 		window->updateMapWH();
 		char tmp[16];
-		snprintf(tmp,16,"%d",currentProject->tileMapC->offset);
+		snprintf(tmp,16,"%d",currentProject->tms->maps[currentProject->curPlane].offset);
 		window->tmapOffset->value(tmp);
 	}
 	if(m&pjHaveChunks){

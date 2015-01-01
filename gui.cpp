@@ -102,8 +102,8 @@ void updateTileSelectAmt(uint32_t newMax){
 		window->tile_select_2->maximum(newMax);
 		checkMaxSlider(newMax,window->tile_select_2);
 		if(currentProject->Chunk->useBlocks){
-			window->tile_select_3->maximum(currentProject->tileMapC->amt-1);
-			checkMaxSlider(currentProject->tileMapC->amt-1,window->tile_select_3);
+			window->tile_select_3->maximum(currentProject->tms->maps[currentProject->curPlane].amt-1);
+			checkMaxSlider(currentProject->tms->maps[currentProject->curPlane].amt-1,window->tile_select_3);
 		}else{
 			window->tile_select_3->maximum(newMax);
 			checkMaxSlider(newMax,window->tile_select_3);

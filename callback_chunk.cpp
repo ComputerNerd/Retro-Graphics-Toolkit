@@ -88,7 +88,7 @@ void useBlocksCB(Fl_Widget*o,void*){
 	Fl_Check_Button*b=(Fl_Check_Button*)o;
 	bool use=b->value()?true:false;
 	if(use){
-		if(!(currentProject->tileMapC->isBlock)){
+		if(!(currentProject->tms->maps[currentProject->curPlane].isBlock)){
 			fl_alert("You cannot use blocks without blocks");
 			b->value(0);
 			window->redraw();

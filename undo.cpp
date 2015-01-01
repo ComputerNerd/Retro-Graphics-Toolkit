@@ -492,10 +492,10 @@ void UndoRedo(bool redo){
 		case uTilemapEdit:
 			{struct undoTilemapEdit*um=(struct undoTilemapEdit*)uptr->ptr;
 			if(redo)
-				currentProject->tileMapC->setRaw(um->x,um->y,um->valnew);
+				currentProject->tms->maps[currentProject->curPlane].setRaw(um->x,um->y,um->valnew);
 			else{
-				um->valnew=currentProject->tileMapC->getRaw(um->x,um->y);
-				currentProject->tileMapC->setRaw(um->x,um->y,um->val);
+				um->valnew=currentProject->tms->maps[currentProject->curPlane].getRaw(um->x,um->y);
+				currentProject->tms->maps[currentProject->curPlane].setRaw(um->x,um->y,um->val);
 			}
 			if(tileEditModePlace_G)
 				window->updateTileMapGUI(um->x,um->y);}
@@ -505,53 +505,53 @@ void UndoRedo(bool redo){
 			{struct undoTilemap*um=(struct undoTilemap*)uptr->ptr;
 			if(redo){
 				if(uptr->type==uTilemapattr)
-					attrCpyU(currentProject->tileMapC->tileMapDat,(uint8_t*)um->ptrnew,um->wnew*um->hnew);
+					attrCpyU(currentProject->tms->maps[currentProject->curPlane].tileMapDat,(uint8_t*)um->ptrnew,um->wnew*um->hnew);
 				else{
-					currentProject->tileMapC->resize_tile_map(um->wnew,um->hnew);
-					memcpy(currentProject->tileMapC->tileMapDat,um->ptrnew,um->wnew*um->hnew*4);
+					currentProject->tms->maps[currentProject->curPlane].resize_tile_map(um->wnew,um->hnew);
+					memcpy(currentProject->tms->maps[currentProject->curPlane].tileMapDat,um->ptrnew,um->wnew*um->hnew*4);
 				}
 			}else{
 				if(!um->ptrnew){
-					um->wnew=currentProject->tileMapC->mapSizeW;
-					um->hnew=currentProject->tileMapC->mapSizeHA;
+					um->wnew=currentProject->tms->maps[currentProject->curPlane].mapSizeW;
+					um->hnew=currentProject->tms->maps[currentProject->curPlane].mapSizeHA;
 					if(uptr->type==uTilemapattr){
 						um->ptrnew=malloc(um->wnew*um->hnew);
-						attrCpy((uint8_t*)um->ptrnew,currentProject->tileMapC->tileMapDat,um->wnew*um->hnew);
+						attrCpy((uint8_t*)um->ptrnew,currentProject->tms->maps[currentProject->curPlane].tileMapDat,um->wnew*um->hnew);
 					}else{
 						um->ptrnew=malloc(um->wnew*um->hnew*4);
-						memcpy(um->ptrnew,currentProject->tileMapC->tileMapDat,um->wnew*um->hnew*4);
+						memcpy(um->ptrnew,currentProject->tms->maps[currentProject->curPlane].tileMapDat,um->wnew*um->hnew*4);
 					}
 				}
 				if(uptr->type==uTilemapattr){
-					attrCpyU(currentProject->tileMapC->tileMapDat,(uint8_t*)um->ptr,um->w*um->h);
+					attrCpyU(currentProject->tms->maps[currentProject->curPlane].tileMapDat,(uint8_t*)um->ptr,um->w*um->h);
 				}else{
-					currentProject->tileMapC->resize_tile_map(um->w,um->h);
-					memcpy(currentProject->tileMapC->tileMapDat,um->ptr,um->w*um->h*4);
+					currentProject->tms->maps[currentProject->curPlane].resize_tile_map(um->w,um->h);
+					memcpy(currentProject->tms->maps[currentProject->curPlane].tileMapDat,um->ptr,um->w*um->h*4);
 				}
 			}}
 		break;
 		case uTilemapResize:
 			{struct undoResize*um=(struct undoResize*)uptr->ptr;
 			if(redo)
-				currentProject->tileMapC->resize_tile_map(um->wnew,um->hnew);
+				currentProject->tms->maps[currentProject->curPlane].resize_tile_map(um->wnew,um->hnew);
 			else{
-				currentProject->tileMapC->resize_tile_map(um->w,um->h);
+				currentProject->tms->maps[currentProject->curPlane].resize_tile_map(um->w,um->h);
 				if(um->ptr)
-					cpyResizeGeneric((uint8_t*)um->ptr,currentProject->tileMapC->tileMapDat,um->w,um->h,um->wnew,um->hnew,4,1,true);
+					cpyResizeGeneric((uint8_t*)um->ptr,currentProject->tms->maps[currentProject->curPlane].tileMapDat,um->w,um->h,um->wnew,um->hnew,4,1,true);
 			}}
 		break;
 		case uTilemapBlocksAmt:
 			{struct undoResize*um=(struct undoResize*)uptr->ptr;
 			if(redo){
-				currentProject->tileMapC->blockAmt(um->hnew/currentProject->tileMapC->mapSizeH);
+				currentProject->tms->maps[currentProject->curPlane].blockAmt(um->hnew/currentProject->tms->maps[currentProject->curPlane].mapSizeH);
 				char tmp[16];
-				snprintf(tmp,16,"%u",um->hnew/currentProject->tileMapC->mapSizeH);
+				snprintf(tmp,16,"%u",um->hnew/currentProject->tms->maps[currentProject->curPlane].mapSizeH);
 			}else{
-				currentProject->tileMapC->blockAmt(um->h/currentProject->tileMapC->mapSizeH);
+				currentProject->tms->maps[currentProject->curPlane].blockAmt(um->h/currentProject->tms->maps[currentProject->curPlane].mapSizeH);
 				if(um->ptr)
-					cpyResizeGeneric((uint8_t*)um->ptr,currentProject->tileMapC->tileMapDat,um->w,um->h,um->wnew,um->hnew,4,1,true);
+					cpyResizeGeneric((uint8_t*)um->ptr,currentProject->tms->maps[currentProject->curPlane].tileMapDat,um->w,um->h,um->wnew,um->hnew,4,1,true);
 				char tmp[16];
-				snprintf(tmp,16,"%u",um->h/currentProject->tileMapC->mapSizeH);
+				snprintf(tmp,16,"%u",um->h/currentProject->tms->maps[currentProject->curPlane].mapSizeH);
 			}}
 		break;
 		case uPalette:
@@ -865,15 +865,15 @@ void pushTilemapAll(bool attrOnly){
 	uptr->ptr=malloc(sizeof(struct undoTilemap));
 	memUsed+=sizeof(struct undoTilemap);
 	struct undoTilemap*um=(struct undoTilemap*)uptr->ptr;
-	um->w=currentProject->tileMapC->mapSizeW;
-	um->h=currentProject->tileMapC->mapSizeHA;
+	um->w=currentProject->tms->maps[currentProject->curPlane].mapSizeW;
+	um->h=currentProject->tms->maps[currentProject->curPlane].mapSizeHA;
 	um->ptrnew=0;
 	if(attrOnly){
 		um->ptr=malloc(um->w*um->h);
-		attrCpy((uint8_t*)um->ptr,currentProject->tileMapC->tileMapDat,um->w*um->h);
+		attrCpy((uint8_t*)um->ptr,currentProject->tms->maps[currentProject->curPlane].tileMapDat,um->w*um->h);
 	}else{
 		um->ptr=malloc(um->w*um->h*4);
-		memcpy(um->ptr,currentProject->tileMapC->tileMapDat,um->w*um->h*4);
+		memcpy(um->ptr,currentProject->tms->maps[currentProject->curPlane].tileMapDat,um->w*um->h*4);
 	}
 }
 void pushTilemapEdit(uint32_t x,uint32_t y){
@@ -885,7 +885,7 @@ void pushTilemapEdit(uint32_t x,uint32_t y){
 	struct undoTilemapEdit*um=(struct undoTilemapEdit*)uptr->ptr;
 	um->x=x;
 	um->y=y;
-	um->val=currentProject->tileMapC->getRaw(x,y);
+	um->val=currentProject->tms->maps[currentProject->curPlane].getRaw(x,y);
 }
 static void pushResize(uint32_t wnew,uint32_t hnew,uint32_t w,uint32_t h,uint8_t*ptr,undoTypes_t type,uint32_t szelm,uint32_t n){
 	if((wnew==w)&&(hnew==h))
@@ -909,10 +909,10 @@ static void pushResize(uint32_t wnew,uint32_t hnew,uint32_t w,uint32_t h,uint8_t
 		um->ptr=0;
 }
 void pushTilemapResize(uint32_t wnew,uint32_t hnew){
-	pushResize(wnew,hnew,currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeHA,currentProject->tileMapC->tileMapDat,uTilemapResize,TileMapSizePerEntry,1);
+	pushResize(wnew,hnew,currentProject->tms->maps[currentProject->curPlane].mapSizeW,currentProject->tms->maps[currentProject->curPlane].mapSizeHA,currentProject->tms->maps[currentProject->curPlane].tileMapDat,uTilemapResize,TileMapSizePerEntry,1);
 }
 void pushTilemapBlocksAmt(uint32_t amtnew){
-	pushResize(currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeH*amtnew,currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeHA,currentProject->tileMapC->tileMapDat,uTilemapBlocksAmt,TileMapSizePerEntry,1);
+	pushResize(currentProject->tms->maps[currentProject->curPlane].mapSizeW,currentProject->tms->maps[currentProject->curPlane].mapSizeH*amtnew,currentProject->tms->maps[currentProject->curPlane].mapSizeW,currentProject->tms->maps[currentProject->curPlane].mapSizeHA,currentProject->tms->maps[currentProject->curPlane].tileMapDat,uTilemapBlocksAmt,TileMapSizePerEntry,1);
 }
 void pushPaletteAll(void){
 	pushEventPrepare();
@@ -1139,7 +1139,7 @@ void historyWindow(Fl_Widget*,void*){
 			break;
 			case uTilemapBlocksAmt:
 				{struct undoResize*um=(struct undoResize*)uptr->ptr;
-				snprintf(tmp,2048,"Change blocks amount from %u",um->h/currentProject->tileMapC->mapSizeH);}	
+				snprintf(tmp,2048,"Change blocks amount from %u",um->h/currentProject->tms->maps[currentProject->curPlane].mapSizeH);}	
 			break;
 			case uTilemapEdit:
 				{struct undoTilemapEdit*um=(struct undoTilemapEdit*)uptr->ptr;

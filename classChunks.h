@@ -19,7 +19,7 @@
 struct __attribute__ ((__packed__)) ChunkAttrs{
 	uint32_t block;
 	uint32_t flags;
-/*! A chuck usally contains a block id and flags which control what to do with the block*/
+/*! A chuck usually contains a block id and flags which control what to do with the block*/
 };
 class ChunkClass{
 public:

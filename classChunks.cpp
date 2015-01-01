@@ -81,21 +81,21 @@ void ChunkClass::resizeAmt(void){
 }
 bool ChunkClass::getPrio_t(uint32_t id,uint32_t x,uint32_t y){//The _t means based on tiles not blocks
 	if(useBlocks){
-		return currentProject->tileMapC->get_prio(
-		x%currentProject->tileMapC->mapSizeW,
-		(chunks[(id*wi*hi)+(y*wi/currentProject->tileMapC->mapSizeH)+(x/currentProject->tileMapC->mapSizeW)].block
-		*currentProject->tileMapC->mapSizeH)
-		+(y%currentProject->tileMapC->mapSizeH));
+		return currentProject->tms->maps[currentProject->curPlane].get_prio(
+		x%currentProject->tms->maps[currentProject->curPlane].mapSizeW,
+		(chunks[(id*wi*hi)+(y*wi/currentProject->tms->maps[currentProject->curPlane].mapSizeH)+(x/currentProject->tms->maps[currentProject->curPlane].mapSizeW)].block
+		*currentProject->tms->maps[currentProject->curPlane].mapSizeH)
+		+(y%currentProject->tms->maps[currentProject->curPlane].mapSizeH));
 	}else
 		return ((chunks[(id*wi*hi)+(y*wi)+x].flags>>2)&1)?true:false;
 }
 uint8_t ChunkClass::getTileRow_t(uint32_t id,uint32_t x,uint32_t y){
 	if(useBlocks){
-		return currentProject->tileMapC->get_palette_map(
-		x%currentProject->tileMapC->mapSizeW,
-		(chunks[(id*wi*hi)+(y*wi/currentProject->tileMapC->mapSizeH)+(x/currentProject->tileMapC->mapSizeW)].block
-		*currentProject->tileMapC->mapSizeH)
-		+(y%currentProject->tileMapC->mapSizeH));
+		return currentProject->tms->maps[currentProject->curPlane].getPalRow(
+		x%currentProject->tms->maps[currentProject->curPlane].mapSizeW,
+		(chunks[(id*wi*hi)+(y*wi/currentProject->tms->maps[currentProject->curPlane].mapSizeH)+(x/currentProject->tms->maps[currentProject->curPlane].mapSizeW)].block
+		*currentProject->tms->maps[currentProject->curPlane].mapSizeH)
+		+(y%currentProject->tms->maps[currentProject->curPlane].mapSizeH));
 	}else
 		return (chunks[(id*wi*hi)+(y*wi)+x].flags>>3)&3;
 }
@@ -179,19 +179,19 @@ void ChunkClass::drawChunk(uint32_t id,int xo,int yo,int zoom,int scrollX,int sc
 		int xoo=xo;
 		for(uint32_t x=scrollX;x<wi;++x){
 			if(useBlocks){
-				uint32_t Ty=cptr->block*currentProject->tileMapC->mapSizeH;
+				uint32_t Ty=cptr->block*currentProject->tms->maps[currentProject->curPlane].mapSizeH;
 				int yoo=yo;
 				if(cptr->flags&2)
-					yoo+=(currentProject->tileMapC->mapSizeH-1)*8*zoom;
+					yoo+=(currentProject->tms->maps[currentProject->curPlane].mapSizeH-1)*8*zoom;
 				int xooo;
-				for(uint32_t yb=0;yb<currentProject->tileMapC->mapSizeH;++yb){
+				for(uint32_t yb=0;yb<currentProject->tms->maps[currentProject->curPlane].mapSizeH;++yb){
 					xooo=xoo;
 					if(cptr->flags&1)
-						xooo+=(currentProject->tileMapC->mapSizeW-1)*8*zoom;
-					for(uint32_t xb=0;xb<currentProject->tileMapC->mapSizeW;++xb){
-						bool hflip=currentProject->tileMapC->get_hflip(xb,Ty),vflip=currentProject->tileMapC->get_vflip(xb,Ty);
-						unsigned row=currentProject->tileMapC->get_palette_map(xb,Ty);
-						uint32_t tile=currentProject->tileMapC->get_tile(xb,Ty);
+						xooo+=(currentProject->tms->maps[currentProject->curPlane].mapSizeW-1)*8*zoom;
+					for(uint32_t xb=0;xb<currentProject->tms->maps[currentProject->curPlane].mapSizeW;++xb){
+						bool hflip=currentProject->tms->maps[currentProject->curPlane].get_hflip(xb,Ty),vflip=currentProject->tms->maps[currentProject->curPlane].get_vflip(xb,Ty);
+						unsigned row=currentProject->tms->maps[currentProject->curPlane].getPalRow(xb,Ty);
+						uint32_t tile=currentProject->tms->maps[currentProject->curPlane].get_tile(xb,Ty);
 						if((cptr->flags&3)==3){//Both
 							if(showTrueColor)
 								currentProject->tileC->draw_truecolor(tile,xooo,yoo,hflip^true,vflip^true,zoom);
@@ -225,8 +225,8 @@ void ChunkClass::drawChunk(uint32_t id,int xo,int yo,int zoom,int scrollX,int sc
 					++Ty;
 				}
 				if(cptr->flags&2)
-					yoo+=currentProject->tileMapC->mapSizeW*8*zoom;
-				xoo+=currentProject->tileMapC->mapSizeW*8*zoom;
+					yoo+=currentProject->tms->maps[currentProject->curPlane].mapSizeW*8*zoom;
+				xoo+=currentProject->tms->maps[currentProject->curPlane].mapSizeW*8*zoom;
 
 			}else{
 				currentProject->tileC->draw_tile(xoo,yo,cptr->block,zoom,(cptr->flags>>3)&3,cptr->flags&1,(cptr->flags>>1)&1);
@@ -237,7 +237,7 @@ void ChunkClass::drawChunk(uint32_t id,int xo,int yo,int zoom,int scrollX,int sc
 				break;
 		}
 		if(useBlocks)
-			yo+=8*zoom*currentProject->tileMapC->mapSizeH;
+			yo+=8*zoom*currentProject->tms->maps[currentProject->curPlane].mapSizeH;
 		else
 			yo+=8*zoom;
 		if(yo>(window->h()))
@@ -249,7 +249,7 @@ void ChunkClass::scrollChunks(void){
 	int zoom=window->chunk_tile_size->value();
 	int off;
 	if(useBlocks)
-		off=(wi*currentProject->tileMapC->mapSizeW)-((window->w()-ChunkOff[0])/(zoom*8));
+		off=(wi*currentProject->tms->maps[currentProject->curPlane].mapSizeW)-((window->w()-ChunkOff[0])/(zoom*8));
 	else
 		off=wi-((window->w()-ChunkOff[0])/(zoom*8));
 	if(oldS>off)
@@ -261,7 +261,7 @@ void ChunkClass::scrollChunks(void){
 		window->chunkX->hide();
 	oldS=window->chunkY->value();
 	if(useBlocks)
-		off=(hi*currentProject->tileMapC->mapSizeH)-((window->h()-ChunkOff[1])/(zoom*8));
+		off=(hi*currentProject->tms->maps[currentProject->curPlane].mapSizeH)-((window->h()-ChunkOff[1])/(zoom*8));
 	else
 		off=hi-((window->h()-ChunkOff[1])/(zoom*8));
 	if(oldS>off)

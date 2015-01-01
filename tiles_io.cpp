@@ -153,10 +153,10 @@ void load_tiles(Fl_Widget*,void*o){
 				if(row < 0){
 					uint32_t x,y;
 					uint8_t foundRow=defaultRow;
-					for(y=0;y<currentProject->tileMapC->mapSizeHA;++y){
-						for(x=0;x<currentProject->tileMapC->mapSizeW;++x){
-							if(currentProject->tileMapC->get_tile(x,y) == c) {
-								foundRow=currentProject->tileMapC->get_palette_map(x,y);
+					for(y=0;y<currentProject->tms->maps[currentProject->curPlane].mapSizeHA;++y){
+						for(x=0;x<currentProject->tms->maps[currentProject->curPlane].mapSizeW;++x){
+							if(currentProject->tms->maps[currentProject->curPlane].get_tile(x,y) == c) {
+								foundRow=currentProject->tms->maps[currentProject->curPlane].getPalRow(x,y);
 								goto doTile;
 							}
 						}

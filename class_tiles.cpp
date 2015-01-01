@@ -550,7 +550,7 @@ void tiles::remove_duplicate_tiles(bool tColor){
 				#endif
 			}
 			if(rm){
-				currentProject->tileMapC->sub_tile_map(curT,cur_tile,false,false);
+				currentProject->tms->maps[currentProject->curPlane].sub_tile_map(curT,cur_tile,false,false);
 				addTileGroup(curT,remap[curT]);
 				remap.erase(remap.begin()+curT);
 				remove_tile_at(curT);
@@ -573,7 +573,7 @@ void tiles::remove_duplicate_tiles(bool tColor){
 				#endif
 			}
 			if(rm){
-				currentProject->tileMapC->sub_tile_map(curT,cur_tile,true,false);
+				currentProject->tms->maps[currentProject->curPlane].sub_tile_map(curT,cur_tile,true,false);
 				addTileGroup(curT,remap[curT]);
 				remap.erase(remap.begin()+curT);
 				remove_tile_at(curT);
@@ -596,7 +596,7 @@ void tiles::remove_duplicate_tiles(bool tColor){
 				#endif
 			}
 			if(rm){
-				currentProject->tileMapC->sub_tile_map(curT,cur_tile,true,true);
+				currentProject->tms->maps[currentProject->curPlane].sub_tile_map(curT,cur_tile,true,true);
 				addTileGroup(curT,remap[curT]);
 				remap.erase(remap.begin()+curT);
 				remove_tile_at(curT);
@@ -619,7 +619,7 @@ void tiles::remove_duplicate_tiles(bool tColor){
 				#endif
 			}
 			if(rm){
-				currentProject->tileMapC->sub_tile_map(curT,cur_tile,false,true);
+				currentProject->tms->maps[currentProject->curPlane].sub_tile_map(curT,cur_tile,false,true);
 				addTileGroup(curT,remap[curT]);
 				remap.erase(remap.begin()+curT);
 				remove_tile_at(curT);

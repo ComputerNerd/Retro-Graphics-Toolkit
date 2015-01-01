@@ -20,6 +20,7 @@
 #include "color_convert.h"
 #include "zlibwrapper.h"
 #include "classpalettebar.h"
+#include "callbacktilemaps.h"
 struct Project ** projects;
 uint32_t projects_count;//holds how many projects there are this is needed for realloc when adding or removing function
 struct Project * currentProject;
@@ -102,7 +103,8 @@ static void initNewProject(unsigned at){
 	projects[at]->subSystem=3;
 	projects[at]->settings=15<<subsettingsDitherShift;
 	projects[at]->tileC=new tiles;
-	projects[at]->tileMapC=new tileMap;
+	projects[at]->curPlane=0;
+	projects[at]->tms=new tilemaps;
 	projects[at]->Chunk=new ChunkClass;
 	projects[at]->spritesC=new sprites;
 	projects[at]->Name.assign(defaultName);
@@ -154,12 +156,12 @@ void setHaveProject(uint32_t id,uint32_t mask,bool set){
 	if((mask&pjHaveMap)&&(projects[id]->share[2]<0)){
 		if(set){
 			if(!(projects[id]->useMask&pjHaveMap)){
-				projects[id]->tileMapC = new tileMap;
+				projects[id]->tms = new tilemaps;
 				projects[id]->useMask|=pjHaveMap;
 			}
 		}else{
 			if(projects[id]->useMask&pjHaveMap){
-				delete projects[id]->tileMapC;
+				delete projects[id]->tms;
 				projects[id]->useMask&=~pjHaveMap;
 			}
 		}
@@ -196,7 +198,7 @@ void setHaveProject(uint32_t id,uint32_t mask,bool set){
 void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable){
 	/*! share is the project that will now point to with's data
 	what uses, use masks
-	This function will not alter gui*/
+	This function will not alter GUI*/
 	if(share==with){
 		fl_alert("One does not simply share with itself");
 		return;
@@ -216,9 +218,9 @@ void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable){
 		}
 		if(what&pjHaveMap){
 			if((projects[share]->share[2]<0)&&(projects[share]->useMask&pjHaveMap))
-				delete projects[share]->tileMapC;
+				delete projects[share]->tms;
 			projects[share]->share[2]=with;
-			projects[share]->tileMapC=projects[with]->tileMapC;
+			projects[share]->tms=projects[with]->tms;
 		}
 		if(what&pjHaveChunks){
 			if((projects[share]->share[chunkEditor]<0)&&(projects[share]->useMask&pjHaveChunks))
@@ -245,7 +247,7 @@ void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable){
 		}
 		if(what&pjHaveMap){
 			if((projects[share]->share[2]>=0)&&(projects[share]->useMask&pjHaveMap))
-				projects[share]->tileMapC = new tileMap(*projects[with]->tileMapC);
+				projects[share]->tms = new tilemaps(*projects[with]->tms);
 			projects[share]->share[2]=-1;//Even if we don't have the data sharing can still be disabled
 		}
 		if(what&pjHaveChunks){
@@ -283,7 +285,7 @@ bool removeProject(uint32_t id){
 	if((projects[id]->share[tile_edit]<0)&&(projects[id]->useMask&pjHaveTiles))
 		delete projects[id]->tileC;
 	if((projects[id]->share[tile_place]<0)&&(projects[id]->useMask&pjHaveMap))
-		delete projects[id]->tileMapC;
+		delete projects[id]->tms;
 	if((projects[id]->share[chunkEditor]<0)&&(projects[id]->useMask&pjHaveChunks))
 		delete projects[id]->Chunk;
 	if((projects[id]->share[spriteEditor]<0)&&(projects[id]->useMask&pjHaveSprites))
@@ -319,7 +321,7 @@ void switchProject(uint32_t id){
 	switch(projects[id]->gameSystem){
 		case sega_genesis:
 			window->subSysC->copy(subSysGenesis);
-			window->subSysC->value((currentProject->subSystem&sgSHmask)>>sgSHshift);
+			window->subSysC->value((projects[id]->subSystem&sgSHmask)>>sgSHshift);
 			if(containsDataProj(id,pjHaveTiles))
 				projects[id]->tileC->tileSize=32;
 			if(containsDataProj(id,pjHavePal)){
@@ -329,7 +331,7 @@ void switchProject(uint32_t id){
 		break;
 		case NES:
 			window->subSysC->copy(subSysNES);
-			window->subSysC->value(currentProject->subSystem&1);
+			window->subSysC->value(projects[id]->subSystem&1);
 			if(containsDataProj(id,pjHaveTiles))
 				projects[id]->tileC->tileSize=16;
 			if(containsDataProj(id,pjHavePal)){
@@ -342,9 +344,10 @@ void switchProject(uint32_t id){
 	}
 	//Make sure sliders have correct values
 	if(containsDataProj(id,pjHaveMap)){
-		window->updateMapWH(projects[id]->tileMapC->mapSizeW,projects[id]->tileMapC->mapSizeH);
+		updatePlaneTilemapMenu(id);
+		window->updateMapWH(projects[id]->tms->maps[projects[id]->curPlane].mapSizeW,projects[id]->tms->maps[projects[id]->curPlane].mapSizeH);
 		char tmp[16];
-		snprintf(tmp,16,"%u",projects[id]->tileMapC->amt);
+		snprintf(tmp,16,"%u",projects[id]->tms->maps[projects[id]->curPlane].amt);
 		window->map_amt->value(tmp);
 	}
 	if(containsDataProj(id,pjHaveTiles))
@@ -371,19 +374,19 @@ void switchProject(uint32_t id){
 		}
 	}
 	if(containsDataProj(id,pjHaveMap))
-		window->BlocksCBtn->value(projects[id]->tileMapC->isBlock?1:0);
+		window->BlocksCBtn->value(projects[id]->tms->maps[projects[id]->curPlane].isBlock?1:0);
 	if(containsDataProj(id,pjHaveChunks)){
 		window->chunk_select->maximum(projects[id]->Chunk->amt-1);
 		window->updateChunkSize(projects[id]->Chunk->wi,projects[id]->Chunk->hi);
 	}
 	if(containsDataProj(id,pjHaveMap))
-		projects[id]->tileMapC->toggleBlocks(projects[id]->tileMapC->isBlock);
+		projects[id]->tms->maps[projects[id]->curPlane].toggleBlocks(projects[id]->tms->maps[projects[id]->curPlane].isBlock);
 	if(containsDataProj(id,pjHaveChunks))
 		window->updateBlockTilesChunk(id);
 	if(containsDataProj(id,pjHaveSprites)){
 		window->updateSpriteSliders(id);
 		window->spriteglobaltxt->show();
-		window->spriteglobaltxt->value(currentProject->spritesC->name.c_str());
+		window->spriteglobaltxt->value(projects[id]->spritesC->name.c_str());
 	}else{
 		window->spriteglobaltxt->hide();
 	}
@@ -463,25 +466,45 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 	}
 	if(projects[id]->useMask&pjHaveMap){
 		if(projects[id]->share[2]<0){
-			fread(&projects[id]->tileMapC->mapSizeW,1,sizeof(uint32_t),fi);
-			fread(&projects[id]->tileMapC->mapSizeH,1,sizeof(uint32_t),fi);
-			if(version>=2){
-				uint8_t isBlockTemp;
-				fread(&isBlockTemp,1,sizeof(uint8_t),fi);
-				projects[id]->tileMapC->isBlock=isBlockTemp?true:false;
-				if(isBlockTemp)
-					fread(&projects[id]->tileMapC->amt,1,sizeof(uint32_t),fi);
-				else
-					projects[id]->tileMapC->amt=1;
-				projects[id]->tileMapC->mapSizeHA=projects[id]->tileMapC->mapSizeH*projects[id]->tileMapC->amt;
-			}else
-				projects[id]->tileMapC->mapSizeHA=projects[id]->tileMapC->mapSizeH;
+			uint32_t readCnt;
 			if(version>=8)
-				fread(&projects[id]->tileMapC->offset,1,sizeof(int32_t),fi);
+				fread(&readCnt,1,4,fi);
 			else
-				projects[id]->tileMapC->offset=0;
-			projects[id]->tileMapC->tileMapDat=(uint8_t*)realloc(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeHA);
-			decompressFromFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeHA,fi);
+				readCnt=1;
+			projects[id]->curPlane=0;
+			projects[id]->tms->setPlaneCnt(readCnt);
+			for(unsigned i=0;i<readCnt;++i){
+				if(version>=8){
+					char firstC=fgetc(fi);
+					if(firstC){
+						projects[id]->tms->planeName[i].clear();
+						do{
+							projects[id]->tms->planeName[i].push_back(firstC);
+						}while(firstC=fgetc(fi));
+					}else
+						projects[id]->tms->assignNum(i);
+				}else
+					projects[id]->tms->assignNum(i);
+				fread(&projects[id]->tms->maps[i].mapSizeW,1,sizeof(uint32_t),fi);
+				fread(&projects[id]->tms->maps[i].mapSizeH,1,sizeof(uint32_t),fi);
+				if(version>=2){
+					uint8_t isBlockTemp;
+					fread(&isBlockTemp,1,sizeof(uint8_t),fi);
+					projects[id]->tms->maps[i].isBlock=isBlockTemp?true:false;
+					if(isBlockTemp)
+						fread(&projects[id]->tms->maps[i].amt,1,sizeof(uint32_t),fi);
+					else
+						projects[id]->tms->maps[i].amt=1;
+					projects[id]->tms->maps[i].mapSizeHA=projects[id]->tms->maps[i].mapSizeH*projects[id]->tms->maps[i].amt;
+				}else
+					projects[id]->tms->maps[i].mapSizeHA=projects[id]->tms->maps[i].mapSizeH;
+				if(version>=8)
+					fread(&projects[id]->tms->maps[i].offset,1,sizeof(int32_t),fi);
+				else
+					projects[id]->tms->maps[i].offset=0;
+				projects[id]->tms->maps[i].tileMapDat=(uint8_t*)realloc(projects[id]->tms->maps[i].tileMapDat,4*projects[id]->tms->maps[i].mapSizeW*projects[id]->tms->maps[i].mapSizeHA);
+				decompressFromFile(projects[id]->tms->maps[i].tileMapDat,4*projects[id]->tms->maps[i].mapSizeW*projects[id]->tms->maps[i].mapSizeHA,fi);
+			}
 		}
 	}
 	if(projects[id]->useMask&pjHaveChunks){
@@ -536,6 +559,8 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 	tile data will decompress to either 32 bytes * tile count if sega genesis or 16 bytes * tile count if NES and is compressed with zlib
 	uint32_t compressed size truecolor tiles
 	true color tile data always decompresses to 256 bytes * tile count and is compressed with zlib
+	if(version>=8) uint32_t plane count and what pertains to tilemap repeats for plane count
+	if(version>=8) name null terminated or 0 for default name
 	uint32_t map size w
 	uint32_t map size h
 	if(version>=2){
@@ -589,14 +614,28 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 	}
 	if(haveTemp&pjHaveMap){
 		if(saveShared||(projects[id]->share[2]<0)){
-			fwrite(&projects[id]->tileMapC->mapSizeW,1,sizeof(uint32_t),fo);
-			fwrite(&projects[id]->tileMapC->mapSizeH,1,sizeof(uint32_t),fo);
-			uint8_t isBlockTemp=projects[id]->tileMapC->isBlock?1:0;
-			fwrite(&isBlockTemp,1,sizeof(uint8_t),fo);
-			if(isBlockTemp)
-				fwrite(&projects[id]->tileMapC->amt,1,sizeof(uint32_t),fo);
-			fwrite(&projects[id]->tileMapC->offset,1,sizeof(int32_t),fo);
-			compressToFile(projects[id]->tileMapC->tileMapDat,4*projects[id]->tileMapC->mapSizeW*projects[id]->tileMapC->mapSizeHA,fo);
+			uint32_t cnt=projects[id]->tms->maps.size();
+			fwrite(&cnt,1,4,fo);
+			for(unsigned i=0;i<projects[id]->tms->maps.size();++i){
+				//Write the name or if default just write 0
+				char tmp[16];
+				snprintf(tmp,16,"%u",i);
+				if(strcmp(projects[id]->tms->planeName[i].c_str(),tmp)){
+					const char*st=projects[id]->tms->planeName[i].c_str();
+					do{
+						fputc(*st,fo);
+					}while(*st++);
+				}else
+					fputc(0,fo);
+				fwrite(&projects[id]->tms->maps[i].mapSizeW,1,sizeof(uint32_t),fo);
+				fwrite(&projects[id]->tms->maps[i].mapSizeH,1,sizeof(uint32_t),fo);
+				uint8_t isBlockTemp=projects[id]->tms->maps[i].isBlock?1:0;
+				fwrite(&isBlockTemp,1,sizeof(uint8_t),fo);
+				if(isBlockTemp)
+					fwrite(&projects[id]->tms->maps[i].amt,1,sizeof(uint32_t),fo);
+				fwrite(&projects[id]->tms->maps[i].offset,1,sizeof(int32_t),fo);
+				compressToFile(projects[id]->tms->maps[i].tileMapDat,4*projects[id]->tms->maps[i].mapSizeW*projects[id]->tms->maps[i].mapSizeHA,fo);
+			}
 		}
 	}
 	if(haveTemp&pjHaveChunks){

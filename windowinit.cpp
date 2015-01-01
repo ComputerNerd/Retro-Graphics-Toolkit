@@ -28,6 +28,7 @@
 #include "gamedef.h"
 #include "runlua.h"
 #include "classpalettebar.h"
+#include "callbacktilemaps.h"
 void set_mode_tabs(Fl_Widget* o, void*){
 	Fl_Group * val=(Fl_Group*)(Fl_Tabs*)window->the_tabs->value();
 	if(val==window->TabsMain[pal_edit]){
@@ -381,12 +382,27 @@ void editor::_editor(){
 				palRTE[7]->callback((Fl_Callback*) set_tile_row,(void *)3);
 				o->end();
 			} // Fl_Group* o
-			map_w = new Fl_Int_Input(480,default_palette_bar_offset_y+72,312,24,MapWidthTxt);
+
+
+			planeSelect=new Fl_Choice(408,default_palette_bar_offset_y+80,112,24,"Plane selection");
+			planeSelect->align(FL_ALIGN_TOP);
+			planeSelect->add("0",0,setCurPlaneTilemaps,(void*)0,0);
+			planeSelect->value(0);
+
+			{ Fl_Button *o = new Fl_Button(408, default_palette_bar_offset_y+104,112,24,"Add plane");
+				o->callback(addPlaneTilemap);
+			}
+
+			curPlaneName = new Fl_Input(tile_place_buttons_x_off+616,56,168,24,"Plane name");
+			curPlaneName->value("0");
+			curPlaneName->callback(updateNameTilemaps);
+
+			map_w = new Fl_Int_Input(608,default_palette_bar_offset_y+72,184,24,MapWidthTxt);
 			map_w->when(FL_WHEN_ENTER_KEY);
 			map_w->value("2");
 			map_w->align(FL_ALIGN_LEFT);
 			map_w->callback(callback_resize_map);
-			map_h = new Fl_Int_Input(480,default_palette_bar_offset_y+104,312,24,MapHeightTxt);
+			map_h = new Fl_Int_Input(608,default_palette_bar_offset_y+104,184,24,MapHeightTxt);
 			map_h->when(FL_WHEN_ENTER_KEY);
 			map_h->value("2");
 			map_h->align(FL_ALIGN_LEFT);

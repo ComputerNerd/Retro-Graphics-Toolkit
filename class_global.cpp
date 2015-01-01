@@ -21,9 +21,9 @@
 #include "classSprite.h"
 #include "undo.h"
 #include "classpalettebar.h"
-const char*rtVersionStr="Retro Graphics Toolkit v0.7";
-editor *window = new editor(800,600,rtVersionStr);//this creates the window
-static void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y){
+const char*rtVersionStr="Retro Graphics Toolkit v0.8 NOT COMPLETE";
+editor *window = new editor(800,600,rtVersionStr);
+static void rect_alpha_grid(uint8_t rgba[4],unsigned x,unsigned y){
 	uint8_t grid[32*32*3];
 	//first generate grid
 	uint8_t * ptr_grid=grid;
@@ -52,8 +52,8 @@ static void rect_alpha_grid(uint8_t rgba[4],uint16_t x,uint16_t y){
 	}
 	ptr_grid=grid;
 	double percent=rgba[3]/255.0;
-	for (uint16_t c=0;c<32*32;++c){
-		for (uint8_t e=0;e<3;++e){
+	for (unsigned c=0;c<32*32;++c){
+		for (unsigned e=0;e<3;++e){
 			uint8_t gridNerd=*ptr_grid;
 			*ptr_grid++=((double)rgba[e]*percent)+((double)gridNerd*(1.0-percent));
 		}
@@ -79,7 +79,7 @@ void editor::updateMapWH(uint32_t w,uint32_t h){
 	map_h->value(tmp);
 }
 void editor::updateMapWH(void){
-	updateMapWH(currentProject->tileMapC->mapSizeW,currentProject->tileMapC->mapSizeH);
+	updateMapWH(currentProject->tms->maps[currentProject->curPlane].mapSizeW,currentProject->tms->maps[currentProject->curPlane].mapSizeH);
 }
 void editor::updateBlockTilesChunk(uint32_t prj){
 	if(projects[prj]->Chunk->useBlocks){
@@ -218,67 +218,18 @@ void editor::draw_non_gui(void){
 			//now draw the tile
 			currentProject->tileC->draw_tile(tile_placer_tile_offset_x,tile_placer_tile_offset_y,currentProject->tileC->current_tile,placer_tile_size,palBar.selRow[2],G_hflip[0],G_vflip[0]);
 			//convert position
-			map_off_y=(double)((double)h()/600.0)*(double)default_map_off_y;
-			map_off_x=(double)((double)w()/800.0)*(double)default_map_off_x;
+			map_off_y=(float)((float)h()/600.f)*(float)default_map_off_y;
+			map_off_x=(float)((float)w()/800.f)*(float)default_map_off_x;
 			//draw tile map
 			uint32_t max_map_w,max_map_h;//used to calculate the displayable tiles
 			max_map_w=((placer_tile_size*8)+w()-map_off_x)/(placer_tile_size*8);//this will allow one tile to go partly off screen
 			max_map_h=((placer_tile_size*8)+h()-map_off_y)/(placer_tile_size*8);
 			//see if shadow highlight is enabled
-			if ((palTypeGen==0) || (currentProject->gameSystem != sega_genesis) || (showTrueColor==true)){
-				//shadow highlight is disabled
-				for (y=0;y<std::min((currentProject->tileMapC->mapSizeHA)-map_scroll_pos_y,max_map_h);++y){
-					for (x=0;x<std::min(currentProject->tileMapC->mapSizeW-map_scroll_pos_x,max_map_w);++x){
-						uint32_t tempx,tempy;
-						tempx=x+map_scroll_pos_x;
-						tempy=y+map_scroll_pos_y;
-						if (rowSolo){
-							int32_t tileTemp = currentProject->tileMapC->get_tileRow(tempx,tempy,palBar.selRow[2]);
-							if (tileTemp!=-1){
-								if (showTrueColor)
-									currentProject->tileC->draw_truecolor(tileTemp,map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),currentProject->tileMapC->get_hflip(tempx,tempy),currentProject->tileMapC->get_vflip(tempx,tempy),placer_tile_size);
-								else
-									currentProject->tileC->draw_tile(map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),tileTemp,placer_tile_size,currentProject->tileMapC->get_palette_map(x+map_scroll_pos_x,y+map_scroll_pos_y),currentProject->tileMapC->get_hflip(x+map_scroll_pos_x,y+map_scroll_pos_y),currentProject->tileMapC->get_vflip(x+map_scroll_pos_x,y+map_scroll_pos_y));
-							}
-						}else{
-							if (showTrueColor)
-								currentProject->tileC->draw_truecolor(currentProject->tileMapC->get_tile(tempx,tempy),map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),currentProject->tileMapC->get_hflip(tempx,tempy),currentProject->tileMapC->get_vflip(tempx,tempy),placer_tile_size);
-							else
-								currentProject->tileC->draw_tile(map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),currentProject->tileMapC->get_tile(x+map_scroll_pos_x,y+map_scroll_pos_y),placer_tile_size,currentProject->tileMapC->get_palette_map(x+map_scroll_pos_x,y+map_scroll_pos_y),currentProject->tileMapC->get_hflip(x+map_scroll_pos_x,y+map_scroll_pos_y),currentProject->tileMapC->get_vflip(x+map_scroll_pos_x,y+map_scroll_pos_y));
-						}
-						
-					}
-				}
-			}else{
-				for (y=0;y<std::min((currentProject->tileMapC->mapSizeHA)-map_scroll_pos_y,max_map_h);++y){
-					for (x=0;x<std::min(currentProject->tileMapC->mapSizeW-map_scroll_pos_x,max_map_w);++x){
-						uint32_t tempx,tempy;
-						tempx=x+map_scroll_pos_x;
-						tempy=y+map_scroll_pos_y;
-						unsigned temp=(currentProject->tileMapC->get_prio(x+map_scroll_pos_x,y+map_scroll_pos_y)^1)*8;
-						set_palette_type_force(temp);
-						if(rowSolo){
-							int32_t tileTemp = currentProject->tileMapC->get_tileRow(tempx,tempy,palBar.selRow[2]);
-							if (tileTemp!=-1){
-								if (showTrueColor)
-									currentProject->tileC->draw_truecolor(tileTemp,tempx,tempy,currentProject->tileMapC->get_hflip(tempx,tempy),currentProject->tileMapC->get_vflip(tempx,tempy),placer_tile_size);
-								else
-									currentProject->tileC->draw_tile(map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),tileTemp,placer_tile_size,currentProject->tileMapC->get_palette_map(tempx,tempy),currentProject->tileMapC->get_hflip(tempx,tempy),currentProject->tileMapC->get_vflip(tempx,tempy));
-							}
-						}else{
-							if (showTrueColor)
-								currentProject->tileC->draw_truecolor(currentProject->tileMapC->get_tile(tempx,tempy),tempx,tempy,currentProject->tileMapC->get_hflip(tempx,tempy),currentProject->tileMapC->get_vflip(tempx,tempy),placer_tile_size);
-							else
-								currentProject->tileC->draw_tile(map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),currentProject->tileMapC->get_tile(tempx,tempy),placer_tile_size,currentProject->tileMapC->get_palette_map(tempx,tempy),currentProject->tileMapC->get_hflip(tempx,tempy),currentProject->tileMapC->get_vflip(tempx,tempy));
-						}
-					}
-				}
-				set_palette_type();
-			}
+			currentProject->tms->maps[currentProject->curPlane].drawPart(map_off_x,map_off_y,map_scroll_pos_x,map_scroll_pos_y,std::min(currentProject->tms->maps[currentProject->curPlane].mapSizeW-map_scroll_pos_x,max_map_w),std::min((currentProject->tms->maps[currentProject->curPlane].mapSizeHA)-map_scroll_pos_y,max_map_h),rowSolo?palBar.selRow[2]:-1,placer_tile_size,showTrueColor);
 			if (show_grid_placer){
 				//draw box over tiles
-				for (y=0;y<std::min((currentProject->tileMapC->mapSizeHA)-map_scroll_pos_y,max_map_h);++y){
-					for (x=0;x<std::min(currentProject->tileMapC->mapSizeW-map_scroll_pos_x,max_map_w);++x)
+				for (y=0;y<std::min((currentProject->tms->maps[currentProject->curPlane].mapSizeHA)-map_scroll_pos_y,max_map_h);++y){
+					for (x=0;x<std::min(currentProject->tms->maps[currentProject->curPlane].mapSizeW-map_scroll_pos_x,max_map_w);++x)
 						fl_draw_box(FL_EMBOSSED_FRAME,map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),placer_tile_size*8,placer_tile_size*8,0);
 				}
 			}
@@ -301,8 +252,8 @@ void editor::draw_non_gui(void){
 				tsx=currentProject->tileC->sizew*tiles_size;
 				tsy=currentProject->tileC->sizeh*tiles_size;
 				if(currentProject->Chunk->useBlocks){
-					tsx*=currentProject->tileMapC->mapSizeW;
-					tsy*=currentProject->tileMapC->mapSizeH;
+					tsx*=currentProject->tms->maps[currentProject->curPlane].mapSizeW;
+					tsy*=currentProject->tms->maps[currentProject->curPlane].mapSizeH;
 				}
 				xo=((editChunk_G[0]-scrollChunks_G[0])*tsx);
 				yo=((editChunk_G[1]-scrollChunks_G[1])*tsy);
@@ -385,28 +336,32 @@ static void setXYdisp(int x,int y,unsigned n){
 	window->cordDisp[n]->copy_label(tmp);
 }
 static void setXYdispBlock(int x,int y){
-	if(currentProject->tileMapC->isBlock){
+	if(currentProject->tms->maps[currentProject->curPlane].isBlock){
 		char tmp[128];
-		snprintf(tmp,128,"Block: %d X: %d, Y: %d",y/currentProject->tileMapC->mapSizeH,x%currentProject->tileMapC->mapSizeW,y%currentProject->tileMapC->mapSizeH);
+		snprintf(tmp,128,"Block: %d X: %d, Y: %d",y/currentProject->tms->maps[currentProject->curPlane].mapSizeH,x%currentProject->tms->maps[currentProject->curPlane].mapSizeW,y%currentProject->tms->maps[currentProject->curPlane].mapSizeH);
 		window->cordDisp[0]->copy_label(tmp);
 	}else
 		setXYdisp(x,y,0);
 }
 int pushed_g;
 void editor::updateTileMapGUI(uint32_t x,uint32_t y){
+	if(x>=currentProject->tms->maps[currentProject->curPlane].mapSizeW)
+		x=currentProject->tms->maps[currentProject->curPlane].mapSizeW-1;
+	if(y>=currentProject->tms->maps[currentProject->curPlane].mapSizeHA)
+		y=currentProject->tms->maps[currentProject->curPlane].mapSizeHA-1;
 	selTileE_G[0]=x;
 	selTileE_G[1]=y;
-	G_highlow_p[0]=currentProject->tileMapC->get_prio(x,y);
-	G_hflip[0]=currentProject->tileMapC->get_hflip(x,y);
-	G_vflip[0]=currentProject->tileMapC->get_vflip(x,y);
+	G_highlow_p[0]=currentProject->tms->maps[currentProject->curPlane].get_prio(x,y);
+	G_hflip[0]=currentProject->tms->maps[currentProject->curPlane].get_hflip(x,y);
+	G_vflip[0]=currentProject->tms->maps[currentProject->curPlane].get_vflip(x,y);
 	hflipCB[0]->value(G_hflip[0]);
 	vflipCB[0]->value(G_vflip[0]);
 	prioCB[0]->value(G_highlow_p[0]);
 
-	uint32_t cT=currentProject->tileMapC->get_tile(x,y);
+	uint32_t cT=currentProject->tms->maps[currentProject->curPlane].get_tile(x,y);
 	tile_select_2->value(cT);
 	currentProject->tileC->current_tile=cT;
-	uint8_t Rm=currentProject->tileMapC->get_palette_map(x,y);
+	uint8_t Rm=currentProject->tms->maps[currentProject->curPlane].getPalRow(x,y);
 	palBar.changeRow(Rm,2);
 	unsigned focus=0;
 	for(int as=0;as<4;++as)
@@ -485,7 +440,7 @@ int editor::handle(int event){
 					palBar.checkBox(Fl::event_x(),Fl::event_y(),2);
 					tiles_size=place_tile_size->value();
 					//see if the user placed a tile on the map
-					if ((Fl::event_x() > map_off_x)&&(Fl::event_y()>map_off_y)&&(Fl::event_x() < map_off_x+((tiles_size*8)*(currentProject->tileMapC->mapSizeW-map_scroll_pos_x)))&&(Fl::event_y() < map_off_y+((tiles_size*8)*((currentProject->tileMapC->mapSizeHA)-map_scroll_pos_y)))){
+					if ((Fl::event_x() > map_off_x)&&(Fl::event_y()>map_off_y)&&(Fl::event_x() < map_off_x+((tiles_size*8)*(currentProject->tms->maps[currentProject->curPlane].mapSizeW-map_scroll_pos_x)))&&(Fl::event_y() < map_off_y+((tiles_size*8)*((currentProject->tms->maps[currentProject->curPlane].mapSizeHA)-map_scroll_pos_y)))){
 						uint32_t temp_two,temp_one;
 						temp_one=((Fl::event_x()-map_off_x)/tiles_size)/8;
 						temp_two=((Fl::event_y()-map_off_y)/tiles_size)/8;
@@ -494,7 +449,7 @@ int editor::handle(int event){
 						if (Fl::event_button()==FL_LEFT_MOUSE){
 							if(!((selTileE_G[0]==temp_one)&&(selTileE_G[1]==temp_two)&&tileEditModePlace_G)){
 								pushTilemapEdit(temp_one,temp_two);
-								currentProject->tileMapC->set_tile_full(temp_one,temp_two,currentProject->tileC->current_tile,palBar.selRow[2],G_hflip[0],G_vflip[0],G_highlow_p[0]);
+								currentProject->tms->maps[currentProject->curPlane].set_tile_full(temp_one,temp_two,currentProject->tileC->current_tile,palBar.selRow[2],G_hflip[0],G_vflip[0],G_highlow_p[0]);
 								setXYdispBlock(temp_one,temp_two);
 							}
 							tileEditModePlace_G=false;
@@ -530,8 +485,8 @@ int editor::handle(int event){
 						maxx=currentProject->Chunk->wi*currentProject->tileC->sizew*tiles_size;
 						maxy=currentProject->Chunk->hi*currentProject->tileC->sizeh*tiles_size;
 						if(currentProject->Chunk->useBlocks){
-							maxx*=currentProject->tileMapC->mapSizeW;
-							maxy*=currentProject->tileMapC->mapSizeH;
+							maxx*=currentProject->tms->maps[currentProject->curPlane].mapSizeW;
+							maxy*=currentProject->tms->maps[currentProject->curPlane].mapSizeH;
 						}
 						maxx+=ChunkOff[0];
 						maxy+=ChunkOff[1];
@@ -540,8 +495,8 @@ int editor::handle(int event){
 							tx=(Fl::event_x()-ChunkOff[0])/(currentProject->tileC->sizew*tiles_size);
 							ty=(Fl::event_y()-ChunkOff[1])/(currentProject->tileC->sizeh*tiles_size);
 							if(currentProject->Chunk->useBlocks){
-								tx/=currentProject->tileMapC->mapSizeW;
-								ty/=currentProject->tileMapC->mapSizeH;
+								tx/=currentProject->tms->maps[currentProject->curPlane].mapSizeW;
+								ty/=currentProject->tms->maps[currentProject->curPlane].mapSizeH;
 							}
 							tx+=scrollChunks_G[0];
 							ty+=scrollChunks_G[1];

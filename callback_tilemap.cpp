@@ -24,13 +24,13 @@
 #include "classpalettebar.h"
 void setTmapOffsetCB(Fl_Widget*o,void*){
 	Fl_Int_Input*i=(Fl_Int_Input*)o;
-	currentProject->tileMapC->offset=atoi(i->value());
+	currentProject->tms->maps[currentProject->curPlane].offset=atoi(i->value());
 }
 void tileDPicker(Fl_Widget*,void*){
 	Fl_Window *win;
 	Fl_Progress *progress;
 	mkProgress(&win,&progress);
-	currentProject->tileMapC->pickRowDelta(true,progress);
+	currentProject->tms->maps[currentProject->curPlane].pickRowDelta(true,progress);
 	win->remove(progress);// remove progress bar from window
 	delete(progress);// deallocate it
 	delete win;
@@ -40,20 +40,20 @@ void resizeBlocksCB(Fl_Widget*o,void*){
 	int32_t wtmp,htmp;
 	wtmp=SafeTxtInput(window->map_w);
 	htmp=SafeTxtInput(window->map_h);
-	currentProject->tileMapC->resizeBlocks(wtmp,htmp);
+	currentProject->tms->maps[currentProject->curPlane].resizeBlocks(wtmp,htmp);
 	window->redraw();
 }
 void blocksAmtCB(Fl_Widget*o,void*){
 	Fl_Int_Input*i=(Fl_Int_Input*)o;
 	int amtTmp=SafeTxtInput(i);
 	pushTilemapBlocksAmt(amtTmp);
-	currentProject->tileMapC->blockAmt(amtTmp);
+	currentProject->tms->maps[currentProject->curPlane].blockAmt(amtTmp);
 	window->redraw();
 }
 void toggleBlocksCB(Fl_Widget*o,void*){
 	Fl_Check_Button* b=(Fl_Check_Button*)o;
 	bool Toggle=b->value()?true:false;
-	currentProject->tileMapC->toggleBlocks(Toggle);
+	currentProject->tms->maps[currentProject->curPlane].toggleBlocks(Toggle);
 	if(!Toggle){
 		currentProject->Chunk->useBlocks=false;
 		window->useBlocksChunkCBtn->value(0);
@@ -63,10 +63,10 @@ void toggleBlocksCB(Fl_Widget*o,void*){
 void FixOutOfRangeCB(Fl_Widget*,void*){
 	//use current attributes
 	pushTilemapAll(false);
-	for(int y=0;y<currentProject->tileMapC->mapSizeHA;++y){
-		for(int x=0;x<currentProject->tileMapC->mapSizeW;++x){
-			if(currentProject->tileMapC->get_tile(x,y)>=currentProject->tileC->amt)
-				currentProject->tileMapC->set_tile_full(x,y,currentProject->tileC->current_tile,palBar.selRow[2],G_hflip[0],G_vflip[0],G_highlow_p[0]);
+	for(int y=0;y<currentProject->tms->maps[currentProject->curPlane].mapSizeHA;++y){
+		for(int x=0;x<currentProject->tms->maps[currentProject->curPlane].mapSizeW;++x){
+			if(currentProject->tms->maps[currentProject->curPlane].get_tile(x,y)>=currentProject->tileC->amt)
+				currentProject->tms->maps[currentProject->curPlane].set_tile_full(x,y,currentProject->tileC->current_tile,palBar.selRow[2],G_hflip[0],G_vflip[0],G_highlow_p[0]);
 		}
 	}
 	window->damage(FL_DAMAGE_USER1);
@@ -76,7 +76,7 @@ void callback_resize_map(Fl_Widget* o,void*){
 	w=SafeTxtInput(window->map_w);
 	h=SafeTxtInput(window->map_h);
 	pushTilemapResize(w,h);
-	currentProject->tileMapC->resize_tile_map(w,h);
+	currentProject->tms->maps[currentProject->curPlane].resize_tile_map(w,h);
 	window->redraw();
 }
 void set_grid(Fl_Widget*,void*){
@@ -92,8 +92,8 @@ void set_grid_placer(Fl_Widget*,void*){
 
 void save_tilemap_as_image(Fl_Widget*,void*){
 	if(load_file_generic("Save png as",true)==true){
-		uint32_t w=currentProject->tileMapC->mapSizeW*8;
-		uint32_t h=currentProject->tileMapC->mapSizeHA*8;
+		uint32_t w=currentProject->tms->maps[currentProject->curPlane].mapSizeW*8;
+		uint32_t h=currentProject->tms->maps[currentProject->curPlane].mapSizeHA*8;
 		uint8_t * image=(uint8_t*)malloc(w*h*3);
 		uint8_t * imageold=image;
 		if(image==0)
@@ -106,7 +106,7 @@ void save_tilemap_as_image(Fl_Widget*,void*){
 		uint8_t * tempptr,yy;
 		for(y=0;y<h;y+=8){
 			for(x=0;x<w;x+=8){
-				tileToTrueCol(currentProject->tileC->tDat.data()+(currentProject->tileMapC->get_tile(x/8,y/8)*currentProject->tileC->tileSize),temptile,currentProject->tileMapC->get_palette_map(x/8,y/8),false);
+				tileToTrueCol(currentProject->tileC->tDat.data()+(currentProject->tms->maps[currentProject->curPlane].get_tile(x/8,y/8)*currentProject->tileC->tileSize),temptile,currentProject->tms->maps[currentProject->curPlane].getPalRow(x/8,y/8),false);
 				tempptr=temptile;
 				for(yy=0;yy<8;++yy){
 					memcpy(image,tempptr,24);
@@ -123,10 +123,10 @@ void save_tilemap_as_image(Fl_Widget*,void*){
 }
 void save_tilemap_as_colspace(Fl_Widget*,void*){
 	if(load_file_generic("Save png as",true)==true){
-		uint32_t w=currentProject->tileMapC->mapSizeW*8;
-		uint32_t h=currentProject->tileMapC->mapSizeHA*8;
+		uint32_t w=currentProject->tms->maps[currentProject->curPlane].mapSizeW*8;
+		uint32_t h=currentProject->tms->maps[currentProject->curPlane].mapSizeHA*8;
 		uint8_t * image=(uint8_t*)malloc(w*h*3);
-		currentProject->tileMapC->truecolor_to_image(image,-1,false);
+		currentProject->tms->maps[currentProject->curPlane].truecolor_to_image(image,-1,false);
 		ditherImage(image,w,h,false,true);
 		savePNG(the_file.c_str(),w,h,(void*)image);
 		free(image);
@@ -134,11 +134,11 @@ void save_tilemap_as_colspace(Fl_Widget*,void*){
 }
 void load_tile_map(Fl_Widget*,void*){
 	pushTilemapAll(false);
-	if(unlikely(!currentProject->tileMapC->loadFromFile()))
+	if(unlikely(!currentProject->tms->maps[currentProject->curPlane].loadFromFile()))
 		fl_alert("Error: Cannot load file %s",the_file.c_str());
 }
 void save_map(Fl_Widget*,void*){
-	if(unlikely(!currentProject->tileMapC->saveToFile()))
+	if(unlikely(!currentProject->tms->maps[currentProject->curPlane].saveToFile()))
 		fl_alert("Error: can not save file %s\nTry making sure that you have permission to save the file here",the_file.c_str());
 }
 void fill_tile_map_with_tile(Fl_Widget*,void*){
@@ -148,9 +148,9 @@ void fill_tile_map_with_tile(Fl_Widget*,void*){
 		return;
 	}
 	if(fl_ask("This will erase the entire tilemap and fill it with the currently selected tile\nAre you sure you want to do this?")){
-		for (uint32_t y=0;y<currentProject->tileMapC->mapSizeHA;++y){
-			for (uint32_t x=0;x<currentProject->tileMapC->mapSizeW;++x)
-				currentProject->tileMapC->set_tile_full(x,y,currentProject->tileC->current_tile,palBar.selRow[2],G_hflip[0],G_vflip[0],G_highlow_p[0]);
+		for (uint32_t y=0;y<currentProject->tms->maps[currentProject->curPlane].mapSizeHA;++y){
+			for (uint32_t x=0;x<currentProject->tms->maps[currentProject->curPlane].mapSizeW;++x)
+				currentProject->tms->maps[currentProject->curPlane].set_tile_full(x,y,currentProject->tileC->current_tile,palBar.selRow[2],G_hflip[0],G_vflip[0],G_highlow_p[0]);
 		}
 		window->damage(FL_DAMAGE_USER1);
 	}
@@ -164,7 +164,7 @@ void dither_tilemap_as_imageCB(Fl_Widget*,void*){
 	if(method==2)
 		return;
 	pushTilesAll(tTypeTile);
-	currentProject->tileMapC->ditherAsImage(method);
+	currentProject->tms->maps[currentProject->curPlane].ditherAsImage(method);
 	Fl::check();
 	window->redraw();
 }
@@ -212,7 +212,7 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 				++h8;
 		}
 		if(over){
-			if((w8!=currentProject->tileMapC->mapSizeW)||(h8!=currentProject->tileMapC->mapSizeHA)){
+			if((w8!=currentProject->tms->maps[currentProject->curPlane].mapSizeW)||(h8!=currentProject->tms->maps[currentProject->curPlane].mapSizeHA)){
 				fl_alert("When importing over tilemap width and height must be the same");
 				loaded_image->release();
 				return;
@@ -266,7 +266,7 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 			for(uint32_t x=0;x<wt;x+=currentProject->tileC->sizew,++tcnt){
 				uint32_t ctile;
 				if(over){
-					ctile=currentProject->tileMapC->get_tile(x/currentProject->tileC->sizew,y/currentProject->tileC->sizeh);
+					ctile=currentProject->tms->maps[currentProject->curPlane].get_tile(x/currentProject->tileC->sizew,y/currentProject->tileC->sizeh);
 					//See if ctile is allocated
 					if(ctile>=currentProject->tileC->amt){
 						//tile on map but not a tile associated with it
@@ -333,11 +333,11 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		loaded_image->release();
 		if((!over)&&(!tilesonly)){
 			pushTilemapAll(false);
-			currentProject->tileMapC->resize_tile_map(w8,h8);
+			currentProject->tms->maps[currentProject->curPlane].resize_tile_map(w8,h8);
 			uint32_t tilecounter=appendoff;
 			for (uint32_t y=0;y<h8;++y){
 				for (uint32_t x=0;x<w8;++x){
-					currentProject->tileMapC->set_tile_full(x,y,tilecounter,0,false,false,false);
+					currentProject->tms->maps[currentProject->curPlane].set_tile_full(x,y,tilecounter,0,false,false,false);
 					++tilecounter;
 				}
 			}
@@ -353,7 +353,7 @@ void set_prioCB(Fl_Widget*,void*o){
 		currentProject->Chunk->setPrio(currentChunk,editChunk_G[0],editChunk_G[1],G_highlow_p[off]);
 	}else if(tileEditModePlace_G&&(off==0)){
 		pushTilemapEdit(selTileE_G[0],selTileE_G[1]);
-		currentProject->tileMapC->set_prio(selTileE_G[0],selTileE_G[1],G_highlow_p[off]);
+		currentProject->tms->maps[currentProject->curPlane].set_prio(selTileE_G[0],selTileE_G[1],G_highlow_p[off]);
 	}
 	window->redraw();
 }
@@ -365,7 +365,7 @@ void set_hflipCB(Fl_Widget*,void*o){
 		currentProject->Chunk->setHflip(currentChunk,editChunk_G[0],editChunk_G[1],G_hflip[off]);
 	}else if(tileEditModePlace_G&&(off==0)){
 		pushTilemapEdit(selTileE_G[0],selTileE_G[1]);
-		currentProject->tileMapC->set_hflip(selTileE_G[0],selTileE_G[1],G_hflip[off]);
+		currentProject->tms->maps[currentProject->curPlane].set_hflip(selTileE_G[0],selTileE_G[1],G_hflip[off]);
 	}
 	window->redraw();
 }
@@ -377,7 +377,7 @@ void set_vflipCB(Fl_Widget*,void*o){
 		currentProject->Chunk->setVflip(currentChunk,editChunk_G[0],editChunk_G[1],G_vflip[off]);
 	}else if(tileEditModePlace_G&&(off==0)){
 		pushTilemapEdit(selTileE_G[0],selTileE_G[1]);
-		currentProject->tileMapC->set_vflip(selTileE_G[0],selTileE_G[1],G_vflip[off]);
+		currentProject->tms->maps[currentProject->curPlane].set_vflip(selTileE_G[0],selTileE_G[1],G_vflip[off]);
 	}
 	window->redraw();
 }
@@ -390,7 +390,7 @@ void update_map_scroll_y(Fl_Widget*,void*){
 	window->redraw();
 }
 void update_map_size(Fl_Widget*,void*){
-	currentProject->tileMapC->ScrollUpdate();
+	currentProject->tms->maps[currentProject->curPlane].ScrollUpdate();
 	window->redraw();
 }
 void tilemap_remove_callback(Fl_Widget*,void*){
@@ -406,9 +406,9 @@ void tilemap_remove_callback(Fl_Widget*,void*){
 		return;
 	}
 	if(tile)
-		currentProject->tileMapC->sub_tile_map(tile,tile-1,false,false);
+		currentProject->tms->maps[currentProject->curPlane].sub_tile_map(tile,tile-1,false,false);
 	else
-		currentProject->tileMapC->sub_tile_map(0,0,false,false);
+		currentProject->tms->maps[currentProject->curPlane].sub_tile_map(0,0,false,false);
 	window->damage(FL_DAMAGE_USER1);
 }
 void shadow_highligh_findout(Fl_Widget*,void*){
@@ -416,53 +416,52 @@ void shadow_highligh_findout(Fl_Widget*,void*){
 		fl_alert("Only the Sega Genesis/Mega Drive supports shadow highlight mode\n");
 		return;
 	}
-	uint8_t type=fl_choice("How will it be determined if the tile is shadowed or not?","Tile brightness","Delta",0);
+	unsigned type=fl_choice("How will it be determined if the tile is shadowed or not?","Tile brightness","Delta",0);
 	//this function will see if 3 or less pixels are above 125 and if so set priority to low or set priority to high if bright tile
-	uint16_t x,y;
+	unsigned x,y;
 	uint32_t xx;
 	if (type==0){
-		for (y=0;y<currentProject->tileMapC->mapSizeHA;++y){
-			for (x=0;x<currentProject->tileMapC->mapSizeW;++x){
-				uint32_t cur_tile=currentProject->tileMapC->get_tile(x,y);
+		for (y=0;y<currentProject->tms->maps[currentProject->curPlane].mapSizeHA;++y){
+			for (x=0;x<currentProject->tms->maps[currentProject->curPlane].mapSizeW;++x){
+				uint32_t cur_tile=currentProject->tms->maps[currentProject->curPlane].get_tile(x,y);
 				uint8_t over=0;
 				for (xx=cur_tile*256;xx<cur_tile*256+256;xx+=4){
 					if ((currentProject->tileC->truetDat[xx] > 130) || (currentProject->tileC->truetDat[xx+1] > 130) || (currentProject->tileC->truetDat[xx+2] > 130))
 						over++;
 				}
 				if (over > 4)
-					currentProject->tileMapC->set_prio(x,y,true);//normal
+					currentProject->tms->maps[currentProject->curPlane].set_prio(x,y,true);//normal
 				else
-					currentProject->tileMapC->set_prio(x,y,false);//shadowed
+					currentProject->tms->maps[currentProject->curPlane].set_prio(x,y,false);//shadowed
 			}
 		}
 	}else{
 		uint8_t temp[256];
-		//uint8_t useHiL=palette_muliplier;
-		for (y=0;y<currentProject->tileMapC->mapSizeHA;++y){
-			for (x=0;x<currentProject->tileMapC->mapSizeW;++x){
-				uint32_t cur_tile=currentProject->tileMapC->get_tile(x,y);
+		for (y=0;y<currentProject->tms->maps[currentProject->curPlane].mapSizeHA;++y){
+			for (x=0;x<currentProject->tms->maps[currentProject->curPlane].mapSizeW;++x){
+				uint32_t cur_tile=currentProject->tms->maps[currentProject->curPlane].get_tile(x,y);
 				uint32_t errorSh=0,errorNorm=0;
 				uint8_t * ptrorgin=&currentProject->tileC->truetDat[(cur_tile*currentProject->tileC->tcSize)];
 				set_palette_type_force(0);//normal
-				currentProject->tileC->truecolor_to_tile(currentProject->tileMapC->get_palette_map(x,y),cur_tile,false);
-				tileToTrueCol(&currentProject->tileC->tDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tileMapC->get_palette_map(x,y));
+				currentProject->tileC->truecolor_to_tile(currentProject->tms->maps[currentProject->curPlane].getPalRow(x,y),cur_tile,false);
+				tileToTrueCol(&currentProject->tileC->tDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tms->maps[currentProject->curPlane].getPalRow(x,y));
 				for (xx=0;xx<256;xx+=4){
 					errorNorm+=abs(temp[xx]-ptrorgin[xx]);
 					errorNorm+=abs(temp[xx+1]-ptrorgin[xx+1]);
 					errorNorm+=abs(temp[xx+2]-ptrorgin[xx+2]);
 				}
 				set_palette_type_force(8);//shadow
-				currentProject->tileC->truecolor_to_tile(currentProject->tileMapC->get_palette_map(x,y),cur_tile,false);
-				tileToTrueCol(&currentProject->tileC->tDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tileMapC->get_palette_map(x,y));
+				currentProject->tileC->truecolor_to_tile(currentProject->tms->maps[currentProject->curPlane].getPalRow(x,y),cur_tile,false);
+				tileToTrueCol(&currentProject->tileC->tDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tms->maps[currentProject->curPlane].getPalRow(x,y));
 				for (xx=0;xx<256;xx+=4){
 					errorSh+=abs(temp[xx]-ptrorgin[xx]);
 					errorSh+=abs(temp[xx+1]-ptrorgin[xx+1]);
 					errorSh+=abs(temp[xx+2]-ptrorgin[xx+2]);
 				}
 				if (errorSh < errorNorm)
-					currentProject->tileMapC->set_prio(x,y,false);//shadowed
+					currentProject->tms->maps[currentProject->curPlane].set_prio(x,y,false);//shadowed
 				else
-					currentProject->tileMapC->set_prio(x,y,true);//normal
+					currentProject->tms->maps[currentProject->curPlane].set_prio(x,y,true);//normal
 			}
 		}
 		set_palette_type();//0 normal 8 shadow 16 highlight		

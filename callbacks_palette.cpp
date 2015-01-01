@@ -276,7 +276,7 @@ void set_tile_row(Fl_Widget*,void* row){
 			palBar.changeRow(selrow,2);
 			if(tileEditModePlace_G){
 				pushTilemapEdit(selTileE_G[0],selTileE_G[1]);
-				currentProject->tileMapC->set_pal_row(selTileE_G[0],selTileE_G[1],selrow);
+				currentProject->tms->maps[currentProject->curPlane].set_pal_row(selTileE_G[0],selTileE_G[1],selrow);
 			}
 		break;
 	}

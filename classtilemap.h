@@ -41,7 +41,7 @@ public:
 	bool get_prio(uint32_t x,uint32_t y);
 	uint32_t get_tile(uint32_t x,uint32_t y);
 	int32_t get_tileRow(uint32_t x,uint32_t y,unsigned useRow);
-	unsigned get_palette_map(uint32_t x,uint32_t y);
+	unsigned getPalRow(uint32_t x,uint32_t y);
 	void set_hflip(uint32_t x,uint32_t y,bool hflip_set);
 	void set_vflip(uint32_t x,uint32_t y,bool vflip_set);
 	void set_pal_row(uint32_t x,uint32_t y,unsigned row);
@@ -58,4 +58,5 @@ public:
 	void resize_tile_map(uint32_t new_x,uint32_t new_y);
 	bool truecolor_to_image(uint8_t * the_image,int useRow=-1,bool useAlpha=true);
 	void truecolorimageToTiles(uint8_t * image,int rowusage,bool useAlpha=true,bool copyToTruecolor=false,bool convert=true);
+	void drawPart(unsigned offx,unsigned offy,unsigned x,unsigned y,unsigned w,unsigned h,int rowSolo,unsigned zoom,bool trueCol);
 };

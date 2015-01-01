@@ -316,7 +316,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 					d[t]=0.0;
 			}
 			if ((type_temp != 0) && (currentProject->gameSystem == sega_genesis)){
-				tempSet=(currentProject->tileMapC->get_prio(xtile,ytile)^1)*8;
+				tempSet=(currentProject->tms->maps[currentProject->curPlane].get_prio(xtile,ytile)^1)*8;
 				set_palette_type_force(tempSet);
 			}
 			for(t=0;t<4;++t){
@@ -433,11 +433,11 @@ static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,unsigned 
 		h=currentProject->spritesC->height(curSpritegroup);
 		currentProject->spritesC->spriteGroupToImage(image,curSpritegroup,row,false);
 	}else{
-		w=currentProject->tileMapC->mapSizeW;
-		h=currentProject->tileMapC->mapSizeHA;
+		w=currentProject->tms->maps[currentProject->curPlane].mapSizeW;
+		h=currentProject->tms->maps[currentProject->curPlane].mapSizeHA;
 		w*=currentProject->tileC->sizew;
 		h*=currentProject->tileC->sizeh;
-		currentProject->tileMapC->truecolor_to_image(image,row,false);
+		currentProject->tms->maps[currentProject->curPlane].truecolor_to_image(image,row,false);
 	}
 	progress->label("Dithering to colorspace");
 	Fl::check();
@@ -615,7 +615,7 @@ againNerd:
 			if(isSprite)
 				currentProject->spritesC->spriteImageToTiles(output,curSpritegroup,row,false);
 			else
-				currentProject->tileMapC->truecolorimageToTiles(output,row,false);
+				currentProject->tms->maps[currentProject->curPlane].truecolorimageToTiles(output,row,false);
 			free(output);
 		}
 		if(yuv)
@@ -642,8 +642,8 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 		w=currentProject->spritesC->width(curSpritegroup);
 		h=currentProject->spritesC->height(curSpritegroup);
 	}else{
-		w=currentProject->tileMapC->mapSizeW;
-		h=currentProject->tileMapC->mapSizeHA;
+		w=currentProject->tms->maps[currentProject->curPlane].mapSizeW;
+		h=currentProject->tms->maps[currentProject->curPlane].mapSizeHA;
 		w*=currentProject->tileC->sizew;
 		h*=currentProject->tileC->sizeh;
 	}
@@ -677,7 +677,7 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 	image = (uint8_t *)malloc(w*h*3);
 	if (rows==1){
 		if (rowAuto)
-			currentProject->tileMapC->allRowSet(firstRow);
+			currentProject->tms->maps[currentProject->curPlane].allRowSet(firstRow);
 		if(set->sprite){
 			unsigned off=set->off[firstRow]+(firstRow*currentProject->pal->perRow);
 			if(currentProject->gameSystem==NES)
@@ -690,14 +690,14 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 	}else{
 		if(rowAuto==2){
 			reduceImage(image,found_colors,-1,0,progress,win,set->perRow[0]+set->perRow[1]+set->perRow[2]+set->perRow[3],set->colSpace,set->alg);
-			currentProject->tileMapC->pickRowDelta(true,progress);
+			currentProject->tms->maps[currentProject->curPlane].pickRowDelta(true,progress);
 			window->damage(FL_DAMAGE_USER1);
 			Fl::check();
 		}else{
 			if (rowAuto==1)
-				currentProject->tileMapC->pickRow(4-firstRow);
+				currentProject->tms->maps[currentProject->curPlane].pickRow(4-firstRow);
 			else if(rowAuto==3)
-				currentProject->tileMapC->pickTileRowQuantChoice(4-firstRow);
+				currentProject->tms->maps[currentProject->curPlane].pickTileRowQuantChoice(4-firstRow);
 			for (unsigned i=firstRow;i<4;++i){
 				if(set->useRow[i]){
 					reduceImage(image,found_colors,i,(i*currentProject->pal->perRow)+set->off[i],progress,win,set->perRow[i],set->colSpace,set->alg);
@@ -718,7 +718,7 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 			ditherSpriteAsImage(curSpritegroup);
 		}else{
 			pushTilesAll(tTypeTile);
-			currentProject->tileMapC->ditherAsImage(set->entireRow);
+			currentProject->tms->maps[currentProject->curPlane].ditherAsImage(set->entireRow);
 		}
 	}
 	window->redraw();
