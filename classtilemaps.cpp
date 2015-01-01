@@ -16,16 +16,16 @@
 */
 #include "classtilemaps.h"
 tilemaps::tilemaps(){
-	maps.push_back(tileMap());
-	planeName.push_back("0");
+	maps.emplace_back();
+	planeName.emplace_back("0");
 }
 tilemaps::tilemaps(const tilemaps&other){
 	unsigned cnt=other.maps.size();
 	maps.reserve(cnt);
 	planeName.reserve(cnt);
 	for(unsigned i=0;i<cnt;++i){
-		maps.push_back(tileMap(other.maps[i]));
-		planeName.push_back(other.planeName[i].c_str());
+		maps.emplace_back(other.maps[i]);
+		planeName.emplace_back(other.planeName[i].c_str());
 	}
 }
 void tilemaps::setPlaneCnt(unsigned cnt){
@@ -36,7 +36,7 @@ void tilemaps::setPlaneCnt(unsigned cnt){
 		for(unsigned i=oldCnt;i<cnt;++i){
 			char tmp[16];
 			snprintf(tmp,16,"%u",i);
-			planeName.push_back(tmp);
+			planeName.emplace_back(tmp);
 		}
 	}else
 		planeName.resize(cnt);

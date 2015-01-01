@@ -23,7 +23,7 @@ enum undoTypes_t{
 	uTileGroup,
 	uTilePixel,
 	uTileAppend,//No struct
-	uTileAppendgroupdat,//uTileGroup could be adapted for this but using seperate code ram is saved
+	uTileAppendgroupdat,//uTileGroup could be adapted for this but using separate code ram is saved
 	uTileNew,//No struct reuses ptr for insert tile after
 	uTilemap,
 	uTilemapattr,
@@ -68,11 +68,11 @@ enum tileTypeMask_t{
 	tTypeDeleteFlag,//Used for checking if delete. Do not pass to any tile functions instead tTypeDelete should be used
 	tTypeDelete=7//This sets bit tTypeBoth|tTypeDeleteFlag
 };
-struct undoEvent{//This struct mearly holds which type of undo this is
+struct undoEvent{//This struct merely holds which type of undo this is
 	undoTypes_t type;
 	void*ptr;//Can also be reused for information for example appendTile will store tile id if doing so limit yourself to 32bit values. Even if void* is 64bit on your system also can point to pointer created either by malloc or new
 };
-struct undoTile{//The purpose of this struct if to completly undo a tile
+struct undoTile{//The purpose of this struct if to completely undo a tile
 	tileTypeMask_t type;
 	uint32_t id;
 	void*ptrnew;
@@ -100,14 +100,17 @@ struct undoTilePixel{
 	uint32_t id,x,y,val,valnew;
 };
 struct undoTilemap{//For undoing the entire tilemap
+	uint32_t plane;
 	uint32_t w,h,wnew,hnew;//The width and height
 	void*ptr;//Points to tilemap data that is w*h*4 bytes or attributes if so size is w*h
 	void*ptrnew;
 };
 struct undoTilemapEdit{
+	uint32_t plane;
 	uint32_t x,y,val,valnew;
 };
 struct undoResize{
+	uint32_t plane;
 	uint32_t w,h,wnew,hnew;//Old width and height
 	void*ptr;//Contains a pointer ONLY TO LOST DATA
 };

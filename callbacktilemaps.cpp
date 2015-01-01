@@ -29,15 +29,15 @@ void updateNameTilemaps(Fl_Widget*w,void*){
 	window->planeSelect->replace(currentProject->curPlane,currentProject->tms->planeName[currentProject->curPlane].c_str());
 	window->redraw();
 }
-void updatePlaneTilemapMenu(uint32_t id){
-	if(window->planeSelect->size())
-		window->planeSelect->clear();
+void updatePlaneTilemapMenu(uint32_t id,Fl_Choice*plM){
+	if(plM->size())
+		plM->clear();
 	for(unsigned i=0;i<projects[id]->tms->maps.size();++i)
-		window->planeSelect->add(projects[id]->tms->planeName[i].c_str(),0,setCurPlaneTilemaps,(void*)i,0);
-	window->planeSelect->value(projects[id]->curPlane);
+		plM->add(projects[id]->tms->planeName[i].c_str(),0,setCurPlaneTilemaps,(void*)i,0);
+	plM->value(projects[id]->curPlane);
 }
 void updatePlaneTilemapMenu(void){
-	updatePlaneTilemapMenu(curProjectID);
+	updatePlaneTilemapMenu(curProjectID,window->planeSelect);
 }
 void addPlaneTilemap(Fl_Widget*,void*val){
 	currentProject->tms->setPlaneCnt(currentProject->tms->maps.size()+1);

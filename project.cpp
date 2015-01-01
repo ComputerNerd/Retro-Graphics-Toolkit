@@ -344,7 +344,7 @@ void switchProject(uint32_t id){
 	}
 	//Make sure sliders have correct values
 	if(containsDataProj(id,pjHaveMap)){
-		updatePlaneTilemapMenu(id);
+		updatePlaneTilemapMenu(id,window->planeSelect);
 		window->updateMapWH(projects[id]->tms->maps[projects[id]->curPlane].mapSizeW,projects[id]->tms->maps[projects[id]->curPlane].mapSizeH);
 		char tmp[16];
 		snprintf(tmp,16,"%u",projects[id]->tms->maps[projects[id]->curPlane].amt);

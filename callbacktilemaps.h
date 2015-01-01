@@ -17,6 +17,6 @@
 #pragma once
 void setCurPlaneTilemaps(Fl_Widget*,void*val);
 void updateNameTilemaps(Fl_Widget*w,void*);
-void updatePlaneTilemapMenu(uint32_t id);
+void updatePlaneTilemapMenu(uint32_t id,Fl_Choice*plM);
 void updatePlaneTilemapMenu(void);
 void addPlaneTilemap(Fl_Widget*,void*val);

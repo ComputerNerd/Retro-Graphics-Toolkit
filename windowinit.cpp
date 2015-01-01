@@ -386,8 +386,7 @@ void editor::_editor(){
 
 			planeSelect=new Fl_Choice(408,default_palette_bar_offset_y+80,112,24,"Plane selection");
 			planeSelect->align(FL_ALIGN_TOP);
-			planeSelect->add("0",0,setCurPlaneTilemaps,(void*)0,0);
-			planeSelect->value(0);
+			updatePlaneTilemapMenu(curProjectID,planeSelect);
 
 			{ Fl_Button *o = new Fl_Button(408, default_palette_bar_offset_y+104,112,24,"Add plane");
 				o->callback(addPlaneTilemap);
