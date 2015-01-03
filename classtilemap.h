@@ -21,6 +21,8 @@ private:
 public:
 	tileMap();
 	tileMap(uint32_t w,uint32_t h);
+	tileMap& operator=(tileMap&& other);
+	tileMap& operator=(const tileMap& other);
 	tileMap(const tileMap& other);
 	~tileMap();
 	uint8_t * tileMapDat;/*!< Holds tilemap data*/

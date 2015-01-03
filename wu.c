@@ -51,6 +51,7 @@ Free to distribute, comments and suggestions are appreciated.
 **********************************************************************/	
 #include <stdint.h>
 #include <math.h>
+#include <stdlib.h>
 #include "memory.h"
 #define MAXCOLOR	256
 #define	RED	2

@@ -384,12 +384,16 @@ void editor::_editor(){
 			} // Fl_Group* o
 
 
-			planeSelect=new Fl_Choice(408,default_palette_bar_offset_y+80,112,24,"Plane selection");
+			planeSelect=new Fl_Choice(408,default_palette_bar_offset_y+56,112,24,"Plane selection");
 			planeSelect->align(FL_ALIGN_TOP);
 			updatePlaneTilemapMenu(curProjectID,planeSelect);
 
-			{ Fl_Button *o = new Fl_Button(408, default_palette_bar_offset_y+104,112,24,"Add plane");
+			{ Fl_Button *o = new Fl_Button(408, default_palette_bar_offset_y+80,112,24,"Add plane");
 				o->callback(addPlaneTilemap);
+			}
+
+			{ Fl_Button *o = new Fl_Button(408, default_palette_bar_offset_y+104,112,24,"Remove plane");
+				o->callback(removeTilemapsPlane);
 			}
 
 			curPlaneName = new Fl_Input(tile_place_buttons_x_off+616,56,168,24,"Plane name");
@@ -426,29 +430,29 @@ void editor::_editor(){
 			map_y_scroll->hide();
 			map_y_scroll->linesize(1);
 			//now for the tile select slider
-			tile_select_2 = new Fl_Hor_Value_Slider(480,default_palette_bar_offset_y+40,312,24,"Tile select");
+			tile_select_2 = new Fl_Hor_Value_Slider(528,default_palette_bar_offset_y+40,264,24,"Tile select");
 			tile_select_2->tooltip("This slider allows you to choice which tile you would like to place on the map remember you can both horizontally and vertically flip the tile once placed on the map and select which row the tile uses");
 			tile_select_2->minimum(0);
 			tile_select_2->maximum(0);
 			tile_select_2->step(1);
-			tile_select_2->align(FL_ALIGN_LEFT);
+			tile_select_2->align(FL_ALIGN_TOP_LEFT);
 			tile_select_2->callback(set_tile_currentTP);
-			totalTiles=new Fl_Box(536,default_palette_bar_offset_y,128,64);
+			totalTiles=new Fl_Box(600,default_palette_bar_offset_y,128,64);
 			totalTiles->labelsize(12);
 			palBar.addTab(2);
 			//buttons for tile settings
 			{ Fl_Group *o = new Fl_Group(304, 96, 88, 96);
 				{
-					palType[6] = new Fl_Round_Button(304, 96, 64, 32, "Free");
+					palType[6] = new Fl_Round_Button(304, 90, 64, 32, "Free");
 					palType[6]->type(FL_RADIO_BUTTON);
 					palType[6]->set();
 					palType[6]->callback((Fl_Callback*) setPalType,(void *)0);
 					palType[6]->tooltip(freeDes);
-					palType[7] = new Fl_Round_Button(304, 128, 72, 32, "Locked");
+					palType[7] = new Fl_Round_Button(304, 122, 72, 32, "Locked");
 					palType[7]->type(FL_RADIO_BUTTON);
 					palType[7]->callback((Fl_Callback*) setPalType,(void *)1);
 					palType[7]->tooltip(lockedDes);
-					palType[8] = new Fl_Round_Button(304, 160, 88, 32, "Reserved");
+					palType[8] = new Fl_Round_Button(304, 154, 88, 32, "Reserved");
 					palType[8]->type(FL_RADIO_BUTTON);
 					palType[8]->callback((Fl_Callback*) setPalType,(void *)2);
 					palType[8]->tooltip(reservedDes);

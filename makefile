@@ -12,7 +12,7 @@ OBJECTS=project.o main.o callbacks_palette.o callback_tiles.o class_global.o glo
 	callback_project.o callback_tilemap.o callback_gui.o classChunks.o compressionWrapper.o callback_chunk.o gui.o \
 	wu.o system.o filemisc.o classSprite.o classSprites.o callbacksprites.o undo.o undocallback.o image.o \
 	classlevel.o runlua.o nearestColor.o CIE.o classpalette.o classtilemaps.o callbacktilemaps.o
-LINKER=-L/usr/lib/fltk-1/ -lfltk_images -lfltk -lpng -ljpeg -lXft -lXext -lXinerama -lX11 -lz -Llua/src -llua -ldl
+LINKER=-L/usr/lib/fltk/ -lfltk_images -lfltk -lpng -ljpeg -lXft -lXext -lXinerama -lX11 -lz -Llua/src -llua -ldl
 
 EXECUTABLE=RetroGraphicsToolkit
 

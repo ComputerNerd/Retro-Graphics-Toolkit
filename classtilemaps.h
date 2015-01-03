@@ -29,4 +29,8 @@ public:
 		snprintf(tmp,16,"%u",i);
 		planeName[i].assign(tmp);
 	}
+	void removePlane(unsigned which){
+		maps.erase(maps.begin()+which);
+		planeName.erase(planeName.begin()+which);
+	}
 };

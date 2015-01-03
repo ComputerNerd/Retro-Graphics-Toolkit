@@ -157,6 +157,20 @@ static void cleanupEvent(uint32_t id){
 			free(uptr->ptr);
 			memUsed-=sizeof(struct undoResize);}
 		break;
+		case uTilemapPlaneDelete:
+		case uTilemapPlaneAdd:
+			{struct undoTilemapPlane*um=(struct undoTilemapPlane*)uptr->ptr;
+			if(um->old){
+				memUsed-=um->old->mapSizeW*um->old->mapSizeHA*TileMapSizePerEntry;
+				delete um->old;
+			}
+			if(um->oldStr){
+				memUsed-=um->oldStr->length();
+				delete um->oldStr;
+			}
+			free(uptr->ptr);
+			memUsed-=sizeof(struct undoTilemapPlane);}
+		break;
 		case uPalette:
 			{struct undoPalette*up=(struct undoPalette*)uptr->ptr;
 			unsigned sz;
@@ -364,11 +378,23 @@ static void cpyResizeGeneric(uint8_t*dst,uint8_t*src,uint32_t w,uint32_t h,uint3
 static void isCorrectPlane(uint32_t plane){
 	if(plane!=currentProject->curPlane){
 		window->planeSelect->value(plane);
-		setCurPlaneTilemaps(0,(void*)plane);
+		setCurPlaneTilemaps(0,(void*)(uintptr_t)plane);
 		window->redraw();
 	}
 }
-
+static void removePlane(uint32_t plane){
+	currentProject->tms->removePlane(plane);
+	if(currentProject->curPlane==plane){
+		if(currentProject->curPlane)
+			--currentProject->curPlane;
+		else
+			++currentProject->curPlane;
+		window->planeSelect->value(currentProject->curPlane);
+		updatePlaneTilemapMenu();
+		setCurPlaneTilemaps(0,(void*)(uintptr_t)currentProject->curPlane);
+	}else
+		updatePlaneTilemapMenu();
+}
 void UndoRedo(bool redo){
 	if((pos<0)&&(!redo))
 		return;
@@ -566,6 +592,32 @@ void UndoRedo(bool redo){
 					cpyResizeGeneric((uint8_t*)um->ptr,currentProject->tms->maps[um->plane].tileMapDat,um->w,um->h,um->wnew,um->hnew,4,1,true);
 				char tmp[16];
 				snprintf(tmp,16,"%u",um->h/currentProject->tms->maps[um->plane].mapSizeH);
+			}}
+		break;
+		case uTilemapPlaneDelete:
+			{struct undoTilemapPlane*um=(struct undoTilemapPlane*)uptr->ptr;
+			if(redo){
+				removePlane(um->plane);
+			}else{
+				currentProject->tms->maps.insert(currentProject->tms->maps.begin()+um->plane,*um->old);
+				currentProject->tms->planeName.insert(currentProject->tms->planeName.begin()+um->plane,*um->oldStr);
+				updatePlaneTilemapMenu();
+				if(um->plane==currentProject->curPlane)
+					setCurPlaneTilemaps(0,(void*)(uintptr_t)um->plane);
+			}}
+		break;
+		case uTilemapPlaneAdd:
+			{struct undoTilemapPlane*um=(struct undoTilemapPlane*)uptr->ptr;
+			if(redo){
+				currentProject->tms->maps.insert(currentProject->tms->maps.begin()+um->plane,tileMap());
+				char tmp[16];
+				snprintf(tmp,16,"%u",um->plane);
+				currentProject->tms->planeName.insert(currentProject->tms->planeName.begin()+um->plane,1,tmp);
+				updatePlaneTilemapMenu();
+				if(um->plane==currentProject->curPlane)
+					setCurPlaneTilemaps(0,(void*)(uintptr_t)um->plane);
+			}else{
+				removePlane(um->plane);
 			}}
 		break;
 		case uPalette:
@@ -891,6 +943,31 @@ void pushTilemapAll(bool attrOnly){
 		memcpy(um->ptr,currentProject->tms->maps[currentProject->curPlane].tileMapDat,um->w*um->h*4);
 	}
 }
+struct undoTilemapPlane*pushTilemapPlaneComm(uint32_t plane){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->ptr=malloc(sizeof(struct undoTilemapPlane));
+	memUsed+=sizeof(struct undoTilemapPlane);
+	struct undoTilemapPlane*um=(struct undoTilemapPlane*)uptr->ptr;
+	um->plane=plane;
+	um->old=0;
+	um->oldStr=0;
+	return um;
+}
+void pushTilemapPlaneDelete(uint32_t plane){
+	struct undoTilemapPlane*um=pushTilemapPlaneComm(plane);
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uTilemapPlaneDelete;
+	um->old=new tileMap(currentProject->tms->maps[plane]);
+	um->oldStr=new std::string(currentProject->tms->planeName[um->plane].c_str());
+	memUsed+=um->oldStr->length();
+	memUsed+=um->old->mapSizeW*um->old->mapSizeHA*TileMapSizePerEntry;
+}
+void pushTilemapPlaneAdd(uint32_t plane){
+	pushTilemapPlaneComm(plane);
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uTilemapPlaneAdd;
+}
 void pushTilemapEdit(uint32_t x,uint32_t y){
 	pushEventPrepare();
 	struct undoEvent*uptr=undoBuf+pos;
@@ -1152,15 +1229,23 @@ void historyWindow(Fl_Widget*,void*){
 			case uChunkResize:
 			case uTilemapResize:
 				{struct undoResize*um=(struct undoResize*)uptr->ptr;
-				snprintf(tmp,2048,"Resize from w: %d h: %d to w: %d h: %d",um->w,um->h,um->wnew,um->hnew);}	
+				snprintf(tmp,2048,"Resize from w: %d h: %d to w: %d h: %d",um->w,um->h,um->wnew,um->hnew);}
 			break;
 			case uTilemapBlocksAmt:
 				{struct undoResize*um=(struct undoResize*)uptr->ptr;
-				snprintf(tmp,2048,"Change blocks amount from %u on plane %u",um->h/currentProject->tms->maps[um->plane].mapSizeH,um->plane);}	
+				snprintf(tmp,2048,"Change blocks amount from %u on plane %u",um->h/currentProject->tms->maps[um->plane].mapSizeH,um->plane);}
 			break;
 			case uTilemapEdit:
 				{struct undoTilemapEdit*um=(struct undoTilemapEdit*)uptr->ptr;
-				snprintf(tmp,2048,"Edit tilemap X: %d Y: %d",um->x,um->y);}	
+				snprintf(tmp,2048,"Edit tilemap X: %d Y: %d",um->x,um->y);}
+			break;
+			case uTilemapPlaneDelete:
+				{struct undoTilemapPlane*um=(struct undoTilemapPlane*)uptr->ptr;
+				snprintf(tmp,2048,"Delete tilemap %u",um->plane);}
+			break;
+			case uTilemapPlaneAdd:
+				{struct undoTilemapPlane*um=(struct undoTilemapPlane*)uptr->ptr;
+				snprintf(tmp,2048,"Add tilemap %u",um->plane);}
 			break;
 			case uPalette:
 				strcpy(tmp,"Change entire palette");
@@ -1171,15 +1256,15 @@ void historyWindow(Fl_Widget*,void*){
 			break;
 			case uChunkEdit:
 				{struct undoChunkEdit*uc=(struct undoChunkEdit*)uptr->ptr;
-				snprintf(tmp,2048,"Edit Chunk ID: %d X: %d Y: %d",uc->id,uc->x,uc->y);}	
+				snprintf(tmp,2048,"Edit Chunk ID: %d X: %d Y: %d",uc->id,uc->x,uc->y);}
 			break;
 			case uChunk:
 				{struct undoChunk*uc=(struct undoChunk*)uptr->ptr;
-				snprintf(tmp,2048,"Change chunk: %d",uc->id);}	
+				snprintf(tmp,2048,"Change chunk: %d",uc->id);}
 			break;
 			case uChunkDelete:
 				{struct undoChunk*uc=(struct undoChunk*)uptr->ptr;
-				snprintf(tmp,2048,"Delete chunk: %d",uc->id);}	
+				snprintf(tmp,2048,"Delete chunk: %d",uc->id);}
 			break;
 			case uChunkAppend:
 				strcpy(tmp,"Append chunk");

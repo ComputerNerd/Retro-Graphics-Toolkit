@@ -17,6 +17,7 @@
 #include "classChunks.h"
 #include "classSprite.h"
 #include "classSprites.h"
+#include "classtilemap.h"
 enum undoTypes_t{
 	uTile=0,
 	uTileAll,
@@ -30,6 +31,8 @@ enum undoTypes_t{
 	uTilemapEdit,
 	uTilemapResize,
 	uTilemapBlocksAmt,
+	uTilemapPlaneDelete,
+	uTilemapPlaneAdd,
 	uPalette,
 	uPaletteEntry,
 	uChunk,
@@ -109,6 +112,13 @@ struct undoTilemapEdit{
 	uint32_t plane;
 	uint32_t x,y,val,valnew;
 };
+struct undoTilemapPlane{
+	tileMap*old;
+	tileMap*Tnew;
+	std::string*oldStr;
+	std::string*TnewStr;
+	uint32_t plane;
+};
 struct undoResize{
 	uint32_t plane;
 	uint32_t w,h,wnew,hnew;//Old width and height
@@ -169,6 +179,8 @@ void pushTilemapEdit(uint32_t x,uint32_t y);
 void pushTilemapResize(uint32_t wnew,uint32_t hnew);
 void pushTilemapBlocksAmt(uint32_t amtnew);
 void pushTilemapAll(bool attrOnly);
+void pushTilemapPlaneDelete(uint32_t plane);
+void pushTilemapPlaneAdd(uint32_t plane);
 void pushPaletteEntry(uint32_t id);
 void pushPaletteAll(void);
 void pushChunk(uint32_t id,bool rm);

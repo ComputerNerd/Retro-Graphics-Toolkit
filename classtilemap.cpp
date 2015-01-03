@@ -45,20 +45,35 @@ tileMap::tileMap(const tileMap& other){
 	if(isBlock){
 		amt=other.amt;
 		mapSizeHA=mapSizeH*amt;
-		tileMapDat=(uint8_t*)malloc(mapSizeW*mapSizeHA*TileMapSizePerEntry);
-		memcpy(tileMapDat,other.tileMapDat,mapSizeW*mapSizeHA*TileMapSizePerEntry);
-		printf("Copied map of size %d\n",mapSizeW*mapSizeHA*TileMapSizePerEntry);
 	}else{
 		amt=1;
-		tileMapDat=(uint8_t*)malloc(mapSizeW*mapSizeH*TileMapSizePerEntry);
-		memcpy(tileMapDat,other.tileMapDat,mapSizeW*mapSizeH*TileMapSizePerEntry);
-		printf("Copied map of size %d\n",mapSizeW*mapSizeH*TileMapSizePerEntry);
+		mapSizeHA=mapSizeH;
 	}
+	tileMapDat=(uint8_t*)malloc(mapSizeW*mapSizeHA*TileMapSizePerEntry);
+	memcpy(tileMapDat,other.tileMapDat,mapSizeW*mapSizeHA*TileMapSizePerEntry);
+}
+tileMap& tileMap::operator=(tileMap&& other){
+	mapSizeW=other.mapSizeW;
+	mapSizeH=other.mapSizeH;
+	mapSizeHA=other.mapSizeHA;
+	isBlock=other.isBlock;
+	offset=other.offset;
+	amt=other.amt;
+	tileMapDat=other.tileMapDat;
+	other.tileMapDat=0;
+}
+tileMap& tileMap::operator=(const tileMap& other){
+	mapSizeW=other.mapSizeW;
+	mapSizeH=other.mapSizeH;
+	mapSizeHA=other.mapSizeHA;
+	isBlock=other.isBlock;
+	offset=other.offset;
+	amt=other.amt;
+	tileMapDat=other.tileMapDat;
 }
 tileMap::~tileMap(){
 	free(tileMapDat);
 }
-
 void tileMap::ditherAsImage(bool entire){
 	uint8_t*image;
 	uint32_t w,h;
@@ -87,7 +102,7 @@ void tileMap::ditherAsImage(bool entire){
 	free(image);
 }
 void tileMap::allRowSet(unsigned row){
-	uint32_t x,y;
+	unsigned x,y;
 	for (y=0;y<mapSizeHA;++y){
 		for (x=0;x<mapSizeW;++x)
 			set_pal_row(x,y,row);
