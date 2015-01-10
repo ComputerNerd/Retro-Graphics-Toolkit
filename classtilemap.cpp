@@ -90,7 +90,7 @@ void tileMap::ditherAsImage(bool entire){
 		ditherImage(image,w,h,true,false);
 		truecolorimageToTiles(image,-1);
 	}else{
-		for(unsigned row=0;row<4;++row){
+		for(unsigned row=0;row<currentProject->pal->rowCntPal;++row){
 			printf("Row: %u\n",row);
 			truecolor_to_image(image,row);
 			ditherImage(image,w,h,true,true);
@@ -138,7 +138,7 @@ bool tileMap::pickTileRowQuantChoice(unsigned rows){
 		for(unsigned y=0;y<mapSizeHA;y+=2){
 			for(unsigned x=0;x<mapSizeW;x+=2){
 				memset(sums,0,sizeof(sums));
-				for(unsigned i=0;i<4;++i){
+				for(unsigned i=0;i<currentProject->pal->rowCntPal;++i){
 					uint32_t sumtmp[3];
 					sumTile(currentProject->tileC->truetDat.data()+(get_tile(x+(i&1),y+(i/2))*currentProject->tileC->tcSize),sumtmp);
 					sums[0]+=sumtmp[0];

@@ -21,8 +21,8 @@ enum gameSystemEnum{segaGenesis,NES,masterSystem,gameGear,TMS9918,SNES,frameBuff
 /* Subsystem declarations
  * Subsystem as the name implies depends on which system is selected
  * These are not compatible when switching systems
- * For the sega genesis bits 1-0 contain bit depth 0 means 1 bit
- * bit 2 sets if shadow highlight is enabled and bit 3 sets if highlight should be displayed instead of shadow
+ * For the Sega Genesis, Master System, Game Gear and TMS9918 bits 1-0 contain bit depth 0 means 1 bit
+ * For the Sega Genesis bit 2 sets if shadow highlight is enabled and bit 3 sets if highlight should be displayed instead of shadow
  * For the NES bit 1 contains bit depth 1 if 2 bit 0 if 1 bit
  * For palette framebuffer bits 2-0 contain bit depth add 1 to get actual just like the others
  * Bits 6-2 contain screen depth for example if set to 15 (16 remember always +1) that would mean palette is based on rgb565 colors

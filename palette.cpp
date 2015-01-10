@@ -20,8 +20,9 @@
 #include "undo.h"
 unsigned palTypeGen;
 typedef std::pair<double,int> HSLpair;
-bool comparatorHSL(const HSLpair& l,const HSLpair& r)
-   { return l.first < r.first; }
+static bool comparatorHSL(const HSLpair& l,const HSLpair& r){
+	return l.first < r.first;
+}
 void sortBy(unsigned type,bool perRow){
 	pushPaletteAll();
 	unsigned totalCol=currentProject->pal->colorCnt+currentProject->pal->colorCntalt;
@@ -50,6 +51,8 @@ void sortBy(unsigned type,bool perRow){
 	memcpy(currentProject->pal->palType,newPalType,totalCol);
 	delete[] MapHSL;
 }
+const uint8_t palTabGameGear[]={0,17,34,51,68,85,102,119,136,153,170,187,204,221,236,255};
+const uint8_t palTabMasterSystem[]={0,85,170,255};//From http://segaretro.org/Palette
 const uint8_t palTab[]=   {0,49,87,119,146,174,206,255,0,27,49,71,87,103,119,130,130,146,157,174,190,206,228,255};//from http://gendev.spritesmind.net/forum/viewtopic.php?t=1389
 const uint8_t palTabEmu[]={0,36,72,108,144,180,216,252,0,18,36,54,72, 90,108,126,126,144,162,180,198,216,234,252};
 void set_palette_type_force(unsigned type){

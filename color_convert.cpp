@@ -23,25 +23,10 @@
 #include "classpalettebar.h"
 uint8_t nespaltab[64*3];
 uint8_t nespaltab_alt[64*3];
-
-uint8_t nearest_color_index(uint8_t val,unsigned startindex){
-	int32_t distanceSquared, minDistanceSquared, bestIndex = 0;
-	minDistanceSquared = 255*255 + 1;
-	if (currentProject->gameSystem!=segaGenesis){
-		fl_alert("This function is for use with sega genesis/mega drive only");
-		return 0;
-	}
-	for(unsigned i=startindex;i<8+startindex;++i){
-		int32_t Rdiff = (int) val - (int)palTab[i];
-		distanceSquared = Rdiff*Rdiff;
-		if(distanceSquared<minDistanceSquared){
-			minDistanceSquared = distanceSquared;
-			bestIndex = i;
-		}
-	}
-	return bestIndex;
+unsigned nearest_color_index(int val,unsigned startindex){
+	return nearestOneChannel(val,palTab+startindex,8);
 }
-uint8_t nearest_color_index(uint8_t val){
+unsigned nearest_color_index(int val){
 	return nearest_color_index(val,palTypeGen);
 }
 static double max3(double a,double b,double c){

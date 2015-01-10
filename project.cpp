@@ -308,7 +308,7 @@ extern Fl_Menu_Item subSysNES[];
 extern Fl_Menu_Item subSysGenesis[];
 void switchProject(uint32_t id){
 	window->TxtBufProject->text(projects[id]->Name.c_str());//Make editor displays new text
-	window->GameSys[projects[id]->gameSystem]->setonly();
+	window->gameSysSel->value(projects[id]->gameSystem);
 	window->ditherPower->value((projects[id]->settings>>subsettingsDitherShift)&subsettingsDitherMask);
 	window->ditherAlgSel->value(projects[id]->settings&subsettingsDitherMask);
 	if((projects[id]->settings&subsettingsDitherMask))
@@ -340,6 +340,17 @@ void switchProject(uint32_t id){
 				update_emphesis(0,0);
 			}
 		break;
+		case masterSystem:
+		case gameGear:
+			if(containsDataProj(id,pjHaveTiles))
+				projects[id]->tileC->tileSize=32;
+			if(containsDataProj(id,pjHavePal)){
+				palBar.setSys();
+				projects[id]->pal->paletteToRgb();
+			}
+		break;
+		default:
+			show_default_error
 	}
 	//Make sure sliders have correct values
 	if(containsDataProj(id,pjHaveMap)){
@@ -439,15 +450,18 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 		fread(&projects[id]->settings,1,sizeof(uint32_t),fi);
 	else
 		projects[id]->settings=15<<subsettingsDitherShift|(aWeighted<<nearestColorShift);
+	projects[id]->tileC->tcSize=256;
 	switch(projects[id]->gameSystem){
 		case segaGenesis:
+		case masterSystem:
+		case gameGear:
 			projects[id]->tileC->tileSize=32;
-			projects[id]->tileC->tcSize=256;
 		break;
 		case NES:
 			projects[id]->tileC->tileSize=16;
-			projects[id]->tileC->tcSize=256;
 		break;
+		default:
+			show_default_error
 	}
 	if(projects[id]->useMask&pjHavePal){
 		if(projects[id]->share[0]<0){

@@ -56,12 +56,17 @@ void palette::setVars(uint32_t gameSystem){
 		break;
 		case masterSystem:
 		case gameGear:
-			colorCnt=32;
 			rowCntPal=2;
+			colorCnt=32;
 			colorCntalt=0;
 			rowCntPalalt=0;
+			perRow=16;
+			perRowalt=0;
+			haveAlt=false;
 			esize=gameSystem==gameGear?2:1;
 		break;
+		default:
+			show_default_error
 	}
 	rgbPal=(uint8_t*)realloc(rgbPal,(colorCnt+colorCntalt)*(4+esize));//Yes this is correct when rgbPal is NULL realloc will behave the same as malloc
 	palDat=rgbPal+((colorCnt+colorCntalt)*3);
@@ -100,6 +105,19 @@ void palette::updateRGBindex(unsigned index){
 			rgbPal[index*3]=(rgb_out>>16)&255;//red
 			}
 		break;
+		case masterSystem:
+			rgbPal[index*3]=palTabMasterSystem[palDat[index]&3];
+			rgbPal[index*3+1]=palTabMasterSystem[(palDat[index]>>2)&3];
+			rgbPal[index*3+2]=palTabMasterSystem[(palDat[index]>>4)&3];
+		break;
+		case gameGear:
+			{uint16_t*ptr=(uint16_t*)palDat+index;
+			rgbPal[index*3]=palTabGameGear[*ptr&15];
+			rgbPal[index*3+1]=palTabGameGear[(*ptr>>4)&15];
+			rgbPal[index*3+2]=palTabGameGear[(*ptr>>8)&15];}
+		break;
+		default:
+			show_default_error
 	}
 }
 void palette::clear(void){
@@ -121,6 +139,17 @@ void palette::rgbToEntry(unsigned r,unsigned g,unsigned b,unsigned ent){
 		case NES:
 			palDat[ent]=to_nes_color_rgb(r,g,b);
 			updateRGBindex(ent);
+		break;
+		case masterSystem:
+			palDat[ent]=nearestOneChannel(r,palTabMasterSystem,4);
+			palDat[ent]|=nearestOneChannel(g,palTabMasterSystem,4)<<2;
+			palDat[ent]|=nearestOneChannel(b,palTabMasterSystem,4)<<4;
+		break;
+		case gameGear:
+			{uint16_t*palPtr=(uint16_t*)palDat+ent;
+			*palPtr=nearestOneChannel(r,palTabGameGear,16);
+			*palPtr|=nearestOneChannel(g,palTabGameGear,16)<<4;
+			*palPtr|=nearestOneChannel(b,palTabGameGear,16)<<8;}
 		break;
 		default:
 			show_default_error
@@ -190,17 +219,17 @@ unsigned palette::calMaxPerRow(unsigned row){
 void palette::swapEntry(unsigned one,unsigned two){
 	if(unlikely(one==two))
 		return;
-	switch(currentProject->gameSystem){
-		case segaGenesis:
+	switch(esize){
+		case 1:
+			{uint8_t palOld=palDat[two];
+			palDat[two]=palDat[one];
+			palDat[one]=palOld;}
+		break;
+		case 2:
 			{uint8_t palOld[2];
 			memcpy(palOld,palDat+two+two,2);
 			memcpy(palDat+two+two,palDat+one+one,2);
 			memcpy(palDat+one+one,palOld,2);}
-		break;
-		case NES:
-			{uint8_t palOld=palDat[two];
-			palDat[two]=palDat[one];
-			palDat[one]=palOld;}
 		break;
 		default:
 			show_default_error

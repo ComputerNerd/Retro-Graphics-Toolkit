@@ -44,4 +44,12 @@ class palette{
 	uint16_t to_sega_genesis_color(uint16_t pal_index);
 	unsigned calMaxPerRow(unsigned row);
 	void swapEntry(unsigned one,unsigned two);
+	unsigned getMaxRows(bool alt) const{
+		return (alt&&haveAlt)?rowCntPalalt:rowCntPal;
+	}
+	void paletteToRgb(void){
+		for(unsigned i=0;i<colorCnt+colorCntalt;++i){
+			updateRGBindex(i);
+	}
+}
 };

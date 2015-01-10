@@ -388,6 +388,16 @@ void editor::updateChunkGUI(uint32_t tx,uint32_t ty){
 	solidChunkMenu->value(solidBits_G);
 	setXYdisp(tx,ty,1);
 }
+static unsigned cal_offset_truecolor(unsigned x,unsigned y,unsigned rgb,uint32_t tile){
+	/*!<
+	cal_offset_truecolor is made to help when accessing a true color tile array
+	an example of it would be
+	red_temp=truecolor_data[cal_offset_truecolor(0,0,0,0)]//get the red pixel at pixel 0,0 at tile 0
+	green_temp=truecolor_data[cal_offset_truecolor(0,0,1,0)]//get the green pixel at pixel 0,0 at tile 0
+	blue_temp=truecolor_data[cal_offset_truecolor(0,0,2,0)]//get the blue pixel at pixel 0,0 at tile 0
+	*/
+	return (x*4)+(y*currentProject->tileC->sizew*4)+rgb+(tile*currentProject->tileC->tcSize);
+}
 int editor::handle(int event){
 	//printf("Event was %s (%d)\n", fl_eventnames[event], event);     // e.g. "Event was FL_PUSH (1)"
 	if(event==FL_PUSH)

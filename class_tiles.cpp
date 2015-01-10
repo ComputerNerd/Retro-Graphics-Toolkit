@@ -28,14 +28,7 @@ tiles::tiles(){
 	amt=1;
 	sizew=sizeh=8;
 	tcSize=sizew*sizeh*4;
-	switch(currentProject->gameSystem){
-		case segaGenesis:
-			tileSize=sizew*sizeh/2;
-		break;
-		case NES:
-			tileSize=sizew*sizeh/4;
-		break;
-	}
+	tileSize=sizew*sizeh*getBitdepthcurSys()/8;
 	tDat.resize(tileSize,0);
 	truetDat.resize(tcSize,0);
 }
@@ -66,12 +59,11 @@ void tiles::insertTile(uint32_t at){
 		exit(1);
 	}
 }
-void tiles::setPixel(uint32_t tile,uint32_t x,uint32_t y,uint32_t val){
+void tiles::setPixel(uint8_t*ptr,uint32_t x,uint32_t y,uint32_t val){
 	if(x>=sizew)
 		x=sizew-1;
 	if(y>=sizeh)
 		y=sizeh-1;
-	uint8_t*ptr=&tDat[(tile*tileSize)];
 	unsigned bdr,bd;
 	bdr=getBitdepthcurSysraw();
 	bd=bdr+1;
@@ -115,12 +107,15 @@ void tiles::setPixel(uint32_t tile,uint32_t x,uint32_t y,uint32_t val){
 		}
 	}
 }
-uint32_t tiles::getPixel(uint32_t tile,uint32_t x,uint32_t y){
+void tiles::setPixel(uint32_t tile,uint32_t x,uint32_t y,uint32_t val){
+	uint8_t*ptr=&tDat[(tile*tileSize)];
+	setPixel(ptr,x,y,val);
+}
+uint32_t tiles::getPixel(const uint8_t*ptr,uint32_t x,uint32_t y) const{
 	if(x>=sizew)
 		x=sizew-1;
 	if(y>=sizeh)
 		y=sizeh-1;
-	uint8_t*ptr=&tDat[(tile*tileSize)];
 	unsigned bdr;
 	bdr=getBitdepthcurSysraw();
 	if((currentProject->gameSystem==NES)&&bdr){//NES stores planar tiles
@@ -147,14 +142,18 @@ uint32_t tiles::getPixel(uint32_t tile,uint32_t x,uint32_t y){
 	}
 	return 0;
 }
+uint32_t tiles::getPixel(uint32_t tile,uint32_t x,uint32_t y) const{
+	const uint8_t*ptr=&tDat[(tile*tileSize)];
+	return getPixel(ptr,x,y);
+}
 void tiles::setPixelTc(uint32_t tile,uint32_t x,uint32_t y,uint32_t val){
 	uint32_t*tt=(uint32_t*)((uint8_t*)truetDat.data()+(tile*tcSize));
 	tt+=y*sizew;
 	tt+=x;
 	*tt=val;
 }
-uint32_t tiles::getPixelTc(uint32_t tile,uint32_t x,uint32_t y){
-	uint32_t*tt=(uint32_t*)((uint8_t*)truetDat.data()+(tile*tcSize));
+uint32_t tiles::getPixelTc(uint32_t tile,uint32_t x,uint32_t y) const{
+	const uint32_t*tt=(const uint32_t*)((const uint8_t*)truetDat.data()+(tile*tcSize));
 	tt+=y*sizew;
 	tt+=x;
 	return*tt;
@@ -291,7 +290,7 @@ void tiles::draw_truecolor(uint32_t tile_draw,unsigned x,unsigned y,bool usehfli
 		fl_draw_image(grid,x,y,sizew*zoom,sizeh*zoom,3);
 }
 static inline uint_fast32_t cal_offset_zoom_rgb(uint_fast16_t x,uint_fast16_t y,uint_fast16_t zoom,uint8_t channel){
-	return (y*(zoom*24))+(x*3)+channel;
+	return (y*(zoom*currentProject->tileC->sizew*3))+(x*3)+channel;
 }
 void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,int zoom,unsigned pal_row,bool Usehflip,bool Usevflip,bool isSprite){
 	static unsigned DontShow=0;
@@ -318,9 +317,8 @@ void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,int zoom,unsigned p
 				pixOff+=pal_row*currentProject->pal->perRow*3;
 			for(unsigned i=0;i<zoom;++i){
 				for(unsigned j=0;j<zoom;++j){
-					temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+j,(y*zoom)+i,zoom,0)]=currentProject->pal->rgbPal[pixOff];
-					temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+j,(y*zoom)+i,zoom,1)]=currentProject->pal->rgbPal[pixOff+1];
-					temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+j,(y*zoom)+i,zoom,2)]=currentProject->pal->rgbPal[pixOff+2];
+					for(unsigned k=0;k<3;++k)
+						temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+j,(y*zoom)+i,zoom,k)]=currentProject->pal->rgbPal[pixOff+k];
 				}
 			}
 		}
@@ -349,70 +347,16 @@ void tiles::vflip_truecolor_ptr(uint8_t * in,uint8_t * out){
 void tiles::vflip_truecolor(uint32_t id,uint8_t * out){
 	vflip_truecolor_ptr(&truetDat[id*tcSize],out);
 }
-static inline uint8_t swap_4bit(uint8_t in){
-	return ((in >> 4) & 0x0f) | ((in << 4) & 0xf0);
-}
-static inline uint8_t reverse_bits(uint8_t b){
-   b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
-   b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
-   b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
-   return b;
-}
 void tiles::hflip_tile(uint32_t id,uint8_t * out){
-	uint8_t x,y;
-	uint8_t * tilePtr=&tDat[id*tileSize];
-	switch (currentProject->gameSystem){
-		case segaGenesis:
-			memcpy(out,tilePtr,32);
-			for (y=0;y<8;++y){
-				for (x=0;x<4;++x){
-					//*out++=swap_4bit(*out); //may be undefined
-					uint8_t temp=*out;
-					*out++=swap_4bit(temp);
-				}
-			}
-			out-=tileSize;
-			uint8_t temp[4];
-			for (y=0;y<8;y++){
-				memcpy(temp,out,4);
-				*out++=temp[3];
-				*out++=temp[2];
-				*out++=temp[1];
-				*out++=temp[0];
-			}
-		break;
-		case NES:
-			memcpy(out,tilePtr,16);
-			for (y=0;y<16;++y){
-				//*out++=reverse_bits(*out); //may be undefined
-				uint8_t temp=*out;
-				*out++=reverse_bits(temp);
-			}
-		break;
+	for(unsigned y=0;y<sizeh;++y){
+		for(unsigned x=0;x<sizew;++x)
+			setPixel(out,(sizew-1)-x,y,getPixel(id,x,y));
 	}
 }
-void tiles::vflip_tile_ptr(uint8_t * in,uint8_t * out){
-	uint8_t y;
-	switch (currentProject->gameSystem){
-		case segaGenesis:
-		{
-			uint8_t temp[32];
-			memcpy(temp,in,32);
-			for (y=0;y<32;y+=4)
-				memcpy(&out[28-y],&temp[y],4);
-		}
-		break;
-		case NES:
-		{
-			uint8_t temp[16];
-			memcpy(temp,in,16);
-			//NES uses different format separated into 2 pieces
-			for (y=0;y<8;y++)
-				out[y]=temp[7-y];
-			for (y=0;y<8;y++)
-				out[y+8]=temp[7-y+8];
-		}
-		break;
+void tiles::vflip_tile_ptr(const uint8_t*in,uint8_t*out){
+	for(unsigned y=0;y<sizeh;++y){
+		for(unsigned x=0;x<sizew;++x)
+			setPixel(out,x,(sizeh-1)-y,getPixel(in,x,y));
 	}
 }
 void tiles::vflip_tile(uint32_t id,uint8_t * out){
@@ -530,4 +474,24 @@ void tiles::remove_duplicate_tiles(bool tColor){
 	//w->draw();
 	delete win;
 	Fl::check();
+}
+void tiles::tileToTrueCol(const uint8_t*input,uint8_t*output,unsigned row,bool useAlpha,bool alphaZero){
+	row*=currentProject->pal->perRow*3;
+	for(unsigned y=0;y<sizeh;++y){
+		for(unsigned x=0;x<sizew;++x){
+			unsigned temp=getPixel(input,x,y);
+			*output++=currentProject->pal->rgbPal[row+(temp*3)];
+			*output++=currentProject->pal->rgbPal[row+(temp*3)+1];
+			*output++=currentProject->pal->rgbPal[row+(temp*3)+2];
+			if(useAlpha){
+				if(alphaZero){
+					if(temp)
+						*output++=255;
+					else
+						*output++=0;
+				}else
+					*output++=255;
+			}
+		}
+	}
 }

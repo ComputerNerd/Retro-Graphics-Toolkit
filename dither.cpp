@@ -3,6 +3,7 @@
 #include "dither.h"
 #include "global.h"
 #include "color_convert.h"
+#include "nearestColor.h"
 #define NONE 0
 #define UP 1
 #define LEFT 2
@@ -29,9 +30,17 @@ uint8_t nearest_color_chanColSpace(uint8_t val,uint8_t chan){
 			img_ptr_dither+=chan;
 			return returnme;}
 		break;
+		case masterSystem:
+			return palTabMasterSystem[nearestOneChannel(val,palTabMasterSystem,4)];
+		break;
+		case gameGear:
+			return palTabGameGear[nearestOneChannel(val,palTabGameGear,16)];
+		break;
 		case 255://alpha
 			return (val&128)?255:0;
 		break;
+		default:
+			show_default_error
 	}
 }
 uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row){
@@ -774,58 +783,15 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 			//if(!fl_ask("Dither to colorspace? WARNING SLOW!"))//I have found that this results in worse quality anyway
 				return;
 		}
-		uint16_t tempPalSize;
-		uint8_t * colPtr;
-		if(colSpace){
-			uint8_t rl,gl,bl;
-			switch(currentProject->gameSystem){
-				case segaGenesis:
-				{
-					tempPalSize=512;
-					palettesize=512;
-					colPtr=(uint8_t *)malloc(512*3);
-					for(rl=0;rl<=7;++rl){
-						for(gl=0;gl<=7;++gl){
-							for(bl=0;bl<=7;++bl){
-								*colPtr++=palTab[rl];
-								*colPtr++=palTab[gl];
-								*colPtr++=palTab[bl];
-							}
-						}
-					}
-				}
-				colPtr-=512*3;
-				break;
-				case NES:
-					tempPalSize=64;
-					palettesize=64;
-					colPtr=(uint8_t *)malloc(64*3);
-					if(isSprite){
-						for(rl=0;rl<64*3;++rl){
-							*colPtr++=nespaltab_alt[rl];
-						}
-					}else{
-						for(rl=0;rl<64*3;++rl){
-							*colPtr++=nespaltab[rl];
-						}
-					}
-					colPtr-=64*3;
-				break;
-			}
+		unsigned tempPalSize;
+		uint8_t * colPtr=colPtr=currentProject->pal->rgbPal;
+		if(currentProject->pal->haveAlt&&isSprite){
+			tempPalSize=currentProject->pal->colorCntalt;
+			palettesize=currentProject->pal->perRowalt;
+			colPtr+=palettesize*3;
 		}else{
-			colPtr=currentProject->pal->rgbPal;
-			switch(currentProject->gameSystem){
-				case segaGenesis:
-					tempPalSize=64;
-					palettesize=16;
-				break;
-				case NES:
-					tempPalSize=16;
-					palettesize=4;
-					if(isSprite)
-						colPtr+=16*3;
-				break;
-			}
+			tempPalSize=currentProject->pal->colorCnt;
+			palettesize=currentProject->pal->perRow;
 		}
 		for(unsigned c=0; c<tempPalSize; ++c){
 			//unsigned r = pal[c]>>16, g = (pal[c]>>8) & 0xFF, b = pal[c] & 0xFF;
@@ -864,60 +830,29 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				if(ditherAlg==7){
 					unsigned map_value = mapTK[(x & 7) + ((y & 7) << 3)];
 					MixingPlanTK plan;
-					if(colSpace){
-						plan=DeviseBestMixingPlanTK(r_old,g_old,b_old,colPtr,0);
-						tempPalOff=plan.colors[map_value]*3;
-					}else{
-						plan=DeviseBestMixingPlanTK(r_old,g_old,b_old,currentProject->pal->rgbPal,pal_row*palettesize);
-						tempPalOff=(plan.colors[map_value]+(pal_row*palettesize))*3;
-					}
+					plan=DeviseBestMixingPlanTK(r_old,g_old,b_old,currentProject->pal->rgbPal,pal_row*palettesize);
+					tempPalOff=(plan.colors[map_value]+(pal_row*palettesize))*3;
 				}else if(ditherAlg==4){
 					float map_value = mapY1[(x & 7) + ((y & 7) << 3)];
 					MixingPlanY1 plan;
-					if(colSpace){
-						plan = DeviseBestMixingPlanY1(r_old,g_old,b_old,colPtr,0);
-						tempPalOff=(plan.colors[map_value < plan.ratio ? 1 : 0])*3;
-					}else{
-						plan = DeviseBestMixingPlanY1(r_old,g_old,b_old,currentProject->pal->rgbPal,pal_row*palettesize);
-						tempPalOff=(plan.colors[map_value < plan.ratio ? 1 : 0]+(pal_row*palettesize))*3;
-					}
+					plan = DeviseBestMixingPlanY1(r_old,g_old,b_old,currentProject->pal->rgbPal,pal_row*palettesize);
+					tempPalOff=(plan.colors[map_value < plan.ratio ? 1 : 0]+(pal_row*palettesize))*3;
 				}else{
 					unsigned map_value = mapY3[(x & 7) + ((y & 7) << 3)];
 					MixingPlan plan;
-					if(colSpace){
-						if(ditherAlg==5)
-							plan = DeviseBestMixingPlanY2(r_old,g_old,b_old,colPtr,0, 16);
-						else
-							plan = DeviseBestMixingPlanY3(r_old,g_old,b_old,colPtr,0, 16);
-						map_value = map_value * plan.size() / 64;
-						//gdImageSetPixel(im, x,y, plan[ map_value ]);
-						tempPalOff=plan[map_value]*3;
-					}else{
-						if(ditherAlg==5)
-							plan = DeviseBestMixingPlanY2(r_old,g_old,b_old,currentProject->pal->rgbPal,pal_row*palettesize, 16);
-						else
-							plan = DeviseBestMixingPlanY3(r_old,g_old,b_old,currentProject->pal->rgbPal,pal_row*palettesize, 16);
-						
-						//unsigned color = gdImageGetTrueColorPixel(srcim, x, y);
-						map_value = map_value * plan.size() / 64;
-						//gdImageSetPixel(im, x,y, plan[ map_value ]);
-						tempPalOff=(plan[ map_value ]+(pal_row*palettesize))*3;
-					}
+					if(ditherAlg==5)
+						plan = DeviseBestMixingPlanY2(r_old,g_old,b_old,currentProject->pal->rgbPal,pal_row*palettesize, 16);
+					else
+						plan = DeviseBestMixingPlanY3(r_old,g_old,b_old,currentProject->pal->rgbPal,pal_row*palettesize, 16);
+					map_value = map_value * plan.size() / 64;
+					tempPalOff=(plan[ map_value ]+(pal_row*palettesize))*3;
 				}
-				if(colSpace){
-					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)]=colPtr[tempPalOff];
-					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+1]=colPtr[tempPalOff+1];
-					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2]=colPtr[tempPalOff+2];
-				}else{
-					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)]=currentProject->pal->rgbPal[tempPalOff];
-					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+1]=currentProject->pal->rgbPal[tempPalOff+1];
-					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2]=currentProject->pal->rgbPal[tempPalOff+2];
-				}
+				image[(x*rgbPixelsize)+(y*w*rgbPixelsize)]=currentProject->pal->rgbPal[tempPalOff];
+				image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+1]=currentProject->pal->rgbPal[tempPalOff+1];
+				image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2]=currentProject->pal->rgbPal[tempPalOff+2];
 			}
 			progressUpdate(&win,&progress,lasttime,progressHave,y,h);
 		}
-		if(colSpace)
-			free(colPtr);
 	}
 	break;
 	case 2://nearest color
@@ -963,6 +898,18 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 							g_new=(temprgb>>8)&255;
 							r_new=(temprgb>>16)&255;}
 						break;
+						case masterSystem:
+							r_new=palTabMasterSystem[nearestOneChannel(r_old,palTabMasterSystem,4)];
+							g_new=palTabMasterSystem[nearestOneChannel(g_old,palTabMasterSystem,4)];
+							b_new=palTabMasterSystem[nearestOneChannel(b_old,palTabMasterSystem,4)];
+						break;
+						case gameGear:
+							r_new=palTabGameGear[nearestOneChannel(r_old,palTabGameGear,16)];
+							g_new=palTabGameGear[nearestOneChannel(g_old,palTabGameGear,16)];
+							b_new=palTabGameGear[nearestOneChannel(b_old,palTabGameGear,16)];
+						break;
+						default:
+							show_default_error
 					}
 				}else{
 					if(ditherAlg==3){
@@ -1057,6 +1004,18 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 							g_new=(temprgb>>8)&255;
 							r_new=(temprgb>>16)&255;}
 						break;
+						case masterSystem:
+							r_new=palTabMasterSystem[nearestOneChannel(r_old,palTabMasterSystem,4)];
+							g_new=palTabMasterSystem[nearestOneChannel(g_old,palTabMasterSystem,4)];
+							b_new=palTabMasterSystem[nearestOneChannel(b_old,palTabMasterSystem,4)];
+						break;
+						case gameGear:
+							r_new=palTabGameGear[nearestOneChannel(r_old,palTabGameGear,16)];
+							g_new=palTabGameGear[nearestOneChannel(g_old,palTabGameGear,16)];
+							b_new=palTabGameGear[nearestOneChannel(b_old,palTabGameGear,16)];
+						break;
+						default:
+							show_default_error
 					}
 				}else{
 					if((currentProject->gameSystem==NES)&&isSprite){

@@ -20,8 +20,8 @@
 #include "nespal.h"
 extern uint8_t nespaltab[];
 extern uint8_t nespaltab_alt[];
-uint8_t nearest_color_index(uint8_t val,unsigned startindex);
-uint8_t nearest_color_index(uint8_t val);
+unsigned nearest_color_index(int val,unsigned startindex);
+unsigned nearest_color_index(int val);
 void rgbToHsl255(unsigned r,unsigned g,unsigned b,double * hh,double * ll,double * ss);
 void rgbToHsl(double r,double g,double b,double * hh,double * ll,double * ss);
 uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_found,bool useAlpha=false);

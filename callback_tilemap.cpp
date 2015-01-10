@@ -106,7 +106,7 @@ void save_tilemap_as_image(Fl_Widget*,void*){
 		uint8_t * tempptr,yy;
 		for(y=0;y<h;y+=8){
 			for(x=0;x<w;x+=8){
-				tileToTrueCol(currentProject->tileC->tDat.data()+(currentProject->tms->maps[currentProject->curPlane].get_tile(x/8,y/8)*currentProject->tileC->tileSize),temptile,currentProject->tms->maps[currentProject->curPlane].getPalRow(x/8,y/8),false);
+				currentProject->tileC->tileToTrueCol(currentProject->tileC->tDat.data()+(currentProject->tms->maps[currentProject->curPlane].get_tile(x/8,y/8)*currentProject->tileC->tileSize),temptile,currentProject->tms->maps[currentProject->curPlane].getPalRow(x/8,y/8),false);
 				tempptr=temptile;
 				for(yy=0;yy<8;++yy){
 					memcpy(image,tempptr,24);
@@ -444,7 +444,7 @@ void shadow_highligh_findout(Fl_Widget*,void*){
 				uint8_t * ptrorgin=&currentProject->tileC->truetDat[(cur_tile*currentProject->tileC->tcSize)];
 				set_palette_type_force(0);//normal
 				currentProject->tileC->truecolor_to_tile(currentProject->tms->maps[currentProject->curPlane].getPalRow(x,y),cur_tile,false);
-				tileToTrueCol(&currentProject->tileC->tDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tms->maps[currentProject->curPlane].getPalRow(x,y));
+				currentProject->tileC->tileToTrueCol(&currentProject->tileC->tDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tms->maps[currentProject->curPlane].getPalRow(x,y));
 				for (xx=0;xx<256;xx+=4){
 					errorNorm+=abs(temp[xx]-ptrorgin[xx]);
 					errorNorm+=abs(temp[xx+1]-ptrorgin[xx+1]);
@@ -452,7 +452,7 @@ void shadow_highligh_findout(Fl_Widget*,void*){
 				}
 				set_palette_type_force(8);//shadow
 				currentProject->tileC->truecolor_to_tile(currentProject->tms->maps[currentProject->curPlane].getPalRow(x,y),cur_tile,false);
-				tileToTrueCol(&currentProject->tileC->tDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tms->maps[currentProject->curPlane].getPalRow(x,y));
+				currentProject->tileC->tileToTrueCol(&currentProject->tileC->tDat[(cur_tile*currentProject->tileC->tileSize)],temp,currentProject->tms->maps[currentProject->curPlane].getPalRow(x,y));
 				for (xx=0;xx<256;xx+=4){
 					errorSh+=abs(temp[xx]-ptrorgin[xx]);
 					errorSh+=abs(temp[xx+1]-ptrorgin[xx+1]);

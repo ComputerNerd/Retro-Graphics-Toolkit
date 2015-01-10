@@ -19,6 +19,7 @@
 #include "project.h"
 #include <inttypes.h>
 extern int pushed_g;
+#define TABS_WITH_ROW_BUTTONS 2
 class editor : public Fl_Double_Window{
 	private:
 	Fl_Menu_Bar *menu;
@@ -44,6 +45,7 @@ class editor : public Fl_Double_Window{
 	Fl_Choice*solidChunkMenu;
 	Fl_Choice*ditherAlgSel;
 	Fl_Choice*planeSelect;
+	Fl_Choice*gameSysSel;
 	Fl_Group* TabsMain[shareAmtPj+1];
 	Fl_Scrollbar * map_x_scroll;
 	Fl_Scrollbar * map_y_scroll;
@@ -82,8 +84,7 @@ class editor : public Fl_Double_Window{
 	Fl_Slider* projectSelect;
 	Fl_Tabs* the_tabs;
 	Fl_Round_Button* palType[9];
-	Fl_Round_Button* GameSys[2];
-	Fl_Round_Button* palRTE[MAX_ROWS_PALETTE*2];
+	Fl_Round_Button* palRTE[MAX_ROWS_PALETTE*TABS_WITH_ROW_BUTTONS];
 	Fl_Check_Button* hflipCB[2];
 	Fl_Check_Button* vflipCB[2];
 	Fl_Check_Button* prioCB[2];

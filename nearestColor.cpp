@@ -16,6 +16,20 @@
 */
 #include "project.h"
 #include "CIE.h"
+unsigned nearestOneChannel(int val,const uint8_t*pal,unsigned amt){
+	int_fast32_t distanceSquared, minDistanceSquared;
+	unsigned bestIndex = 0;
+	minDistanceSquared = 255*255 + 1;
+	for(unsigned i=0;i<amt;++i){
+		int32_t Rdiff = val - (int)pal[i];
+		distanceSquared = Rdiff*Rdiff;
+		if(distanceSquared<minDistanceSquared){
+			minDistanceSquared = distanceSquared;
+			bestIndex = i;
+		}
+	}
+	return bestIndex;
+}
 static inline int sq(int x){
 	return x*x;
 }

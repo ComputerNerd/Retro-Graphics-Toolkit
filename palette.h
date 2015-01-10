@@ -16,6 +16,8 @@
 */
 #pragma once
 extern unsigned palTypeGen;
+extern const uint8_t palTabGameGear[];
+extern const uint8_t palTabMasterSystem[];
 extern const uint8_t palTab[];
 void sortBy(unsigned type,bool perRow);
 void set_palette_type(void);

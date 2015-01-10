@@ -162,9 +162,9 @@ void load_tiles(Fl_Widget*,void*o){
 						}
 					}
 doTile:
-					tileToTrueCol(&currentProject->tileC->tDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetDat[(c*256)],foundRow,true,alphaZero);
+					currentProject->tileC->tileToTrueCol(&currentProject->tileC->tDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetDat[(c*256)],foundRow,true,alphaZero);
 				}else
-					tileToTrueCol(&currentProject->tileC->tDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetDat[(c*256)],defaultRow,true,alphaZero);
+					currentProject->tileC->tileToTrueCol(&currentProject->tileC->tDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetDat[(c*256)],defaultRow,true,alphaZero);
 			}
 			currentProject->tileC->amt=(file_size/currentProject->tileC->tileSize);
 			currentProject->tileC->amt+=offset_tiles;

@@ -15,4 +15,5 @@
    along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
+unsigned nearestOneChannel(int val,const uint8_t*pal,unsigned amt);
 unsigned nearestColIndex(int red,int green,int blue,uint8_t*pal,unsigned amt,bool checkType=false,unsigned off=0);

@@ -28,10 +28,12 @@ public:
 	unsigned sizew,sizeh;
 	unsigned tcSize;
 	void insertTile(uint32_t at);
+	void setPixel(uint8_t*ptr,uint32_t x,uint32_t y,uint32_t val);
 	void setPixel(uint32_t tile,uint32_t x,uint32_t y,uint32_t val);
-	uint32_t getPixel(uint32_t tile,uint32_t x,uint32_t y);
+	uint32_t getPixel(const uint8_t*ptr,uint32_t x,uint32_t y) const;
+	uint32_t getPixel(uint32_t tile,uint32_t x,uint32_t y) const;
 	void setPixelTc(uint32_t tile,uint32_t x,uint32_t y,uint32_t val);
-	uint32_t getPixelTc(uint32_t tile,uint32_t x,uint32_t y);
+	uint32_t getPixelTc(uint32_t tile,uint32_t x,uint32_t y) const;
 	void resizeAmt(uint32_t amtnew);//Resizes array to hold enough for set amount
 	void resizeAmt(void);
 	void appendTile(unsigned many=1);
@@ -45,7 +47,8 @@ public:
 	void vflip_truecolor_ptr(uint8_t *,uint8_t *);
 	void hflip_tile(uint32_t,uint8_t *);
 	void vflip_tile(uint32_t,uint8_t *);
-	void vflip_tile_ptr(uint8_t *,uint8_t *);
+	void vflip_tile_ptr(const uint8_t*in,uint8_t*out);
 	void blank_tile(uint32_t);/*!<This makes the tile use color 0*/ 
 	void remove_duplicate_tiles(bool tColor);
+	void tileToTrueCol(const uint8_t*input,uint8_t*output,unsigned row,bool useAlpha=true,bool alphaZero=false);
 };

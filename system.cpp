@@ -27,6 +27,9 @@ void setBitdepthcurSys(unsigned bd){
 	--bd;
 	switch(currentProject->gameSystem){
 		case segaGenesis:
+		case masterSystem:
+		case gameGear:
+		case TMS9918:
 			setbdmask(bd,3);
 		break;
 		case NES:
@@ -38,11 +41,20 @@ void setBitdepthcurSys(unsigned bd){
 		case frameBufferPal:
 			setbdmask(bd,7);
 		break;
+		default:
+			show_default_error
+	}
+	if(containsDataCurProj(pjHaveTiles)){
+		currentProject->tileC->tileSize=currentProject->tileC->sizew*currentProject->tileC->sizeh*getBitdepthcurSys()/8;
+		currentProject->tileC->resizeAmt();
 	}
 }
 int getBitdepthcurSysraw(void){
 	switch(currentProject->gameSystem){
 		case segaGenesis:
+		case masterSystem:
+		case gameGear:
+		case TMS9918:
 			return (currentProject->subSystem&3);
 		break;
 		case NES:
@@ -51,5 +63,7 @@ int getBitdepthcurSysraw(void){
 		case frameBufferPal:
 			return (currentProject->subSystem&7);
 		break;
+		default:
+			show_default_error
 	}
 }

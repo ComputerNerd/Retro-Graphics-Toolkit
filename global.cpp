@@ -39,68 +39,6 @@ bool showTrueColor;
 bool rowSolo;
 bool tileEditModePlace_G;
 uint32_t selTileE_G[2];
-void tileToTrueCol(uint8_t * input,uint8_t * output,uint8_t row,bool useAlpha,bool alphaZero){
-	switch (currentProject->gameSystem){
-		case segaGenesis:
-			row*=48;
-			for (uint8_t y=0;y<8;++y){
-				for (uint8_t x=0;x<4;++x){
-					//even,odd
-					uint8_t temp=*input++;
-					uint8_t temp_1,temp_2;
-					temp_1=temp>>4;//first pixel
-					temp_2=temp&15;//second pixel
-					*output++=currentProject->pal->rgbPal[row+(temp_1*3)];
-					*output++=currentProject->pal->rgbPal[row+(temp_1*3)+1];
-					*output++=currentProject->pal->rgbPal[row+(temp_1*3)+2];
-					if(useAlpha){
-						if(alphaZero){
-							if(temp_1)
-								*output++=255;
-							else
-								*output++=0;
-						}else
-							*output++=255;
-					}
-					*output++=currentProject->pal->rgbPal[row+(temp_2*3)];
-					*output++=currentProject->pal->rgbPal[row+(temp_2*3)+1];
-					*output++=currentProject->pal->rgbPal[row+(temp_2*3)+2];
-					if(useAlpha){
-						if(alphaZero){
-							if(temp_2)
-								*output++=255;
-							else
-								*output++=0;
-						}else
-							*output++=255;
-					}
-				}
-			}
-		break;
-		case NES:
-			row*=12;
-			for (uint8_t y=0;y<8;++y){
-				for (int8_t x=7;x>=0;--x){
-					uint8_t temp;
-					temp=(input[y]>>x)&1;
-					temp|=((input[y+8]>>x)&1)<<1;
-					*output++=currentProject->pal->rgbPal[row+(temp*3)];
-					*output++=currentProject->pal->rgbPal[row+(temp*3)+1];
-					*output++=currentProject->pal->rgbPal[row+(temp*3)+2];
-					if(useAlpha){
-						if(alphaZero){
-							if(temp)
-								*output++=255;
-							else
-								*output++=0;
-						}else
-							*output++=255;
-					}
-				}
-			}
-		break;
-	}
-}
 bool verify_str_number_only(char * str){
 /*!
 Fltk provides an input text box that makes it easy for the user to type text however as a side effect they can accidentally enter non number characters that may be handled weird by atoi()
@@ -134,14 +72,4 @@ uint8_t find_near_color_from_row_rgb(unsigned row,uint8_t r,uint8_t g,uint8_t b,
 }
 uint8_t find_near_color_from_row(unsigned row,uint8_t r,uint8_t g,uint8_t b,bool alt){
 	return (find_near_color_from_row_rgb(row,r,g,b,alt)/3)-(row*currentProject->pal->perRow);
-}
-uint32_t cal_offset_truecolor(unsigned x,unsigned y,unsigned rgb,uint32_t tile){
-	/*!<
-	cal_offset_truecolor is made to help when accessing a true color tile array
-	an example of it would be
-	red_temp=truecolor_data[cal_offset_truecolor(0,0,0,0)]//get the red pixel at pixel 0,0 at tile 0
-	green_temp=truecolor_data[cal_offset_truecolor(0,0,1,0)]//get the green pixel at pixel 0,0 at tile 0
-	blue_temp=truecolor_data[cal_offset_truecolor(0,0,2,0)]//get the blue pixel at pixel 0,0 at tile 0
-	*/
-	return (x*4)+(y*32)+rgb+(tile*256);
 }

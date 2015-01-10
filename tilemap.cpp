@@ -29,6 +29,7 @@
 #include "classtilemap.h"
 #include "classpalette.h"
 #include "classpalettebar.h"
+#include "nearestColor.h"
 static void addHist(uint32_t cur_tile,int type,uint32_t*hist,unsigned sz){
 	double szz=(double)sz;
 	uint8_t * truePtr=&currentProject->tileC->truetDat[cur_tile*256];
@@ -548,12 +549,25 @@ try_again_color:
 					rgb_pal2[(x*3)+2]=palTab[b];
 				break;
 				case NES:
-					uint8_t temp=currentProject->pal->to_nes_color_rgb(r,g,b);
+					{uint8_t temp=currentProject->pal->to_nes_color_rgb(r,g,b);
 					uint32_t temp_rgb = nesPalToRgb(temp);
 					rgb_pal2[(x*3)]=(temp_rgb>>16)&255;
 					rgb_pal2[(x*3)+1]=(temp_rgb>>8)&255;
-					rgb_pal2[(x*3)+2]=temp_rgb&255;
+					rgb_pal2[(x*3)+2]=temp_rgb&255;}
 				break;
+				case masterSystem:
+				case gameGear:
+					{const uint8_t*palUseTab=currentProject->gameSystem==gameGear?palTabGameGear:palTabMasterSystem;
+					unsigned colsTab=currentProject->gameSystem==gameGear?16:4;
+					r=nearestOneChannel(r,palUseTab,colsTab);
+					g=nearestOneChannel(g,palUseTab,colsTab);
+					b=nearestOneChannel(b,palUseTab,colsTab);
+					rgb_pal2[(x*3)]=palUseTab[r];
+					rgb_pal2[(x*3)+1]=palUseTab[g];
+					rgb_pal2[(x*3)+2]=palUseTab[b];}
+				break;
+				default:
+					show_default_error
 			}
 		}
 		unsigned new_colors = count_colors(rgb_pal2,colorz,1,&rgb_pal3[off3]);
@@ -593,21 +607,7 @@ againNerd:
 				goto againNerd;
 			}
 			memcpy(currentProject->pal->rgbPal+off3+(x*3),rgb_pal3+off3o+(x*3),3);
-			switch(currentProject->gameSystem){
-				case segaGenesis:
-					r=currentProject->pal->rgbPal[(x*3)+off3];
-					g=currentProject->pal->rgbPal[(x*3)+1+off3];
-					b=currentProject->pal->rgbPal[(x*3)+2+off3];
-					r=nearest_color_index(r)-palTypeGen;
-					g=nearest_color_index(g)-palTypeGen;
-					b=nearest_color_index(b)-palTypeGen;
-					currentProject->pal->palDat[(x*2)+off2]=b<<1;
-					currentProject->pal->palDat[(x*2)+1+off2]=(r<<1)|(g<<5);
-				break;
-				case NES:
-					currentProject->pal->palDat[x+offsetPal]=currentProject->pal->to_nes_color(x+offsetPal);
-				break;
-			}
+			currentProject->pal->rgbToEntry(currentProject->pal->rgbPal[(x*3)+off3],currentProject->pal->rgbPal[(x*3)+1+off3],currentProject->pal->rgbPal[(x*3)+2+off3],x+offsetPal);
 		}
 		if(currentProject->gameSystem==NES)
 			update_emphesis(0,0);
@@ -624,14 +624,14 @@ againNerd:
 }
 struct settings{//TODO avoid hardcoding palette row amount
 	bool sprite;//Are we generating the palette for a sprite
-	unsigned off[4];//Offsets for each row
+	unsigned off[MAX_ROWS_PALETTE];//Offsets for each row
 	unsigned col;//How many colors are to be generated
 	unsigned alg;//Which algorithm should be used
 	bool ditherAfter;//After color quantization should the image be dithered
 	bool entireRow;//If true dither entire tilemap at once or false dither each row separately
 	unsigned colSpace;//Which colorspace should the image be quantized in
-	unsigned perRow[4];//How many colors will be generated per row
-	bool useRow[4];
+	unsigned perRow[MAX_ROWS_PALETTE];//How many colors will be generated per row
+	bool useRow[MAX_ROWS_PALETTE];
 };
 static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 	struct settings*set=(struct settings*)s;
@@ -647,14 +647,15 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 		w*=currentProject->tileC->sizew;
 		h*=currentProject->tileC->sizeh;
 	}
+	unsigned maxRows=currentProject->pal->getMaxRows(set->sprite);
 	unsigned firstRow=0;
-	for(;(firstRow<4)&&(!set->useRow[firstRow]);++firstRow);
-	if(firstRow>=4){
+	for(;(firstRow<maxRows)&&(!set->useRow[firstRow]);++firstRow);
+	if(firstRow>=maxRows){
 		fl_alert("No rows specified");
 		return;
 	}
 	unsigned rows=0;
-	for(unsigned i=firstRow;i<4;++i){
+	for(unsigned i=firstRow;i<maxRows;++i){
 		if(set->useRow[i])
 			++rows;
 	}
@@ -695,10 +696,10 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 			Fl::check();
 		}else{
 			if (rowAuto==1)
-				currentProject->tms->maps[currentProject->curPlane].pickRow(4-firstRow);
+				currentProject->tms->maps[currentProject->curPlane].pickRow(maxRows-firstRow);
 			else if(rowAuto==3)
-				currentProject->tms->maps[currentProject->curPlane].pickTileRowQuantChoice(4-firstRow);
-			for (unsigned i=firstRow;i<4;++i){
+				currentProject->tms->maps[currentProject->curPlane].pickTileRowQuantChoice(maxRows-firstRow);
+			for (unsigned i=firstRow;i<maxRows;++i){
 				if(set->useRow[i]){
 					reduceImage(image,found_colors,i,(i*currentProject->pal->perRow)+set->off[i],progress,win,set->perRow[i],set->colSpace,set->alg);
 					window->damage(FL_DAMAGE_USER1);
@@ -726,9 +727,9 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 }
 static Fl_Window*winG;
 struct settings*setG;
-static Fl_Int_Input*perrow[4];
-static Fl_Int_Input*perrowoffset[4];
-static Fl_Check_Button*useRowCbtn[4];
+static Fl_Int_Input*perrow[MAX_ROWS_PALETTE];
+static Fl_Int_Input*perrowoffset[MAX_ROWS_PALETTE];
+static Fl_Check_Button*useRowCbtn[MAX_ROWS_PALETTE];
 static void setValInt(Fl_Int_Input*i,unsigned val){
 	char tmp[16];
 	snprintf(tmp,16,"%d",val);
@@ -812,7 +813,7 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	rowlabel1->labelsize(12);
 	Fl_Box*rowlabel2=new Fl_Box(120,8,96,12,"Offset per row:");
 	rowlabel2->labelsize(12);
-	for(uintptr_t i=0;i<4;++i){
+	for(unsigned i=0;i<currentProject->pal->getMaxRows(sprite?true:false);++i){
 		set.useRow[i]=true;
 		char tmp[16];
 		useRowCbtn[i]=new Fl_Check_Button(8,28+(i*24),24,16);
@@ -839,7 +840,7 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	Fl_Check_Button*dit=new Fl_Check_Button(216,2,176,24,"Dither after completion");
 	dit->set();
 	dit->callback(toggleBoolCB,&set.ditherAfter);
-	Fl_Choice*algsel=new Fl_Choice(240,40,128,24,"Color reducation algorithm:");
+	Fl_Choice*algsel=new Fl_Choice(240,40,128,24,"Color reduction algorithm:");
 	algsel->align(FL_ALIGN_TOP);
 	algsel->copy(colorReducationChoices);
 	algsel->callback(setParmChoiceCB,(void*)&set.alg);

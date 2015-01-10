@@ -634,8 +634,16 @@ void UndoRedo(bool redo){
 		break;
 		case uPaletteEntry:
 			{struct undoPaletteEntry*up=(struct undoPaletteEntry*)uptr->ptr;
-			switch(currentProject->gameSystem){
-				case segaGenesis:
+			switch(currentProject->pal->esize){
+				case 1:
+					if(redo)
+						currentProject->pal->palDat[up->id]=up->valnew;
+					else{
+						up->valnew=currentProject->pal->palDat[up->id];
+						currentProject->pal->palDat[up->id]=up->val;
+					}
+				break;
+				case 2:
 					{uint16_t*ptr=(uint16_t*)currentProject->pal->palDat+up->id;
 					if(redo)
 						*ptr=up->valnew;
@@ -643,14 +651,6 @@ void UndoRedo(bool redo){
 						up->valnew=*ptr;
 						*ptr=up->val;
 					}}
-				break;
-				case NES:
-					if(redo)
-						currentProject->pal->palDat[up->id]=up->valnew;
-					else{
-						up->valnew=currentProject->pal->palDat[up->id];
-						currentProject->pal->palDat[up->id]=up->val;
-					}
 				break;
 			}
 			currentProject->pal->updateRGBindex(up->id);
@@ -663,9 +663,9 @@ void UndoRedo(bool redo){
 					palBar.selBox[1]=up->id%currentProject->pal->perRow;
 					palBar.changeRow(up->id/currentProject->pal->perRow,1);
 					{unsigned focus=0;
-					for(unsigned i=0;i<4;++i)
+					for(unsigned i=0;i<currentProject->pal->rowCntPal;++i)
 						focus|=Fl::focus()==window->palRTE[i];
-					for(unsigned i=0;i<4;++i){
+					for(unsigned i=0;i<currentProject->pal->rowCntPal;++i){
 						if(focus&&(i==palBar.selRow[1]))
 							Fl::focus(window->palRTE[i]);
 						window->palRTE[i]->value(i==palBar.selRow[1]);
@@ -675,9 +675,9 @@ void UndoRedo(bool redo){
 					palBar.selBox[2]=up->id%currentProject->pal->perRow;
 					palBar.changeRow(up->id/currentProject->pal->perRow,2);
 					{unsigned focus=0;
-					for(unsigned i=0;i<4;++i)
+					for(unsigned i=0;i<currentProject->pal->rowCntPal;++i)
 						focus|=Fl::focus()==window->palRTE[i+4];
-					for(unsigned i=0;i<4;++i){
+					for(unsigned i=0;i<currentProject->pal->rowCntPal;++i){
 						if(focus&&(i==palBar.selRow[2]))
 							Fl::focus(window->palRTE[i+4]);
 						window->palRTE[i+4]->value(i==palBar.selRow[2]);
@@ -1015,14 +1015,16 @@ void pushPaletteEntry(uint32_t id){
 	memUsed+=sizeof(struct undoPaletteEntry);
 	struct undoPaletteEntry*up=(struct undoPaletteEntry*)uptr->ptr;
 	up->id=id;
-	switch(currentProject->gameSystem){
-		case segaGenesis:
+	switch(currentProject->pal->esize){
+		case 1:
+			up->val=(int32_t)currentProject->pal->palDat[id];
+		break;
+		case 2:
 			{uint16_t*ptr=(uint16_t*)currentProject->pal->palDat+id;
 			up->val=*ptr;}
 		break;
-		case NES:
-			up->val=(int32_t)currentProject->pal->palDat[id];
-		break;
+		default:
+			show_default_error
 	}
 }
 void pushChunkResize(uint32_t wnew,uint32_t hnew){

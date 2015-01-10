@@ -46,8 +46,13 @@ void paletteBar::addTab(unsigned tab,bool all,bool tiny,bool alt){
 }
 void paletteBar::setSys(bool upSlide){
 	if(sysCache!=currentProject->gameSystem){
-		sysCache=currentProject->gameSystem;
-		currentProject->pal->setVars(sysCache);
+		currentProject->pal->setVars(currentProject->gameSystem);
+		for(unsigned i=0;i<TABS_WITH_ROW_BUTTONS*MAX_ROWS_PALETTE;i+=MAX_ROWS_PALETTE){
+			for(unsigned j=0;j<currentProject->pal->rowCntPal;++j)
+				window->palRTE[i+j]->show();
+			for(unsigned j=currentProject->pal->rowCntPal;j<MAX_ROWS_PALETTE;++j)
+				window->palRTE[i+j]->hide();
+		}
 		for(unsigned j=0;j<tabsWithPalette;++j){
 			for(unsigned i=0;i<3;++i){
 				switch(currentProject->gameSystem){
@@ -55,17 +60,31 @@ void paletteBar::setSys(bool upSlide){
 						slide[j][i]->label(namesGen[i]);
 						slide[j][i]->maximum(7);
 					break;
+					case masterSystem:
+						slide[j][i]->label(namesGen[i]);
+						slide[j][i]->maximum(3);
+					break;
+					case gameGear:
+						slide[j][i]->label(namesGen[i]);
+						slide[j][i]->maximum(15);
+					break;
 					case NES:
 						slide[j][i]->label(namesNES[i]);
 					break;
+					default:
+						show_default_error
 				}
 			}
 			switch(currentProject->gameSystem){
 				case segaGenesis:
-					slide[j][1]->labelsize(13);
-					slide[j][2]->labelsize(14);
-					slide[j][2]->resize(slide[j][2]->x()-16,slide[j][2]->y(),slide[j][2]->w()+16,slide[j][2]->h());
-					slide[j][2]->callback(update_palette, (void*)2);
+				case masterSystem:
+				case gameGear:
+					if(sysCache==NES){
+						slide[j][1]->labelsize(13);
+						slide[j][2]->labelsize(14);
+						slide[j][2]->resize(slide[j][2]->x()-16,slide[j][2]->y(),slide[j][2]->w()+16,slide[j][2]->h());
+						slide[j][2]->callback(update_palette, (void*)2);
+					}
 				break;
 				case NES:
 					slide[j][0]->maximum(15);
@@ -77,9 +96,19 @@ void paletteBar::setSys(bool upSlide){
 					slide[j][2]->resize(slide[j][2]->x()+16,slide[j][2]->y(),slide[j][2]->w()-16,slide[j][2]->h());
 					slide[j][2]->callback(update_emphesis);
 				break;
+				default:
+					show_default_error
 			}
 			selBox[j]%=currentProject->pal->perRow;
+			if(alt[j]&&currentProject->pal->haveAlt){
+				if(selRow[j]>=currentProject->pal->rowCntPalalt)
+					selRow[j]=currentProject->pal->rowCntPalalt-1;
+			}else{
+				if(selRow[j]>=currentProject->pal->rowCntPal)
+					selRow[j]=currentProject->pal->rowCntPal-1;
+			}
 		}
+		sysCache=currentProject->gameSystem;
 	}else
 		puts("Warning: syscache is same as gameSystem");
 	if(upSlide)
@@ -110,6 +139,17 @@ void paletteBar::updateSlider(unsigned tab){
 					slide[tab][0]->value(currentProject->pal->palDat[selBox[tab]+(selRow[tab]*4)]&15);
 					slide[tab][1]->value((currentProject->pal->palDat[selBox[tab]+(selRow[tab]*4)]>>4)&3);
 				}
+			break;
+			case masterSystem:
+				slide[tab][0]->value(currentProject->pal->palDat[selBox[tab]+(selRow[tab]*16)]&3);
+				slide[tab][1]->value((currentProject->pal->palDat[selBox[tab]+(selRow[tab]*16)]>>2)&3);
+				slide[tab][2]->value((currentProject->pal->palDat[selBox[tab]+(selRow[tab]*16)]>>4)&3);
+			break;
+			case gameGear:
+				{uint16_t*palDat=(uint16_t*)currentProject->pal->palDat+selBox[tab]+(selRow[tab]*16);
+				slide[tab][0]->value(*palDat&15);
+				slide[tab][1]->value((*palDat>>4)&15);
+				slide[tab][2]->value((*palDat>>8)&15);}
 			break;
 			default:
 				show_default_error

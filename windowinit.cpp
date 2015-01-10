@@ -183,6 +183,13 @@ static const Fl_Menu_Item SolidMenu[]={
 	{"All solid",0,solidCB,(void*)3},
 	{0}
 };
+static const Fl_Menu_Item gameSysMenuSel[]={
+	{"Sega Genesis/Mega Drive",0,set_game_system,(void*)segaGenesis},
+	{"Nintendo Entertainment System/Famicon",0,set_game_system,(void*)NES},
+	{"Master System",0,set_game_system,(void*)masterSystem},
+	{"Game Gear",0,set_game_system,(void*)gameGear},
+	{0}
+};
 extern Fl_Menu_Item subSysGenesis[];
 extern const char * MapWidthTxt;
 extern const char * MapHeightTxt;
@@ -222,23 +229,8 @@ void editor::_editor(){
 			ditherPower->value(16);
 			ditherPower->align(FL_ALIGN_LEFT);
 			ditherPower->callback(setSubditherSetting);
-			{
-				Fl_Group *o = new Fl_Group(96, 312, 800, 480);
-				{
-					GameSys[segaGenesis] = new Fl_Round_Button(96, 312, 96, 32, "Sega Genesis");
-					GameSys[segaGenesis]->tooltip("Sets the editing mode to Sega Genesis or Sega Mega Drive");
-					GameSys[segaGenesis]->type(FL_RADIO_BUTTON);
-					GameSys[segaGenesis]->callback((Fl_Callback*) set_game_system,(void *)segaGenesis);
-					GameSys[segaGenesis]->set();
-				} // Fl_Round_Button* o
-				{
-					GameSys[NES] = new Fl_Round_Button(224, 312, 64, 32, "NES");
-					GameSys[NES]->tooltip("Sets the editing mode to Nintendo Entertainment System or Famicon");
-					GameSys[NES]->type(FL_RADIO_BUTTON);
-					GameSys[NES]->callback((Fl_Callback*) set_game_system,(void *)NES);
-				} // Fl_Round_Button* o
-				o->end();
-			} // End of buttons
+			gameSysSel=new Fl_Choice(96, 312, 192, 24);
+			gameSysSel->copy(gameSysMenuSel);
 			ditherAlgSel=new Fl_Choice(64, 464, 144, 24);
 			ditherAlgSel->copy(ditherChoices);
 			subSysC=new Fl_Choice(208, 464, 128, 24);
