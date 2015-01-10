@@ -26,7 +26,7 @@ static void setbdmask(unsigned bd,unsigned mask){
 void setBitdepthcurSys(unsigned bd){
 	--bd;
 	switch(currentProject->gameSystem){
-		case sega_genesis:
+		case segaGenesis:
 			setbdmask(bd,3);
 		break;
 		case NES:
@@ -35,20 +35,20 @@ void setBitdepthcurSys(unsigned bd){
 			else
 				currentProject->subSystem&=~2;
 		break;
-		case frameBuffer_pal:
+		case frameBufferPal:
 			setbdmask(bd,7);
 		break;
 	}
 }
 int getBitdepthcurSysraw(void){
 	switch(currentProject->gameSystem){
-		case sega_genesis:
+		case segaGenesis:
 			return (currentProject->subSystem&3);
 		break;
 		case NES:
 			return ((currentProject->subSystem>>1)&1);
 		break;
-		case frameBuffer_pal:
+		case frameBufferPal:
 			return (currentProject->subSystem&7);
 		break;
 	}

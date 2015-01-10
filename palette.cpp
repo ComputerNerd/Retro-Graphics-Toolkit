@@ -37,24 +37,15 @@ void sortBy(unsigned type,bool perRow){
 			std::sort(MapHSL+(currentProject->pal->perRow*i),MapHSL+(currentProject->pal->perRow*(i+1)),comparatorHSL);
 	}else
 		std::sort(MapHSL,MapHSL+(totalCol),comparatorHSL);
-	unsigned eSize;
-	switch(currentProject->gameSystem){
-		case sega_genesis:
-			eSize=2;
-		break;
-		case NES:
-			eSize=1;
-		break;
-	}
-	uint8_t* newPal=(uint8_t*)alloca((totalCol)*eSize);
-	uint8_t* newPalRgb=(uint8_t*)alloca(totalCol*eSize*3);
+	uint8_t* newPal=(uint8_t*)alloca((totalCol)*currentProject->pal->esize);
+	uint8_t* newPalRgb=(uint8_t*)alloca(totalCol*currentProject->pal->esize*3);
 	uint8_t* newPalType=(uint8_t*)alloca(totalCol);
 	for(unsigned x=0;x<totalCol;++x){
-		memcpy(newPal+(x*eSize),currentProject->pal->palDat+(MapHSL[x].second*eSize),eSize);
+		memcpy(newPal+(x*currentProject->pal->esize),currentProject->pal->palDat+(MapHSL[x].second*currentProject->pal->esize),currentProject->pal->esize);
 		memcpy(newPalRgb+(x*3),currentProject->pal->rgbPal+(MapHSL[x].second*3),3);
 		newPalType[x]=currentProject->pal->palType[MapHSL[x].second];
 	}
-	memcpy(currentProject->pal->palDat,newPal,totalCol*eSize);
+	memcpy(currentProject->pal->palDat,newPal,totalCol*currentProject->pal->esize);
 	memcpy(currentProject->pal->rgbPal,newPalRgb,totalCol*3);
 	memcpy(currentProject->pal->palType,newPalType,totalCol);
 	delete[] MapHSL;

@@ -51,7 +51,7 @@ void paletteBar::setSys(bool upSlide){
 		for(unsigned j=0;j<tabsWithPalette;++j){
 			for(unsigned i=0;i<3;++i){
 				switch(currentProject->gameSystem){
-					case sega_genesis:
+					case segaGenesis:
 						slide[j][i]->label(namesGen[i]);
 						slide[j][i]->maximum(7);
 					break;
@@ -61,7 +61,7 @@ void paletteBar::setSys(bool upSlide){
 				}
 			}
 			switch(currentProject->gameSystem){
-				case sega_genesis:
+				case segaGenesis:
 					slide[j][1]->labelsize(13);
 					slide[j][2]->labelsize(14);
 					slide[j][2]->resize(slide[j][2]->x()-16,slide[j][2]->y(),slide[j][2]->w()+16,slide[j][2]->h());
@@ -97,7 +97,7 @@ void paletteBar::updateSlider(unsigned tab){
 		for(unsigned i=0;i<3;++i)
 			slide[tab][i]->show();
 		switch (currentProject->gameSystem){
-			case sega_genesis:
+			case segaGenesis:
 				slide[tab][2]->value(currentProject->pal->palDat[(selBox[tab]*2)+(selRow[tab]*32)]>>1);
 				slide[tab][1]->value(currentProject->pal->palDat[1+(selBox[tab]*2)+(selRow[tab]*32)]>>5);
 				slide[tab][0]->value((currentProject->pal->palDat[1+(selBox[tab]*2)+(selRow[tab]*32)]&14)>>1);		

@@ -15,11 +15,9 @@
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
 #pragma once
+#define MAX_ROWS_PALETTE 4//TODO refractor to allow "unlimited" rows
 //System declarations
-#define sega_genesis 0
-#define NES 1
-#define frameBuffer_pal 2
-#define frameBuffer 3//For example rgb565 would be here instead of frameBuffer_pal because the colors are fixed and all can be used
+enum gameSystemEnum{segaGenesis,NES,masterSystem,gameGear,TMS9918,SNES,frameBufferPal,frameBuffer};
 /* Subsystem declarations
  * Subsystem as the name implies depends on which system is selected
  * These are not compatible when switching systems

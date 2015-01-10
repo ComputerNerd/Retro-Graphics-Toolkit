@@ -300,7 +300,7 @@ bool sprites::recttoSprite(int x0,int x1,int y0,int y1,int where,Fl_Shared_Image
 	unsigned depth=loaded_image->d();
 	unsigned wmax,hmax;
 	switch(currentProject->gameSystem){
-		case sega_genesis:
+		case segaGenesis:
 			wmax=hmax=32;
 		break;
 		case NES:

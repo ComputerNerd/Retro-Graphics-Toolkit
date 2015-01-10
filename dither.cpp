@@ -20,7 +20,7 @@ static bool isChunkD_G;
 static uint32_t idChunk_G;
 uint8_t nearest_color_chanColSpace(uint8_t val,uint8_t chan){
 	switch (useMode){
-		case sega_genesis:
+		case segaGenesis:
 			return palTab[nearest_color_index(val)];
 		break;
 		case NES:
@@ -42,7 +42,7 @@ uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row){
 	minDistanceSquared = 255*255 + 1;
 	unsigned max_rgb=0;
 	switch (useMode){
-		case sega_genesis:
+		case segaGenesis:
 			max_rgb=48;//16*3=48
 		break;
 		case NES:
@@ -111,7 +111,7 @@ static int32_t error[SIZE]; /* queue with error
 	else
 		pvalue=*pixel + err/MAX;
   //pvalue = (pvalue>=128) ? 255 : 0;
-	if ((currentProject->gameSystem == sega_genesis) && (useHiL == 9)){
+	if ((currentProject->gameSystem == segaGenesis) && (useHiL == 9)){
 		unsigned tempSet;
 		if(isChunkD_G)
 			tempSet=(currentProject->Chunk->getPrio_t(idChunk_G,cur_x/8,cur_y/8)^1)*8;
@@ -779,7 +779,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 		if(colSpace){
 			uint8_t rl,gl,bl;
 			switch(currentProject->gameSystem){
-				case sega_genesis:
+				case segaGenesis:
 				{
 					tempPalSize=512;
 					palettesize=512;
@@ -815,14 +815,15 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 		}else{
 			colPtr=currentProject->pal->rgbPal;
 			switch(currentProject->gameSystem){
-				case sega_genesis:
+				case segaGenesis:
 					tempPalSize=64;
 					palettesize=16;
 				break;
 				case NES:
 					tempPalSize=16;
 					palettesize=4;
-					colPtr+=16*3;
+					if(isSprite)
+						colPtr+=16*3;
 				break;
 			}
 		}
@@ -843,7 +844,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				b_old=image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2];
 				if (useAlpha)
 					a_old=image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+3];
-				if (currentProject->gameSystem == sega_genesis && type_temp != 0){
+				if (currentProject->gameSystem == segaGenesis && type_temp != 0){
 					unsigned tempSet;
 					if(isChunk)
 						tempSet=(currentProject->Chunk->getPrio_t(idChunk,x/8,y/8)^1)*8;
@@ -912,15 +913,6 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+1]=currentProject->pal->rgbPal[tempPalOff+1];
 					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2]=currentProject->pal->rgbPal[tempPalOff+2];
 				}
-				//puts("x");
-				/*if(colSpace&&((x&31)==0)){
-					//this is slower
-					char txtbuf[128];
-					sprintf(txtbuf,"%d/%d,%d/%d",y,h,x,w);
-					progress->copy_label(txtbuf);
-					progress->value((double)y+((double)x/(double)w));
-					Fl::check();
-				}*/
 			}
 			progressUpdate(&win,&progress,lasttime,progressHave,y,h);
 		}
@@ -949,7 +941,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				}
 				//find nearest color
 				uint8_t half=18;
-				if(currentProject->gameSystem == sega_genesis && type_temp != 0){
+				if(currentProject->gameSystem == segaGenesis && type_temp != 0){
 					unsigned tempSet;
 					if(isChunk)
 						tempSet=(currentProject->Chunk->getPrio_t(idChunk,x/rgbRowsize,y/8)^1)*8;
@@ -960,7 +952,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				}
 				if(colSpace){
 					switch (currentProject->gameSystem){
-						case sega_genesis:
+						case segaGenesis:
 							r_new=palTab[nearest_color_index(r_old)];
 							g_new=palTab[nearest_color_index(g_old)];
 							b_new=palTab[nearest_color_index(b_old)];
@@ -1044,7 +1036,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					}
 				}
 				//find nearest color
-				if (currentProject->gameSystem == sega_genesis && type_temp != 0){
+				if (currentProject->gameSystem == segaGenesis && type_temp != 0){
 					unsigned tempSet;
 					if(isChunk)
 						tempSet=(currentProject->Chunk->getPrio_t(idChunk,x/8,y/8)^1)*8;
@@ -1054,7 +1046,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				}
 				if(colSpace){
 					switch (currentProject->gameSystem){
-						case sega_genesis:
+						case segaGenesis:
 							r_new=palTab[nearest_color_index(r_old)];
 							g_new=palTab[nearest_color_index(g_old)];
 							b_new=palTab[nearest_color_index(b_old)];
@@ -1111,7 +1103,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 		}
 	break;
 	}
-	if(currentProject->gameSystem == sega_genesis)
+	if(currentProject->gameSystem == segaGenesis)
 		set_palette_type();
 	if(progressHave){
 		win->remove(progress);// remove progress bar from window

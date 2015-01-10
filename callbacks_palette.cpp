@@ -30,16 +30,7 @@ void sortRowbyCB(Fl_Widget*,void*){
 }
 void save_palette(Fl_Widget*, void* start_end){
 	char temp[4];
-	switch (currentProject->gameSystem){
-		case sega_genesis:
-			strcpy(temp,"63");
-		break;
-		case NES:
-			strcpy(temp,"15");
-		break;
-		default:
-			show_default_error
-	}
+	snprintf(temp,4,"%u",currentProject->pal->colorCnt-1);
 	char * returned=(char *)fl_input("Counting from zero enter the first entry that you want saved\nFor NES to save the sprite palette the first entry is 16","0");
 	if(!returned)
 		return;
@@ -94,13 +85,9 @@ void save_palette(Fl_Widget*, void* start_end){
 			if (type){
 				char comment[512];
 				snprintf(comment,512,"Colors %d-%d",start,end-1);
-				int bits;
-				if(currentProject->gameSystem==sega_genesis){
-					start*=2;//Be sure to keep this in sync with the other if statement shortly below
-					end*=2;
-					bits=16;
-				}else
-					bits=8;
+				int bits=currentProject->pal->esize*8;;
+				start*=currentProject->pal->esize;
+				end*=currentProject->pal->esize;
 				if(skipzero){
 					if (!saveBinAsText(bufskip,szskip,myfile,type,comment,"palDat",bits)){
 						fl_alert("Error: can not save file %s",the_file.c_str());
@@ -113,10 +100,8 @@ void save_palette(Fl_Widget*, void* start_end){
 					}
 				}
 			}else{
-				if(currentProject->gameSystem==sega_genesis){
-					start*=2;
-					end*=2;
-				}
+				start*=currentProject->pal->esize;
+				end*=currentProject->pal->esize;
 				if(skipzero){
 					if (fwrite(bufskip,1,szskip,myfile)==0){
 						fl_alert("Error: can not save file %s",the_file.c_str());
@@ -147,37 +132,37 @@ void update_palette(Fl_Widget* o, void* v){
 		pushed_g=0;
 		pushPaletteEntry(temp_entry);
 	}
-	if (currentProject->gameSystem == sega_genesis){
+	if (currentProject->gameSystem == segaGenesis){
 		unsigned temp_var=0;
-		unsigned temp2=(unsigned)s->value()*2;
+		unsigned temp2=(unsigned)s->value();
 		switch ((uintptr_t)v){
 			case 0://red
 				temp_var=currentProject->pal->palDat[(temp_entry*2)+1];//get the green value we need to save it for later
 				temp_var&=0xF0;
-				temp_var|=temp2;
+				temp_var|=temp2<<1;
 				currentProject->pal->palDat[(temp_entry*2)+1]=temp_var;
 				//now convert the new red value
-				currentProject->pal->rgbPal[temp_entry*3]=palTab[(temp2>>1)+palTypeGen];
+				currentProject->pal->rgbPal[temp_entry*3]=palTab[temp2+palTypeGen];
 			break;
 			case 1://green
 				//this is very similar to what I just did above
 				temp_var=currentProject->pal->palDat[(temp_entry*2)+1];
 				temp_var&=15;//get only the red value
 				//now OR the new green value to it
-				temp_var|=temp2<<4;
+				temp_var|=temp2<<5;
 				currentProject->pal->palDat[(temp_entry*2)+1]=temp_var;
 				//now convert the new green value
-				currentProject->pal->rgbPal[(temp_entry*3)+1]=palTab[(temp2>>1)+palTypeGen];
+				currentProject->pal->rgbPal[(temp_entry*3)+1]=palTab[temp2+palTypeGen];
 			break;
 			case 2:
 				//blue is the most trivial conversion to do
-				currentProject->pal->palDat[temp_entry*2]=temp2;
-				currentProject->pal->rgbPal[(temp_entry*3)+2]=palTab[(temp2>>1)+palTypeGen];
+				currentProject->pal->palDat[temp_entry*2]=temp2<<1;
+				currentProject->pal->rgbPal[(temp_entry*3)+2]=palTab[temp2+palTypeGen];
 			break;
 		}
 	}
 	else if (currentProject->gameSystem == NES){
-		uint8_t pal;
+		unsigned pal;
 		uint32_t rgb_out;
 		switch ((uintptr_t)v){
 			/*
@@ -191,16 +176,16 @@ void update_palette(Fl_Widget* o, void* v){
 				//first read out value
 				pal=currentProject->pal->palDat[temp_entry];
 				pal&=48;
-				pal|=(uint8_t)s->value();
+				pal|=(unsigned)s->value();
 			break;
 			case 1://Value
 				pal=currentProject->pal->palDat[temp_entry];
 				pal&=15;
-				pal|=((uint8_t)s->value())<<4;
+				pal|=((unsigned)s->value())<<4;
 			break;
 		}
 		currentProject->pal->palDat[temp_entry]=pal;
-		rgb_out=MakeRGBcolor(pal);
+		rgb_out=nesPalToRgb(pal);
 		currentProject->pal->rgbPal[temp_entry*3+2]=rgb_out&255;//blue
 		currentProject->pal->rgbPal[temp_entry*3+1]=(rgb_out>>8)&255;//green
 		currentProject->pal->rgbPal[temp_entry*3]=(rgb_out>>16)&255;//red
@@ -211,23 +196,16 @@ void update_palette(Fl_Widget* o, void* v){
 }
 void loadPalette(Fl_Widget*, void*){
 	uint32_t file_size;
-	uint8_t offset;
+	unsigned offset;
 	char * inputTemp=(char *)fl_input("Counting from zero enter the first entry that you want the palette to start at\nFor NES to load a sprite palette enter 16 or greater","0");
 	if (!inputTemp)
 		return;
 	if (!verify_str_number_only(inputTemp))
 		return;
 	offset=atoi(inputTemp);
-	uint8_t palSize;
-	switch (currentProject->gameSystem){
-		case sega_genesis:
-			offset*=2;
-			palSize=128;
-		break;
-		case NES:
-			palSize=32;
-		break;
-	}
+	unsigned palSize=currentProject->pal->colorCnt+currentProject->pal->colorCntalt;
+	palSize*=currentProject->pal->esize;
+	offset*=currentProject->pal->esize;
 	if(load_file_generic("Load palette") == true){
 		FILE * fi=fopen(the_file.c_str(), "rb");
 		if(fi){
@@ -235,7 +213,7 @@ void loadPalette(Fl_Widget*, void*){
 			fseek(fi,0,SEEK_END);
 			file_size = ftell(fi);
 			if (file_size > palSize-offset){
-				fl_alert("Error: The file size is bigger than %d (%d-%d) bytes\nMaybe there is extra data or you loaded the wrong file?",palSize-offset,palSize,offset);
+				fl_alert("Error: The file size is bigger than %d (%d-%d) bytes\nMaybe there is extra data or you loaded the wrong file?\n",palSize-offset,palSize,offset);
 				fclose(fi);
 				return;//end function due to errors
 			}
@@ -245,7 +223,7 @@ void loadPalette(Fl_Widget*, void*){
 			fclose(fi);
 			//now convert each value to rgb
 			switch (currentProject->gameSystem){
-				case sega_genesis:
+				case segaGenesis:
 					set_palette_type();
 				break;
 				case NES:

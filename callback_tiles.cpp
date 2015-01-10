@@ -168,7 +168,7 @@ void fill_tile(Fl_Widget* o, void*){
 		color=palBar.selBox[2];
 		uint8_t * tile_ptr_temp;
 		switch (currentProject->gameSystem){
-			case sega_genesis:
+			case segaGenesis:
 				tile_ptr_temp = &currentProject->tileC->tDat[currentProject->tileC->current_tile*32];
 				color|=color<<4;
 				memset(tile_ptr_temp,color,32);

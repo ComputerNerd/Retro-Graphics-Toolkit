@@ -31,7 +31,7 @@
 extern uint32_t curProjectID;
 struct Project{/*!<Holds all data needed for a project based system for example tile screen and level 1 are 2 separate projects*/
 	std::string Name;
-	uint32_t gameSystem;
+	gameSystemEnum gameSystem;
 	uint32_t subSystem;
 	uint32_t settings;//Stores dither algorithm and engine settings such as sonic 1 and such.
 	uint32_t useMask;/*!<Sharing can be used regardless of use mask*/

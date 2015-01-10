@@ -315,7 +315,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 				for (t=0;t<4;t++)
 					d[t]=0.0;
 			}
-			if ((type_temp != 0) && (currentProject->gameSystem == sega_genesis)){
+			if ((type_temp != 0) && (currentProject->gameSystem == segaGenesis)){
 				tempSet=(currentProject->tms->maps[currentProject->curPlane].get_prio(xtile,ytile)^1)*8;
 				set_palette_type_force(tempSet);
 			}
@@ -386,7 +386,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	free(imageout[2]);
 	free(imageout[3]);
 	free(imageout);
-	if(currentProject->gameSystem == sega_genesis)
+	if(currentProject->gameSystem == segaGenesis)
 		set_palette_type();
 }
 #define CLIP(X) ( (X) > 255 ? 255 : (X) < 0 ? 0 : X)
@@ -539,7 +539,7 @@ try_again_color:
 				b=user_pal[2][x];
 			}
 			switch(currentProject->gameSystem){
-				case sega_genesis:
+				case segaGenesis:
 					r=nearest_color_index(r);
 					g=nearest_color_index(g);
 					b=nearest_color_index(b);
@@ -549,7 +549,7 @@ try_again_color:
 				break;
 				case NES:
 					uint8_t temp=currentProject->pal->to_nes_color_rgb(r,g,b);
-					uint32_t temp_rgb = MakeRGBcolor(temp);
+					uint32_t temp_rgb = nesPalToRgb(temp);
 					rgb_pal2[(x*3)]=(temp_rgb>>16)&255;
 					rgb_pal2[(x*3)+1]=(temp_rgb>>8)&255;
 					rgb_pal2[(x*3)+2]=temp_rgb&255;
@@ -594,7 +594,7 @@ againNerd:
 			}
 			memcpy(currentProject->pal->rgbPal+off3+(x*3),rgb_pal3+off3o+(x*3),3);
 			switch(currentProject->gameSystem){
-				case sega_genesis:
+				case segaGenesis:
 					r=currentProject->pal->rgbPal[(x*3)+off3];
 					g=currentProject->pal->rgbPal[(x*3)+1+off3];
 					b=currentProject->pal->rgbPal[(x*3)+2+off3];

@@ -225,11 +225,11 @@ void editor::_editor(){
 			{
 				Fl_Group *o = new Fl_Group(96, 312, 800, 480);
 				{
-					GameSys[sega_genesis] = new Fl_Round_Button(96, 312, 96, 32, "Sega Genesis");
-					GameSys[sega_genesis]->tooltip("Sets the editing mode to Sega Genesis or Sega Mega Drive");
-					GameSys[sega_genesis]->type(FL_RADIO_BUTTON);
-					GameSys[sega_genesis]->callback((Fl_Callback*) set_game_system,(void *)sega_genesis);
-					GameSys[sega_genesis]->set();
+					GameSys[segaGenesis] = new Fl_Round_Button(96, 312, 96, 32, "Sega Genesis");
+					GameSys[segaGenesis]->tooltip("Sets the editing mode to Sega Genesis or Sega Mega Drive");
+					GameSys[segaGenesis]->type(FL_RADIO_BUTTON);
+					GameSys[segaGenesis]->callback((Fl_Callback*) set_game_system,(void *)segaGenesis);
+					GameSys[segaGenesis]->set();
 				} // Fl_Round_Button* o
 				{
 					GameSys[NES] = new Fl_Round_Button(224, 312, 64, 32, "NES");

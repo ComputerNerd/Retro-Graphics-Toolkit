@@ -15,6 +15,7 @@
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
 #pragma once
+#include "system.h"
 #include "project.h"
 #include <inttypes.h>
 extern int pushed_g;
@@ -82,7 +83,7 @@ class editor : public Fl_Double_Window{
 	Fl_Tabs* the_tabs;
 	Fl_Round_Button* palType[9];
 	Fl_Round_Button* GameSys[2];
-	Fl_Round_Button* palRTE[12];
+	Fl_Round_Button* palRTE[MAX_ROWS_PALETTE*2];
 	Fl_Check_Button* hflipCB[2];
 	Fl_Check_Button* vflipCB[2];
 	Fl_Check_Button* prioCB[2];

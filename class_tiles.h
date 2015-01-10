@@ -36,10 +36,10 @@ public:
 	void resizeAmt(void);
 	void appendTile(unsigned many=1);
 	void remove_tile_at(uint32_t);
-	void truecolor_to_tile_ptr(uint8_t palette_row,uint32_t cur_tile,uint8_t * tileinput,bool Usedither,bool isSprite);
-	void truecolor_to_tile(uint8_t,uint32_t,bool isSprite);/*!< truecolor_to_tile will update/dither the selected tile*/
+	void truecolor_to_tile_ptr(unsigned palette_row,uint32_t cur_tile,uint8_t * tileinput,bool Usedither,bool isSprite);
+	void truecolor_to_tile(unsigned,uint32_t,bool isSprite);/*!< truecolor_to_tile will update/dither the selected tile*/
 	void draw_truecolor(uint32_t,unsigned x,unsigned y,bool usehflip,bool usevflip,unsigned zoom);
-	void draw_tile(int,int,uint32_t,int,uint8_t,bool,bool,bool isSprite=false);
+	void draw_tile(int x_off,int y_off,uint32_t tile_draw,int zoom,unsigned pal_row,bool Usehflip,bool Usevflip,bool isSprite=false);
 	void hflip_truecolor(uint32_t,uint32_t *);
 	void vflip_truecolor(uint32_t,uint8_t *);
 	void vflip_truecolor_ptr(uint8_t *,uint8_t *);
@@ -48,14 +48,4 @@ public:
 	void vflip_tile_ptr(uint8_t *,uint8_t *);
 	void blank_tile(uint32_t);/*!<This makes the tile use color 0*/ 
 	void remove_duplicate_tiles(bool tColor);
-#if __LP64__
-	bool cmp_trueC(uint32_t one,uint64_t * two);/*!<Used to compare two truecolor tiles returns true if the same*/
-#else
-	bool cmp_trueC(uint32_t one,uint32_t * two);/*!<Used to compare two truecolor tiles returns true if the same*/
-#endif
-#if __LP64__
-	bool cmp_tiles(uint32_t one,uint64_t * two);/*!<Used to compare two tiles returns true if the same*/
-#else
-	bool cmp_tiles(uint32_t one,uint32_t * two);/*!<Used to compare two tiles returns true if the same*/
-#endif
 };

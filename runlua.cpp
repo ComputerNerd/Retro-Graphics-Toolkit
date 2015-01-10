@@ -274,7 +274,7 @@ static int lua_palette_getRaw(lua_State*L){
 	unsigned ent=luaL_optunsigned(L,1,0);
 	if(inRangeEnt(ent)){
 		switch(currentProject->gameSystem){
-			case sega_genesis:
+			case segaGenesis:
 				ent*=2;
 				lua_pushunsigned(L,currentProject->pal->palDat[ent]|(currentProject->pal->palDat[ent+1]<<8));
 			break;
@@ -294,7 +294,7 @@ static int lua_palette_setRaw(lua_State*L){
 	if(inRangeEnt(ent)){
 		unsigned val=luaL_optunsigned(L,2,0);
 		switch(currentProject->gameSystem){
-			case sega_genesis:
+			case segaGenesis:
 				currentProject->pal->palDat[ent*2]=val&255;
 				currentProject->pal->palDat[ent*2+1]=val>>8;
 			break;
@@ -628,8 +628,7 @@ static int lua_project_rgt_haveMessage(lua_State*L){
 	std::string msg="Current project:";
 	for(unsigned x=0;x<=pjMaxMaskBit;++x){
 		if(mask&(1<<x)){
-			msg.push_back('\n');
-			msg.append(containsDataCurProj(1<<x)?"has ":"does not have ");
+			msg.append(containsDataCurProj(1<<x)?"\nhas ":"\ndoes not have ");
 			msg.append(maskToName(1<<x));
 		}
 	}
@@ -958,7 +957,7 @@ void runLua(Fl_Widget*,void*){
 				mkKeyunsigned(L,"levelMask",pjHaveLevel);
 				mkKeyunsigned(L,"allMask",pjAllMask);
 				mkKeyunsigned(L,"gameSystem",currentProject->gameSystem);
-				mkKeyunsigned(L,"segaGenesis",sega_genesis);
+				mkKeyunsigned(L,"segaGenesis",segaGenesis);
 				mkKeyunsigned(L,"NES",NES);
 				lua_setglobal(L, "project");
 

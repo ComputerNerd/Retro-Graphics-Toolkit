@@ -437,7 +437,7 @@ bool tileMap::saveToFile(){
 			myfile = fopen(the_file.c_str(),"wb");
 		if (likely(myfile||clipboard)){
 			switch (currentProject->gameSystem){
-				case sega_genesis:
+				case segaGenesis:
 					{uint16_t * TheMap;
 					fileSize=(mapSizeW*mapSizeH*amt)*2;
 					TheMap = (uint16_t*)malloc(fileSize);
@@ -493,7 +493,7 @@ bool tileMap::saveToFile(){
 				char temp[2048];
 				snprintf(temp,2048,"Width %d Height %d %s",mapSizeW,mapSizeH*amt,typeToText(compression));
 				int bits;
-				if((currentProject->gameSystem==sega_genesis)&&(!compression))
+				if((currentProject->gameSystem==segaGenesis)&&(!compression))
 					bits=16;
 				else
 					bits=8;
@@ -619,7 +619,7 @@ bool tileMap::loadFromFile(){
 			output=decodeTypeStr(tilemap_file.c_str(),file_size,compression);
 		uint32_t blocksLoaded=file_size/w/h;
 		switch (currentProject->gameSystem){
-			case sega_genesis:
+			case segaGenesis:
 				if(blocksLoad)
 					size_temp=blocksLoaded*w*h;
 				else
@@ -658,7 +658,7 @@ bool tileMap::loadFromFile(){
 		}
 		uint32_t x,y;
 		switch (currentProject->gameSystem){
-			case sega_genesis:
+			case segaGenesis:
 				for (y=0;y<mapSizeH*amt;++y){
 					for (x=0;x<mapSizeW;++x){
 						if (((x+(y*w)+1)*2) <= file_size){
@@ -972,7 +972,7 @@ void tileMap::truecolorimageToTiles(uint8_t * image,int rowusage,bool useAlpha,b
 				}
 			}
 			//convert back to tile
-			if ((type_temp != 0) && (currentProject->gameSystem == sega_genesis)){
+			if ((type_temp != 0) && (currentProject->gameSystem == segaGenesis)){
 				tempSet=(get_prio(x_tile,y_tile)^1)*8;
 				set_palette_type_force(tempSet);
 			}
@@ -986,13 +986,13 @@ dont_convert_tile:
 	x_tile=0;
 	++y_tile;
 	}
-	if(currentProject->gameSystem==sega_genesis)
+	if(currentProject->gameSystem==segaGenesis)
 		set_palette_type();
 }
 void tileMap::drawPart(unsigned offx,unsigned offy,unsigned x,unsigned y,unsigned w,unsigned h,int rowSolo,unsigned zoom,bool trueCol){
 	w+=x;
 	h+=y;
-	bool shadowHighlight=currentProject->gameSystem==sega_genesis&&palTypeGen;
+	bool shadowHighlight=currentProject->gameSystem==segaGenesis&&palTypeGen;
 	for(unsigned j=y;j<h;++j){
 		unsigned ox=offx;
 		for(unsigned i=x;i<w;++i){
@@ -1002,7 +1002,7 @@ void tileMap::drawPart(unsigned offx,unsigned offy,unsigned x,unsigned y,unsigne
 			}
 			bool canShow;
 			unsigned palRow=getPalRow(i,j);
-			if(rowSolo>0){
+			if(rowSolo>=0){
 				canShow=palRow==rowSolo;
 			}else
 				canShow=true;

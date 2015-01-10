@@ -28,13 +28,13 @@ double ciede2000(double L1,double a1,double b1,double L2,double a2,double b2,dou
 	if((a1!=0.0)||(b1!=0.0)){
 		h1=atan2(b1,a1);
 		if(h1<0.0)
-			h1+=2.0*PI;
+			h1+=2.0*M_PI;
 	}else
 		h1=0.0;
 	if((a2!=0.0)||(b2!=0.0)){
 		h2=atan2(b2,a2);
 		if(h2<0.0)
-			h2+=2.0*PI;
+			h2+=2.0*M_PI;
 	}else
 		h2=0.0;
 	double dL,dC;
@@ -44,10 +44,10 @@ double ciede2000(double L1,double a1,double b1,double L2,double a2,double b2,dou
 	dh=h2-h1;
 	if(C1==0.0&&C2==0.0)
 		dh=0.0;
-	else if(dh>PI)
-		dh-=2.0*PI;
-	else if(dh<(-PI))
-		dh+=2.0*PI;
+	else if(dh>M_PI)
+		dh-=2.0*M_PI;
+	else if(dh<(-M_PI))
+		dh+=2.0*M_PI;
 	double dH=2.0*sqrt(C1*C2)*sin(dh/2.0);
 	double LL,CC;
 	LL=(L1+L2)/2.0;
@@ -58,14 +58,14 @@ double ciede2000(double L1,double a1,double b1,double L2,double a2,double b2,dou
 	hh=h1+h2;
 	if(C1==0.0&&C2==0.0)
 		hh=h1+h2;
-	else if(sillyfun<=PI)
+	else if(sillyfun<=M_PI)
 		hh=(h1+h2)/2.0;
-	else if(sillyfun>PI&&silly<(2.0*PI))
-		hh=(h1+h2+(2.0*PI))/2.0;
-	else if(sillyfun>PI&&silly>=(2.0*PI))
-		hh=(h1+h2-(2.0*PI))/2.0;
-	double T=1.0-(0.17*cos(hh-(30.0/180.0*PI)))+(0.24*cos(2.0*hh))+(0.32*cos((3.0*hh)+(6.0/180.0*PI)))-(0.20*cos((4.0*hh)-(63.0/180.0*PI)));
-	double dtheta=(30.0/180.0*PI)*exp(-1.0*square((180.0/PI*hh-275.0)/25.0));
+	else if(sillyfun>M_PI&&silly<(2.0*M_PI))
+		hh=(h1+h2+(2.0*M_PI))/2.0;
+	else if(sillyfun>M_PI&&silly>=(2.0*M_PI))
+		hh=(h1+h2-(2.0*M_PI))/2.0;
+	double T=1.0-(0.17*cos(hh-(30.0/180.0*M_PI)))+(0.24*cos(2.0*hh))+(0.32*cos((3.0*hh)+(6.0/180.0*M_PI)))-(0.20*cos((4.0*hh)-(63.0/180.0*M_PI)));
+	double dtheta=(30.0/180.0*M_PI)*exp(-1.0*square((180.0/M_PI*hh-275.0)/25.0));
 	temp=pow(CC,7.0);
 	double Rc=2.0*sqrt(temp/(temp+6103515625.0));
 	temp=square(LL-50.0);

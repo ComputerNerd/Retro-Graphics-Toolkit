@@ -29,7 +29,7 @@ tiles::tiles(){
 	sizew=sizeh=8;
 	tcSize=sizew*sizeh*4;
 	switch(currentProject->gameSystem){
-		case sega_genesis:
+		case segaGenesis:
 			tileSize=sizew*sizeh/2;
 		break;
 		case NES:
@@ -103,10 +103,10 @@ void tiles::setPixel(uint32_t tile,uint32_t x,uint32_t y,uint32_t val){
 			case 3:
 				ptr+=((y*sizew)/2)+(x/2);
 				if(x&1){
-					*ptr&=~3;
+					*ptr&=~15;
 					*ptr|=val;
 				}else{
-					*ptr&=~(3<<4);
+					*ptr&=~(15<<4);
 					*ptr|=val<<4;
 				}
 			break;
@@ -194,52 +194,27 @@ void tiles::remove_tile_at(uint32_t tileDel){
 	--amt;
 	updateTileSelectAmt(amt);
 }
-void tiles::truecolor_to_tile(uint8_t palette_row,uint32_t cur_tile,bool isSprite){
+void tiles::truecolor_to_tile(unsigned palette_row,uint32_t cur_tile,bool isSprite){
 	truecolor_to_tile_ptr(palette_row,cur_tile,&truetDat[(cur_tile*tcSize)],true,isSprite);
 }
-void tiles::truecolor_to_tile_ptr(uint8_t palette_row,uint32_t cur_tile,uint8_t * tileinput,bool Usedither,bool isSprite){
+void tiles::truecolor_to_tile_ptr(unsigned palette_row,uint32_t cur_tile,uint8_t * tileinput,bool Usedither,bool isSprite){
 	//dithers a truecolor tile to tile
-	uint_fast32_t tile_32=cur_tile*32;
-	uint_fast32_t tile_16=cur_tile*16;
 	uint8_t*true_color_temp=(uint8_t*)alloca(tcSize);
 	memcpy(true_color_temp,tileinput,tcSize);
-	if(currentProject->gameSystem == NES)
-		std::fill(tDat.begin()+tile_16,tDat.begin()+tile_16+16,0);
 	if(Usedither){
-		ditherImage(&true_color_temp[0],8,8,true,true, true,palette_row);
-		ditherImage(&true_color_temp[0],8,8,true,false,true,palette_row);
+		ditherImage(true_color_temp,sizew,sizeh,true,true, true,palette_row);
+		ditherImage(true_color_temp,sizew,sizeh,true,false,true,palette_row);
 	}
 	//now image needs to be checked for alpha
 	uint8_t * truePtr=true_color_temp;
-	for (unsigned y=0;y<8;++y){
-		for (unsigned x=0;x<8;++x){
-			uint8_t temp=find_near_color_from_row(palette_row,truePtr[0],truePtr[1],truePtr[2],(currentProject->gameSystem==NES)&&isSprite);
+	for (unsigned y=0;y<sizeh;++y){
+		for (unsigned x=0;x<sizew;++x){
+			unsigned temp=find_near_color_from_row(palette_row,truePtr[0],truePtr[1],truePtr[2],(currentProject->pal->haveAlt)&&isSprite);
 			truePtr+=3;
-			//sega genesis tile format
-			//even pixel,odd pixel
-			switch (currentProject->gameSystem){
-				case sega_genesis:
-					if (x & 1){
-						//this is an odd (not a strange pixel but odd number) pixel
-						if (*truePtr++ != 0)
-							tDat[(y*4)+(x/2)+tile_32]|=temp;
-					}else{
-						//even pixel
-						if (*truePtr++ != 0)
-							tDat[(y*4)+(x/2)+tile_32]=temp<<4;
-						else
-							tDat[(y*4)+(x/2)+tile_32]=0;
-					}
-				break;
-				case NES:
-					if (*truePtr++ != 0){
-						tDat[y+tile_16]|=(temp&1)<<(7-x);
-						tDat[y+8+tile_16]|=((temp>>1)&1)<<(7-x);
-					}
-				break;
-			}
+			if(*truePtr++)
+				setPixel(cur_tile,x,y,temp);
 		}
-	}//end of loop
+	}
 }
 void tiles::draw_truecolor(uint32_t tile_draw,unsigned x,unsigned y,bool usehflip,bool usevflip,unsigned zoom){
 	static uint8_t DontShow=0;
@@ -251,7 +226,7 @@ void tiles::draw_truecolor(uint32_t tile_draw,unsigned x,unsigned y,bool usehfli
 			printf("Warning tried to draw truecolor tile # %d at X: %d y: %d\nBut there is only %d tiles.\n",tile_draw,x,y,amt);
 		return;
 	}
-	uint_fast16_t xx,yy,xxx,yyy;
+	uint_fast32_t xx,yy,xxx,yyy;
 	uint8_t*trueColTemp=(uint8_t*)alloca(tcSize);
 	uint8_t*grid=(uint8_t*)alloca(tcSize*3/4);
 	uint8_t * grid_ptr=grid;
@@ -318,7 +293,7 @@ void tiles::draw_truecolor(uint32_t tile_draw,unsigned x,unsigned y,bool usehfli
 static inline uint_fast32_t cal_offset_zoom_rgb(uint_fast16_t x,uint_fast16_t y,uint_fast16_t zoom,uint8_t channel){
 	return (y*(zoom*24))+(x*3)+channel;
 }
-void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,int zoom,uint8_t pal_row,bool Usehflip,bool Usevflip,bool isSprite){
+void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,int zoom,unsigned pal_row,bool Usehflip,bool Usevflip,bool isSprite){
 	static unsigned DontShow=0;
 	if (amt<=tile_draw){
 		if (unlikely(DontShow==0)){
@@ -328,100 +303,39 @@ void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,int zoom,uint8_t pa
 			printf("Warning tried to draw tile # %d at X: %d y: %d\nBut there is only %d tiles.\n",tile_draw,x_off,y_off,amt);
 		return;
 	}
-	int x,y;
-	uint8_t * temp_img_ptr = (uint8_t *)malloc(((8*zoom)*(8*zoom))*3);
+	uint8_t * temp_img_ptr = (uint8_t *)malloc(((sizeh*zoom)*(sizew*zoom))*3);
 	if(!temp_img_ptr){
-		show_malloc_error(((8*zoom)*(8*zoom))*3)
+		show_malloc_error(((sizeh*zoom)*(sizew*zoom))*3)
+		return;
 	}
-	uint8_t c,d;//used for drawing pixels to buffer
-	uint8_t red_temp,green_temp,blue_temp;
-	uint8_t * tileTemp=(uint8_t *)alloca(tileSize);//Nes tiles are 16 bytes and sega genesis tiles are 32 bytes
-	if (Usehflip == true && Usevflip == false)//it is important to make sure vflip is false or else this could be ran when vflip==true
-		hflip_tile(tile_draw,tileTemp);
-	else if (Usehflip == false && Usevflip == true)
-		vflip_tile(tile_draw,tileTemp);
-	else if (Usehflip == true && Usevflip == true){
-		hflip_tile(tile_draw,tileTemp);
-		vflip_tile_ptr(tileTemp,tileTemp);//vflip creates temp buffer having dst and src to be the same will not cause issue
-	}else
-		memcpy(tileTemp,&tDat[tile_draw*tileSize],tileSize);
-	tile_draw*=tileSize;
-	switch (currentProject->gameSystem){
-		case sega_genesis:
-			for (y=0;y<8;++y){
-				for (x=0;x<4;++x){
-					//get two pixels
-					uint8_t temp=tileTemp[(y*4)+x];
-					//split the two pixels
-					uint8_t temp_1,temp_2;
-					//first,second pixel
-					temp_1=temp>>4;//first pixel
-					temp_2=temp&15;//second pixel
-					//now based on the temp_1 and temp_2 get the two colors
-					red_temp=currentProject->pal->rgbPal[(pal_row*48)+(temp_1*3)];
-					green_temp=currentProject->pal->rgbPal[(pal_row*48)+(temp_1*3)+1];
-					blue_temp=currentProject->pal->rgbPal[(pal_row*48)+(temp_1*3)+2];
-					for (c=0;c<zoom;c++){//ha ha c++ bad programming pun
-						for (d=0;d<zoom;d++){
-							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d,(y*zoom)+c,zoom,0)]=red_temp;
-							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d,(y*zoom)+c,zoom,1)]=green_temp;
-							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d,(y*zoom)+c,zoom,2)]=blue_temp;
-						}
-					}
-					red_temp=currentProject->pal->rgbPal[(pal_row*48)+(temp_2*3)];
-					green_temp=currentProject->pal->rgbPal[(pal_row*48)+(temp_2*3)+1];
-					blue_temp=currentProject->pal->rgbPal[(pal_row*48)+(temp_2*3)+2];
-					for (c=0;c<zoom;++c){
-						for (d=0;d<zoom;++d){
-							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d+zoom,(y*zoom)+c,zoom,0)]=red_temp;
-							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d+zoom,(y*zoom)+c,zoom,1)]=green_temp;
-							temp_img_ptr[cal_offset_zoom_rgb(((x*zoom)*2)+d+zoom,(y*zoom)+c,zoom,2)]=blue_temp;
-						}
-					}
+	for(unsigned y=0;y<sizeh;++y){
+		for(unsigned x=0;x<sizew;++x){
+			unsigned pixOff=getPixel(tile_draw,Usehflip?(sizew-1)-x:x,Usevflip?(sizeh-1)-y:y)*3;
+			if(currentProject->pal->haveAlt&&isSprite){
+				pixOff+=currentProject->pal->colorCnt*3;
+				pixOff+=pal_row*currentProject->pal->perRowalt*3;
+			}else
+				pixOff+=pal_row*currentProject->pal->perRow*3;
+			for(unsigned i=0;i<zoom;++i){
+				for(unsigned j=0;j<zoom;++j){
+					temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+j,(y*zoom)+i,zoom,0)]=currentProject->pal->rgbPal[pixOff];
+					temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+j,(y*zoom)+i,zoom,1)]=currentProject->pal->rgbPal[pixOff+1];
+					temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+j,(y*zoom)+i,zoom,2)]=currentProject->pal->rgbPal[pixOff+2];
 				}
 			}
-		break;
-			case NES:
-				for (y=0;y<8;++y){
-					for (x=0;x<8;++x){
-						uint8_t temp;
-						temp=(tileTemp[y]>>(7-x))&1;
-						temp|=((tileTemp[y+8]>>(7-x))&1)<<1;
-						uint8_t*rgbPtr=currentProject->pal->rgbPal;
-						if(isSprite)
-							rgbPtr+=48;
-						red_temp=rgbPtr[(pal_row*12)+(temp*3)];
-						green_temp=rgbPtr[(pal_row*12)+(temp*3)+1];
-						blue_temp=rgbPtr[(pal_row*12)+(temp*3)+2];
-						for (c=0;c<zoom;++c){
-							for (d=0;d<zoom;++d){
-								temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+d,(y*zoom)+c,zoom,0)]=red_temp;
-								temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+d,(y*zoom)+c,zoom,1)]=green_temp;
-								temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+d,(y*zoom)+c,zoom,2)]=blue_temp;
-							}
-						}
-					}
-				}
-			break;
 		}
+	}
 	fl_draw_image(temp_img_ptr,x_off,y_off,sizew*zoom,sizeh*zoom,3);
 	free(temp_img_ptr);
 }
 void tiles::hflip_truecolor(uint32_t id,uint32_t * out){
-	//out must contain at least 256 bytes
-	uint8_t y;
+	//out must contain at least tcSize bytes
 	uint32_t * trueColPtr=(uint32_t *)&truetDat[id*tcSize];
-	trueColPtr+=7;//32-4 28/4
-	for (y=0;y<sizeh;y++){
-		*out++=*trueColPtr--;//this is 32bit so only one copy needed
-		*out++=*trueColPtr--;
-		*out++=*trueColPtr--;
-		*out++=*trueColPtr--;
-		*out++=*trueColPtr--;
-		*out++=*trueColPtr--;
-		*out++=*trueColPtr--;
-		*out++=*trueColPtr--;
-		trueColPtr+=16;//64/4 next line
+	trueColPtr+=sizew-1;
+	for(unsigned y=0;y<sizeh;y++){
+		for(unsigned x=0;x<sizew;++x)
+			*out++=*trueColPtr--;
+		trueColPtr+=sizew*2;
 	}
 }
 void tiles::vflip_truecolor_ptr(uint8_t * in,uint8_t * out){
@@ -448,7 +362,7 @@ void tiles::hflip_tile(uint32_t id,uint8_t * out){
 	uint8_t x,y;
 	uint8_t * tilePtr=&tDat[id*tileSize];
 	switch (currentProject->gameSystem){
-		case sega_genesis:
+		case segaGenesis:
 			memcpy(out,tilePtr,32);
 			for (y=0;y<8;++y){
 				for (x=0;x<4;++x){
@@ -480,7 +394,7 @@ void tiles::hflip_tile(uint32_t id,uint8_t * out){
 void tiles::vflip_tile_ptr(uint8_t * in,uint8_t * out){
 	uint8_t y;
 	switch (currentProject->gameSystem){
-		case sega_genesis:
+		case segaGenesis:
 		{
 			uint8_t temp[32];
 			memcpy(temp,in,32);
@@ -536,19 +450,10 @@ void tiles::remove_duplicate_tiles(bool tColor){
 			if (cur_tile == curT)//don't compare with itself
 				continue;
 			bool rm;
-			if(tColor){
-				#if __LP64__
-					rm=cmp_trueC(cur_tile,(uint64_t*)&truetDat[curT*tcSize]);
-				#else
-					rm=cmp_trueC(cur_tile,(uint32_t*)&truetDat[curT*tcSize]);
-				#endif
-			}else{
-				#if __LP64__
-					rm=cmp_tiles(cur_tile,(uint64_t*)&tDat[curT*tileSize]);
-				#else
-					rm=cmp_tiles(cur_tile,(uint32_t*)&tDat[curT*tileSize]);
-				#endif
-			}
+			if(tColor)
+				rm=!bcmp(&truetDat[cur_tile*tcSize],&truetDat[curT*tcSize],tcSize);
+			else
+				rm=!bcmp(&tDat[cur_tile*tileSize],&tDat[curT*tileSize],tileSize);
 			if(rm){
 				currentProject->tms->maps[currentProject->curPlane].sub_tile_map(curT,cur_tile,false,false);
 				addTileGroup(curT,remap[curT]);
@@ -559,18 +464,10 @@ void tiles::remove_duplicate_tiles(bool tColor){
 			}
 			if(tColor){
 				hflip_truecolor(curT,(uint32_t*)tileTemp);			
-				#if __LP64__
-					rm=cmp_trueC(cur_tile,(uint64_t*)tileTemp);
-				#else
-					rm=cmp_trueC(cur_tile,(uint32_t*)tileTemp);
-				#endif
+				rm=!bcmp(&truetDat[cur_tile*tcSize],tileTemp,tcSize);
 			}else{
 				hflip_tile(curT,tileTemp);
-				#if __LP64__
-					rm=cmp_tiles(cur_tile,(uint64_t*)tileTemp);
-				#else
-					rm=cmp_tiles(cur_tile,(uint32_t*)tileTemp);
-				#endif
+				rm=!bcmp(&tDat[cur_tile*tileSize],tileTemp,tileSize);
 			}
 			if(rm){
 				currentProject->tms->maps[currentProject->curPlane].sub_tile_map(curT,cur_tile,true,false);
@@ -582,18 +479,10 @@ void tiles::remove_duplicate_tiles(bool tColor){
 			}
 			if(tColor){
 				vflip_truecolor_ptr(tileTemp,tileTemp);
-				#if __LP64__
-					rm=cmp_trueC(cur_tile,(uint64_t*)tileTemp);
-				#else
-					rm=cmp_trueC(cur_tile,(uint32_t*)tileTemp);
-				#endif
+				rm=!bcmp(&truetDat[cur_tile*tcSize],tileTemp,tcSize);
 			}else{
 				vflip_tile_ptr(tileTemp,tileTemp);
-				#if __LP64__
-					rm=cmp_tiles(cur_tile,(uint64_t*)tileTemp);
-				#else
-					rm=cmp_tiles(cur_tile,(uint32_t*)tileTemp);
-				#endif
+				rm=!bcmp(&tDat[cur_tile*tileSize],tileTemp,tileSize);
 			}
 			if(rm){
 				currentProject->tms->maps[currentProject->curPlane].sub_tile_map(curT,cur_tile,true,true);
@@ -605,18 +494,10 @@ void tiles::remove_duplicate_tiles(bool tColor){
 			}
 			if(tColor){
 				vflip_truecolor(curT,tileTemp);
-				#if __LP64__
-					rm=cmp_trueC(cur_tile,(uint64_t*)tileTemp);
-				#else
-					rm=cmp_trueC(cur_tile,(uint32_t*)tileTemp);
-				#endif
+				rm=!bcmp(&truetDat[cur_tile*tcSize],tileTemp,tcSize);
 			}else{
 				vflip_tile(curT,tileTemp);
-				#if __LP64__
-					rm=cmp_tiles(cur_tile,(uint64_t*)tileTemp);
-				#else
-					rm=cmp_tiles(cur_tile,(uint32_t*)tileTemp);
-				#endif
+				rm=!bcmp(&tDat[cur_tile*tileSize],tileTemp,tileSize);
 			}
 			if(rm){
 				currentProject->tms->maps[currentProject->curPlane].sub_tile_map(curT,cur_tile,false,true);
@@ -647,43 +528,3 @@ void tiles::remove_duplicate_tiles(bool tColor){
 	delete win;
 	Fl::check();
 }
-#if __LP64__
-bool tiles::cmp_trueC(uint32_t one,uint64_t * two){
-//this should be faster than memcmp as it returns as soon as there is a difference
-	uint64_t * onePtr =(uint64_t *)&truetDat[one*tcSize];
-	for (int x=0;x<32;x++){
-		if (*onePtr++ != *two++)
-			return false;
-	}
-	return true;
-}
-#else
-bool tiles::cmp_trueC(uint32_t one,uint32_t * two){
-//this should be faster than memcmp as it returns as soon as there is a difference
-	uint32_t * onePtr =(uint32_t *)&truetDat[one*tcSize];
-	for (int x=0;x<64;x++){
-		if (*onePtr++ != *two++)
-			return false;
-	}
-	return true;
-}
-#endif
-#if __LP64__
-bool tiles::cmp_tiles(uint32_t one,uint64_t * two){
-	uint64_t * onePtr =(uint64_t *)&tDat[one*tileSize];
-	for (int x=0;x<tileSize;x+=8){
-		if (*onePtr++ != *two++)
-			return false;
-	}
-	return true;
-}
-#else
-bool tiles::cmp_tiles(uint32_t one,uint32_t * two){
-	uint32_t * onePtr =(uint32_t *)&tDat[one*tileSize];
-	for (int x=0;x<tileSize;x+=4){
-		if (*onePtr++ != *two++)
-			return false;
-	}
-	return true;
-}
-#endif

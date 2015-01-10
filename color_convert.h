@@ -17,6 +17,7 @@
 //Color conversion functions should go here
 #pragma once
 #include <stdint.h>
+#include "nespal.h"
 extern uint8_t nespaltab[];
 extern uint8_t nespaltab_alt[];
 uint8_t nearest_color_index(uint8_t val,unsigned startindex);
@@ -26,7 +27,7 @@ void rgbToHsl(double r,double g,double b,double * hh,double * ll,double * ss);
 uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_found,bool useAlpha=false);
 void update_emphesis(Fl_Widget*,void*);
 static inline uint32_t toNesRgb(uint8_t ri,uint8_t gi,uint8_t bi){
-	return MakeRGBcolor(currentProject->pal->to_nes_color_rgb(ri,gi,bi));
+	return nesPalToRgb(currentProject->pal->to_nes_color_rgb(ri,gi,bi));
 }
 void updateNesTab(unsigned emps,bool alt);
 static inline double pickIt(double h,double s,double l,unsigned type){

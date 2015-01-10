@@ -27,7 +27,7 @@ uint8_t nespaltab_alt[64*3];
 uint8_t nearest_color_index(uint8_t val,unsigned startindex){
 	int32_t distanceSquared, minDistanceSquared, bestIndex = 0;
 	minDistanceSquared = 255*255 + 1;
-	if (currentProject->gameSystem!=sega_genesis){
+	if (currentProject->gameSystem!=segaGenesis){
 		fl_alert("This function is for use with sega genesis/mega drive only");
 		return 0;
 	}
@@ -161,14 +161,14 @@ void updateNesTab(unsigned emps,bool alt){
 	uint32_t rgb_out;
 	if(alt){
 		for(unsigned temp=0;temp<64;++temp){
-			rgb_out=MakeRGBcolor(temp|emps);
+			rgb_out=nesPalToRgb(temp|emps);
 			nespaltab_alt[temp*3]=(rgb_out>>16)&255;//red
 			nespaltab_alt[temp*3+1]=(rgb_out>>8)&255;//green
 			nespaltab_alt[temp*3+2]=rgb_out&255;//blue
 		}
 	}else{
 		for(unsigned temp=0;temp<64;++temp){
-			rgb_out=MakeRGBcolor(temp|emps);
+			rgb_out=nesPalToRgb(temp|emps);
 			nespaltab[temp*3]=(rgb_out>>16)&255;//red
 			nespaltab[temp*3+1]=(rgb_out>>8)&255;//green
 			nespaltab[temp*3+2]=rgb_out&255;//blue
@@ -189,13 +189,13 @@ void update_emphesis(Fl_Widget*,void*){
 	updateNesTab(emps,false);
 	updateNesTab(empsSprite,true);
 	for(unsigned c=0;c<48;c+=3){
-		rgb_out=MakeRGBcolor(currentProject->pal->palDat[c/3]|emps);
+		rgb_out=nesPalToRgb(currentProject->pal->palDat[c/3]|emps);
 		currentProject->pal->rgbPal[c]=(rgb_out>>16)&255;//red
 		currentProject->pal->rgbPal[c+1]=(rgb_out>>8)&255;//green
 		currentProject->pal->rgbPal[c+2]=rgb_out&255;//blue
 	}
 	for(unsigned c=48;c<96;c+=3){
-		rgb_out=MakeRGBcolor(currentProject->pal->palDat[c/3]|empsSprite);
+		rgb_out=nesPalToRgb(currentProject->pal->palDat[c/3]|empsSprite);
 		currentProject->pal->rgbPal[c]=(rgb_out>>16)&255;//red
 		currentProject->pal->rgbPal[c+1]=(rgb_out>>8)&255;//green
 		currentProject->pal->rgbPal[c+2]=rgb_out&255;//blue

@@ -412,7 +412,7 @@ void tilemap_remove_callback(Fl_Widget*,void*){
 	window->damage(FL_DAMAGE_USER1);
 }
 void shadow_highligh_findout(Fl_Widget*,void*){
-	if (unlikely(currentProject->gameSystem != sega_genesis)){
+	if (unlikely(currentProject->gameSystem != segaGenesis)){
 		fl_alert("Only the Sega Genesis/Mega Drive supports shadow highlight mode\n");
 		return;
 	}

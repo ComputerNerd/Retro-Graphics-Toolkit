@@ -173,15 +173,8 @@ static void cleanupEvent(uint32_t id){
 		break;
 		case uPalette:
 			{struct undoPalette*up=(struct undoPalette*)uptr->ptr;
-			unsigned sz;
-			switch(currentProject->gameSystem){
-				case sega_genesis:
-					sz=128;
-				break;
-				case NES:
-					sz=32;
-				break;
-			}
+			unsigned sz=currentProject->pal->colorCnt+currentProject->pal->colorCntalt;
+			sz*=currentProject->pal->esize;
 			free(up->ptr);
 			memUsed-=sz;
 			if(up->ptrnew){
@@ -599,7 +592,7 @@ void UndoRedo(bool redo){
 			if(redo){
 				removePlane(um->plane);
 			}else{
-				currentProject->tms->maps.insert(currentProject->tms->maps.begin()+um->plane,*um->old);
+				currentProject->tms->maps.insert(currentProject->tms->maps.begin()+um->plane,tileMap(*um->old));
 				currentProject->tms->planeName.insert(currentProject->tms->planeName.begin()+um->plane,*um->oldStr);
 				updatePlaneTilemapMenu();
 				if(um->plane==currentProject->curPlane)
@@ -622,16 +615,8 @@ void UndoRedo(bool redo){
 		break;
 		case uPalette:
 			{struct undoPalette*up=(struct undoPalette*)uptr->ptr;
-			unsigned sz,el;
-			switch(currentProject->gameSystem){
-				case sega_genesis:
-					sz=128;
-					el=64;
-				break;
-				case NES:
-					el=sz=32;
-				break;
-			}
+			unsigned sz,el=currentProject->pal->colorCnt+currentProject->pal->colorCntalt;
+			sz=el*currentProject->pal->esize;
 			if(redo)
 				memcpy(currentProject->pal->palDat,up->ptrnew,sz);
 			else{
@@ -650,7 +635,7 @@ void UndoRedo(bool redo){
 		case uPaletteEntry:
 			{struct undoPaletteEntry*up=(struct undoPaletteEntry*)uptr->ptr;
 			switch(currentProject->gameSystem){
-				case sega_genesis:
+				case segaGenesis:
 					{uint16_t*ptr=(uint16_t*)currentProject->pal->palDat+up->id;
 					if(redo)
 						*ptr=up->valnew;
@@ -1015,18 +1000,11 @@ void pushPaletteAll(void){
 	uptr->ptr=malloc(sizeof(struct undoPalette));
 	memUsed+=sizeof(struct undoPalette);
 	struct undoPalette*up=(struct undoPalette*)uptr->ptr;
-	switch(currentProject->gameSystem){
-		case sega_genesis:
-			up->ptr=malloc(128);
-			memcpy(up->ptr,currentProject->pal->palDat,128);
-			memUsed+=128;
-		break;
-		case NES:
-			up->ptr=malloc(32);
-			memcpy(up->ptr,currentProject->pal->palDat,32);
-			memUsed+=32;
-		break;
-	}
+	unsigned sz=currentProject->pal->colorCnt+currentProject->pal->colorCntalt;
+	sz*=currentProject->pal->esize;
+	up->ptr=malloc(sz);
+	memcpy(up->ptr,currentProject->pal->palDat,sz);
+	memUsed+=sz;
 	up->ptrnew=0;
 }
 void pushPaletteEntry(uint32_t id){
@@ -1038,7 +1016,7 @@ void pushPaletteEntry(uint32_t id){
 	struct undoPaletteEntry*up=(struct undoPaletteEntry*)uptr->ptr;
 	up->id=id;
 	switch(currentProject->gameSystem){
-		case sega_genesis:
+		case segaGenesis:
 			{uint16_t*ptr=(uint16_t*)currentProject->pal->palDat+id;
 			up->val=*ptr;}
 		break;

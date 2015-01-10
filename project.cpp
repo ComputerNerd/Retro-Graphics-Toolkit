@@ -99,7 +99,7 @@ void compactPrjMem(void){
 	printf("Old capacity: %d New capacity: %d saved %d bytes\n",Cold,Cnew,Cold-Cnew);
 }
 static void initNewProject(unsigned at){
-	projects[at]->gameSystem=sega_genesis;
+	projects[at]->gameSystem=segaGenesis;
 	projects[at]->subSystem=3;
 	projects[at]->settings=15<<subsettingsDitherShift;
 	projects[at]->tileC=new tiles;
@@ -319,7 +319,7 @@ void switchProject(uint32_t id){
 	if(containsDataProj(id,pjHavePal))
 		projects[id]->pal->setVars(projects[id]->gameSystem);
 	switch(projects[id]->gameSystem){
-		case sega_genesis:
+		case segaGenesis:
 			window->subSysC->copy(subSysGenesis);
 			window->subSysC->value((projects[id]->subSystem&sgSHmask)>>sgSHshift);
 			if(containsDataProj(id,pjHaveTiles))
@@ -415,7 +415,7 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 		fread(&version,1,sizeof(uint32_t),fi);
 	printf("Read as version %d\n",version);
 	if(version>currentProjectVersionNUM){
-		fl_alert("The latest project version Retro Graphics Toolkit supports is %d but you are opening %d",currentProjectVersionNUM,version);
+		fl_alert("The latest project version Retro Graphics Toolkit supports is %u but you are opening %u",currentProjectVersionNUM,version);
 		fclose(fi);
 		return false;
 	}
@@ -423,10 +423,12 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 		fread(&projects[id]->useMask,1,sizeof(uint32_t),fi);
 	else
 		projects[id]->useMask=pjHavePal|pjHaveTiles|pjHaveMap;
-	fread(&projects[id]->gameSystem,1,sizeof(uint32_t),fi);
+	uint32_t gameTemp;
+	fread(&gameTemp,1,sizeof(uint32_t),fi);
+	currentProject->gameSystem=(gameSystemEnum)gameTemp;
 	if(version>=4){
 		fread(&projects[id]->subSystem,1,sizeof(uint32_t),fi);
-		if((version<6)&&(projects[id]->gameSystem==sega_genesis))
+		if((version<6)&&(projects[id]->gameSystem==segaGenesis))
 			projects[id]->subSystem=3;//Old projects were storing the wrong number for 4bit graphics even though that is what is stored
 		if((version==4)&&(projects[id]->gameSystem==NES)){
 			projects[id]->subSystem^=1;//Fix the fact that NES2x2 and NES1x1 were switched around in version 4
@@ -439,7 +441,7 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 	else
 		projects[id]->settings=15<<subsettingsDitherShift;
 	switch(projects[id]->gameSystem){
-		case sega_genesis:
+		case segaGenesis:
 			projects[id]->tileC->tileSize=32;
 			projects[id]->tileC->tcSize=256;
 		break;
@@ -527,6 +529,14 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 				projects[id]->spritesC->load(fi,version);
 		}
 	}
+	if(version>=8){
+		uint32_t userDat;
+		uint32_t controlDat;
+		fread(&userDat,1,sizeof(uint32_t),fi);
+		fread(&controlDat,1,sizeof(uint32_t),fi);
+		if(userDat||controlDat)
+			fl_alert("This version of Retro Graphics Toolkit does not support Lua user data please upgrade");
+	}
 	return true;
 }
 bool loadProject(uint32_t id){
@@ -580,6 +590,21 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 		Chunk data (zlib compressed)
 	}
 	if(version>=5) sprite data (see documentation in classSprites.cpp)
+	if(version>=8) Lua user data:
+		Format:
+		uint32_t count
+		for each with count
+			const char*name null terminated
+			uint32_t length
+			void*data
+	if(version>=8) Lua control data:
+		Format:
+		uint32_t count
+		for each with count
+			const char*controlName null terminated
+			uint32_t type
+			uint32_t length
+			void*data
 	*/
 	fputc('R',fo);
 	fputc('P',fo);
@@ -598,7 +623,8 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 	}else
 		haveTemp=projects[id]->useMask;
 	fwrite(&haveTemp,sizeof(uint32_t),1,fo);
-	fwrite(&projects[id]->gameSystem,sizeof(uint32_t),1,fo);
+	uint32_t gameTemp=(uint32_t)currentProject->gameSystem;
+	fwrite(&gameTemp,1,sizeof(uint32_t),fo);
 	fwrite(&projects[id]->subSystem,sizeof(uint32_t),1,fo);
 	fwrite(&projects[id]->settings,sizeof(uint32_t),1,fo);
 	if(haveTemp&pjHavePal){
@@ -652,6 +678,9 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 		if(saveShared||(projects[id]->share[4]<0))
 			projects[id]->spritesC->save(fo);
 	}
+	uint32_t LuaSize=0;//TODO implement saving of user data and control data
+	fwrite(&LuaSize,1,sizeof(uint32_t),fo);
+	fwrite(&LuaSize,1,sizeof(uint32_t),fo);
 	return true;
 }
 bool saveProject(uint32_t id){

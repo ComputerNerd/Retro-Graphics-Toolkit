@@ -36,9 +36,9 @@ palette::palette(const palette& other,uint32_t gameSystem){
 	memcpy(rgbPal,other.rgbPal,(colorCnt+colorCntalt)*(4+esize));
 }
 void palette::setVars(uint32_t gameSystem){
-	rowCntPal=4;
 	switch(gameSystem){
-		case sega_genesis:
+		case segaGenesis:
+			rowCntPal=4;
 			colorCnt=64;
 			colorCntalt=0;
 			rowCntPalalt=0;
@@ -49,10 +49,18 @@ void palette::setVars(uint32_t gameSystem){
 		break;
 		case NES:
 			colorCnt=colorCntalt=16;
-			rowCntPalalt=4;
+			rowCntPal=rowCntPalalt=4;
 			perRowalt=perRow=4;
 			haveAlt=true;
 			esize=1;
+		break;
+		case masterSystem:
+		case gameGear:
+			colorCnt=32;
+			rowCntPal=2;
+			colorCntalt=0;
+			rowCntPalalt=0;
+			esize=gameSystem==gameGear?2:1;
 		break;
 	}
 	rgbPal=(uint8_t*)realloc(rgbPal,(colorCnt+colorCntalt)*(4+esize));//Yes this is correct when rgbPal is NULL realloc will behave the same as malloc
@@ -78,7 +86,7 @@ void palette::write(FILE*fp){
 }
 void palette::updateRGBindex(unsigned index){
 	switch(currentProject->gameSystem){
-		case sega_genesis:
+		case segaGenesis:
 			{uint16_t*ptr=(uint16_t*)palDat+index;
 			rgbPal[index*3+2]=palTab[((*ptr>>1)&7)+palTypeGen];//Blue note that bit shifting is different due to little endian
 			rgbPal[index*3+1]=palTab[((*ptr>>13)&7)+palTypeGen];//Green
@@ -86,7 +94,7 @@ void palette::updateRGBindex(unsigned index){
 			}
 		break;
 		case NES:
-			{uint32_t rgb_out=MakeRGBcolor(palDat[index]);
+			{uint32_t rgb_out=nesPalToRgb(palDat[index]);
 			rgbPal[index*3+2]=rgb_out&255;//blue
 			rgbPal[index*3+1]=(rgb_out>>8)&255;//green
 			rgbPal[index*3]=(rgb_out>>16)&255;//red
@@ -104,7 +112,7 @@ void palette::rgbToEntry(unsigned r,unsigned g,unsigned b,unsigned ent){
 		return;
 	}
 	switch(currentProject->gameSystem){
-		case sega_genesis:
+		case segaGenesis:
 			{uint16_t temp=to_sega_genesis_colorRGB(r,g,b,ent);
 			ent*=2;
 			palDat[ent]=temp>>8;
@@ -183,7 +191,7 @@ void palette::swapEntry(unsigned one,unsigned two){
 	if(unlikely(one==two))
 		return;
 	switch(currentProject->gameSystem){
-		case sega_genesis:
+		case segaGenesis:
 			{uint8_t palOld[2];
 			memcpy(palOld,palDat+two+two,2);
 			memcpy(palDat+two+two,palDat+one+one,2);

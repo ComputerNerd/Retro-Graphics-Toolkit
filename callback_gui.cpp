@@ -55,12 +55,12 @@ Fl_Menu_Item subSysGenesis[]={
 	{0}
 };
 void set_game_system(Fl_Widget*,void* selection){
-	unsigned sel=(uintptr_t)selection;
+	gameSystemEnum sel=(gameSystemEnum)(intptr_t)selection;
 	if(unlikely(sel == currentProject->gameSystem)){
 		fl_alert("You are already in that mode");
 		return;
 	}
-	uint32_t gold=currentProject->gameSystem;
+	gameSystemEnum gold=currentProject->gameSystem;
 	uint32_t sold=currentProject->subSystem;
 	unsigned bd=getBitdepthcurSys();
 	unsigned bdold=bd;
@@ -69,7 +69,7 @@ void set_game_system(Fl_Widget*,void* selection){
 		tilesOld=new tiles(*currentProject->tileC);
 	if(containsDataCurProj(pjHavePal)){
 		switch(sel){
-			case sega_genesis:
+			case segaGenesis:
 				if(currentProject->gameSystem==NES){
 					uint8_t rgbTmp[32*3];
 					uint8_t palTypeTmp[32];
@@ -92,7 +92,7 @@ void set_game_system(Fl_Widget*,void* selection){
 					fl_alert("TODO");
 			break;
 			case NES:
-				if(currentProject->gameSystem==sega_genesis){
+				if(currentProject->gameSystem==segaGenesis){
 					sortBy(2,true);
 					uint8_t rgbTmp[64*3];
 					memcpy(rgbTmp,currentProject->pal->rgbPal,64*3);
@@ -138,9 +138,9 @@ void set_game_system(Fl_Widget*,void* selection){
 		palBar.updateSliders();
 	}
 	switch(sel){
-		case sega_genesis:
+		case segaGenesis:
 			bd=4;
-			currentProject->gameSystem=sega_genesis;
+			currentProject->gameSystem=segaGenesis;
 			currentProject->subSystem=0;
 			setBitdepthcurSys(bd);
 			if(containsDataCurProj(pjHaveTiles)){
@@ -188,8 +188,8 @@ void set_game_system(Fl_Widget*,void* selection){
 			window->subSysC->copy(subSysNES);
 			window->subSysC->value(currentProject->subSystem&NES2x2);
 		break;
-		case frameBuffer_pal:
-			{currentProject->gameSystem=frameBuffer_pal;
+		case frameBufferPal:
+			{currentProject->gameSystem=frameBufferPal;
 			currentProject->subSystem=0;
 			if(bd>8)
 				bd=8;
@@ -207,7 +207,7 @@ void set_game_system(Fl_Widget*,void* selection){
 		}
 	}
 	if(containsDataCurProj(pjHaveTiles)){
-		uint32_t gnew=currentProject->gameSystem;
+		gameSystemEnum gnew=currentProject->gameSystem;
 		uint32_t snew=currentProject->subSystem;
 		for(unsigned i=0;i<tilesOld->amt;++i){
 			for(unsigned y=0;y<std::min(currentProject->tileC->sizeh,tilesOld->sizeh);++y){
