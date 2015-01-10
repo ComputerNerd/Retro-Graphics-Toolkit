@@ -9,64 +9,6 @@ struct rgbo{
 	float r,g,b;
 	bool ovr;
 };
-static struct rgbo absColorimetric(float r,float g,float b){
-	float rgb[3] = {r, g, b};
-	float xyz[3];
-	std::fill(xyz,xyz+3,0);
-	const float xyzmat[] = {.4124f,.3576f,.1805f,.2126f,.7152f,.0722f,.0193f,.1192f,.9505f};
-	float WY = 1.f;
-	float WX = (WY * 0.3127f)/0.3290f;
-	float WZ = (WY * (1.f - 0.3127f - 0.3290f))/0.3290f;
-	// Grabbed from the Wikipedia page on sRGB and xyY -> XYZ
-	const float xyzprims[] = {(.2126*.64)/.33, .2126, (.2126*(1-.64-.33))/.33, (.7153*.3)/.6, .7153, (.7153*(1-.3-.6))/.6, (.0721*.15)/.06, .0721, (.0721*(1-.15-.06))/.06};
-	// First, convert RGB to CIEXYZ.
-	for (unsigned i = 0; i < 3; i++) {
-		if (rgb[i] <= 0.04045f) {
-			rgb[i] /= 12.92f;
-		} else {
-			rgb[i] = powf((rgb[i] + 0.055f)/(1.f+0.055f),2.4f);
-		}
-	}
-	for (unsigned i=0,j=0;i<3;i++){
-		xyz[i] = xyzmat[j++] * rgb[0];
-		xyz[i] += xyzmat[j++] * rgb[1];
-		xyz[i] += xyzmat[j++] * rgb[2];
-	}
-	// Convert XYZ to LUV.
-	float luv[3];
-	std::fill(luv,luv+3,0.f);
-	float luvprims[9];
-	std::fill(luvprims,luv+9,0.f);
-	if ((xyz[1] / WY) <= powf(6.f/29.f, 3.f))
-		luv[0] = powf(29.f/3.f,3.f) * (xyz[1] / WY);
-	else
-		luv[0] = (116.f * powf(xyz[1] / WY,1.f/3.f))-16.f;
-	for (unsigned i = 0; i < 3; i++) {
-		if ((xyzprims[(i*3)+1] / WY) <= powf(6.f/29.f, 3.f))
-			luvprims[i*3] = powf(29.f/3.f,3.f) * (xyzprims[(i*3)+1] / WY);
-		else
-			luvprims[i*3] = (116.f * powf(xyzprims[(i*3)+1] / WY,1.f/3.f))-16.f;
-	}
-	float upn = (4.f*WX)/(WX + (15.f*WY) + (3.f*WZ));
-	float vpn = (9.f*WY)/(WX + (15.f*WY) + (3.f*WZ));
-	float up = (4.f*xyz[0])/(xyz[0] + (15*xyz[1]) + (3*xyz[2]));
-	float vp = (9.f*xyz[1])/(xyz[0] + (15*xyz[1]) + (3*xyz[2]));
-	luv[1] = (13.f*luv[0]) * (up - upn);
-	luv[2] = (13.f*luv[0]) * (vp - vpn);
-	for (unsigned i = 0; i < 3; i++) {
-		up = (4*xyzprims[(i*3)])/(xyzprims[(i*3)] + (15*xyzprims[(i*3)+1]) + (3*xyzprims[(i*3)+2]));
-		vp = (9*xyzprims[(i*3)+1])/(xyzprims[(i*3)] + (15*xyzprims[(i*3)+1]) + (3*xyzprims[(i*3)+2]));
-		luvprims[(i*3)+1] = (13*luvprims[(i*3)]) * (up - upn);
-		luvprims[(i*3)+2] = (13*luvprims[(i*3)]) * (vp - vpn);
-	}
-	// We've now gone from sRGB -> XYZ -> LUV.
-	if (((r >= 0.f) && (r <= 1.f)) &&
-		((g >= 0.f) && (g <= 1.f)) &&
-		((b >= 0.f) && (b <= 1.f))) {
-		return {r,g,b,false};
-	}
-	return {r,g,b,true};
-}
 static struct rgbo simpleClip(float r,float g,float b) {
 	bool ovr = false;
 	if (r > 1.f) {
@@ -175,35 +117,6 @@ static struct rgbo huePreserveClip3(float r,float g,float b) {
 	else if (b < 0.f) b = 0.f;
 	return {r,g,b,ovr};
 }
-static struct rgbo hueLumPreserveClip(float r,float g,float b,float l){
-	bool ovr = false;
-	float ratio = 1;
-	if ((r > 1.f) || (g > 1.f) || (b > 1.f)) {
-		ovr = true;
-		float max = r;
-		if (g > max) max = g;
-		if (b > max) max = b;
-		ratio = 1 / max;
-	}
-	if (ovr) {
-		r -= l;
-		g -= l;
-		b -= l;
-		r *= ratio;
-		g *= ratio;
-		b *= ratio;
-		r += l;
-		g += l;
-		b += l;
-	}
-	if (r > 1.f) r = 1.f;
-	else if (r < 0.f) r = 0.f;
-	if (g > 1.f) g = 1.f;
-	else if (g < 0.f) g = 0.f;
-	if (b > 1.f) b = 1.f;
-	else if (b < 0.f) b = 0.f;
-	return {r,g,b,ovr};
-}
 enum clipYIQtoRGB{NONE_Y,CLAMP_Y,DARKEN_Y,DESATURATE_Y};
 enum clipStyle{CLAMP_S,DARKEN_S,DESATURATE_S};
 static struct rgbo yiqToRgb(float Y,float I,float Q){
@@ -241,7 +154,7 @@ static struct rgbo yiqToRgb(float Y,float I,float Q){
 	// http://www.brucelindbloom.com/Eqn_RGB_XYZ_Matrix.html
 	// and I know it's right because when you use the sRGB colorimetry, this matrix produces identical results to
 	// just using the raw R, G, and B above.
-	const float xyztorgb[] = {3.2404, -1.5371, -0.4985, -0.9693, 1.876, 0.0416, 0.0556, -0.204, 1.0572};
+	static const float xyztorgb[] = {3.2404f, -1.5371f, -0.4985f, -0.9693f, 1.876f, 0.0416f, 0.0556f, -0.204f, 1.0572f};
 
 	// Remove the disabled channels.
 	// If channels are negative, clamp them to 0. I'm pretty sure this is what TVs do.
@@ -377,7 +290,7 @@ uint32_t nesPalToRgb(unsigned inputPal) {
 	}
 
 	float hueAdj = -0.25f;//TODO gui
-	float hue_tweak=hueAdj/M_PI*12.f/360.f;
+	float hue_tweak=hueAdj/float(M_PI)*12.f/360.f;
 	float satAdj = 1.2f;//TODO gui
 	float bri = 1.f;//TODO gui
 	float con = 1.f;//TODO gui
@@ -442,8 +355,8 @@ uint32_t nesPalToRgb(unsigned inputPal) {
 		v *= bri / 12.f;
 
 		y += v;
-		i += v * std::cos( (M_PI/6.f) * (p+hue_tweak) );
-		q += v * std::sin( (M_PI/6.f) * (p+hue_tweak) );
+		i += v * cosf((float(M_PI)/6.f) * (p+hue_tweak) );
+		q += v * sinf((float(M_PI)/6.f) * (p+hue_tweak) );
 	}
 	i *= satAdj;
 	q *= satAdj;

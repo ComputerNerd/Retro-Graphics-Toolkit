@@ -29,11 +29,22 @@
 #include "classtilemaps.h"
 #define currentProjectVersionNUM 8
 extern uint32_t curProjectID;
+struct luaDat{
+	uint32_t len;
+	void*dat;
+};
+enum luaControlEnum{TILEMAP_C,CHUNK_C,SPRITE_C,LEVEL_C};
+struct luaControl{
+	uint32_t len;
+	enum luaControlEnum ctrlType;
+	const char*name;
+	void*dat;
+};
 struct Project{/*!<Holds all data needed for a project based system for example tile screen and level 1 are 2 separate projects*/
 	std::string Name;
 	gameSystemEnum gameSystem;
 	uint32_t subSystem;
-	uint32_t settings;//Stores dither algorithm and engine settings such as sonic 1 and such.
+	uint32_t settings;
 	uint32_t useMask;/*!<Sharing can be used regardless of use mask*/
 	tilemaps*tms;
 	tiles*tileC;
@@ -41,8 +52,11 @@ struct Project{/*!<Holds all data needed for a project based system for example 
 	palette*pal;
 	sprites*spritesC;
 	int32_t share[shareAmtPj];/*!<Negative if not sharing or project id (which is always positive) if sharing*/
-	nearestAlgs_t nearestAlg;
 	unsigned curPlane;
+	uint32_t lauDatAmt;
+	uint32_t luaControlAmt;
+	struct luaDat*lDat;
+	struct luaControl*lCtrl;
 };
 extern struct Project ** projects;
 extern uint32_t projects_count;//holds how many projects there are this is needed for realloc when adding or removing function
@@ -76,8 +90,9 @@ bool loadAllProjects(bool Old);
 #define pjDefaultMask (pjHavePal|pjHaveTiles|pjHaveMap|pjHaveChunks|pjHaveSprites|pjHaveLevel)
 #define pjAllMask pjDefaultMask
 
-#define settingsDitherMask 255
+#define settingsDitherMask 255//Used for dither algorithm
 #define subsettingsDitherMask 255
 #define subsettingsDitherShift 8
-
+#define nearestColorSettingsMask 255
+#define nearestColorShift 16
 #endif

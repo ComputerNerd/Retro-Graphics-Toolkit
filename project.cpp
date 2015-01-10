@@ -101,7 +101,7 @@ void compactPrjMem(void){
 static void initNewProject(unsigned at){
 	projects[at]->gameSystem=segaGenesis;
 	projects[at]->subSystem=3;
-	projects[at]->settings=15<<subsettingsDitherShift;
+	projects[at]->settings=(15<<subsettingsDitherShift)|(aWeighted<<nearestColorShift);
 	projects[at]->tileC=new tiles;
 	projects[at]->curPlane=0;
 	projects[at]->tms=new tilemaps;
@@ -111,7 +111,6 @@ static void initNewProject(unsigned at){
 	projects[at]->pal=new palette;
 	std::fill(projects[at]->share,&projects[at]->share[shareAmtPj],-1);
 	projects[at]->useMask=pjDefaultMask;
-	projects[at]->nearestAlg=aWeighted;
 }
 void initProject(void){
 	projects = (struct Project **) malloc(sizeof(void *));
@@ -439,7 +438,7 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 	if(version>=8)
 		fread(&projects[id]->settings,1,sizeof(uint32_t),fi);
 	else
-		projects[id]->settings=15<<subsettingsDitherShift;
+		projects[id]->settings=15<<subsettingsDitherShift|(aWeighted<<nearestColorShift);
 	switch(projects[id]->gameSystem){
 		case segaGenesis:
 			projects[id]->tileC->tileSize=32;
@@ -560,7 +559,7 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 	if these bits are zero skip it 
 	uint32_t game system
 	if(version >= 4) uint32_t sub System requires special handling for version==4
-	if(version>=8) settings
+	if(version>=8) uint32_t settings
 	palette data (128 bytes if sega genesis or 16 bytes if NES)
 	if((version>=7)&&(gameSystem==NES)) 16 bytes for sprite specific palette
 	Free locked reserved data 64 bytes if sega genesis or 32 (16 if version<7) if NES

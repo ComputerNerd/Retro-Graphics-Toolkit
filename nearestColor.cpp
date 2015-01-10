@@ -24,7 +24,7 @@ static inline double sqd(double x){
 }
 unsigned nearestColIndex(int red,int green,int blue,uint8_t*pal,unsigned amt,bool checkType,unsigned off){
 	unsigned bestcolor=0;
-	switch(currentProject->nearestAlg){
+	switch(((currentProject->settings)>>nearestColorShift)&nearestColorSettingsMask){
 		case aCiede2000:
 			{
 				double minerrord=1e99;

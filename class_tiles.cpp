@@ -425,6 +425,9 @@ void tiles::blank_tile(uint32_t tileUsage){
 	}else
 		memset(&tDat[tileUsage*tileSize],0,tileSize);
 }
+#if _WIN32
+#define bcmp memcmp
+#endif
 void tiles::remove_duplicate_tiles(bool tColor){
 	pushTilemapAll(false);
 	pushTileGroupPrepare(tTypeDelete);

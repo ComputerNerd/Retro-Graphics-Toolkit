@@ -267,7 +267,8 @@ void setPalType(Fl_Widget*,void*type){
 	window->redraw();
 }
 void pickNearAlg(Fl_Widget*,void*){
-	currentProject->nearestAlg=(nearestAlgs_t)MenuPopup("Nearest color algorithm selection","Select an algorithm",4,"ciede2000","Weighted","Euclidean distance","CIE76");
+	currentProject->settings&=~(nearestColorSettingsMask<<nearestColorShift);
+	currentProject->settings|=MenuPopup("Nearest color algorithm selection","Select an algorithm",4,"ciede2000","Weighted","Euclidean distance","CIE76")<<nearestColorShift;
 }
 void rgb_pal_to_entry(Fl_Widget*,void*){
 	//this function will convert a rgb value to the nearest palette entry

@@ -34,7 +34,7 @@ static int panic(lua_State *L){
 	fl_alert("PANIC: unprotected error in call to Lua API (%s)\n",lua_tostring(L, -1));
 	throw 0;//Otherwise abort() would be called when not needed
 }
-static void *l_alloc (void *ud, void *ptr, size_t osize, size_t nsize){
+static void *l_alloc(void *ud, void *ptr, size_t osize, size_t nsize){
 	if(nsize)
 		return realloc(ptr, nsize);
 	else{
