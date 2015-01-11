@@ -30,9 +30,9 @@ palette::palette(void){
 palette::~palette(void){
 	free(rgbPal);
 }
-palette::palette(const palette& other,uint32_t gameSystem){
+palette::palette(const palette& other){
 	rgbPal=0;
-	setVars(gameSystem);
+	setVars(currentProject->gameSystem);
 	memcpy(rgbPal,other.rgbPal,(colorCnt+colorCntalt)*(4+esize));
 }
 void palette::setVars(uint32_t gameSystem){

@@ -94,7 +94,7 @@ void paletteBar::setSys(bool upSlide){
 					slide[j][2]->value(0);
 					slide[j][2]->maximum(7);
 					slide[j][2]->resize(slide[j][2]->x()+16,slide[j][2]->y(),slide[j][2]->w()-16,slide[j][2]->h());
-					slide[j][2]->callback(update_emphesis);
+					slide[j][2]->callback(updateEmphesisCB);
 				break;
 				default:
 					show_default_error

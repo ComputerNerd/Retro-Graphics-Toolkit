@@ -16,6 +16,7 @@
 */
 #include "global.h"
 #include "project.h"
+#include "undo.h"
 static const char * warningDelete="Warning this will delete this project's data\nDo you wish to continue?";
 void setSegaPalType(Fl_Widget*,void*x){
 	currentProject->subSystem&=~sgSHmask;
@@ -50,7 +51,7 @@ void haveCB(Fl_Widget*o,void*mask){
 		}
 	}
 	if((m&pjHavePal)&&(!set)){//cannot have tiles without a palette
-		if(containsDataCurProjOR(pjNeedsPalette)){
+		if(currentProject->containsDataOR(pjNeedsPalette)){
 			fl_alert("You cannot have these/this without a palette");
 			b->value(1);
 			window->redraw();
@@ -58,7 +59,7 @@ void haveCB(Fl_Widget*o,void*mask){
 		}
 	}
 	if((m&pjHaveTiles)&&(!set)){
-		if(containsDataCurProjOR(pjNeedsTiles)){
+		if(currentProject->containsDataOR(pjNeedsTiles)){
 			fl_alert("You cannot have these/this without tiles");
 			b->value(1);
 			window->redraw();
@@ -66,7 +67,7 @@ void haveCB(Fl_Widget*o,void*mask){
 		}
 	}
 	if((m&(~pjHavePal))&&set){//Ensure that a palette exists before enabling anything else
-		if(!containsDataCurProj(pjHavePal)){
+		if(!currentProject->containsData(pjHavePal)){
 			fl_alert("You need a palette to do this");
 			b->value(0);
 			window->redraw();
@@ -74,7 +75,7 @@ void haveCB(Fl_Widget*o,void*mask){
 		}
 	}
 	if((m&pjNeedsTiles)&&set){//Are we trying to enable something that needs tiles?
-		if(!containsDataCurProj(pjHaveTiles)){
+		if(!currentProject->containsData(pjHaveTiles)){
 			fl_alert("You cannot have that without tiles");
 			b->value(0);
 			window->redraw();
@@ -159,6 +160,7 @@ void shareProjectCB(Fl_Widget*o,void*mask){
 	window->redraw();
 }
 void loadProjectCB(Fl_Widget*,void*){
+	pushProject();
 	loadProject(curProjectID);
 	switchProject(curProjectID);
 }

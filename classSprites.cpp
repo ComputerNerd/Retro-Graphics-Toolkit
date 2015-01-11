@@ -307,6 +307,8 @@ bool sprites::recttoSprite(int x0,int x1,int y0,int y1,int where,Fl_Shared_Image
 			wmax=8;
 			hmax=16;
 		break;
+		default:
+			show_default_error
 	}
 	unsigned wf,hf,w,h,wt,ht;
 	wf=loaded_image->w();

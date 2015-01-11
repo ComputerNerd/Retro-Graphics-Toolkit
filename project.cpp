@@ -35,35 +35,51 @@ const char*maskToName(unsigned mask){
 	else
 		return maskNames[off];
 }
-bool containsDataProj(uint32_t prj,uint32_t mask){//OR to require multiple types of data
+bool Project::isShared(uint32_t mask){
 	bool andIt=true;
 	for(unsigned m=0;m<=pjMaxMaskBit;++m){
 		if(mask&(1<<m)){
-			andIt&=((projects[prj]->useMask&(1<<m))||(projects[prj]->share[m]>0));
+			andIt&=share[m]>=0;
 			if(!andIt)
 				break;
 		}
 	}
 	return andIt;
 }
-bool containsDataCurProj(uint32_t mask){
-	return containsDataProj(curProjectID,mask);
+bool Project::isUniqueData(uint32_t mask){
+	bool andIt=true;
+	for(unsigned m=0;m<=pjMaxMaskBit;++m){
+		if(mask&(1<<m)){
+			andIt&=((useMask&(1<<m))&&(share[m]<0));
+			if(!andIt)
+				break;
+		}
+	}
+	return andIt;
 }
-bool containsDataProjOR(uint32_t prj,uint32_t mask){//OR to require multiple types of data
+bool Project::containsData(uint32_t mask){
+	bool andIt=true;
+	for(unsigned m=0;m<=pjMaxMaskBit;++m){
+		if(mask&(1<<m)){
+			andIt&=((useMask&(1<<m))||(share[m]>=0));
+			if(!andIt)
+				break;
+		}
+	}
+	return andIt;
+}
+bool Project::containsDataOR(uint32_t mask){
 	bool orIt=false;
 	for(unsigned m=0;m<=pjMaxMaskBit;++m){
 		if(mask&(1<<m))
-			orIt|=((projects[prj]->useMask&(1<<m))||(projects[prj]->share[m]>0));
+			orIt|=((useMask&(1<<m))||(share[m]>=0));
 	}
 	return orIt;
-}
-bool containsDataCurProjOR(uint32_t mask){
-	return containsDataProjOR(curProjectID,mask);
 }
 void compactPrjMem(void){
 	int Cold=0,Cnew=0;//Old and new capacity
 	for(uint_fast32_t i=0;i<projects_count;++i){
-		if(containsDataProj(i,pjHaveTiles)){
+		if(projects[i]->containsData(pjHaveTiles)){
 			Cold+=projects[i]->tileC->tDat.capacity();
 			Cold+=projects[i]->tileC->truetDat.capacity();
 			projects[i]->tileC->tDat.shrink_to_fit();
@@ -71,12 +87,12 @@ void compactPrjMem(void){
 			Cnew+=projects[i]->tileC->tDat.capacity();
 			Cnew+=projects[i]->tileC->truetDat.capacity();
 		}
-		if(containsDataProj(i,pjHaveChunks)){
+		if(projects[i]->containsData(pjHaveChunks)){
 			Cold+=projects[i]->Chunk->chunks.capacity();
 			projects[i]->Chunk->chunks.shrink_to_fit();
 			Cnew+=projects[i]->Chunk->chunks.capacity();
 		}
-		if(containsDataProj(i,pjHaveSprites)){
+		if(projects[i]->containsData(pjHaveSprites)){
 			for(uint32_t n=0;n<projects[i]->spritesC->amt;++n){
 				Cold+=projects[i]->spritesC->groups[n].list.capacity();
 				Cold+=projects[i]->spritesC->groups[n].list.capacity();
@@ -97,6 +113,47 @@ void compactPrjMem(void){
 		}
 	}
 	printf("Old capacity: %d New capacity: %d saved %d bytes\n",Cold,Cnew,Cold-Cnew);
+}
+Project::Project(){
+
+}
+Project::Project(const Project& other){
+	gameSystem=other.gameSystem;
+	subSystem=other.subSystem;
+	settings=other.settings;
+	curPlane=other.curPlane;
+	useMask=other.useMask;
+	memcpy(share,other.share,sizeof(share));
+	if(isUniqueData(pjHavePal))
+		pal=new palette(*other.pal);
+	else if(isShared(pjHavePal))
+		pal=other.pal;
+	else
+		pal=0;
+	if(isUniqueData(pjHaveTiles))
+		tileC=new tiles(*other.tileC);
+	else if(isShared(pjHaveTiles))
+		tileC=other.tileC;
+	else
+		tileC=0;
+	if(isUniqueData(pjHaveMap))
+		tms=new tilemaps(*other.tms);
+	else if(isShared(pjHaveMap))
+		tms=other.tms;
+	else
+		tms=0;
+	if(isUniqueData(pjHaveChunks))
+		Chunk=new ChunkClass(*other.Chunk);
+	else if(isShared(pjHaveChunks))
+		Chunk=other.Chunk;
+	else
+		Chunk=0;
+	if(isUniqueData(pjHaveSprites))
+		spritesC=new sprites(*other.spritesC);
+	else if(isShared(pjHaveSprites))
+		spritesC=other.spritesC;
+	else
+		spritesC=0;
 }
 static void initNewProject(unsigned at){
 	projects[at]->gameSystem=segaGenesis;
@@ -130,7 +187,7 @@ void setHaveProject(uint32_t id,uint32_t mask,bool set){
 				projects[id]->useMask|=pjHavePal;
 				palBar.setSys();
 				if(projects[id]->gameSystem==NES)
-					update_emphesis(0,0);
+					updateEmphesis();
 			}
 		}else{
 			if(projects[id]->useMask&pjHavePal){
@@ -275,22 +332,24 @@ bool appendProject(void){
 		window->shareWith[x]->maximum(projects_count-1);
 	return true;
 }
+Project::~Project(){
+	if(isUniqueData(pjHavePal))
+		delete pal;
+	if(isUniqueData(pjHaveTiles))
+		delete tileC;
+	if(isUniqueData(pjHaveMap))
+		delete tms;
+	if(isUniqueData(pjHaveChunks))
+		delete Chunk;
+	if(isUniqueData(pjHaveSprites))
+		delete spritesC;
+}
 bool removeProject(uint32_t id){
 	//removes selected project
 	if (projects_count<=1){
 		fl_alert("You must have at least one project.");
 		return false;
 	}
-	if((projects[id]->share[tile_edit]<0)&&(projects[id]->useMask&pjHaveTiles))
-		delete projects[id]->tileC;
-	if((projects[id]->share[tile_place]<0)&&(projects[id]->useMask&pjHaveMap))
-		delete projects[id]->tms;
-	if((projects[id]->share[chunkEditor]<0)&&(projects[id]->useMask&pjHaveChunks))
-		delete projects[id]->Chunk;
-	if((projects[id]->share[spriteEditor]<0)&&(projects[id]->useMask&pjHaveSprites))
-		delete projects[id]->spritesC;
-	if((projects[id]->share[pal_edit]<0)&&(projects[id]->useMask&pjHavePal))
-		delete projects[id]->pal;
 	delete projects[id];
 	if((id+1)!=projects_count)//Are we not removing the project last on the list?
 		memmove(projects+id,projects+id+1,sizeof(void*)*(projects_count-id-1));
@@ -315,15 +374,15 @@ void switchProject(uint32_t id){
 		window->ditherPower->hide();
 	else
 		window->ditherPower->show();
-	if(containsDataProj(id,pjHavePal))
+	if(projects[id]->containsData(pjHavePal))
 		projects[id]->pal->setVars(projects[id]->gameSystem);
 	switch(projects[id]->gameSystem){
 		case segaGenesis:
 			window->subSysC->copy(subSysGenesis);
 			window->subSysC->value((projects[id]->subSystem&sgSHmask)>>sgSHshift);
-			if(containsDataProj(id,pjHaveTiles))
+			if(projects[id]->containsData(pjHaveTiles))
 				projects[id]->tileC->tileSize=32;
-			if(containsDataProj(id,pjHavePal)){
+			if(projects[id]->containsData(pjHavePal)){
 				palBar.setSys();
 				set_palette_type();
 			}
@@ -331,20 +390,18 @@ void switchProject(uint32_t id){
 		case NES:
 			window->subSysC->copy(subSysNES);
 			window->subSysC->value(projects[id]->subSystem&1);
-			if(containsDataProj(id,pjHaveTiles))
+			if(projects[id]->containsData(pjHaveTiles))
 				projects[id]->tileC->tileSize=16;
-			if(containsDataProj(id,pjHavePal)){
-				updateNesTab(0,false);
-				updateNesTab(0,true);
+			if(projects[id]->containsData(pjHavePal)){
 				palBar.setSys();
-				update_emphesis(0,0);
+				updateEmphesis();
 			}
 		break;
 		case masterSystem:
 		case gameGear:
-			if(containsDataProj(id,pjHaveTiles))
+			if(projects[id]->containsData(pjHaveTiles))
 				projects[id]->tileC->tileSize=32;
-			if(containsDataProj(id,pjHavePal)){
+			if(projects[id]->containsData(pjHavePal)){
 				palBar.setSys();
 				projects[id]->pal->paletteToRgb();
 			}
@@ -353,14 +410,14 @@ void switchProject(uint32_t id){
 			show_default_error
 	}
 	//Make sure sliders have correct values
-	if(containsDataProj(id,pjHaveMap)){
+	if(projects[id]->containsData(pjHaveMap)){
 		updatePlaneTilemapMenu(id,window->planeSelect);
 		window->updateMapWH(projects[id]->tms->maps[projects[id]->curPlane].mapSizeW,projects[id]->tms->maps[projects[id]->curPlane].mapSizeH);
 		char tmp[16];
 		snprintf(tmp,16,"%u",projects[id]->tms->maps[projects[id]->curPlane].amt);
 		window->map_amt->value(tmp);
 	}
-	if(containsDataProj(id,pjHaveTiles))
+	if(projects[id]->containsData(pjHaveTiles))
 		updateTileSelectAmt(projects[id]->tileC->amt);
 	for(int x=0;x<shareAmtPj;++x){
 		window->sharePrj[x]->value(projects[id]->share[x]<0?0:1);
@@ -383,17 +440,17 @@ void switchProject(uint32_t id){
 			}
 		}
 	}
-	if(containsDataProj(id,pjHaveMap))
+	if(projects[id]->containsData(pjHaveMap))
 		window->BlocksCBtn->value(projects[id]->tms->maps[projects[id]->curPlane].isBlock?1:0);
-	if(containsDataProj(id,pjHaveChunks)){
+	if(projects[id]->containsData(pjHaveChunks)){
 		window->chunk_select->maximum(projects[id]->Chunk->amt-1);
 		window->updateChunkSize(projects[id]->Chunk->wi,projects[id]->Chunk->hi);
 	}
-	if(containsDataProj(id,pjHaveMap))
+	if(projects[id]->containsData(pjHaveMap))
 		projects[id]->tms->maps[projects[id]->curPlane].toggleBlocks(projects[id]->tms->maps[projects[id]->curPlane].isBlock);
-	if(containsDataProj(id,pjHaveChunks))
+	if(projects[id]->containsData(pjHaveChunks))
 		window->updateBlockTilesChunk(id);
-	if(containsDataProj(id,pjHaveSprites)){
+	if(projects[id]->containsData(pjHaveSprites)){
 		window->updateSpriteSliders(id);
 		window->spriteglobaltxt->show();
 		window->spriteglobaltxt->value(projects[id]->spritesC->name.c_str());

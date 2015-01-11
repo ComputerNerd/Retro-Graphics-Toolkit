@@ -227,28 +227,26 @@ void tileMap::pickRow(unsigned amount){
 	if(method)
 		free(hist);
 }
-static inline uint8_t pick4Delta(double * d){
-	if ((d[0] <= d[1]) && (d[0] <= d[2]) && (d[0] <= d[3]))
-		return 0;
-	if ((d[1] <= d[2]) && (d[1] <= d[3]))
-		return 1;
-	if (d[2] <= d[3])
-		return 2;
-	return 3;
-}
-static inline uint8_t pick4Deltai(uint32_t * d){
-	if ((d[0] <= d[1]) && (d[0] <= d[2]) && (d[0] <= d[3]))
-		return 0;
-	if ((d[1] <= d[2]) && (d[1] <= d[3]))
-		return 1;
-	if (d[2] <= d[3])
-		return 2;
-	return 3;
+template <typename Type>
+static unsigned pick4Delta(Type*ptr,unsigned amt){
+	Type minVal=ptr[0];
+	unsigned which=0;
+	for(unsigned i=1;i<amt;++i){
+		if(ptr[i]<minVal){
+			minVal=ptr[i];
+			which=i;
+		}
+	}
+	return which;
 }
 static inline uint32_t sqri(int x){
 	return x*x;
 }
 void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
+	if(currentProject->pal->rowCntPal<=1){
+		fl_alert("This function needs more than one palette row to work");
+		return;
+	}
 	int alg=MenuPopup("Select picking algorithm","Pick which method you think works better for this image.",6,"ciede2000","Weighted","Mean squared error","Hue difference","Saturation difference","Lightness difference");
 	if(alg<0)
 		return;
@@ -256,6 +254,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	pushTilesAll(tTypeTile);
 	if(fl_ask("Would you like the palette to be ordered by hue or light or saturation")){
 		unsigned type=fl_choice("What do you want it ordered by","Hue","Saturation","Lightness");
+		pushPaletteAll();
 		sortBy(type,false);
 	}
 	unsigned type_temp=palTypeGen;
@@ -270,13 +269,13 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	h=mapSizeHA*8;
 	uint8_t * imagein=(uint8_t*)malloc(w*h*4);
 	truecolor_to_image(imagein,-1);
-	uint8_t **imageout=(uint8_t**)malloc(4*sizeof(void*));
+	uint8_t **imageout=(uint8_t**)malloc(currentProject->pal->rowCntPal*sizeof(void*));
 	uint32_t xtile=0,ytile=0;
 	if(showProgress){
-		progress->maximum(12);
+		progress->maximum(currentProject->pal->rowCntPal*3);
 		progress->value(0);
 	}
-	for(x=0;x<4;++x){//This function has too many hard coded values The four should be a variable with the amount of palette rows
+	for(x=0;x<currentProject->pal->rowCntPal;++x){//This function has too many hard coded values The four should be a variable with the amount of palette rows
 		if(showProgress){
 			snprintf((char*)temp,256,"Dithering %d",x);
 			progress->label((char*)temp);
@@ -311,16 +310,15 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 	for (uint_fast32_t a=0;a<(h*w*4)-(w*4*per);a+=w*4*8*per){//a tiles y
 		for (uint_fast32_t b=0;b<w*4;b+=32*per){//b tiles x
 			if(alg==2||alg==1)
-				memset(di,0,4*sizeof(uint32_t));
+				memset(di,0,currentProject->pal->rowCntPal*sizeof(uint32_t));
 			else{
-				for (t=0;t<4;t++)
-					d[t]=0.0;
+				std::fill(d,d+currentProject->pal->rowCntPal,0.);
 			}
 			if ((type_temp != 0) && (currentProject->gameSystem == segaGenesis)){
 				tempSet=(currentProject->tms->maps[currentProject->curPlane].get_prio(xtile,ytile)^1)*8;
 				set_palette_type_force(tempSet);
 			}
-			for(t=0;t<4;++t){
+			for(t=0;t<currentProject->pal->rowCntPal;++t){
 				for(unsigned c=0;c<per*w*4*8;c+=w*4*8){
 					for(uint32_t y=0;y<w*4*8;y+=w*4){//pixels y
 						for(unsigned e=0;e<per*32;e+=32){
@@ -355,9 +353,9 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 			}
 			unsigned sillyrow;
 			if(alg==2||alg==1)
-				sillyrow=pick4Deltai(di);
+				sillyrow=pick4Delta(di,currentProject->pal->rowCntPal);
 			else
-				sillyrow=pick4Delta(d);
+				sillyrow=pick4Delta(d,currentProject->pal->rowCntPal);
 			set_pal_row(xtile,ytile,sillyrow);
 			for(unsigned c=0,i=0;c<per*w*4*8;c+=w*4*8,++i){
 				for(unsigned e=0,j=0;e<per*32;e+=32,++j){
@@ -382,10 +380,8 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 		ytile+=per;
 	}
 	free(imagein);
-	free(imageout[0]);
-	free(imageout[1]);
-	free(imageout[2]);
-	free(imageout[3]);
+	for(unsigned i=0;i<currentProject->pal->rowCntPal;++i)
+		free(imageout[i]);
 	free(imageout);
 	if(currentProject->gameSystem == segaGenesis)
 		set_palette_type();
@@ -470,7 +466,7 @@ againFun:
 			currentProject->pal->rgbToEntry(r,g,b,x+offsetPal);
 		}
 		if(currentProject->gameSystem==NES)
-			update_emphesis(0,0);
+			updateEmphesis();
 		window->redraw();
 	}else{
 		printf("More than %d colors reducing to %d colors\n",maxCol,maxCol);
@@ -610,7 +606,7 @@ againNerd:
 			currentProject->pal->rgbToEntry(currentProject->pal->rgbPal[(x*3)+off3],currentProject->pal->rgbPal[(x*3)+1+off3],currentProject->pal->rgbPal[(x*3)+2+off3],x+offsetPal);
 		}
 		if(currentProject->gameSystem==NES)
-			update_emphesis(0,0);
+			updateEmphesis();
 		if(alg==1){
 			if(isSprite)
 				currentProject->spritesC->spriteImageToTiles(output,curSpritegroup,row,false);

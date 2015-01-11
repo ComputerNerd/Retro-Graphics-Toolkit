@@ -273,13 +273,13 @@ static int lua_palette_getRGB(lua_State*L){
 static int lua_palette_getRaw(lua_State*L){
 	unsigned ent=luaL_optunsigned(L,1,0);
 	if(inRangeEnt(ent)){
-		switch(currentProject->gameSystem){
-			case segaGenesis:
+		switch(currentProject->pal->esize){
+			case 1:
+				lua_pushunsigned(L,currentProject->pal->palDat[ent]);
+			break;
+			case 2:
 				ent*=2;
 				lua_pushunsigned(L,currentProject->pal->palDat[ent]|(currentProject->pal->palDat[ent+1]<<8));
-			break;
-			case NES:
-				lua_pushunsigned(L,currentProject->pal->palDat[ent]);
 			break;
 			default:
 				show_default_error
@@ -293,13 +293,13 @@ static int lua_palette_setRaw(lua_State*L){
 	unsigned ent=luaL_optunsigned(L,1,0);
 	if(inRangeEnt(ent)){
 		unsigned val=luaL_optunsigned(L,2,0);
-		switch(currentProject->gameSystem){
-			case segaGenesis:
+		switch(currentProject->pal->esize){
+			case 1:
+				currentProject->pal->palDat[ent]=val;
+			break;
+			case 2:
 				currentProject->pal->palDat[ent*2]=val&255;
 				currentProject->pal->palDat[ent*2+1]=val>>8;
-			break;
-			case NES:
-				currentProject->pal->palDat[ent]=val;
 			break;
 			default:
 				show_default_error
@@ -616,11 +616,11 @@ static const luaL_Reg lua_spriteAPI[]={
 	{0,0}
 };
 static int lua_project_rgt_have(lua_State*L){
-	lua_pushboolean(L,containsDataCurProj(luaL_optunsigned(L,1,pjHavePal)));
+	lua_pushboolean(L,currentProject->containsData(luaL_optunsigned(L,1,pjHavePal)));
 	return 1;
 }
 static int lua_project_rgt_haveOR(lua_State*L){
-	lua_pushboolean(L,containsDataCurProjOR(luaL_optunsigned(L,1,pjHavePal)));
+	lua_pushboolean(L,currentProject->containsDataOR(luaL_optunsigned(L,1,pjHavePal)));
 	return 1;
 }
 static int lua_project_rgt_haveMessage(lua_State*L){
@@ -628,7 +628,7 @@ static int lua_project_rgt_haveMessage(lua_State*L){
 	std::string msg="Current project:";
 	for(unsigned x=0;x<=pjMaxMaskBit;++x){
 		if(mask&(1<<x)){
-			msg.append(containsDataCurProj(1<<x)?"\nhas ":"\ndoes not have ");
+			msg.append(currentProject->containsData(1<<x)?"\nhas ":"\ndoes not have ");
 			msg.append(maskToName(1<<x));
 		}
 	}
@@ -902,7 +902,7 @@ void runLua(Fl_Widget*,void*){
 				lua_setglobal(L, "Fl_Window");
 
 				//Retro Graphics Toolkit bindings
-				if(containsDataCurProj(pjHavePal)){
+				if(currentProject->containsData(pjHavePal)){
 					lua_createtable(L, 0,(sizeof(lua_paletteAPI)/sizeof((lua_paletteAPI)[0]) - 1)+5);
 					luaL_setfuncs(L,lua_paletteAPI,0);
 
@@ -915,7 +915,7 @@ void runLua(Fl_Widget*,void*){
 					lua_setglobal(L, "palette");
 				}
 
-				if(containsDataCurProj(pjHaveTiles)){
+				if(currentProject->containsData(pjHaveTiles)){
 					lua_createtable(L, 0,(sizeof(lua_tileAPI)/sizeof((lua_tileAPI)[0]) - 1)+3);
 					luaL_setfuncs(L,lua_tileAPI,0);
 
@@ -926,7 +926,7 @@ void runLua(Fl_Widget*,void*){
 					lua_setglobal(L, "tile");
 				}
 
-				if(containsDataCurProj(pjHaveMap)){
+				if(currentProject->containsData(pjHaveMap)){
 					lua_createtable(L, 0,(sizeof(lua_tilemapAPI)/sizeof((lua_tilemapAPI)[0]) - 1)+3);
 					luaL_setfuncs(L,lua_tilemapAPI,0);
 
@@ -937,7 +937,7 @@ void runLua(Fl_Widget*,void*){
 					lua_setglobal(L, "tilemap");
 				}
 
-				if(containsDataCurProj(pjHaveSprites)){
+				if(currentProject->containsData(pjHaveSprites)){
 					lua_createtable(L, 0,(sizeof(lua_spriteAPI)/sizeof((lua_spriteAPI)[0]) - 1)+1);
 					luaL_setfuncs(L,lua_spriteAPI,0);
 

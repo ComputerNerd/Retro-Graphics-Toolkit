@@ -44,7 +44,7 @@ void setBitdepthcurSys(unsigned bd){
 		default:
 			show_default_error
 	}
-	if(containsDataCurProj(pjHaveTiles)){
+	if(currentProject->containsData(pjHaveTiles)){
 		currentProject->tileC->tileSize=currentProject->tileC->sizew*currentProject->tileC->sizeh*getBitdepthcurSys()/8;
 		currentProject->tileC->resizeAmt();
 	}

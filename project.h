@@ -33,7 +33,7 @@ struct luaDat{
 	uint32_t len;
 	void*dat;
 };
-enum luaControlEnum{TILEMAP_C,CHUNK_C,SPRITE_C,LEVEL_C};
+enum luaControlEnum{PALETTE_C,TILEMAP_C,CHUNK_C,SPRITE_C,LEVEL_C};
 struct luaControl{
 	uint32_t len;
 	enum luaControlEnum ctrlType;
@@ -41,6 +41,13 @@ struct luaControl{
 	void*dat;
 };
 struct Project{/*!<Holds all data needed for a project based system for example tile screen and level 1 are 2 separate projects*/
+	Project();
+	Project(const Project& other);
+	~Project();
+	bool isShared(uint32_t mask);
+	bool isUniqueData(uint32_t mask);
+	bool containsData(uint32_t mask);
+	bool containsDataOR(uint32_t mask);
 	std::string Name;
 	gameSystemEnum gameSystem;
 	uint32_t subSystem;
@@ -63,10 +70,6 @@ extern uint32_t projects_count;//holds how many projects there are this is neede
 extern struct Project * currentProject;
 extern Fl_Slider* curPrj;
 const char*maskToName(unsigned mask);
-bool containsDataProj(uint32_t prj,uint32_t mask);
-bool containsDataProjOR(uint32_t prj,uint32_t mask);
-bool containsDataCurProj(uint32_t mask);
-bool containsDataCurProjOR(uint32_t mask);
 void compactPrjMem(void);
 void initProject(void) __attribute__((constructor(101)));/*!< this needs to be ran before class constructors*/
 void setHaveProject(uint32_t id,uint32_t mask,bool set);

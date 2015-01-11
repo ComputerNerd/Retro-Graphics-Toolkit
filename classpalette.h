@@ -30,7 +30,7 @@ class palette{
 	bool haveAlt;//Does the current game system use an alternative sprite palette?
 	palette(void);
 	~palette(void);
-	palette(const palette& other,uint32_t gameSystem);
+	palette(const palette& other);
 	void setVars(uint32_t gameSystem);
 	void read(FILE*fp,bool supportsAlt);
 	void write(FILE*fp);

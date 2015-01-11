@@ -25,6 +25,147 @@
 #include "callbacksprites.h"
 #include "classpalettebar.h"
 #include "callbacktilemaps.h"
+enum undoTypes_t{
+	uTile=0,
+	uTileAll,
+	uTileGroup,
+	uTilePixel,
+	uTileAppend,//No struct
+	uTileAppendgroupdat,//uTileGroup could be adapted for this but using separate code ram is saved
+	uTileNew,//No struct reuses ptr for insert tile after
+	uTilemap,
+	uTilemapattr,
+	uTilemapEdit,
+	uTilemapResize,
+	uTilemapBlocksAmt,
+	uTilemapPlaneDelete,
+	uTilemapPlaneAdd,
+	uPalette,
+	uPaletteEntry,
+	uChunk,
+	uChunkDelete,
+	uChunkAll,
+	uChunkEdit,
+	uChunkResize,
+	uChunkAppend,
+	uChunkNew,//No struct reuses ptr
+	uSpriteNew,
+	uSpriteNewgroup,//No struct reuses ptr
+	uSpriteAppend,//No struct reuses ptr
+	uSpriteAppendgroup,//No struct
+	uSpriteWidth,
+	uSpriteHeight,
+	uSpritePalrow,
+	uSpritestarttile,
+	uSpriteloadat,
+	uSpriteoffx,
+	uSpriteoffy,
+	uSpriteprio,
+	uSpritehflip,
+	uSpritevflip,
+	uSpriteGroupDel,
+	uSpriteDel,
+	uSpriteAll,
+	uCurProject,//For both system switches and project loads
+	uSwitchPrj,//No struct reuses ptr
+	ULoadPrjGroup,
+};
+struct undoEvent{//This struct merely holds which type of undo this is
+	undoTypes_t type;
+	void*ptr;//Can also be reused for information for example appendTile will store tile id if doing so limit yourself to 32bit values. Even if void* is 64bit on your system also can point to pointer created either by malloc or new
+};
+struct undoTile{//The purpose of this struct if to completely undo a tile
+	tileTypeMask_t type;
+	uint32_t id;
+	void*ptrnew;
+	void*ptr;//when type is both first the truecolor tile will be stored then the regular tile
+};
+struct undoTileAll{
+	tileTypeMask_t type;
+	uint32_t amt,amtnew;
+	void*ptr;
+	void*ptrnew;
+};
+struct undoTileGroup{
+	tileTypeMask_t type;
+	std::vector<uint32_t> lst;//Contains group of affect tiles
+	std::vector<uint8_t> data;//Similar situation to other tile structs as in what this contains and what order
+	std::vector<uint8_t> datanew;
+};
+struct undoAppendgroupdat{
+	uint32_t amt;
+	std::vector<uint8_t> dat;
+	std::vector<uint8_t> truedat;
+};
+struct undoTilePixel{
+	tileTypeMask_t type;
+	uint32_t id,x,y,val,valnew;
+};
+struct undoTilemap{//For undoing the entire tilemap
+	uint32_t plane;
+	uint32_t w,h,wnew,hnew;//The width and height
+	void*ptr;//Points to tilemap data that is w*h*4 bytes or attributes if so size is w*h
+	void*ptrnew;
+};
+struct undoTilemapEdit{
+	uint32_t plane;
+	uint32_t x,y,val,valnew;
+};
+struct undoTilemapPlane{
+	tileMap*old;
+	tileMap*Tnew;
+	std::string*oldStr;
+	std::string*TnewStr;
+	uint32_t plane;
+};
+struct undoResize{
+	uint32_t plane;
+	uint32_t w,h,wnew,hnew;//Old width and height
+	void*ptr;//Contains a pointer ONLY TO LOST DATA
+};
+struct undoPalette{
+	void*ptr;
+	void*ptrnew;
+};
+struct undoPaletteEntry{
+	uint32_t id,val,valnew;
+};
+struct undoChunkEdit{
+	uint32_t id,x,y;
+	struct ChunkAttrs valnew,val;
+};
+struct undoChunk{
+	uint32_t id;
+	struct ChunkAttrs*ptr,*ptrnew;
+};
+struct undoChunkAll{
+	uint32_t w,h,wnew,hnew;//The width and height
+	uint32_t amt,amtnew;
+	struct ChunkAttrs*ptr,*ptrnew;
+};
+struct undoSpriteVal{
+	uint32_t id,subid;
+	uint32_t val,valnew;
+};
+struct undoSpriteValbool{
+	uint32_t id,subid;
+	bool val,valnew;
+};
+struct undoSpriteDel{
+	uint32_t id,subid;
+	class sprite sp;
+	int32_t offx,offy;
+	uint32_t loadat;
+};
+struct undoSpriteGroupDel{
+	struct spriteGroup;
+};
+struct undoProject{
+	struct Project*old,*pnew;
+};
+struct undoProjectSwitch{
+	uint32_t oldID,newID;
+};
 static struct undoEvent*undoBuf;
 static uint_fast32_t amount;
 static uint_fast32_t memUsed;
@@ -242,6 +383,14 @@ static void cleanupEvent(uint32_t id){
 			free(uptr->ptr);
 			memUsed-=sizeof(struct undoSpriteValbool);}
 		break;
+		case uCurProject:
+			{struct undoProject*up=(struct undoProject*)uptr->ptr;
+			if(up->old)
+				delete up->old;
+			if(up->pnew)
+				delete up->pnew;
+			memUsed-=sizeof(struct undoProject);}
+		break;
 	}
 }
 void clearUndoCB(Fl_Widget*,void*){
@@ -388,7 +537,7 @@ static void removePlane(uint32_t plane){
 	}else
 		updatePlaneTilemapMenu();
 }
-void UndoRedo(bool redo){
+static void UndoRedo(bool redo){
 	if((pos<0)&&(!redo))
 		return;
 	if(!amount)
@@ -806,10 +955,33 @@ void UndoRedo(bool redo){
 		case uSpritevflip:
 			mkSpritePopbool(vflip)
 		break;
+		case uCurProject:
+			{struct undoProject*up=(struct undoProject*)uptr->ptr;
+			if(redo){
+				up->old=new Project(*currentProject);
+				delete currentProject;
+				currentProject=new Project(*up->pnew);
+				delete up->pnew;
+				up->pnew=0;
+			}else{
+				up->pnew=new Project(*currentProject);
+				delete currentProject;
+				currentProject=new Project(*up->old);
+				delete up->old;
+				up->old=0;
+			}
+			switchProject(curProjectID);}
+		break;
 	}
 	if(!redo)
 		--pos;
 	window->redraw();
+}
+void undoCB(Fl_Widget*,void*){
+	UndoRedo(false);
+}
+void redoCB(Fl_Widget*,void*){
+	UndoRedo(true);
 }
 void pushTile(uint32_t id,tileTypeMask_t type){
 	pushEventPrepare();
@@ -1150,6 +1322,16 @@ void pushSpriteVflip(void){
 void pushSpritePrio(void){
 	mkSpritePushbool(uSpriteprio,prio);
 }
+void pushProject(void){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uCurProject;
+	uptr->ptr=malloc(sizeof(struct undoProject));
+	memUsed+=sizeof(struct undoProject);
+	struct undoProject*up=(struct undoProject*)uptr->ptr;
+	up->old=new Project(*currentProject);
+	up->pnew=0;
+}
 static Fl_Window * win;
 static void closeHistory(Fl_Widget*,void*){
 	win->hide();
@@ -1290,6 +1472,9 @@ void historyWindow(Fl_Widget*,void*){
 			break;
 			case uSpritevflip:
 				strcpy(tmp,"Change sprite vflip");
+			break;
+			case uCurProject:
+				strcpy(tmp,"Change current project");
 			break;
 			default:
 				snprintf(tmp,2048,"TODO unhandled %d",uptr->type);

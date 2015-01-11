@@ -24,7 +24,6 @@ static bool comparatorHSL(const HSLpair& l,const HSLpair& r){
 	return l.first < r.first;
 }
 void sortBy(unsigned type,bool perRow){
-	pushPaletteAll();
 	unsigned totalCol=currentProject->pal->colorCnt+currentProject->pal->colorCntalt;
 	HSLpair* MapHSL=new HSLpair[totalCol];
 	for(unsigned x=0;x<totalCol*3;x+=3){

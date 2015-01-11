@@ -160,16 +160,16 @@ void updateNesTab(unsigned emps,bool alt){
 		}
 	}
 }
-void update_emphesis(Fl_Widget*,void*){
-	unsigned emps;
-	unsigned empsSprite;
-	emps=palBar.slide[palBar.toTab(mode_editor)][2]->value();
+void updateEmphesis(void){
 	/*76543210
 	  ||||||||
 	  ||||++++- Hue (phase)
 	  ||++----- Value (voltage)
 	  ++------- Unimplemented, reads back as 0*/
+	unsigned emps=(currentProject->subSystem>>NESempShift)&NESempMask;
+	unsigned empsSprite=(currentProject->subSystem>>NESempShiftAlt)&NESempMask;
 	emps<<=6;
+	empsSprite<<=6;
 	uint32_t rgb_out;
 	updateNesTab(emps,false);
 	updateNesTab(empsSprite,true);
@@ -185,5 +185,13 @@ void update_emphesis(Fl_Widget*,void*){
 		currentProject->pal->rgbPal[c+1]=(rgb_out>>8)&255;//green
 		currentProject->pal->rgbPal[c+2]=rgb_out&255;//blue
 	}
+}
+void updateEmphesisCB(Fl_Widget*,void*){
+	unsigned emps;
+	unsigned empsSprite;
+	currentProject->subSystem&=~((NESempMask<<NESempShift)|(NESempMask<<NESempShiftAlt));
+	currentProject->subSystem|=(unsigned)palBar.slide[palBar.toTab(mode_editor)][2]->value()<<NESempShift;
+	currentProject->subSystem|=(unsigned)palBar.slide[palBar.toTab(spriteEditor)][2]->value()<<NESempShiftAlt;
+	updateEmphesis();
 	window->redraw();
 }

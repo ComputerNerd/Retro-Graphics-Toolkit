@@ -22,6 +22,7 @@
 #include "lua.h"
 #include "CIE.h"
 #include "classpalettebar.h"
+#include "undo.h"
 static const char* GPLv3="This program is free software: you can redistribute it and/or modify\n"
 	"it under the terms of the GNU General Public License as published by\n"
 	"the Free Software Foundation, either version 3 of the License, or\n"
@@ -55,6 +56,7 @@ Fl_Menu_Item subSysGenesis[]={
 	{0}
 };
 void set_game_system(Fl_Widget*,void* selection){
+	pushProject();
 	gameSystemEnum sel=(gameSystemEnum)(intptr_t)selection;
 	if(unlikely(sel == currentProject->gameSystem)){
 		fl_alert("You are already in that mode");
@@ -65,9 +67,9 @@ void set_game_system(Fl_Widget*,void* selection){
 	unsigned bd=getBitdepthcurSys();
 	unsigned bdold=bd;
 	tiles*tilesOld=0;
-	if(containsDataCurProj(pjHaveTiles))
+	if(currentProject->containsData(pjHaveTiles))
 		tilesOld=new tiles(*currentProject->tileC);
-	if(containsDataCurProj(pjHavePal)){
+	if(currentProject->containsData(pjHavePal)){
 		switch(sel){
 			case segaGenesis:
 				if(currentProject->gameSystem==NES||currentProject->gameSystem==masterSystem||currentProject->gameSystem==gameGear){
@@ -104,9 +106,7 @@ void set_game_system(Fl_Widget*,void* selection){
 					memcpy(rgbTmp,currentProject->pal->rgbPal,64*3);
 					currentProject->gameSystem=sel;
 					palBar.setSys(false);
-					update_emphesis(0,0);
-					updateNesTab(0,false);
-					updateNesTab(0,true);
+					updateEmphesis();
 					uint8_t*nPtr=currentProject->pal->rgbPal;
 					uint8_t*rgbPtr=rgbTmp;
 					for(unsigned k=0;k<4;++k){
@@ -184,7 +184,7 @@ void set_game_system(Fl_Widget*,void* selection){
 					memcpy(rgbTmp,currentProject->pal->rgbPal,32*3);
 					currentProject->gameSystem=sel;
 					palBar.setSys(false);
-					uint8_t*nPtr=currentProject->pal->rgbPal;
+					uint8_t*nPtr=rgbTmp;
 					for(unsigned i=0;i<32;++i,nPtr+=3)
 						currentProject->pal->rgbToEntry(nPtr[0],nPtr[1],nPtr[2],i);
 					memcpy(currentProject->pal->palType,palTypeTmp,32);
@@ -192,6 +192,7 @@ void set_game_system(Fl_Widget*,void* selection){
 					fl_alert("TODO");
 			break;
 		}
+		currentProject->pal->paletteToRgb();
 		palBar.updateSliders();
 	}
 	switch(sel){
@@ -200,7 +201,7 @@ void set_game_system(Fl_Widget*,void* selection){
 			currentProject->gameSystem=segaGenesis;
 			currentProject->subSystem=0;
 			setBitdepthcurSys(bd);
-			if(containsDataCurProj(pjHaveSprites)){
+			if(currentProject->containsData(pjHaveSprites)){
 				window->spritesize[0]->maximum(4);
 				window->spritesize[1]->maximum(4);
 				currentProject->spritesC->enforceMax(4,4);
@@ -214,12 +215,12 @@ void set_game_system(Fl_Widget*,void* selection){
 			currentProject->gameSystem=NES;
 			currentProject->subSystem=0;
 			setBitdepthcurSys(bd);
-			if(!containsDataCurProj(pjHavePal)){
+			if(!currentProject->containsData(pjHavePal)){
 				updateNesTab(0,false);//In case the user enables palette later
 				updateNesTab(0,true);
 			}
 			currentProject->subSystem|=NES2x2;
-			if(containsDataCurProj(pjHaveMap)){
+			if(currentProject->containsData(pjHaveMap)){
 				//on the NES tilemaps need to be a multiple of 2
 				if(((currentProject->tms->maps[currentProject->curPlane].mapSizeW)&1) && ((currentProject->tms->maps[currentProject->curPlane].mapSizeHA)&1))
 					currentProject->tms->maps[currentProject->curPlane].resize_tile_map(currentProject->tms->maps[currentProject->curPlane].mapSizeW+1,currentProject->tms->maps[currentProject->curPlane].mapSizeHA+1);
@@ -228,7 +229,7 @@ void set_game_system(Fl_Widget*,void* selection){
 				else if((currentProject->tms->maps[currentProject->curPlane].mapSizeHA)&1)
 					currentProject->tms->maps[currentProject->curPlane].resize_tile_map(currentProject->tms->maps[currentProject->curPlane].mapSizeW,currentProject->tms->maps[currentProject->curPlane].mapSizeHA+1);
 			}
-			if(containsDataCurProj(pjHaveSprites)){
+			if(currentProject->containsData(pjHaveSprites)){
 				window->spritesize[0]->maximum(1);
 				window->spritesize[1]->maximum(2);
 				currentProject->spritesC->enforceMax(1,2);
@@ -262,7 +263,7 @@ void set_game_system(Fl_Widget*,void* selection){
 			show_default_error
 		break;
 	}
-	if(containsDataCurProj(pjHaveMap)){
+	if(currentProject->containsData(pjHaveMap)){
 		if((sel==masterSystem||sel==gameGear)&&(gold==NES)){
 			for(unsigned i=0;i<currentProject->tms->maps.size();++i){
 				for(unsigned y=0;y<currentProject->tms->maps[i].mapSizeHA;++y){
@@ -290,7 +291,7 @@ void set_game_system(Fl_Widget*,void* selection){
 			}
 		}
 	}
-	if(containsDataCurProj(pjHaveTiles)){
+	if(currentProject->containsData(pjHaveTiles)){
 		if(bd!=bdold){
 			gameSystemEnum gnew=currentProject->gameSystem;
 			uint32_t snew=currentProject->subSystem;

@@ -18,52 +18,7 @@
 #include "classSprite.h"
 #include "classSprites.h"
 #include "classtilemap.h"
-enum undoTypes_t{
-	uTile=0,
-	uTileAll,
-	uTileGroup,
-	uTilePixel,
-	uTileAppend,//No struct
-	uTileAppendgroupdat,//uTileGroup could be adapted for this but using separate code ram is saved
-	uTileNew,//No struct reuses ptr for insert tile after
-	uTilemap,
-	uTilemapattr,
-	uTilemapEdit,
-	uTilemapResize,
-	uTilemapBlocksAmt,
-	uTilemapPlaneDelete,
-	uTilemapPlaneAdd,
-	uPalette,
-	uPaletteEntry,
-	uChunk,
-	uChunkDelete,
-	uChunkAll,
-	uChunkEdit,
-	uChunkResize,
-	uChunkAppend,
-	uChunkNew,//No struct reuses ptr
-	uSpriteNew,
-	uSpriteNewgroup,//No struct reuses ptr
-	uSpriteAppend,//No struct reuses ptr
-	uSpriteAppendgroup,//No struct
-	uSpriteWidth,
-	uSpriteHeight,
-	uSpritePalrow,
-	uSpritestarttile,
-	uSpriteloadat,
-	uSpriteoffx,
-	uSpriteoffy,
-	uSpriteprio,
-	uSpritehflip,
-	uSpritevflip,
-	uSpriteGroupDel,
-	uSpriteDel,
-	uSpriteAll,
-	uSwitchSys,
-	uSwitchPrj,//No struct reuses ptr
-	uLoadPrj,
-	ULoadPrjGroup,
-};
+#include "project.h"
 enum tileTypeMask_t{
 	tTypeTile=1,
 	tTypeTruecolor,
@@ -71,100 +26,10 @@ enum tileTypeMask_t{
 	tTypeDeleteFlag,//Used for checking if delete. Do not pass to any tile functions instead tTypeDelete should be used
 	tTypeDelete=7//This sets bit tTypeBoth|tTypeDeleteFlag
 };
-struct undoEvent{//This struct merely holds which type of undo this is
-	undoTypes_t type;
-	void*ptr;//Can also be reused for information for example appendTile will store tile id if doing so limit yourself to 32bit values. Even if void* is 64bit on your system also can point to pointer created either by malloc or new
-};
-struct undoTile{//The purpose of this struct if to completely undo a tile
-	tileTypeMask_t type;
-	uint32_t id;
-	void*ptrnew;
-	void*ptr;//when type is both first the truecolor tile will be stored then the regular tile
-};
-struct undoTileAll{
-	tileTypeMask_t type;
-	uint32_t amt,amtnew;
-	void*ptr;
-	void*ptrnew;
-};
-struct undoTileGroup{
-	tileTypeMask_t type;
-	std::vector<uint32_t> lst;//Contains group of affect tiles
-	std::vector<uint8_t> data;//Similar situation to other tile structs as in what this contains and what order
-	std::vector<uint8_t> datanew;
-};
-struct undoAppendgroupdat{
-	uint32_t amt;
-	std::vector<uint8_t> dat;
-	std::vector<uint8_t> truedat;
-};
-struct undoTilePixel{
-	tileTypeMask_t type;
-	uint32_t id,x,y,val,valnew;
-};
-struct undoTilemap{//For undoing the entire tilemap
-	uint32_t plane;
-	uint32_t w,h,wnew,hnew;//The width and height
-	void*ptr;//Points to tilemap data that is w*h*4 bytes or attributes if so size is w*h
-	void*ptrnew;
-};
-struct undoTilemapEdit{
-	uint32_t plane;
-	uint32_t x,y,val,valnew;
-};
-struct undoTilemapPlane{
-	tileMap*old;
-	tileMap*Tnew;
-	std::string*oldStr;
-	std::string*TnewStr;
-	uint32_t plane;
-};
-struct undoResize{
-	uint32_t plane;
-	uint32_t w,h,wnew,hnew;//Old width and height
-	void*ptr;//Contains a pointer ONLY TO LOST DATA
-};
-struct undoPalette{
-	void*ptr;
-	void*ptrnew;
-};
-struct undoPaletteEntry{
-	uint32_t id,val,valnew;
-};
-struct undoChunkEdit{
-	uint32_t id,x,y;
-	struct ChunkAttrs valnew,val;
-};
-struct undoChunk{
-	uint32_t id;
-	struct ChunkAttrs*ptr,*ptrnew;
-};
-struct undoChunkAll{
-	uint32_t w,h,wnew,hnew;//The width and height
-	uint32_t amt,amtnew;
-	struct ChunkAttrs*ptr,*ptrnew;
-};
-struct undoSpriteVal{
-	uint32_t id,subid;
-	uint32_t val,valnew;
-};
-struct undoSpriteValbool{
-	uint32_t id,subid;
-	bool val,valnew;
-};
-struct undoSpriteDel{
-	uint32_t id,subid;
-	class sprite sp;
-	int32_t offx,offy;
-	uint32_t loadat;
-};
-struct undoSpriteGroupDel{
-	struct spriteGroup;
-};
-
+void undoCB(Fl_Widget*,void*);
+void redoCB(Fl_Widget*,void*);
 void clearUndoCB(Fl_Widget*,void*);
 void showMemUsageUndo(Fl_Widget*,void*);
-void UndoRedo(bool redo);
 void historyWindow(Fl_Widget*,void*);//Controls settings and shows history
 void pushTile(uint32_t id,tileTypeMask_t type);
 void pushTilenew(uint32_t id);
@@ -201,5 +66,5 @@ void pushSpriteOffy(void);
 void pushSpriteHflip(void);
 void pushSpriteVflip(void);
 void pushSpritePrio(void);
-void pushSwitchSys(void);
+void pushProject(void);
 void pushSwitchPrj(void);

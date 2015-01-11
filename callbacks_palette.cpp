@@ -24,6 +24,7 @@
 #include "classpalettebar.h"
 void sortRowbyCB(Fl_Widget*,void*){
 	unsigned type=fl_choice("Sort each row by","Hue","Saturation","Lightness");
+	pushPaletteAll();
 	sortBy(type,true);
 	palBar.updateSlider(palBar.toTab(mode_editor));
 	window->redraw();
@@ -247,10 +248,10 @@ void loadPalette(Fl_Widget*, void*){
 					set_palette_type();
 				break;
 				case NES:
-					update_emphesis(0,0);
+					updateEmphesis();
 				break;
 				default:
-					show_default_error
+					currentProject->pal->paletteToRgb();
 			}
 			window->redraw();
 		}else

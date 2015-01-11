@@ -46,6 +46,9 @@ enum gameSystemEnum{segaGenesis,NES,masterSystem,gameGear,TMS9918,SNES,frameBuff
 #define NES1x1 0
 #define NES2bit 2
 #define NES1bit 0
+#define NESempShift 2
+#define NESempMask 3 //This mask should be used after bit shifting
+#define NESempShiftAlt 4
 void setBitdepthcurSys(unsigned bd);
 int getBitdepthcurSysraw(void);
 static inline int getBitdepthcurSys(void){

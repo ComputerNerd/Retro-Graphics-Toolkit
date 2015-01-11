@@ -23,7 +23,6 @@
 #include "callback_project.h"
 #include "callback_chunk.h"
 #include "callbacksprites.h"
-#include "undocallback.h"
 #include "undo.h"
 #include "gamedef.h"
 #include "runlua.h"

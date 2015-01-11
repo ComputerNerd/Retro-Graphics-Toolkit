@@ -25,7 +25,8 @@ unsigned nearest_color_index(int val);
 void rgbToHsl255(unsigned r,unsigned g,unsigned b,double * hh,double * ll,double * ss);
 void rgbToHsl(double r,double g,double b,double * hh,double * ll,double * ss);
 uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_found,bool useAlpha=false);
-void update_emphesis(Fl_Widget*,void*);
+void updateEmphesis(void);
+void updateEmphesisCB(Fl_Widget*,void*);
 static inline uint32_t toNesRgb(uint8_t ri,uint8_t gi,uint8_t bi){
 	return nesPalToRgb(currentProject->pal->to_nes_color_rgb(ri,gi,bi));
 }
