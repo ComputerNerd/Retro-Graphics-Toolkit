@@ -304,6 +304,8 @@ bool sprites::recttoSprite(int x0,int x1,int y0,int y1,int where,Fl_Shared_Image
 			wmax=hmax=32;
 		break;
 		case NES:
+		case masterSystem:
+		case gameGear:
 			wmax=8;
 			hmax=16;
 		break;
@@ -1688,5 +1690,11 @@ void sprites::enforceMax(unsigned wmax,unsigned hmax){
 				}
 			}
 		}
+	}
+}
+void sprites::allToPalRow(unsigned palRow){
+	for(unsigned j=0;j<amt;++j){
+		for(unsigned i=0;i<groups[j].list.size();++i)
+			groups[j].list[i].palrow=palRow;
 	}
 }

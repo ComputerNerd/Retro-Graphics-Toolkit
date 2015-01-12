@@ -15,6 +15,7 @@
    Copyright Sega16 (or whatever you wish to call me) (2012-2014)
 */
 #pragma once
+#include <stdint.h>
 #define MAX_ROWS_PALETTE 4//TODO refractor to allow "unlimited" rows
 //System declarations
 enum gameSystemEnum{segaGenesis,NES,masterSystem,gameGear,TMS9918,SNES,frameBufferPal,frameBuffer};
@@ -54,3 +55,5 @@ int getBitdepthcurSysraw(void);
 static inline int getBitdepthcurSys(void){
 	return getBitdepthcurSysraw()+1;
 }
+int fixedSpirtePalRow(uint32_t gameSystem);
+bool isPlanarTiles(uint32_t gameSystem);

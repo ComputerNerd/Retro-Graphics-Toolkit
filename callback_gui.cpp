@@ -205,7 +205,6 @@ void set_game_system(Fl_Widget*,void* selection){
 				window->spritesize[0]->maximum(4);
 				window->spritesize[1]->maximum(4);
 				currentProject->spritesC->enforceMax(4,4);
-				window->updateSpriteSliders();
 			}
 			window->subSysC->copy(subSysGenesis);
 			window->subSysC->value((currentProject->subSystem&sgSHmask)>>sgSHshift);
@@ -233,7 +232,6 @@ void set_game_system(Fl_Widget*,void* selection){
 				window->spritesize[0]->maximum(1);
 				window->spritesize[1]->maximum(2);
 				currentProject->spritesC->enforceMax(1,2);
-				window->updateSpriteSliders();
 			}
 			window->subSysC->copy(subSysNES);
 			window->subSysC->value(currentProject->subSystem&NES2x2);
@@ -244,12 +242,22 @@ void set_game_system(Fl_Widget*,void* selection){
 			currentProject->subSystem=0;
 			bd=4;
 			setBitdepthcurSys(bd);
+			if(currentProject->containsData(pjHaveSprites)){
+				window->spritesize[0]->maximum(1);
+				window->spritesize[1]->maximum(2);
+				currentProject->spritesC->enforceMax(1,2);
+			}
 		break;
 		case TMS9918:
 			currentProject->gameSystem=sel;
 			currentProject->subSystem=0;
-			bd=4;
+			bd=1;
 			setBitdepthcurSys(bd);
+			if(currentProject->containsData(pjHaveSprites)){
+				window->spritesize[0]->maximum(1);
+				window->spritesize[1]->maximum(2);
+				currentProject->spritesC->enforceMax(1,2);
+			}
 		break;
 		case frameBufferPal:
 			{currentProject->gameSystem=frameBufferPal;
@@ -262,6 +270,15 @@ void set_game_system(Fl_Widget*,void* selection){
 		default:
 			show_default_error
 		break;
+	}
+
+	if(currentProject->containsData(pjHaveSprites)){
+		int spRow=fixedSpirtePalRow(sel);
+		if(spRow>=0){
+			currentProject->spritesC->allToPalRow(spRow);
+			palBar.changeRow(spRow,3);
+		}
+		window->updateSpriteSliders();
 	}
 	if(currentProject->containsData(pjHaveMap)){
 		if((sel==masterSystem||sel==gameGear)&&(gold==NES)){

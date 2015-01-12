@@ -643,12 +643,23 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 		w*=currentProject->tileC->sizew;
 		h*=currentProject->tileC->sizeh;
 	}
-	unsigned maxRows=currentProject->pal->getMaxRows(set->sprite);
-	unsigned firstRow=0;
-	for(;(firstRow<maxRows)&&(!set->useRow[firstRow]);++firstRow);
-	if(firstRow>=maxRows){
-		fl_alert("No rows specified");
-		return;
+
+	unsigned maxRows,firstRow;
+	int spRow=fixedSpirtePalRow(currentProject->gameSystem);
+	if(spRow>=0&&set->sprite){
+		maxRows=spRow+1;
+		firstRow=spRow;
+		if(!set->useRow[firstRow]){
+			fl_alert("No rows specified");
+			return;
+		}
+	}else{
+		maxRows=currentProject->pal->getMaxRows(set->sprite);
+		for(firstRow=0;(firstRow<maxRows)&&(!set->useRow[firstRow]);++firstRow);
+		if(firstRow>=maxRows){
+			fl_alert("No rows specified");
+			return;
+		}
 	}
 	unsigned rows=0;
 	for(unsigned i=firstRow;i<maxRows;++i){
@@ -809,7 +820,12 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	rowlabel1->labelsize(12);
 	Fl_Box*rowlabel2=new Fl_Box(120,8,96,12,"Offset per row:");
 	rowlabel2->labelsize(12);
+	int spRow=fixedSpirtePalRow(currentProject->gameSystem);
+	if(!sprite)
+		spRow=-1;
 	for(unsigned i=0;i<currentProject->pal->getMaxRows(sprite?true:false);++i){
+		if(spRow>=0&&i!=spRow)
+			continue;
 		set.useRow[i]=true;
 		char tmp[16];
 		useRowCbtn[i]=new Fl_Check_Button(8,28+(i*24),24,16);

@@ -104,13 +104,15 @@ void editor::updateSpriteSliders(uint32_t prj){
 		curSpritegroup=projects[prj]->spritesC->amt-1;
 	}
 	if(haveSprite){
+		int fixedRow=fixedSpirtePalRow(currentProject->gameSystem);
 		if(!spritesel->visible()){
 			spritesel->show();
 			spritest->show();
 			spriteslat->show();
 			spritesize[0]->show();
 			spritesize[1]->show();
-			spritepalrow->show();
+			if(fixedRow<0)
+				spritepalrow->show();
 			spritesoff[0]->show();
 			spritesoff[1]->show();
 			spritehflip->show();
@@ -128,7 +130,9 @@ void editor::updateSpriteSliders(uint32_t prj){
 		spriteslat->value(projects[prj]->spritesC->groups[curSpritegroup].loadat[curSprite]);
 		spritesize[0]->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].w);
 		spritesize[1]->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].h);
-		spritepalrow->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].palrow);
+		if(fixedRow<0)
+			spritepalrow->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].palrow);
+		spritepalrow->hide();
 		char tmp[16];
 		intstr(projects[prj]->spritesC->groups[curSpritegroup].offx[curSprite],tmp);
 		spritesoff[0]->value(tmp);

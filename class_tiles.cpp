@@ -70,41 +70,32 @@ void tiles::setPixel(uint8_t*ptr,uint32_t x,uint32_t y,uint32_t val){
 	unsigned maxp=(1<<bd)-1;
 	if(val>maxp)
 		val=maxp;
-	if((currentProject->gameSystem==NES)&&bdr){//NES stores planar tiles
-		x=7-x;
-		ptr+=y;
-		if(val&1)//First plane
-			*ptr|=1<<x;
-		else
-			*ptr&=~(1<<x);
-		ptr+=8;
-		if(val&2)//Second plane
-			*ptr|=1<<x;
-		else
-			*ptr&=~(1<<x);
-	}else{
-		switch(bdr){
-			case 0:
-				x=7-x;
-				ptr+=(y*sizew/8)+(x/8);
-				if(val)
-					*ptr|=1<<x;
-				else
-					*ptr&=~(1<<x);
-			break;
-			case 3:
-				ptr+=((y*sizew)/2)+(x/2);
-				if(x&1){
-					*ptr&=~15;
-					*ptr|=val;
-				}else{
-					*ptr&=~(15<<4);
-					*ptr|=val<<4;
-				}
-			break;
-			default:
-				show_default_error
-		}
+	switch(bdr){
+		case 0:
+			x=7-x;
+			ptr+=(y*sizew/8)+(x/8);
+			if(val)
+				*ptr|=1<<x;
+			else
+				*ptr&=~(1<<x);
+		break;
+		case 1:
+			ptr+=((y*sizew)/4)+(x/4);
+			*ptr&=~(3<<(6-((x&3)*2)));
+			*ptr|=val<<(6-((x&3)*2));
+		break;
+		case 3:
+			ptr+=((y*sizew)/2)+(x/2);
+			if(x&1){
+				*ptr&=~15;
+				*ptr|=val;
+			}else{
+				*ptr&=~(15<<4);
+				*ptr|=val<<4;
+			}
+		break;
+		default:
+			show_default_error
 	}
 }
 void tiles::setPixel(uint32_t tile,uint32_t x,uint32_t y,uint32_t val){
@@ -118,27 +109,25 @@ uint32_t tiles::getPixel(const uint8_t*ptr,uint32_t x,uint32_t y) const{
 		y=sizeh-1;
 	unsigned bdr;
 	bdr=getBitdepthcurSysraw();
-	if((currentProject->gameSystem==NES)&&bdr){//NES stores planar tiles
-		x=7-x;
-		ptr+=y;
-		return ((*ptr)>>x&1)|(((*(ptr+8))>>x&1)<<1);
-	}else{
-		switch(bdr){
-			case 0:
-				x=7-x;
-				ptr+=y*sizew/8;
-				return (*ptr)>>x&1;
-			break;
-			case 3:
-				ptr+=((y*sizew)/2)+(x/2);
-				if(x&1)
-					return *ptr&15;
-				else
-					return *ptr>>4;
-			break;
-			default:
-				show_default_error
-		}
+	switch(bdr){
+		case 0:
+			x=7-x;
+			ptr+=y*sizew/8;
+			return (*ptr)>>x&1;
+		break;
+		case 1:
+			ptr+=((y*sizew)/4)+(x/4);
+			return (*ptr>>(6-((x&3)*2)))&3;
+		break;
+		case 3:
+			ptr+=((y*sizew)/2)+(x/2);
+			if(x&1)
+				return *ptr&15;
+			else
+				return *ptr>>4;
+		break;
+		default:
+			show_default_error
 	}
 	return 0;
 }
@@ -212,6 +201,8 @@ void tiles::truecolor_to_tile_ptr(unsigned palette_row,uint32_t cur_tile,uint8_t
 			truePtr+=3;
 			if(*truePtr++)
 				setPixel(cur_tile,x,y,temp);
+			else
+				setPixel(cur_tile,x,y,0);
 		}
 	}
 }

@@ -67,3 +67,22 @@ int getBitdepthcurSysraw(void){
 			show_default_error
 	}
 }
+int fixedSpirtePalRow(uint32_t gameSystem){
+	switch(currentProject->gameSystem){
+		case masterSystem:
+		case gameGear:
+			return 1;
+		default:
+			return -1;
+	}
+}
+bool isPlanarTiles(uint32_t gameSystem){
+	switch(currentProject->gameSystem){
+		case NES:
+		case masterSystem:
+		case gameGear:
+			return true;
+		default:
+			return false;
+	}
+}
