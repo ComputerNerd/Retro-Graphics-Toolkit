@@ -51,4 +51,7 @@ public:
 	void blank_tile(uint32_t);/*!<This makes the tile use color 0*/ 
 	void remove_duplicate_tiles(bool tColor);
 	void tileToTrueCol(const uint8_t*input,uint8_t*output,unsigned row,bool useAlpha=true,bool alphaZero=false);
+	void toPlanar(void);
+	void*toLinear(void);
+	void setDim(unsigned w,unsigned h,unsigned bd);
 };

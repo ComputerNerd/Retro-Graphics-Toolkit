@@ -29,10 +29,10 @@ static const char* GPLv3="This program is free software: you can redistribute it
 	"(at your option) any later version.\n\n"
 	"This program is distributed in the hope that it will be useful,\n"
 	"but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
-	"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+	"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\n"
 	"GNU General Public License for more details.\n\n"
 	"You should have received a copy of the GNU General Public License\n"
-	"along with this program.  If not, see <http://www.gnu.org/licenses/>.\n";
+	"along with this program. If not, see <http://www.gnu.org/licenses/>.\n";
 void setSubditherSetting(Fl_Widget*w,void*){
 	Fl_Slider*s=(Fl_Slider*)w;
 	currentProject->settings&=~(subsettingsDitherMask<<subsettingsDitherShift);
@@ -42,7 +42,7 @@ void redrawOnlyCB(Fl_Widget*, void*){
 	window->redraw();
 }
 void showAbout(Fl_Widget*,void*){
-	fl_alert("Retro Graphics Toolkit is written by sega16/nintendo8/sonic master or whatever username you know me as\nhttps://github.com/ComputerNerd/Retro-Graphics-Toolkit\nThis program was built on %s %s\n\n%s\nUses lua version: " LUA_RELEASE "\n" LUA_COPYRIGHT "\n" LUA_AUTHORS,__DATE__,__TIME__,GPLv3);
+	fl_alert("Retro Graphics Toolkit is written by sega16/nintendo8/sonic master or whatever username you know me as\nhttps://github.com/ComputerNerd/Retro-Graphics-Toolkit\nThis program was built on %s %s\n\n%s\nUses Lua version: " LUA_RELEASE "\n" LUA_COPYRIGHT "\n" LUA_AUTHORS,__DATE__,__TIME__,GPLv3);
 }
 Fl_Menu_Item subSysNES[]={
 	{"1x1 tile palette",0,setNesTile,(void*)NES1x1},
@@ -56,12 +56,12 @@ Fl_Menu_Item subSysGenesis[]={
 	{0}
 };
 void set_game_system(Fl_Widget*,void* selection){
-	pushProject();
 	gameSystemEnum sel=(gameSystemEnum)(intptr_t)selection;
-	if(unlikely(sel == currentProject->gameSystem)){
+	if(unlikely(sel==currentProject->gameSystem)){
 		fl_alert("You are already in that mode");
 		return;
 	}
+	pushProject();
 	gameSystemEnum gold=currentProject->gameSystem;
 	uint32_t sold=currentProject->subSystem;
 	unsigned bd=getBitdepthcurSys();

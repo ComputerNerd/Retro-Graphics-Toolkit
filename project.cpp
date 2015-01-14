@@ -507,19 +507,6 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 		fread(&projects[id]->settings,1,sizeof(uint32_t),fi);
 	else
 		projects[id]->settings=15<<subsettingsDitherShift|(aWeighted<<nearestColorShift);
-	projects[id]->tileC->tcSize=256;
-	switch(projects[id]->gameSystem){
-		case segaGenesis:
-		case masterSystem:
-		case gameGear:
-			projects[id]->tileC->tileSize=32;
-		break;
-		case NES:
-			projects[id]->tileC->tileSize=16;
-		break;
-		default:
-			show_default_error
-	}
 	if(projects[id]->useMask&pjHavePal){
 		if(projects[id]->share[0]<0){
 			projects[id]->pal->setVars(projects[id]->gameSystem);
@@ -527,6 +514,7 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 		}
 	}
 	if(projects[id]->useMask&pjHaveTiles){
+		projects[id]->tileC->setDim(8,8,getBitdepthcurSys());
 		if(projects[id]->share[1]<0){
 			fread(&projects[id]->tileC->amt,1,sizeof(uint32_t),fi);
 			if(version<6)
@@ -534,6 +522,8 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 			projects[id]->tileC->resizeAmt();
 			decompressFromFile(projects[id]->tileC->tDat.data(),projects[id]->tileC->tileSize*(projects[id]->tileC->amt),fi);
 			decompressFromFile(projects[id]->tileC->truetDat.data(),projects[id]->tileC->tcSize*(projects[id]->tileC->amt),fi);
+			if(version<=7&&(!isPlanarTiles(projects[id]->gameSystem)))
+				projects[id]->tileC->toPlanar();
 		}
 	}
 	if(projects[id]->useMask&pjHaveMap){

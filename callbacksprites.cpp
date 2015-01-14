@@ -108,7 +108,7 @@ void exportSonicDPLCCB(Fl_Widget*o,void*t){
 void alignSpriteCB(Fl_Widget*,void*t){
 	uint32_t with;
 	if(currentProject->spritesC->groups[curSpritegroup].list.size()<=1){
-		fl_alert("You must have atleast two sprites to align");
+		fl_alert("You must have at least two sprites to align");
 		return;
 	}
 	pushSpriteOffx();

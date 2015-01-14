@@ -26,9 +26,7 @@
 tiles::tiles(){
 	current_tile=0;
 	amt=1;
-	sizew=sizeh=8;
-	tcSize=sizew*sizeh*4;
-	tileSize=sizew*sizeh*getBitdepthcurSys()/8;
+	setDim(8,8,getBitdepthcurSys());
 	tDat.resize(tileSize,0);
 	truetDat.resize(tcSize,0);
 }
@@ -64,38 +62,18 @@ void tiles::setPixel(uint8_t*ptr,uint32_t x,uint32_t y,uint32_t val){
 		x=sizew-1;
 	if(y>=sizeh)
 		y=sizeh-1;
-	unsigned bdr,bd;
-	bdr=getBitdepthcurSysraw();
+	unsigned bdr=getBitdepthcurSysraw(),bd;
 	bd=bdr+1;
 	unsigned maxp=(1<<bd)-1;
 	if(val>maxp)
 		val=maxp;
-	switch(bdr){
-		case 0:
-			x=7-x;
-			ptr+=(y*sizew/8)+(x/8);
-			if(val)
-				*ptr|=1<<x;
-			else
-				*ptr&=~(1<<x);
-		break;
-		case 1:
-			ptr+=((y*sizew)/4)+(x/4);
-			*ptr&=~(3<<(6-((x&3)*2)));
-			*ptr|=val<<(6-((x&3)*2));
-		break;
-		case 3:
-			ptr+=((y*sizew)/2)+(x/2);
-			if(x&1){
-				*ptr&=~15;
-				*ptr|=val;
-			}else{
-				*ptr&=~(15<<4);
-				*ptr|=val<<4;
-			}
-		break;
-		default:
-			show_default_error
+	ptr+=y*((sizew+4)/8);
+	x=(sizew-1)-x;
+	for(unsigned shift=0;shift<bd;++shift){
+		*ptr&=~(1<<x);
+		*ptr|=(val&1)<<x;
+		val>>=1;
+		ptr+=8;
 	}
 }
 void tiles::setPixel(uint32_t tile,uint32_t x,uint32_t y,uint32_t val){
@@ -107,29 +85,15 @@ uint32_t tiles::getPixel(const uint8_t*ptr,uint32_t x,uint32_t y) const{
 		x=sizew-1;
 	if(y>=sizeh)
 		y=sizeh-1;
-	unsigned bdr;
-	bdr=getBitdepthcurSysraw();
-	switch(bdr){
-		case 0:
-			x=7-x;
-			ptr+=y*sizew/8;
-			return (*ptr)>>x&1;
-		break;
-		case 1:
-			ptr+=((y*sizew)/4)+(x/4);
-			return (*ptr>>(6-((x&3)*2)))&3;
-		break;
-		case 3:
-			ptr+=((y*sizew)/2)+(x/2);
-			if(x&1)
-				return *ptr&15;
-			else
-				return *ptr>>4;
-		break;
-		default:
-			show_default_error
+	unsigned bdr=getBitdepthcurSysraw();
+	unsigned val=0;
+	x=(sizew-1)-x;
+	ptr+=y*((sizew+4)/8);
+	for(unsigned shift=0;shift<=bdr;++shift){
+		val|=((*ptr>>x)&1)<<shift;
+		ptr+=8;
 	}
-	return 0;
+	return val;
 }
 uint32_t tiles::getPixel(uint32_t tile,uint32_t x,uint32_t y) const{
 	const uint8_t*ptr=&tDat[(tile*tileSize)];
@@ -485,4 +449,60 @@ void tiles::tileToTrueCol(const uint8_t*input,uint8_t*output,unsigned row,bool u
 			}
 		}
 	}
+}
+void tiles::toPlanar(void){
+	uint8_t*tmp=(uint8_t*)alloca(tileSize);
+	uint8_t*tPtr=tDat.data();
+	unsigned bdr=getBitdepthcurSysraw();
+	for(unsigned i=0;i<amt;++i){
+		uint8_t*ptr=tmp;
+		memcpy(tmp,tPtr,tileSize);
+		for(unsigned y=0;y<sizeh;++y){
+			for(unsigned x=0;x<sizew;++x){
+				unsigned val;
+				switch(bdr){
+					case 3:
+						if(x&1)
+							val=(*ptr++)&15;
+						else
+							val=*ptr>>4;
+					break;
+					default:
+						val=0;
+						show_default_error
+				}
+				setPixel(tPtr,x,y,val);
+			}
+		}
+		tPtr+=tileSize;
+	}
+}
+void*tiles::toLinear(void){
+	void*pt=malloc(amt*tileSize);
+	uint8_t*ptr=(uint8_t*)ptr;
+	unsigned bdr=getBitdepthcurSysraw();
+	uint8_t*tPtr=tDat.data();
+	for(unsigned i=0;i<amt;++i){
+		for(unsigned y=0;y<sizeh;++y){
+			for(unsigned x=0;x<sizew;++x){
+				unsigned val=getPixel(tPtr,x,y);
+				switch(bdr){
+					case 3:
+						if(x&1)
+							*ptr++|=val;
+						else
+							*ptr=val<<4;
+					break;
+				}
+			}
+		}
+		tPtr+=tileSize;
+	}
+	return pt;
+}
+void tiles::setDim(unsigned w,unsigned h,unsigned bd){
+	sizew=w;
+	sizeh=h;
+	tcSize=sizew*sizeh*4;
+	tileSize=sizew*sizeh*getBitdepthcurSys()/8;
 }

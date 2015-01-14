@@ -193,8 +193,10 @@ void paletteBar::drawBoxes(unsigned tab){
 }
 unsigned paletteBar::toTab(unsigned realtab){
 	static const int tabLut[]={0,1,2,-1,3,-1,-1};
-	if(tabLut[realtab]<0)
-		throw std::invalid_argument("Invalid tab");
+	if(tabLut[realtab]<0){
+		fl_alert("Invalid tab using palette editor");
+		return 0;
+	}
 	return tabLut[realtab];
 }
 void paletteBar::checkBox(int x,int y,unsigned tab){

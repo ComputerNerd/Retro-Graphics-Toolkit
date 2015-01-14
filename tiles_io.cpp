@@ -32,6 +32,11 @@ void save_tiles(Fl_Widget*,void*){
 	else
 		pickedFile=load_file_generic("Pick a location to save tiles",true);
 	if(pickedFile){
+		uint8_t*savePtr;
+		if(isPlanarTiles(currentProject->gameSystem))
+			savePtr=currentProject->tileC->tDat.data();
+		else
+			savePtr=(uint8_t*)currentProject->tileC->toLinear();
 		int compression=compressionAsk();
 		if(compression<0)
 			return;
@@ -46,7 +51,7 @@ void save_tiles(Fl_Widget*,void*){
 			myfile = fopen(the_file.c_str(),"wb");
 		if (likely(myfile||clipboard)){
 			if(compression)
-				compdat=(uint8_t*)encodeType(currentProject->tileC->tDat.data(),currentProject->tileC->tileSize*(currentProject->tileC->amt),compsize,compression);
+				compdat=(uint8_t*)encodeType(savePtr,currentProject->tileC->tileSize*(currentProject->tileC->amt),compsize,compression);
 			if (type){
 				char comment[2048];
 				snprintf(comment,2048,"%d tiles %s",currentProject->tileC->amt,typeToText(compression));
@@ -54,11 +59,15 @@ void save_tiles(Fl_Widget*,void*){
 					if(saveBinAsText(compdat,compsize,myfile,type,comment,"tileDat",8)==false){
 						free(compdat);
 						fl_alert("Error: can not save file %s",the_file.c_str());
+						if(!isPlanarTiles(currentProject->gameSystem))
+							free(savePtr);
 						return;
 					}
 				}else{
-					if(!saveBinAsText(currentProject->tileC->tDat.data(),(currentProject->tileC->amt)*currentProject->tileC->tileSize,myfile,type,comment,"tileDat",32)){
+					if(!saveBinAsText(savePtr,(currentProject->tileC->amt)*currentProject->tileC->tileSize,myfile,type,comment,"tileDat",32)){
 						fl_alert("Error: can not save file %s",the_file.c_str());
+						if(!isPlanarTiles(currentProject->gameSystem))
+							free(savePtr);
 						return;
 					}
 				}
@@ -66,10 +75,12 @@ void save_tiles(Fl_Widget*,void*){
 				if(compression)
 					fwrite(compdat,1,compsize,myfile);
 				else
-					fwrite(currentProject->tileC->tDat.data(),currentProject->tileC->tileSize,(currentProject->tileC->amt),myfile);
+					fwrite(savePtr,currentProject->tileC->tileSize,(currentProject->tileC->amt),myfile);
 			}
 			if(compression)
 				free(compdat);
+			if(!isPlanarTiles(currentProject->gameSystem))
+				free(savePtr);
 		}else
 			fl_alert("Error: can not save file %s",the_file.c_str());
 		if(myfile)
@@ -148,6 +159,8 @@ void load_tiles(Fl_Widget*,void*o){
 				fread(currentProject->tileC->tDat.data()+offset_tiles_bytes,1,file_size,myfile);
 				fclose(myfile);
 			}
+			if(!isPlanarTiles(currentProject->gameSystem))
+				currentProject->tileC->toPlanar();
 			currentProject->tileC->truetDat.resize((file_size*truecolor_multiplier)+(offset_tiles_bytes*truecolor_multiplier));
 			for(uint32_t c=offset_tiles;c<(file_size/currentProject->tileC->tileSize)+offset_tiles;c++) {
 				if(row < 0){
