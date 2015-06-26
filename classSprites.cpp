@@ -7,23 +7,25 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #include <stdlib.h>
 #include <string.h>
 #include <FL/Fl_Scroll.H>
 #include <ctime>
+#include "macros.h"
 #include "classSprite.h"
 #include "classSprites.h"
 #include "includes.h"
 #include "callback_tiles.h"
-#include "global.h"
 #include "image.h"
+#include "class_global.h"
+#include "gui.h"
 const char*spriteDefName="DefaultGroupLabel";
 const char*spritesName="AllGroupsLabel";
 #if _WIN32
@@ -92,7 +94,7 @@ void sprites::fixDel(unsigned at,unsigned tamt){
 		}
 	}
 }
-uint32_t sprites::getTileOnSprite(unsigned x,unsigned y,unsigned which,unsigned i){
+uint32_t sprites::getTileOnSprite(unsigned x,unsigned y,unsigned which,unsigned i)const{
 	return groups[which].list[i].starttile+(x*groups[which].list[i].h)+y;
 }
 void sprites::freeOptmizations(unsigned which){
@@ -649,7 +651,7 @@ void sprites::importSpriteSheet(void){
 	}
 }
 extern const char*rtVersionStr;
-void sprites::exportMapping(gameType_t game){
+void sprites::exportMapping(gameType_t game)const{
 	if(load_file_generic("Save mapping to:",true)){
 		FILE*fp;
 		if(game==tSonic1){
@@ -898,7 +900,7 @@ void sprites::DplcItem(void*in,uint32_t which,gameType_t game){
 		handleDPLC(which,buf,amtd);
 	}
 }
-bool sprites::alreadyLoaded(uint32_t id,uint32_t subid){
+bool sprites::alreadyLoaded(uint32_t id,uint32_t subid)const{
 	if(!subid)
 		return false;
 	for(uint32_t i=0;i<subid;++i){
@@ -913,7 +915,7 @@ bool sprites::alreadyLoaded(uint32_t id,uint32_t subid){
 	}
 	return false;
 }
-bool sprites::checkDupdplc(uint32_t id,uint32_t&which){
+bool sprites::checkDupdplc(uint32_t id,uint32_t&which)const{
 	if(!id)
 		return false;
 	for(uint32_t i=0;i<id;++i){//We only search before id in question so later dplc entries will refer to dplc entries before
@@ -941,7 +943,7 @@ bool sprites::checkDupdplc(uint32_t id,uint32_t&which){
 	}
 	return false;
 }
-bool sprites::checkDupmapping(uint32_t id,uint32_t&which){
+bool sprites::checkDupmapping(uint32_t id,uint32_t&which)const{
 	if(!id)
 		return false;
 	for(uint32_t i=0;i<id;++i){//Now check what has not already been checked
@@ -994,7 +996,7 @@ bool sprites::checkDupmapping(uint32_t id,uint32_t&which){
 	return false;
 }
 
-std::vector<uint8_t> sprites::optDPLC(unsigned which,gameType_t game){
+std::vector<uint8_t> sprites::optDPLC(unsigned which,gameType_t game)const{
 	printf("%u\n",which);
 	std::vector<unsigned> tmp;//amount,offset
 	tmp.reserve(groups[which].list.size());
@@ -1073,7 +1075,7 @@ mergeIt:
 	tmp.clear();
 	return out;
 }
-void sprites::exportDPLC(gameType_t game){
+void sprites::exportDPLC(gameType_t game)const{
 	if(load_file_generic("Save DPLC",true)){
 		FILE*fp;
 		if(game==tSonic1){
@@ -1319,6 +1321,13 @@ static uint8_t*rect2rect(uint8_t*in,uint8_t*out,unsigned xin,unsigned yin,unsign
 				}
 			}
 			in+=(win-wout)*3;
+		}else if(depth==1){
+			if(reverse)
+				memcpy(in,out,wout);
+			else
+				memcpy(out,in,wout);
+			in+=win;
+			out+=wout;
 		}
 	}
 	return out;
@@ -1351,7 +1360,7 @@ void sprites::spriteGroupToImage(uint8_t*img,uint32_t id,int row,bool alpha){
 		}
 	}
 }
-void sprites::spriteImageToTiles(uint8_t*img,uint32_t id,int rowUsage,bool alpha){
+void sprites::spriteImageToTiles(uint8_t*img,uint32_t id,int rowUsage,bool alpha,bool isIndexArray){
 	int32_t miny,maxy,minx,maxx;
 	minmaxoffy(id,miny,maxy);
 	minmaxoffx(id,minx,maxx);
@@ -1368,13 +1377,13 @@ void sprites::spriteImageToTiles(uint8_t*img,uint32_t id,int rowUsage,bool alpha
 			continue;//Skip if we only want a specific row
 		for(uint32_t x=0;x<groups[id].list[i].w*currentProject->tileC->sizew;x+=currentProject->tileC->sizew){
 			for(uint32_t y=0;y<groups[id].list[i].h*currentProject->tileC->sizeh;y+=currentProject->tileC->sizeh,++ttile){
-				rect2rect(img,tcTemp,xoff+x,yoff+y,w,currentProject->tileC->sizew,currentProject->tileC->sizeh,alpha?4:3,false);
-				currentProject->tileC->truecolor_to_tile_ptr(groups[id].list[i].palrow,ttile,tcTemp,false,true);
+				rect2rect(img,tcTemp,xoff+x,yoff+y,w,currentProject->tileC->sizew,currentProject->tileC->sizeh,isIndexArray?1:(alpha?4:3),false);
+				currentProject->tileC->truecolor_to_tile_ptr(groups[id].list[i].palrow,ttile,tcTemp,false,true,isIndexArray);
 			}
 		}
 	}
 }
-void sprites::minmaxoffy(uint32_t id,int32_t&miny,int32_t&maxy){
+void sprites::minmaxoffy(uint32_t id,int32_t&miny,int32_t&maxy)const{
 	miny=maxy=groups[id].offy[0];
 	for(uint32_t i=0;i<groups[id].offy.size();++i){
 		if(groups[id].offy[i]<miny)
@@ -1384,7 +1393,7 @@ void sprites::minmaxoffy(uint32_t id,int32_t&miny,int32_t&maxy){
 			maxy=tmpy;
 	}
 }
-void sprites::minmaxoffx(uint32_t id,int32_t&minx,int32_t&maxx){
+void sprites::minmaxoffx(uint32_t id,int32_t&minx,int32_t&maxx)const{
 	minx=maxx=groups[id].offx[0];
 	for(uint32_t i=0;i<groups[id].offx.size();++i){
 		if(groups[id].offx[i]<minx)
@@ -1394,12 +1403,12 @@ void sprites::minmaxoffx(uint32_t id,int32_t&minx,int32_t&maxx){
 			maxx=tmpx;
 	}
 }
-uint32_t sprites::width(uint32_t id){
+uint32_t sprites::width(uint32_t id)const{
 	int32_t minx,maxx;
 	minmaxoffx(id,minx,maxx);
 	return abs(maxx-minx);
 }
-uint32_t sprites::height(uint32_t id){
+uint32_t sprites::height(uint32_t id)const{
 	int32_t miny,maxy;
 	minmaxoffy(id,miny,maxy);
 	return abs(maxy-miny);
@@ -1468,7 +1477,7 @@ void sprites::setAmtingroup(uint32_t id,uint32_t amtnew){
 	groups[id].offy.resize(amtnew);
 	groups[id].loadat.resize(amtnew);
 }
-bool sprites::save(FILE*fp){
+bool sprites::save(FILE*fp)const{
 	/* Format:
 	 * uint32_t group amount
 	 * uint8_t extra DPLC optimization

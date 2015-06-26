@@ -1,18 +1,18 @@
 /*
-   This file is part of Retro Graphics Toolkit
+	This file is part of Retro Graphics Toolkit
 
-   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or any later version.
+	Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or any later version.
 
-   Retro Graphics Toolkit is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+	Retro Graphics Toolkit is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+	You should have received a copy of the GNU General Public License
+	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #include <cmath>//For some reason this is needed when compiling with mingw otherwise hypot error is encountered
 #include <stdlib.h>
@@ -25,6 +25,8 @@
 #include "callbacksprites.h"
 #include "classpalettebar.h"
 #include "callbacktilemaps.h"
+#include "class_global.h"
+#include "gui.h"
 enum undoTypes_t{
 	uTile=0,
 	uTileAll,
@@ -40,6 +42,7 @@ enum undoTypes_t{
 	uTilemapBlocksAmt,
 	uTilemapPlaneDelete,
 	uTilemapPlaneAdd,
+	uExtAttrs,
 	uPalette,
 	uPaletteEntry,
 	uChunk,
@@ -117,6 +120,10 @@ struct undoTilemapPlane{
 	std::string*oldStr;
 	std::string*TnewStr;
 	uint32_t plane;
+};
+struct undoExtAttrs{
+	uint32_t plane;
+	uint8_t*old,*pnew;
 };
 struct undoResize{
 	uint32_t plane;
@@ -311,6 +318,13 @@ static void cleanupEvent(uint32_t id){
 			}
 			free(uptr->ptr);
 			memUsed-=sizeof(struct undoTilemapPlane);}
+		break;
+		case uExtAttrs:
+			{struct undoExtAttrs*um=(struct undoExtAttrs*)uptr->ptr;
+			free(um->old);
+			free(um->pnew);
+			free(uptr->ptr);
+			memUsed-=sizeof(struct undoExtAttrs);}
 		break;
 		case uPalette:
 			{struct undoPalette*up=(struct undoPalette*)uptr->ptr;
@@ -751,7 +765,7 @@ static void UndoRedo(bool redo){
 		case uTilemapPlaneAdd:
 			{struct undoTilemapPlane*um=(struct undoTilemapPlane*)uptr->ptr;
 			if(redo){
-				currentProject->tms->maps.insert(currentProject->tms->maps.begin()+um->plane,tileMap());
+				currentProject->tms->maps.insert(currentProject->tms->maps.begin()+um->plane,tileMap(currentProject));
 				char tmp[16];
 				snprintf(tmp,16,"%u",um->plane);
 				currentProject->tms->planeName.insert(currentProject->tms->planeName.begin()+um->plane,1,tmp);
@@ -760,6 +774,24 @@ static void UndoRedo(bool redo){
 					setCurPlaneTilemaps(0,(void*)(uintptr_t)um->plane);
 			}else{
 				removePlane(um->plane);
+			}}
+		break;
+		case uExtAttrs:
+			{struct undoExtAttrs*um=(struct undoExtAttrs*)uptr->ptr;
+			isCorrectPlane(um->plane);
+			size_t sz=currentProject->tms->maps[um->plane].getExtAttrsSize();
+			if(redo){
+				um->old=(uint8_t*)malloc(sz);
+				memcpy(um->old,currentProject->tms->maps[um->plane].extPalRows,sz);
+				memcpy(currentProject->tms->maps[um->plane].extPalRows,um->pnew,sz);
+				free(um->pnew);
+				um->pnew=0;
+			}else{
+				um->pnew=(uint8_t*)malloc(sz);
+				memcpy(um->pnew,currentProject->tms->maps[um->plane].extPalRows,sz);
+				memcpy(currentProject->tms->maps[um->plane].extPalRows,um->old,sz);
+				free(um->old);
+				um->old=0;
 			}}
 		break;
 		case uPalette:
@@ -959,14 +991,22 @@ static void UndoRedo(bool redo){
 			{struct undoProject*up=(struct undoProject*)uptr->ptr;
 			if(redo){
 				up->old=new Project(*currentProject);
-				delete currentProject;
-				currentProject=new Project(*up->pnew);
+				up->old->copyClasses(*currentProject);
+				delete projects[curProjectID];
+				projects[curProjectID]=new Project(*up->pnew);
+				currentProject=projects[curProjectID];
+				prjChangePtr(curProjectID);
+				projects[curProjectID]->copyClasses(*up->pnew);
 				delete up->pnew;
 				up->pnew=0;
 			}else{
 				up->pnew=new Project(*currentProject);
-				delete currentProject;
-				currentProject=new Project(*up->old);
+				up->pnew->copyClasses(*currentProject);
+				delete projects[curProjectID];
+				projects[curProjectID]=new Project(*up->old);
+				currentProject=projects[curProjectID];
+				prjChangePtr(curProjectID);
+				projects[curProjectID]->copyClasses(*up->old);
 				delete up->old;
 				up->old=0;
 			}
@@ -1124,6 +1164,19 @@ void pushTilemapPlaneAdd(uint32_t plane){
 	pushTilemapPlaneComm(plane);
 	struct undoEvent*uptr=undoBuf+pos;
 	uptr->type=uTilemapPlaneAdd;
+}
+void pushExtAttrs(uint32_t plane){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uExtAttrs;
+	uptr->ptr=malloc(sizeof(struct undoExtAttrs));
+	memUsed+=sizeof(struct undoExtAttrs);
+	struct undoExtAttrs*um=(struct undoExtAttrs*)uptr->ptr;
+	um->plane=plane;
+	size_t sz=currentProject->tms->maps[plane].getExtAttrsSize();
+	um->old=(uint8_t*)malloc(sz);
+	memcpy(um->old,currentProject->tms->maps[um->plane].extPalRows,sz);
+	um->pnew=nullptr;
 }
 void pushTilemapEdit(uint32_t x,uint32_t y){
 	pushEventPrepare();
@@ -1330,6 +1383,7 @@ void pushProject(void){
 	memUsed+=sizeof(struct undoProject);
 	struct undoProject*up=(struct undoProject*)uptr->ptr;
 	up->old=new Project(*currentProject);
+	up->old->copyClasses(*currentProject);
 	up->pnew=0;
 }
 static Fl_Window * win;
@@ -1399,15 +1453,19 @@ void historyWindow(Fl_Widget*,void*){
 			break;
 			case uTilemapEdit:
 				{struct undoTilemapEdit*um=(struct undoTilemapEdit*)uptr->ptr;
-				snprintf(tmp,2048,"Edit tilemap X: %d Y: %d",um->x,um->y);}
+				snprintf(tmp,2048,"Edit tilemap X: %d Y: %d on plane: %u",um->x,um->y,um->plane);}
 			break;
 			case uTilemapPlaneDelete:
 				{struct undoTilemapPlane*um=(struct undoTilemapPlane*)uptr->ptr;
-				snprintf(tmp,2048,"Delete tilemap %u",um->plane);}
+				snprintf(tmp,2048,"Delete plane %u",um->plane);}
+			break;
+			case uExtAttrs:
+				{struct undoExtAttrs*um=(struct undoExtAttrs*)uptr->ptr;
+				snprintf(tmp,2048,"Change extended attributes on plane: %u",um->plane);}
 			break;
 			case uTilemapPlaneAdd:
 				{struct undoTilemapPlane*um=(struct undoTilemapPlane*)uptr->ptr;
-				snprintf(tmp,2048,"Add tilemap %u",um->plane);}
+				snprintf(tmp,2048,"Add plane %u",um->plane);}
 			break;
 			case uPalette:
 				strcpy(tmp,"Change entire palette");

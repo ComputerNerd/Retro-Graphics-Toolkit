@@ -14,7 +14,7 @@
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
-void save_tiles(Fl_Widget*,void*);
-void load_tiles(Fl_Widget*,void* split);
-void load_truecolor_tiles(Fl_Widget*,void*);
-void save_tiles_truecolor(Fl_Widget*,void*);
+#pragma once
+#define likely(x)       __builtin_expect((x),1)
+#define unlikely(x)     __builtin_expect((x),0)
+

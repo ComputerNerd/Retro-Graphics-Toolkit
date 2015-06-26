@@ -1,74 +1,78 @@
 /*
-   This file is part of Retro Graphics Toolkit
+	This file is part of Retro Graphics Toolkit
 
-   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or any later version.
+	Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or any later version.
 
-   Retro Graphics Toolkit is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+	Retro Graphics Toolkit is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+	You should have received a copy of the GNU General Public License
+	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #include "project.h"
-#include "global.h"
-//System refers to game system and such or device for example sega genesis or NES
-static void setbdmask(unsigned bd,unsigned mask){
+#include "system.h"
+static void setbdmask(unsigned bd,unsigned mask,struct Project*p){
 	if(bd>mask)
 		bd=mask;
-	currentProject->subSystem&=~mask;
-	currentProject->subSystem|=bd;
+	p->subSystem&=~mask;
+	p->subSystem|=bd;
 }
-void setBitdepthcurSys(unsigned bd){
+void Project::setBitdepthSys(unsigned bd){
 	--bd;
-	switch(currentProject->gameSystem){
+	switch(gameSystem){
 		case segaGenesis:
 		case masterSystem:
 		case gameGear:
-		case TMS9918:
-			setbdmask(bd,3);
+			setbdmask(bd,3,this);
 		break;
 		case NES:
 			if(bd)
-				currentProject->subSystem|=2;
+				subSystem|=2;
 			else
-				currentProject->subSystem&=~2;
+				subSystem&=~2;
+		break;
+		case TMS9918:
+			//Do nothing
 		break;
 		case frameBufferPal:
-			setbdmask(bd,7);
+			setbdmask(bd,7,this);
 		break;
 		default:
 			show_default_error
 	}
-	if(currentProject->containsData(pjHaveTiles)){
-		currentProject->tileC->tileSize=currentProject->tileC->sizew*currentProject->tileC->sizeh*getBitdepthcurSys()/8;
-		currentProject->tileC->resizeAmt();
+	if(containsData(pjHaveTiles)){
+		tileC->tileSize=((tileC->sizew+7)/8*8)*tileC->sizeh*getBitdepthSys()/8;
+		tileC->resizeAmt();
 	}
 }
-int getBitdepthcurSysraw(void){
-	switch(currentProject->gameSystem){
+int Project::getBitdepthSysraw(void)const{
+	switch(gameSystem){
 		case segaGenesis:
 		case masterSystem:
 		case gameGear:
-		case TMS9918:
-			return (currentProject->subSystem&3);
+			return (subSystem&3);
 		break;
 		case NES:
-			return ((currentProject->subSystem>>1)&1);
+			return ((subSystem>>1)&1);
 		break;
 		case frameBufferPal:
-			return (currentProject->subSystem&7);
+			return (subSystem&7);
+		break;
+		case TMS9918:
+			return getTMS9918subSys()==MODE_3?3:0;
 		break;
 		default:
 			show_default_error
+			return 0;
 	}
 }
-int fixedSpirtePalRow(uint32_t gameSystem){
-	switch(currentProject->gameSystem){
+int fixedSpirtePalRowSys(enum gameSystemEnum gameSystem){
+	switch(gameSystem){
 		case masterSystem:
 		case gameGear:
 			return 1;
@@ -76,13 +80,65 @@ int fixedSpirtePalRow(uint32_t gameSystem){
 			return -1;
 	}
 }
-bool isPlanarTiles(uint32_t gameSystem){
-	switch(currentProject->gameSystem){
+int Project::fixedSpirtePalRow(void){
+	return fixedSpirtePalRowSys(gameSystem);
+}
+bool Project::isPlanarTiles(void){
+	switch(gameSystem){
 		case NES:
 		case masterSystem:
 		case gameGear:
 			return true;
 		default:
 			return false;
+	}
+}
+bool Project::isFixedPalette(void){
+	switch(gameSystem){
+		case TMS9918:
+			return true;
+		break;
+		default:
+			return false;
+	}
+}
+unsigned Project::extAttrTilesPerByte(void){
+	switch(gameSystem){
+		case TMS9918:
+			{enum TMS9918SubSys subSys=getTMS9918subSys();
+			switch(subSys){
+				case MODE_0:
+				case MODE_3:
+				case MODE_2:
+					return 0;
+				break;
+				case MODE_1:
+					return 8;
+				break;
+			}}
+		break;
+		default:
+			return 0;
+	}
+}
+unsigned Project::szPerExtPalRow(void){
+	switch(gameSystem){
+		case TMS9918:
+			{enum TMS9918SubSys subSys=getTMS9918subSys();
+			switch(subSys){
+				case MODE_0:
+				case MODE_3:
+					return 0;
+				break;
+				case MODE_1:
+					return 1;
+				break;
+				case MODE_2:
+					return tileC->sizeh;
+				break;
+			}}
+		break;
+		default:
+			return 0;
 	}
 }

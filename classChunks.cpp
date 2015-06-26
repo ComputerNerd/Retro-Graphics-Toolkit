@@ -7,20 +7,22 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #include <exception>
-#include "global.h"
-#include "compressionWrapper.h"
+#include "macros.h"
 #include "callback_chunk.h"
 #include "filemisc.h"
 #include "undo.h"
 #include "gamedef.h"
+#include "gui.h"
+#include "class_global.h"
+#include "compressionWrapper.h"
 ChunkClass::ChunkClass(void){
 	chunks.resize(256);
 	amt=1;
@@ -48,7 +50,7 @@ void ChunkClass::setElm(uint32_t id,uint32_t x,uint32_t y,struct ChunkAttrs c){
 	ch->flags=c.flags;
 	ch->block=c.block;
 }
-struct ChunkAttrs ChunkClass::getElm(uint32_t id,uint32_t x,uint32_t y){
+struct ChunkAttrs ChunkClass::getElm(uint32_t id,uint32_t x,uint32_t y)const{
 	return chunks[(id*wi*hi)+(y*wi)+x];
 }
 void ChunkClass::removeAt(uint32_t at){
@@ -79,7 +81,7 @@ void ChunkClass::resizeAmt(uint32_t amtnew){
 void ChunkClass::resizeAmt(void){
 	resizeAmt(amt);
 }
-bool ChunkClass::getPrio_t(uint32_t id,uint32_t x,uint32_t y){//The _t means based on tiles not blocks
+bool ChunkClass::getPrio_t(uint32_t id,uint32_t x,uint32_t y)const{//The _t means based on tiles not blocks
 	if(useBlocks){
 		return currentProject->tms->maps[currentProject->curPlane].get_prio(
 		x%currentProject->tms->maps[currentProject->curPlane].mapSizeW,
@@ -89,7 +91,7 @@ bool ChunkClass::getPrio_t(uint32_t id,uint32_t x,uint32_t y){//The _t means bas
 	}else
 		return ((chunks[(id*wi*hi)+(y*wi)+x].flags>>2)&1)?true:false;
 }
-uint8_t ChunkClass::getTileRow_t(uint32_t id,uint32_t x,uint32_t y){
+uint8_t ChunkClass::getTileRow_t(uint32_t id,uint32_t x,uint32_t y)const{
 	if(useBlocks){
 		return currentProject->tms->maps[currentProject->curPlane].getPalRow(
 		x%currentProject->tms->maps[currentProject->curPlane].mapSizeW,
@@ -99,7 +101,7 @@ uint8_t ChunkClass::getTileRow_t(uint32_t id,uint32_t x,uint32_t y){
 	}else
 		return (chunks[(id*wi*hi)+(y*wi)+x].flags>>3)&3;
 }
-unsigned ChunkClass::getSolid(uint32_t id,uint32_t x,uint32_t y){
+unsigned ChunkClass::getSolid(uint32_t id,uint32_t x,uint32_t y)const{
 	unsigned shift;
 	if(useBlocks)
 		shift=2;
@@ -107,19 +109,19 @@ unsigned ChunkClass::getSolid(uint32_t id,uint32_t x,uint32_t y){
 		shift=5;
 	return (chunks[getOff(id,x,y)].flags>>shift)&3;
 }
-uint32_t ChunkClass::getBlock(uint32_t id,uint32_t x,uint32_t y){
+uint32_t ChunkClass::getBlock(uint32_t id,uint32_t x,uint32_t y)const{
 	return chunks[getOff(id,x,y)].block;
 }
-bool ChunkClass::getHflip(uint32_t id,uint32_t x,uint32_t y){
+bool ChunkClass::getHflip(uint32_t id,uint32_t x,uint32_t y)const{
 	return chunks[getOff(id,x,y)].flags&1;
 }
-bool ChunkClass::getVflip(uint32_t id,uint32_t x,uint32_t y){
+bool ChunkClass::getVflip(uint32_t id,uint32_t x,uint32_t y)const{
 	return (chunks[getOff(id,x,y)].flags&2)>>1;
 }
-unsigned ChunkClass::getOff(uint32_t id,uint32_t x,uint32_t y){
+unsigned ChunkClass::getOff(uint32_t id,uint32_t x,uint32_t y)const{
 	return (id*wi*hi)+(y*wi)+x;
 }
-bool ChunkClass::getPrio(uint32_t id,uint32_t x,uint32_t y){
+bool ChunkClass::getPrio(uint32_t id,uint32_t x,uint32_t y)const{
 	return (chunks[getOff(id,x,y)].flags&4)>>2;
 }
 void ChunkClass::setBlock(uint32_t id,uint32_t x,uint32_t y,uint32_t block){
@@ -182,12 +184,12 @@ void ChunkClass::drawChunk(uint32_t id,int xo,int yo,int zoom,int scrollX,int sc
 				uint32_t Ty=cptr->block*currentProject->tms->maps[currentProject->curPlane].mapSizeH;
 				int yoo=yo;
 				if(cptr->flags&2)
-					yoo+=(currentProject->tms->maps[currentProject->curPlane].mapSizeH-1)*8*zoom;
+					yoo+=(currentProject->tms->maps[currentProject->curPlane].mapSizeH-1)*currentProject->tileC->sizeh*zoom;
 				int xooo;
 				for(uint32_t yb=0;yb<currentProject->tms->maps[currentProject->curPlane].mapSizeH;++yb){
 					xooo=xoo;
 					if(cptr->flags&1)
-						xooo+=(currentProject->tms->maps[currentProject->curPlane].mapSizeW-1)*8*zoom;
+						xooo+=(currentProject->tms->maps[currentProject->curPlane].mapSizeW-1)*currentProject->tileC->sizew*zoom;
 					for(uint32_t xb=0;xb<currentProject->tms->maps[currentProject->curPlane].mapSizeW;++xb){
 						bool hflip=currentProject->tms->maps[currentProject->curPlane].get_hflip(xb,Ty),vflip=currentProject->tms->maps[currentProject->curPlane].get_vflip(xb,Ty);
 						unsigned row=currentProject->tms->maps[currentProject->curPlane].getPalRow(xb,Ty);
@@ -214,32 +216,32 @@ void ChunkClass::drawChunk(uint32_t id,int xo,int yo,int zoom,int scrollX,int sc
 								currentProject->tileC->draw_tile(xooo,yoo,tile,zoom,row,hflip,vflip);
 						}
 						if(cptr->flags&1)
-							xooo-=8*zoom;
+							xooo-=currentProject->tileC->sizew*zoom;
 						else
-							xooo+=8*zoom;
+							xooo+=currentProject->tileC->sizew*zoom;
 					}
 					if(cptr->flags&2)
-						yoo-=8*zoom;
+						yoo-=currentProject->tileC->sizeh*zoom;
 					else
-						yoo+=8*zoom;
+						yoo+=currentProject->tileC->sizeh*zoom;
 					++Ty;
 				}
 				if(cptr->flags&2)
-					yoo+=currentProject->tms->maps[currentProject->curPlane].mapSizeW*8*zoom;
-				xoo+=currentProject->tms->maps[currentProject->curPlane].mapSizeW*8*zoom;
+					yoo+=currentProject->tms->maps[currentProject->curPlane].mapSizeW*currentProject->tileC->sizeh*zoom;
+				xoo+=currentProject->tms->maps[currentProject->curPlane].mapSizeW*currentProject->tileC->sizew*zoom;
 
 			}else{
 				currentProject->tileC->draw_tile(xoo,yo,cptr->block,zoom,(cptr->flags>>3)&3,cptr->flags&1,(cptr->flags>>1)&1);
-				xoo+=8*zoom;
+				xoo+=currentProject->tileC->sizew*zoom;
 			}
 			cptr++;
 			if((xoo)>(window->w()))
 				break;
 		}
 		if(useBlocks)
-			yo+=8*zoom*currentProject->tms->maps[currentProject->curPlane].mapSizeH;
+			yo+=currentProject->tileC->sizeh*zoom*currentProject->tms->maps[currentProject->curPlane].mapSizeH;
 		else
-			yo+=8*zoom;
+			yo+=currentProject->tileC->sizeh*zoom;
 		if(yo>(window->h()))
 			break;
 	}
@@ -249,9 +251,9 @@ void ChunkClass::scrollChunks(void){
 	int zoom=window->chunk_tile_size->value();
 	int off;
 	if(useBlocks)
-		off=(wi*currentProject->tms->maps[currentProject->curPlane].mapSizeW)-((window->w()-ChunkOff[0])/(zoom*8));
+		off=(wi*currentProject->tms->maps[currentProject->curPlane].mapSizeW)-((window->w()-ChunkOff[0])/(zoom*currentProject->tileC->sizew));
 	else
-		off=wi-((window->w()-ChunkOff[0])/(zoom*8));
+		off=wi-((window->w()-ChunkOff[0])/(zoom*currentProject->tileC->sizew));
 	if(oldS>off)
 		scrollChunks_G[0]=oldS=off;
 	if(off>0){
@@ -261,9 +263,9 @@ void ChunkClass::scrollChunks(void){
 		window->chunkX->hide();
 	oldS=window->chunkY->value();
 	if(useBlocks)
-		off=(hi*currentProject->tms->maps[currentProject->curPlane].mapSizeH)-((window->h()-ChunkOff[1])/(zoom*8));
+		off=(hi*currentProject->tms->maps[currentProject->curPlane].mapSizeH)-((window->h()-ChunkOff[1])/(zoom*currentProject->tileC->sizeh));
 	else
-		off=hi-((window->h()-ChunkOff[1])/(zoom*8));
+		off=hi-((window->h()-ChunkOff[1])/(zoom*currentProject->tileC->sizeh));
 	if(oldS>off)
 		scrollChunks_G[1]=oldS=off;
 	if(off>0){
@@ -356,7 +358,7 @@ void ChunkClass::importSonic1(const char * filename,bool append){
 	}
 	free(Dat);
 }
-void ChunkClass::exportSonic1(void){
+void ChunkClass::exportSonic1(void)const{
 	FILE*fp;
 	int compression,clipboard;
 	fileType_t type=askSaveType();
@@ -383,7 +385,7 @@ void ChunkClass::exportSonic1(void){
 		else
 			fp = fopen(the_file.c_str(),"wb");
 		if (likely(fp||clipboard)){
-			struct ChunkAttrs*cptr=chunks.data();
+			const struct ChunkAttrs*cptr=chunks.data();
 			uint16_t*tmp=(uint16_t*)malloc(wi*hi*2*amt);
 			uint16_t*ptmp=tmp;
 			fileSize=wi*hi*amt*2;

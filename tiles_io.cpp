@@ -7,16 +7,19 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
-#include "global.h"
+#include "project.h"
+#include "macros.h"
 #include "filemisc.h"
 #include "compressionWrapper.h"
+#include "gui.h"
+#include "class_global.h"
 void save_tiles(Fl_Widget*,void*){
 	fileType_t type=askSaveType();
 	int clipboard;
@@ -33,7 +36,7 @@ void save_tiles(Fl_Widget*,void*){
 		pickedFile=load_file_generic("Pick a location to save tiles",true);
 	if(pickedFile){
 		uint8_t*savePtr;
-		if(isPlanarTiles(currentProject->gameSystem))
+		if(currentProject->isPlanarTiles())
 			savePtr=currentProject->tileC->tDat.data();
 		else
 			savePtr=(uint8_t*)currentProject->tileC->toLinear();
@@ -59,14 +62,14 @@ void save_tiles(Fl_Widget*,void*){
 					if(saveBinAsText(compdat,compsize,myfile,type,comment,"tileDat",8)==false){
 						free(compdat);
 						fl_alert("Error: can not save file %s",the_file.c_str());
-						if(!isPlanarTiles(currentProject->gameSystem))
+						if(!currentProject->isPlanarTiles())
 							free(savePtr);
 						return;
 					}
 				}else{
 					if(!saveBinAsText(savePtr,(currentProject->tileC->amt)*currentProject->tileC->tileSize,myfile,type,comment,"tileDat",32)){
 						fl_alert("Error: can not save file %s",the_file.c_str());
-						if(!isPlanarTiles(currentProject->gameSystem))
+						if(!currentProject->isPlanarTiles())
 							free(savePtr);
 						return;
 					}
@@ -79,7 +82,7 @@ void save_tiles(Fl_Widget*,void*){
 			}
 			if(compression)
 				free(compdat);
-			if(!isPlanarTiles(currentProject->gameSystem))
+			if(!currentProject->isPlanarTiles())
 				free(savePtr);
 		}else
 			fl_alert("Error: can not save file %s",the_file.c_str());
@@ -159,7 +162,7 @@ void load_tiles(Fl_Widget*,void*o){
 				fread(currentProject->tileC->tDat.data()+offset_tiles_bytes,1,file_size,myfile);
 				fclose(myfile);
 			}
-			if(!isPlanarTiles(currentProject->gameSystem))
+			if(!currentProject->isPlanarTiles())
 				currentProject->tileC->toPlanar();
 			currentProject->tileC->truetDat.resize((file_size*truecolor_multiplier)+(offset_tiles_bytes*truecolor_multiplier));
 			for(uint32_t c=offset_tiles;c<(file_size/currentProject->tileC->tileSize)+offset_tiles;c++) {
@@ -193,7 +196,6 @@ void load_truecolor_tiles(Fl_Widget*,void*){
 	//start by loading the file
 	uint32_t file_size;
 	if (load_file_generic() == true){
-		//ios::ifstream file (the_file.c_str(), ios::in|ios::binary|ios::ate);
 		FILE * myfile;
 		myfile = fopen(the_file.c_str(),"rb");
 		fseek(myfile, 0L, SEEK_END);

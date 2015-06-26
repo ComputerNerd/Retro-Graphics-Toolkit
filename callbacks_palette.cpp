@@ -1,26 +1,28 @@
 /*
-   This file is part of Retro Graphics Toolkit
+	This file is part of Retro Graphics Toolkit
 
-   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or any later version.
+	Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or any later version.
 
-   Retro Graphics Toolkit is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-   GNU General Public License for more details.
+	Retro Graphics Toolkit is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+	You should have received a copy of the GNU General Public License
+	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
-#include "global.h"
+#include "macros.h"
 #include "class_global.h"
 #include "color_convert.h"
 #include "filemisc.h"
 #include "undo.h"
 #include "errorMsg.h"
 #include "classpalettebar.h"
+#include "gui.h"
+#include "palette.h"
 void sortRowbyCB(Fl_Widget*,void*){
 	unsigned type=fl_choice("Sort each row by","Hue","Saturation","Lightness");
 	pushPaletteAll();
@@ -28,7 +30,7 @@ void sortRowbyCB(Fl_Widget*,void*){
 	palBar.updateSlider(palBar.toTab(mode_editor));
 	window->redraw();
 }
-void save_palette(Fl_Widget*, void* start_end){
+void save_palette(Fl_Widget*,void*){
 	char temp[4];
 	snprintf(temp,4,"%u",currentProject->pal->colorCnt-1);
 	char * returned=(char *)fl_input("Counting from zero enter the first entry that you want saved\nFor NES to save the sprite palette the first entry is 16","0");
@@ -294,6 +296,8 @@ void pickNearAlg(Fl_Widget*,void*){
 }
 void rgb_pal_to_entry(Fl_Widget*,void*){
 	//this function will convert a rgb value to the nearest palette entry
+	if(currentProject->isFixedPalette())
+		return;
 	if (mode_editor != tile_edit){
 		fl_alert("Be in Tile editor to use this");
 		return;

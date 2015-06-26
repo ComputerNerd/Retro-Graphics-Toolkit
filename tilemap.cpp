@@ -7,14 +7,13 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
-#include "global.h"
 #include "quant.h"
 #include "color_compare.h"
 #include "color_convert.h"
@@ -30,6 +29,8 @@
 #include "classpalette.h"
 #include "classpalettebar.h"
 #include "nearestColor.h"
+#include "gui.h"
+#include "class_global.h"
 static void addHist(uint32_t cur_tile,int type,uint32_t*hist,unsigned sz){
 	double szz=(double)sz;
 	uint8_t * truePtr=&currentProject->tileC->truetDat[cur_tile*256];
@@ -464,6 +465,7 @@ againFun:
 			b=found_colors[(x*3)+2];
 			printf("R=%d G=%d B=%d\n",r,g,b);
 			currentProject->pal->rgbToEntry(r,g,b,x+offsetPal);
+			currentProject->pal->updateRGBindex(x+offsetPal);
 		}
 		if(currentProject->gameSystem==NES)
 			updateEmphesis();
@@ -645,7 +647,7 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 	}
 
 	unsigned maxRows,firstRow;
-	int spRow=fixedSpirtePalRow(currentProject->gameSystem);
+	int spRow=currentProject->fixedSpirtePalRow();
 	if(spRow>=0&&set->sprite){
 		maxRows=spRow+1;
 		firstRow=spRow;
@@ -820,7 +822,7 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	rowlabel1->labelsize(12);
 	Fl_Box*rowlabel2=new Fl_Box(120,8,96,12,"Offset per row:");
 	rowlabel2->labelsize(12);
-	int spRow=fixedSpirtePalRow(currentProject->gameSystem);
+	int spRow=currentProject->fixedSpirtePalRow();
 	if(!sprite)
 		spRow=-1;
 	for(unsigned i=0;i<currentProject->pal->getMaxRows(sprite?true:false);++i){
@@ -830,14 +832,14 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 		char tmp[16];
 		useRowCbtn[i]=new Fl_Check_Button(8,28+(i*24),24,16);
 		useRowCbtn[i]->set();
-		useRowCbtn[i]->callback(rowShowCB,(void*)i);
+		useRowCbtn[i]->callback(rowShowCB,(void*)(uintptr_t)i);
 		perrow[i]=new Fl_Int_Input(40,24+(i*24),64,24);
 		perrowoffset[i]=new Fl_Int_Input(136,24+(i*24),64,24);
 		snprintf(tmp,sizeof(tmp),"%d",i);
 		perrow[i]->copy_label(tmp);
 		perrowoffset[i]->copy_label(tmp);
-		perrow[i]->callback(setPerRow,(void*)i);
-		perrowoffset[i]->callback(setPerRowoff,(void*)i);
+		perrow[i]->callback(setPerRow,(void*)(uintptr_t)i);
+		perrowoffset[i]->callback(setPerRowoff,(void*)(uintptr_t)i);
 		snprintf(tmp,sizeof(tmp),"%d",currentProject->pal->calMaxPerRow(i));
 		set.perRow[i]=currentProject->pal->calMaxPerRow(i);
 		perrow[i]->value(tmp);

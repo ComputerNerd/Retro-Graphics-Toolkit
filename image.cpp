@@ -7,12 +7,12 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #include "includes.h"
 #include "image.h"
@@ -233,7 +233,7 @@ bool getMaskColorImg(Fl_Shared_Image*loaded_image,bool grayscale,unsigned*remap,
 	rc=(double)r/255.0;
 	gc=(double)g/255.0;
 	bc=(double)b/255.0;
-	win=new Fl_Double_Window(640,480,"Backgroud color selection");
+	win=new Fl_Double_Window(640,480,"Background color selection");
 	win->begin();
 	win->resizable(win);
 	Fl_Button * Ok=new Fl_Button(52,448,64,24,"Okay");
@@ -300,9 +300,9 @@ bool handle1byteImg(Fl_Shared_Image*loaded_image,unsigned*remap){
 	char*timgptr=(char*)loaded_image->data()[0];
 	//See if grayscale or colormapped xpm
 	if(isdigit(*timgptr)){
-		/*Checking to see if the first byte is a digit is not enough.
-		  What if the first pixel just happen to fall in digit range?
-		  Avoid this by verifing width and height*/
+		/* Checking to see if the first byte is a digit is not enough.
+		 * What if the first pixel just happen to fall in digit range?
+		 * Avoid this by verifying width and height*/
 		if(strtol(timgptr,&timgptr,10)==loaded_image->w()){
 			if(strtol(timgptr,&timgptr,10)==loaded_image->h()){
 				unsigned numcolors;

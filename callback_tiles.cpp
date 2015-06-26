@@ -11,14 +11,14 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
-#include "global.h"
 #include "class_global.h"
 #include "tilemap.h"
 #include "undo.h"
 #include "classpalettebar.h"
+#include "gui.h"
 void tilesnewfilppedCB(Fl_Widget*,void*){
 	pushTilemapAll(false);
 	pushTileappendGroupPrepare();
@@ -92,7 +92,7 @@ void insertTileCB(Fl_Widget*,void*){
 	updateTileSelectAmt();
 	window->redraw();
 }
-void delete_tile_at_location(Fl_Widget*, void* row){
+void delete_tile_at_location(Fl_Widget*, void*){
 	/* this function will delete the tile that the user has selected */
 	pushTile(currentProject->tileC->current_tile,tTypeDelete);
 	currentProject->tileC->remove_tile_at(currentProject->tileC->current_tile);
@@ -150,7 +150,7 @@ void update_all_tiles(Fl_Widget*,void*){
 	for (uint32_t x=0;x<currentProject->tileC->amt;++x){
 		currentProject->tileC->truecolor_to_tile(sel_pal,x,mode_editor==spriteEditor);
 		if ((!(x&63))&&x)
-			printf("Progress: %f\r",((float)x/(float)currentProject->tileC->amt)*100.0);
+			printf("Progress: %f\r",((float)x/(float)currentProject->tileC->amt)*100.0f);
 	}
 	window->redraw();
 }
@@ -167,28 +167,9 @@ void fill_tile(Fl_Widget* o, void*){
 		unsigned color;
 		color=palBar.selBox[2];
 		uint8_t * tile_ptr_temp;
-		switch (currentProject->gameSystem){
-			case segaGenesis:
-				tile_ptr_temp = &currentProject->tileC->tDat[currentProject->tileC->current_tile*32];
-				color|=color<<4;
-				memset(tile_ptr_temp,color,32);
-			break;
-			case NES:
-				tile_ptr_temp = &currentProject->tileC->tDat[currentProject->tileC->current_tile*16];
-				//for the NES it is different
-				uint8_t col_1;
-				uint8_t col_2;
-				col_1=color&1;
-				col_2=(color>>1)&1;
-				uint32_t x;
-				memset(tile_ptr_temp,0,16);
-				for (uint8_t y=0;y<8;++y){
-					for (x=0;x<8;++x){
-						tile_ptr_temp[y]|=col_1<<x;
-						tile_ptr_temp[y+8]|=col_2<<x;
-					}
-				}
-			break;
+		for(unsigned y=0;y<currentProject->tileC->sizeh;++y){
+			for(unsigned x=0;x<currentProject->tileC->sizew;++x)
+				currentProject->tileC->setPixel(currentProject->tileC->current_tile,x,y,color);
 		}
 	}
 	else if (mode_editor == tile_edit){

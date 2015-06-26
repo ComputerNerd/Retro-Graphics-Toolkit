@@ -1,4 +1,3 @@
-#include "global.h"
 #include <cmath>
 #include "color_compare.h"
 #include "CIE.h"

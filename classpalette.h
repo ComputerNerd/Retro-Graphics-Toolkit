@@ -7,16 +7,15 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #pragma once
-class palette{
-	public:
+struct palette{
 	uint8_t*rgbPal;
 	uint8_t*palDat;
 	uint8_t*palType;/*!<Sets 3 different types for each palette entry free, locked and reserved*/
@@ -31,7 +30,7 @@ class palette{
 	palette(void);
 	~palette(void);
 	palette(const palette& other);
-	void setVars(uint32_t gameSystem);
+	void setVars(enum gameSystemEnum gameSystem);
 	void read(FILE*fp,bool supportsAlt);
 	void write(FILE*fp);
 	void updateRGBindex(unsigned index);

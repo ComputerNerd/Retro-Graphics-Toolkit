@@ -7,18 +7,19 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #include <stdint.h>
 #include <cstdarg>
 #include <stdio.h>
 #include "gui.h"
 #include "project.h"
+#include "class_global.h"
 unsigned map_scroll_pos_x;
 unsigned map_scroll_pos_y;
 unsigned map_off_x,map_off_y;
@@ -27,6 +28,19 @@ unsigned tile_edit_offset_y;
 unsigned tile_placer_tile_offset_y;
 unsigned tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
 unsigned true_color_box_x,true_color_box_y;
+bool show_grid;
+bool G_hflip[2];
+bool G_vflip[2];
+bool G_highlow_p[2];
+bool show_grid_placer;
+unsigned tile_zoom_edit;
+uint8_t truecolor_temp[4];/*!< This stores the rgba data selected with the truecolor sliders*/
+std::string the_file;//this is for temporary use only
+unsigned mode_editor;//this is used to determine which thing to draw
+bool showTrueColor;
+bool rowSolo;
+bool tileEditModePlace_G;
+uint32_t selTileE_G[2];
 static int returnVal=0;
 static Fl_Choice*PopC;
 static Fl_Window * winP;
@@ -101,7 +115,7 @@ void updateTileSelectAmt(uint32_t newMax){
 		checkMaxSlider(newMax,window->tile_select);
 		window->tile_select_2->maximum(newMax);
 		checkMaxSlider(newMax,window->tile_select_2);
-		if(currentProject->Chunk->useBlocks){
+		if(currentProject->containsData(pjHaveChunks)&&currentProject->Chunk->useBlocks){
 			window->tile_select_3->maximum(currentProject->tms->maps[currentProject->curPlane].amt-1);
 			checkMaxSlider(currentProject->tms->maps[currentProject->curPlane].amt-1,window->tile_select_3);
 		}else{
@@ -125,7 +139,7 @@ void updateTileSelectAmt(uint32_t newMax){
 void updateTileSelectAmt(void){
 	updateTileSelectAmt(currentProject->tileC->amt);
 }
-void setRet(Fl_Widget*,void*r){
+static void setRet(Fl_Widget*,void*r){
 	bool Cancel=(uintptr_t)r?true:false;
 	if(Cancel)
 		returnVal=-1;
@@ -171,7 +185,6 @@ bool load_file_generic(const char * the_tile,bool save_file){//Warning this func
 	// Show native chooser
 	switch (native.show()){
 		case -1:
-			//fprintf(stderr, "ERROR: %s\n", native.errmsg());
 			fl_alert("Error %s",native.errmsg());
 		break;	// ERROR
 		case  1:
@@ -187,7 +200,7 @@ bool load_file_generic(const char * the_tile,bool save_file){//Warning this func
 	}
 	return false;//if an error happened or the user did not pick a file the function returns false
 }
-bool loadsavefile(std::string&fn,const char * the_tile,bool save_file){
+char*loadsavefile(const char * the_tile,bool save_file){
 	// Create native chooser
 	Fl_Native_File_Chooser native;
 	native.title(the_tile);
@@ -198,7 +211,6 @@ bool loadsavefile(std::string&fn,const char * the_tile,bool save_file){
 	// Show native chooser
 	switch (native.show()){
 		case -1:
-			//fprintf(stderr, "ERROR: %s\n", native.errmsg());
 			fl_alert("Error %s",native.errmsg());
 		break;	// ERROR
 		case  1:
@@ -206,12 +218,30 @@ bool loadsavefile(std::string&fn,const char * the_tile,bool save_file){
 			//fl_beep();
 		break;		// CANCEL
 		default:// Picked File
-			if (native.filename()){
-				fn=native.filename();
-				return true;
-			}
+			if(native.filename())
+				return strdup(native.filename());
 		break;
 	}
-	return false;
+	return nullptr;
 }
-
+bool verify_str_number_only(char * str){
+/*!
+FLTK provides an input text box that makes it easy for the user to type text however as a side effect they may accidentally enter non-numeric characters.
+This function address that issue by error checking the string and it also gives the user feedback so they are aware that the input box takes only numbers.
+This function returns true when the string contains only numbers 0-9 and false when there are other characters.
+It also allows the use of the minus character '-' without the quotes.
+*/
+	while(*str++){
+		if (*str != 0 && *str != '-'){
+			if (*str < '0'){
+				fl_alert("Please enter only numbers in decimal format\nCharacter entered %c",*str);
+				return false;
+			}
+			if (*str > '9'){
+				fl_alert("Please enter only numbers in decimal format\nCharacter entered %c",*str);
+				return false;
+			}
+		}
+	}
+	return true;
+}

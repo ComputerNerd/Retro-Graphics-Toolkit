@@ -1,9 +1,10 @@
-#include <inttypes.h>
 #include <ctime>
+#include "includes.h"
 #include "dither.h"
-#include "global.h"
 #include "color_convert.h"
 #include "nearestColor.h"
+#include "gui.h"
+#include "palette.h"
 #define NONE 0
 #define UP 1
 #define LEFT 2
@@ -16,10 +17,12 @@ static bool USEofColGlob;
 static bool isSpriteG;
 static bool forcedfun;
 static unsigned theforcedfun;
-static uint8_t *img_ptr_dither;
+static uint8_t*img_ptr_dither;
+static uint8_t*indexPtrG;
+static bool toIndexG;
 static bool isChunkD_G;
 static uint32_t idChunk_G;
-uint8_t nearest_color_chanColSpace(uint8_t val,uint8_t chan){
+static uint8_t nearest_color_chanColSpace(uint8_t val,uint8_t chan){
 	switch (useMode){
 		case segaGenesis:
 			return palTab[nearest_color_index(val)];
@@ -36,34 +39,30 @@ uint8_t nearest_color_chanColSpace(uint8_t val,uint8_t chan){
 		case gameGear:
 			return palTabGameGear[nearestOneChannel(val,palTabGameGear,16)];
 		break;
+		case TMS9918:
+			//return nearestColIndex(r_old,g_old,b_old,currentProject->pal->rgbPal,currentProject->pal->colorCnt);
+			return 0;//TODO
+		break;
 		case 255://alpha
 			return (val&128)?255:0;
 		break;
 		default:
 			show_default_error
+			return 0;
 	}
 }
-uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row){
+static uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row){
 	//returns closest value
 	//palette_multiplier
 	unsigned i;
 	int_fast32_t distanceSquared, minDistanceSquared, bestIndex = 0;
 	minDistanceSquared = 255*255 + 1;
 	unsigned max_rgb=0;
-	switch (useMode){
-		case segaGenesis:
-			max_rgb=48;//16*3=48
-		break;
-		case NES:
-			max_rgb=12;//4*3=12
-			if(isSpriteG)
-				row+=4;
-		break;
-		case 255://alpha
-			return (val&128)?255:0;
-		break;
-	}
-	row*=max_rgb;
+	if(useMode==255)
+		return (val&128)?255:0;
+	row*=currentProject->pal->perRow*3;
+	if(currentProject->pal->haveAlt&&isSpriteG)
+		row+=currentProject->pal->colorCnt;
 	for (i=row; i<max_rgb+row; i+=3){
 		int_fast32_t Rdiff = (int_fast32_t) val - (int_fast32_t)currentProject->pal->rgbPal[i+chan];
 		distanceSquared = Rdiff*Rdiff;
@@ -72,7 +71,7 @@ uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row){
 			bestIndex = i;
 		}
 	}
-	return currentProject->pal->rgbPal[bestIndex+chan];
+	return bestIndex+chan;
 }
 /* variables needed for the Riemersma
  * dither algorithm */ 
@@ -82,17 +81,17 @@ static int32_t img_width=0, img_height=0;
 static unsigned rgb_select=0;
 	
 #define SIZE 16	/* queue size: number of
-				 * pixels remembered */ 
+		 * pixels remembered */
 #define MAX  16	/* relative weight of
-				 * youngest pixel in the
-				 * queue, versus the oldest
-				 * pixel */
+		 * youngest pixel in the
+		 * queue, versus the oldest
+		 * pixel */
 	
 static int32_t weights[SIZE];	/* weights for
-								 * the errors
-								 * of recent
-								 * pixels */
-	
+				 * the errors
+				 * of recent
+				 * pixels */
+
 static void init_weights(int32_t a[],int32_t size,int32_t max){
 	double m = exp(log(max)/(size-1));
 	double v;
@@ -105,21 +104,19 @@ static void init_weights(int32_t a[],int32_t size,int32_t max){
 }
 
 static void dither_pixel(uint8_t *pixel){
-static int32_t error[SIZE]; /* queue with error
-						 * values of recent
-						 * pixels */
+	static int32_t error[SIZE]; /* queue with error
+				     * values of recent
+				     * pixels */
 	int32_t i,pvalue,err;
-	
+
 	for (i=0,err=0L; i<SIZE;++i)
 		err+=error[i]*weights[i];
-	//pvalue=*pixel + err/MAX;
 	if (*pixel+err/MAX > 255)
 		pvalue=255;
 	else if (*pixel+err/MAX < 0)
 		pvalue=0;
 	else
 		pvalue=*pixel + err/MAX;
-  //pvalue = (pvalue>=128) ? 255 : 0;
 	if ((currentProject->gameSystem == segaGenesis) && (useHiL == 9)){
 		unsigned tempSet;
 		if(isChunkD_G)
@@ -139,8 +136,11 @@ static int32_t error[SIZE]; /* queue with error
 			else
 				pvalue=nearest_color_chan(pvalue,rgb_select,currentProject->tms->maps[currentProject->curPlane].getPalRow(cur_x/8,cur_y/8));
 		}
+		if(toIndexG)
+			indexPtrG[cur_x+(cur_y*img_width)]=pvalue;
+		pvalue=currentProject->pal->rgbPal[pvalue];
 	}
-  /* shift queue */ 
+	// shift queue
 	memmove(error, error+1,(SIZE-1)*sizeof error[0]); 
 	error[SIZE-1] = *pixel - pvalue;
 	*pixel=(uint8_t)pvalue;
@@ -242,7 +242,7 @@ static inline int32_t log2int(int32_t value){
 	}
 	return result;
 }
-static void Riemersma(uint8_t *image, int32_t width,int32_t height,uint8_t rgb_sel){
+static void Riemersma(uint8_t *image, int32_t width,int32_t height,unsigned rgb_sel){
 	int32_t level,size;
 	rgb_select=rgb_sel;
 	/* determine the required order of the
@@ -441,23 +441,23 @@ d(42), d(26), d(38), d(22), d(41), d(25), d(37), d(21) };
 
 // Compare the difference of two RGB values
 static inline float EvaluateMixingError(int r,int g,int b,
-						   int r0,int g0,int b0,
-						   int r1,int g1,int b1,
-						   int r2,int g2,int b2,
-						   float ratio){
+		int r0,int g0,int b0,
+		int r1,int g1,int b1,
+		int r2,int g2,int b2,
+		float ratio){
 	return ColorCompare(r,g,b, r0,g0,b0) 
-		 + (ColorCompare(r1,g1,b1, r2,g2,b2) * 0.1f * (fabsf(ratio-0.5f)+0.5f));
+		+ (ColorCompare(r1,g1,b1, r2,g2,b2) * 0.1f * (fabsf(ratio-0.5f)+0.5f));
 }
 
 struct MixingPlanY1{
 	unsigned colors[2];
 	float ratio; /* 0 = always index1, 1 = always index2, 0.5 = 50% of both */
 };
-MixingPlanY1 DeviseBestMixingPlanY1(const unsigned r,const unsigned g,const unsigned b,uint8_t * pal,uint16_t offset){
+static MixingPlanY1 DeviseBestMixingPlanY1(const unsigned r,const unsigned g,const unsigned b,uint8_t * pal,uint16_t offset){
 	//const unsigned r = color>>16, g = (color>>8)&0xFF, b = color&0xFF;
 	pal+=offset*3;
 	offsetGloablY3=offset;
-	MixingPlanY1 result = { {0,0}, 0.5 };
+	MixingPlanY1 result = { {0,0}, 0.5f };
 	float least_penalty = 1e99;
 	for(unsigned index1 = 0; index1 < palettesize; ++index1)
 	for(unsigned index2 = index1; index2 < palettesize; ++index2)
@@ -501,7 +501,7 @@ MixingPlanY1 DeviseBestMixingPlanY1(const unsigned r,const unsigned g,const unsi
 	return result;
 }
 
-MixingPlan DeviseBestMixingPlanY2(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * pal,uint16_t offset,size_t limit){
+static MixingPlan DeviseBestMixingPlanY2(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * pal,uint16_t offset,size_t limit){
 	// Input color in RGB
 	int input_rgb[3] = {rIn,gIn,bIn};
 	pal+=offset*3;
@@ -559,7 +559,7 @@ MixingPlan DeviseBestMixingPlanY2(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * 
 	std::sort(result.begin(), result.end(), PaletteCompareLuma);
 	return result;
 }
-MixingPlan DeviseBestMixingPlanY3(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * pal,uint16_t offset,size_t limit){
+static MixingPlan DeviseBestMixingPlanY3(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * pal,uint16_t offset,size_t limit){
 	// Input color in RGB
 	float input_rgb[3] = {(float)rIn,(float)gIn,(float)bIn};
 	pal+=offset*3;
@@ -691,9 +691,9 @@ static const unsigned char mapTK[8*8]={
 	42,26,38,22,41,25,37,21};
 /* Luminance for each palette entry, to be initialized as soon as the program begins */
 struct MixingPlanTK{
-    unsigned colors[64];
+	unsigned colors[64];
 };
-MixingPlanTK DeviseBestMixingPlanTK(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * pal,uint16_t offset){
+static MixingPlanTK DeviseBestMixingPlanTK(uint8_t rIn,uint8_t gIn,uint8_t bIn,uint8_t * pal,uint16_t offset){
 	// Input color in RGB
 	pal+=offset*3;
 	offsetGloablY3=offset;
@@ -746,45 +746,43 @@ static void progressUpdate(Fl_Window**win,Fl_Progress**progress,time_t&lasttime,
 		Fl::check();
 	}
 }
-void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpace,bool forceRow,unsigned forcedrow,bool isChunk,uint32_t idChunk,bool isSprite){
-	/*!
-	This function will take an input with or without alpha and dither it
-	Also note that this function now has the option to first dither to color space
-	*/
+void*ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpace,bool forceRow,unsigned forcedrow,bool isChunk,uint32_t idChunk,bool isSprite,bool toIndex){
+	void*retPtr;
+	if(colSpace&&toIndex)
+		retPtr=malloc(w*h*((currentProject->pal->esize==0)?1:currentProject->pal->esize));
+	else if(toIndex)
+		retPtr=malloc(w*h);
+	else
+		retPtr=0;
+	if((currentProject->gameSystem==TMS9918)&&(currentProject->getTMS9918subSys()==MODE_3))
+		colSpace=true;
+	uint8_t*indexPtr=(uint8_t*)retPtr;
 	unsigned ditherAlg=currentProject->settings&settingsDitherMask;
 	int ditherSetting=((currentProject->settings>>subsettingsDitherShift)&subsettingsDitherMask)+1;
 	unsigned type_temp=palTypeGen;
 	unsigned temp=0;
-	unsigned rgbRowsize;
+	rgbPixelsize=useAlpha?4:3;
+	unsigned rgbRowsize=currentProject->tileC->sizew*rgbPixelsize;
 	unsigned x,y;
-	if (useAlpha){
-		rgbPixelsize=4;
-		rgbRowsize=32;
-	}
-	else{
-		rgbPixelsize=3;
-		rgbRowsize=24;
-	}
-	uint8_t r_old,g_old,b_old,a_old;
-	uint8_t r_new,g_new,b_new,a_new;
+	uint_fast8_t r_old,g_old,b_old,a_old;
+	uint_fast8_t r_new,g_new,b_new,a_new;
 	unsigned pal_row;
-	int16_t error_rgb[4];
+	int_fast16_t error_rgb[4];
 	Fl_Window *win;
 	Fl_Progress *progress;
 	bool progressHave=false;
 	time_t lasttime=time(NULL);
+	bool haveExt=currentProject->szPerExtPalRow()>0;
 	switch (currentProject->settings&settingsDitherMask){
 	case 7:
 	case 6:
-	case 5://Yliluoma's ordered dithering algorithm
+	case 5://Yliluoma's ordered dithering algorithms
 	case 4:
 	{
-		if(colSpace){
-			//if(!fl_ask("Dither to colorspace? WARNING SLOW!"))//I have found that this results in worse quality anyway
-				return;
-		}
+		if(colSpace&&currentProject->gameSystem!=TMS9918)
+			return 0;
 		unsigned tempPalSize;
-		uint8_t * colPtr=colPtr=currentProject->pal->rgbPal;
+		uint8_t * colPtr=currentProject->pal->rgbPal;
 		if(currentProject->pal->haveAlt&&isSprite){
 			tempPalSize=currentProject->pal->colorCntalt;
 			palettesize=currentProject->pal->perRowalt;
@@ -794,11 +792,8 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 			palettesize=currentProject->pal->perRow;
 		}
 		for(unsigned c=0; c<tempPalSize; ++c){
-			//unsigned r = pal[c]>>16, g = (pal[c]>>8) & 0xFF, b = pal[c] & 0xFF;
 			unsigned r=colPtr[c*3],g=colPtr[(c*3)+1],b=colPtr[(c*3)+2];
-			//gdImageColorAllocate(im, r,g,b);
 			luma[c] = r*299 + g*587 + b*114;
-			//meta[c].Set((double)r/255.0,(double)g/255.0,(double)b/255.0);
 			pal_g[c][0] = GammaCorrect(r/255.0);
 			pal_g[c][1] = GammaCorrect(g/255.0);
 			pal_g[c][2] = GammaCorrect(b/255.0);
@@ -831,12 +826,12 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					unsigned map_value = mapTK[(x & 7) + ((y & 7) << 3)];
 					MixingPlanTK plan;
 					plan=DeviseBestMixingPlanTK(r_old,g_old,b_old,currentProject->pal->rgbPal,pal_row*palettesize);
-					tempPalOff=(plan.colors[map_value]+(pal_row*palettesize))*3;
+					tempPalOff=(plan.colors[map_value]+(pal_row*palettesize));
 				}else if(ditherAlg==4){
 					float map_value = mapY1[(x & 7) + ((y & 7) << 3)];
 					MixingPlanY1 plan;
 					plan = DeviseBestMixingPlanY1(r_old,g_old,b_old,currentProject->pal->rgbPal,pal_row*palettesize);
-					tempPalOff=(plan.colors[map_value < plan.ratio ? 1 : 0]+(pal_row*palettesize))*3;
+					tempPalOff=(plan.colors[map_value < plan.ratio ? 1 : 0]+(pal_row*palettesize));
 				}else{
 					unsigned map_value = mapY3[(x & 7) + ((y & 7) << 3)];
 					MixingPlan plan;
@@ -845,8 +840,15 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					else
 						plan = DeviseBestMixingPlanY3(r_old,g_old,b_old,currentProject->pal->rgbPal,pal_row*palettesize, 16);
 					map_value = map_value * plan.size() / 64;
-					tempPalOff=(plan[ map_value ]+(pal_row*palettesize))*3;
+					tempPalOff=(plan[ map_value ]+(pal_row*palettesize));
 				}
+				if(toIndex){
+					if(useAlpha)
+						indexPtr[x+(y*w)]=a_old>=128?tempPalOff:0;//TODO dither alpha with these algorithms
+					else
+						indexPtr[x+(y*w)]=tempPalOff;
+				}
+				tempPalOff*=3;
 				image[(x*rgbPixelsize)+(y*w*rgbPixelsize)]=currentProject->pal->rgbPal[tempPalOff];
 				image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+1]=currentProject->pal->rgbPal[tempPalOff+1];
 				image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2]=currentProject->pal->rgbPal[tempPalOff+2];
@@ -864,7 +866,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				b_old=image[x+(y*w*rgbPixelsize)+2];
 				if (useAlpha)
 					a_old=image[x+(y*w*rgbPixelsize)+3];
-				if(!colSpace){
+				if(!colSpace&&!haveExt){
 					if(forceRow)
 						pal_row=forcedrow;
 					else{
@@ -908,6 +910,14 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 							g_new=palTabGameGear[nearestOneChannel(g_old,palTabGameGear,16)];
 							b_new=palTabGameGear[nearestOneChannel(b_old,palTabGameGear,16)];
 						break;
+						case TMS9918:
+							temp=nearestColIndex(r_old,g_old,b_old,currentProject->pal->rgbPal,currentProject->pal->colorCnt)*3;
+							if(toIndex)
+								indexPtr[(x/rgbPixelsize)+(y*w)]=temp/3;
+							r_new=currentProject->pal->rgbPal[temp];
+							g_new=currentProject->pal->rgbPal[temp+1];
+							b_new=currentProject->pal->rgbPal[temp+2];
+						break;
 						default:
 							show_default_error
 					}
@@ -921,16 +931,28 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 								a_old=addCheck(a_old,half);
 						}
 					}
-					if((currentProject->gameSystem==NES)&&isSprite){
+					if(haveExt){
+						temp=choiceTwoColor(currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x/rgbRowsize,y,false),currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x/rgbRowsize,y,true),r_old,g_old,b_old)*3;
+						r_new=currentProject->pal->rgbPal[temp];
+						g_new=currentProject->pal->rgbPal[temp+1];
+						b_new=currentProject->pal->rgbPal[temp+2];
+						temp=3*((temp/3)==currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x/rgbRowsize,y,true));
+					}else if((currentProject->pal->haveAlt)&&isSprite){
 						temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old,true);
-						r_new=currentProject->pal->rgbPal[temp+48];
-						g_new=currentProject->pal->rgbPal[temp+49];
-						b_new=currentProject->pal->rgbPal[temp+50];
+						r_new=currentProject->pal->rgbPal[temp+(currentProject->pal->colorCnt*3)];
+						g_new=currentProject->pal->rgbPal[temp+1+(currentProject->pal->colorCnt*3)];
+						b_new=currentProject->pal->rgbPal[temp+2+(currentProject->pal->colorCnt*3)];
 					}else{
 						temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old,false);
 						r_new=currentProject->pal->rgbPal[temp];
 						g_new=currentProject->pal->rgbPal[temp+1];
 						b_new=currentProject->pal->rgbPal[temp+2];
+					}
+					if(toIndex){
+						if(useAlpha)
+							indexPtr[(x/rgbPixelsize)+(y*w)]=a_old>=128?temp/3:0;
+						else
+							indexPtr[(x/rgbPixelsize)+(y*w)]=temp/3;
 					}
 				}
 				if (useAlpha)
@@ -952,6 +974,8 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 		theforcedfun=forcedrow;
 		isChunkD_G=isChunk;
 		idChunk_G=idChunk;
+		toIndexG=toIndex;
+		indexPtrG=indexPtr;
 		Riemersma(image,w,h,0);
 		progressUpdate(&win,&progress,lasttime,progressHave,1,useAlpha?4:3);
 		Riemersma(image,w,h,1);
@@ -972,7 +996,7 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				b_old=image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+2];
 				if (useAlpha)
 					a_old=image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+3];
-				if(!colSpace){
+				if(!colSpace&&!haveExt){
 					if(forceRow)
 						pal_row=forcedrow;
 					else{
@@ -1014,15 +1038,29 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 							g_new=palTabGameGear[nearestOneChannel(g_old,palTabGameGear,16)];
 							b_new=palTabGameGear[nearestOneChannel(b_old,palTabGameGear,16)];
 						break;
+						case TMS9918:
+							temp=nearestColIndex(r_old,g_old,b_old,currentProject->pal->rgbPal,currentProject->pal->colorCnt)*3;
+							if(toIndex)
+								indexPtr[x+(y*w)]=temp/3;
+							r_new=currentProject->pal->rgbPal[temp];
+							g_new=currentProject->pal->rgbPal[temp+1];
+							b_new=currentProject->pal->rgbPal[temp+2];
+						break;
 						default:
 							show_default_error
 					}
 				}else{
-					if((currentProject->gameSystem==NES)&&isSprite){
+					if(haveExt){
+						temp=choiceTwoColor(currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x/8,y,false),currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x/8,y,true),r_old,g_old,b_old)*3;
+						r_new=currentProject->pal->rgbPal[temp];
+						g_new=currentProject->pal->rgbPal[temp+1];
+						b_new=currentProject->pal->rgbPal[temp+2];
+						temp=3*((temp/3)==currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x/8,y,true));
+					}else if((currentProject->pal->haveAlt)&&isSprite){
 						temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old,true);
-						r_new=currentProject->pal->rgbPal[temp+48];
-						g_new=currentProject->pal->rgbPal[temp+49];
-						b_new=currentProject->pal->rgbPal[temp+50];
+						r_new=currentProject->pal->rgbPal[temp+(currentProject->pal->colorCnt*3)];
+						g_new=currentProject->pal->rgbPal[temp+1+(currentProject->pal->colorCnt*3)];
+						b_new=currentProject->pal->rgbPal[temp+2+(currentProject->pal->colorCnt*3)];
 					}else{
 						temp=find_near_color_from_row_rgb(pal_row,r_old,g_old,b_old,false);
 						r_new=currentProject->pal->rgbPal[temp];
@@ -1032,14 +1070,19 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 				}
 				if (useAlpha){
 					a_new=(a_old&128)?255:0;
-					//a_new&=128;
-					error_rgb[3]=(int16_t)a_old-(int16_t)a_new;
+					error_rgb[3]=(int_fast16_t)a_old-(int_fast16_t)a_new;
 					image[(x*rgbPixelsize)+(y*w*rgbPixelsize)+3]=a_new;
 				}
-				error_rgb[0]=(int16_t)r_old-(int16_t)r_new;
-				error_rgb[1]=(int16_t)g_old-(int16_t)g_new;
-				error_rgb[2]=(int16_t)b_old-(int16_t)b_new;
-				for (unsigned channel=0;channel<rgbPixelsize;channel++){
+				if(toIndex){
+					if(useAlpha)
+						indexPtr[x+(y*w)]=a_new>=128?temp/3:0;
+					else
+						indexPtr[x+(y*w)]=temp/3;
+				}
+				error_rgb[0]=(int_fast16_t)r_old-(int_fast16_t)r_new;
+				error_rgb[1]=(int_fast16_t)g_old-(int_fast16_t)g_new;
+				error_rgb[2]=(int_fast16_t)b_old-(int_fast16_t)b_new;
+				for (unsigned channel=0;channel<rgbPixelsize;++channel){
 					//add the offset
 					if (x+1 < w){
 						plus_truncate_uchar(image[((x+1)*rgbPixelsize)+(y*w*rgbPixelsize)+channel],(error_rgb[channel]*7) / ditherSetting);
@@ -1069,4 +1112,5 @@ void ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 		delete(progress);// deallocate it
 		delete win;
 	}
+	return retPtr;
 }

@@ -7,24 +7,26 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #pragma once
 #include <stdint.h>
 #define MAX_ROWS_PALETTE 4//TODO refractor to allow "unlimited" rows
 //System declarations
 enum gameSystemEnum{segaGenesis,NES,masterSystem,gameGear,TMS9918,SNES,frameBufferPal,frameBuffer};
+enum TMS9918SubSys{MODE_0,MODE_1,MODE_2,MODE_3};
 /* Subsystem declarations
  * Subsystem as the name implies depends on which system is selected
  * These are not compatible when switching systems
- * For the Sega Genesis, Master System, Game Gear and TMS9918 bits 1-0 contain bit depth 0 means 1 bit
+ * For the Sega Genesis, Master System and Game Gear bits 1-0 contain bit depth 0 means 1 bit
  * For the Sega Genesis bit 2 sets if shadow highlight is enabled and bit 3 sets if highlight should be displayed instead of shadow
  * For the NES bit 1 contains bit depth 1 if 2 bit 0 if 1 bit
+ * For the TMS9918 bits 1-0 contain the subsystem
  * For palette framebuffer bits 2-0 contain bit depth add 1 to get actual just like the others
  * Bits 6-2 contain screen depth for example if set to 15 (16 remember always +1) that would mean palette is based on rgb565 colors
  * For framebuffer bits 4-0 contain bit depth again remember to add one to get actual bit depth
@@ -50,10 +52,4 @@ enum gameSystemEnum{segaGenesis,NES,masterSystem,gameGear,TMS9918,SNES,frameBuff
 #define NESempShift 2
 #define NESempMask 3 //This mask should be used after bit shifting
 #define NESempShiftAlt 4
-void setBitdepthcurSys(unsigned bd);
-int getBitdepthcurSysraw(void);
-static inline int getBitdepthcurSys(void){
-	return getBitdepthcurSysraw()+1;
-}
-int fixedSpirtePalRow(uint32_t gameSystem);
-bool isPlanarTiles(uint32_t gameSystem);
+int fixedSpirtePalRowSys(enum gameSystemEnum gameSystem);

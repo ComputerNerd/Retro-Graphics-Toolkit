@@ -1,11 +1,14 @@
 Most recent changes are placed at the top
 
+Recently I have been forgetting to maintain this list. I consider this to be
+redundant anyway. Just check the commit messages.
+
 20140925
 Project now stores shadow highlight settings.
 Shadow highlight selection is now done the same as it would be to do NES 2x2 or 1x1 tile selection.
 
 20140924
-Fixed rimerisha dither bug relating to sprites. There were two bugs addressed
+Fixed Rimerisha dither bug relating to sprites. There were two bugs addressed
 First of all the terminal would be spammed with out of range errors.
 For NES the wrong palette would be used.
 
@@ -17,15 +20,15 @@ Improved the way palette generation options are set
 
 20140816
 Shadow highlight settings are now saved in project file
-Fixed a bug where the first instance of sonic float was loaded incorrectly due repeat lables not fully taken into account
+Fixed a bug where the first instance of sonic float was loaded incorrectly due repeat labels not fully taken into account
 
 20140815
-Fixed a bug where priority was unitilized in constructor and not copied in copy construtor
+Fixed a bug where priority was uninitialized in constructor and not copied in copy constructor
 
 20140814
 Added palette generation with offset
 Fix sprite copy constructor thus eliminated crash when uncheck sharing
-Replace kens compression libray with code from Sonic 2 special stage editor bringing better compression ratios
+Replace kens compression library with code from Sonic 2 special stage editor bringing better compression ratios
 
 20140813
 Change tilemap offset loading behavior now subtracts instead of adds. Also added offset for saving
@@ -34,7 +37,7 @@ Change tilemap offset loading behavior now subtracts instead of adds. Also added
 Fixed a minor bug where area near tab space would not be redrawn
 
 20140809
-Added new tile row pick algorith Quantizer's choice
+Added new tile row pick algorithm Quantizer's choice
 
 20140808
 Fixed a bug where sprite palette (NES only) was not used in sprites
@@ -60,7 +63,7 @@ Added importing and exporting sprite mapping
 Added create new tile for tiles set as flipped useful for NES users
 
 Added NES option to skip color zero on all rows except 0 because NES uses
-"universal background color" This differs from the sega genesis where yes
+"universal background color" This differs from the Sega genesis where yes
 there is only one background color however you can still haves colors there.
 
 20140803
@@ -75,7 +78,7 @@ Update dither sprite as image and generate optimal palette for grouping
 
 20140801
 Added sprite grouping support
-Fixed a bug where msb of emepesis bits did not apply
+Fixed a bug where msb of emphasis bits did not apply
 
 20140731
 Fixed attributes save crash NES
@@ -96,8 +99,8 @@ Checks size for import image over tilemap
 Fixed a bug where using dither tilemap as image with a tilemap containing out of range tiles would cause a crash
 Fixed a bug where import image over tilemap would try to write to out of range tiles
 Added support for undoing tilemap edits
-Added custome sized sonic 1 formated chunk loading
-Fixed a bug where when switching tabs incorect tile may be drawn
+Added custom sized sonic 1 formated chunk loading
+Fixed a bug where when switching tabs incorrect tile may be drawn
 Added more support for undoing changes to tiles
 Added undo history window
 Added append chunk button
@@ -111,7 +114,7 @@ Internal changes regarding chunks the user will not notice this
 Internal changes regarding tiles the user will not notice this
 
 20140727
-Fixed bug in plane editor edit mode where check boxes do not reflect interal values
+Fixed bug in plane editor edit mode where check boxes do not reflect internal values
 Released Version 0.611
 Added export to sonic 1 chunks
 Fixed urgent bug wrong compression used for saving tiles
@@ -130,7 +133,7 @@ Fixed import tilemap as image alignment
 
 20140724
 Yliluoma dither methods never tries to dither to colorspace as it takes too long even for one tile
-Improved loading and saving with compression (unifed options)
+Improved loading and saving with compression (unified options)
 Added resizing of Chunks
 
 20140723

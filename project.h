@@ -7,17 +7,17 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #define shareAmtPj 6
 #ifndef _PROJECT_H
 #define _PROJECT_H 1
-#include "global.h"
+#include "includes.h"
 #include "system.h"
 #include "tilemap.h"
 #include "class_tiles.h"
@@ -40,20 +40,41 @@ struct luaControl{
 	const char*name;
 	void*dat;
 };
+struct luaScript{
+	std::string str,name;
+};
 struct Project{/*!<Holds all data needed for a project based system for example tile screen and level 1 are 2 separate projects*/
 	Project();
-	Project(const Project& other);
+	Project(const Project&other);
+	void copyClasses(const Project&other);
 	~Project();
 	bool isShared(uint32_t mask);
 	bool isUniqueData(uint32_t mask);
 	bool containsData(uint32_t mask);
 	bool containsDataOR(uint32_t mask);
+	enum TMS9918SubSys getTMS9918subSys()const{
+		return (enum TMS9918SubSys)(subSystem&3);
+	}
+	void setTMS9918subSys(enum TMS9918SubSys sys){
+		subSystem&=~3;
+		subSystem|=sys;
+	}
+	void setBitdepthSys(unsigned bd);
+	int getBitdepthSysraw(void)const;
+	int getBitdepthSys(void)const{
+		return getBitdepthSysraw()+1;
+	}
+	unsigned szPerExtPalRow(void);
+	unsigned extAttrTilesPerByte(void);
+	bool isFixedPalette(void);
+	bool isPlanarTiles(void);
+	int fixedSpirtePalRow(void);
 	std::string Name;
 	gameSystemEnum gameSystem;
 	uint32_t subSystem;
 	uint32_t settings;
 	uint32_t useMask;/*!<Sharing can be used regardless of use mask*/
-	tilemaps*tms;
+	class tilemaps*tms;
 	tiles*tileC;
 	ChunkClass*Chunk;
 	palette*pal;
@@ -62,25 +83,29 @@ struct Project{/*!<Holds all data needed for a project based system for example 
 	unsigned curPlane;
 	uint32_t lauDatAmt;
 	uint32_t luaControlAmt;
+	uint32_t lScptAmt;
 	struct luaDat*lDat;
 	struct luaControl*lCtrl;
+	struct luaScript*lScpt;
 };
 extern struct Project ** projects;
 extern uint32_t projects_count;//holds how many projects there are this is needed for realloc when adding or removing function
 extern struct Project * currentProject;
 extern Fl_Slider* curPrj;
+void changeTileDim(unsigned w,unsigned h,struct Project*p);
 const char*maskToName(unsigned mask);
 void compactPrjMem(void);
 void initProject(void) __attribute__((constructor(101)));/*!< this needs to be ran before class constructors*/
 void setHaveProject(uint32_t id,uint32_t mask,bool set);
 void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable);
+void prjChangePtr(unsigned id);
 bool appendProject();
 bool removeProject(uint32_t id);
 void switchProject(uint32_t id);
 bool loadProject(uint32_t id);
 bool saveProject(uint32_t id);
 bool saveAllProjects(void);
-bool loadAllProjects(bool Old);
+bool loadAllProjects(void);
 #define pjHavePal 1
 #define pjHaveTiles 2
 #define pjHaveMap 4

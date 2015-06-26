@@ -7,19 +7,21 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
-#include "project.h"
+#include <stdexcept>
 #include "includes.h"
+#include "project.h"
 #include "classpalettebar.h"
 #include "color_convert.h"
 #include "callbacks_palette.h"
-#include <stdexcept>
+#include "class_global.h"
+#include "gui.h"
 static const char*namesGen[]={"Red","Green","Blue"};
 static const char*namesNES[]={"Hue","Value","Emphasis"};
 paletteBar palBar;
@@ -40,7 +42,7 @@ void paletteBar::addTab(unsigned tab,bool all,bool tiny,bool alt){
 		slide[tab][i]->step(1);
 		slide[tab][i]->value(0);
 		slide[tab][i]->align(FL_ALIGN_LEFT);
-		slide[tab][i]->callback(update_palette, (void*)i);
+		slide[tab][i]->callback(update_palette, (void*)(uintptr_t)i);
 		offsety+=tiny?26:32;
 	}
 }
@@ -55,24 +57,29 @@ void paletteBar::setSys(bool upSlide){
 		}
 		for(unsigned j=0;j<tabsWithPalette;++j){
 			for(unsigned i=0;i<3;++i){
-				switch(currentProject->gameSystem){
-					case segaGenesis:
-						slide[j][i]->label(namesGen[i]);
-						slide[j][i]->maximum(7);
-					break;
-					case masterSystem:
-						slide[j][i]->label(namesGen[i]);
-						slide[j][i]->maximum(3);
-					break;
-					case gameGear:
-						slide[j][i]->label(namesGen[i]);
-						slide[j][i]->maximum(15);
-					break;
-					case NES:
-						slide[j][i]->label(namesNES[i]);
-					break;
-					default:
-						show_default_error
+				if(currentProject->isFixedPalette())
+					slide[j][i]->hide();
+				else{
+					slide[j][i]->show();
+					switch(currentProject->gameSystem){
+						case segaGenesis:
+							slide[j][i]->label(namesGen[i]);
+							slide[j][i]->maximum(7);
+						break;
+						case masterSystem:
+							slide[j][i]->label(namesGen[i]);
+							slide[j][i]->maximum(3);
+						break;
+						case gameGear:
+							slide[j][i]->label(namesGen[i]);
+							slide[j][i]->maximum(15);
+						break;
+						case NES:
+							slide[j][i]->label(namesNES[i]);
+						break;
+						default:
+							show_default_error
+					}
 				}
 			}
 			switch(currentProject->gameSystem){
@@ -95,6 +102,9 @@ void paletteBar::setSys(bool upSlide){
 					slide[j][2]->maximum(7);
 					slide[j][2]->resize(slide[j][2]->x()+16,slide[j][2]->y(),slide[j][2]->w()-16,slide[j][2]->h());
 					slide[j][2]->callback(updateEmphesisCB);
+				break;
+				case TMS9918:
+					//Do nothing
 				break;
 				default:
 					show_default_error
@@ -119,6 +129,8 @@ void paletteBar::updateSize(unsigned tab){
 	oy[tab]=(float)((float)window->h()/600.f)*(float)baseOffy[tab];
 }
 void paletteBar::updateSlider(unsigned tab){
+	if(currentProject->isFixedPalette())
+		return;
 	if(currentProject->pal->palType[selBox[tab]+(selRow[tab]*currentProject->pal->perRow)]){
 		for(unsigned i=0;i<3;++i)
 			slide[tab][i]->hide();

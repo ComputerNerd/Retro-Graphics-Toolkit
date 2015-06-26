@@ -155,11 +155,18 @@ void comper::encode_internal(ostream &Dst, unsigned char const *&Buffer,
 
 bool comper::encode(istream &Src, ostream &Dst) {
 	Src.seekg(0, ios::end);
-	streamsize BSize = Src.tellg();
+	streamsize ISize = Src.tellg();
 	Src.seekg(0);
+	// Pad to even size.
+	streamsize BSize = ISize + ((ISize & 1) != 0 ? 1 : 0);
 	char *const Buffer = new char[BSize];
 	unsigned char const *ptr = reinterpret_cast<unsigned char *>(Buffer);
-	Src.read(Buffer, BSize);
+	Src.read(Buffer, ISize);
+	// If we had to increase buffer size, we need to set the last byte in the
+	// buffer manually. We will pad with a 0 byte.
+	if (ISize != BSize) {
+		Buffer[ISize] = 0;
+	}
 
 	encode_internal(Dst, ptr, BSize);
 

@@ -7,12 +7,12 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #include <zlib.h>
 #include <stdio.h>
@@ -26,7 +26,7 @@ bool decompressFromFile(void * ptr,int size,FILE * fi){
 	if(!cDat)
 		return false;
 	fread(cDat,1,cSize,fi);
-	printf("Compresed size %d uncompressed size %d\n",cSize,size);
+	printf("Compressed size %d uncompressed size %d\n",cSize,size);
 	z_stream strm;
 	strm.zalloc = Z_NULL;
 	strm.zfree = Z_NULL;
@@ -41,7 +41,7 @@ bool decompressFromFile(void * ptr,int size,FILE * fi){
 	strm.next_in=(Bytef*)cDat;
 	strm.next_out=(Bytef*)ptr;
 	ret=inflate(&strm,Z_FINISH);
-	bool Retf=(ret==Z_STREAM_END)?true:false;
+	bool Retf=ret==Z_STREAM_END;
 	if(!Retf)
 		printf("ret %d\n",ret);
 	free(cDat);

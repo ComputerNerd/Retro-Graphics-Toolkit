@@ -9,7 +9,7 @@ if project.have(project.tilesMask) then
 					local r,g,bl,al=tile.getPixelRGBA(i,x,y)
 					local L,a,b=rgt.rgbToLab(r/255,g/255,bl/255)
 					r,g,bl=rgt.labToRgb(L*Lm,a*am,b*bm)
-					tile.setPixelRGBA(i,x,y,r*255,g*255,bl*255,al)
+					tile.setPixelRGBA(i,x,y,r*255.,g*255.,bl*255.,al)
 				end
 			end
 		end

@@ -7,19 +7,26 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #include <string>
 #include <FL/Fl_Color_Chooser.H>
 #include <cmath>//Mingw workaround
 #include <FL/Fl_File_Chooser.H>
 #include <libgen.h>
-#include "lua.h"
+#ifdef __MINGW32__
+#include <direct.h>
+#endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <unistd.h>
+#include "runlua.h"
 #include "lualib.h"
 #include "lauxlib.h"
 #include "includes.h"
@@ -30,6 +37,8 @@
 #include "callbacksprites.h"
 #include "dither.h"
 #include "CIE.h"
+#include "class_global.h"
+#include "palette.h"
 static int panic(lua_State *L){
 	fl_alert("PANIC: unprotected error in call to Lua API (%s)\n",lua_tostring(L, -1));
 	throw 0;//Otherwise abort() would be called when not needed
@@ -63,7 +72,7 @@ static int luafl_color_chooser(lua_State*L){
 	r=luaL_optnumber(L,3,0.0);
 	g=luaL_optnumber(L,4,0.0);
 	b=luaL_optnumber(L,5,0.0);
-	int ret=fl_color_chooser(luaL_optstring(L,1,"Select a color"),r,g,b,luaL_optint(L,2,-1));
+	int ret=fl_color_chooser(luaL_optstring(L,1,"Select a color"),r,g,b,luaL_optinteger(L,2,-1));
 	if(ret){
 		lua_pushinteger(L,ret);
 		lua_pushnumber(L,r);
@@ -76,11 +85,11 @@ static int luafl_color_chooser(lua_State*L){
 	}
 }
 static int luafl_dir_chooser(lua_State*L){
-	lua_pushstring(L,fl_dir_chooser(luaL_optstring(L,1,"Choose a directory"),luaL_optstring(L,2,NULL),luaL_optint(L,3,0)));
+	lua_pushstring(L,fl_dir_chooser(luaL_optstring(L,1,"Choose a directory"),luaL_optstring(L,2,NULL),luaL_optinteger(L,3,0)));
 	return 1;
 }
 static int luafl_file_chooser(lua_State*L){
-	lua_pushstring(L,fl_file_chooser(luaL_optstring(L,1,"Choose a file"),luaL_optstring(L,2,NULL),luaL_optstring(L,3,0),luaL_optint(L,4,0)));
+	lua_pushstring(L,fl_file_chooser(luaL_optstring(L,1,"Choose a file"),luaL_optstring(L,2,NULL),luaL_optstring(L,3,0),luaL_optinteger(L,4,0)));
 	return 1;
 }
 static int luafl_input(lua_State*L){
@@ -96,31 +105,31 @@ static int luafl_password(lua_State*L){
 	return 0;
 }
 static int luafl_eventnames(lua_State*L){
-	lua_pushstring(L,fl_eventnames[luaL_checkunsigned(L,1)]);
+	lua_pushstring(L,fl_eventnames[luaL_checkinteger(L,1)]);
 	return 1;
 }
 static int luafl_point(lua_State*L){
-	fl_point(luaL_optint(L,1,0),luaL_optint(L,2,0));
+	fl_point(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0));
 	return 0;
 }
 static int luafl_rect(lua_State*L){
-	int x=luaL_optint(L,1,0),y=luaL_optint(L,2,0),w=luaL_optint(L,3,0),h=luaL_optint(L,4,0);
+	int x=luaL_optinteger(L,1,0),y=luaL_optinteger(L,2,0),w=luaL_optinteger(L,3,0),h=luaL_optinteger(L,4,0);
 	if(lua_type(L,5)==LUA_TNUMBER)
-		fl_rect(x,y,w,h,luaL_optunsigned(L,5,0));
+		fl_rect(x,y,w,h,luaL_optinteger(L,5,0));
 	else
 		fl_rect(x,y,w,h);
 	return 0;
 }
 static int luafl_color(lua_State*L){
 	if(lua_type(L,2)==LUA_TNUMBER&&lua_type(L,3)==LUA_TNUMBER)
-		fl_color(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0),luaL_optunsigned(L,3,0));
+		fl_color(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0));
 	else
-		fl_color(luaL_optunsigned(L,1,0));
+		fl_color((unsigned)luaL_optinteger(L,1,0));
 	return 0;
 }
 static int luafl_arc(lua_State*L){
 	if(lua_type(L,6)==LUA_TNUMBER)
-		fl_arc(luaL_optint(L,1,0),luaL_optint(L,2,0),luaL_optint(L,3,0),luaL_optint(L,4,0),luaL_optnumber(L,5,0),luaL_optnumber(L,6,0));
+		fl_arc(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0),luaL_optnumber(L,5,0),luaL_optnumber(L,6,0));
 	else
 		fl_arc(luaL_optnumber(L,1,0.0),luaL_optnumber(L,2,0.0),luaL_optnumber(L,3,0.0),luaL_optnumber(L,4,0.0),luaL_optnumber(L,5,0.0));
 	return 0;
@@ -172,22 +181,22 @@ static int luafl_end_polygon(lua_State*L){
 static int luafl_draw(lua_State*L){
 	if(lua_type(L,1)==LUA_TNUMBER){
 		int parm[3];
-		parm[0]=luaL_optint(L,1,0);
-		parm[1]=luaL_optint(L,3,0);
-		parm[2]=luaL_optint(L,4,0);
+		parm[0]=luaL_optinteger(L,1,0);
+		parm[1]=luaL_optinteger(L,3,0);
+		parm[2]=luaL_optinteger(L,4,0);
 		const char*str=lua_tostring(L,2);
 		if(lua_type(L,5)==LUA_TNUMBER)//n specified
-			fl_draw(parm[0],str,parm[1],parm[2],luaL_optint(L,5,0));
+			fl_draw(parm[0],str,parm[1],parm[2],luaL_optinteger(L,5,0));
 		else
 			fl_draw(parm[0],str,parm[1],parm[2]);
 			
 	}else{
 		const char*str=lua_tostring(L,1);
 		int parm[2];
-		parm[0]=luaL_optint(L,2,0);
-		parm[1]=luaL_optint(L,3,0);
+		parm[0]=luaL_optinteger(L,2,0);
+		parm[1]=luaL_optinteger(L,3,0);
 		if(lua_type(L,4)==LUA_TNUMBER)//n specified
-			fl_draw(str,parm[0],parm[1],luaL_optint(L,4,0));
+			fl_draw(str,parm[0],parm[1],luaL_optinteger(L,4,0));
 		else
 			fl_draw(str,parm[0],parm[1]);
 	}
@@ -260,26 +269,26 @@ static unsigned inRangeEnt(unsigned ent){
 	return 1;
 }
 static int lua_palette_getRGB(lua_State*L){
-	unsigned ent=luaL_optunsigned(L,1,0);
+	unsigned ent=luaL_optinteger(L,1,0);
 	if(inRangeEnt(ent)){
 		ent*=3;
-		lua_pushunsigned(L,currentProject->pal->rgbPal[ent]);
-		lua_pushunsigned(L,currentProject->pal->rgbPal[ent+1]);
-		lua_pushunsigned(L,currentProject->pal->rgbPal[ent+2]);
+		lua_pushinteger(L,currentProject->pal->rgbPal[ent]);
+		lua_pushinteger(L,currentProject->pal->rgbPal[ent+1]);
+		lua_pushinteger(L,currentProject->pal->rgbPal[ent+2]);
 		return 3;
 	}else
 		return 0;
 }
 static int lua_palette_getRaw(lua_State*L){
-	unsigned ent=luaL_optunsigned(L,1,0);
+	unsigned ent=luaL_optinteger(L,1,0);
 	if(inRangeEnt(ent)){
 		switch(currentProject->pal->esize){
 			case 1:
-				lua_pushunsigned(L,currentProject->pal->palDat[ent]);
+				lua_pushinteger(L,currentProject->pal->palDat[ent]);
 			break;
 			case 2:
 				ent*=2;
-				lua_pushunsigned(L,currentProject->pal->palDat[ent]|(currentProject->pal->palDat[ent+1]<<8));
+				lua_pushinteger(L,currentProject->pal->palDat[ent]|(currentProject->pal->palDat[ent+1]<<8));
 			break;
 			default:
 				show_default_error
@@ -290,9 +299,9 @@ static int lua_palette_getRaw(lua_State*L){
 		return 0;
 }
 static int lua_palette_setRaw(lua_State*L){
-	unsigned ent=luaL_optunsigned(L,1,0);
+	unsigned ent=luaL_optinteger(L,1,0);
 	if(inRangeEnt(ent)){
-		unsigned val=luaL_optunsigned(L,2,0);
+		unsigned val=luaL_optinteger(L,2,0);
 		switch(currentProject->pal->esize){
 			case 1:
 				currentProject->pal->palDat[ent]=val;
@@ -311,9 +320,9 @@ static int lua_palette_setRaw(lua_State*L){
 		return 0;
 }
 static int lua_palette_setRGB(lua_State*L){
-	unsigned ent=luaL_optunsigned(L,1,0);
+	unsigned ent=luaL_optinteger(L,1,0);
 	if(inRangeEnt(ent))
-		currentProject->pal->rgbToEntry(luaL_optunsigned(L,2,0),luaL_optunsigned(L,3,0),luaL_optunsigned(L,4,0),ent);
+		currentProject->pal->rgbToEntry(luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0),ent);
 	return 0;
 }
 static int lua_palette_fixSliders(lua_State*L){
@@ -322,15 +331,15 @@ static int lua_palette_fixSliders(lua_State*L){
 	return 0;
 }
 static int lua_palette_maxInRow(lua_State*L){
-	lua_pushunsigned(L,currentProject->pal->calMaxPerRow(luaL_optunsigned(L,1,0)));
+	lua_pushinteger(L,currentProject->pal->calMaxPerRow(luaL_optinteger(L,1,0)));
 	return 1;
 }
 static int lua_palette_getType(lua_State*L){
-	lua_pushunsigned(L,currentProject->pal->palType[luaL_optunsigned(L,1,0)]);
+	lua_pushinteger(L,currentProject->pal->palType[luaL_optinteger(L,1,0)]);
 	return 1;
 }
 static int lua_palette_sortByHSL(lua_State*L){
-	sortBy(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0));
+	sortBy(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0));
 	return 0;
 }
 static const luaL_Reg lua_paletteAPI[]={
@@ -363,30 +372,30 @@ static unsigned inXYbound(unsigned x,unsigned y){
 	return 1;
 }
 static int lua_tile_getPixelRGBA(lua_State*L){
-	unsigned tile=luaL_optunsigned(L,1,0);
-	unsigned x=luaL_optunsigned(L,2,0);
-	unsigned y=luaL_optunsigned(L,3,0);
+	unsigned tile=luaL_optinteger(L,1,0);
+	unsigned x=luaL_optinteger(L,2,0);
+	unsigned y=luaL_optinteger(L,3,0);
 	if(inRangeTile(tile)){
 		if(inXYbound(x,y)){
 			uint8_t*tptr=((uint8_t*)currentProject->tileC->truetDat.data()+(tile*currentProject->tileC->tcSize));
 			tptr+=(y*currentProject->tileC->sizew+x)*4;
 			for(unsigned i=0;i<4;++i)
-				lua_pushunsigned(L,*tptr++);
+				lua_pushinteger(L,*tptr++);
 			return 4;
 		}
 	}
 	return 0;
 }
 static int lua_tile_setPixelRGBA(lua_State*L){
-	unsigned tile=luaL_optunsigned(L,1,0);
-	unsigned x=luaL_optunsigned(L,2,0);
-	unsigned y=luaL_optunsigned(L,3,0);
+	unsigned tile=luaL_optinteger(L,1,0);
+	unsigned x=luaL_optinteger(L,2,0);
+	unsigned y=luaL_optinteger(L,3,0);
 	if(inRangeTile(tile)){
 		if(inXYbound(x,y)){
 			uint8_t*tptr=((uint8_t*)currentProject->tileC->truetDat.data()+(tile*currentProject->tileC->tcSize));
 			tptr+=(y*currentProject->tileC->sizew+x)*4;
 			for(unsigned i=4;i<8;++i){
-				unsigned tmp=luaL_optunsigned(L,i,0);
+				unsigned tmp=luaL_optinteger(L,i,0);
 				if(tmp>255)
 					tmp=255;
 				*tptr++=tmp;
@@ -396,12 +405,12 @@ static int lua_tile_setPixelRGBA(lua_State*L){
 	return 0;
 }
 static int lua_tile_getTileRGBA(lua_State*L){
-	unsigned tile=luaL_optunsigned(L,1,0);
+	unsigned tile=luaL_optinteger(L,1,0);
 	if(inRangeTile(tile)){
 		uint8_t*tptr=((uint8_t*)currentProject->tileC->truetDat.data()+(tile*currentProject->tileC->tcSize));
 		lua_newtable(L);
 		for(unsigned i=1;i<=currentProject->tileC->tcSize;++i){
-			lua_pushunsigned(L,*tptr++);
+			lua_pushinteger(L,*tptr++);
 			lua_rawseti(L,-2,i);
 		}
 		return 1;
@@ -424,7 +433,7 @@ static void fillucharFromTab(lua_State*L,unsigned index,unsigned len,unsigned sz
 		memset(ptr,0,sz-len);
 }
 static int lua_tile_setTileRGBA(lua_State*L){
-	unsigned tile=luaL_optunsigned(L,1,0);
+	unsigned tile=luaL_optinteger(L,1,0);
 	if(inRangeTile(tile)){
 		uint8_t*tptr=((uint8_t*)currentProject->tileC->truetDat.data()+(tile*currentProject->tileC->tcSize));
 		unsigned len=lua_rawlen(L,2);
@@ -437,9 +446,9 @@ static int lua_tile_setTileRGBA(lua_State*L){
 	return 0;
 }
 static int lua_tile_dither(lua_State*L){
-	unsigned tile=luaL_optunsigned(L,1,0);
-	unsigned row=luaL_optunsigned(L,2,0);
-	bool useAlt=luaL_optunsigned(L,3,0);
+	unsigned tile=luaL_optinteger(L,1,0);
+	unsigned row=luaL_optinteger(L,2,0);
+	bool useAlt=luaL_optinteger(L,3,0);
 	if(inRangeTile(tile))
 		currentProject->tileC->truecolor_to_tile(row,tile,useAlt);
 	return 0;
@@ -447,7 +456,7 @@ static int lua_tile_dither(lua_State*L){
 static void setUnsignedLua(lua_State*L,const char*tab,const char*var,unsigned val){
 	lua_getglobal(L,tab);
 	lua_pushstring(L,var);
-	lua_pushunsigned(L,val);
+	lua_pushinteger(L,val);
 	lua_rawset(L, -3);
 }
 static void syncTileAmt(lua_State*L){
@@ -455,12 +464,12 @@ static void syncTileAmt(lua_State*L){
 	updateTileSelectAmt();
 }
 static int lua_tile_append(lua_State*L){
-	currentProject->tileC->appendTile(luaL_optunsigned(L,1,1));
+	currentProject->tileC->appendTile(luaL_optinteger(L,1,1));
 	syncTileAmt(L);
 	return 0;
 }
 static int lua_tile_resize(lua_State*L){
-	currentProject->tileC->resizeAmt(luaL_optunsigned(L,1,1));
+	currentProject->tileC->resizeAmt(luaL_optinteger(L,1,1));
 	syncTileAmt(L);
 	return 0;
 }
@@ -475,72 +484,72 @@ static const luaL_Reg lua_tileAPI[]={
 	{0,0}
 };
 static int lua_tilemap_dither(lua_State*L){
-	unsigned method=luaL_optunsigned(L,1,1);
+	unsigned method=luaL_optinteger(L,1,1);
 	currentProject->tms->maps[currentProject->curPlane].ditherAsImage(method);
 	return 0;
 }
 static int lua_tilemap_resize(lua_State*L){
-	currentProject->tms->maps[currentProject->curPlane].resize_tile_map(luaL_optunsigned(L,1,1),luaL_optunsigned(L,2,1));
+	currentProject->tms->maps[currentProject->curPlane].resize_tile_map(luaL_optinteger(L,1,1),luaL_optinteger(L,2,1));
 	setUnsignedLua(L,"tilemap","width",currentProject->tms->maps[currentProject->curPlane].mapSizeW);
 	setUnsignedLua(L,"tilemap","height",currentProject->tms->maps[currentProject->curPlane].mapSizeH);
 	setUnsignedLua(L,"tilemap","heightA",currentProject->tms->maps[currentProject->curPlane].mapSizeHA);
 	return 0;
 }
 static int lua_tilemap_getHflip(lua_State*L){
-	lua_pushboolean(L,currentProject->tms->maps[currentProject->curPlane].get_hflip(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0)));
+	lua_pushboolean(L,currentProject->tms->maps[currentProject->curPlane].get_hflip(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0)));
 	return 1;
 }
 static int lua_tilemap_getVflip(lua_State*L){
-	lua_pushboolean(L,currentProject->tms->maps[currentProject->curPlane].get_vflip(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0)));
+	lua_pushboolean(L,currentProject->tms->maps[currentProject->curPlane].get_vflip(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0)));
 	return 1;
 }
 static int lua_tilemap_getPrio(lua_State*L){
-	lua_pushboolean(L,currentProject->tms->maps[currentProject->curPlane].get_prio(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0)));
+	lua_pushboolean(L,currentProject->tms->maps[currentProject->curPlane].get_prio(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0)));
 	return 1;
 }
 static int lua_tilemap_getTile(lua_State*L){
-	lua_pushunsigned(L,currentProject->tms->maps[currentProject->curPlane].get_tile(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0)));
+	lua_pushinteger(L,currentProject->tms->maps[currentProject->curPlane].get_tile(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0)));
 	return 1;
 }
 static int lua_tilemap_getTileRow(lua_State*L){
-	lua_pushinteger(L,currentProject->tms->maps[currentProject->curPlane].get_tileRow(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0),luaL_optunsigned(L,3,0)));
+	lua_pushinteger(L,currentProject->tms->maps[currentProject->curPlane].get_tileRow(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0)));
 	return 1;
 }
 static int lua_tilemap_getRow(lua_State*L){
-	lua_pushunsigned(L,currentProject->tms->maps[currentProject->curPlane].getPalRow(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0)));
+	lua_pushinteger(L,currentProject->tms->maps[currentProject->curPlane].getPalRow(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0)));
 	return 1;
 }
 static int lua_tilemap_setHflip(lua_State*L){
-	currentProject->tms->maps[currentProject->curPlane].set_hflip(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0),luaL_optunsigned(L,3,0));
+	currentProject->tms->maps[currentProject->curPlane].set_hflip(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0));
 	return 0;
 }
 static int lua_tilemap_setVflip(lua_State*L){
-	currentProject->tms->maps[currentProject->curPlane].set_vflip(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0),luaL_optunsigned(L,3,0));
+	currentProject->tms->maps[currentProject->curPlane].set_vflip(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0));
 	return 0;
 }
 static int lua_tilemap_setRow(lua_State*L){
-	currentProject->tms->maps[currentProject->curPlane].set_pal_row(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0),luaL_optunsigned(L,3,0));
+	currentProject->tms->maps[currentProject->curPlane].set_pal_row(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0));
 	return 0;
 }
 static int lua_tilemap_setFull(lua_State*L){
-	currentProject->tms->maps[currentProject->curPlane].set_tile_full(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0),luaL_optunsigned(L,3,0),luaL_optunsigned(L,4,0),luaL_optunsigned(L,5,0),luaL_optunsigned(L,6,0),luaL_optunsigned(L,7,0));
+	currentProject->tms->maps[currentProject->curPlane].set_tile_full(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0),luaL_optinteger(L,5,0),luaL_optinteger(L,6,0),luaL_optinteger(L,7,0));
 	return 0;
 }
 static int lua_tilemap_setTile(lua_State*L){
-	currentProject->tms->maps[currentProject->curPlane].set_tile(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0),luaL_optunsigned(L,3,0));
+	currentProject->tms->maps[currentProject->curPlane].set_tile(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0));
 	return 0;
 }
 static int lua_tilemap_setPrio(lua_State*L){
-	currentProject->tms->maps[currentProject->curPlane].set_prio(luaL_optunsigned(L,1,0),luaL_optunsigned(L,2,0),luaL_optunsigned(L,3,0));
+	currentProject->tms->maps[currentProject->curPlane].set_prio(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0));
 	return 0;
 }
 static int lua_tilemap_allToRow(lua_State*L){
-	currentProject->tms->maps[currentProject->curPlane].allRowSet(luaL_optunsigned(L,1,0));
+	currentProject->tms->maps[currentProject->curPlane].allRowSet(luaL_optinteger(L,1,0));
 	return 0;
 }
 static int lua_tilemap_toImage(lua_State*L){
 	int row=luaL_optinteger(L,1,-1);
-	bool useAlpha=luaL_optunsigned(L,2,0);
+	bool useAlpha=luaL_optinteger(L,2,0);
 	uint32_t w,h;
 	w=currentProject->tms->maps[currentProject->curPlane].mapSizeW*currentProject->tileC->sizew;
 	h=currentProject->tms->maps[currentProject->curPlane].mapSizeHA*currentProject->tileC->sizeh;
@@ -554,7 +563,7 @@ static int lua_tilemap_toImage(lua_State*L){
 	uint8_t*imgptr=image;
 	lua_newtable(L);
 	for(unsigned i=1;i<=w*h*bpp;++i){
-		lua_pushunsigned(L,*imgptr++);
+		lua_pushinteger(L,*imgptr++);
 		lua_rawseti(L,-2,i);
 	}
 	free(image);
@@ -567,9 +576,9 @@ static int lua_tilemap_imageToTiles(lua_State*L){
 		return 0;
 	}
 	int row=luaL_optinteger(L,2,-1);
-	bool useAlpha=luaL_optunsigned(L,3,0);
-	bool copyToTruecol=luaL_optunsigned(L,4,0);
-	bool convert=luaL_optunsigned(L,4,1);
+	bool useAlpha=luaL_optinteger(L,3,0);
+	bool copyToTruecol=luaL_optinteger(L,4,0);
+	bool convert=luaL_optinteger(L,4,1);
 	unsigned bpp=useAlpha+3;
 	uint32_t w,h;
 	w=currentProject->tms->maps[currentProject->curPlane].mapSizeW*currentProject->tileC->sizew;
@@ -602,7 +611,7 @@ static const luaL_Reg lua_tilemapAPI[]={
 	{0,0}
 };
 static int lua_sprite_dither(lua_State*L){
-	unsigned which=luaL_optunsigned(L,1,0);
+	unsigned which=luaL_optinteger(L,1,0);
 	ditherSpriteAsImage(which);
 	return 0;
 }
@@ -616,15 +625,15 @@ static const luaL_Reg lua_spriteAPI[]={
 	{0,0}
 };
 static int lua_project_rgt_have(lua_State*L){
-	lua_pushboolean(L,currentProject->containsData(luaL_optunsigned(L,1,pjHavePal)));
+	lua_pushboolean(L,currentProject->containsData(luaL_optinteger(L,1,pjHavePal)));
 	return 1;
 }
 static int lua_project_rgt_haveOR(lua_State*L){
-	lua_pushboolean(L,currentProject->containsDataOR(luaL_optunsigned(L,1,pjHavePal)));
+	lua_pushboolean(L,currentProject->containsDataOR(luaL_optinteger(L,1,pjHavePal)));
 	return 1;
 }
 static int lua_project_rgt_haveMessage(lua_State*L){
-	unsigned mask=luaL_optunsigned(L,1,pjHavePal);
+	unsigned mask=luaL_optinteger(L,1,pjHavePal);
 	std::string msg="Current project:";
 	for(unsigned x=0;x<=pjMaxMaskBit;++x){
 		if(mask&(1<<x)){
@@ -651,21 +660,21 @@ static int lua_rgt_ditherImage(lua_State*L){
 		fl_alert("ditherImage error: parameter 1 must be a table");
 		return 0;
 	}
-	unsigned w=luaL_optunsigned(L,2,0);
-	unsigned h=luaL_optunsigned(L,3,0);
+	unsigned w=luaL_optinteger(L,2,0);
+	unsigned h=luaL_optinteger(L,3,0);
 	if(!w||!h){
 		fl_alert("Invalid width/height");
 		return 0;
 	}
-	bool useAlpha=luaL_optunsigned(L,4,0);
+	bool useAlpha=luaL_optinteger(L,4,0);
 	unsigned bpp=useAlpha+3;
 	unsigned sz=w*h*bpp;
 	uint8_t*image=(uint8_t*)malloc(sz);
 	fillucharFromTab(L,1,len,sz,image);
-	ditherImage(image,w,h,useAlpha,luaL_optunsigned(L,5,0),luaL_optunsigned(L,6,0),luaL_optunsigned(L,7,0),luaL_optunsigned(L,8,0),luaL_optunsigned(L,9,0),luaL_optunsigned(L,10,0));
+	ditherImage(image,w,h,useAlpha,luaL_optinteger(L,5,0),luaL_optinteger(L,6,0),luaL_optinteger(L,7,0),luaL_optinteger(L,8,0),luaL_optinteger(L,9,0),luaL_optinteger(L,10,0));
 	uint8_t*imgptr=image;
 	for(unsigned i=1;i<=std::min(len,sz);++i){
-		lua_pushunsigned(L,*imgptr++);
+		lua_pushinteger(L,*imgptr++);
 		lua_rawseti(L,1,i);
 	}
 	free(image);
@@ -738,7 +747,7 @@ public:
 			lua_getglobal(L,handleFunc);
 			lua_pushnumber(L,e);
 			runFunc(L,1,1);
-			int ret=luaL_checkint(L,-1);
+			int ret=luaL_checkinteger(L,-1);
 			lua_pop(L,1);
 			return ret;
 		}else
@@ -762,14 +771,14 @@ public:
 		}
 };
 static int lua_Fl_Window_new(lua_State*L){
-	unsigned width=luaL_checkunsigned(L,1);
-	unsigned height=luaL_checkunsigned(L,2);
+	unsigned width=luaL_checkinteger(L,1);
+	unsigned height=luaL_checkinteger(L,2);
 	bool useXY=false;
 	unsigned x,y;
 	const char*title;
 	if(lua_type(L,3)==LUA_TNUMBER&&lua_type(L,4)==LUA_TNUMBER){
-		unsigned x=luaL_checkunsigned(L,3);
-		unsigned y=luaL_checkunsigned(L,4);
+		unsigned x=luaL_checkinteger(L,3);
+		unsigned y=luaL_checkinteger(L,4);
 		useXY=true;
 		title=luaL_optstring(L,5,0);
 	}else
@@ -845,7 +854,7 @@ static int lua_Fl_Window_setHandleFunction(lua_State*L){
 }
 static int lua_Fl_Window_baseHandle(lua_State*L){
 	Fl_Lua_Window*win=getWin(L);
-	lua_pushinteger(L,win->baseHandle(luaL_checkint(L,2)));
+	lua_pushinteger(L,win->baseHandle(luaL_checkinteger(L,2)));
 	return 1;
 }
 static int lua_Fl_Window_baseDraw(lua_State*L){
@@ -872,123 +881,137 @@ static const luaL_Reg lua_Fl_Window[]={
 };
 static void mkKeyunsigned(lua_State*L,const char*str,unsigned val){
 	lua_pushstring(L,str);
-	lua_pushunsigned(L,val);
+	lua_pushinteger(L,val);
 	lua_rawset(L, -3);
 }
-void runLua(Fl_Widget*,void*){
-	std::string scriptname;
-	if(loadsavefile(scriptname,"Select a lua script")){
-		lua_State *L = lua_newstate(l_alloc, NULL);
-  		if(L){
-			lua_atpanic(L, &panic);
-			try{
-				luaL_openlibs(L);
-				//FLTK bindings
-				luaL_newlib(L,lua_flAPI);
-				lua_setglobal(L, "fl");
-
-				luaL_newlib(L,lua_FlAPI);
-				lua_setglobal(L, "Fl");
-
-				lua_createtable(L,0,FL_FULLSCREEN);
-				for(unsigned x=0;x<=FL_FULLSCREEN;++x)
-					mkKeyunsigned(L,fl_eventnames[x]+3,x);
-				lua_setglobal(L, "FL");
-
-				luaL_newmetatable(L,"FLTKmeta.Fl_Window");
-				lua_pushcfunction(L,lua_Fl_Window_gc);
-				lua_setfield(L, -2, "__gc");
-				luaL_newlib(L,lua_Fl_Window);
-				lua_setglobal(L, "Fl_Window");
-
-				//Retro Graphics Toolkit bindings
-				if(currentProject->containsData(pjHavePal)){
-					lua_createtable(L, 0,(sizeof(lua_paletteAPI)/sizeof((lua_paletteAPI)[0]) - 1)+5);
-					luaL_setfuncs(L,lua_paletteAPI,0);
-
-					mkKeyunsigned(L,"cnt",currentProject->pal->colorCnt);
-					mkKeyunsigned(L,"cntAlt",currentProject->pal->colorCntalt);
-					mkKeyunsigned(L,"rowCnt",currentProject->pal->rowCntPal);
-					mkKeyunsigned(L,"rowCntAlt",currentProject->pal->rowCntPalalt);
-					mkKeyunsigned(L,"haveAlt",currentProject->pal->haveAlt);
-
-					lua_setglobal(L, "palette");
-				}
-
-				if(currentProject->containsData(pjHaveTiles)){
-					lua_createtable(L, 0,(sizeof(lua_tileAPI)/sizeof((lua_tileAPI)[0]) - 1)+3);
-					luaL_setfuncs(L,lua_tileAPI,0);
-
-					mkKeyunsigned(L,"amt",currentProject->tileC->amt);
-					mkKeyunsigned(L,"width",currentProject->tileC->sizew);
-					mkKeyunsigned(L,"height",currentProject->tileC->sizeh);
-
-					lua_setglobal(L, "tile");
-				}
-
-				if(currentProject->containsData(pjHaveMap)){
-					lua_createtable(L, 0,(sizeof(lua_tilemapAPI)/sizeof((lua_tilemapAPI)[0]) - 1)+3);
-					luaL_setfuncs(L,lua_tilemapAPI,0);
-
-					mkKeyunsigned(L,"width",currentProject->tms->maps[currentProject->curPlane].mapSizeW);
-					mkKeyunsigned(L,"height",currentProject->tms->maps[currentProject->curPlane].mapSizeH);
-					mkKeyunsigned(L,"heightA",currentProject->tms->maps[currentProject->curPlane].mapSizeHA);
-
-					lua_setglobal(L, "tilemap");
-				}
-
-				if(currentProject->containsData(pjHaveSprites)){
-					lua_createtable(L, 0,(sizeof(lua_spriteAPI)/sizeof((lua_spriteAPI)[0]) - 1)+1);
-					luaL_setfuncs(L,lua_spriteAPI,0);
-
-					mkKeyunsigned(L,"amt",currentProject->spritesC->amt);
-
-					lua_setglobal(L, "sprite");
-				}
-
-
-  				lua_createtable(L, 0,(sizeof(lua_projectAPI)/sizeof((lua_projectAPI)[0]) - 1)+10);
-				luaL_setfuncs(L,lua_projectAPI,0);
-				mkKeyunsigned(L,"palMask",pjHavePal);
-				mkKeyunsigned(L,"tilesMask",pjHaveTiles);
-				mkKeyunsigned(L,"mapMask",pjHaveMap);
-				mkKeyunsigned(L,"chunksMask",pjHaveChunks);
-				mkKeyunsigned(L,"spritesMask",pjHaveSprites);
-				mkKeyunsigned(L,"levelMask",pjHaveLevel);
-				mkKeyunsigned(L,"allMask",pjAllMask);
-				mkKeyunsigned(L,"gameSystem",currentProject->gameSystem);
-				mkKeyunsigned(L,"segaGenesis",segaGenesis);
-				mkKeyunsigned(L,"NES",NES);
-				lua_setglobal(L, "project");
-
-				luaL_newlib(L,lua_rgtAPI);
-				lua_setglobal(L, "rgt");
-
-
-				std::string scriptnamecopy=scriptname.c_str();
-				chdir(dirname((char*)scriptnamecopy.c_str()));
-				int s = luaL_loadfile(L, scriptname.c_str());
-				if(s != LUA_OK && !lua_isnil(L, -1)){
-					const char *msg = lua_tostring(L, -1);
-					if (msg == NULL) msg = "(error object is not a string)";
-					fl_alert(msg);
-					lua_pop(L, 1);
-				}else{
-					// execute Lua program
-					s = lua_pcall(L, 0, LUA_MULTRET, 0);
-					if (s != LUA_OK){
-						const char *msg = (lua_type(L, -1) == LUA_TSTRING) ? lua_tostring(L, -1)
-							: NULL;
-						if (msg == NULL) msg = "(error object is not a string)";
-						fl_alert(msg);
-						lua_pop(L, 1);
-					}
-				}
-			}catch(...){
-				fl_alert("Lua error while running script\nthrow was called");
+void runLua(lua_State*L,const char*fname){
+	try{
+		int s = luaL_loadfile(L, fname);
+		if(s != LUA_OK && !lua_isnil(L, -1)){
+			const char *msg = lua_tostring(L, -1);
+			if (msg == NULL) msg = "(error object is not a string)";
+			fl_alert(msg);
+			lua_pop(L, 1);
+		}else{
+			// execute Lua program
+			s = lua_pcall(L, 0, LUA_MULTRET, 0);
+			if (s != LUA_OK){
+				const char *msg = (lua_type(L, -1) == LUA_TSTRING) ? lua_tostring(L, -1)
+					: NULL;
+				if (msg == NULL) msg = "(error object is not a string)";
+				fl_alert(msg);
+				lua_pop(L, 1);
 			}
-			lua_close(L);
-		}else
-			fl_alert("lua_newstate failed");
+		}
+	}catch(...){
+		fl_alert("Lua error while running script\nthrow was called");
+	}
+}
+lua_State*createLuaState(void){
+	lua_State *L = lua_newstate(l_alloc, NULL);
+	if(L){
+		lua_atpanic(L, &panic);
+		luaL_openlibs(L);
+		//FLTK bindings
+		luaL_newlib(L,lua_flAPI);
+		lua_setglobal(L, "fl");
+
+		luaL_newlib(L,lua_FlAPI);
+		lua_setglobal(L, "Fl");
+
+		lua_createtable(L,0,FL_FULLSCREEN);
+		for(unsigned x=0;x<=FL_FULLSCREEN;++x)
+			mkKeyunsigned(L,fl_eventnames[x]+3,x);
+		lua_setglobal(L, "FL");
+
+		luaL_newmetatable(L,"FLTKmeta.Fl_Window");
+		lua_pushcfunction(L,lua_Fl_Window_gc);
+		lua_setfield(L, -2, "__gc");
+		luaL_newlib(L,lua_Fl_Window);
+		lua_setglobal(L, "Fl_Window");
+
+		//Retro Graphics Toolkit bindings
+		if(currentProject->containsData(pjHavePal)){
+			lua_createtable(L, 0,(sizeof(lua_paletteAPI)/sizeof((lua_paletteAPI)[0]) - 1)+5);
+			luaL_setfuncs(L,lua_paletteAPI,0);
+
+			mkKeyunsigned(L,"cnt",currentProject->pal->colorCnt);
+			mkKeyunsigned(L,"cntAlt",currentProject->pal->colorCntalt);
+			mkKeyunsigned(L,"perRow",currentProject->pal->perRow);
+			mkKeyunsigned(L,"perRowAlt",currentProject->pal->perRowalt);
+			mkKeyunsigned(L,"rowCnt",currentProject->pal->rowCntPal);
+			mkKeyunsigned(L,"rowCntAlt",currentProject->pal->rowCntPalalt);
+			mkKeyunsigned(L,"haveAlt",currentProject->pal->haveAlt);
+			mkKeyunsigned(L,"esize",currentProject->pal->esize);
+
+			lua_setglobal(L, "palette");
+		}
+
+		if(currentProject->containsData(pjHaveTiles)){
+			lua_createtable(L, 0,(sizeof(lua_tileAPI)/sizeof((lua_tileAPI)[0]) - 1)+3);
+			luaL_setfuncs(L,lua_tileAPI,0);
+
+			mkKeyunsigned(L,"amt",currentProject->tileC->amt);
+			mkKeyunsigned(L,"width",currentProject->tileC->sizew);
+			mkKeyunsigned(L,"height",currentProject->tileC->sizeh);
+
+			lua_setglobal(L, "tile");
+		}
+
+		if(currentProject->containsData(pjHaveMap)){
+			lua_createtable(L, 0,(sizeof(lua_tilemapAPI)/sizeof((lua_tilemapAPI)[0]) - 1)+3);
+			luaL_setfuncs(L,lua_tilemapAPI,0);
+
+			mkKeyunsigned(L,"width",currentProject->tms->maps[currentProject->curPlane].mapSizeW);
+			mkKeyunsigned(L,"height",currentProject->tms->maps[currentProject->curPlane].mapSizeH);
+			mkKeyunsigned(L,"heightA",currentProject->tms->maps[currentProject->curPlane].mapSizeHA);
+
+			lua_setglobal(L, "tilemap");
+		}
+
+		if(currentProject->containsData(pjHaveSprites)){
+			lua_createtable(L, 0,(sizeof(lua_spriteAPI)/sizeof((lua_spriteAPI)[0]) - 1)+1);
+			luaL_setfuncs(L,lua_spriteAPI,0);
+
+			mkKeyunsigned(L,"amt",currentProject->spritesC->amt);
+
+			lua_setglobal(L, "sprite");
+		}
+
+
+		lua_createtable(L, 0,(sizeof(lua_projectAPI)/sizeof((lua_projectAPI)[0]) - 1)+10);
+		luaL_setfuncs(L,lua_projectAPI,0);
+		mkKeyunsigned(L,"palMask",pjHavePal);
+		mkKeyunsigned(L,"tilesMask",pjHaveTiles);
+		mkKeyunsigned(L,"mapMask",pjHaveMap);
+		mkKeyunsigned(L,"chunksMask",pjHaveChunks);
+		mkKeyunsigned(L,"spritesMask",pjHaveSprites);
+		mkKeyunsigned(L,"levelMask",pjHaveLevel);
+		mkKeyunsigned(L,"allMask",pjAllMask);
+		mkKeyunsigned(L,"gameSystem",currentProject->gameSystem);
+		mkKeyunsigned(L,"segaGenesis",segaGenesis);
+		mkKeyunsigned(L,"NES",NES);
+		lua_setglobal(L, "project");
+
+		luaL_newlib(L,lua_rgtAPI);
+		lua_setglobal(L, "rgt");
+	}else
+		fl_alert("lua_newstate failed");
+	return L;
+}
+void runLuaCB(Fl_Widget*,void*){
+	char*st;
+	if(st=loadsavefile("Select a Lua script",false)){
+		char*dup=strdup(st);
+#ifdef _WIN32
+		_chdir(dirname(dup));
+#else
+		chdir(dirname(dup));
+#endif
+		lua_State*L=createLuaState();
+		runLua(L,st);
+		lua_close(L);
+		free(st);
+		free(dup);
 	}
 }

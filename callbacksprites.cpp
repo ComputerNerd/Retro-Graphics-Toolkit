@@ -7,12 +7,12 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #include <ctime>
 #include "includes.h"
@@ -23,6 +23,7 @@
 #include "undo.h"
 #include "dither.h"
 #include "classpalettebar.h"
+#include "class_global.h"
 uint32_t curSprite;
 uint32_t curSpritegroup;
 int32_t spriteEndDraw[2];
@@ -54,11 +55,12 @@ void ditherSpriteAsImage(unsigned which){
 	if (!image)
 		show_malloc_error(w*h*4)
 	pushTilesAll(tTypeTile);
-	for (unsigned row=0;row<4;++row){
+	for(unsigned row=0;row<(currentProject->pal->haveAlt?currentProject->pal->rowCntPalalt:currentProject->pal->rowCntPal);++row){
 		currentProject->spritesC->spriteGroupToImage(image,which,row);
 		ditherImage(image,w,h,true,true,false,0,false,0,true);
-		ditherImage(image,w,h,true,false,true,row,false,0,true);
-		currentProject->spritesC->spriteImageToTiles(image,which,row);
+		void*indexPtr=ditherImage(image,w,h,true,false,true,row,false,0,true,true);
+		currentProject->spritesC->spriteImageToTiles((uint8_t*)indexPtr,which,row,true,true);
+		free(indexPtr);
 	}
 	Fl::check();
 	free(image);
@@ -68,12 +70,12 @@ void ditherSpriteAsImageAllCB(Fl_Widget*,void*){
 	Fl_Progress *progress;
 	mkProgress(&winP,&progress);
 	progress->maximum(currentProject->spritesC->amt-1);
-	time_t lasttime=time(NULL);
+	time_t lasttime=time(nullptr);
 	Fl::check();
 	for(unsigned i=0;i<currentProject->spritesC->amt;++i){
 		ditherSpriteAsImage(i);
-		if((time(NULL)-lasttime)>=1){
-			lasttime=time(NULL);
+		if((time(nullptr)-lasttime)>=1){
+			lasttime=time(nullptr);
 			progress->value(i);
 			Fl::check();
 		}
@@ -185,7 +187,7 @@ void spriteVflipCB(Fl_Widget*,void*){
 }
 void SpriteimportCB(Fl_Widget*,void*append){
 	if((uintptr_t)append)
-		currentProject->spritesC->importImg(currentProject->spritesC->amt);//This works because amt counts from one and the function counts from zero
+		currentProject->spritesC->importImg(currentProject->spritesC->amt);//This works due to the fact that amt counts from one and the function counts from zero
 	else
 		currentProject->spritesC->importImg(curSprite);
 }

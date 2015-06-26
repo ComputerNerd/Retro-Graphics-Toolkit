@@ -19,7 +19,6 @@
 #include <math.h>
 
 #include "quant.h"
-#include "global.h"
 //#include "mygtk.h"
 
 #define CScale   1     /* For RGB: all components equal */

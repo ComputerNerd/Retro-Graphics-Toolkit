@@ -7,20 +7,20 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
-#include "global.h"
 #include "class_global.h"
 #include "callback_chunk.h"
 #include "callbacksprites.h"
 #include "classSprite.h"
 #include "undo.h"
 #include "classpalettebar.h"
+#include "gui.h"
 const char*rtVersionStr="Retro Graphics Toolkit v0.8 NOT COMPLETE";
 editor *window = new editor(800,600,rtVersionStr);
 static void rect_alpha_grid(uint8_t rgba[4],unsigned x,unsigned y){
@@ -45,21 +45,17 @@ static void rect_alpha_grid(uint8_t rgba[4],unsigned x,unsigned y){
 		while(c--)
 			*ptr_grid++=255;
 	}
-	if (rgba[3]==0){//no need to mix in picture if alpha is 0
-		//just draw grid and return
-		fl_draw_image(grid,x,y,32,32,3);
-		return;
-	}
-	ptr_grid=grid;
-	double percent=rgba[3]/255.0;
-	for (unsigned c=0;c<32*32;++c){
-		for (unsigned e=0;e<3;++e){
-			uint8_t gridNerd=*ptr_grid;
-			*ptr_grid++=((double)rgba[e]*percent)+((double)gridNerd*(1.0-percent));
+	if(rgba[3]){
+		ptr_grid=grid;
+		double percent=rgba[3]/255.0;
+		for (unsigned c=0;c<32*32;++c){
+			for (unsigned e=0;e<3;++e){
+				double gridNerd=*ptr_grid;
+				*ptr_grid++=((double)rgba[e]*percent)+(gridNerd*(1.0-percent));
+			}
 		}
 	}
 	fl_draw_image(grid,x,y,32,32,3);
-	
 }
 static void uintstr(unsigned x,char*tmp){
 	snprintf(tmp,16,"%u",x);
@@ -104,7 +100,7 @@ void editor::updateSpriteSliders(uint32_t prj){
 		curSpritegroup=projects[prj]->spritesC->amt-1;
 	}
 	if(haveSprite){
-		int fixedRow=fixedSpirtePalRow(currentProject->gameSystem);
+		int fixedRow=currentProject->fixedSpirtePalRow();
 		if(!spritesel->visible()){
 			spritesel->show();
 			spritest->show();
@@ -177,7 +173,6 @@ void editor::updateChunkSize(void){
 void editor::draw_non_gui(void){
 	//When resizing the window things move around so we need to compensate for that
 	int x,y;//we will need to reuse these later
-	unsigned box_size=pal_size->value();
 	unsigned tiles_size=tile_size->value();
 	unsigned placer_tile_size=place_tile_size->value();
 	switch (mode_editor){
@@ -194,21 +189,21 @@ void editor::draw_non_gui(void){
 			tile_edit_truecolor_off_x=(double)((double)w()/800.0)*(double)default_tile_edit_truecolor_off_x;
 			tile_edit_truecolor_off_y=(double)((double)h()/600.0)*(double)default_tile_edit_truecolor_off_y;
 			tile_edit_offset_y=(double)((double)h()/600.0)*(double)default_tile_edit_offset_y;
-			tile_edit_offset_x=(tiles_size*9)+tile_edit_truecolor_off_x;//I multiplied it by 9 instead of 8 to give spacing between the tiles
+			tile_edit_offset_x=(tiles_size*(currentProject->tileC->sizew+1))+tile_edit_truecolor_off_x;//I multiplied it by +1 to allow for some spacing between the tiles
 			//draw palette selection box
 			palBar.drawBoxes(1);
 			if(currentProject->tileC->tDat.size()){
 				currentProject->tileC->draw_truecolor(currentProject->tileC->current_tile,tile_edit_truecolor_off_x,tile_edit_truecolor_off_y,false,false,tiles_size);
-				currentProject->tileC->draw_tile(tile_edit_offset_x,tile_edit_offset_y,currentProject->tileC->current_tile,tiles_size,palBar.selRow[1],false,false);
+				static const uint8_t previewAttr[]={0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,0xF0};
+				currentProject->tileC->draw_tile(tile_edit_offset_x,tile_edit_offset_y,currentProject->tileC->current_tile,tiles_size,palBar.selRow[1],false,false,false,currentProject->szPerExtPalRow()>0?previewAttr:0,0);
 				if (show_grid){
-					//draw the grid
 					if (tiles_size > 4){
-						for (y=0;y<8;y++){
-							for (x=0;x<8;x++)
+						for (y=0;y<currentProject->tileC->sizeh;++y){
+							for (x=0;x<currentProject->tileC->sizew;++x)
 								fl_draw_box(FL_EMBOSSED_FRAME,(x*tiles_size)+tile_edit_offset_x,(y*tiles_size)+tile_edit_offset_y,tiles_size,tiles_size,0);
 						}
-						for (y=0;y<8;y++){
-							for (x=0;x<8;x++)
+						for (y=0;y<currentProject->tileC->sizeh;y++){
+							for (x=0;x<currentProject->tileC->sizew;++x)
 								fl_draw_box(FL_EMBOSSED_FRAME,(x*tiles_size)+tile_edit_truecolor_off_x,(y*tiles_size)+tile_edit_truecolor_off_y,tiles_size,tiles_size,0);
 						}
 					}
@@ -226,15 +221,14 @@ void editor::draw_non_gui(void){
 			map_off_x=(float)((float)w()/800.f)*(float)default_map_off_x;
 			//draw tile map
 			uint32_t max_map_w,max_map_h;//used to calculate the displayable tiles
-			max_map_w=((placer_tile_size*8)+w()-map_off_x)/(placer_tile_size*8);//this will allow one tile to go partly off screen
-			max_map_h=((placer_tile_size*8)+h()-map_off_y)/(placer_tile_size*8);
-			//see if shadow highlight is enabled
+			max_map_w=((placer_tile_size*currentProject->tileC->sizew)+w()-map_off_x)/(placer_tile_size*currentProject->tileC->sizew);//this will allow one tile to go partly off screen
+			max_map_h=((placer_tile_size*currentProject->tileC->sizeh)+h()-map_off_y)/(placer_tile_size*currentProject->tileC->sizeh);
 			currentProject->tms->maps[currentProject->curPlane].drawPart(map_off_x,map_off_y,map_scroll_pos_x,map_scroll_pos_y,std::min(currentProject->tms->maps[currentProject->curPlane].mapSizeW-map_scroll_pos_x,max_map_w),std::min((currentProject->tms->maps[currentProject->curPlane].mapSizeHA)-map_scroll_pos_y,max_map_h),rowSolo?palBar.selRow[2]:-1,placer_tile_size,showTrueColor);
 			if (show_grid_placer){
 				//draw box over tiles
 				for (y=0;y<std::min((currentProject->tms->maps[currentProject->curPlane].mapSizeHA)-map_scroll_pos_y,max_map_h);++y){
 					for (x=0;x<std::min(currentProject->tms->maps[currentProject->curPlane].mapSizeW-map_scroll_pos_x,max_map_w);++x)
-						fl_draw_box(FL_EMBOSSED_FRAME,map_off_x+((x*8)*placer_tile_size),map_off_y+((y*8)*placer_tile_size),placer_tile_size*8,placer_tile_size*8,0);
+						fl_draw_box(FL_EMBOSSED_FRAME,map_off_x+((x*currentProject->tileC->sizew)*placer_tile_size),map_off_y+((y*currentProject->tileC->sizeh)*placer_tile_size),placer_tile_size*currentProject->tileC->sizew,placer_tile_size*currentProject->tileC->sizeh,0);
 				}
 			}
 			if(tileEditModePlace_G){
@@ -242,7 +236,7 @@ void editor::draw_non_gui(void){
 				xo=((selTileE_G[0]-map_scroll_pos_x)*currentProject->tileC->sizew*placer_tile_size)+map_off_x;
 				yo=((selTileE_G[1]-map_scroll_pos_y)*currentProject->tileC->sizeh*placer_tile_size)+map_off_y;
 				if((xo>=map_off_x)&&(yo>=map_off_y))
-					fl_draw_box(FL_EMBOSSED_FRAME,xo,yo,placer_tile_size*8+1,placer_tile_size*8+1,0);
+					fl_draw_box(FL_EMBOSSED_FRAME,xo,yo,placer_tile_size*currentProject->tileC->sizew+1,placer_tile_size*currentProject->tileC->sizeh+1,0);
 			}
 		break;
 		case chunkEditor:
@@ -306,7 +300,7 @@ void editor::draw_non_gui(void){
 						if(looptile>=currentProject->tileC->amt)
 							break;
 					}
-					fl_draw_box(FL_EMBOSSED_FRAME,tileatx,tileaty,(currentProject->spritesC->groups[curSpritegroup].list[curSprite].w*currentProject->spritesC->groups[curSpritegroup].list[curSprite].h*8*2)+1,17,0);
+					fl_draw_box(FL_EMBOSSED_FRAME,tileatx,tileaty,(currentProject->spritesC->groups[curSpritegroup].list[curSprite].w*currentProject->spritesC->groups[curSpritegroup].list[curSprite].h*currentProject->tileC->sizeh*2)+1,17,0);
 				}
 			}
 		break;
@@ -420,12 +414,11 @@ int editor::handle(int event){
 					//first see if we are in a "valid" range
 					tiles_size=tile_size->value();
 					//start by handling true color
-					if ((Fl::event_x() > tile_edit_truecolor_off_x) && (Fl::event_y() > tile_edit_truecolor_off_y) && (Fl::event_x() < tile_edit_truecolor_off_x+(tiles_size*8))  && (Fl::event_y() < tile_edit_truecolor_off_y+(tiles_size*8))){
+					if ((Fl::event_x() > tile_edit_truecolor_off_x) && (Fl::event_y() > tile_edit_truecolor_off_y) && (Fl::event_x() < tile_edit_truecolor_off_x+(tiles_size*currentProject->tileC->sizew))  && (Fl::event_y() < tile_edit_truecolor_off_y+(tiles_size*currentProject->tileC->sizeh))){
 						//if all conditions have been met that means we are able to edit the truecolor tile
 						unsigned temp_two,temp_one;
 						temp_one=(Fl::event_x()-tile_edit_truecolor_off_x)/tiles_size;
 						temp_two=(Fl::event_y()-tile_edit_truecolor_off_y)/tiles_size;
-						//true color tiles are slightly easier to edit
 						pushTilePixel(currentProject->tileC->current_tile,temp_one,temp_two,tTypeTruecolor);
 						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,0,currentProject->tileC->current_tile)]=truecolor_temp[0];//red
 						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one,temp_two,1,currentProject->tileC->current_tile)]=truecolor_temp[1];//green
@@ -435,7 +428,7 @@ int editor::handle(int event){
 						currentProject->tileC->truecolor_to_tile(palBar.selRow[1],currentProject->tileC->current_tile,false);
 						damage(FL_DAMAGE_USER1);
 					}
-					if (Fl::event_x() > tile_edit_offset_x && Fl::event_y() > tile_edit_offset_y && Fl::event_x() < tile_edit_offset_x+(tiles_size*8) && Fl::event_y() < tile_edit_offset_y+(tiles_size*8)){
+					if(Fl::event_x() > tile_edit_offset_x && Fl::event_y() > tile_edit_offset_y && Fl::event_x() < tile_edit_offset_x+(tiles_size*currentProject->tileC->sizew) && Fl::event_y() < tile_edit_offset_y+(tiles_size*currentProject->tileC->sizeh)){
 						unsigned temp_two,temp_one;
 						temp_one=(Fl::event_x()-tile_edit_offset_x)/tiles_size;
 						temp_two=(Fl::event_y()-tile_edit_offset_y)/tiles_size;
@@ -454,10 +447,10 @@ int editor::handle(int event){
 					palBar.checkBox(Fl::event_x(),Fl::event_y(),2);
 					tiles_size=place_tile_size->value();
 					//see if the user placed a tile on the map
-					if ((Fl::event_x() > map_off_x)&&(Fl::event_y()>map_off_y)&&(Fl::event_x() < map_off_x+((tiles_size*8)*(currentProject->tms->maps[currentProject->curPlane].mapSizeW-map_scroll_pos_x)))&&(Fl::event_y() < map_off_y+((tiles_size*8)*((currentProject->tms->maps[currentProject->curPlane].mapSizeHA)-map_scroll_pos_y)))){
+					if ((Fl::event_x() > map_off_x)&&(Fl::event_y()>map_off_y)&&(Fl::event_x() < map_off_x+((tiles_size*currentProject->tileC->sizew)*(currentProject->tms->maps[currentProject->curPlane].mapSizeW-map_scroll_pos_x)))&&(Fl::event_y() < map_off_y+((tiles_size*currentProject->tileC->sizeh)*((currentProject->tms->maps[currentProject->curPlane].mapSizeHA)-map_scroll_pos_y)))){
 						uint32_t temp_two,temp_one;
-						temp_one=((Fl::event_x()-map_off_x)/tiles_size)/8;
-						temp_two=((Fl::event_y()-map_off_y)/tiles_size)/8;
+						temp_one=((Fl::event_x()-map_off_x)/tiles_size)/currentProject->tileC->sizew;
+						temp_two=((Fl::event_y()-map_off_y)/tiles_size)/currentProject->tileC->sizeh;
 						temp_one+=+map_scroll_pos_x;
 						temp_two+=+map_scroll_pos_y;
 						if (Fl::event_button()==FL_LEFT_MOUSE){
@@ -479,7 +472,7 @@ int editor::handle(int event){
 							}
 						}
 					}
-					if (Fl::event_x() > tile_placer_tile_offset_x && Fl::event_y() > tile_placer_tile_offset_y && Fl::event_x() < tile_placer_tile_offset_x+(tiles_size*8) && Fl::event_y() < tile_placer_tile_offset_y+(tiles_size*8)){
+					if(Fl::event_x() > tile_placer_tile_offset_x && Fl::event_y() > tile_placer_tile_offset_y && Fl::event_x() < tile_placer_tile_offset_x+(tiles_size*currentProject->tileC->sizew) && Fl::event_y() < tile_placer_tile_offset_y+(tiles_size*currentProject->tileC->sizeh)){
 						unsigned temp_two,temp_one;
 						temp_one=(Fl::event_x()-tile_placer_tile_offset_x)/tiles_size;
 						temp_two=(Fl::event_y()-tile_placer_tile_offset_y)/tiles_size;

@@ -7,17 +7,22 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #pragma once
+#include "system.h"
+void TODO_error(int line,const char * file,const char * function);
 void malloc_error(int line,const char * file,const char * function,int bytes);
 void realloc_error(int line,const char * file,const char * function,int bytes);
 void default_trigger(int line,const char * file,const char * function);
+void notSupportedBySys(int line,const char * file,const char * function,enum gameSystemEnum gs);
+#define show_TODO_error TODO_error(__LINE__,__FILE__,__FUNCTION__);
 #define show_malloc_error(bytes_error) malloc_error(__LINE__,__FILE__,__FUNCTION__,bytes_error);
 #define show_realloc_error(bytes_error) realloc_error(__LINE__,__FILE__,__FUNCTION__,bytes_error);
 #define show_default_error default_trigger(__LINE__,__FILE__,__FUNCTION__);
+#define showGameSysError(sys) notSupportedBySys(__LINE__,__FILE__,__FUNCTION__,sys);

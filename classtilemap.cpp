@@ -7,13 +7,15 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
+#include "class_global.h"
+#include "macros.h"
 #include "project.h"
 #include "callback_tilemap.h"
 #include "filemisc.h"
@@ -21,20 +23,21 @@
 #include "compressionWrapper.h"
 #include "quant.h"
 #include "dither.h"
-tileMap::tileMap(){
-	amt=1;
-	mapSizeHA=mapSizeW=mapSizeH=2;
-	isBlock=false;
-	tileMapDat=(uint8_t *)calloc(4,TileMapSizePerEntry);
-	offset=0;
-}
-tileMap::tileMap(uint32_t w,uint32_t h){
+#include "palette.h"
+#include "gui.h"
+tileMap::tileMap(Project*prj):tileMap(2,2,prj){}
+tileMap::tileMap(uint32_t w,uint32_t h,Project*prj){
+	this->prj=prj;
 	amt=1;
 	mapSizeW=w;
 	mapSizeHA=mapSizeH=h;
 	isBlock=false;
-	tileMapDat=(uint8_t*)malloc(TileMapSizePerEntry*w*h);
+	tileMapDat=(uint8_t*)calloc(w*h,TileMapSizePerEntry);
 	offset=0;
+	if(prj->szPerExtPalRow())
+		extPalRows=(uint8_t*)calloc(w*h,prj->szPerExtPalRow());
+	else
+		extPalRows=0;
 }
 tileMap::tileMap(const tileMap& other){
 	mapSizeW=other.mapSizeW;
@@ -51,6 +54,11 @@ tileMap::tileMap(const tileMap& other){
 	}
 	tileMapDat=(uint8_t*)malloc(mapSizeW*mapSizeHA*TileMapSizePerEntry);
 	memcpy(tileMapDat,other.tileMapDat,mapSizeW*mapSizeHA*TileMapSizePerEntry);
+	if(other.extPalRows){
+		extPalRows=(uint8_t*)malloc(mapSizeW*mapSizeHA*prj->szPerExtPalRow());
+		memcpy(extPalRows,other.extPalRows,mapSizeW*mapSizeHA*prj->szPerExtPalRow());
+	}else
+		extPalRows=0;
 }
 tileMap& tileMap::operator=(tileMap&& other){
 	mapSizeW=other.mapSizeW;
@@ -60,7 +68,10 @@ tileMap& tileMap::operator=(tileMap&& other){
 	offset=other.offset;
 	amt=other.amt;
 	tileMapDat=other.tileMapDat;
+	extPalRows=other.extPalRows;
+	other.extPalRows=0;
 	other.tileMapDat=0;
+	return *this;
 }
 tileMap& tileMap::operator=(const tileMap& other){
 	mapSizeW=other.mapSizeW;
@@ -70,8 +81,12 @@ tileMap& tileMap::operator=(const tileMap& other){
 	offset=other.offset;
 	amt=other.amt;
 	tileMapDat=other.tileMapDat;
+	extPalRows=other.extPalRows;
+	return *this;
 }
 tileMap::~tileMap(){
+	if(extPalRows)
+		free(extPalRows);
 	free(tileMapDat);
 }
 void tileMap::ditherAsImage(bool entire){
@@ -79,24 +94,26 @@ void tileMap::ditherAsImage(bool entire){
 	uint32_t w,h;
 	w=mapSizeW;
 	h=mapSizeHA;
-	w*=currentProject->tileC->sizew;
-	h*=currentProject->tileC->sizeh;
+	w*=prj->tileC->sizew;
+	h*=prj->tileC->sizeh;
 	image = (uint8_t *)malloc(w*h*4);
 	if(!image)
 		show_malloc_error(w*h*4)
 	if(entire){
 		truecolor_to_image(image,-1);
 		ditherImage(image,w,h,true,true);
-		ditherImage(image,w,h,true,false);
-		truecolorimageToTiles(image,-1);
+		void*indexPtr=ditherImage(image,w,h,true,false,false,0,false,0,false,true);
+		truecolorimageToTiles((uint8_t*)indexPtr,-1,false,false,true,true);
+		free(indexPtr);
 	}else{
-		for(unsigned row=0;row<currentProject->pal->rowCntPal;++row){
+		for(unsigned row=0;row<prj->pal->rowCntPal;++row){
 			printf("Row: %u\n",row);
 			truecolor_to_image(image,row);
 			ditherImage(image,w,h,true,true);
-			ditherImage(image,w,h,true,false);
+			void*indexPtr=ditherImage(image,w,h,true,false,false,0,false,0,false,true);
 			//convert back to tiles
-			truecolorimageToTiles(image,row);
+			truecolorimageToTiles((uint8_t*)indexPtr,row,false,false,true,true);
+			free(indexPtr);
 		}
 	}
 	free(image);
@@ -108,10 +125,10 @@ void tileMap::allRowSet(unsigned row){
 			set_pal_row(x,y,row);
 	}
 }
-static void sumTile(uint8_t*tilePtr,uint32_t*sums){
+static void sumTile(uint8_t*tilePtr,uint32_t*sums,Project*prj){
 	uint32_t sum[3];//In hopes that the compiler is smart enough to keep these in registers
 	memset(sum,0,sizeof(sum));
-	for(unsigned j=0;j<256;++j){
+	for(unsigned j=0;j<prj->tileC->tcSize;++j){
 		if(tilePtr[3]){
 			sum[0]+=tilePtr[0];
 			sum[1]+=tilePtr[1];
@@ -126,21 +143,29 @@ static void sumTile(uint8_t*tilePtr,uint32_t*sums){
 bool tileMap::pickTileRowQuantChoice(unsigned rows){
 	unsigned w=mapSizeW,h=mapSizeHA;
 	unsigned char userpal[3][256];
-	if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
+	if((prj->gameSystem==NES)&&(prj->subSystem&NES2x2)){
 		w/=2;
 		h/=2;
 	}
 	uint8_t*imgin=(uint8_t*)malloc(w*h*3);
+	if(!imgin){
+		show_malloc_error(w*h*3)
+		return false;
+	}
 	uint8_t*imgout=(uint8_t*)malloc(w*h);
+	if(!imgout){
+		show_malloc_error(w*h)
+		return false;
+	}
 	uint32_t sums[3];
 	uint8_t*imgptr=imgin;
-	if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
+	if((prj->gameSystem==NES)&&(prj->subSystem&NES2x2)){
 		for(unsigned y=0;y<mapSizeHA;y+=2){
 			for(unsigned x=0;x<mapSizeW;x+=2){
 				memset(sums,0,sizeof(sums));
-				for(unsigned i=0;i<currentProject->pal->rowCntPal;++i){
+				for(unsigned i=0;i<prj->pal->rowCntPal;++i){
 					uint32_t sumtmp[3];
-					sumTile(currentProject->tileC->truetDat.data()+(get_tile(x+(i&1),y+(i/2))*currentProject->tileC->tcSize),sumtmp);
+					sumTile(prj->tileC->truetDat.data()+(get_tile(x+(i&1),y+(i/2))*prj->tileC->tcSize),sumtmp,prj);
 					sums[0]+=sumtmp[0];
 					sums[1]+=sumtmp[1];
 					sums[2]+=sumtmp[2];
@@ -153,7 +178,7 @@ bool tileMap::pickTileRowQuantChoice(unsigned rows){
 	}else{
 		for(unsigned y=0;y<mapSizeHA;++y){
 			for(unsigned x=0;x<mapSizeW;++x){
-				sumTile(currentProject->tileC->truetDat.data()+(get_tile(x,y)*currentProject->tileC->tcSize),sums);
+				sumTile(prj->tileC->truetDat.data()+(get_tile(x,y)*prj->tileC->tcSize),sums,prj);
 				*imgptr++=sums[0]/64;
 				*imgptr++=sums[1]/64;
 				*imgptr++=sums[2]/64;
@@ -163,7 +188,7 @@ bool tileMap::pickTileRowQuantChoice(unsigned rows){
 	dl3quant(imgin,w,h,rows,userpal,false,0);
 	dl3floste(imgin,imgout,w,h,rows,0,userpal);
 	imgptr=imgout;
-	if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
+	if((prj->gameSystem==NES)&&(prj->subSystem&NES2x2)){
 		for(unsigned y=0;y<mapSizeHA;y+=2){
 			for(unsigned x=0;x<mapSizeW;x+=2){
 				set_pal_row(x,y,(*imgptr)%rows);
@@ -180,8 +205,9 @@ bool tileMap::pickTileRowQuantChoice(unsigned rows){
 	}
 	free(imgin);
 	free(imgout);
+	return true;
 }
-bool tileMap::inRange(uint32_t x,uint32_t y){
+bool tileMap::inRange(uint32_t x,uint32_t y)const{
 	if (mapSizeW < x || mapSizeHA < y){
 		printf("Out of range %u %u\n",x,y);
 		return false;
@@ -193,7 +219,7 @@ void tileMap::setRaw(uint32_t x,uint32_t y,uint32_t val){
 	tptr+=(y*mapSizeW)+x;
 	*tptr=val;
 }
-uint32_t tileMap::getRaw(uint32_t x,uint32_t y){
+uint32_t tileMap::getRaw(uint32_t x,uint32_t y)const{
 	uint32_t*tptr=(uint32_t*)tileMapDat;
 	tptr+=(y*mapSizeW)+x;
 	return*tptr;
@@ -305,27 +331,27 @@ void tileMap::toggleBlocks(bool set){
 	updateTileSelectAmt();
 	ScrollUpdate();
 }
-bool tileMap::get_hflip(uint32_t x,uint32_t y){
+bool tileMap::get_hflip(uint32_t x,uint32_t y)const{
 	if(inRange(x,y))
 		return (tileMapDat[((y*mapSizeW)+x)*4]>>3)&1;
 	else
 		return false;
 }
-bool tileMap::get_vflip(uint32_t x,uint32_t y){
+bool tileMap::get_vflip(uint32_t x,uint32_t y)const{
 	if(inRange(x,y))
 		return (tileMapDat[((y*mapSizeW)+x)*4]>>4)&1;
 	else
 		return false;
 }
-bool tileMap::get_prio(uint32_t x,uint32_t y){
+bool tileMap::get_prio(uint32_t x,uint32_t y)const{
 	if(inRange(x,y))
 		return (tileMapDat[((y*mapSizeW)+x)*4]>>7)&1;
 	else
 		return false;
 }
-unsigned tileMap::getPalRow(uint32_t x,uint32_t y){
+unsigned tileMap::getPalRow(uint32_t x,uint32_t y)const{
 	if(inRange(x,y)){
-		if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
+		if((prj->gameSystem==NES)&&(prj->subSystem&NES2x2)){
 			x&=~1;
 			y&=~1;
 		}
@@ -333,8 +359,31 @@ unsigned tileMap::getPalRow(uint32_t x,uint32_t y){
 	}else
 		return 0;
 }
+const uint8_t*tileMap::getExtPtr(uint32_t x,uint32_t y)const{
+	return extPalRows+((x+(y*mapSizeW))*prj->szPerExtPalRow());
+}
+unsigned tileMap::getPalRowExt(uint32_t x,uint32_t y,bool fg)const{
+	if(extPalRows&&inRange(x,y/8))
+		return getPalRowExt(getExtPtr(x,y/8),y&7,fg);
+	else
+		return 0;
+}
+unsigned tileMap::getPalRowExt(const uint8_t*ptr,uint32_t y,bool fg){
+	if(fg)
+		return ptr[y]>>4;
+	else
+		return ptr[y]&15;
+}
+void tileMap::setPalRowExt(uint32_t x,uint32_t y,unsigned row,bool fg){
+	if(extPalRows&&inRange(x,y/8)){
+		unsigned shift=fg*4;
+		uint8_t*ptr=(uint8_t*)getExtPtr(x,y/8)+(y&7);
+		*ptr&=~(15<<shift);
+		*ptr|=row<<shift;
+	}
+}
 void tileMap::set_pal_row(uint32_t x,uint32_t y,unsigned row){
-	if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
+	if((prj->gameSystem==NES)&&(prj->subSystem&NES2x2)){
 		tileMapDat[((y*mapSizeW)+(x&(~1)))*4]&= ~(3 << 5);
 		tileMapDat[((y*mapSizeW)+(x&(~1)))*4]|=row<<5;
 		tileMapDat[((y*mapSizeW)+(x|1))*4]&= ~(3 << 5);
@@ -352,7 +401,7 @@ void tileMap::set_pal_row(uint32_t x,uint32_t y,unsigned row){
 		tileMapDat[((y*mapSizeW)+x)*4]|=row<<5;
 	}
 }
-uint32_t tileMap::get_tile(uint32_t x,uint32_t y){
+uint32_t tileMap::get_tile(uint32_t x,uint32_t y)const{
 	//first calculate which tile we want
 	if ((mapSizeW <= x) || (mapSizeHA) <= y){
 		printf("Error tile (%d,%d) does not exist on this map\n",x,y);
@@ -366,10 +415,10 @@ uint32_t tileMap::get_tile(uint32_t x,uint32_t y){
 	temp_3=tileMapDat[selected_tile+3];//most significant
 	return (temp_1<<16)+(temp_2<<8)+temp_3;
 }
-int32_t tileMap::get_tileRow(uint32_t x,uint32_t y,unsigned useRow){
+int32_t tileMap::get_tileRow(uint32_t x,uint32_t y,unsigned useRow)const{
 	//first calculate which tile we want
 	uint32_t selected_tile=((y*mapSizeW)+x)*4;
-	if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
+	if((prj->gameSystem==NES)&&(prj->subSystem&NES2x2)){
 		x&=~1;
 		y&=~1;
 	}
@@ -436,7 +485,7 @@ bool tileMap::saveToFile(){
 		else
 			myfile = fopen(the_file.c_str(),"wb");
 		if (likely(myfile||clipboard)){
-			switch (currentProject->gameSystem){
+			switch (prj->gameSystem){
 				case segaGenesis:
 					{uint16_t * TheMap;
 					fileSize=(mapSizeW*mapSizeH*amt)*2;
@@ -483,6 +532,8 @@ bool tileMap::saveToFile(){
 					TheMap-=mapSizeW*mapSizeH*amt;//return to beginning so it can be freeded and the file sized
 					mapptr=TheMap;}
 				break;
+				default:
+					show_default_error
 			}
 			if(compression){
 				void*TheMap=mapptr;
@@ -493,7 +544,7 @@ bool tileMap::saveToFile(){
 				char temp[2048];
 				snprintf(temp,2048,"Width %d Height %d %s",mapSizeW,mapSizeH*amt,typeToText(compression));
 				int bits;
-				if((currentProject->gameSystem==segaGenesis)&&(!compression))
+				if((prj->gameSystem==segaGenesis)&&(!compression))
 					bits=16;
 				else
 					bits=8;
@@ -510,7 +561,7 @@ bool tileMap::saveToFile(){
 		}else
 			return false;
 	}
-	if (currentProject->gameSystem == NES){
+	if (prj->gameSystem == NES){
 		if(clipboard)
 			fl_alert("Copy the data to clipboard and press okay after this tilemap attributes will be copied to clipboard");
 		else
@@ -574,7 +625,7 @@ bool tileMap::loadFromFile(){
 			zero_error_tile_map(w);
 			return true;
 		}
-		if (currentProject->gameSystem == NES && (w & 1)&&(currentProject->subSystem&NES2x2)){
+		if (prj->gameSystem == NES && (w & 1)&&(prj->subSystem&NES2x2)){
 			fl_alert("Error unlike in Sega genesis mode NES mode needs the width and height to be a multiple to 2");
 			return true;
 		}
@@ -591,7 +642,7 @@ bool tileMap::loadFromFile(){
 			zero_error_tile_map(h);
 			return true;
 		}
-		if (currentProject->gameSystem == NES && (h & 1)&&(currentProject->subSystem&NES2x2)){
+		if (prj->gameSystem == NES && (h & 1)&&(prj->subSystem&NES2x2)){
 			fl_alert("Error unlike in Sega genesis mode NES mode needs the width and height the be a multiple to 2");
 			return true;
 		}
@@ -618,7 +669,7 @@ bool tileMap::loadFromFile(){
 		if(compression)
 			output=decodeTypeStr(tilemap_file.c_str(),file_size,compression);
 		uint32_t blocksLoaded=file_size/w/h;
-		switch (currentProject->gameSystem){
+		switch (prj->gameSystem){
 			case segaGenesis:
 				if(blocksLoad)
 					size_temp=blocksLoaded*w*h;
@@ -632,6 +683,8 @@ bool tileMap::loadFromFile(){
 				else
 					size_temp=w*h;
 			break;
+			default:
+				show_default_error
 		}
 		printf("W %d H %d blocks loaded %d\n",w,h,blocksLoaded);
 		window->updateMapWH();
@@ -657,7 +710,7 @@ bool tileMap::loadFromFile(){
 			fclose(fp);
 		}
 		uint32_t x,y;
-		switch (currentProject->gameSystem){
+		switch (prj->gameSystem){
 			case segaGenesis:
 				for (y=0;y<mapSizeH*amt;++y){
 					for (x=0;x<mapSizeW;++x){
@@ -716,6 +769,8 @@ bool tileMap::loadFromFile(){
 					fclose(fp);
 				}
 			break;
+			default:
+				show_default_error
 		}
 		tempMap-=file_size;
 		free(tempMap);
@@ -838,32 +893,46 @@ void tileMap::resize_tile_map(uint32_t new_x,uint32_t new_y){
 		return;
 	}
 	//now create a temp buffer to hold the old data
-	uint32_t x,y;//needed for loop variables to copy data
 	uint8_t * temp=0;
-	temp=(uint8_t *)malloc((new_x*new_y)*4);
+	temp=(uint8_t *)malloc((new_x*new_y)*TileMapSizePerEntry);
 	if (!temp){
-		show_malloc_error((new_x*new_y)*4)
+		show_malloc_error((new_x*new_y)*TileMapSizePerEntry)
 		return;
 	}
+	uint8_t*extTmp;
+	if(extPalRows)
+		extTmp=(uint8_t*)malloc(new_x*new_y*prj->szPerExtPalRow());
 	//now copy old data to temp
-	uint32_t sel_map;
-	for (y=0;y<new_y;y++){
-		for (x=0;x<new_x;x++){
-			sel_map=((y*new_x)+x)*4;
+	unsigned szPer=prj->szPerExtPalRow();
+	for (unsigned y=0;y<new_y;++y){
+		for (unsigned x=0;x<new_x;++x){
+			uint32_t posCal=((y*new_x)+x);
+			uint32_t sel_map=posCal*TileMapSizePerEntry;
+			uint32_t posAttr=posCal*prj->szPerExtPalRow();
 			if (x < mapSizeW && y < mapSizeH){
-				uint32_t sel_map_old=((y*mapSizeW)+x)*4;
-				memcpy(&temp[sel_map],&tileMapDat[sel_map_old],4);
+				uint32_t sel_map_old=((y*mapSizeW)+x)*TileMapSizePerEntry;
+				memcpy(temp+sel_map,tileMapDat+sel_map_old,TileMapSizePerEntry);
+				if(extPalRows){
+					uint32_t AttrOldPos=((y*mapSizeW)+x)*szPer;
+					memcpy(extTmp+sel_map,extPalRows+AttrOldPos,szPer);
+				}
 			}else{
-				memset(&temp[sel_map],0,4);
+				memset(temp+sel_map,0,TileMapSizePerEntry);
+				if(extPalRows)
+					memset(extTmp+posAttr,0,prj->szPerExtPalRow());
 			}
 		}
 	}
-	tileMapDat = (uint8_t *)realloc(tileMapDat,(new_x*new_y)*4);
+	tileMapDat = (uint8_t *)realloc(tileMapDat,(new_x*new_y)*TileMapSizePerEntry);
 	if (!tileMapDat){
-		show_realloc_error((new_x*new_y)*4)
+		show_realloc_error((new_x*new_y)*TileMapSizePerEntry)
 		return;
 	}
-	memcpy(tileMapDat,temp,(new_x*new_y)*4);
+	if(extPalRows){
+		extPalRows=(uint8_t*)realloc(extPalRows,new_x*new_y*szPer);
+		memcpy(extPalRows,extTmp,new_x*new_y*szPer);
+	}
+	memcpy(tileMapDat,temp,(new_x*new_y)*TileMapSizePerEntry);
 	free(temp);
 	mapSizeW=new_x;
 	mapSizeH=new_y;
@@ -887,38 +956,32 @@ bool tileMap::truecolor_to_image(uint8_t * the_image,int useRow,bool useAlpha){
 		return false;
 	}
 	uint32_t w,h;
-	w=mapSizeW*currentProject->tileC->sizew;
-	h=mapSizeHA*currentProject->tileC->sizeh;
+	w=mapSizeW*prj->tileC->sizew;
+	h=mapSizeHA*prj->tileC->sizeh;
 	unsigned x_tile=0,y_tile=0;
 	int_fast32_t truecolor_tile_ptr=0;
-	unsigned pixelSize,pSize2;
-	if (useAlpha){
-		pixelSize=4;
-		pSize2=32;
-	}else{
-		pixelSize=3;
-		pSize2=24;
-	}
-	for (uint64_t a=0;a<(h*w*pixelSize)-w*pixelSize;a+=w*pixelSize*8){//a tiles y
+	unsigned pixelSize=useAlpha?4:3;
+	unsigned pSize2=prj->tileC->sizew*pixelSize;
+	for (uint64_t a=0;a<(h*w*pixelSize)-w*pixelSize;a+=w*pSize2){//a tiles y
 		for (uint_fast32_t b=0;b<w*pixelSize;b+=pSize2){//b tiles x
 			if(useRow>=0)
-				truecolor_tile_ptr=get_tileRow(x_tile,y_tile,useRow)*256;
+				truecolor_tile_ptr=get_tileRow(x_tile,y_tile,useRow)*prj->tileC->tcSize;
 			else
-				truecolor_tile_ptr=get_tile(x_tile,y_tile)*256;
-			if((truecolor_tile_ptr != -256)&&(truecolor_tile_ptr<(currentProject->tileC->amt*256))){
+				truecolor_tile_ptr=get_tile(x_tile,y_tile)*prj->tileC->tcSize;
+			if((truecolor_tile_ptr != -prj->tileC->tcSize)&&(truecolor_tile_ptr<(prj->tileC->amt*prj->tileC->tcSize))){
 				for (uint_fast32_t y=0;y<w*pSize2;y+=w*pixelSize){//pixels y
 					if (useAlpha)
-						memcpy(&the_image[a+b+y],&currentProject->tileC->truetDat[truecolor_tile_ptr],32);
+						memcpy(&the_image[a+b+y],&prj->tileC->truetDat[truecolor_tile_ptr],prj->tileC->sizew*4);
 					else{
 						unsigned xx=0;
-						for (unsigned x=0;x<32;x+=4){//pixels x
-							the_image[a+b+y+xx]=currentProject->tileC->truetDat[truecolor_tile_ptr+x];
-							the_image[a+b+y+xx+1]=currentProject->tileC->truetDat[truecolor_tile_ptr+x+1];
-							the_image[a+b+y+xx+2]=currentProject->tileC->truetDat[truecolor_tile_ptr+x+2];
+						for (unsigned x=0;x<prj->tileC->sizew*4;x+=4){//pixels x
+							the_image[a+b+y+xx]=prj->tileC->truetDat[truecolor_tile_ptr+x];
+							the_image[a+b+y+xx+1]=prj->tileC->truetDat[truecolor_tile_ptr+x+1];
+							the_image[a+b+y+xx+2]=prj->tileC->truetDat[truecolor_tile_ptr+x+2];
 							xx+=3;
 						}
 					}
-					truecolor_tile_ptr+=32;
+					truecolor_tile_ptr+=prj->tileC->sizew*4;
 				}
 			}else{
 				for (uint32_t y=0;y<w*pSize2;y+=w*pixelSize)//pixels y
@@ -931,68 +994,72 @@ bool tileMap::truecolor_to_image(uint8_t * the_image,int useRow,bool useAlpha){
 	}
 	return true;
 }
-void tileMap::truecolorimageToTiles(uint8_t * image,int rowusage,bool useAlpha,bool copyToTruecolor,bool convert){
+void tileMap::truecolorimageToTiles(uint8_t * image,int rowusage,bool useAlpha,bool copyToTruecolor,bool convert,bool isIndexArray){
+	if(isIndexArray&&useAlpha){
+		fl_alert("Invalid parameters");
+		return;
+	}
 	unsigned type_temp=palTypeGen;
 	unsigned tempSet=0;
-	uint8_t truecolor_tile[256];//TODO avoid hard coding tile size
-	uint_fast32_t x_tile=0;
-	uint_fast32_t y_tile=0;
-	uint_fast8_t pSize=useAlpha ? 4:3;
-	uint_fast8_t pTile=useAlpha ? 32:24;
-	uint32_t w=mapSizeW*8;
-	uint32_t h=mapSizeHA*8;
-	uint_fast32_t truecolor_tile_ptr;
-	for (uint_fast32_t a=0;a<(h*w*pSize)-w*pSize;a+=w*pSize*8){//a tiles y
+	uint8_t*truecolor_tile=(uint8_t*)alloca(isIndexArray?(prj->tileC->sizew*prj->tileC->sizeh):prj->tileC->tcSize);
+	uint_fast32_t x_tile=0,y_tile=0;
+	uint_fast32_t pSize=isIndexArray?1:(useAlpha?4:3);
+	uint_fast32_t pTile=prj->tileC->sizew*pSize;
+	uint_fast32_t w=mapSizeW*prj->tileC->sizew;
+	uint_fast32_t h=mapSizeHA*prj->tileC->sizeh;
+	for (uint_fast32_t a=0;a<(h*w*pSize)-w*pSize;a+=w*pTile){//a tiles y
 		for (uint_fast32_t b=0;b<w*pSize;b+=pTile){//b tiles x
 			int32_t current_tile;
 			if(rowusage<0){
 				current_tile=get_tile(x_tile,y_tile);
-				if(current_tile>=currentProject->tileC->amt)
+				if(current_tile>=prj->tileC->amt)
 					goto dont_convert_tile;
 			}else{
 				current_tile=get_tileRow(x_tile,y_tile,rowusage);
-				if(current_tile>=currentProject->tileC->amt)
+				if(current_tile>=prj->tileC->amt)
 					goto dont_convert_tile;
 				if (current_tile == -1)
 					goto dont_convert_tile;
 			}
-			truecolor_tile_ptr=0;
-			for (uint32_t y=0;y<w*pSize*8;y+=w*pSize)//pixels y
-			{
-				if(useAlpha){
-					memcpy(&truecolor_tile[truecolor_tile_ptr],&image[a+b+y],32);
-					truecolor_tile_ptr+=32;
+			{uint8_t*truecolor_tile_ptr=truecolor_tile;
+			for (uint32_t y=0;y<w*pTile;y+=w*pSize){//pixels y
+				if(isIndexArray){
+					memcpy(truecolor_tile_ptr,&image[a+b+y],prj->tileC->sizew);
+					truecolor_tile_ptr+=prj->tileC->sizew;
+				}else if(useAlpha||isIndexArray){
+					memcpy(truecolor_tile_ptr,&image[a+b+y],prj->tileC->sizew*4);
+					truecolor_tile_ptr+=prj->tileC->sizew*4;
 				}else{
-					for(uint8_t xx=0;xx<24;xx+=3){
-						memcpy(&truecolor_tile[truecolor_tile_ptr],&image[a+b+y+xx],3);
+					for(uint8_t xx=0;xx<prj->tileC->sizew*3;xx+=3){
+						memcpy(truecolor_tile_ptr,&image[a+b+y+xx],3);
 						truecolor_tile_ptr+=3;
-						truecolor_tile[truecolor_tile_ptr]=255;
+						*truecolor_tile_ptr=255;
 						++truecolor_tile_ptr;
 					}
 				}
-			}
+			}}
 			//convert back to tile
-			if ((type_temp != 0) && (currentProject->gameSystem == segaGenesis)){
+			if ((type_temp != 0) && (prj->gameSystem == segaGenesis)){
 				tempSet=(get_prio(x_tile,y_tile)^1)*8;
 				set_palette_type_force(tempSet);
 			}
 			if(copyToTruecolor)
-				memcpy(currentProject->tileC->truetDat.data()+(current_tile*currentProject->tileC->tcSize),truecolor_tile,currentProject->tileC->tcSize);
+				memcpy(prj->tileC->truetDat.data()+(current_tile*prj->tileC->tcSize),truecolor_tile,prj->tileC->tcSize);
 			if(convert)
-				currentProject->tileC->truecolor_to_tile_ptr(getPalRow(x_tile,y_tile),current_tile,truecolor_tile,false,false);
+				prj->tileC->truecolor_to_tile_ptr(getPalRow(x_tile,y_tile),current_tile,truecolor_tile,false,false,isIndexArray);
 dont_convert_tile:
-		++x_tile;
+			++x_tile;
 		}
-	x_tile=0;
-	++y_tile;
+		x_tile=0;
+		++y_tile;
 	}
-	if(currentProject->gameSystem==segaGenesis)
+	if(prj->gameSystem==segaGenesis)
 		set_palette_type();
 }
 void tileMap::drawPart(unsigned offx,unsigned offy,unsigned x,unsigned y,unsigned w,unsigned h,int rowSolo,unsigned zoom,bool trueCol){
 	w+=x;
 	h+=y;
-	bool shadowHighlight=currentProject->gameSystem==segaGenesis&&palTypeGen;
+	bool shadowHighlight=prj->gameSystem==segaGenesis&&palTypeGen;
 	for(unsigned j=y;j<h;++j){
 		unsigned ox=offx;
 		for(unsigned i=x;i<w;++i){
@@ -1012,14 +1079,174 @@ void tileMap::drawPart(unsigned offx,unsigned offy,unsigned x,unsigned y,unsigne
 				bool prio=get_prio(i,j);
 				uint32_t tile=get_tile(i,j);
 				if(trueCol)
-					currentProject->tileC->draw_truecolor(tile,ox,offy,hflip,vflip,zoom);
-				else
-					currentProject->tileC->draw_tile(ox,offy,tile,zoom,palRow,hflip,vflip,false);
+					prj->tileC->draw_truecolor(tile,ox,offy,hflip,vflip,zoom);
+				else{
+					prj->tileC->draw_tile(ox,offy,tile,zoom,palRow,hflip,vflip,false,extPalRows?getExtPtr(i,j):0,prj->curPlane);
+				}
 			}
-			ox+=currentProject->tileC->sizew*zoom;
+			ox+=prj->tileC->sizew*zoom;
 		}
-		offy+=currentProject->tileC->sizeh*zoom;
+		offy+=prj->tileC->sizeh*zoom;
 	}
 	if(shadowHighlight)
 		set_palette_type();
+}
+void tileMap::findFirst(int&x,int&y,unsigned tile)const{
+	for(unsigned j=0;j<mapSizeHA;++j){
+		for(unsigned i=0;i<mapSizeW;++i){
+			if(tile==get_tile(i,j)){
+				x=i;
+				y=j;
+				return;
+			}
+		}
+	}
+	x=y=-1;
+}
+static void pickFromHist2(unsigned*hist,unsigned*largest,unsigned cnt){
+	hist[1]+=hist[0];
+	hist[0]=0;
+	memset(largest,0,2*sizeof(unsigned));
+	unsigned cmp=hist[0];
+	for(unsigned x=1;x<cnt;++x){
+		if(hist[x]>cmp){
+			cmp=hist[x];
+			largest[0]=x;
+		}
+	}
+	cmp=hist[0];
+	for(unsigned x=1;x<cnt;++x){
+		if((hist[x]>cmp)&&(x!=largest[0])){
+			cmp=hist[x];
+			largest[1]=x;
+		}
+	}
+	if(largest[0]>largest[1]){
+		unsigned tmp=largest[1];
+		largest[1]=largest[0];
+		largest[0]=tmp;
+	}
+}
+typedef std::pair<uint8_t,uint32_t> tilePair;
+static bool comparatorTile(const tilePair& l,const tilePair& r){
+	return l.first < r.first;
+}
+void tileMap::pickExtAttrs(void){
+	if(!extPalRows){
+		fl_alert("Extended attributes are not supported with this configuration of game system and subsystem");
+		return;
+	}
+	switch(prj->gameSystem){
+		case TMS9918:
+			switch(prj->getTMS9918subSys()){
+				case MODE_1:{
+					tilePair*attrs=new tilePair[prj->tileC->amt];
+					unsigned w=mapSizeW*prj->tileC->sizew;
+					unsigned h=mapSizeHA*prj->tileC->sizeh;
+					uint8_t*imgTmp=(uint8_t*)malloc(w*h*4);
+					truecolor_to_image(imgTmp);
+					uint8_t*indexList=(uint8_t*)ditherImage(imgTmp,w,h,true,true,false,0,false,0,false,true);
+					if(!indexList)
+						return;
+					for(unsigned j=0;j<mapSizeHA;++j){
+						for(unsigned i=0;i<mapSizeW;++i){
+							unsigned hist[16];
+							unsigned tile=get_tile(i,j);
+							attrs[tile].second=tile;
+							if(tile<prj->tileC->amt){
+								memset(hist,0,sizeof(hist));
+								for(unsigned y=0;y<prj->tileC->sizeh;++y){
+									unsigned offset=(j*prj->tileC->sizeh*prj->tileC->sizew*mapSizeW)+(i*prj->tileC->sizew)+(y*mapSizeW*prj->tileC->sizew);
+									uint8_t*iPtr=indexList+offset;
+									uint8_t*tPtr=imgTmp+(offset*4)+3;
+									for(unsigned x=0;x<prj->tileC->sizew;++x){
+										if(*tPtr)
+											++hist[(*iPtr++)&15];
+										else
+											++hist[0];
+										tPtr+=4;
+									}
+								}
+								unsigned cmp=hist[0];
+								bool allEqual=true;
+								for(unsigned x=1;x<16;++x){
+									allEqual&=cmp==hist[x];
+									if(!allEqual)
+										break;
+								}
+								if(allEqual)
+									attrs[tile].first=0x10;
+								else{
+									unsigned largest[2];
+									pickFromHist2(hist,largest,16);
+									attrs[tile].first=(largest[1]<<4)|largest[0];
+								}
+							}
+						}
+					}
+					std::sort(attrs,attrs+prj->tileC->amt,comparatorTile);
+
+					delete[] attrs;
+				}break;
+				case MODE_2:{
+					unsigned w=mapSizeW*prj->tileC->sizew;
+					unsigned h=mapSizeHA*prj->tileC->sizeh;
+					uint8_t*imgTmp=(uint8_t*)malloc(w*h*4);
+					truecolor_to_image(imgTmp);
+					uint8_t*indexList=(uint8_t*)ditherImage(imgTmp,w,h,true,true,false,0,false,0,false,true);
+					if(!indexList)
+						return;
+					for(unsigned j=0;j<mapSizeHA;++j){
+						for(unsigned i=0;i<mapSizeW;++i){
+							for(unsigned y=0;y<prj->tileC->sizeh;++y){
+								unsigned offset=(j*prj->tileC->sizeh*prj->tileC->sizew*mapSizeW)+(i*prj->tileC->sizew)+(y*mapSizeW*prj->tileC->sizew);
+								uint8_t*iPtr=indexList+offset;
+								uint8_t*tPtr=imgTmp+(offset*4)+3;
+								unsigned hist[16];
+								memset(hist,0,sizeof(hist));
+								for(unsigned x=0;x<prj->tileC->sizew;++x){
+									if(*tPtr)
+										++hist[(*iPtr++)&15];
+									else
+										++hist[0];
+									tPtr+=4;
+								}
+								unsigned cmp=hist[0];
+								bool allEqual=true;
+								for(unsigned x=1;x<16;++x){
+									allEqual&=cmp==hist[x];
+									if(!allEqual)
+										break;
+								}
+								if(allEqual){
+									//Find closest color to that one
+									setPalRowExt(i,j*8+y,0,false);
+									setPalRowExt(i,j*8+y,1,true);
+								}else{
+									unsigned largest[2];
+									pickFromHist2(hist,largest,16);
+									setPalRowExt(i,j*8+y,largest[0],false);
+									setPalRowExt(i,j*8+y,largest[1],true);
+								}
+							}
+						}
+					}
+					free(imgTmp);
+					free(indexList);
+				}break;
+				default:
+					show_default_error
+			}
+		break;
+		default:
+			show_default_error
+	}
+}
+size_t tileMap::getExtAttrsSize(void)const{
+	//First see if based on tiles or tilemap
+	unsigned sz=prj->szPerExtPalRow(),szT=prj->extAttrTilesPerByte();
+	if(szT)
+		return (prj->tileC->amt+szT-1)/szT*szT;//Round up
+	else
+		return mapSizeW*mapSizeHA*sz;
 }

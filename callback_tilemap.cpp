@@ -7,14 +7,14 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
-#include "global.h"
+#include "macros.h"
 #include "savepng.h"
 #include "dither.h"
 #include "callback_chunk.h"
@@ -22,6 +22,14 @@
 #include "undo.h"
 #include "image.h"
 #include "classpalettebar.h"
+#include "class_global.h"
+#include "gui.h"
+#include "palette.h"
+void pickExtAttrsCB(Fl_Widget*,void*){
+	pushExtAttrs(currentProject->curPlane);
+	currentProject->tms->maps[currentProject->curPlane].pickExtAttrs();
+	window->damage(FL_DAMAGE_USER1);
+}
 void setTmapOffsetCB(Fl_Widget*o,void*){
 	Fl_Int_Input*i=(Fl_Int_Input*)o;
 	currentProject->tms->maps[currentProject->curPlane].offset=atoi(i->value());

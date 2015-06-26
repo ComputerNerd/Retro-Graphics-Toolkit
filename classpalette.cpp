@@ -7,21 +7,40 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
+#include <stdint.h>
+#include <string.h>
+#include <stdio.h>
+#include "macros.h"
+#include "palette.h"
 #include "project.h"
 #include "classpalette.h"
 #include "system.h"
 #include "color_convert.h"
 #include "nearestColor.h"
-#include <string.h>
-#include <stdio.h>
-#include <stdint.h>
+static const uint8_t TMS9918Palette[]={
+  0,   0,   0,
+  0,   0,   0,
+ 33, 200,  66,
+ 94, 220, 120,
+ 84,  85, 237,
+125, 118, 252,
+212,  82,  77,
+ 66, 235, 245,
+252,  85,  84,
+255, 121, 120,
+212, 193,  84,
+230, 206, 128,
+ 33, 176,  59,
+201,  91, 186,
+204, 204, 204,
+255, 255, 255};
 palette::palette(void){
 	rgbPal=0;
 	setVars(currentProject->gameSystem);
@@ -33,9 +52,9 @@ palette::~palette(void){
 palette::palette(const palette& other){
 	rgbPal=0;
 	setVars(currentProject->gameSystem);
-	memcpy(rgbPal,other.rgbPal,(colorCnt+colorCntalt)*(4+esize));
+	memcpy(rgbPal,other.rgbPal,std::min((colorCnt+colorCntalt)*(4+esize),(other.colorCnt+other.colorCntalt)*(4+other.esize)));
 }
-void palette::setVars(uint32_t gameSystem){
+void palette::setVars(enum gameSystemEnum gameSystem){
 	switch(gameSystem){
 		case segaGenesis:
 			rowCntPal=4;
@@ -65,12 +84,27 @@ void palette::setVars(uint32_t gameSystem){
 			haveAlt=false;
 			esize=gameSystem==gameGear?2:1;
 		break;
+		case TMS9918:
+			rowCntPal=1;
+			colorCnt=16;
+			colorCntalt=0;
+			rowCntPalalt=0;
+			perRow=16;
+			perRowalt=0;
+			haveAlt=false;
+			esize=0;
+		break;
 		default:
-			show_default_error
+			showGameSysError(gameSystem)
 	}
 	rgbPal=(uint8_t*)realloc(rgbPal,(colorCnt+colorCntalt)*(4+esize));//Yes this is correct when rgbPal is NULL realloc will behave the same as malloc
-	palDat=rgbPal+((colorCnt+colorCntalt)*3);
+	if(esize)
+		palDat=rgbPal+((colorCnt+colorCntalt)*3);
+	else
+		palDat=0;
 	palType=rgbPal+((colorCnt+colorCntalt)*(3+esize));
+	if(gameSystem==TMS9918)
+		memcpy(rgbPal,TMS9918Palette,sizeof(TMS9918Palette));
 }
 void palette::read(FILE*fp,bool supportsAlt){
 	if(supportsAlt){
@@ -80,7 +114,8 @@ void palette::read(FILE*fp,bool supportsAlt){
 		fread(palDat,colorCnt,esize,fp);
 		fread(palType,colorCnt,1,fp);
 		if(haveAlt){
-			memset(palDat+(colorCnt*esize),0,colorCntalt*esize);
+			if(palDat)
+				memset(palDat+(colorCnt*esize),0,colorCntalt*esize);
 			memset(palType+colorCnt,0,colorCntalt);
 		}
 	}
@@ -116,6 +151,9 @@ void palette::updateRGBindex(unsigned index){
 			rgbPal[index*3+1]=palTabGameGear[(*ptr>>4)&15];
 			rgbPal[index*3+2]=palTabGameGear[(*ptr>>8)&15];}
 		break;
+		case TMS9918:
+			//Do nothing
+		break;
 		default:
 			show_default_error
 	}
@@ -150,6 +188,9 @@ void palette::rgbToEntry(unsigned r,unsigned g,unsigned b,unsigned ent){
 			*palPtr=nearestOneChannel(r,palTabGameGear,16);
 			*palPtr|=nearestOneChannel(g,palTabGameGear,16)<<4;
 			*palPtr|=nearestOneChannel(b,palTabGameGear,16)<<8;}
+		break;
+		case TMS9918:
+			//Do nothing
 		break;
 		default:
 			show_default_error

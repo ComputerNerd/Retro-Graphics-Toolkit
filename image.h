@@ -7,13 +7,13 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #pragma once
-bool getMaskColorImg(Fl_Shared_Image*loaded_image,bool grayscale,unsigned*remap,uint8_t*palMap,uint8_t*mask,bool&alphaSel);//mask must pointer to an array or byte with atleast 1 byte for 1 bpp images or 3 bytes for 3 bpp and 4 bpp images returns true if ok false if cancle
+bool getMaskColorImg(Fl_Shared_Image*loaded_image,bool grayscale,unsigned*remap,uint8_t*palMap,uint8_t*mask,bool&alphaSel);//mask must pointer to an array or byte with atleast 1 byte for 1 bpp images or 3 bytes for 3 bpp and 4 bpp images returns true if ok false if cancel
 bool handle1byteImg(Fl_Shared_Image*loaded_image,unsigned*remap);//Returns true if grayscale false if gif

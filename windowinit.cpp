@@ -7,14 +7,13 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
-#include "global.h"
 #include "callbacks_palette.h"
 #include "callback_tiles.h"
 #include "tiles_io.h"
@@ -28,6 +27,9 @@
 #include "runlua.h"
 #include "classpalettebar.h"
 #include "callbacktilemaps.h"
+#include "gui.h"
+#include "project.h"
+#include "class_global.h"
 void set_mode_tabs(Fl_Widget* o, void*){
 	Fl_Group * val=(Fl_Group*)(Fl_Tabs*)window->the_tabs->value();
 	if(val==window->TabsMain[pal_edit]){
@@ -81,7 +83,6 @@ static const Fl_Menu_Item menuEditor[]={
 			{"Load project",FL_CTRL+FL_SHIFT+'o',loadProjectCB,0},
 			{"Save project",FL_CTRL+FL_SHIFT+'s',saveProjectCB,0},
 			{"Load project group",FL_CTRL+'o',loadAllProjectsCB,0},
-			{"Load project group (File creatd before 2014-02-23)",0,loadAllProjectsCB,(void*)1},
 			{"Save project group",FL_CTRL+'s',saveAllProjectsCB,0},
 			{0},
 		{"Chunks",0, 0, 0, FL_SUBMENU},
@@ -115,7 +116,7 @@ static const Fl_Menu_Item menuEditor[]={
 				{0},
 			{0},
 		{"Scripts",0,0,0,FL_SUBMENU},
-			{"Run Lua script",FL_CTRL+'r',runLua,0},	
+			{"Run Lua script",FL_CTRL+'r',runLuaCB,0},
 			{0},
 		{0},
 	{"Palette actions",0, 0, 0, FL_SUBMENU},
@@ -144,6 +145,7 @@ static const Fl_Menu_Item menuEditor[]={
 		{"Dither tilemap as image",0,dither_tilemap_as_imageCB,0},
 		{"File tile map with selection including attributes",0,fill_tile_map_with_tile,(void *)0},
 		{"Fix out of range tiles (replace with current attributes in plane editor)",0,FixOutOfRangeCB,0},
+		{"Pick extended attributes",0,pickExtAttrsCB,0},
 		{0},
 	{"Sprite actions",0, 0, 0, FL_SUBMENU},
 		{"Generate optimal palette for selected sprite",0,generate_optimal_palette,(void*)1},
@@ -187,6 +189,7 @@ static const Fl_Menu_Item gameSysMenuSel[]={
 	{"Nintendo Entertainment System/Famicon",0,set_game_system,(void*)NES},
 	{"Master System",0,set_game_system,(void*)masterSystem},
 	{"Game Gear",0,set_game_system,(void*)gameGear},
+	{"TMS9918",0,set_game_system,(void*)TMS9918},
 	{0}
 };
 extern Fl_Menu_Item subSysGenesis[];

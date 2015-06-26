@@ -7,12 +7,12 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #pragma once
 #include <stdint.h>
@@ -24,8 +24,7 @@ struct __attribute__ ((__packed__)) levDat{
 struct __attribute__ ((__packed__)) levobjDat{//For sprite layout
 	uint32_t x,y,id,dat;
 };
-class level{
-public:
+struct level{
 	uint32_t layeramt;
 	std::vector<uint32_t> w;//Allow different sized layers
 	std::vector<uint32_t> h;

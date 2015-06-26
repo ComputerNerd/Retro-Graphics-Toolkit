@@ -7,12 +7,12 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #include <stdio.h>
 #include <stdint.h>
@@ -22,14 +22,14 @@
 int clipboardAsk(void){
 	return fl_choice("File or clipboard?","File","Clipboard","Cancel");
 }
-fileType_t askSaveType(void){
-	return (fileType_t)MenuPopup("How would you like the file saved?","Set if the file is saved as binary C header bex or asm",4,"Binary","C header","Asm","BEX");
+fileType_t askSaveType(bool save){
+	return (fileType_t)MenuPopup(save?"How would you like the file saved?":"What type of file is this?","Set if the file is saved as binary, C header, bex, or asm",4,"Binary","C header","ASM","BEX");
 }
 bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,fileType_t type,const char*comment,const char*label,int bits){
 	/*!
-	This function saves binary data as plain text useful for c headers each byte is seperated by a comma
+	This function saves binary data as plain text useful for c headers each byte is separated by a comma
 	To use the clipboard specify file as NULL
-	Returns True on sucess false on error
+	Returns True on success false on error
 	Type can be:
 	1 - c header
 	2 - asm
@@ -45,7 +45,7 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,fileType_t type,const cha
 	char tmp[16];
 	if(mask){
 		if(sizeBin&mask){
-			fl_alert("Error filetype unaligned to %d bits",bits);
+			fl_alert("Error file type unaligned to %d bits",bits);
 			return false;
 		}
 		sizeBin/=mask+1;
@@ -63,13 +63,13 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,fileType_t type,const cha
 	}
 	if(comment){
 		switch(type){
-			case 1:
+			case tCheader:
 				temp.assign("// ");
 			break;
-			case 2:
+			case tASM:
 				temp.assign("; ");
 			break;
-			case 3:
+			case tBEX:
 				temp.assign("' ");
 			break;
 		}
@@ -85,8 +85,8 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,fileType_t type,const cha
 			temp.append(label);
 			temp.append("[]={");
 		break;
-		case tAsm:
-		case tBex:
+		case tASM:
+		case tBEX:
 			temp.append(label);
 			temp.push_back(':');
 		break;

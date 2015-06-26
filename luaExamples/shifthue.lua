@@ -37,12 +37,12 @@ function hsl_to_rgb(h, s, L)
 end
 
 if project.have(project.palMask) then
-	shift=tonumber(fl.input("Shift hue by","0"))
+	shift=tonumber(fl.input("Shift hue by","0"))+0.
 	if shift~=nil then
 		for ent=0,palette.cnt+palette.cntAlt-1,1 do
 			local r,g,b=palette.getRGB(ent)
 			local h,s,l=rgt.rgbToHsl(r/255,g/255,b/255)
-			h=h*360
+			h=h*360.
 			r,g,b=hsl_to_rgb((h+shift)%360,s,l)
 			palette.setRGB(ent,r*255,g*255,b*255)
 		end

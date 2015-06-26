@@ -7,27 +7,43 @@
 
    Retro Graphics Toolkit is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit.  If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2014)
+   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
+#include "includes.h"
 #include "project.h"
-#include <FL/Fl.H>
-#include <FL/Fl_Hor_Value_Slider.H>
 #include "color_convert.h"
 #include "zlibwrapper.h"
 #include "classpalettebar.h"
 #include "callbacktilemaps.h"
+#include "palette.h"
+#include "class_global.h"
+#include "gui.h"
+#include "callback_gui.h"
 struct Project ** projects;
-uint32_t projects_count;//holds how many projects there are this is needed for realloc when adding or removing function
+uint32_t projects_count;
 struct Project * currentProject;
 Fl_Slider* curPrj;
 static const char * defaultName="Add a description here.";
 uint32_t curProjectID;
 static const char*const maskNames[]={"palette","tiles","tilemap","chunks","sprites","level","{Undefined}"};
+void changeTileDim(unsigned w,unsigned h,struct Project*p){
+	if(p->containsData(pjHaveTiles)){
+		unsigned sw=p->tileC->sizew,sh=p->tileC->sizeh;
+		p->tileC->changeDim(w,h,p->getBitdepthSys());
+		if(sw>w&&sh>h&&p->containsData(pjHaveMap)){
+			for(size_t i=0;i<p->tms->maps.size();++i){
+				tileMap*tm=new tileMap(p->tms->maps[i]);
+				p->tms->maps[i].resize_tile_map(p->tms->maps[i].mapSizeW*sw/w,p->tms->maps[i].mapSizeH*sh/h);
+				delete tm;
+			}
+		}
+	}
+}
 const char*maskToName(unsigned mask){
 	unsigned off=__builtin_ctz(mask);
 	if(off>=6)
@@ -117,13 +133,7 @@ void compactPrjMem(void){
 Project::Project(){
 
 }
-Project::Project(const Project& other){
-	gameSystem=other.gameSystem;
-	subSystem=other.subSystem;
-	settings=other.settings;
-	curPlane=other.curPlane;
-	useMask=other.useMask;
-	memcpy(share,other.share,sizeof(share));
+void Project::copyClasses(const Project&other){
 	if(isUniqueData(pjHavePal))
 		pal=new palette(*other.pal);
 	else if(isShared(pjHavePal))
@@ -155,13 +165,21 @@ Project::Project(const Project& other){
 	else
 		spritesC=0;
 }
+Project::Project(const Project&other){
+	gameSystem=other.gameSystem;
+	subSystem=other.subSystem;
+	settings=other.settings;
+	curPlane=other.curPlane;
+	useMask=other.useMask;
+	memcpy(share,other.share,sizeof(share));
+}
 static void initNewProject(unsigned at){
 	projects[at]->gameSystem=segaGenesis;
 	projects[at]->subSystem=3;
 	projects[at]->settings=(15<<subsettingsDitherShift)|(aWeighted<<nearestColorShift);
-	projects[at]->tileC=new tiles;
+	projects[at]->tileC=new tiles(projects[at]);
 	projects[at]->curPlane=0;
-	projects[at]->tms=new tilemaps;
+	projects[at]->tms=new tilemaps(projects[at]);
 	projects[at]->Chunk=new ChunkClass;
 	projects[at]->spritesC=new sprites;
 	projects[at]->Name.assign(defaultName);
@@ -171,7 +189,7 @@ static void initNewProject(unsigned at){
 }
 void initProject(void){
 	projects = (struct Project **) malloc(sizeof(void *));
-	projects[0]= new struct Project;
+	projects[0]= new Project;
 	currentProject=projects[0];
 	projects_count=1;
 	initNewProject(0);
@@ -199,7 +217,7 @@ void setHaveProject(uint32_t id,uint32_t mask,bool set){
 	if((mask&pjHaveTiles)&&(projects[id]->share[1]<0)){
 		if(set){
 			if(!(projects[id]->useMask&pjHaveTiles)){
-				projects[id]->tileC = new tiles;
+				projects[id]->tileC = new tiles(projects[id]);
 				projects[id]->useMask|=pjHaveTiles;
 			}
 		}else{
@@ -212,7 +230,7 @@ void setHaveProject(uint32_t id,uint32_t mask,bool set){
 	if((mask&pjHaveMap)&&(projects[id]->share[2]<0)){
 		if(set){
 			if(!(projects[id]->useMask&pjHaveMap)){
-				projects[id]->tms = new tilemaps;
+				projects[id]->tms = new tilemaps(projects[id]);
 				projects[id]->useMask|=pjHaveMap;
 			}
 		}else{
@@ -318,18 +336,35 @@ void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable){
 		}
 	}
 }
-bool appendProject(void){
-	projects = (struct Project **) realloc(projects,(projects_count+1)*sizeof(void *));
-	if (!projects){
-		show_realloc_error((projects_count+1)*sizeof(void *))
-		return false;
+void prjChangePtr(unsigned id){
+	if(projects[id]->isUniqueData(pjHaveTiles))
+		projects[id]->tileC->prj=projects[id];
+	if(projects[id]->isUniqueData(pjHaveMap))
+		projects[id]->tms->changePrjPtr(projects[id]);
+}
+static int reallocProject(size_t amt){
+	projects=(struct Project**)realloc(projects,amt*sizeof(void*));
+	if(!projects){
+		show_realloc_error(amt*sizeof(void *))
+		return 1;
 	}
-	projects[projects_count]= new struct Project;
-	initNewProject(projects_count++);
+	for(size_t i=0;i<amt;++i){
+		prjChangePtr(i);
+	}
 	currentProject=projects[curProjectID];//Realloc could have changed address so update currentProject to reflect the potentially new address
+	return 0;
+}
+static void changeProjectAmt(void){
 	window->projectSelect->maximum(projects_count-1);
 	for(int x=0;x<shareAmtPj;++x)
 		window->shareWith[x]->maximum(projects_count-1);
+}
+bool appendProject(void){
+	if(reallocProject(projects_count+1))
+		return false;
+	projects[projects_count]= new struct Project;
+	initNewProject(projects_count++);
+	changeProjectAmt();
 	return true;
 }
 Project::~Project(){
@@ -353,11 +388,9 @@ bool removeProject(uint32_t id){
 	delete projects[id];
 	if((id+1)!=projects_count)//Are we not removing the project last on the list?
 		memmove(projects+id,projects+id+1,sizeof(void*)*(projects_count-id-1));
-	projects_count--;
-	projects = (struct Project **) realloc(projects,projects_count*sizeof(void *));
-	window->projectSelect->maximum(projects_count-1);
-	for(int x=0;x<shareAmtPj;++x)
-		window->shareWith[x]->maximum(projects_count-1);
+	if(reallocProject(--projects_count))
+		return false;
+	changeProjectAmt();
 	return true;
 }
 static void invaildProject(void){
@@ -365,6 +398,7 @@ static void invaildProject(void){
 }
 extern Fl_Menu_Item subSysNES[];
 extern Fl_Menu_Item subSysGenesis[];
+extern Fl_Menu_Item subSysTMS9918[];
 void switchProject(uint32_t id){
 	window->TxtBufProject->text(projects[id]->Name.c_str());//Make editor displays new text
 	window->gameSysSel->value(projects[id]->gameSystem);
@@ -405,6 +439,15 @@ void switchProject(uint32_t id){
 				palBar.setSys();
 				projects[id]->pal->paletteToRgb();
 			}
+		break;
+		case TMS9918:
+			setGameSysTMS9918(projects[id]);
+			window->subSysC->copy(subSysTMS9918);
+			window->subSysC->value(projects[id]->getTMS9918subSys());
+			if(projects[id]->containsData(pjHavePal))
+				palBar.setSys();
+			if(projects[id]->containsData(pjHaveTiles))
+				projects[id]->tileC->tileSize=8;
 		break;
 		default:
 			show_default_error
@@ -475,7 +518,7 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 		projects[id]->Name.clear();
 		do{
 			projects[id]->Name.push_back(d);
-		}while(d=fgetc(fi));
+		}while((d=fgetc(fi)));
 	}else
 		projects[id]->Name.assign(defaultName);
 	if(loadVersion)
@@ -492,7 +535,7 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 		projects[id]->useMask=pjHavePal|pjHaveTiles|pjHaveMap;
 	uint32_t gameTemp;
 	fread(&gameTemp,1,sizeof(uint32_t),fi);
-	currentProject->gameSystem=(gameSystemEnum)gameTemp;
+	projects[id]->gameSystem=(gameSystemEnum)gameTemp;
 	if(version>=4){
 		fread(&projects[id]->subSystem,1,sizeof(uint32_t),fi);
 		if((version<6)&&(projects[id]->gameSystem==segaGenesis))
@@ -514,7 +557,10 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 		}
 	}
 	if(projects[id]->useMask&pjHaveTiles){
-		projects[id]->tileC->setDim(8,8,getBitdepthcurSys());
+		if(projects[id]->gameSystem==TMS9918)
+			setGameSysTMS9918(projects[id]);
+		else
+			projects[id]->tileC->changeDim(8,8,projects[id]->getBitdepthSys());
 		if(projects[id]->share[1]<0){
 			fread(&projects[id]->tileC->amt,1,sizeof(uint32_t),fi);
 			if(version<6)
@@ -522,7 +568,7 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 			projects[id]->tileC->resizeAmt();
 			decompressFromFile(projects[id]->tileC->tDat.data(),projects[id]->tileC->tileSize*(projects[id]->tileC->amt),fi);
 			decompressFromFile(projects[id]->tileC->truetDat.data(),projects[id]->tileC->tcSize*(projects[id]->tileC->amt),fi);
-			if(version<=7&&(!isPlanarTiles(projects[id]->gameSystem)))
+			if(version<=7&&(!projects[id]->isPlanarTiles()))
 				projects[id]->tileC->toPlanar();
 		}
 	}
@@ -530,7 +576,7 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 		if(projects[id]->share[2]<0){
 			uint32_t readCnt;
 			if(version>=8)
-				fread(&readCnt,1,4,fi);
+				fread(&readCnt,1,sizeof(uint32_t),fi);
 			else
 				readCnt=1;
 			projects[id]->curPlane=0;
@@ -542,7 +588,7 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 						projects[id]->tms->planeName[i].clear();
 						do{
 							projects[id]->tms->planeName[i].push_back(firstC);
-						}while(firstC=fgetc(fi));
+						}while((firstC=fgetc(fi)));
 					}else
 						projects[id]->tms->assignNum(i);
 				}else
@@ -566,6 +612,14 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 					projects[id]->tms->maps[i].offset=0;
 				projects[id]->tms->maps[i].tileMapDat=(uint8_t*)realloc(projects[id]->tms->maps[i].tileMapDat,4*projects[id]->tms->maps[i].mapSizeW*projects[id]->tms->maps[i].mapSizeHA);
 				decompressFromFile(projects[id]->tms->maps[i].tileMapDat,4*projects[id]->tms->maps[i].mapSizeW*projects[id]->tms->maps[i].mapSizeHA,fi);
+				if(version>=8&&projects[id]->szPerExtPalRow()){
+					size_t sz=projects[id]->tms->maps[i].mapSizeW*projects[id]->tms->maps[i].mapSizeHA*projects[id]->szPerExtPalRow();
+					projects[id]->tms->maps[i].extPalRows=(uint8_t*)realloc(projects[id]->tms->maps[i].extPalRows,sz);
+					decompressFromFile(projects[id]->tms->maps[i].extPalRows,sz,fi);
+				}else{
+					free(projects[id]->tms->maps[i].extPalRows);
+					projects[id]->tms->maps[i].extPalRows=0;
+				}
 			}
 		}
 	}
@@ -683,7 +737,7 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 	}else
 		haveTemp=projects[id]->useMask;
 	fwrite(&haveTemp,sizeof(uint32_t),1,fo);
-	uint32_t gameTemp=(uint32_t)currentProject->gameSystem;
+	uint32_t gameTemp=(uint32_t)projects[id]->gameSystem;
 	fwrite(&gameTemp,1,sizeof(uint32_t),fo);
 	fwrite(&projects[id]->subSystem,sizeof(uint32_t),1,fo);
 	fwrite(&projects[id]->settings,sizeof(uint32_t),1,fo);
@@ -721,6 +775,8 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 					fwrite(&projects[id]->tms->maps[i].amt,1,sizeof(uint32_t),fo);
 				fwrite(&projects[id]->tms->maps[i].offset,1,sizeof(int32_t),fo);
 				compressToFile(projects[id]->tms->maps[i].tileMapDat,4*projects[id]->tms->maps[i].mapSizeW*projects[id]->tms->maps[i].mapSizeHA,fo);
+				if(projects[id]->szPerExtPalRow())
+					compressToFile(projects[id]->tms->maps[i].extPalRows,projects[id]->tms->maps[i].mapSizeW*projects[id]->tms->maps[i].mapSizeHA*projects[id]->szPerExtPalRow(),fo);
 			}
 		}
 	}
@@ -739,6 +795,7 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 			projects[id]->spritesC->save(fo);
 	}
 	uint32_t LuaSize=0;//TODO implement saving of user data and control data
+	fwrite(&LuaSize,1,sizeof(uint32_t),fo);
 	fwrite(&LuaSize,1,sizeof(uint32_t),fo);
 	fwrite(&LuaSize,1,sizeof(uint32_t),fo);
 	return true;
@@ -785,7 +842,7 @@ static void readShare(unsigned amt,FILE*fi,unsigned x){
 	if(amt<shareAmtPj)
 		std::fill(&projects[x]->share[amt-1],&projects[x]->share[shareAmtPj],-1);
 }
-bool loadAllProjects(bool Old){
+bool loadAllProjects(void){
 	if(!load_file_generic("Load projects group"))
 		return true;
 	FILE * fi=fopen(the_file.c_str(),"rb");
@@ -804,19 +861,15 @@ bool loadAllProjects(bool Old){
 	while(PC>projects_count)
 		appendProject();
 	uint32_t version;
-	if(!Old){
-		fread(&version,1,sizeof(uint32_t),fi);
-		printf("Group is version %d\n",version);
-		if(version>currentProjectVersionNUM){
-			fl_alert("The latest project version Retro Graphics Toolkit supports is %d but you are opening %d",currentProjectVersionNUM,version);
-			fclose(fi);
-			return false;
-		}
+	fread(&version,1,sizeof(uint32_t),fi);
+	printf("Group is version %d\n",version);
+	if(version>currentProjectVersionNUM){
+		fl_alert("The latest project version Retro Graphics Toolkit supports is %d but you are opening %d",currentProjectVersionNUM,version);
+		fclose(fi);
+		return false;
 	}
 	for(unsigned x=0;x<projects_count;++x){
-		if(Old)
-			readShare(3,fi,x);
-		else if(version<4)
+		if(version<4)
 			readShare(3,fi,x);
 		else if(version==4)
 			readShare(4,fi,x);
@@ -824,13 +877,8 @@ bool loadAllProjects(bool Old){
 			readShare(5,fi,x);
 		else
 			readShare(shareAmtPj,fi,x);
-		if(Old){
-			if(!(loadProjectFile(x,fi,true,3)))
-				return false;
-		}else{
-			if(!(loadProjectFile(x,fi,false,version)))
-				return false;
-		}
+		if(!(loadProjectFile(x,fi,false,version)))
+			return false;
 	}
 	for(unsigned x=0;x<projects_count;++x){
 		if(projects[x]->share[0]>=0)
