@@ -22,12 +22,14 @@
 extern int pushed_g;
 #define TABS_WITH_ROW_BUTTONS 2
 class editor : public Fl_Double_Window{
-	private:
+private:
 	Fl_Menu_Bar *menu;
 	void _editor();
 	void draw_non_gui();
 	unsigned tilesSpriteOff[2];
-	public:
+public:
+	std::vector<std::pair<unsigned,int64_t>>*keepUserdat;
+	std::vector<std::pair<std::string,int64_t>>*luaCallback;
 	void updateChunkSel(void);
 	void updateMapWH(uint32_t w,uint32_t h);
 	void updateMapWH(void);

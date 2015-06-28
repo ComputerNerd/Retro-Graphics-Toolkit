@@ -14,25 +14,10 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
-#pragma once
-#include "includes.h"
-#include "classtilemap.h"
-class tilemaps{
-public:
-	Project*prj;
-	std::vector<class tileMap> maps;
-	std::vector<std::string> planeName;
-	tilemaps(Project*prj);
-	tilemaps(const tilemaps&other);
-	void setPlaneCnt(unsigned cnt);
-	void assignNum(unsigned i){
-		char tmp[16];
-		snprintf(tmp,16,"%u",i);
-		planeName[i].assign(tmp);
-	}
-	void removePlane(unsigned which){
-		maps.erase(maps.begin()+which);
-		planeName.erase(planeName.begin()+which);
-	}
-	void changePrjPtr(Project*prj);
-};
+#include "luaconfig.h"
+#include "runlua.h"
+lua_State*Lconf;
+void startLuaConf(void){
+	Lconf=createLuaState();
+	runLua(Lconf,"config.lua");
+}

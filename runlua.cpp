@@ -730,7 +730,7 @@ static const luaL_Reg lua_rgtAPI[]={
 	{"rgbToHsl",lua_rgt_rgbToHsl},
 	{0,0}
 };
-static void runFunc(lua_State*L,unsigned args,unsigned results){
+void runLuaFunc(lua_State*L,unsigned args,unsigned results){
 	if (lua_pcall(L, args, results, 0) != LUA_OK)
 		luaL_error(L, "error: %s",lua_tostring(L, -1));
 }
@@ -746,7 +746,7 @@ public:
 		if(handleFunc){
 			lua_getglobal(L,handleFunc);
 			lua_pushnumber(L,e);
-			runFunc(L,1,1);
+			runLuaFunc(L,1,1);
 			int ret=luaL_checkinteger(L,-1);
 			lua_pop(L,1);
 			return ret;
@@ -759,7 +759,7 @@ public:
 	void draw(){
 		if(drawFunc){
 			lua_getglobal(L,drawFunc);
-			runFunc(L,0,0);
+			runLuaFunc(L,0,0);
 		}else
 			baseDraw();
 	}
@@ -907,6 +907,33 @@ void runLua(lua_State*L,const char*fname){
 		fl_alert("Lua error while running script\nthrow was called");
 	}
 }
+struct keyPair{
+	const char*key;
+	unsigned pair;
+};
+#define arLen(ar) (sizeof(ar)/sizeof(ar[0]))
+static const keyPair FLconsts[]={
+	{"MENU_INACTIVE",FL_MENU_INACTIVE},
+	{"MENU_TOGGLE",FL_MENU_TOGGLE},
+	{"MENU_VALUE",FL_MENU_VALUE},
+	{"MENU_RADIO",FL_MENU_RADIO},
+	{"MENU_INVISIBLE",FL_MENU_INVISIBLE},
+	{"SUBMENU_POINTER",FL_SUBMENU_POINTER},
+	{"SUBMENU",FL_SUBMENU},
+	{"MENU_DIVIDER",FL_MENU_DIVIDER},
+	{"MENU_HORIZONTAL",FL_MENU_HORIZONTAL},
+	{"SHIFT",FL_SHIFT},
+	{"CAPS_LOCK",FL_CAPS_LOCK},
+	{"CTRL",FL_CTRL},
+	{"ALT",FL_ALT},
+	{"NUM_LOCK",FL_NUM_LOCK},
+	{"META",FL_META},
+	{"SCROLL_LOCK",FL_SCROLL_LOCK},
+	{"BUTTON1",FL_BUTTON1},
+	{"BUTTON2",FL_BUTTON2},
+	{"BUTTON3",FL_BUTTON3},
+	{"BUTTONS",FL_BUTTONS}
+};
 lua_State*createLuaState(void){
 	lua_State *L = lua_newstate(l_alloc, NULL);
 	if(L){
@@ -919,9 +946,11 @@ lua_State*createLuaState(void){
 		luaL_newlib(L,lua_FlAPI);
 		lua_setglobal(L, "Fl");
 
-		lua_createtable(L,0,FL_FULLSCREEN);
+		lua_createtable(L,0,FL_FULLSCREEN+1+arLen(FLconsts));
 		for(unsigned x=0;x<=FL_FULLSCREEN;++x)
 			mkKeyunsigned(L,fl_eventnames[x]+3,x);
+		for(unsigned x=0;x<arLen(FLconsts);++x)
+			mkKeyunsigned(L,FLconsts[x].key,FLconsts[x].pair);
 		lua_setglobal(L, "FL");
 
 		luaL_newmetatable(L,"FLTKmeta.Fl_Window");

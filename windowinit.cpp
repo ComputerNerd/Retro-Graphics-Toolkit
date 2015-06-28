@@ -30,6 +30,7 @@
 #include "gui.h"
 #include "project.h"
 #include "class_global.h"
+#include "luaconfig.h"
 void set_mode_tabs(Fl_Widget* o, void*){
 	Fl_Group * val=(Fl_Group*)(Fl_Tabs*)window->the_tabs->value();
 	if(val==window->TabsMain[pal_edit]){
@@ -57,115 +58,6 @@ void set_mode_tabs(Fl_Widget* o, void*){
 static const char * freeDes="This sets the currently selected palette entry to free meaning that this color can be changed";
 static const char * lockedDes="This sets the currently selected palette entry to locked meaning that this color cannot be changed but tiles can still use it";
 static const char * reservedDes="This sets the currently selected palette entry to reserved meaning that this color cannot be changed or used in tiles note that you may need make sure all tiles get re-dithered to ensure that this rule is enforced";
-static const Fl_Menu_Item menuEditor[]={
-	{"File",0, 0, 0, FL_SUBMENU},
-		{"Tiles",0, 0, 0, FL_SUBMENU},
-			{"Open tiles",0,load_tiles,0},
-			{"Open truecolor tiles",0,load_truecolor_tiles,0},
-			{"Open tiles (append)",0,load_tiles,(void*)1},
-			{"Save tiles",0,save_tiles,0},
-			{"Save truecolor tiles",0,save_tiles_truecolor,0},
-			{"Import image to tiles",0,load_image_to_tilemap,(void*)2},
-			{0},
-		{"Palette",0, 0, 0, FL_SUBMENU},
-			{"Open palette",0,loadPalette,0},
-			{"Save palette",0, save_palette,0},
-			{0},
-		{"Tilemap",0, 0, 0, FL_SUBMENU},
-			{"Import tile map or blocks and if NES attributes",0,load_tile_map,0},
-			{"Import image to tilemap",0,load_image_to_tilemap,0},
-			{"Import image over current tilemap",0,load_image_to_tilemap,(void*)1},
-			{"Export tilemap as image",0,save_tilemap_as_image,0},
-			{"Export tilemap as with system color space",0,save_tilemap_as_colspace,0},
-			{"Export tile map and if NES attributes",0,save_map,0},
-			{0},
-		{"Projects",0, 0, 0, FL_SUBMENU},
-			{"Load project",FL_CTRL+FL_SHIFT+'o',loadProjectCB,0},
-			{"Save project",FL_CTRL+FL_SHIFT+'s',saveProjectCB,0},
-			{"Load project group",FL_CTRL+'o',loadAllProjectsCB,0},
-			{"Save project group",FL_CTRL+'s',saveAllProjectsCB,0},
-			{0},
-		{"Chunks",0, 0, 0, FL_SUBMENU},
-			{"Import sonic 1 chunks",0,ImportS1CBChunks,0},
-			{"Import sonic 1 chunks (append)",0,ImportS1CBChunks,(void*)1},
-			{"Export chunks as sonic 1 format",0,saveChunkS1CB},
-			{0},
-		{"Sprites",0, 0, 0, FL_SUBMENU},
-			{"Import sprite from image",0,SpriteimportCB,0},
-			{"Import sprite from image (append)",0,SpriteimportCB,(void*)1},
-			{"Import sprite sheet",0,SpriteSheetimportCB,(void*)1},
-			{"Import mapping",0, 0, 0, FL_SUBMENU},
-				{"Sonic 1",0,importSonicMappingCB,(void*)tSonic1},
-				{"Sonic 2",0,importSonicMappingCB,(void*)tSonic2},
-				{"Sonic 3",0,importSonicMappingCB,(void*)tSonic3},
-				{0},
-			{"Import DPLC",0, 0, 0, FL_SUBMENU},
-				{"Sonic 1",0,importSonicDPLCCB,(void*)tSonic1},
-				{"Sonic 2 (or sonic 3 character)",0,importSonicDPLCCB,(void*)tSonic2},
-				{"Sonic 3",0,importSonicDPLCCB,(void*)tSonic3},
-				{0},
-			{"Export mapping",0, 0, 0, FL_SUBMENU},
-				{"Sonic 1",0,exportSonicMappingCB,(void*)tSonic1},
-				{"Sonic 2",0,exportSonicMappingCB,(void*)tSonic2},
-				{"Sonic 3",0,exportSonicMappingCB,(void*)tSonic3},
-				{0},
-			{"Export DPLC",0, 0, 0, FL_SUBMENU},
-				{"Sonic 1",0,exportSonicDPLCCB,(void*)tSonic1},
-				{"Sonic 2 (or sonic 3 character)",0,exportSonicDPLCCB,(void*)tSonic2},
-				{"Sonic 3",0,exportSonicDPLCCB,(void*)tSonic3},
-				{0},
-			{0},
-		{"Scripts",0,0,0,FL_SUBMENU},
-			{"Run Lua script",FL_CTRL+'r',runLuaCB,0},
-			{0},
-		{0},
-	{"Palette actions",0, 0, 0, FL_SUBMENU},
-		{"Generate optimal palette with x amount of colors",0,generate_optimal_palette,0},
-		{"Clear entire Palette",0,clearPalette,0},
-		{"Pick nearest color algorithm",0,pickNearAlg,0},
-		{"RGB color to entry",0,rgb_pal_to_entry,0},
-		{"Entry to RGB color",0,entryToRgb,0},
-		{"Sort each row by",0,sortRowbyCB,0},
-		{0},
-	{"Tile actions",0, 0, 0, FL_SUBMENU},
-		{"Append blank tile to end of buffer",0,new_tile,0},
-		{"Fill tile with selected color",0,fill_tile,0},
-		{"Fill tile with color 0",0,blank_tile,0},
-		{"Remove duplicate truecolor tiles",0,remove_duplicate_truecolor,0},
-		{"Remove duplicate tiles",0,remove_duplicate_tiles,0},
-		{"Update dither all tiles",0,update_all_tiles,0},
-		{"Delete currently selected tile",0,delete_tile_at_location,0},
-		{"Create new tiles for flipped tiles",0,tilesnewfilppedCB},
-		{0},
-	{"TileMap actions",0, 0, 0, FL_SUBMENU},
-		{"Fix tile delete on tilemap",0,tilemap_remove_callback,0},
-		{"Toggle TrueColor Viewing (defaults to off)",0,trueColTileToggle,0},
-		{"Pick Tile row based on color delta",0,tileDPicker,0},
-		{"Auto determine if use shadow highlight",0,shadow_highligh_findout,0},
-		{"Dither tilemap as image",0,dither_tilemap_as_imageCB,0},
-		{"File tile map with selection including attributes",0,fill_tile_map_with_tile,(void *)0},
-		{"Fix out of range tiles (replace with current attributes in plane editor)",0,FixOutOfRangeCB,0},
-		{"Pick extended attributes",0,pickExtAttrsCB,0},
-		{0},
-	{"Sprite actions",0, 0, 0, FL_SUBMENU},
-		{"Generate optimal palette for selected sprite",0,generate_optimal_palette,(void*)1},
-		{"Dither sprite as image",0,ditherSpriteAsImageCB,0},
-		{"Dither all sprites as image",0,ditherSpriteAsImageAllCB,0},
-		{"Remove blank and duplicate tiles without affect sprite amount",0,optimizeSpritesCB,0},
-		{"Set all sprites with same start tile to currently selected palette row",0,palRowstCB,0},
-		{0},
-	{"Undo/Redo",0, 0, 0, FL_SUBMENU},
-		{"Undo",FL_CTRL+'z',undoCB},
-		{"Redo",FL_CTRL+'y',redoCB},
-		//{"Show estimated ram usage",0,showMemUsageUndo},
-		{"Show history window",FL_CTRL+'h',historyWindow},
-		{"Clear undo buffer",0,clearUndoCB},
-		{0},
-	{"Help",0, 0, 0, FL_SUBMENU},
-		{"About",0,showAbout},
-		{0},
-	{0}
-};
 static const Fl_Menu_Item ditherChoices[]={
 	{"Floyd Steinberg",0,set_ditherAlg,(void *)0},
 	{"Riemersma",0,set_ditherAlg,(void *)1},
@@ -198,10 +90,167 @@ extern const char * MapHeightTxt;
 static const char * TooltipZoom="By changing this slider you are changing the magnification of the tile for example if this slider was set to 10 that would mean that the tile is magnified by a factor of 10";
 extern const char*spriteDefName;
 extern const char*spritesName;
+static void(*const mainCBtab[])(Fl_Widget*,void*)={
+	//Number is plus one because it is that way in the Lua configuration file
+	//Subtract one to get the index of said function.
+	load_tiles,//1
+	load_truecolor_tiles,//2
+	save_tiles,//3
+	save_tiles_truecolor,//4
+	load_image_to_tilemap,//5
+	loadPalette,//6
+	save_palette,//7
+	load_tile_map,//8
+	save_tilemap_as_image,//9
+	save_tilemap_as_colspace,//10
+	save_map,//11
+	loadProjectCB,//12
+	saveProjectCB,//13
+	loadAllProjectsCB,//14
+	saveAllProjectsCB,//15
+	ImportS1CBChunks,//16
+	saveChunkS1CB,//17
+	SpriteimportCB,//18
+	SpriteSheetimportCB,//19
+	importSonicMappingCB,//20
+	importSonicDPLCCB,//21
+	exportSonicMappingCB,//22
+	exportSonicDPLCCB,//23
+	runLuaCB,//24
+	generate_optimal_palette,//25
+	clearPalette,//26
+	pickNearAlg,//27
+	rgb_pal_to_entry,//28
+	entryToRgb,//29
+	sortRowbyCB,//30
+	new_tile,//31
+	fill_tile,//32
+	blank_tile,//33
+	remove_duplicate_truecolor,//34
+	remove_duplicate_tiles,//35
+	update_all_tiles,//36
+	delete_tile_at_location,//37
+	tilesnewfilppedCB,//38
+	tilemap_remove_callback,//39
+	trueColTileToggle,//40
+	tileDPicker,//41
+	shadow_highligh_findout,//42
+	dither_tilemap_as_imageCB,//43
+	fill_tile_map_with_tile,//44
+	FixOutOfRangeCB,//45
+	pickExtAttrsCB,//46
+	ditherSpriteAsImageCB,//47
+	ditherSpriteAsImageAllCB,//48
+	optimizeSpritesCB,//49
+	palRowstCB,//50
+	undoCB,//51
+	redoCB,//52
+	historyWindow,//53
+	clearUndoCB,//54
+	showAbout,//55
+};
+static void callCFuncLua(Fl_Widget*w,void*toPair){
+	std::pair<unsigned,int64_t>*p=(std::pair<unsigned,int64_t>*)toPair;
+	(*mainCBtab[p->first])(w,(void*)p->second);
+}
+static void callLuaCB(Fl_Widget*w,void*toPair){
+	std::pair<std::string,int64_t>*p=(std::pair<std::string,int64_t>*)toPair;
+	lua_getglobal(Lconf,p->first.c_str());
+	lua_pushnumber(Lconf,p->second);
+	runLuaFunc(Lconf,1,0);
+}
 void editor::_editor(){
 	//create the window
+	keepUserdat=new std::vector<std::pair<unsigned,int64_t>>;
+	luaCallback=new std::vector<std::pair<std::string,int64_t>>;
+	startLuaConf();
 	menu = new Fl_Menu_Bar(0,0,800,24);//Create menubar, items..
-	menu->copy(menuEditor);
+	lua_getglobal(Lconf,"generateMenu");
+	runLuaFunc(Lconf,0,1);
+	{unsigned menucnt;
+	std::vector<Fl_Menu_Item> tmp;
+	if(!(menucnt=lua_rawlen(Lconf,-1))){
+		fl_alert("generateMenu must return a table");
+		exit(1);
+	}
+	for(unsigned i=1;i<=menucnt;++i){
+		lua_rawgeti(Lconf,-1,i);
+		unsigned len=lua_rawlen(Lconf,-1);
+		if(len){
+			Fl_Menu_Item mi{0};
+			lua_rawgeti(Lconf,-1,1);
+			char*txt=(char*)luaL_optstring(Lconf,-1,0);
+			if(txt)
+				txt=strdup(txt);
+			mi.text=txt;
+			lua_pop(Lconf,1);
+			if(len>=2){
+				lua_rawgeti(Lconf,-1,2);
+				mi.shortcut_=luaL_optinteger(Lconf,-1,0);
+				lua_pop(Lconf,1);
+			}else
+				mi.shortcut_=0;
+			int64_t userdat;
+			if(len>=4){
+				lua_rawgeti(Lconf,-1,4);
+				userdat=luaL_optinteger(Lconf,-1,0);
+				lua_pop(Lconf,1);
+			}else
+				userdat=0;
+
+			if(len>=3){
+				lua_rawgeti(Lconf,-1,3);
+				if(lua_type(Lconf,-1)==LUA_TSTRING){
+					luaCallback->emplace_back(std::make_pair(lua_tostring(Lconf,-1),userdat));
+					mi.callback_=callLuaCB;
+					mi.user_data_=&(*luaCallback)[luaCallback->size()-1];
+				}else if(lua_type(Lconf,-1)==LUA_TNUMBER){
+					int64_t lcall=lua_tointeger(Lconf,-1);
+					if(lcall>0){
+						keepUserdat->emplace_back(std::make_pair(lcall-1,userdat));
+						mi.callback_=callCFuncLua;
+						mi.user_data_=&(*keepUserdat)[keepUserdat->size()-1];
+					}else
+						mi.callback_=0;
+				}else{
+					fl_alert("Error invalid type for callback %s",lua_typename(Lconf,lua_type(Lconf,-1)));
+					exit(1);
+				}
+				lua_pop(Lconf,1);
+			}else{
+				mi.callback_=0;
+				mi.user_data_=0;
+			}
+			if(len>=5){
+				lua_rawgeti(Lconf,-1,5);
+				mi.flags=luaL_optinteger(Lconf,-1,0);
+				lua_pop(Lconf,1);
+			}else
+				mi.flags=0;
+			tmp.emplace_back(mi);
+		}else
+			tmp.emplace_back(Fl_Menu_Item{0});
+		lua_pop(Lconf,1);
+	}
+	unsigned cidx=0,lidx=0;
+	for(unsigned i=0;i<menucnt;++i){//While resizing the vector the addresses may have changed.
+		lua_rawgeti(Lconf,-1,i+1);
+		unsigned len=lua_rawlen(Lconf,-1);
+		if(len>=3){
+			lua_rawgeti(Lconf,-1,3);
+			if(lua_type(Lconf,-1)==LUA_TSTRING){
+				tmp[i].user_data_=&(*luaCallback)[lidx++];
+			}else if(lua_type(Lconf,-1)==LUA_TNUMBER){
+				int64_t lcall=lua_tointeger(Lconf,-1);
+				if(lcall>0)
+					tmp[i].user_data_=&(*keepUserdat)[cidx++];
+			}
+			lua_pop(Lconf,1);
+		}
+		lua_pop(Lconf,1);
+	}
+	lua_pop(Lconf,1);
+	menu->copy(tmp.data());}
 	tile_placer_tile_offset_y=default_tile_placer_tile_offset_y;
 	true_color_box_x=default_true_color_box_x;
 	true_color_box_y=default_true_color_box_y;

@@ -14,7 +14,10 @@
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
+#pragma once
 #include "lua.h"
+#include <FL/Fl_Widget.H>
+void runLuaFunc(lua_State*L,unsigned args,unsigned results);
 void runLua(lua_State*L,const char*fname);
 lua_State*createLuaState(void);
 void runLuaCB(Fl_Widget*,void*);

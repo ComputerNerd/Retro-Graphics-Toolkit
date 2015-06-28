@@ -1,4 +1,4 @@
-/*
+--[[ 
 	This file is part of Retro Graphics Toolkit
 
 	Retro Graphics Toolkit is free software: you can redistribute it and/or modify
@@ -13,26 +13,13 @@
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
-*/
-#pragma once
-#include "includes.h"
-#include "classtilemap.h"
-class tilemaps{
-public:
-	Project*prj;
-	std::vector<class tileMap> maps;
-	std::vector<std::string> planeName;
-	tilemaps(Project*prj);
-	tilemaps(const tilemaps&other);
-	void setPlaneCnt(unsigned cnt);
-	void assignNum(unsigned i){
-		char tmp[16];
-		snprintf(tmp,16,"%u",i);
-		planeName[i].assign(tmp);
-	}
-	void removePlane(unsigned which){
-		maps.erase(maps.begin()+which);
-		planeName.erase(planeName.begin()+which);
-	}
-	void changePrjPtr(Project*prj);
-};
+--]]
+
+--[[
+This file allows you control various aspects of Retro Graphics Toolkit.
+For purposes of organization files are separated and included in this main file.
+For example menu.lua allows you to edit the shortcut keys to various menu items.
+--]]
+
+dofile "menu.lua"
+--print('Code will execute here after the window is created but before the GUI controls are added')
