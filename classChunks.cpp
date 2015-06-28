@@ -55,7 +55,7 @@ struct ChunkAttrs ChunkClass::getElm(uint32_t id,uint32_t x,uint32_t y)const{
 }
 void ChunkClass::removeAt(uint32_t at){
 	if(amt<2){
-		fl_alert("If you don't want chunks uncheck have chunks instead of deleting");
+		fl_alert("If you don't want chunks uncheck \"have chunks\" instead of deleting");
 		return;
 	}
 	try{

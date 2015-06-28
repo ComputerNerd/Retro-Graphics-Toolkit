@@ -29,16 +29,21 @@
 #include "classtilemaps.h"
 #define currentProjectVersionNUM 8
 extern uint32_t curProjectID;
+enum luaLocEnum{PALETTE_C,TILEMAP_C,CHUNK_C,SPRITE_C,LEVEL_C,GLOBAL_C/*Not allowed for luaControl*/};
 struct luaDat{
 	uint32_t len;
+	std::string name;
+	enum luaLocEnum datLoc;
 	void*dat;
 };
-enum luaControlEnum{PALETTE_C,TILEMAP_C,CHUNK_C,SPRITE_C,LEVEL_C};
+enum luaControlType{INPUT_T,RADIO_T,INT_INPUT_T,CHECKBOX_T,MENU_T};
 struct luaControl{
 	uint32_t len;
-	enum luaControlEnum ctrlType;
-	const char*name;
-	void*dat;
+	enum luaLocEnum ctrlLoc;
+	enum luaControlType ctrlType;
+	bool cbInFile;
+	std::string name,callback,callbackwhere;
+	void*dat;//Points to a structure that depends on
 };
 struct luaScript{
 	std::string str,name;

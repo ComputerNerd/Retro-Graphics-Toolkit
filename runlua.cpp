@@ -322,7 +322,7 @@ static int lua_palette_setRaw(lua_State*L){
 static int lua_palette_setRGB(lua_State*L){
 	unsigned ent=luaL_optinteger(L,1,0);
 	if(inRangeEnt(ent))
-		currentProject->pal->rgbToEntry(luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0),ent);
+		currentProject->pal->rgbToEntry(lua_tointeger(L,2),lua_tointeger(L,3),lua_tointeger(L,4),ent);
 	return 0;
 }
 static int lua_palette_fixSliders(lua_State*L){
@@ -954,10 +954,12 @@ lua_State*createLuaState(void){
 		lua_setglobal(L, "FL");
 
 		luaL_newmetatable(L,"FLTKmeta.Fl_Window");
+		lua_pushvalue(L, -1); /* duplicates the metatable */
+		lua_setfield(L, -2,"__index");
 		lua_pushcfunction(L,lua_Fl_Window_gc);
 		lua_setfield(L, -2, "__gc");
-		luaL_newlib(L,lua_Fl_Window);
-		lua_setglobal(L, "Fl_Window");
+		luaL_setfuncs(L,lua_Fl_Window,0);
+		lua_setglobal(L,"Fl_Window");
 
 		//Retro Graphics Toolkit bindings
 		if(currentProject->containsData(pjHavePal)){

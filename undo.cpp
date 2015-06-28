@@ -995,7 +995,6 @@ static void UndoRedo(bool redo){
 				delete projects[curProjectID];
 				projects[curProjectID]=new Project(*up->pnew);
 				currentProject=projects[curProjectID];
-				prjChangePtr(curProjectID);
 				projects[curProjectID]->copyClasses(*up->pnew);
 				delete up->pnew;
 				up->pnew=0;
@@ -1005,11 +1004,11 @@ static void UndoRedo(bool redo){
 				delete projects[curProjectID];
 				projects[curProjectID]=new Project(*up->old);
 				currentProject=projects[curProjectID];
-				prjChangePtr(curProjectID);
 				projects[curProjectID]->copyClasses(*up->old);
 				delete up->old;
 				up->old=0;
 			}
+			prjChangePtr(curProjectID);
 			switchProject(curProjectID);}
 		break;
 	}

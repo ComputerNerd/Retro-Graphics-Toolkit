@@ -1,10 +1,10 @@
 -- Sets all tiles to a gradient
 local function hueDir(h1,h2)
-	if math.abs(h2-h1)>180 then
+	if math.abs(h2-h1)>180. then
 		if h2>h1 then
-			return -(360-h2+h1)
+			return -(360.-h2+h1)
 		else
-			return 360-h1+h2
+			return 360.-h1+h2
 		end
 	else
 		return h2-h1
@@ -30,15 +30,15 @@ if project.have(project.tilesMask+project.mapMask) then
 				Ls,cs,hs = (L2-L1)/palette.maxInRow(0),(c2-c1)/palette.maxInRow(0),hueDir(h1,h2)/palette.maxInRow(0)
 				for i=0,palette.maxInRow(0)-1 do
 					local r,g,b=rgt.lchToRgb(Lt,ct,ht)
-					palette.setRGB(i,r*255,g*255,b*255)
+					palette.setRGB(i,r*255.,g*255.,b*255.)
 					Lt=Lt+Ls
 					ct=ct+cs
 					ht=ht+hs
-					if(ht>360) then
-						ht=ht-360
+					if(ht>360.) then
+						ht=ht-360.
 					end
-					if(ht<0) then
-						ht=ht+360
+					if(ht<0.) then
+						ht=ht+360.
 					end
 				end
 				palette.fixSliders()
@@ -49,19 +49,19 @@ if project.have(project.tilesMask+project.mapMask) then
 				for i=0,tile.height-1 do
 					local r,g,b=rgt.lchToRgb(L1,c1,h1)
 					for j=0,tile.width*4-1,4 do
-						gr[(i*tile.width*4)+j+1]=r*255
-						gr[(i*tile.width*4)+j+2]=g*255
-						gr[(i*tile.width*4)+j+3]=b*255
-						gr[(i*tile.width*4)+j+4]=255
+						gr[(i*tile.width*4)+j+1]=r*255.
+						gr[(i*tile.width*4)+j+2]=g*255.
+						gr[(i*tile.width*4)+j+3]=b*255.
+						gr[(i*tile.width*4)+j+4]=255.
 					end
 					L1=L1+Ls
 					c1=c1+cs
 					h1=h1+hs
-					if(h1>360) then
-						h1=h1-360
+					if(h1>360.) then
+						h1=h1-360.
 					end
 					if(h1<0) then
-						h1=h1+360
+						h1=h1+360.
 					end
 				end
 				tile.setTileRGBA(t,gr)
