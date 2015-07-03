@@ -38,6 +38,7 @@ end
 if project.have(project.palMask) then
 	shift=tonumber(fl.input("Shift hue by [0,1]","0"))+0.
 	if shift~=nil then
+		undo.pushPaletteAll()
 		for ent=0,palette.cnt+palette.cntAlt-1,1 do
 			local r,g,b=palette.getRGB(ent)
 			local h,s,l=rgt.rgbToHsl(r/255.,g/255.,b/255.)

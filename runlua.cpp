@@ -41,6 +41,7 @@
 #include "palette.h"
 #include "callback_project.h"
 #include "lua_zlib.h"
+#include "undoLua.h"
 static int panic(lua_State *L){
 	fl_alert("PANIC: unprotected error in call to Lua API (%s)\n",lua_tostring(L, -1));
 	throw 0;//Otherwise abort() would be called when not needed
@@ -268,6 +269,18 @@ static int luaFl_event_alt(lua_State*L){
 	lua_pushinteger(L,Fl::event_alt());
 	return 1;
 }
+static int luaFl_event_shift(lua_State*L){
+	lua_pushinteger(L,Fl::event_shift());
+	return 1;
+}
+static int luaFl_event_length(lua_State*L){
+	lua_pushinteger(L,Fl::event_length());
+	return 1;
+}
+static int luaFl_event_text(lua_State*L){
+	lua_pushlstring(L,Fl::event_text(),Fl::event_length());
+	return 1;
+}
 static const luaL_Reg lua_FlAPI[]={
 	{"check",luaFl_check},
 	{"wait",luaFl_wait},
@@ -276,6 +289,9 @@ static const luaL_Reg lua_FlAPI[]={
 	{"event_key",luaFl_event_key},
 	{"event_ctrl",luaFl_event_ctrl},
 	{"event_alt",luaFl_event_alt},
+	{"event_shift",luaFl_event_shift},
+	{"event_length",luaFl_event_length},
+	{"event_text",luaFl_event_text},
 	{0,0}
 };
 static void outofBoundsAlert(const char*what,unsigned val){
@@ -863,6 +879,10 @@ static int lua_rgt_appendTab(lua_State*L){
 static int lua_rgt_endAppendTab(lua_State*L){
 	window->tabsMain[window->tabsMain.size()-1]->end();
 }
+struct keyPair{
+	const char*key;
+	unsigned pair;
+};
 static const luaL_Reg lua_rgtAPI[]={
 	{"redraw",lua_rgt_redraw},
 	{"ditherImage",lua_rgt_ditherImage},
@@ -876,9 +896,20 @@ static const luaL_Reg lua_rgtAPI[]={
 	{"endAppendTab",lua_rgt_endAppendTab},
 	{0,0}
 };
+static const struct keyPair rgtConsts[]={
+	{"paletteTab",pal_edit},
+	{"tileTab",tile_edit},
+	{"planeTab",tile_place},
+	{"chunkTab",chunkEditor},
+	{"spritesTab",spriteEditor},
+	{"levelTab",levelEditor},
+	{"settingsTab",settingsTab},
+	{"luaTab",luaTab},
+};
 void runLuaFunc(lua_State*L,unsigned args,unsigned results){
-	if (lua_pcall(L, args, results, 0) != LUA_OK)
+	if (lua_pcall(L, args, results, 0) != LUA_OK){
 		luaL_error(L, "error: %s",lua_tostring(L, -1));
+	}
 }
 class Fl_Lua_Window : public Fl_Window{
 public:
@@ -1029,9 +1060,9 @@ void runLua(lua_State*L,const char*str,bool isFile){
 	try{
 		int s;
 		if(isFile)
-			luaL_loadfile(L, str);
+			s=luaL_loadfile(L, str);
 		else
-			luaL_loadstring(L, str);
+			s=luaL_loadstring(L, str);
 		if(s != LUA_OK && !lua_isnil(L, -1)){
 			const char *msg = lua_tostring(L, -1);
 			if (msg == NULL) msg = "(error object is not a string)";
@@ -1052,10 +1083,6 @@ void runLua(lua_State*L,const char*str,bool isFile){
 		fl_alert("Lua error while running script\nthrow was called");
 	}
 }
-struct keyPair{
-	const char*key;
-	unsigned pair;
-};
 static const keyPair FLconsts[]={
 	{"MENU_INACTIVE",FL_MENU_INACTIVE},
 	{"MENU_TOGGLE",FL_MENU_TOGGLE},
@@ -1147,11 +1174,17 @@ lua_State*createLuaState(void){
 
 		updateProjectTablesLua(L);
 
-		luaL_newlib(L,lua_rgtAPI);
+		lua_createtable(L,0,arLen(rgtConsts)+arLen(lua_rgtAPI)-1);
+		luaL_setfuncs(L,lua_rgtAPI,0);
+		for(unsigned x=0;x<arLen(rgtConsts);++x)
+			mkKeyunsigned(L,rgtConsts[x].key,rgtConsts[x].pair);
 		lua_setglobal(L, "rgt");
 
 		luaopen_zlib(L);
 		lua_setglobal(L, "zlib");
+
+		luaopen_undoLua(L);
+		lua_setglobal(L, "undo");
 	}else
 		fl_alert("lua_newstate failed");
 	return L;
