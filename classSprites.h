@@ -22,6 +22,7 @@
 #include <FL/Fl_Shared_Image.H>
 #include "classSprite.h"
 #include "gamedef.h"
+#include "project.h"
 struct spriteGroup{
 	std::vector<int32_t> offx;
 	std::vector<int32_t> offy;
@@ -42,11 +43,12 @@ class sprites{
 		std::vector<uint8_t> optDPLC(unsigned which,gameType_t game)const;
 		uint32_t getTileOnSprite(unsigned x,unsigned y,unsigned which,unsigned i)const;
 	public:
+		Project*prj;
 		uint32_t amt;//The amount of sprites
 		std::string name;
-		std::vector<struct spriteGroup> groups;
-		sprites();
-		sprites(const sprites& other);
+		std::vector<struct spriteGroup>groups;
+		sprites(Project*prj);
+		sprites(const sprites&other,Project*prj);
 		~sprites();
 		void fixDel(unsigned at,unsigned amt);
 		void freeOptmizations(unsigned which);

@@ -20,13 +20,13 @@ tilemaps::tilemaps(Project*prj){
 	maps.emplace_back(prj);
 	planeName.emplace_back("0");
 }
-tilemaps::tilemaps(const tilemaps&other){
-	prj=other.prj;
+tilemaps::tilemaps(const tilemaps&other,Project*prj){
+	this->prj=prj;
 	unsigned cnt=other.maps.size();
 	maps.reserve(cnt);
 	planeName.reserve(cnt);
 	for(unsigned i=0;i<cnt;++i){
-		maps.emplace_back(other.maps[i]);
+		maps.emplace_back(other.maps[i],prj);
 		planeName.emplace_back(other.planeName[i].c_str());
 	}
 }

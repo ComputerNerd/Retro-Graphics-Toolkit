@@ -1,18 +1,18 @@
 /*
-   This file is part of Retro Graphics Toolkit
+	This file is part of Retro Graphics Toolkit
 
-   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or any later version.
+	Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or any later version.
 
-   Retro Graphics Toolkit is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-   GNU General Public License for more details.
+	Retro Graphics Toolkit is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	You should have received a copy of the GNU General Public License
+	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #include <string>
 #include <FL/Fl_Color_Chooser.H>
@@ -39,6 +39,8 @@
 #include "CIE.h"
 #include "class_global.h"
 #include "palette.h"
+#include "callback_project.h"
+#include "lua_zlib.h"
 static int panic(lua_State *L){
 	fl_alert("PANIC: unprotected error in call to Lua API (%s)\n",lua_tostring(L, -1));
 	throw 0;//Otherwise abort() would be called when not needed
@@ -69,9 +71,9 @@ static int luafl_choice(lua_State*L){
 }
 static int luafl_color_chooser(lua_State*L){
 	double r,g,b;
-	r=luaL_optnumber(L,3,0.0);
-	g=luaL_optnumber(L,4,0.0);
-	b=luaL_optnumber(L,5,0.0);
+	r=luaL_optnumber(L,3,0.);
+	g=luaL_optnumber(L,4,0.);
+	b=luaL_optnumber(L,5,0.);
 	int ret=fl_color_chooser(luaL_optstring(L,1,"Select a color"),r,g,b,luaL_optinteger(L,2,-1));
 	if(ret){
 		lua_pushinteger(L,ret);
@@ -251,11 +253,29 @@ static int luaFl_event_y(lua_State*L){
 	lua_pushinteger(L,Fl::event_y());
 	return 1;
 }
+static int luaFl_event_key(lua_State*L){
+	if(lua_type(L,1)==LUA_TNUMBER)
+		lua_pushinteger(L,Fl::event_key(luaL_checknumber(L,1)));
+	else
+		lua_pushinteger(L,Fl::event_key());
+	return 1;
+}
+static int luaFl_event_ctrl(lua_State*L){
+	lua_pushinteger(L,Fl::event_ctrl());
+	return 1;
+}
+static int luaFl_event_alt(lua_State*L){
+	lua_pushinteger(L,Fl::event_alt());
+	return 1;
+}
 static const luaL_Reg lua_FlAPI[]={
 	{"check",luaFl_check},
 	{"wait",luaFl_wait},
 	{"event_x",luaFl_event_x},
 	{"event_y",luaFl_event_y},
+	{"event_key",luaFl_event_key},
+	{"event_ctrl",luaFl_event_ctrl},
+	{"event_alt",luaFl_event_alt},
 	{0,0}
 };
 static void outofBoundsAlert(const char*what,unsigned val){
@@ -458,6 +478,15 @@ static void setUnsignedLua(lua_State*L,const char*tab,const char*var,unsigned va
 	lua_pushstring(L,var);
 	lua_pushinteger(L,val);
 	lua_rawset(L, -3);
+	lua_pop(L,1);
+}
+static lua_Integer getLuaInt(lua_State*L,const char*tab,const char*var){
+	lua_getglobal(L,tab);
+	lua_pushstring(L,var);
+	lua_rawget(L, -2);
+	lua_Integer l=luaL_checkinteger(L,-1);
+	lua_pop(L,2);
+	return l;
 }
 static void syncTileAmt(lua_State*L){
 	setUnsignedLua(L,"tile","amt",currentProject->tileC->amt);
@@ -611,12 +640,11 @@ static const luaL_Reg lua_tilemapAPI[]={
 	{0,0}
 };
 static int lua_sprite_dither(lua_State*L){
-	unsigned which=luaL_optinteger(L,1,0);
-	ditherSpriteAsImage(which);
+	ditherSpriteAsImage(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0));
 	return 0;
 }
 static int lua_sprite_ditherAll(lua_State*L){
-	ditherSpriteAsImageAllCB(0,0);
+	ditherGroupAsImage(luaL_optinteger(L,1,0));
 	return 0;
 }
 static const luaL_Reg lua_spriteAPI[]={
@@ -644,12 +672,111 @@ static int lua_project_rgt_haveMessage(lua_State*L){
 	fl_alert(msg.c_str());
 	return 0;
 }
+static void mkKeyunsigned(lua_State*L,const char*str,unsigned val){
+	lua_pushstring(L,str);
+	lua_pushinteger(L,val);
+	lua_rawset(L, -3);
+}
+static int lua_project_set(lua_State*L);
 static const luaL_Reg lua_projectAPI[]={
 	{"have",lua_project_rgt_have},
 	{"haveOR",lua_project_rgt_haveOR},
 	{"haveMessage",lua_project_rgt_haveMessage},
+	{"set",lua_project_set},
 	{0,0}
 };
+#define arLen(ar) (sizeof(ar)/sizeof(ar[0]))
+void updateProjectTablesLua(lua_State*L){
+	//Retro Graphics Toolkit bindings
+	lua_pushnil(L);
+	lua_setglobal(L, "palette");
+	if(currentProject->containsData(pjHavePal)){
+		lua_createtable(L, 0,(sizeof(lua_paletteAPI)/sizeof((lua_paletteAPI)[0]) - 1)+5);
+		luaL_setfuncs(L,lua_paletteAPI,0);
+
+		mkKeyunsigned(L,"cnt",currentProject->pal->colorCnt);
+		mkKeyunsigned(L,"cntAlt",currentProject->pal->colorCntalt);
+		mkKeyunsigned(L,"perRow",currentProject->pal->perRow);
+		mkKeyunsigned(L,"perRowAlt",currentProject->pal->perRowalt);
+		mkKeyunsigned(L,"rowCnt",currentProject->pal->rowCntPal);
+		mkKeyunsigned(L,"rowCntAlt",currentProject->pal->rowCntPalalt);
+		mkKeyunsigned(L,"haveAlt",currentProject->pal->haveAlt);
+		mkKeyunsigned(L,"esize",currentProject->pal->esize);
+
+		lua_setglobal(L, "palette");
+	}
+	lua_pushnil(L);
+	lua_setglobal(L, "tile");
+	if(currentProject->containsData(pjHaveTiles)){
+		lua_createtable(L, 0,(sizeof(lua_tileAPI)/sizeof((lua_tileAPI)[0]) - 1)+3);
+		luaL_setfuncs(L,lua_tileAPI,0);
+
+		mkKeyunsigned(L,"amt",currentProject->tileC->amt);
+		mkKeyunsigned(L,"width",currentProject->tileC->sizew);
+		mkKeyunsigned(L,"height",currentProject->tileC->sizeh);
+
+		lua_setglobal(L, "tile");
+	}
+
+	lua_pushnil(L);
+	lua_setglobal(L, "tilemap");
+	if(currentProject->containsData(pjHaveMap)){
+		lua_createtable(L, 0,(sizeof(lua_tilemapAPI)/sizeof((lua_tilemapAPI)[0]) - 1)+3);
+		luaL_setfuncs(L,lua_tilemapAPI,0);
+
+		mkKeyunsigned(L,"width",currentProject->tms->maps[currentProject->curPlane].mapSizeW);
+		mkKeyunsigned(L,"height",currentProject->tms->maps[currentProject->curPlane].mapSizeH);
+		mkKeyunsigned(L,"heightA",currentProject->tms->maps[currentProject->curPlane].mapSizeHA);
+
+		lua_setglobal(L, "tilemap");
+	}
+
+	lua_pushnil(L);
+	lua_setglobal(L, "metasprites");
+	if(currentProject->containsData(pjHaveSprites)){
+		lua_createtable(L, 0,(arLen(lua_spriteAPI)-1)+1);
+		luaL_setfuncs(L,lua_spriteAPI,0);
+
+		lua_pushstring(L,"amt");
+		lua_createtable(L,currentProject->ms->sps.size(),0);
+		for(unsigned i=0;i<currentProject->ms->sps.size();++i){
+			lua_pushinteger(L,currentProject->ms->sps[i].amt);
+			lua_rawseti(L,-2,i+1);
+		}
+		lua_rawset(L,-3);
+		lua_setglobal(L, "metasprites");
+	}
+
+	lua_pushnil(L);
+	lua_setglobal(L, "project");
+	lua_createtable(L, 0,(sizeof(lua_projectAPI)/sizeof((lua_projectAPI)[0]) - 1)+12);
+	luaL_setfuncs(L,lua_projectAPI,0);
+	mkKeyunsigned(L,"palMask",pjHavePal);
+	mkKeyunsigned(L,"tilesMask",pjHaveTiles);
+	mkKeyunsigned(L,"mapMask",pjHaveMap);
+	mkKeyunsigned(L,"chunksMask",pjHaveChunks);
+	mkKeyunsigned(L,"spritesMask",pjHaveSprites);
+	mkKeyunsigned(L,"levelMask",pjHaveLevel);
+	mkKeyunsigned(L,"allMask",pjAllMask);
+	mkKeyunsigned(L,"gameSystem",currentProject->gameSystem);
+	mkKeyunsigned(L,"segaGenesis",segaGenesis);
+	mkKeyunsigned(L,"NES",NES);
+	mkKeyunsigned(L,"count",projects_count);
+	mkKeyunsigned(L,"curProjectID",curProjectID);
+	lua_setglobal(L, "project");
+}
+static int lua_project_set(lua_State*L){
+	unsigned off=luaL_optinteger(L,1,0);
+	printf("off = %u\n",off);
+	if((off>=projects_count)||(off==curProjectID))
+		lua_pushboolean(L,false);//Failure
+	else{
+		switchProjectSlider(off);
+		updateProjectTablesLua(L);
+		lua_pushboolean(L,true);
+	}
+	return 1;
+}
 static int lua_rgt_redraw(lua_State*L){
 	window->redraw();
 	return 0;
@@ -720,6 +847,22 @@ static int lua_rgt_rgbToHsl(lua_State*L){
 	lua_pushnumber(L,l);
 	return 3;
 }
+static int lua_rgt_setTab(lua_State*L){
+	int idx=luaL_checkinteger(L,1);
+	if(idx<0)
+		idx=window->tabsMain.size()-1;
+	idx%=window->tabsMain.size();
+	window->the_tabs->value(window->tabsMain[idx]);
+	set_mode_tabs(nullptr,nullptr);
+}
+static int lua_rgt_appendTab(lua_State*L){
+	int rx,ry,rw,rh;
+	window->the_tabs->client_area(rx,ry,rw,rh);
+	window->tabsMain.emplace_back(new Fl_Group(rx, ry, rw, rh, "Lua scripting"));
+}
+static int lua_rgt_endAppendTab(lua_State*L){
+	window->tabsMain[window->tabsMain.size()-1]->end();
+}
 static const luaL_Reg lua_rgtAPI[]={
 	{"redraw",lua_rgt_redraw},
 	{"ditherImage",lua_rgt_ditherImage},
@@ -728,6 +871,9 @@ static const luaL_Reg lua_rgtAPI[]={
 	{"rgbToLch",lua_rgt_rgbToLch},
 	{"lchToRgb",lua_rgt_lchToRgb},
 	{"rgbToHsl",lua_rgt_rgbToHsl},
+	{"setTab",lua_rgt_setTab},
+	{"appendTab",lua_rgt_appendTab},
+	{"endAppendTab",lua_rgt_endAppendTab},
 	{0,0}
 };
 void runLuaFunc(lua_State*L,unsigned args,unsigned results){
@@ -879,14 +1025,13 @@ static const luaL_Reg lua_Fl_Window[]={
 	{"redraw",lua_Fl_Window_redraw},
 	{0,0}
 };
-static void mkKeyunsigned(lua_State*L,const char*str,unsigned val){
-	lua_pushstring(L,str);
-	lua_pushinteger(L,val);
-	lua_rawset(L, -3);
-}
-void runLua(lua_State*L,const char*fname){
+void runLua(lua_State*L,const char*str,bool isFile){
 	try{
-		int s = luaL_loadfile(L, fname);
+		int s;
+		if(isFile)
+			luaL_loadfile(L, str);
+		else
+			luaL_loadstring(L, str);
 		if(s != LUA_OK && !lua_isnil(L, -1)){
 			const char *msg = lua_tostring(L, -1);
 			if (msg == NULL) msg = "(error object is not a string)";
@@ -911,7 +1056,6 @@ struct keyPair{
 	const char*key;
 	unsigned pair;
 };
-#define arLen(ar) (sizeof(ar)/sizeof(ar[0]))
 static const keyPair FLconsts[]={
 	{"MENU_INACTIVE",FL_MENU_INACTIVE},
 	{"MENU_TOGGLE",FL_MENU_TOGGLE},
@@ -932,7 +1076,47 @@ static const keyPair FLconsts[]={
 	{"BUTTON1",FL_BUTTON1},
 	{"BUTTON2",FL_BUTTON2},
 	{"BUTTON3",FL_BUTTON3},
-	{"BUTTONS",FL_BUTTONS}
+	{"BUTTONS",FL_BUTTONS},
+	{"Button",FL_Button},
+	{"BackSpace",FL_BackSpace},
+	{"Tab",FL_Tab},
+	{"Iso_Key",FL_Iso_Key},
+	{"Enter",FL_Enter},
+	{"Pause",FL_Pause},
+	{"Scroll_Lock",FL_Scroll_Lock},
+	{"Escape",FL_Escape},
+	{"Kana",FL_Kana},
+	{"Eisu",FL_Eisu},
+	{"Yen",FL_Yen},
+	{"JIS_Underscore",FL_JIS_Underscore},
+	{"Home",FL_Home},
+	{"Left",FL_Left},
+	{"Up",FL_Up},
+	{"Right",FL_Right},
+	{"Down",FL_Down},
+	{"Page_Up",FL_Page_Up},
+	{"Page_Down",FL_Page_Down},
+	{"End",FL_End},
+	{"Print",FL_Print},
+	{"Insert",FL_Insert},
+	{"Menu",FL_Menu},
+	{"Help",FL_Help},
+	{"Num_Lock",FL_Num_Lock},
+	{"KP",FL_KP},
+	{"KP_Enter",FL_KP_Enter},
+	{"KP_Last",FL_KP_Last},
+	{"F",FL_F},
+	{"F_Last",FL_F_Last},
+	{"Shift_L",FL_Shift_L},
+	{"Shift_R",FL_Shift_R},
+	{"Control_L",FL_Control_L},
+	{"Control_R",FL_Control_R},
+	{"Caps_Lock",FL_Caps_Lock},
+	{"Meta_L",FL_Meta_L},
+	{"Meta_R",FL_Meta_R},
+	{"Alt_L",FL_Alt_L},
+	{"Alt_R",FL_Alt_R},
+	{"Delete",FL_Delete},
 };
 lua_State*createLuaState(void){
 	lua_State *L = lua_newstate(l_alloc, NULL);
@@ -946,7 +1130,7 @@ lua_State*createLuaState(void){
 		luaL_newlib(L,lua_FlAPI);
 		lua_setglobal(L, "Fl");
 
-		lua_createtable(L,0,FL_FULLSCREEN+1+arLen(FLconsts));
+		lua_createtable(L,0,FL_FULLSCREEN+arLen(FLconsts));
 		for(unsigned x=0;x<=FL_FULLSCREEN;++x)
 			mkKeyunsigned(L,fl_eventnames[x]+3,x);
 		for(unsigned x=0;x<arLen(FLconsts);++x)
@@ -961,71 +1145,13 @@ lua_State*createLuaState(void){
 		luaL_setfuncs(L,lua_Fl_Window,0);
 		lua_setglobal(L,"Fl_Window");
 
-		//Retro Graphics Toolkit bindings
-		if(currentProject->containsData(pjHavePal)){
-			lua_createtable(L, 0,(sizeof(lua_paletteAPI)/sizeof((lua_paletteAPI)[0]) - 1)+5);
-			luaL_setfuncs(L,lua_paletteAPI,0);
-
-			mkKeyunsigned(L,"cnt",currentProject->pal->colorCnt);
-			mkKeyunsigned(L,"cntAlt",currentProject->pal->colorCntalt);
-			mkKeyunsigned(L,"perRow",currentProject->pal->perRow);
-			mkKeyunsigned(L,"perRowAlt",currentProject->pal->perRowalt);
-			mkKeyunsigned(L,"rowCnt",currentProject->pal->rowCntPal);
-			mkKeyunsigned(L,"rowCntAlt",currentProject->pal->rowCntPalalt);
-			mkKeyunsigned(L,"haveAlt",currentProject->pal->haveAlt);
-			mkKeyunsigned(L,"esize",currentProject->pal->esize);
-
-			lua_setglobal(L, "palette");
-		}
-
-		if(currentProject->containsData(pjHaveTiles)){
-			lua_createtable(L, 0,(sizeof(lua_tileAPI)/sizeof((lua_tileAPI)[0]) - 1)+3);
-			luaL_setfuncs(L,lua_tileAPI,0);
-
-			mkKeyunsigned(L,"amt",currentProject->tileC->amt);
-			mkKeyunsigned(L,"width",currentProject->tileC->sizew);
-			mkKeyunsigned(L,"height",currentProject->tileC->sizeh);
-
-			lua_setglobal(L, "tile");
-		}
-
-		if(currentProject->containsData(pjHaveMap)){
-			lua_createtable(L, 0,(sizeof(lua_tilemapAPI)/sizeof((lua_tilemapAPI)[0]) - 1)+3);
-			luaL_setfuncs(L,lua_tilemapAPI,0);
-
-			mkKeyunsigned(L,"width",currentProject->tms->maps[currentProject->curPlane].mapSizeW);
-			mkKeyunsigned(L,"height",currentProject->tms->maps[currentProject->curPlane].mapSizeH);
-			mkKeyunsigned(L,"heightA",currentProject->tms->maps[currentProject->curPlane].mapSizeHA);
-
-			lua_setglobal(L, "tilemap");
-		}
-
-		if(currentProject->containsData(pjHaveSprites)){
-			lua_createtable(L, 0,(sizeof(lua_spriteAPI)/sizeof((lua_spriteAPI)[0]) - 1)+1);
-			luaL_setfuncs(L,lua_spriteAPI,0);
-
-			mkKeyunsigned(L,"amt",currentProject->spritesC->amt);
-
-			lua_setglobal(L, "sprite");
-		}
-
-
-		lua_createtable(L, 0,(sizeof(lua_projectAPI)/sizeof((lua_projectAPI)[0]) - 1)+10);
-		luaL_setfuncs(L,lua_projectAPI,0);
-		mkKeyunsigned(L,"palMask",pjHavePal);
-		mkKeyunsigned(L,"tilesMask",pjHaveTiles);
-		mkKeyunsigned(L,"mapMask",pjHaveMap);
-		mkKeyunsigned(L,"chunksMask",pjHaveChunks);
-		mkKeyunsigned(L,"spritesMask",pjHaveSprites);
-		mkKeyunsigned(L,"levelMask",pjHaveLevel);
-		mkKeyunsigned(L,"allMask",pjAllMask);
-		mkKeyunsigned(L,"gameSystem",currentProject->gameSystem);
-		mkKeyunsigned(L,"segaGenesis",segaGenesis);
-		mkKeyunsigned(L,"NES",NES);
-		lua_setglobal(L, "project");
+		updateProjectTablesLua(L);
 
 		luaL_newlib(L,lua_rgtAPI);
 		lua_setglobal(L, "rgt");
+
+		luaopen_zlib(L);
+		lua_setglobal(L, "zlib");
 	}else
 		fl_alert("lua_newstate failed");
 	return L;

@@ -132,13 +132,14 @@ void set_game_system(Fl_Widget*,void* selection){
 		updateNesTab(0,false);
 		updateNesTab(0,true);
 	}
+	unsigned msprt=window->metaspritesel->value();
 	gameSystemEnum gold=currentProject->gameSystem;
 	uint32_t sold=currentProject->subSystem;
 	unsigned bd=currentProject->getBitdepthSys();
 	unsigned bdold=bd;
 	tiles*tilesOld=0;
 	if(currentProject->containsData(pjHaveTiles))
-		tilesOld=new tiles(*currentProject->tileC);
+		tilesOld=new tiles(*currentProject->tileC,currentProject);
 	if(currentProject->containsData(pjHavePal)){
 		switch(sel){
 			case segaGenesis:
@@ -271,7 +272,7 @@ void set_game_system(Fl_Widget*,void* selection){
 			if(currentProject->containsData(pjHaveSprites)){
 				window->spritesize[0]->maximum(4);
 				window->spritesize[1]->maximum(4);
-				currentProject->spritesC->enforceMax(4,4);
+				currentProject->ms->sps[msprt].enforceMax(4,4);
 			}
 			window->subSysC->copy(subSysGenesis);
 			window->subSysC->value((currentProject->subSystem&sgSHmask)>>sgSHshift);
@@ -294,7 +295,7 @@ void set_game_system(Fl_Widget*,void* selection){
 			if(currentProject->containsData(pjHaveSprites)){
 				window->spritesize[0]->maximum(1);
 				window->spritesize[1]->maximum(2);
-				currentProject->spritesC->enforceMax(1,2);
+				currentProject->ms->sps[msprt].enforceMax(1,2);
 			}
 			window->subSysC->copy(subSysNES);
 			window->subSysC->value(currentProject->subSystem&NES2x2);
@@ -308,7 +309,7 @@ void set_game_system(Fl_Widget*,void* selection){
 			if(currentProject->containsData(pjHaveSprites)){
 				window->spritesize[0]->maximum(1);
 				window->spritesize[1]->maximum(2);
-				currentProject->spritesC->enforceMax(1,2);
+				currentProject->ms->sps[msprt].enforceMax(1,2);
 			}
 		break;
 		case TMS9918:
@@ -320,7 +321,7 @@ void set_game_system(Fl_Widget*,void* selection){
 			if(currentProject->containsData(pjHaveSprites)){
 				window->spritesize[0]->maximum(1);
 				window->spritesize[1]->maximum(2);
-				currentProject->spritesC->enforceMax(1,2);
+				currentProject->ms->sps[msprt].enforceMax(1,2);
 			}
 			window->subSysC->copy(subSysTMS9918);
 			window->subSysC->value(currentProject->getTMS9918subSys());
@@ -341,7 +342,7 @@ void set_game_system(Fl_Widget*,void* selection){
 	if(currentProject->containsData(pjHaveSprites)){
 		int spRow=fixedSpirtePalRowSys(sel);
 		if(spRow>=0){
-			currentProject->spritesC->allToPalRow(spRow);
+			currentProject->ms->sps[msprt].allToPalRow(spRow);
 			palBar.changeRow(spRow,3);
 		}
 		window->updateSpriteSliders();

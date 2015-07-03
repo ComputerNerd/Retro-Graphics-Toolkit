@@ -38,7 +38,10 @@ void saveAllProjectsCB(Fl_Widget*,void*){
 	saveAllProjects();
 }
 void loadAllProjectsCB(Fl_Widget*,void*){
-	loadAllProjects();
+	if(!load_file_generic("Load projects group"))
+		return;
+	pushProjectAll();
+	loadAllProjects(the_file.c_str());
 	switchProject(curProjectID);
 }
 void haveCB(Fl_Widget*o,void*mask){
@@ -88,13 +91,13 @@ void haveCB(Fl_Widget*o,void*mask){
 	unsigned off=__builtin_ctz(m);
 	if(set){
 		if(window->tabsHidden[off]){
-			window->the_tabs->insert(*window->TabsMain[off],off);
+			window->the_tabs->insert(*window->tabsMain[off],off);
 			window->tabsHidden[off]=false;
 		}
 	}else{
 		if(!window->tabsHidden[off]){
 			if(currentProject->share[off]<0){
-				window->the_tabs->remove(window->TabsMain[off]);
+				window->the_tabs->remove(window->tabsMain[off]);
 				window->tabsHidden[off]=true;
 			}
 		}
@@ -162,22 +165,22 @@ void shareProjectCB(Fl_Widget*o,void*mask){
 	window->redraw();
 }
 void loadProjectCB(Fl_Widget*,void*){
+	if(!load_file_generic("Load project",false))
+		return;
 	pushProject();
-	loadProject(curProjectID);
+	loadProject(curProjectID,the_file.c_str());
 	switchProject(curProjectID);
 }
 void saveProjectCB(Fl_Widget*,void*){
-	currentProject->Name.assign(window->TxtBufProject->text());//Make sure text is up to date
+	currentProject->Name.assign(window->TxtBufProject->text());//Update the project text.
 	saveProject(curProjectID);
 }
 void switchProjectCB(Fl_Widget*o,void*){
 	Fl_Slider* s=(Fl_Slider*)o;
-	currentProject->Name.assign(window->TxtBufProject->text());//Save text to old project
-	curProjectID=s->value();
-	currentProject=projects[curProjectID];
-	switchProject(curProjectID);
+	switchProjectSlider(s->value());
 }
 void appendProjectCB(Fl_Widget*,void*){
+	pushProjectAppend();
 	appendProject();
 	window->redraw();
 }

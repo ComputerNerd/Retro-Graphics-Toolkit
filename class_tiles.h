@@ -21,7 +21,7 @@ private:
 	void setDim(unsigned w,unsigned h,unsigned bd);
 public:
 	tiles(struct Project*prj);
-	tiles(const tiles& other);
+	tiles(const tiles&other,Project*prj);
 	~tiles();
 	struct Project*prj;
 	unsigned tileSize;/*!< Sets the size on one tile in bytes 16 or 32 depends of if NES or genesis*/

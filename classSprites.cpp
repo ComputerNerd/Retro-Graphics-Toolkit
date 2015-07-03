@@ -38,7 +38,8 @@ static inline uint16_t swap_word(uint16_t w){
 #define be16toh swap_word
 #define htobe16 swap_word
 #endif
-sprites::sprites(){
+sprites::sprites(Project*prj){
+	this->prj=prj;
 	amt=1;
 	groups.push_back(spriteGroup());
 	groups[0].list.push_back(sprite());
@@ -49,7 +50,8 @@ sprites::sprites(){
 	name.assign(spritesName);
 	extraOptDPLC=false;
 }
-sprites::sprites(const sprites& other){
+sprites::sprites(const sprites&other,Project*prj){
+	this->prj=prj;
 	groups.reserve(other.groups.size());
 	name=other.name;
 	for(uint32_t i=0;i<other.groups.size();++i)
@@ -103,7 +105,7 @@ void sprites::freeOptmizations(unsigned which){
 		bool notBlank=false;
 		for(unsigned h=0,ctile=groups[which].list[i].starttile;h<groups[which].list[i].h;++h){
 			for(unsigned w=0;w<groups[which].list[i].w;++w,++ctile)
-				notBlank|=chkNotZero(currentProject->tileC->truetDat.data()+(ctile*256),256);
+				notBlank|=chkNotZero(prj->tileC->truetDat.data()+(ctile*256),256);
 		}
 		if(!notBlank){
 			//Completely remove the sprite
@@ -113,7 +115,7 @@ void sprites::freeOptmizations(unsigned which){
 				else
 					delingroup(which,i);
 			for(int td=tiledel+tiledelamt-1;td>=tiledel;--td)
-				currentProject->tileC->remove_tile_at(td);
+				prj->tileC->remove_tile_at(td);
 			fixDel(tiledel,tiledelamt);
 			if(groups[which].list.size()<1)
 				return;
@@ -124,11 +126,11 @@ void sprites::freeOptmizations(unsigned which){
 		for(unsigned w=groups[which].list[i].w,ctile=groups[which].list[i].starttile+(groups[which].list[i].h*groups[which].list[i].w)-1;w--;){
 			bool notBlank=false;
 			for(unsigned h=groups[which].list[i].h;h--;--ctile){
-				if(ctile>=currentProject->tileC->amt){
-					printf("Tile %u exceeded %u\n",ctile,currentProject->tileC->amt-1);
+				if(ctile>=prj->tileC->amt){
+					printf("Tile %u exceeded %u\n",ctile,prj->tileC->amt-1);
 					continue;
 				}else
-					notBlank|=chkNotZero(currentProject->tileC->truetDat.data()+(ctile*256),256);
+					notBlank|=chkNotZero(prj->tileC->truetDat.data()+(ctile*256),256);
 			}
 			if(notBlank){
 				break;
@@ -136,7 +138,7 @@ void sprites::freeOptmizations(unsigned which){
 				--groups[which].list[i].w;
 				int tiledel=ctile,tiledelamt=groups[which].list[i].h;
 				for(int td=tiledel+tiledelamt;td>tiledel;--td)
-					currentProject->tileC->remove_tile_at(td);
+					prj->tileC->remove_tile_at(td);
 				fixDel(tiledel,tiledelamt);
 			}
 		}
@@ -146,14 +148,14 @@ void sprites::freeOptmizations(unsigned which){
 		for(unsigned w=0,ctile=groups[which].list[i].starttile;w<groups[which].list[i].w;++w){
 			bool notBlank=false;
 			for(unsigned h=0;h<groups[which].list[i].h;++h,++ctile)
-				notBlank|=chkNotZero(currentProject->tileC->truetDat.data()+(ctile*256),256);
+				notBlank|=chkNotZero(prj->tileC->truetDat.data()+(ctile*256),256);
 			if(notBlank){
 				break;
 			}else{
 				--groups[which].list[i].w;
 				groups[which].offx[i]+=8;
 				for(int td=ctile-1;td>=ctile-groups[which].list[i].h;--td)
-					currentProject->tileC->remove_tile_at(td);
+					prj->tileC->remove_tile_at(td);
 				fixDel(ctile-groups[which].list[i].h,groups[which].list[i].h);
 				groups[which].list[i].starttile+=groups[which].list[i].h;
 				ctile-=groups[which].list[i].h;
@@ -166,13 +168,13 @@ void sprites::freeOptmizations(unsigned which){
 		for(unsigned h=groups[which].list[i].h;h--;){
 			bool notBlank=false;
 			for(unsigned w=0;w<groups[which].list[i].w;++w)
-				notBlank|=chkNotZero(currentProject->tileC->truetDat.data()+(getTileOnSprite(w,h,which,i))*256,256);
+				notBlank|=chkNotZero(prj->tileC->truetDat.data()+(getTileOnSprite(w,h,which,i))*256,256);
 			if(notBlank){
 				break;
 			}else{
 				for(unsigned w=groups[which].list[i].w;w--;){
 					unsigned delWhich=getTileOnSprite(w,h,which,i);
-					currentProject->tileC->remove_tile_at(delWhich);
+					prj->tileC->remove_tile_at(delWhich);
 					fixDel(delWhich,1);
 				}
 				--groups[which].list[i].h;
@@ -184,13 +186,13 @@ void sprites::freeOptmizations(unsigned which){
 		for(unsigned h=0;h<groups[which].list[i].h;++h){
 			bool notBlank=false;
 			for(unsigned w=0;w<groups[which].list[i].w;++w)
-				notBlank|=chkNotZero(currentProject->tileC->truetDat.data()+(getTileOnSprite(w,h,which,i))*256,256);
+				notBlank|=chkNotZero(prj->tileC->truetDat.data()+(getTileOnSprite(w,h,which,i))*256,256);
 			if(notBlank){
 				break;
 			}else{
 				for(unsigned w=groups[which].list[i].w;w--;){
 					unsigned delWhich=getTileOnSprite(w,h,which,i);
-					currentProject->tileC->remove_tile_at(delWhich);
+					prj->tileC->remove_tile_at(delWhich);
 					fixDel(delWhich+1,1);
 				}
 				groups[which].offy[i]+=8;
@@ -301,7 +303,7 @@ bool sprites::recttoSprite(int x0,int x1,int y0,int y1,int where,Fl_Shared_Image
 	}
 	unsigned depth=loaded_image->d();
 	unsigned wmax,hmax;
-	switch(currentProject->gameSystem){
+	switch(prj->gameSystem){
 		case segaGenesis:
 			wmax=hmax=32;
 		break;
@@ -325,13 +327,13 @@ bool sprites::recttoSprite(int x0,int x1,int y0,int y1,int where,Fl_Shared_Image
 	unsigned spritesnew=((wt+wmax-8)/wmax)*((ht+hmax-8)/hmax);
 	if(where>=amt)
 		setAmt(where+1);
-	unsigned startTile=currentProject->tileC->amt;
-	uint8_t*out=currentProject->tileC->truetDat.data()+(startTile*256);
+	unsigned startTile=prj->tileC->amt;
+	uint8_t*out=prj->tileC->truetDat.data()+(startTile*256);
 	unsigned newTiles=(wt/8)*(ht/8);
-	currentProject->tileC->amt+=newTiles;
+	prj->tileC->amt+=newTiles;
 	//set new amount
-	currentProject->tileC->resizeAmt();
-	out=currentProject->tileC->truetDat.data()+(startTile*currentProject->tileC->tcSize);
+	prj->tileC->resizeAmt();
+	out=prj->tileC->truetDat.data()+(startTile*prj->tileC->tcSize);
 	setAmtingroup(where,spritesnew);
 	unsigned center[3];
 	center[0]=(wt-w)/2;
@@ -1352,10 +1354,10 @@ void sprites::spriteGroupToImage(uint8_t*img,uint32_t id,int row,bool alpha){
 		uint32_t ttile=groups[id].list[i].starttile;
 		if((row!=groups[id].list[i].palrow)&&(row>=0))
 			continue;//Skip if we only want a specific row
-		for(uint32_t x=0;x<groups[id].list[i].w*currentProject->tileC->sizew;x+=currentProject->tileC->sizew){
-			for(uint32_t y=0;y<groups[id].list[i].h*currentProject->tileC->sizeh;y+=currentProject->tileC->sizeh,++ttile){
-				uint8_t*outptr=currentProject->tileC->truetDat.data()+(ttile*currentProject->tileC->tcSize);
-				rect2rect(img,outptr,xoff+x,yoff+y,w,currentProject->tileC->sizew,currentProject->tileC->sizeh,alpha?4:3,true);
+		for(uint32_t x=0;x<groups[id].list[i].w*prj->tileC->sizew;x+=prj->tileC->sizew){
+			for(uint32_t y=0;y<groups[id].list[i].h*prj->tileC->sizeh;y+=prj->tileC->sizeh,++ttile){
+				uint8_t*outptr=prj->tileC->truetDat.data()+(ttile*prj->tileC->tcSize);
+				rect2rect(img,outptr,xoff+x,yoff+y,w,prj->tileC->sizew,prj->tileC->sizeh,alpha?4:3,true);
 			}
 		}
 	}
@@ -1375,10 +1377,10 @@ void sprites::spriteImageToTiles(uint8_t*img,uint32_t id,int rowUsage,bool alpha
 		uint32_t ttile=groups[id].list[i].starttile;
 		if((rowUsage!=groups[id].list[i].palrow)&&(rowUsage>=0))
 			continue;//Skip if we only want a specific row
-		for(uint32_t x=0;x<groups[id].list[i].w*currentProject->tileC->sizew;x+=currentProject->tileC->sizew){
-			for(uint32_t y=0;y<groups[id].list[i].h*currentProject->tileC->sizeh;y+=currentProject->tileC->sizeh,++ttile){
-				rect2rect(img,tcTemp,xoff+x,yoff+y,w,currentProject->tileC->sizew,currentProject->tileC->sizeh,isIndexArray?1:(alpha?4:3),false);
-				currentProject->tileC->truecolor_to_tile_ptr(groups[id].list[i].palrow,ttile,tcTemp,false,true,isIndexArray);
+		for(uint32_t x=0;x<groups[id].list[i].w*prj->tileC->sizew;x+=prj->tileC->sizew){
+			for(uint32_t y=0;y<groups[id].list[i].h*prj->tileC->sizeh;y+=prj->tileC->sizeh,++ttile){
+				rect2rect(img,tcTemp,xoff+x,yoff+y,w,prj->tileC->sizew,prj->tileC->sizeh,isIndexArray?1:(alpha?4:3),false);
+				prj->tileC->truecolor_to_tile_ptr(groups[id].list[i].palrow,ttile,tcTemp,false,true,isIndexArray);
 			}
 		}
 	}
@@ -1388,7 +1390,7 @@ void sprites::minmaxoffy(uint32_t id,int32_t&miny,int32_t&maxy)const{
 	for(uint32_t i=0;i<groups[id].offy.size();++i){
 		if(groups[id].offy[i]<miny)
 			miny=groups[id].offy[i];
-		int32_t tmpy=groups[id].offy[i]+(groups[id].list[i].h*currentProject->tileC->sizeh);
+		int32_t tmpy=groups[id].offy[i]+(groups[id].list[i].h*prj->tileC->sizeh);
 		if(tmpy>maxy)
 			maxy=tmpy;
 	}
@@ -1398,7 +1400,7 @@ void sprites::minmaxoffx(uint32_t id,int32_t&minx,int32_t&maxx)const{
 	for(uint32_t i=0;i<groups[id].offx.size();++i){
 		if(groups[id].offx[i]<minx)
 			minx=groups[id].offx[i];
-		int32_t tmpx=groups[id].offx[i]+(groups[id].list[i].w*currentProject->tileC->sizew);
+		int32_t tmpx=groups[id].offx[i]+(groups[id].list[i].w*prj->tileC->sizew);
 		if(tmpx>maxx)
 			maxx=tmpx;
 	}

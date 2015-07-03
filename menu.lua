@@ -1,4 +1,4 @@
---[[ 
+--[[
 	This file is part of Retro Graphics Toolkit
 
 	Retro Graphics Toolkit is free software: you can redistribute it and/or modify
@@ -16,6 +16,15 @@
 --]]
 function userGuide(userData)--callback functions **must** have the user data (name does not matter) parameter and only that.
 	fl.alert("The user's guide can be found on the wiki https://github.com/ComputerNerd/Retro-Graphics-Toolkit/wiki or locally in the Manual folder");
+end
+function allMetaDither(unused)
+	if project.have(project.spritesMask)==true then
+		for i=0,#metasprites.amt-1 do
+			metasprites.ditherAll(i)
+		end
+	else
+		project.haveMessage(project.spritesMask)
+	end
 end
 function generateMenu()
 --[[ This function shall return a table containing menu items that will be added to the main menu.
@@ -38,12 +47,12 @@ function generateMenu()
 			{"Open palette",0,6--[[loadPalette--]]},
 			{"Save palette",0,7--[[save_palette--]]},
 			{},
-		{"Tilemap",0,0,0,FL.SUBMENU},
+		{"Tile map",0,0,0,FL.SUBMENU},
 			{"Import tile map or blocks and if NES attributes",0,8--[[load_tile_map--]],0},
-			{"Import image to tilemap",0,5--[[load_image_to_tilemap--]],0},
-			{"Import image over current tilemap",0,5--[[load_image_to_tilemap--]],1},
-			{"Export tilemap as image",0,9--[[save_tilemap_as_image--]],0},
-			{"Export tilemap as with system color space",0,10--[[save_tilemap_as_colspace--]],0},
+			{"Import image to tile map",0,5--[[load_image_to_tilemap--]],0},
+			{"Import image over current tile map",0,5--[[load_image_to_tilemap--]],1},
+			{"Export tile map as image",0,9--[[save_tilemap_as_image--]],0},
+			{"Export tile map as with system color space",0,10--[[save_tilemap_as_colspace--]],0},
 			{"Export tile map and if NES attributes",0,11--[[save_map--]],0},
 			{},
 		{"Projects",0,0,0,FL.SUBMENU},
@@ -104,20 +113,21 @@ function generateMenu()
 		{"Delete currently selected tile",0,37--[[delete_tile_at_location--]],0},
 		{"Create new tiles for flipped tiles",0,38--[[tilesnewfilppedCB--]]},
 		{},
-	{"TileMap actions",0,0,0,FL.SUBMENU},
-		{"Fix tile delete on tilemap",0,39--[[tilemap_remove_callback--]],0},
+	{"Tile map actions",0,0,0,FL.SUBMENU},
+		{"Fix tile delete on tile map",0,39--[[tilemap_remove_callback--]],0},
 		{"Toggle TrueColor Viewing (defaults to off)",0,40--[[trueColTileToggle--]],0},
 		{"Pick Tile row based on color delta",0,41--[[tileDPicker--]],0},
 		{"Auto determine if use shadow highlight",0,42--[[shadow_highligh_findout--]],0},
-		{"Dither tilemap as image",0,43--[[dither_tilemap_as_imageCB--]],0},
+		{"Dither tile map as image",0,43--[[dither_tilemap_as_imageCB--]],0},
 		{"File tile map with selection including attributes",0,44--[[fill_tile_map_with_tile--]],0},
 		{"Fix out of range tiles (replace with current attributes in plane editor)",0,45--[[FixOutOfRangeCB--]],0},
 		{"Pick extended attributes",0,46--[[pickExtAttrsCB--]],0},
 		{},
 	{"Sprite actions",0,0,0,FL.SUBMENU},
 		{"Generate optimal palette for selected sprite",0,25--[[generate_optimal_palette--]],1},
-		{"Dither sprite as image",0,47--[[ditherSpriteAsImageCB--]],0},
-		{"Dither all sprites as image",0,48--[[ditherSpriteAsImageAllCB--]],0},
+		{"Dither sprite group as image",0,47--[[ditherSpriteAsImageCB--]],0},
+		{"Dither meta sprite as image",0,48--[[ditherSpriteAsImageAllCB--]],0},
+		{"Dither all meta sprites as image",0,"allMetaDither",0},
 		{"Remove blank and duplicate tiles without affect sprite amount",0,49--[[optimizeSpritesCB--]],0},
 		{"Set all sprites with same start tile to currently selected palette row",0,50--[[palRowstCB--]],0},
 		{},

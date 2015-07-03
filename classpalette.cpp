@@ -1,18 +1,18 @@
 /*
-   This file is part of Retro Graphics Toolkit
+	This file is part of Retro Graphics Toolkit
 
-   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or any later version.
+	Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or any later version.
 
-   Retro Graphics Toolkit is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-   GNU General Public License for more details.
+	Retro Graphics Toolkit is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	You should have received a copy of the GNU General Public License
+	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #include <stdint.h>
 #include <string.h>
@@ -41,17 +41,19 @@ static const uint8_t TMS9918Palette[]={
 201,  91, 186,
 204, 204, 204,
 255, 255, 255};
-palette::palette(void){
+palette::palette(Project*prj){
+	this->prj=prj;
 	rgbPal=0;
-	setVars(currentProject->gameSystem);
+	setVars(prj->gameSystem);
 	memset(rgbPal,0,(colorCnt+colorCntalt)*(4+esize));
 }
 palette::~palette(void){
 	free(rgbPal);
 }
-palette::palette(const palette& other){
+palette::palette(const palette&other,Project*prj){
+	this->prj=prj;
 	rgbPal=0;
-	setVars(currentProject->gameSystem);
+	setVars(prj->gameSystem);
 	memcpy(rgbPal,other.rgbPal,std::min((colorCnt+colorCntalt)*(4+esize),(other.colorCnt+other.colorCntalt)*(4+other.esize)));
 }
 void palette::setVars(enum gameSystemEnum gameSystem){
@@ -125,7 +127,7 @@ void palette::write(FILE*fp){
 	fwrite(palType,colorCnt+colorCntalt,1,fp);
 }
 void palette::updateRGBindex(unsigned index){
-	switch(currentProject->gameSystem){
+	switch(prj->gameSystem){
 		case segaGenesis:
 			{uint16_t*ptr=(uint16_t*)palDat+index;
 			rgbPal[index*3+2]=palTab[((*ptr>>1)&7)+palTypeGen];//Blue note that bit shifting is different due to little endian
@@ -167,7 +169,7 @@ void palette::rgbToEntry(unsigned r,unsigned g,unsigned b,unsigned ent){
 		fl_alert("Attempted access for color %d but there is only %d colors",ent,maxent);
 		return;
 	}
-	switch(currentProject->gameSystem){
+	switch(prj->gameSystem){
 		case segaGenesis:
 			{uint16_t temp=to_sega_genesis_colorRGB(r,g,b,ent);
 			ent*=2;

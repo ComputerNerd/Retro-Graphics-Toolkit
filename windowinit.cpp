@@ -1,18 +1,18 @@
 /*
-   This file is part of Retro Graphics Toolkit
+	This file is part of Retro Graphics Toolkit
 
-   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or any later version.
+	Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or any later version.
 
-   Retro Graphics Toolkit is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-   GNU General Public License for more details.
+	Retro Graphics Toolkit is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	You should have received a copy of the GNU General Public License
+	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #include "callbacks_palette.h"
 #include "callback_tiles.h"
@@ -31,29 +31,34 @@
 #include "project.h"
 #include "class_global.h"
 #include "luaconfig.h"
-void set_mode_tabs(Fl_Widget* o, void*){
+#include "callbacklua.h"
+void set_mode_tabs(Fl_Widget*, void*){
 	Fl_Group * val=(Fl_Group*)(Fl_Tabs*)window->the_tabs->value();
-	if(val==window->TabsMain[pal_edit]){
-		mode_editor=pal_edit;
-		palBar.updateSlider(0);
-	}else if(val==window->TabsMain[tile_edit]){
-		currentProject->tileC->current_tile=window->tile_select->value();
-		mode_editor=tile_edit;
-		palBar.updateSlider(1);
-	}else if(val==window->TabsMain[tile_place]){
-		currentProject->tileC->current_tile=window->tile_select_2->value();
-		mode_editor=tile_place;
-		palBar.updateSlider(2);
-	}else if(val==window->TabsMain[chunkEditor]){
-		mode_editor=chunkEditor;
-	}else if(val==window->TabsMain[spriteEditor]){
-		mode_editor=spriteEditor;
-		palBar.updateSlider(3);
-	}else if(val==window->TabsMain[levelEditor]){
-		mode_editor=levelEditor;
-	}else if(val==window->TabsMain[settingsTab]){
-		mode_editor=settingsTab;
+	uint32_t oldTab=mode_editor;
+	for(unsigned i=0;i<window->tabsMain.size();++i){
+		if(val==window->tabsMain[i])
+			mode_editor=i;
 	}
+	switch(mode_editor){
+		case pal_edit:
+			palBar.updateSlider(0);
+		break;
+		case tile_edit:
+			currentProject->tileC->current_tile=window->tile_select->value();
+			palBar.updateSlider(1);
+		break;
+		case tile_place:
+			currentProject->tileC->current_tile=window->tile_select_2->value();
+			palBar.updateSlider(2);
+		break;
+		case spriteEditor:
+			palBar.updateSlider(3);
+		break;
+	}
+	lua_getglobal(Lconf,"switchTab");
+	lua_pushinteger(Lconf,oldTab);
+	lua_pushinteger(Lconf,mode_editor);
+	runLuaFunc(Lconf,2,0);
 }
 static const char * freeDes="This sets the currently selected palette entry to free meaning that this color can be changed";
 static const char * lockedDes="This sets the currently selected palette entry to locked meaning that this color cannot be changed but tiles can still use it";
@@ -89,6 +94,7 @@ extern const char * MapWidthTxt;
 extern const char * MapHeightTxt;
 static const char * TooltipZoom="By changing this slider you are changing the magnification of the tile for example if this slider was set to 10 that would mean that the tile is magnified by a factor of 10";
 extern const char*spriteDefName;
+extern const char*defMDesc;
 extern const char*spritesName;
 static void(*const mainCBtab[])(Fl_Widget*,void*)={
 	//Number is plus one because it is that way in the Lua configuration file
@@ -155,8 +161,9 @@ static void callCFuncLua(Fl_Widget*w,void*toPair){
 }
 static void callLuaCB(Fl_Widget*w,void*toPair){
 	std::pair<std::string,int64_t>*p=(std::pair<std::string,int64_t>*)toPair;
+	updateProjectTablesLua(Lconf);
 	lua_getglobal(Lconf,p->first.c_str());
-	lua_pushnumber(Lconf,p->second);
+	lua_pushinteger(Lconf,p->second);
 	runLuaFunc(Lconf,1,0);
 }
 void editor::_editor(){
@@ -263,7 +270,7 @@ void editor::_editor(){
 		int rx,ry,rw,rh;
 		the_tabs->client_area(rx,ry,rw,rh);
 		{
-			TabsMain[pal_edit] = new Fl_Group(rx, ry, rw, rh, "Palette editor");
+			tabsMain.emplace_back(new Fl_Group(rx, ry, rw, rh, "Palette editor"));
 			//stuff related to this group should go here
 			palBar.addTab(0,true);
 			pal_size = new Fl_Hor_Value_Slider(128,384,320,24,"Palette box size");
@@ -305,9 +312,9 @@ void editor::_editor(){
 					o->end();
 				} // End of buttons
 			}//end of group
-      			TabsMain[pal_edit]->end();
+      			tabsMain[pal_edit]->end();
 		} // Fl_Group* o
-		{TabsMain[tile_edit] = new Fl_Group(rx, ry, rw, rh, "Tile editor");
+		{tabsMain.emplace_back(new Fl_Group(rx, ry, rw, rh, "Tile editor"));
 			//stuff related to this group should go here
 			{ Fl_Group* o = new Fl_Group(0, 0, 800, 567);
 				palRTE[0] = new Fl_Round_Button(384, default_palette_bar_offset_y+40, 56, 32, "Row 0");
@@ -406,9 +413,9 @@ void editor::_editor(){
 			tile_select->step(1);
 			tile_select->align(FL_ALIGN_LEFT);
 			tile_select->callback(set_tile_current);
-			TabsMain[tile_edit]->end();
+			tabsMain[tile_edit]->end();
 		}
-		{TabsMain[tile_place] = new Fl_Group(rx,ry,rw,rh,"Plane mapping/block editor");
+		{tabsMain.emplace_back(new Fl_Group(rx,ry,rw,rh,"Plane mapping/block editor"));
 			{Fl_Group* o = new Fl_Group(tile_place_buttons_x_off, 192, 60, 128);
 				palRTE[4] = new Fl_Round_Button(tile_place_buttons_x_off, 192, 60, 28, "Row 0");
 				palRTE[4]->type(FL_RADIO_BUTTON);
@@ -514,11 +521,11 @@ void editor::_editor(){
 			prioCB[0]->tooltip("If checked tile is high priority");
 			{Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,400,96,32,"Show grid?");
 				o->callback(set_grid_placer);
-				o->tooltip("This button toggles whether or not a grid is visible over the tilemap this will allow you to easily see were each tile is");
+				o->tooltip("This button toggles whether or not a grid is visible over the tile map this will allow you to easily see were each tile is");
 			}
 			BlocksCBtn = new Fl_Check_Button(tile_place_buttons_x_off,432,96,32,"Blocks?");
 			BlocksCBtn->callback(toggleBlocksCB);
-			BlocksCBtn->tooltip("Toggles if tilemap is treated as blocks");
+			BlocksCBtn->tooltip("Toggles if tile map is treated as blocks");
 			{Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off,464,192,32,"Show only selected row");
 				o->callback(toggleRowSolo);
 				o->tooltip("When checked tiles that do not use the selected row will not be drawn");
@@ -541,9 +548,9 @@ void editor::_editor(){
 			cordDisp[0]=new Fl_Box(tile_place_buttons_x_off,556,128,64);
 			cordDisp[0]->labelsize(12);
 
-			TabsMain[tile_place]->end();
+			tabsMain[tile_place]->end();
 		}
-		{TabsMain[chunkEditor] = new Fl_Group(rx,ry,rw,rh,"Chunk editor");
+		{tabsMain.emplace_back(new Fl_Group(rx,ry,rw,rh,"Chunk editor"));
 			useBlocksChunkCBtn=new Fl_Check_Button(8, 48, 152, 24, "Use blocks");
 			useBlocksChunkCBtn->callback(useBlocksCB);
 			chunk_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,512,160,24,"Tile zoom factor:");
@@ -618,14 +625,51 @@ void editor::_editor(){
 			}
 			updateChunkSize();
 
-			TabsMain[chunkEditor]->end();
+			tabsMain[chunkEditor]->end();
 		}
-		{TabsMain[spriteEditor] = new Fl_Group(rx,ry,rw,rh,"Sprites");
+		{tabsMain.emplace_back(new Fl_Group(rx,ry,rw,rh,"Sprites"));
 			palBar.addTab(3,false,true,true);
+			{ Fl_Group *o = new Fl_Group(tile_place_buttons_x_off+616, 44, 88, 96);
+				{
+					palType[9] = new Fl_Round_Button(tile_place_buttons_x_off+616, 44, 64, 24, "Free");
+					palType[9]->type(FL_RADIO_BUTTON);
+					palType[9]->set();
+					palType[9]->callback((Fl_Callback*) setPalType,(void *)0);
+					palType[9]->tooltip(freeDes);
+					palType[10] = new Fl_Round_Button(tile_place_buttons_x_off+616, 68, 72, 24, "Locked");
+					palType[10]->type(FL_RADIO_BUTTON);
+					palType[10]->callback((Fl_Callback*) setPalType,(void *)1);
+					palType[10]->tooltip(lockedDes);
+					palType[11] = new Fl_Round_Button(tile_place_buttons_x_off+616, 92, 88, 24, "Reserved");
+					palType[11]->type(FL_RADIO_BUTTON);
+					palType[11]->callback((Fl_Callback*) setPalType,(void *)2);
+					palType[11]->tooltip(reservedDes);
+					o->end();
+				}
+			}
 
-			spritegrouptxt = new Fl_Input(tile_place_buttons_x_off+616,56,168,24,"Group name");
+			spritegrouptxt = new Fl_Input(tile_place_buttons_x_off+616,128,168,24,"Group name");
+			spritegrouptxt->align(FL_ALIGN_TOP);
 			spritegrouptxt->value(spriteDefName);
 			spritegrouptxt->callback(assignSpritegroupnameCB);
+
+			spritemetatxt = new Fl_Input(tile_place_buttons_x_off+616,168,168,24,"Meta name");
+			spritemetatxt->value(spritesName);
+			spritemetatxt->callback(assignSpritemetaNameCB);
+			spritemetatxt->align(FL_ALIGN_TOP);
+
+			spriteglobaltxt = new Fl_Input(tile_place_buttons_x_off+616,208,168,24,"All meta name");
+			spriteglobaltxt->value(defMDesc);
+			spriteglobaltxt->callback(assignSpriteAllMetanameCB);
+			spriteglobaltxt->align(FL_ALIGN_TOP);
+
+
+			metaspritesel=new Fl_Hor_Value_Slider(tile_place_buttons_x_off+616,244,200,22,"Meta group select:");
+			metaspritesel->step(1);
+			metaspritesel->maximum(0);
+			metaspritesel->align(FL_ALIGN_TOP);
+			metaspritesel->callback(selspriteGroup);
+			metaspritesel->labelsize(12);
 
 			spriteselgroup=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,184,168,22,"Sprite group select:");
 			spriteselgroup->step(1);
@@ -735,7 +779,6 @@ void editor::_editor(){
 			spritealign[3]->labelsize(12);
 			spritealign[3]->callback(alignSpriteCB,(void*)3);
 
-
 			{
 				Fl_Group *o = new Fl_Group(tile_place_buttons_x_off, 572, 800, 480);
 				{
@@ -752,12 +795,12 @@ void editor::_editor(){
 				o->end();
 			} // End of buttons
 
-			TabsMain[spriteEditor]->end();
+			tabsMain[spriteEditor]->end();
 		}
-		{TabsMain[levelEditor] = new Fl_Group(rx,ry,rw,rh,"Level editor");
-			TabsMain[levelEditor]->end();
+		{tabsMain.emplace_back(new Fl_Group(rx,ry,rw,rh,"Level editor"));
+			tabsMain[levelEditor]->end();
 		}
-		{TabsMain[settingsTab] = new Fl_Group(rx,ry,rw,rh,"Settings/projects");
+		{tabsMain.emplace_back(new Fl_Group(rx,ry,rw,rh,"Settings/projects"));
 			projectSelect=new Fl_Hor_Value_Slider(112,56,128,24,"Current project");
 			projectSelect->minimum(0);
 			projectSelect->maximum(0);
@@ -774,9 +817,9 @@ void editor::_editor(){
 			//IMPORTANT if adding a new tab remember to update these
 			sharePrj[0]=new Fl_Check_Button(8,112,112,16,"Share palette");
 			sharePrj[0]->callback(shareProjectCB,(void*)pjHavePal);
-			sharePrj[1]=new Fl_Check_Button(120,112,96,16,"Share Tiles");
+			sharePrj[1]=new Fl_Check_Button(120,112,96,16,"Share tiles");
 			sharePrj[1]->callback(shareProjectCB,(void*)pjHaveTiles);
-			sharePrj[2]=new Fl_Check_Button(216,112,120,16,"Share TileMap");
+			sharePrj[2]=new Fl_Check_Button(216,112,120,16,"Share tile map");
 			sharePrj[2]->callback(shareProjectCB,(void*)pjHaveMap);
 			sharePrj[3]=new Fl_Check_Button(336,112,120,16,"Share chunks");
 			sharePrj[3]->callback(shareProjectCB,(void*)pjHaveChunks);
@@ -789,7 +832,7 @@ void editor::_editor(){
 			havePrj[0]->callback(haveCB,(void*)pjHavePal);
 			havePrj[1]=new Fl_Check_Button(120,88,96,16,"Have tiles");
 			havePrj[1]->callback(haveCB,(void*)pjHaveTiles);
-			havePrj[2]=new Fl_Check_Button(232,88,120,16,"Have tileMap");
+			havePrj[2]=new Fl_Check_Button(232,88,120,16,"Have tile map");
 			havePrj[2]->callback(haveCB,(void*)pjHaveMap);
 			havePrj[3]=new Fl_Check_Button(344,88,120,16,"Have chunks");
 			havePrj[3]->callback(haveCB,(void*)pjHaveChunks);
@@ -802,7 +845,7 @@ void editor::_editor(){
 			shareWith[0]->callback(switchShareCB,(void*)pjHavePal);
 			shareWith[1]=new Fl_Hor_Value_Slider(136,142,128,24,"Share tiles with:");
 			shareWith[1]->callback(switchShareCB,(void*)pjHaveTiles);
-			shareWith[2]=new Fl_Hor_Value_Slider(264,142,128,24,"Share tileMap with:");
+			shareWith[2]=new Fl_Hor_Value_Slider(264,142,128,24,"Share tile map with:");
 			shareWith[2]->callback(switchShareCB,(void*)pjHaveMap);
 			shareWith[3]=new Fl_Hor_Value_Slider(400,142,128,24,"Share chunks with:");
 			shareWith[3]->callback(switchShareCB,(void*)pjHaveChunks);
@@ -819,17 +862,38 @@ void editor::_editor(){
 				shareWith[x]->align(FL_ALIGN_TOP);
 			}
 			
-			spriteglobaltxt = new Fl_Input(tile_place_buttons_x_off+616,64,168,24,"Global sprites name");
-			spriteglobaltxt->value(spritesName);
-			spriteglobaltxt->callback(assignSpriteglobalnameCB);
-			spriteglobaltxt->align(FL_ALIGN_TOP);
 
 			TxtBufProject = new Fl_Text_Buffer;
 			TxtEditProject = new Fl_Text_Editor(8, 184, 640, 370,"Description/Notes");
 			TxtEditProject->buffer(TxtBufProject);
 			TxtEditProject->textfont(FL_TIMES);
 			TxtBufProject->text(currentProject->Name.c_str());
-			TabsMain[settingsTab]->end();
+			tabsMain[settingsTab]->end();
+		}
+		{tabsMain.emplace_back(new Fl_Group(rx,ry,rw,rh,"Lua scripting"));
+			luaScriptSel=new Fl_Choice(tile_place_buttons_x_off,default_palette_bar_offset_y+8,112,24);
+			luaScriptSel->label("Script selection");
+			luaScriptSel->align(FL_ALIGN_TOP);
+			luaScriptSel->callback(switchCurLuaScript);
+			{ Fl_Button *o = new Fl_Button(tile_place_buttons_x_off+120, default_palette_bar_offset_y,112, 32, "Append script");
+				o->callback(appendLuaScript);
+			}
+			{ Fl_Button *o = new Fl_Button(tile_place_buttons_x_off+240, default_palette_bar_offset_y,144,32, "Delete selected script");
+				o->callback(deleteLuaScript);
+			}
+			{ Fl_Button *o = new Fl_Button(tile_place_buttons_x_off+392, default_palette_bar_offset_y,48,32, "Run");
+				o->callback(runCurLuaScript);
+			}
+			luaScriptName = new Fl_Input(tile_place_buttons_x_off+448+8,default_palette_bar_offset_y+8,328,24,"Script name");
+			luaScriptName->callback(setNameLuaScript);
+			luaScriptName->align(FL_ALIGN_TOP);
+			luaBufProject = new Fl_Text_Buffer;
+			luaEditProject = new Fl_Text_Editor(tile_place_buttons_x_off,default_palette_bar_offset_y+48, 784, 456,"Currently selected Lua script");
+			luaEditProject->buffer(luaBufProject);
+			luaEditProject->textfont(FL_COURIER);
+			luaEditProject->hide();
+			luaEditProject->callback(changeCurLuaScript);
+			tabsMain[luaTab]->end();
 		}
 	}
 }

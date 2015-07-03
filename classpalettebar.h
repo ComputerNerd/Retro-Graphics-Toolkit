@@ -28,9 +28,7 @@ public:
 	Fl_Slider*slide[tabsWithPalette][3];
 	unsigned selRow[tabsWithPalette];
 	unsigned selBox[tabsWithPalette];
-	inline unsigned getEntry(unsigned tab) const{
-		return currentProject->pal->perRow*selRow[tab]+selBox[tab];
-	}
+	unsigned getEntry(unsigned tab)const;
 	void addTab(unsigned tab,bool all=false,bool tiny=false,bool alt=false);
 	void setSys(bool upSlide=true);
 	void updateSize(unsigned tab);

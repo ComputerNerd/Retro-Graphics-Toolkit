@@ -17,7 +17,8 @@
 #pragma once
 #include "lua.h"
 #include <FL/Fl_Widget.H>
+void updateProjectTablesLua(lua_State*L);
 void runLuaFunc(lua_State*L,unsigned args,unsigned results);
-void runLua(lua_State*L,const char*fname);
+void runLua(lua_State*L,const char*str,bool isFile=true);
 lua_State*createLuaState(void);
 void runLuaCB(Fl_Widget*,void*);

@@ -1,31 +1,47 @@
 /*
-   This file is part of Retro Graphics Toolkit
+	This file is part of Retro Graphics Toolkit
 
-   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or any later version.
+	Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or any later version.
 
-   Retro Graphics Toolkit is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-   GNU General Public License for more details.
+	Retro Graphics Toolkit is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	You should have received a copy of the GNU General Public License
+	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #include <FL/fl_ask.H>
 #include <string.h>
 #include "classlevel.h"
-level::level(){
+level::level(Project*prj){
+	this->prj=prj;
 	layeramt=1;
 	w.resize(1,1);
 	h.resize(1,1);
+	s.resize(1,CHUNKS);
 	dat.resize(1);
 	odat.resize(1);
 	dat[0]=new std::vector<struct levDat>;
 	dat[0]->resize(1);
 	odat[0]=new std::vector<struct levobjDat>;
+}
+level::level(const level&o,Project*prj){
+	this->prj=prj;
+	s=o.s;
+	layeramt=o.layeramt;
+	w=o.w;
+	h=o.h;
+	s=o.s;
+	dat.resize(o.dat.size());
+	odat.resize(o.odat.size());
+	for(unsigned i=0;i<o.dat.size();++i)
+		dat[i]=new std::vector<struct levDat>(*o.dat[i]);
+	for(unsigned i=0;i<o.odat.size();++i)
+		odat[i]=new std::vector<struct levobjDat>(*o.odat[i]);
 }
 void level::addLayer(unsigned at,bool after){
 	unsigned base=at;
@@ -92,17 +108,22 @@ void level::setlayeramt(unsigned amt,bool lastLayerDim){
 	}
 	layeramt=amt;
 }
+void level::draw(unsigned x,unsigned y,unsigned zoom,int solo){
+	
+}
 void level::save(FILE*fp){
 	/*Format
 	 * uint32_t layers amount
-	 * For each layer uint32_t width,height
+	 * For each layer uint32_t source,width,height
 	 * Data see struct levDat
 	 * uint32_t objects amount
 	 * Data see struct levobjDat*/
-	fwrite(&layeramt,1,sizeof(uint32_t),fp);
+	fwrite(&layeramt,sizeof(uint32_t),1,fp);
 	for(unsigned i=0;i<layeramt;++i){
-		fwrite(&w[i],1,sizeof(uint32_t),fp);
-		fwrite(&h[i],1,sizeof(uint32_t),fp);
+		uint32_t tmp=(uint32_t)s[i];
+		fwrite(&tmp,sizeof(uint32_t),1,fp);
+		fwrite(&w[i],sizeof(uint32_t),1,fp);
+		fwrite(&h[i],sizeof(uint32_t),1,fp);
 		fwrite(dat.data(),dat.size(),sizeof(struct levDat),fp);
 		uint32_t objamt=odat.size();
 		fwrite(&objamt,1,sizeof(uint32_t),fp);
@@ -115,15 +136,17 @@ void level::load(FILE*fp){
 	fread(&amtnew,1,sizeof(uint32_t),fp);
 	setlayeramt(amtnew,false);
 	for(unsigned i=0;i<layeramt;++i){
-		fread(&w[i],1,sizeof(uint32_t),fp);
-		fread(&h[i],1,sizeof(uint32_t),fp);
+		uint32_t objamt,tmp;
+		fread(&tmp,sizeof(uint32_t),1,fp);
+		s[i]=(enum source)tmp;
+		fread(&w[i],sizeof(uint32_t),1,fp);
+		fread(&h[i],sizeof(uint32_t),1,fp);
 		dat.resize(w[i]*h[i]);
-		fread(dat[i]->data(),w[i]*h[i],sizeof(struct levDat),fp);
-		uint32_t objamt;
-		fread(&objamt,1,sizeof(uint32_t),fp);
+		fread(dat[i]->data(),sizeof(struct levDat),w[i]*h[i],fp);
+		fread(&objamt,sizeof(uint32_t),1,fp);
 		if(objamt){
 			odat.resize(objamt);
-			fread(odat.data(),odat.size(),sizeof(struct levobjDat),fp);
+			fread(odat.data(),sizeof(struct levobjDat),odat.size(),fp);
 		}
 	}
 }

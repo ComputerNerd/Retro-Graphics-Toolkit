@@ -1,18 +1,18 @@
 /*
-   This file is part of Retro Graphics Toolkit
+	This file is part of Retro Graphics Toolkit
 
-   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or any later version.
+	Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or any later version.
 
-   Retro Graphics Toolkit is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-   GNU General Public License for more details.
+	Retro Graphics Toolkit is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	You should have received a copy of the GNU General Public License
+	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #pragma once
 #include "includes.h"
@@ -41,7 +41,7 @@ public:
 	void updateChunkGUI(uint32_t tx,uint32_t ty);
 	void updateChunkSize(uint32_t wi,uint32_t hi);
 	void updateChunkSize(void);
-	bool tabsHidden[shareAmtPj+1];//The purpose of the +1 is to accommodate for the settings/project tab
+	bool tabsHidden[shareAmtPj];
 	Fl_Box* cordDisp[2];//The purpose of this is to display coordinates of tile in plane and chunk editor
 	Fl_Box*totalTiles;
 	Fl_Choice*subSysC;
@@ -49,7 +49,9 @@ public:
 	Fl_Choice*ditherAlgSel;
 	Fl_Choice*planeSelect;
 	Fl_Choice*gameSysSel;
-	Fl_Group* TabsMain[shareAmtPj+1];
+	Fl_Choice*luaScriptSel;
+	Fl_Input*luaScriptName;
+	std::vector<Fl_Group*>tabsMain;
 	Fl_Scrollbar * map_x_scroll;
 	Fl_Scrollbar * map_y_scroll;
 	Fl_Scrollbar* chunkX;
@@ -80,13 +82,15 @@ public:
 	Fl_Slider* spritesize[2];//sprite width,height
 	Fl_Slider* spritepalrow;//selects palette row
 	Fl_Slider* spritezoom;
+	Fl_Slider*metaspritesel;
 	Fl_Input*curPlaneName;
 	Fl_Input* spritegrouptxt;
 	Fl_Button*spritealign[4];
 	Fl_Input* spriteglobaltxt;
+	Fl_Input*spritemetatxt;
 	Fl_Slider* projectSelect;
 	Fl_Tabs* the_tabs;
-	Fl_Round_Button* palType[9];
+	Fl_Round_Button* palType[12];
 	Fl_Round_Button* palRTE[MAX_ROWS_PALETTE*TABS_WITH_ROW_BUTTONS];
 	Fl_Check_Button* hflipCB[2];
 	Fl_Check_Button* vflipCB[2];
@@ -100,7 +104,9 @@ public:
 	Fl_Slider* shareWith[shareAmtPj];
 	Fl_Check_Button* havePrj[shareAmtPj];
 	Fl_Text_Buffer* TxtBufProject;
+	Fl_Text_Buffer* luaBufProject;
 	Fl_Text_Editor* TxtEditProject;
+	Fl_Text_Editor* luaEditProject;
 	void draw();
 	editor(int X, int Y, int W, int H, const char *L = 0);
 	editor(int W, int H, const char *L = 0);

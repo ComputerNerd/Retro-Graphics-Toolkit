@@ -21,6 +21,8 @@
 #include "undo.h"
 #include "classpalettebar.h"
 #include "gui.h"
+#include "runlua.h"
+#include "luaconfig.h"
 const char*rtVersionStr="Retro Graphics Toolkit v0.8 NOT COMPLETE";
 editor *window = new editor(800,600,rtVersionStr);
 static void rect_alpha_grid(uint8_t rgba[4],unsigned x,unsigned y){
@@ -93,11 +95,12 @@ static void intstr(int x,char*tmp){
 	snprintf(tmp,16,"%d",x);
 }
 void editor::updateSpriteSliders(uint32_t prj){
-	bool haveSprite=(projects[prj]->spritesC->groups[curSpritegroup].list.size())?true:false;
-	spriteselgroup->maximum(projects[prj]->spritesC->amt-1);
-	if(spriteselgroup->value()>projects[prj]->spritesC->amt-1){
-		spriteselgroup->value(projects[prj]->spritesC->amt-1);
-		curSpritegroup=projects[prj]->spritesC->amt-1;
+	unsigned msprt=metaspritesel->value();
+	bool haveSprite=(projects[prj]->ms->sps[msprt].groups[curSpritegroup].list.size())?true:false;
+	spriteselgroup->maximum(projects[prj]->ms->sps[msprt].amt-1);
+	if(spriteselgroup->value()>projects[prj]->ms->sps[msprt].amt-1){
+		spriteselgroup->value(projects[prj]->ms->sps[msprt].amt-1);
+		curSpritegroup=projects[prj]->ms->sps[msprt].amt-1;
 	}
 	if(haveSprite){
 		int fixedRow=currentProject->fixedSpirtePalRow();
@@ -117,26 +120,27 @@ void editor::updateSpriteSliders(uint32_t prj){
 			for(unsigned i=0;i<4;++i)
 				spritealign[i]->show();
 		}
-		spritesel->maximum(projects[prj]->spritesC->groups[curSpritegroup].list.size()-1);
-		if(spritesel->value()>projects[prj]->spritesC->groups[curSpritegroup].list.size()-1){
-			spritesel->value(projects[prj]->spritesC->groups[curSpritegroup].list.size()-1);
-			curSprite=projects[prj]->spritesC->groups[curSpritegroup].list.size()-1;
+		spritesel->maximum(projects[prj]->ms->sps[msprt].groups[curSpritegroup].list.size()-1);
+		if(spritesel->value()>projects[prj]->ms->sps[msprt].groups[curSpritegroup].list.size()-1){
+			spritesel->value(projects[prj]->ms->sps[msprt].groups[curSpritegroup].list.size()-1);
+			curSprite=projects[prj]->ms->sps[msprt].groups[curSpritegroup].list.size()-1;
 		}
-		spritest->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].starttile);
-		spriteslat->value(projects[prj]->spritesC->groups[curSpritegroup].loadat[curSprite]);
-		spritesize[0]->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].w);
-		spritesize[1]->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].h);
+		spritest->value(projects[prj]->ms->sps[msprt].groups[curSpritegroup].list[curSprite].starttile);
+		spriteslat->value(projects[prj]->ms->sps[msprt].groups[curSpritegroup].loadat[curSprite]);
+		spritesize[0]->value(projects[prj]->ms->sps[msprt].groups[curSpritegroup].list[curSprite].w);
+		spritesize[1]->value(projects[prj]->ms->sps[msprt].groups[curSpritegroup].list[curSprite].h);
 		if(fixedRow<0)
-			spritepalrow->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].palrow);
-		spritepalrow->hide();
+			spritepalrow->value(projects[prj]->ms->sps[msprt].groups[curSpritegroup].list[curSprite].palrow);
+		else
+			spritepalrow->hide();
 		char tmp[16];
-		intstr(projects[prj]->spritesC->groups[curSpritegroup].offx[curSprite],tmp);
+		intstr(projects[prj]->ms->sps[msprt].groups[curSpritegroup].offx[curSprite],tmp);
 		spritesoff[0]->value(tmp);
-		intstr(projects[prj]->spritesC->groups[curSpritegroup].offy[curSprite],tmp);
+		intstr(projects[prj]->ms->sps[msprt].groups[curSpritegroup].offy[curSprite],tmp);
 		spritesoff[1]->value(tmp);
-		spritehflip->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].hflip);
-		spritevflip->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].vflip);
-		spriteprio->value(projects[prj]->spritesC->groups[curSpritegroup].list[curSprite].prio);
+		spritehflip->value(projects[prj]->ms->sps[msprt].groups[curSpritegroup].list[curSprite].hflip);
+		spritevflip->value(projects[prj]->ms->sps[msprt].groups[curSpritegroup].list[curSprite].vflip);
+		spriteprio->value(projects[prj]->ms->sps[msprt].groups[curSpritegroup].list[curSprite].prio);
 	}else{
 		curSprite=0;
 		if(spritesel->visible()){
@@ -155,7 +159,7 @@ void editor::updateSpriteSliders(uint32_t prj){
 				spritealign[i]->hide();
 		}
 	}
-	spritegrouptxt->value(projects[prj]->spritesC->groups[curSpritegroup].name.c_str());
+	spritegrouptxt->value(projects[prj]->ms->sps[msprt].groups[curSpritegroup].name.c_str());
 }
 void editor::updateSpriteSliders(void){
 	updateSpriteSliders(curProjectID);
@@ -266,33 +270,34 @@ void editor::draw_non_gui(void){
 			palBar.drawBoxes(3);
 			SpriteOff[0]=(double)((double)w()/800.0)*(double)defaultspritex;
 			SpriteOff[1]=(double)((double)w()/600.0)*(double)defaultspritey;
-			if(currentProject->spritesC->groups[curSpritegroup].list.size()){
+			{unsigned msprt=metaspritesel->value();
+			if(currentProject->ms->sps[msprt].groups[curSpritegroup].list.size()){
 				if(centerSpriteDraw_G)
-					currentProject->spritesC->draw(curSpritegroup,w()/2,h()/2,spritezoom->value(),centerSpriteDraw_G,&spriteEndDraw[0],&spriteEndDraw[1]);
+					currentProject->ms->sps[msprt].draw(curSpritegroup,w()/2,h()/2,spritezoom->value(),centerSpriteDraw_G,&spriteEndDraw[0],&spriteEndDraw[1]);
 				else
-					currentProject->spritesC->draw(curSpritegroup,SpriteOff[0],SpriteOff[1],spritezoom->value(),centerSpriteDraw_G,&spriteEndDraw[0],&spriteEndDraw[1]);
+					currentProject->ms->sps[msprt].draw(curSpritegroup,SpriteOff[0],SpriteOff[1],spritezoom->value(),centerSpriteDraw_G,&spriteEndDraw[0],&spriteEndDraw[1]);
 				//Now draw the tile selection
 				if(spriteEndDraw[1]<(h()-48)){
 					tilesSpriteOff[0]=unsigned(double(192.0*(double)w()/800.0));
 					tilesSpriteOff[1]=spriteEndDraw[1]+unsigned(double(32.0*(double)h()/600.0));
-					unsigned perw=(w()-tilesSpriteOff[0])/16;
-					unsigned perh=(h()-(tilesSpriteOff[1]))/16;
-					unsigned starttile=currentProject->spritesC->groups[curSpritegroup].list[curSprite].starttile;
+					unsigned perw=(w()-tilesSpriteOff[0])/(currentProject->tileC->sizew*2);
+					unsigned perh=(h()-(tilesSpriteOff[1]))/(currentProject->tileC->sizeh*2);
+					unsigned starttile=currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].starttile;
 					if(starttile>((perw*perh)/2))
 						starttile-=(perw*perh)/2;
 					else
 						starttile=0;
 					unsigned looptile=starttile;
 					unsigned tileatx=0,tileaty=0;
-					for(unsigned y=tilesSpriteOff[1];y<h();y+=16){
-						for(unsigned x=tilesSpriteOff[0];x<w();x+=16,++looptile){
+					for(unsigned y=tilesSpriteOff[1];y<h();y+=currentProject->tileC->sizeh*2){
+						for(unsigned x=tilesSpriteOff[0];x<w();x+=currentProject->tileC->sizew*2,++looptile){
 							if(looptile>=currentProject->tileC->amt)
 								break;
-							unsigned palrow=currentProject->spritesC->groups[curSpritegroup].list[curSprite].palrow;
-							if(currentProject->gameSystem==NES)
-								palrow+=4;
+							unsigned palrow=currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].palrow;
+							if(currentProject->pal->haveAlt)
+								palrow+=currentProject->pal->rowCntPal;
 							currentProject->tileC->draw_tile(x,y,looptile,2,palrow,false,false);
-							if(looptile==currentProject->spritesC->groups[curSpritegroup].list[curSprite].starttile){
+							if(looptile==currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].starttile){
 								tileatx=x;
 								tileaty=y;
 							}
@@ -300,20 +305,23 @@ void editor::draw_non_gui(void){
 						if(looptile>=currentProject->tileC->amt)
 							break;
 					}
-					fl_draw_box(FL_EMBOSSED_FRAME,tileatx,tileaty,(currentProject->spritesC->groups[curSpritegroup].list[curSprite].w*currentProject->spritesC->groups[curSpritegroup].list[curSprite].h*currentProject->tileC->sizeh*2)+1,17,0);
+					fl_draw_box(FL_EMBOSSED_FRAME,tileatx,tileaty,(currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].w*currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].h*currentProject->tileC->sizeh*2)+1,17,0);
 				}
-			}
+			}}
 		break;
 	}//end of switch statement
 }
 
 void editor::draw(){
-	if (damage() == FL_DAMAGE_USER1){
-		draw_non_gui();
-		return;
-	}
-	Fl_Double_Window::draw();
+	if(damage()!=FL_DAMAGE_USER1)
+		Fl_Double_Window::draw();
+	lua_getglobal(Lconf,"drawCBfirst");
+	lua_pushinteger(Lconf,mode_editor);
+	runLuaFunc(Lconf,1,0);
 	draw_non_gui();
+	lua_getglobal(Lconf,"drawCBlast");
+	lua_pushinteger(Lconf,mode_editor);
+	runLuaFunc(Lconf,1,0);
 }
 
 // Create a window at the specified position
@@ -386,7 +394,7 @@ void editor::updateChunkGUI(uint32_t tx,uint32_t ty){
 	solidChunkMenu->value(solidBits_G);
 	setXYdisp(tx,ty,1);
 }
-static unsigned cal_offset_truecolor(unsigned x,unsigned y,unsigned rgb,uint32_t tile){
+static inline unsigned cal_offset_truecolor(unsigned x,unsigned y,unsigned rgb,uint32_t tile){
 	/*!<
 	cal_offset_truecolor is made to help when accessing a true color tile array
 	an example of it would be
@@ -397,11 +405,17 @@ static unsigned cal_offset_truecolor(unsigned x,unsigned y,unsigned rgb,uint32_t
 	return (x*4)+(y*currentProject->tileC->sizew*4)+rgb+(tile*currentProject->tileC->tcSize);
 }
 int editor::handle(int event){
-	//printf("Event was %s (%d)\n", fl_eventnames[event], event);     // e.g. "Event was FL_PUSH (1)"
 	if(event==FL_PUSH)
 		pushed_g=1;//The slider callback will need to clear this
 	if (Fl_Double_Window::handle(event)) return (1);
-	//printf("Event was %s (%d)\n", fl_eventnames[event], event);     // e.g. "Event was FL_PUSH (1)"
+	lua_getglobal(Lconf,"eventCB");
+	lua_pushinteger(Lconf,event);
+	lua_pushinteger(Lconf,mode_editor);
+	runLuaFunc(Lconf,2,1);
+	int ret=luaL_checkinteger(Lconf,-1);
+	lua_pop(Lconf,1);
+	if(ret)
+		return 1;
 	unsigned tiles_size;
 	switch(event){
 		case FL_PUSH:

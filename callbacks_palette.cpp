@@ -127,9 +127,6 @@ void update_palette(Fl_Widget* o, void* v){
 	Fl_Slider* s = (Fl_Slider*)o;
 	//now we need to update the entry we are editing
 	unsigned temp_entry=palBar.getEntry(palBar.toTab(mode_editor));
-	if(mode_editor==spriteEditor)
-		if(currentProject->pal->haveAlt)
-			temp_entry+=currentProject->pal->colorCnt;
 	if(pushed_g||(Fl::event()==FL_KEYDOWN)){
 		pushed_g=0;
 		pushPaletteEntry(temp_entry);
@@ -260,7 +257,7 @@ void loadPalette(Fl_Widget*, void*){
 	}
 }
 void set_ditherAlg(Fl_Widget*,void* typeset){
-	if ((uintptr_t)typeset==0)
+	if((uintptr_t)typeset==0)
 		window->ditherPower->show();
 	else
 		window->ditherPower->hide();//imagine the user trying to change the power and nothing happening not fun at all
@@ -294,14 +291,19 @@ void pickNearAlg(Fl_Widget*,void*){
 	currentProject->settings&=~(nearestColorSettingsMask<<nearestColorShift);
 	currentProject->settings|=MenuPopup("Nearest color algorithm selection","Select an algorithm",4,"ciede2000","Weighted","Euclidean distance","CIE76")<<nearestColorShift;
 }
+static bool isModeEditor(void){
+	if(mode_editor!=tile_edit){
+		fl_alert("Be in Tile editor to use this");
+		return false;
+	}else
+		return true;
+}
 void rgb_pal_to_entry(Fl_Widget*,void*){
 	//this function will convert a rgb value to the nearest palette entry
 	if(currentProject->isFixedPalette())
 		return;
-	if (mode_editor != tile_edit){
-		fl_alert("Be in Tile editor to use this");
+	if(!isModeEditor())
 		return;
-	}
 	unsigned ent=palBar.getEntry(1);
 	pushPaletteEntry(ent);
 	currentProject->pal->rgbToEntry(window->rgb_red->value(),window->rgb_green->value(),window->rgb_blue->value(),ent);
@@ -310,6 +312,8 @@ void rgb_pal_to_entry(Fl_Widget*,void*){
 	window->redraw();
 }
 void entryToRgb(Fl_Widget*,void*){
+	if(!isModeEditor())
+		return;
 	unsigned en=palBar.getEntry(1)*3;
 	truecolor_temp[0]=currentProject->pal->rgbPal[en];
 	truecolor_temp[1]=currentProject->pal->rgbPal[en+1];

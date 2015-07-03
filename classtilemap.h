@@ -23,8 +23,9 @@ public:
 	tileMap(Project*prj);
 	tileMap(uint32_t w,uint32_t h,Project*prj);
 	tileMap& operator=(tileMap&& other);
-	tileMap& operator=(const tileMap& other);
-	tileMap(const tileMap& other);
+	tileMap& operator=(const tileMap&other);
+	tileMap(const tileMap&other,Project*prj);
+	tileMap(const tileMap&other);
 	~tileMap();
 	struct Project*prj;
 	uint8_t*tileMapDat;/*!< Holds tilemap data*/

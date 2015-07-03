@@ -70,12 +70,17 @@ enum undoTypes_t{
 	uSpriteDel,
 	uSpriteAll,
 	uCurProject,//For both system switches and project loads
-	uSwitchPrj,//No struct reuses ptr
-	ULoadPrjGroup,
+	uProjectAppend,//no struct
+	uProjectAll,
 };
-struct undoEvent{//This struct merely holds which type of undo this is
+struct undoEvent{//This struct merely holds which type of undo this is and one value if ptr is not used.
 	undoTypes_t type;
-	void*ptr;//Can also be reused for information for example appendTile will store tile id if doing so limit yourself to 32bit values. Even if void* is 64bit on your system also can point to pointer created either by malloc or new
+	uint32_t prjId;//Project affected
+	union{
+		void*ptr;
+		uint32_t vu;
+		int32_t vi;
+	};
 };
 struct undoTile{//The purpose of this struct if to completely undo a tile
 	tileTypeMask_t type;
@@ -151,27 +156,33 @@ struct undoChunkAll{
 	struct ChunkAttrs*ptr,*ptrnew;
 };
 struct undoSpriteVal{
-	uint32_t id,subid;
+	uint32_t metaid,id,subid;
 	uint32_t val,valnew;
 };
 struct undoSpriteValbool{
-	uint32_t id,subid;
+	uint32_t metaid,id,subid;
 	bool val,valnew;
 };
 struct undoSpriteDel{
-	uint32_t id,subid;
+	uint32_t metaid,id,subid;
 	class sprite sp;
 	int32_t offx,offy;
 	uint32_t loadat;
 };
 struct undoSpriteGroupDel{
+	uint32_t id[2];
 	struct spriteGroup;
 };
-struct undoProject{
-	struct Project*old,*pnew;
+struct undoSpriteAppend{
+	uint32_t id[2];
 };
-struct undoProjectSwitch{
-	uint32_t oldID,newID;
+struct undoProject{
+	uint32_t id;
+	Project*ptr;
+};
+struct undoProjectAll{
+	uint32_t ao;
+	struct Project**old;
 };
 static struct undoEvent*undoBuf;
 static uint_fast32_t amount;
@@ -249,9 +260,13 @@ static void cleanupEvent(uint32_t id){
 		case uChunkAppend:
 		case uChunkNew:
 		case uSpriteNewgroup:
-		case uSpriteAppend:
 		case uSpriteAppendgroup:
+		case uProjectAppend:
 			//Nothing to do here
+		break;
+		case uSpriteAppend:
+			memUsed-=sizeof(struct undoSpriteAppend);
+			free(uptr->ptr);
 		break;
 		case uTileGroup:
 			{struct undoTileGroup*ut=(struct undoTileGroup*)uptr->ptr;
@@ -399,11 +414,23 @@ static void cleanupEvent(uint32_t id){
 		break;
 		case uCurProject:
 			{struct undoProject*up=(struct undoProject*)uptr->ptr;
-			if(up->old)
-				delete up->old;
-			if(up->pnew)
-				delete up->pnew;
+			if(up->ptr)
+				delete up->ptr;
 			memUsed-=sizeof(struct undoProject);}
+		break;
+		case uProjectAll:
+			{struct undoProjectAll*up=(struct undoProjectAll*)uptr->ptr;
+			if(up->old){
+				for(unsigned i=0;i<up->ao;++i)
+					delete up->old[i];
+				free(up->old);
+			}
+			/*if(up->pnew){
+				for(unsigned i=0;i<up->an;++i)
+					delete up->pnew[i];
+				free(up->pnew);
+			}*/
+			memUsed-=sizeof(struct undoProjectAll);}
 		break;
 	}
 }
@@ -428,6 +455,8 @@ static void pushEventPrepare(void){
 	}
 	amount=pos;
 	resizeArray(++amount);
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->prjId=curProjectID;
 	memUsed+=sizeof(struct undoEvent);
 }
 static void tilesTo(uint8_t*ptr,uint32_t id,tileTypeMask_t type){
@@ -508,26 +537,26 @@ static void cpyResizeGeneric(uint8_t*dst,uint8_t*src,uint32_t w,uint32_t h,uint3
 }
 #define mkSpritePop(which) {struct undoSpriteVal*us=(struct undoSpriteVal*)uptr->ptr; \
 	if(redo) \
-		currentProject->spritesC->groups[us->id].list[us->subid].which=us->valnew; \
+		currentProject->ms->sps[us->metaid].groups[us->id].list[us->subid].which=us->valnew; \
 	else{ \
-		us->valnew=currentProject->spritesC->groups[us->id].list[us->subid].which; \
-		currentProject->spritesC->groups[us->id].list[us->subid].which=us->val; \
+		us->valnew=currentProject->ms->sps[us->metaid].groups[us->id].list[us->subid].which; \
+		currentProject->ms->sps[us->metaid].groups[us->id].list[us->subid].which=us->val; \
 	} \
 	window->updateSpriteSliders();}
 #define mkSpritePop2(which) {struct undoSpriteVal*us=(struct undoSpriteVal*)uptr->ptr; \
 	if(redo) \
-		currentProject->spritesC->groups[us->id].which[us->subid]=us->valnew; \
+		currentProject->ms->sps[us->metaid].groups[us->id].which[us->subid]=us->valnew; \
 	else{ \
-		us->valnew=currentProject->spritesC->groups[us->id].which[us->subid]; \
-		currentProject->spritesC->groups[us->id].which[us->subid]=us->val; \
+		us->valnew=currentProject->ms->sps[us->metaid].groups[us->id].which[us->subid]; \
+		currentProject->ms->sps[us->metaid].groups[us->id].which[us->subid]=us->val; \
 	} \
 	window->updateSpriteSliders();}
 #define mkSpritePopbool(which) {struct undoSpriteValbool*us=(struct undoSpriteValbool*)uptr->ptr; \
 	if(redo) \
-		currentProject->spritesC->groups[us->id].list[us->subid].which=us->valnew; \
+		currentProject->ms->sps[us->metaid].groups[us->id].list[us->subid].which=us->valnew; \
 	else{ \
-		us->valnew=currentProject->spritesC->groups[us->id].list[us->subid].which; \
-		currentProject->spritesC->groups[us->id].list[us->subid].which=us->val; \
+		us->valnew=currentProject->ms->sps[us->metaid].groups[us->id].list[us->subid].which; \
+		currentProject->ms->sps[us->metaid].groups[us->id].list[us->subid].which=us->val; \
 	} \
 	window->updateSpriteSliders();}
 
@@ -551,6 +580,27 @@ static void removePlane(uint32_t plane){
 	}else
 		updatePlaneTilemapMenu();
 }
+static void moveProject(Project**from,Project**to){
+	*to=new Project(**from);
+	(*to)->copyClasses(**from);
+	delete *from;
+	*from=0;
+}
+static void copyProject(Project*from,Project**to){
+	*to=new Project(*from);
+	(*to)->copyClasses(*from);
+}
+static bool shouldChangePrj(undoTypes_t t){
+	switch(t){
+		case uCurProject:
+		case uProjectAppend:
+		case uProjectAll:
+			return false;
+		break;
+		default:
+			return true;
+	}
+}
 static void UndoRedo(bool redo){
 	if((pos<0)&&(!redo))
 		return;
@@ -561,6 +611,8 @@ static void UndoRedo(bool redo){
 	if(redo&&(pos<=int_fast32_t(amount)))
 		++pos;
 	struct undoEvent*uptr=undoBuf+pos;
+	if(shouldChangePrj(uptr->type)&&(uptr->prjId!=curProjectID))
+		switchProjectSlider(uptr->prjId);
 	switch(uptr->type){
 		case uTile:
 			{struct undoTile*ut=(struct undoTile*)uptr->ptr;
@@ -903,9 +955,9 @@ static void UndoRedo(bool redo){
 		break;
 		case uChunkNew:
 			if(redo)
-				currentProject->Chunk->insert((uintptr_t)uptr->ptr);
+				currentProject->Chunk->insert(uptr->vu);
 			else
-				currentProject->Chunk->removeAt((uintptr_t)uptr->ptr);
+				currentProject->Chunk->removeAt(uptr->vu);
 			window->updateChunkSel();
 		break;
 		case uChunkAll:
@@ -943,18 +995,18 @@ static void UndoRedo(bool redo){
 			}
 		break;
 		case uSpriteAppend:
-			{uint32_t id=(uintptr_t)uptr->ptr;
+			{struct undoSpriteAppend*us=(struct undoSpriteAppend*)uptr->ptr;
 			if(redo)
-				currentProject->spritesC->setAmtingroup(id,currentProject->spritesC->groups[id].list.size()+1);
+				currentProject->ms->sps[us->id[0]].setAmtingroup(us->id[1],currentProject->ms->sps[us->id[0]].groups[us->id[1]].list.size()+1);
 			else
-				currentProject->spritesC->delingroup(id,currentProject->spritesC->groups[id].list.size()-1);
+				currentProject->ms->sps[us->id[0]].delingroup(us->id[1],currentProject->ms->sps[us->id[0]].groups[us->id[1]].list.size()-1);
 			window->updateSpriteSliders();}
 		break;
 		case uSpriteAppendgroup:
 			if(redo)
-				currentProject->spritesC->setAmt(currentProject->spritesC->amt+1);
+				currentProject->ms->sps[uptr->vu].setAmt(currentProject->ms->sps[uptr->vu].amt+1);
 			else
-				currentProject->spritesC->del(currentProject->spritesC->amt-1);
+				currentProject->ms->sps[uptr->vu].del(currentProject->ms->sps[uptr->vu].amt-1);
 			window->updateSpriteSliders();
 		break;
 		case uSpriteWidth:
@@ -989,27 +1041,47 @@ static void UndoRedo(bool redo){
 		break;
 		case uCurProject:
 			{struct undoProject*up=(struct undoProject*)uptr->ptr;
-			if(redo){
-				up->old=new Project(*currentProject);
-				up->old->copyClasses(*currentProject);
-				delete projects[curProjectID];
-				projects[curProjectID]=new Project(*up->pnew);
-				currentProject=projects[curProjectID];
-				projects[curProjectID]->copyClasses(*up->pnew);
-				delete up->pnew;
-				up->pnew=0;
-			}else{
-				up->pnew=new Project(*currentProject);
-				up->pnew->copyClasses(*currentProject);
-				delete projects[curProjectID];
-				projects[curProjectID]=new Project(*up->old);
-				currentProject=projects[curProjectID];
-				projects[curProjectID]->copyClasses(*up->old);
-				delete up->old;
-				up->old=0;
+			Project*tmp;
+			copyProject(projects[up->id],&tmp);
+			moveProject(&up->ptr,&projects[up->id]);
+			up->ptr=tmp;
+			prjChangePtr(up->id);
+			switchProjectSlider(up->id);}
+		break;
+		case uProjectAll:
+			{struct undoProjectAll*up=(struct undoProjectAll*)uptr->ptr;
+			unsigned i;
+			reallocProject(std::max(up->ao,projects_count));
+			Project**tmp=(Project**)malloc(projects_count*sizeof(void*));
+			for(i=0;i<std::min(up->ao,projects_count);++i){
+				copyProject(projects[i],&tmp[i]);
+				moveProject(&up->old[i],&projects[i]);
 			}
-			prjChangePtr(curProjectID);
-			switchProject(curProjectID);}
+			if(projects_count>up->ao){
+				for(;i<projects_count;++i){
+					copyProject(projects[i],&tmp[i]);
+					delete projects[i];
+				}
+			}else if(projects_count<up->ao){
+				for(;i<up->ao;++i)
+					copyProject(up->old[i],&projects[i]);
+			}
+			free(up->old);
+			up->old=tmp;
+			uint32_t old=projects_count;
+			projects_count=up->ao;
+			up->ao=old;
+			reallocProject(up->ao);
+			for(i=0;i<projects_count;++i)
+				prjChangePtr(i);
+			changeProjectAmt();
+			switchProjectSlider(curProjectID);}
+		break;
+		case uProjectAppend:
+			if(redo)
+				appendProject();
+			else
+				removeProject(projects_count-1);
 		break;
 	}
 	if(!redo)
@@ -1154,7 +1226,7 @@ void pushTilemapPlaneDelete(uint32_t plane){
 	struct undoTilemapPlane*um=pushTilemapPlaneComm(plane);
 	struct undoEvent*uptr=undoBuf+pos;
 	uptr->type=uTilemapPlaneDelete;
-	um->old=new tileMap(currentProject->tms->maps[plane]);
+	um->old=new tileMap(currentProject->tms->maps[plane],currentProject);
 	um->oldStr=new std::string(currentProject->tms->planeName[um->plane].c_str());
 	memUsed+=um->oldStr->length();
 	memUsed+=um->old->mapSizeW*um->old->mapSizeHA*TileMapSizePerEntry;
@@ -1270,7 +1342,7 @@ void pushChunkNew(uint32_t id){
 	pushEventPrepare();
 	struct undoEvent*uptr=undoBuf+pos;
 	uptr->type=uChunkNew;
-	uptr->ptr=(void*)(uintptr_t)id;
+	uptr->vu=id;
 }
 void pushChunkAppend(void){
 	pushEventPrepare();
@@ -1310,12 +1382,17 @@ void pushSpriteAppend(uint32_t id){
 	pushEventPrepare();
 	struct undoEvent*uptr=undoBuf+pos;
 	uptr->type=uSpriteAppend;
-	uptr->ptr=(void*)(uintptr_t)id;
+	uptr->ptr=malloc(sizeof(struct undoSpriteAppend));
+	struct undoSpriteAppend*us=(struct undoSpriteAppend*)uptr->ptr;
+	us->id[0]=window->metaspritesel->value();
+	us->id[1]=id;
+	memUsed+=sizeof(struct undoSpriteAppend);
 }
 void pushSpriteAppendgroup(void){
 	pushEventPrepare();
 	struct undoEvent*uptr=undoBuf+pos;
 	uptr->type=uSpriteAppendgroup;
+	uptr->vu=window->metaspritesel->value();
 }
 #define mkSpritePush(thetype,which) pushEventPrepare(); \
 	struct undoEvent*uptr=undoBuf+pos; \
@@ -1325,7 +1402,8 @@ void pushSpriteAppendgroup(void){
 	struct undoSpriteVal*us=(struct undoSpriteVal*)uptr->ptr; \
 	us->id=curSpritegroup; \
 	us->subid=curSprite; \
-	us->val=currentProject->spritesC->groups[us->id].list[us->subid].which
+	us->metaid=window->metaspritesel->value(); \
+	us->val=currentProject->ms->sps[us->metaid].groups[us->id].list[us->subid].which
 void pushSpriteWidth(void){
 	mkSpritePush(uSpriteWidth,w);
 }
@@ -1346,7 +1424,8 @@ void pushSpriteStarttile(void){
 	struct undoSpriteVal*us=(struct undoSpriteVal*)uptr->ptr; \
 	us->id=curSpritegroup; \
 	us->subid=curSprite; \
-	us->val=currentProject->spritesC->groups[us->id].which[us->subid]
+	us->metaid=window->metaspritesel->value(); \
+	us->val=currentProject->ms->sps[us->metaid].groups[us->id].which[us->subid]
 void pushSpriteLoadat(void){
 	mkSpritePush2(uSpriteloadat,loadat);
 }
@@ -1364,7 +1443,8 @@ void pushSpriteOffy(void){
 	struct undoSpriteValbool*us=(struct undoSpriteValbool*)uptr->ptr; \
 	us->id=curSpritegroup; \
 	us->subid=curSprite; \
-	us->val=currentProject->spritesC->groups[us->id].list[us->subid].which
+	us->metaid=window->metaspritesel->value(); \
+	us->val=currentProject->ms->sps[us->metaid].groups[us->id].list[us->subid].which
 void pushSpriteHflip(void){
 	mkSpritePushbool(uSpritehflip,hflip);
 }
@@ -1381,11 +1461,28 @@ void pushProject(void){
 	uptr->ptr=malloc(sizeof(struct undoProject));
 	memUsed+=sizeof(struct undoProject);
 	struct undoProject*up=(struct undoProject*)uptr->ptr;
-	up->old=new Project(*currentProject);
-	up->old->copyClasses(*currentProject);
-	up->pnew=0;
+	copyProject(currentProject,&up->ptr);
+	up->id=curProjectID;
 }
-static Fl_Window * win;
+void pushProjectAppend(void){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uProjectAppend;
+}
+void pushProjectAll(void){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uProjectAll;
+	uptr->ptr=malloc(sizeof(struct undoProjectAll));
+	memUsed+=sizeof(struct undoProjectAll);
+	struct undoProjectAll*up=(struct undoProjectAll*)uptr->ptr;
+	up->ao=projects_count;
+	up->old=(Project**)malloc(projects_count*sizeof(void*));
+	for(unsigned i=0;i<projects_count;++i)
+		copyProject(projects[i],&up->old[i]);
+	//up->pnew=0;
+}
+static Fl_Window*win;
 static void closeHistory(Fl_Widget*,void*){
 	win->hide();
 }
@@ -1489,7 +1586,7 @@ void historyWindow(Fl_Widget*,void*){
 				strcpy(tmp,"Append chunk");
 			break;
 			case uChunkNew:
-				snprintf(tmp,2048,"Insert chunk at %u",unsigned(uintptr_t(uptr->ptr)));
+				snprintf(tmp,2048,"Insert chunk at %u",uptr->vu);
 			break;
 			case uChunkAll:
 				strcpy(tmp,"Change all chunks");
@@ -1532,6 +1629,12 @@ void historyWindow(Fl_Widget*,void*){
 			break;
 			case uCurProject:
 				strcpy(tmp,"Change current project");
+			break;
+			case uProjectAll:
+				strcpy(tmp,"Change all projects");
+			break;
+			case uProjectAppend:
+				strcpy(tmp,"Append blank project");
 			break;
 			default:
 				snprintf(tmp,2048,"TODO unhandled %d",uptr->type);

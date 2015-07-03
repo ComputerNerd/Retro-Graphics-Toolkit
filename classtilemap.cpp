@@ -39,7 +39,7 @@ tileMap::tileMap(uint32_t w,uint32_t h,Project*prj){
 	else
 		extPalRows=0;
 }
-tileMap::tileMap(const tileMap& other){
+tileMap::tileMap(const tileMap&other,Project*prj){
 	mapSizeW=other.mapSizeW;
 	mapSizeH=other.mapSizeH;
 	mapSizeHA=other.mapSizeHA;
@@ -59,6 +59,9 @@ tileMap::tileMap(const tileMap& other){
 		memcpy(extPalRows,other.extPalRows,mapSizeW*mapSizeHA*prj->szPerExtPalRow());
 	}else
 		extPalRows=0;
+}
+tileMap::tileMap(const tileMap&other){
+	tileMap(other,other.prj);
 }
 tileMap& tileMap::operator=(tileMap&& other){
 	mapSizeW=other.mapSizeW;

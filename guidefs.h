@@ -44,3 +44,4 @@
 #define spriteEditor 4
 #define levelEditor 5
 #define settingsTab 6
+#define luaTab 7

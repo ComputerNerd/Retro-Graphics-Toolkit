@@ -32,7 +32,8 @@ tiles::tiles(struct Project*prj){
 	setDim(8,8,prj->getBitdepthSys());
 	this->prj=prj;
 }
-tiles::tiles(const tiles& other){
+tiles::tiles(const tiles&other,Project*prj){
+	this->prj=prj;
 	current_tile=other.current_tile;
 	amt=other.amt;
 	tileSize=other.tileSize;
@@ -41,7 +42,6 @@ tiles::tiles(const tiles& other){
 	tcSize=sizew*sizeh*4;
 	tDat=other.tDat;
 	truetDat=other.truetDat;
-	prj=other.prj;
 }
 tiles::~tiles(){
 	tDat.clear();
@@ -564,7 +564,7 @@ void tiles::changeDim(unsigned w,unsigned h,unsigned bd){
 		return;
 	}
 	unsigned amto=amt;
-	tiles*old=new tiles(*this);
+	tiles*old=new tiles(*this,prj);
 	amt=amt*sizew/w*sizeh/h;
 	unsigned sw=sizew,sh=sizeh;
 	if(sw>w&&sh>h)

@@ -426,10 +426,11 @@ static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,unsigned 
 		maxPal=currentProject->pal->colorCntalt;
 	else
 		maxPal=currentProject->pal->colorCnt;
+	unsigned msprt=window->metaspritesel->value();
 	if(isSprite){
-		w=currentProject->spritesC->width(curSpritegroup);
-		h=currentProject->spritesC->height(curSpritegroup);
-		currentProject->spritesC->spriteGroupToImage(image,curSpritegroup,row,false);
+		w=currentProject->ms->sps[msprt].width(curSpritegroup);
+		h=currentProject->ms->sps[msprt].height(curSpritegroup);
+		currentProject->ms->sps[msprt].spriteGroupToImage(image,curSpritegroup,row,false);
 	}else{
 		w=currentProject->tms->maps[currentProject->curPlane].mapSizeW;
 		h=currentProject->tms->maps[currentProject->curPlane].mapSizeHA;
@@ -611,7 +612,7 @@ againNerd:
 			updateEmphesis();
 		if(alg==1){
 			if(isSprite)
-				currentProject->spritesC->spriteImageToTiles(output,curSpritegroup,row,false);
+				currentProject->ms->sps[msprt].spriteImageToTiles(output,curSpritegroup,row,false);
 			else
 				currentProject->tms->maps[currentProject->curPlane].truecolorimageToTiles(output,row,false);
 			free(output);
@@ -637,8 +638,9 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 	uint8_t * image;
 	uint32_t w,h;
 	if(set->sprite){
-		w=currentProject->spritesC->width(curSpritegroup);
-		h=currentProject->spritesC->height(curSpritegroup);
+		unsigned msprt=window->metaspritesel->value();
+		w=currentProject->ms->sps[msprt].width(curSpritegroup);
+		h=currentProject->ms->sps[msprt].height(curSpritegroup);
 	}else{
 		w=currentProject->tms->maps[currentProject->curPlane].mapSizeW;
 		h=currentProject->tms->maps[currentProject->curPlane].mapSizeHA;
@@ -725,7 +727,7 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 	palBar.updateSliders();
 	if(set->ditherAfter){
 		if(set->sprite){
-			ditherSpriteAsImage(curSpritegroup);
+			ditherSpriteAsImage(window->metaspritesel->value(),curSpritegroup);
 		}else{
 			pushTilesAll(tTypeTile);
 			currentProject->tms->maps[currentProject->curPlane].ditherAsImage(set->entireRow);

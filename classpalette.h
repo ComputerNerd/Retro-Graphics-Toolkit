@@ -16,6 +16,7 @@
 */
 #pragma once
 struct palette{
+	Project*prj;
 	uint8_t*rgbPal;
 	uint8_t*palDat;
 	uint8_t*palType;/*!<Sets 3 different types for each palette entry free, locked and reserved*/
@@ -27,9 +28,9 @@ struct palette{
 	unsigned perRowalt;
 	unsigned esize;//Bytes per palette entry
 	bool haveAlt;//Does the current game system use an alternative sprite palette?
-	palette(void);
+	palette(Project*prj);
 	~palette(void);
-	palette(const palette& other);
+	palette(const palette&other,Project*prj);
 	void setVars(enum gameSystemEnum gameSystem);
 	void read(FILE*fp,bool supportsAlt);
 	void write(FILE*fp);

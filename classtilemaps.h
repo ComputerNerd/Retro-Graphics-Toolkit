@@ -23,7 +23,7 @@ public:
 	std::vector<class tileMap> maps;
 	std::vector<std::string> planeName;
 	tilemaps(Project*prj);
-	tilemaps(const tilemaps&other);
+	tilemaps(const tilemaps&other,Project*prj);
 	void setPlaneCnt(unsigned cnt);
 	void assignNum(unsigned i){
 		char tmp[16];

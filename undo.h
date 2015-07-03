@@ -68,4 +68,5 @@ void pushSpriteHflip(void);
 void pushSpriteVflip(void);
 void pushSpritePrio(void);
 void pushProject(void);
-void pushSwitchPrj(void);
+void pushProjectAppend(void);
+void pushProjectAll(void);

@@ -29,51 +29,53 @@ uint32_t curSpritegroup;
 int32_t spriteEndDraw[2];
 bool centerSpriteDraw_G;
 void palRowstCB(Fl_Widget*,void*){
-	unsigned st=currentProject->spritesC->groups[curSpritegroup].list[curSprite].starttile;
-	unsigned palrow=currentProject->spritesC->groups[curSpritegroup].list[curSprite].palrow;
-	for(unsigned j=0;j<currentProject->spritesC->amt;++j){
-		for(unsigned i=0;i<currentProject->spritesC->groups[j].list.size();++i){
-			if(st==currentProject->spritesC->groups[j].list[i].starttile)
-				currentProject->spritesC->groups[j].list[i].palrow=palrow;
+	unsigned msprt=window->metaspritesel->value();
+	unsigned st=currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].starttile;
+	unsigned palrow=currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].palrow;
+	for(unsigned j=0;j<currentProject->ms->sps[msprt].amt;++j){
+		for(unsigned i=0;i<currentProject->ms->sps[msprt].groups[j].list.size();++i){
+			if(st==currentProject->ms->sps[msprt].groups[j].list[i].starttile)
+				currentProject->ms->sps[msprt].groups[j].list[i].palrow=palrow;
 		}
 	}
 	window->updateSpriteSliders();
 	window->redraw();
 }
 void optimizeSpritesCB(Fl_Widget*,void*){
-	for(unsigned i=0;i<currentProject->spritesC->amt;++i){
-		currentProject->spritesC->freeOptmizations(i);
+	unsigned msprt=window->metaspritesel->value();
+	for(unsigned i=0;i<currentProject->ms->sps[msprt].amt;++i){
+		currentProject->ms->sps[msprt].freeOptmizations(i);
 	}
 	window->updateSpriteSliders();
 	window->redraw();
 }
-void ditherSpriteAsImage(unsigned which){
+void ditherSpriteAsImage(unsigned msprt,unsigned which){
 	unsigned w,h;
-	w=currentProject->spritesC->width(which);
-	h=currentProject->spritesC->height(which);
+	w=currentProject->ms->sps[msprt].width(which);
+	h=currentProject->ms->sps[msprt].height(which);
 	uint8_t*image=(uint8_t*)malloc(w*h*4);
 	if (!image)
 		show_malloc_error(w*h*4)
 	pushTilesAll(tTypeTile);
 	for(unsigned row=0;row<(currentProject->pal->haveAlt?currentProject->pal->rowCntPalalt:currentProject->pal->rowCntPal);++row){
-		currentProject->spritesC->spriteGroupToImage(image,which,row);
+		currentProject->ms->sps[msprt].spriteGroupToImage(image,which,row);
 		ditherImage(image,w,h,true,true,false,0,false,0,true);
 		void*indexPtr=ditherImage(image,w,h,true,false,true,row,false,0,true,true);
-		currentProject->spritesC->spriteImageToTiles((uint8_t*)indexPtr,which,row,true,true);
+		currentProject->ms->sps[msprt].spriteImageToTiles((uint8_t*)indexPtr,which,row,true,true);
 		free(indexPtr);
 	}
 	Fl::check();
 	free(image);
 }
-void ditherSpriteAsImageAllCB(Fl_Widget*,void*){
+void ditherGroupAsImage(unsigned msprt){
 	Fl_Window *winP;
 	Fl_Progress *progress;
 	mkProgress(&winP,&progress);
-	progress->maximum(currentProject->spritesC->amt-1);
+	progress->maximum(currentProject->ms->sps[msprt].amt-1);
 	time_t lasttime=time(nullptr);
 	Fl::check();
-	for(unsigned i=0;i<currentProject->spritesC->amt;++i){
-		ditherSpriteAsImage(i);
+	for(unsigned i=0;i<currentProject->ms->sps[msprt].amt;++i){
+		ditherSpriteAsImage(msprt,i);
 		if((time(nullptr)-lasttime)>=1){
 			lasttime=time(nullptr);
 			progress->value(i);
@@ -86,8 +88,12 @@ void ditherSpriteAsImageAllCB(Fl_Widget*,void*){
 	Fl::check();
 	window->redraw();
 }
+void ditherSpriteAsImageAllCB(Fl_Widget*,void*){
+	ditherGroupAsImage(window->metaspritesel->value());
+}
 void ditherSpriteAsImageCB(Fl_Widget*,void*){
-	ditherSpriteAsImage(curSpritegroup);
+	unsigned msprt=window->metaspritesel->value();
+	ditherSpriteAsImage(msprt,curSpritegroup);
 	window->redraw();
 }
 void setDrawSpriteCB(Fl_Widget*,void*m){
@@ -95,21 +101,30 @@ void setDrawSpriteCB(Fl_Widget*,void*m){
 	window->redraw();
 }
 void SpriteSheetimportCB(Fl_Widget*o,void*){
-	currentProject->spritesC->importSpriteSheet();
+	unsigned msprt=window->metaspritesel->value();
+	currentProject->ms->sps[msprt].importSpriteSheet();
 	window->updateSpriteSliders();
 	window->redraw();
 }
-void assignSpriteglobalnameCB(Fl_Widget*o,void*){
+void assignSpriteAllMetanameCB(Fl_Widget*o,void*){
 	Fl_Input*i=(Fl_Input*)o;
-	currentProject->spritesC->name.assign(i->value());
+	currentProject->ms->name.assign(i->value());
+	window->redraw();
+}
+void assignSpritemetaNameCB(Fl_Widget*o,void*){
+	unsigned msprt=window->metaspritesel->value();
+	Fl_Input*i=(Fl_Input*)o;
+	currentProject->ms->sps[msprt].name.assign(i->value());
 	window->redraw();
 }
 void exportSonicDPLCCB(Fl_Widget*o,void*t){
-	currentProject->spritesC->exportDPLC((gameType_t)(uintptr_t)t);
+	unsigned msprt=window->metaspritesel->value();
+	currentProject->ms->sps[msprt].exportDPLC((gameType_t)(uintptr_t)t);
 }
 void alignSpriteCB(Fl_Widget*,void*t){
+	unsigned msprt=window->metaspritesel->value();
 	uint32_t with;
-	if(currentProject->spritesC->groups[curSpritegroup].list.size()<=1){
+	if(currentProject->ms->sps[msprt].groups[curSpritegroup].list.size()<=1){
 		fl_alert("You must have at least two sprites to align");
 		return;
 	}
@@ -121,75 +136,84 @@ void alignSpriteCB(Fl_Widget*,void*t){
 		with=curSprite+1;
 	switch((uintptr_t)t){
 		case 0://Left
-			currentProject->spritesC->groups[curSpritegroup].offx[curSprite]=currentProject->spritesC->groups[curSpritegroup].offx[with]-(currentProject->spritesC->groups[curSpritegroup].list[with].w*8);
-			currentProject->spritesC->groups[curSpritegroup].offy[curSprite]=currentProject->spritesC->groups[curSpritegroup].offy[with];
+			currentProject->ms->sps[msprt].groups[curSpritegroup].offx[curSprite]=currentProject->ms->sps[msprt].groups[curSpritegroup].offx[with]-(currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].w*8);
+			currentProject->ms->sps[msprt].groups[curSpritegroup].offy[curSprite]=currentProject->ms->sps[msprt].groups[curSpritegroup].offy[with];
 		break;
 		case 1://Right
-			currentProject->spritesC->groups[curSpritegroup].offx[curSprite]=currentProject->spritesC->groups[curSpritegroup].offx[with]+(currentProject->spritesC->groups[curSpritegroup].list[with].w*8);
-			currentProject->spritesC->groups[curSpritegroup].offy[curSprite]=currentProject->spritesC->groups[curSpritegroup].offy[with];
+			currentProject->ms->sps[msprt].groups[curSpritegroup].offx[curSprite]=currentProject->ms->sps[msprt].groups[curSpritegroup].offx[with]+(currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].w*8);
+			currentProject->ms->sps[msprt].groups[curSpritegroup].offy[curSprite]=currentProject->ms->sps[msprt].groups[curSpritegroup].offy[with];
 		break;
 		case 2://Top
-			currentProject->spritesC->groups[curSpritegroup].offx[curSprite]=currentProject->spritesC->groups[curSpritegroup].offx[with];
-			currentProject->spritesC->groups[curSpritegroup].offy[curSprite]=currentProject->spritesC->groups[curSpritegroup].offy[with]-(currentProject->spritesC->groups[curSpritegroup].list[with].h*8);
+			currentProject->ms->sps[msprt].groups[curSpritegroup].offx[curSprite]=currentProject->ms->sps[msprt].groups[curSpritegroup].offx[with];
+			currentProject->ms->sps[msprt].groups[curSpritegroup].offy[curSprite]=currentProject->ms->sps[msprt].groups[curSpritegroup].offy[with]-(currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].h*8);
 		break;
 		case 3://Bottom
-			currentProject->spritesC->groups[curSpritegroup].offx[curSprite]=currentProject->spritesC->groups[curSpritegroup].offx[with];
-			currentProject->spritesC->groups[curSpritegroup].offy[curSprite]=currentProject->spritesC->groups[curSpritegroup].offy[with]+(currentProject->spritesC->groups[curSpritegroup].list[with].h*8);
+			currentProject->ms->sps[msprt].groups[curSpritegroup].offx[curSprite]=currentProject->ms->sps[msprt].groups[curSpritegroup].offx[with];
+			currentProject->ms->sps[msprt].groups[curSpritegroup].offy[curSprite]=currentProject->ms->sps[msprt].groups[curSpritegroup].offy[with]+(currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].h*8);
 		break;
 	}
 	window->updateSpriteSliders();
 	window->redraw();
 }
 void importSonicDPLCCB(Fl_Widget*o,void*t){
-	currentProject->spritesC->importDPLC((gameType_t)(uintptr_t)t);
+	unsigned msprt=window->metaspritesel->value();
+	currentProject->ms->sps[msprt].importDPLC((gameType_t)(uintptr_t)t);
 	window->updateSpriteSliders();
 	window->redraw();
 }
 void setoffspriteCB(Fl_Widget*o,void*y){
+	unsigned msprt=window->metaspritesel->value();
 	Fl_Int_Input*i=(Fl_Int_Input*)o;
 	int tmp=atoi(i->value());
 	if(y){
 		pushSpriteOffy();
-		currentProject->spritesC->groups[curSpritegroup].offy[curSprite]=tmp;	
+		currentProject->ms->sps[msprt].groups[curSpritegroup].offy[curSprite]=tmp;	
 	}else{
 		pushSpriteOffx();
-		currentProject->spritesC->groups[curSpritegroup].offx[curSprite]=tmp;	
+		currentProject->ms->sps[msprt].groups[curSpritegroup].offx[curSprite]=tmp;	
 	}
 	window->redraw();
 }
 void exportSonicMappingCB(Fl_Widget*o,void*t){
-	currentProject->spritesC->exportMapping((gameType_t)(uintptr_t)t);
+	unsigned msprt=window->metaspritesel->value();
+	currentProject->ms->sps[msprt].exportMapping((gameType_t)(uintptr_t)t);
 }
 void importSonicMappingCB(Fl_Widget*o,void*t){
-	currentProject->spritesC->importMapping((gameType_t)(uintptr_t)t);
+	unsigned msprt=window->metaspritesel->value();
+	currentProject->ms->sps[msprt].importMapping((gameType_t)(uintptr_t)t);
 	window->updateSpriteSliders();
 	window->redraw();
 }
 void assignSpritegroupnameCB(Fl_Widget*o,void*){
+	unsigned msprt=window->metaspritesel->value();
 	Fl_Input*i=(Fl_Input*)o;
-	currentProject->spritesC->groups[curSpritegroup].name.assign(i->value());
+	currentProject->ms->sps[msprt].groups[curSpritegroup].name.assign(i->value());
 	window->redraw();
 }
 void spritePrioCB(Fl_Widget*,void*){
+	unsigned msprt=window->metaspritesel->value();
 	pushSpritePrio();
-	currentProject->spritesC->groups[curSpritegroup].list[curSprite].prio^=true;
+	currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].prio^=true;
 	window->redraw();
 }
 void spriteHflipCB(Fl_Widget*,void*){
+	unsigned msprt=window->metaspritesel->value();
 	pushSpriteHflip();
-	currentProject->spritesC->groups[curSpritegroup].list[curSprite].hflip^=true;
+	currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].hflip^=true;
 	window->redraw();
 }
 void spriteVflipCB(Fl_Widget*,void*){
+	unsigned msprt=window->metaspritesel->value();
 	pushSpriteVflip();
-	currentProject->spritesC->groups[curSpritegroup].list[curSprite].vflip^=true;
+	currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].vflip^=true;
 	window->redraw();
 }
 void SpriteimportCB(Fl_Widget*,void*append){
+	unsigned msprt=window->metaspritesel->value();
 	if((uintptr_t)append)
-		currentProject->spritesC->importImg(currentProject->spritesC->amt);//This works due to the fact that amt counts from one and the function counts from zero
+		currentProject->ms->sps[msprt].importImg(currentProject->ms->sps[msprt].amt);//This works due to the fact that amt counts from one and the function counts from zero
 	else
-		currentProject->spritesC->importImg(curSprite);
+		currentProject->ms->sps[msprt].importImg(curSprite);
 }
 void selSpriteCB(Fl_Widget*w,void*){
 	Fl_Slider*s=(Fl_Slider*)w;
@@ -198,21 +222,23 @@ void selSpriteCB(Fl_Widget*w,void*){
 	window->redraw();
 }
 void appendSpriteCB(Fl_Widget*,void*g){
+	unsigned msprt=window->metaspritesel->value();
 	if(g){
 		pushSpriteAppendgroup();
-		currentProject->spritesC->setAmt(currentProject->spritesC->amt+1);
+		currentProject->ms->sps[msprt].setAmt(currentProject->ms->sps[msprt].amt+1);
 	}else{
 		pushSpriteAppend(curSpritegroup);
-		currentProject->spritesC->setAmtingroup(curSpritegroup,currentProject->spritesC->groups[curSpritegroup].list.size()+1);
+		currentProject->ms->sps[msprt].setAmtingroup(curSpritegroup,currentProject->ms->sps[msprt].groups[curSpritegroup].list.size()+1);
 	}
 	window->updateSpriteSliders();
 	window->redraw();
 }
 void delSpriteCB(Fl_Widget*,void*group){
+	unsigned msprt=window->metaspritesel->value();
 	if(group)
-		currentProject->spritesC->del(curSpritegroup);
+		currentProject->ms->sps[msprt].del(curSpritegroup);
 	else
-		currentProject->spritesC->delingroup(curSpritegroup,curSprite);
+		currentProject->ms->sps[msprt].delingroup(curSpritegroup,curSprite);
 	window->updateSpriteSliders();
 	window->redraw();
 }
@@ -229,27 +255,28 @@ void selspriteGroup(Fl_Widget*o,void*){
 void setvalueSpriteCB(Fl_Widget*o,void*which){
 	Fl_Slider*v=(Fl_Slider*)o;
 	uint32_t val=v->value();
+	unsigned msprt=window->metaspritesel->value();
 	switch((uintptr_t)which){
 		case 0:
 			pushSpriteItem(Starttile)
-			currentProject->spritesC->groups[curSpritegroup].list[curSprite].starttile=val;
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].starttile=val;
 		break;
 		case 1:
 			pushSpriteItem(Width)
-			currentProject->spritesC->groups[curSpritegroup].list[curSprite].w=val;
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].w=val;
 		break;
 		case 2:
 			pushSpriteItem(Height)
-			currentProject->spritesC->groups[curSpritegroup].list[curSprite].h=val;
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].h=val;
 		break;
 		case 3:
 			pushSpriteItem(Palrow)
 			palBar.changeRow(val,3);
-			currentProject->spritesC->groups[curSpritegroup].list[curSprite].palrow=val;
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].palrow=val;
 		break;
 		case 4:
 			pushSpriteItem(Loadat)
-			currentProject->spritesC->groups[curSpritegroup].loadat[curSprite]=val;
+			currentProject->ms->sps[msprt].groups[curSpritegroup].loadat[curSprite]=val;
 		break;
 	}
 	window->redraw();

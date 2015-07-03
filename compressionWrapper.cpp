@@ -20,16 +20,12 @@
 #include "nemesis.h"
 #include "kosinski.h"
 #include "enigma.h"
-static const char*Uncomp="Uncompressed";
-static const char*NemTxt="Nemesis";
-static const char*KosTxt="Kosinski";
-static const char*EngTxt="Enigma";
-static const char*const TypeTab[]={Uncomp,NemTxt,KosTxt,EngTxt};
+static const char*const TypeTab[]={"Uncompressed","Nemesis","Kosinski","Enigma","Saxman","Comper"};
 const char*typeToText(int type){
 	return TypeTab[type];
 }
 int compressionAsk(void){
-	return MenuPopup("Compression?","Select a compression algorithm or use uncompressed",4,TypeTab[0],TypeTab[1],TypeTab[2],TypeTab[3]);
+	return MenuPopup("Compression?","Select a compression algorithm or use uncompressed",4,TypeTab[0],TypeTab[1],TypeTab[2],TypeTab[3],TypeTab[4],TypeTab[5]);
 }
 static std::string decodeNemKos(const char * filename,size_t &fileSize,bool kos){
 	std::stringstream outDecomp;
