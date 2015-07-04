@@ -20,9 +20,7 @@
 level::level(Project*prj){
 	this->prj=prj;
 	layeramt=1;
-	w.resize(1,1);
-	h.resize(1,1);
-	s.resize(1,CHUNKS);
+	lvlI.resize(1,{1,1,1,1,0,0,CHUNKS});
 	dat.resize(1);
 	odat.resize(1);
 	dat[0]=new std::vector<struct levDat>;
@@ -31,11 +29,8 @@ level::level(Project*prj){
 }
 level::level(const level&o,Project*prj){
 	this->prj=prj;
-	s=o.s;
 	layeramt=o.layeramt;
-	w=o.w;
-	h=o.h;
-	s=o.s;
+	lvlI=o.lvlI;
 	dat.resize(o.dat.size());
 	odat.resize(o.odat.size());
 	for(unsigned i=0;i<o.dat.size();++i)
@@ -47,49 +42,45 @@ void level::addLayer(unsigned at,bool after){
 	unsigned base=at;
 	if(after)
 		++at;
-	w.insert(w.begin()+at,w[base]);
-	h.insert(h.begin()+at,h[base]);
+	lvlI.insert(lvlI.begin()+at,lvlI[base]);
 	std::vector<struct levDat>*vtmp=new std::vector<struct levDat>;
 	dat.insert(dat.begin()+at,vtmp);
-	dat[at]->resize(w[at]*h[at]);
+	dat[at]->resize(lvlI[at].w*lvlI[at].h);
 }
 void level::removeLayer(unsigned which){
-	w.erase(w.begin()+which);
-	h.erase(h.begin()+which);
+	lvlI.erase(lvlI.begin()+which);
 	delete dat[which];
 	dat.erase(dat.begin()+which);
+	delete odat[which];
+	odat.erase(odat.begin()+which);
 }
 void level::setId(unsigned x,unsigned y,unsigned layer,unsigned val){
-	(*dat[layer])[(y*w[layer])+x].id=val;
+	(*dat[layer])[(y*lvlI[layer].w)+x].id=val;
 }
 void level::setDat(unsigned x,unsigned y,unsigned layer,unsigned val){
-	(*dat[layer])[(y*w[layer])+x].dat=val;
+	(*dat[layer])[(y*lvlI[layer].w)+x].dat=val;
 }
-uint32_t level::getId(unsigned x,unsigned y,unsigned layer){
-	return (*dat[layer])[(y*w[layer])+x].id;
+uint32_t level::getId(unsigned x,unsigned y,unsigned layer)const{
+	return (*dat[layer])[(y*lvlI[layer].w)+x].id;
 }
-uint32_t level::getDat(unsigned x,unsigned y,unsigned layer){
-	return (*dat[layer])[(y*w[layer])+x].dat;
+uint32_t level::getDat(unsigned x,unsigned y,unsigned layer)const{
+	return (*dat[layer])[(y*lvlI[layer].w)+x].dat;
 }
 void level::setlayeramt(unsigned amt,bool lastLayerDim){
 	if(amt>layeramt){
 		if(lastLayerDim){
-			w.reserve(amt);
-			h.reserve(amt);
+			lvlI.reserve(amt);
 		}else{
-			w.resize(amt);
-			h.resize(amt);
+			lvlI.resize(amt,{1,1,1,1,0,0,CHUNKS});
 		}
 		dat.reserve(amt);
 		odat.reserve(amt);
 		for(unsigned i=layeramt;i<amt;++i){
-			if(lastLayerDim){
-				w.push_back(w[layeramt-1]);
-				h.push_back(h[layeramt-1]);
-			}
+			if(lastLayerDim)
+				lvlI.push_back(lvlI[layeramt-1]);
 			std::vector<struct levDat>*vtmp=new std::vector<struct levDat>;
 			if(lastLayerDim)
-				vtmp->resize(w[i]*h[i]);
+				vtmp->resize(lvlI[i].w*lvlI[i].h);
 			dat.push_back(vtmp);
 			std::vector<struct levobjDat>*votmp=new std::vector<struct levobjDat>;
 			odat.push_back(votmp);
@@ -99,54 +90,49 @@ void level::setlayeramt(unsigned amt,bool lastLayerDim){
 			delete dat[i];
 			delete odat[i];
 		}
-		w.resize(amt);
-		h.resize(amt);
+		lvlI.resize(amt);
 		dat.resize(amt);
 		odat.resize(amt);
-	}else{
-		fl_alert("Same amount of layers");
 	}
 	layeramt=amt;
 }
-void level::draw(unsigned x,unsigned y,unsigned zoom,int solo){
-	
+void level::draw(unsigned x,unsigned y,unsigned zoom,int solo,bool showSprites)const{
+	//Painter's algorithm
+	uint32_t d=solo>=0?solo+1:layeramt;
+	while(d--){
+		unsigned xx=x;
+	}
 }
 void level::save(FILE*fp){
 	/*Format
 	 * uint32_t layers amount
-	 * For each layer uint32_t source,width,height
+	 * For each layer info struct
 	 * Data see struct levDat
 	 * uint32_t objects amount
 	 * Data see struct levobjDat*/
 	fwrite(&layeramt,sizeof(uint32_t),1,fp);
 	for(unsigned i=0;i<layeramt;++i){
-		uint32_t tmp=(uint32_t)s[i];
-		fwrite(&tmp,sizeof(uint32_t),1,fp);
-		fwrite(&w[i],sizeof(uint32_t),1,fp);
-		fwrite(&h[i],sizeof(uint32_t),1,fp);
+		fwrite(&lvlI[i],sizeof(struct levelInfo),1,fp);
 		fwrite(dat.data(),dat.size(),sizeof(struct levDat),fp);
-		uint32_t objamt=odat.size();
+		uint32_t objamt=odat[i]->size();
 		fwrite(&objamt,1,sizeof(uint32_t),fp);
 		if(objamt)
-			fwrite(odat.data(),odat.size(),sizeof(struct levobjDat),fp);
+			fwrite(odat[i]->data(),odat[i]->size(),sizeof(struct levobjDat),fp);
 	}
 }
-void level::load(FILE*fp){
+void level::load(FILE*fp,uint32_t version){
 	uint32_t amtnew;
 	fread(&amtnew,1,sizeof(uint32_t),fp);
 	setlayeramt(amtnew,false);
 	for(unsigned i=0;i<layeramt;++i){
-		uint32_t objamt,tmp;
-		fread(&tmp,sizeof(uint32_t),1,fp);
-		s[i]=(enum source)tmp;
-		fread(&w[i],sizeof(uint32_t),1,fp);
-		fread(&h[i],sizeof(uint32_t),1,fp);
-		dat.resize(w[i]*h[i]);
-		fread(dat[i]->data(),sizeof(struct levDat),w[i]*h[i],fp);
+		uint32_t objamt;
+		fread(&lvlI[i],sizeof(struct levelInfo),1,fp);
+		dat.resize(lvlI[i].w*lvlI[i].h);
+		fread(dat[i]->data(),sizeof(struct levDat),lvlI[i].w*lvlI[i].h,fp);
 		fread(&objamt,sizeof(uint32_t),1,fp);
 		if(objamt){
-			odat.resize(objamt);
-			fread(odat.data(),sizeof(struct levobjDat),odat.size(),fp);
+			odat[i]->resize(objamt);
+			fread(odat[i]->data(),sizeof(struct levobjDat),odat[i]->size(),fp);
 		}
 	}
 }

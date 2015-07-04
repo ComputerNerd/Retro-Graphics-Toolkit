@@ -54,8 +54,9 @@ enum undoTypes_t{
 	uChunkNew,//No struct reuses ptr
 	uSpriteNew,
 	uSpriteNewgroup,//No struct reuses ptr
-	uSpriteAppend,//No struct reuses ptr
-	uSpriteAppendgroup,//No struct
+	uSpriteAppend,
+	uSpriteAppendgroup,//No struct reuses ptr
+	uSpriteAppendmeta,//No struct
 	uSpriteWidth,
 	uSpriteHeight,
 	uSpritePalrow,
@@ -261,6 +262,7 @@ static void cleanupEvent(uint32_t id){
 		case uChunkNew:
 		case uSpriteNewgroup:
 		case uSpriteAppendgroup:
+		case uSpriteAppendmeta:
 		case uProjectAppend:
 			//Nothing to do here
 		break;
@@ -728,9 +730,9 @@ static void UndoRedo(bool redo){
 		break;
 		case uTileNew:
 			if(redo)
-				currentProject->tileC->insertTile((uintptr_t)uptr->ptr);
+				currentProject->tileC->insertTile(uptr->vu);
 			else
-				currentProject->tileC->remove_tile_at((uintptr_t)uptr->ptr);
+				currentProject->tileC->remove_tile_at(uptr->vu);
 			updateTileSelectAmt();
 		break;
 		case uTilemapEdit:
@@ -1009,6 +1011,13 @@ static void UndoRedo(bool redo){
 				currentProject->ms->sps[uptr->vu].del(currentProject->ms->sps[uptr->vu].amt-1);
 			window->updateSpriteSliders();
 		break;
+		case uSpriteAppendmeta:
+			if(redo)
+				currentProject->ms->sps.emplace_back(sprites(currentProject));
+			else
+				currentProject->ms->sps.pop_back();
+			window->updateSpriteSliders();
+		break;
 		case uSpriteWidth:
 			mkSpritePop(w)
 		break;
@@ -1113,7 +1122,7 @@ void pushTilenew(uint32_t id){
 	pushEventPrepare();
 	struct undoEvent*uptr=undoBuf+pos;
 	uptr->type=uTileNew;
-	uptr->ptr=(void*)(uintptr_t)id;
+	uptr->vu=id;
 }
 void pushTilePixel(uint32_t id,uint32_t x,uint32_t y,tileTypeMask_t type){
 	pushEventPrepare();
@@ -1394,6 +1403,11 @@ void pushSpriteAppendgroup(void){
 	uptr->type=uSpriteAppendgroup;
 	uptr->vu=window->metaspritesel->value();
 }
+void pushSpriteAppendmeta(void){
+	pushEventPrepare();
+	struct undoEvent*uptr=undoBuf+pos;
+	uptr->type=uSpriteAppendmeta;
+}
 #define mkSpritePush(thetype,which) pushEventPrepare(); \
 	struct undoEvent*uptr=undoBuf+pos; \
 	uptr->type=thetype; \
@@ -1523,7 +1537,7 @@ void historyWindow(Fl_Widget*,void*){
 				strcpy(tmp,"Append tile");
 			break;
 			case uTileNew:
-				snprintf(tmp,2048,"Insert tile at %u",unsigned(uintptr_t(uptr->ptr)));
+				snprintf(tmp,2048,"Insert tile at %u",uptr->vu);
 			case uTileGroup:
 				{struct undoTileGroup*ut=(struct undoTileGroup*)uptr->ptr;
 				snprintf(tmp,2048,"Tile group tiles affected: %u",(unsigned)ut->lst.size());}
@@ -1592,10 +1606,14 @@ void historyWindow(Fl_Widget*,void*){
 				strcpy(tmp,"Change all chunks");
 			break;
 			case uSpriteAppend:
-				snprintf(tmp,2048,"Append sprite to group: %u",unsigned(uintptr_t(uptr->ptr)));
+				{struct undoSpriteAppend*us=(struct undoSpriteAppend*)uptr->ptr;
+				snprintf(tmp,2048,"Append sprite to group: %u meta: %u",us->id[1],us->id[0]);}
 			break;
 			case uSpriteAppendgroup:
-				strcpy(tmp,"Append sprite group");
+				snprintf(tmp,2048,"Append sprite group meta: %u",uptr->vu);
+			break;
+			case uSpriteAppendmeta:
+				strcpy(tmp,"Append sprite meta sprite");
 			break;
 			case uSpriteWidth:
 				strcpy(tmp,"Change sprite width");

@@ -39,14 +39,20 @@ struct luaDat{
 	void*dat;
 };
 enum luaControlType{INPUT_T,RADIO_T,INT_INPUT_T,CHECKBOX_T,CHOICE_T};
+struct inputLua{
+	std::string label,value;
+};
+struct intInputLua{
+	std::string label;
+	int64_t val;
+};
 struct luaControl{
 	uint32_t len;
 	enum luaLocEnum ctrlLoc;
 	enum luaControlType ctrlType;
 	bool cbInFile;
 	std::string callback,callbackwhere;
-	std::vector<std::string>txt;
-	std::vector<int64_t>vals;
+	void*info;
 };
 struct luaScript{
 	std::string str,name;
@@ -75,7 +81,7 @@ struct Project{/*!<Holds all data needed for a project based system for example 
 	unsigned szPerExtPalRow(void);
 	unsigned extAttrTilesPerByte(void);
 	bool isFixedPalette(void);
-	bool isPlanarTiles(void);
+	enum tileType getTileType(void);
 	int fixedSpirtePalRow(void);
 	std::string Name;
 	gameSystemEnum gameSystem;
@@ -112,7 +118,7 @@ void changeProjectAmt(void);
 bool appendProject();
 bool removeProject(uint32_t id);
 void switchProjectSlider(uint32_t id,bool oldExists=true);
-void switchProject(uint32_t id);
+void switchProject(uint32_t id,bool load=false);
 bool loadProject(uint32_t id,const char*fname);
 bool saveProject(uint32_t id);
 bool saveAllProjects(void);

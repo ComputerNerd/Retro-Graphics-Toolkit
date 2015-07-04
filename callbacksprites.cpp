@@ -26,6 +26,7 @@
 #include "class_global.h"
 uint32_t curSprite;
 uint32_t curSpritegroup;
+uint32_t curSpritemeta;
 int32_t spriteEndDraw[2];
 bool centerSpriteDraw_G;
 void palRowstCB(Fl_Widget*,void*){
@@ -223,9 +224,13 @@ void selSpriteCB(Fl_Widget*w,void*){
 }
 void appendSpriteCB(Fl_Widget*,void*g){
 	unsigned msprt=window->metaspritesel->value();
-	if(g){
+	intptr_t typ=(intptr_t)g;
+	if(typ==1){
 		pushSpriteAppendgroup();
 		currentProject->ms->sps[msprt].setAmt(currentProject->ms->sps[msprt].amt+1);
+	}else if(typ==2){
+		pushSpriteAppendmeta();
+		currentProject->ms->sps.emplace_back(sprites(currentProject));
 	}else{
 		pushSpriteAppend(curSpritegroup);
 		currentProject->ms->sps[msprt].setAmtingroup(curSpritegroup,currentProject->ms->sps[msprt].groups[curSpritegroup].list.size()+1);
@@ -245,6 +250,12 @@ void delSpriteCB(Fl_Widget*,void*group){
 void selspriteGroup(Fl_Widget*o,void*){
 	Fl_Slider*s=(Fl_Slider*)o;
 	curSpritegroup=s->value();
+	window->updateSpriteSliders();
+	window->redraw();
+}
+void selspriteMeta(Fl_Widget*o,void*){
+	Fl_Slider*s=(Fl_Slider*)o;
+	curSpritemeta=s->value();
 	window->updateSpriteSliders();
 	window->redraw();
 }

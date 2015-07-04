@@ -161,7 +161,6 @@ static void callCFuncLua(Fl_Widget*w,void*toPair){
 }
 static void callLuaCB(Fl_Widget*w,void*toPair){
 	std::pair<std::string,int64_t>*p=(std::pair<std::string,int64_t>*)toPair;
-	updateProjectTablesLua(Lconf);
 	lua_getglobal(Lconf,p->first.c_str());
 	lua_pushinteger(Lconf,p->second);
 	runLuaFunc(Lconf,1,0);
@@ -664,12 +663,16 @@ void editor::_editor(){
 			spriteglobaltxt->align(FL_ALIGN_TOP);
 
 
-			metaspritesel=new Fl_Hor_Value_Slider(tile_place_buttons_x_off+616,244,200,22,"Meta group select:");
+			metaspritesel=new Fl_Hor_Value_Slider(tile_place_buttons_x_off+616,244,168,24,"Meta group select:");
 			metaspritesel->step(1);
 			metaspritesel->maximum(0);
 			metaspritesel->align(FL_ALIGN_TOP);
-			metaspritesel->callback(selspriteGroup);
+			metaspritesel->callback(selspriteMeta);
 			metaspritesel->labelsize(12);
+
+
+			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off+616, 274, 96, 28, "Append meta");
+			o->callback(appendSpriteCB,(void*)(intptr_t)2);}
 
 			spriteselgroup=new Fl_Hor_Value_Slider(tile_place_buttons_x_off,184,168,22,"Sprite group select:");
 			spriteselgroup->step(1);
@@ -755,7 +758,7 @@ void editor::_editor(){
 			o->callback(appendSpriteCB,0);
 			o->labelsize(12);}
 			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off+72, 492, 96, 28, "Append group");
-			o->callback(appendSpriteCB,(void*)1);
+			o->callback(appendSpriteCB,(void*)(intptr_t)1);
 			o->labelsize(12);}
 			{Fl_Button *o = new Fl_Button(tile_place_buttons_x_off, 522, 64, 28, "Delete");
 			o->callback(delSpriteCB,0);
@@ -892,7 +895,6 @@ void editor::_editor(){
 			luaEditProject->buffer(luaBufProject);
 			luaEditProject->textfont(FL_COURIER);
 			luaEditProject->hide();
-			luaEditProject->callback(changeCurLuaScript);
 			tabsMain[luaTab]->end();
 		}
 	}

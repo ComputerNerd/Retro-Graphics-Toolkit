@@ -83,14 +83,16 @@ int fixedSpirtePalRowSys(enum gameSystemEnum gameSystem){
 int Project::fixedSpirtePalRow(void){
 	return fixedSpirtePalRowSys(gameSystem);
 }
-bool Project::isPlanarTiles(void){
+enum tileType Project::getTileType(void){
 	switch(gameSystem){
 		case NES:
+			return PLANAR_TILE;
+		break;
 		case masterSystem:
 		case gameGear:
-			return true;
+			return PLANAR_LINE;
 		default:
-			return false;
+			return LINEAR;
 	}
 }
 bool Project::isFixedPalette(void){

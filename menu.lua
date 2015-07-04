@@ -18,6 +18,7 @@ function userGuide(userData)--callback functions **must** have the user data (na
 	fl.alert("The user's guide can be found on the wiki https://github.com/ComputerNerd/Retro-Graphics-Toolkit/wiki or locally in the Manual folder");
 end
 function allMetaDither(unused)
+	rgt.syncProject()--this MUST be called in all callbacks that access the project table BEFORE any project table access.
 	if project.have(project.spritesMask)==true then
 		for i=0,#metasprites.amt-1 do
 			metasprites.ditherAll(i)

@@ -57,6 +57,7 @@ void pushChunkAppend(void);
 void pushChunkNew(uint32_t id);
 void pushSpriteAppend(uint32_t id);
 void pushSpriteAppendgroup(void);
+void pushSpriteAppendmeta(void);
 void pushSpriteWidth(void);
 void pushSpriteHeight(void);
 void pushSpritePalrow(void);

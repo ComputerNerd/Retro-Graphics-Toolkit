@@ -47,7 +47,7 @@ public:
 	void truecolor_to_tile_ptr(unsigned palette_row,uint32_t cur_tile,uint8_t * tileinput,bool Usedither,bool isSprite,bool isIndexArray=false);
 	void truecolor_to_tile(unsigned,uint32_t,bool isSprite);/*!< truecolor_to_tile will update/dither the selected tile*/
 	void draw_truecolor(uint32_t,unsigned x,unsigned y,bool usehflip,bool usevflip,unsigned zoom);
-	void draw_tile(int x_off,int y_off,uint32_t tile_draw,unsigned zoom,unsigned pal_row,bool Usehflip,bool Usevflip,bool isSprite=false,const uint8_t*extAttr=0,unsigned plane=0);
+	void draw_tile(int x_off,int y_off,uint32_t tile_draw,unsigned zoom,unsigned pal_row,bool Usehflip,bool Usevflip,bool isSprite=false,const uint8_t*extAttr=0,unsigned plane=0,bool alpha=false);
 	void hflip_truecolor(uint32_t,uint32_t *);
 	void vflip_truecolor(uint32_t,uint8_t *);
 	void vflip_truecolor_ptr(uint8_t *,uint8_t *);
@@ -57,8 +57,9 @@ public:
 	void blank_tile(uint32_t);/*!<This makes the tile use color 0*/ 
 	void remove_duplicate_tiles(bool tColor);
 	void tileToTrueCol(const uint8_t*input,uint8_t*output,unsigned row,bool useAlpha=true,bool alphaZero=false);
-	void toPlanar(void);
+	void toPlanar(enum tileType tt=LINEAR);
 	void*toLinear(void);
+	void*toLinePlanar(void);
 	void changeDim(unsigned w,unsigned h,unsigned bd);
 	void swap(unsigned first,unsigned second);
 };

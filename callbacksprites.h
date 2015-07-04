@@ -16,6 +16,7 @@
 */
 extern uint32_t curSprite;
 extern uint32_t curSpritegroup;
+extern uint32_t curSpritemeta;
 extern int32_t spriteEndDraw[2];
 extern bool centerSpriteDraw_G;
 void palRowstCB(Fl_Widget*,void*);
@@ -41,6 +42,7 @@ void spriteVflipCB(Fl_Widget*,void*);
 void SpriteimportCB(Fl_Widget*,void*);
 void selSpriteCB(Fl_Widget*w,void*);
 void selspriteGroup(Fl_Widget*o,void*);
+void selspriteMeta(Fl_Widget*o,void*);
 void appendSpriteCB(Fl_Widget*,void*);
 void delSpriteCB(Fl_Widget*,void*);
 void setvalueSpriteCB(Fl_Widget*o,void*which);

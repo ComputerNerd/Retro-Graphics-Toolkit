@@ -453,6 +453,15 @@ static inline uint16_t swap_word(uint16_t w){
 	return (a<<8)|b;
 }
 #endif
+static int bondsCheckTile(int tile,int mx,unsigned x,unsigned y){
+	if(tile<0)
+		tile=0;
+	if (tile > mx){
+		printf("Warning tile value %d exceeded %d at x: %u y: %u\n",tile,mx,x,y);
+		tile=mx;
+	}
+	return tile;
+}
 bool tileMap::saveToFile(){
 	/*!
 	Saves tilemap to file returns true on success or cancellation
@@ -497,12 +506,7 @@ bool tileMap::saveToFile(){
 						for (x=0;x<mapSizeW;++x){
 							int tile=get_tile(x,y);
 							tile+=offset;
-							if(tile<0)
-								tile=0;
-							if (tile > 2047){
-								printf("Warning tile value %d exceeded 2047 at x: %d y: %d\n",tile,x,y);
-								tile=2047;
-							}
+							tile=bondsCheckTile(tile,2047,x,y);
 							#if _WIN32
 							tile=swap_word(tile);//mingw appears not to provide htobe16 function
 							#else
@@ -515,6 +519,36 @@ bool tileMap::saveToFile(){
 					TheMap-=mapSizeW*mapSizeH*amt;//return to beginning so it can be freeded and the file saved
 					mapptr=(uint8_t*)TheMap;}
 				break;
+				case masterSystem:
+				case gameGear:
+					{uint8_t * TheMap;
+					fileSize=(mapSizeW*mapSizeH*amt)*2;
+					TheMap = (uint8_t*)malloc(fileSize);
+					for (y=0;y<mapSizeH*amt;++y){
+						for (x=0;x<mapSizeW;++x){
+							/*
+							 MSB          LSB
+							 ---pcvhn nnnnnnnn
+
+							 - = Unused. Some games use these bits as flags for collision and damage
+							     zones. (such as Wonderboy in Monster Land, Zillion 2)
+							 p = Priority flag. When set, sprites will be displayed underneath the
+							     background pattern in question.
+							 c = Palette select.
+							 v = Vertical flip flag.
+							 h = Horizontal flip flag.
+							 n = Pattern index, any one of 512 patterns in VRAM can be selected.
+							 */
+							int tile=get_tile(x,y);
+							tile+=offset;
+							tile=bondsCheckTile(tile,511,x,y);
+							*TheMap++=tile&255;
+							*TheMap++=((tile>>8)&1)|(get_hflip(x,y)<<1)|(get_vflip(x,y)<<2)|(getPalRow(x,y)<<3)|(get_prio(x,y)<<4);
+						}
+					}
+					TheMap-=mapSizeW*mapSizeH*amt*2;//return to beginning so it can be freeded and the file saved
+					mapptr=TheMap;}
+				break;
 				case NES:
 					{uint8_t * TheMap;
 					fileSize=mapSizeW*mapSizeH*amt;
@@ -523,12 +557,7 @@ bool tileMap::saveToFile(){
 						for (x=0;x<mapSizeW;++x){
 							int tile=get_tile(x,y);
 							tile+=offset;
-							if(tile<0)
-								tile=0;
-							if (tile > 255) {
-								printf("Warning tile value %d exceeded 255 at x: %d y: %d\n",tile,x,y);
-								tile=255;
-							}
+							tile=bondsCheckTile(tile,255,x,y);
 							*TheMap++=tile;
 						}
 					}
@@ -674,6 +703,8 @@ bool tileMap::loadFromFile(){
 		uint32_t blocksLoaded=file_size/w/h;
 		switch (prj->gameSystem){
 			case segaGenesis:
+			case masterSystem:
+			case gameGear:
 				if(blocksLoad)
 					size_temp=blocksLoaded*w*h;
 				else
@@ -713,10 +744,10 @@ bool tileMap::loadFromFile(){
 			fclose(fp);
 		}
 		uint32_t x,y;
-		switch (prj->gameSystem){
-			case segaGenesis:
-				for (y=0;y<mapSizeH*amt;++y){
-					for (x=0;x<mapSizeW;++x){
+		for (y=0;y<mapSizeH*amt;++y){
+			for (x=0;x<mapSizeW;++x){
+				switch (prj->gameSystem){
+					case segaGenesis:
 						if (((x+(y*w)+1)*2) <= file_size){
 							int temp=*tempMap++;
 							//set attributes
@@ -730,12 +761,18 @@ bool tileMap::loadFromFile(){
 								set_tile(x,y,0);
 						}else
 							set_tile(x,y,0);
-					}
-				}
-			break;
-			case NES:
-				for (y=0;y<mapSizeH*amt;++y){
-					for (x=0;x<mapSizeW;++x){
+					break;
+					case masterSystem:
+					case gameGear:
+						if (((x+(y*w)+1)*2) <= file_size){
+							uint8_t attrs=*tempMap++;
+							uint16_t tile=*tempMap++;
+							tile|=(attrs&1)<<8;
+							set_tile_full(x,y,tile,(attrs>>3)&1,(attrs>>1)&1,(attrs>>2)&1,(attrs>>4)&1);
+						}else
+							set_tile(x,y,0);
+					break;
+					case NES:
 						if ((x+(y*w)+1) <= file_size){
 							int temp=*tempMap++;
 							if (temp-offset > 0)
@@ -744,36 +781,38 @@ bool tileMap::loadFromFile(){
 								set_tile(x,y,0);
 						}else
 							set_tile(x,y,0);
-					}
+					break;
+					default:
+						show_default_error
 				}
-				//now load attributes
-				if (load_file_generic("Load Attributes")){
-					FILE * fp=fopen(the_file.c_str(),"rb");
-					fseek(fp, 0L, SEEK_END);
-					uint32_t sz=ftell(fp);
-					rewind(fp);
-					uint8_t* tempbuf=(uint8_t*)alloca(sz);
-					fread(tempbuf,1,sz,fp);
-					for (y=0;y<mapSizeH*amt;y+=4){
-						for (x=0;x<mapSizeW;x+=4){
-							set_pal_row(x,y,*tempbuf&3);
-							set_pal_row(x,y+1,*tempbuf&3);
-							set_pal_row(x+1,y,*tempbuf&3);
-							set_pal_row(x+1,y+1,*tempbuf&3);
-							
-							set_pal_row(x+2,y,((*tempbuf)>>2)&3);
-							set_pal_row(x+2,y+1,((*tempbuf)>>2)&3);
-							set_pal_row(x+3,y,((*tempbuf)>>2)&3);
-							set_pal_row(x+3,y+1,((*tempbuf)>>2)&3);
+			}
+		}
+		if(currentProject->gameSystem==NES){
+			//now load attributes
+			if (load_file_generic("Load Attributes")){
+				FILE * fp=fopen(the_file.c_str(),"rb");
+				fseek(fp, 0L, SEEK_END);
+				uint32_t sz=ftell(fp);
+				rewind(fp);
+				uint8_t* tempbuf=(uint8_t*)alloca(sz);
+				fread(tempbuf,1,sz,fp);
+				for (y=0;y<mapSizeH*amt;y+=4){
+					for (x=0;x<mapSizeW;x+=4){
+						set_pal_row(x,y,*tempbuf&3);
+						set_pal_row(x,y+1,*tempbuf&3);
+						set_pal_row(x+1,y,*tempbuf&3);
+						set_pal_row(x+1,y+1,*tempbuf&3);
 
-							++tempbuf;
-						}
+						set_pal_row(x+2,y,((*tempbuf)>>2)&3);
+						set_pal_row(x+2,y+1,((*tempbuf)>>2)&3);
+						set_pal_row(x+3,y,((*tempbuf)>>2)&3);
+						set_pal_row(x+3,y+1,((*tempbuf)>>2)&3);
+
+						++tempbuf;
 					}
-					fclose(fp);
 				}
-			break;
-			default:
-				show_default_error
+				fclose(fp);
+			}
 		}
 		tempMap-=file_size;
 		free(tempMap);

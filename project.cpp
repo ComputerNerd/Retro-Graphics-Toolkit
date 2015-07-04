@@ -449,7 +449,9 @@ void switchProjectSlider(uint32_t id,bool oldExists){
 	switchProject(curProjectID);
 }
 extern int curScript;
-static void updateLuaScriptWindow(uint32_t id){
+static void updateLuaScriptWindow(uint32_t id,bool load=false){
+	if((curScript>=0)&&(!load))
+		currentProject->lScrpt[curScript].str.assign(window->luaBufProject->text());
 	window->luaScriptSel->clear();
 	size_t amt=projects[id]->lScrpt.size();
 	if(amt){
@@ -464,8 +466,8 @@ static void updateLuaScriptWindow(uint32_t id){
 		curScript=-1;
 	}
 }
-void switchProject(uint32_t id){
-	updateLuaScriptWindow(id);
+void switchProject(uint32_t id,bool load){
+	updateLuaScriptWindow(id,load);
 	window->TxtBufProject->text(projects[id]->Name.c_str());//Make editor displays new text
 	window->gameSysSel->value(projects[id]->gameSystem);
 	window->ditherPower->value((projects[id]->settings>>subsettingsDitherShift)&subsettingsDitherMask);
@@ -645,8 +647,8 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 			projects[id]->tileC->resizeAmt();
 			decompressFromFile(projects[id]->tileC->tDat.data(),projects[id]->tileC->tileSize*(projects[id]->tileC->amt),fi);
 			decompressFromFile(projects[id]->tileC->truetDat.data(),projects[id]->tileC->tcSize*(projects[id]->tileC->amt),fi);
-			if(version<=7&&(!projects[id]->isPlanarTiles()))
-				projects[id]->tileC->toPlanar();
+			if(version<=7&&(projects[id]->getTileType()!=PLANAR_TILE))
+				projects[id]->tileC->toPlanar(projects[id]->getTileType());
 		}
 	}
 	if(projects[id]->useMask&pjHaveMap){
@@ -720,6 +722,13 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 				projects[id]->ms->load(fi,version);
 		}
 	}
+	if(projects[id]->useMask&pjHaveLevel){
+		if(projects[id]->share[5]<0){
+			if(version>=8)
+				projects[id]->lvl->load(fi,version);
+		}
+	}
+
 	if(version>=8){
 		uint32_t scriptAmt,tabsAmt,controlDat,userDat;
 		fread(&scriptAmt,1,sizeof(uint32_t),fi);
@@ -734,7 +743,7 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 				fileToStr(fi,projects[id]->lScrpt[i].str,"");
 			}
 		}
-		updateLuaScriptWindow(id);
+		updateLuaScriptWindow(id,true);
 		if(tabsAmt||userDat||controlDat)
 			fl_alert("This version of Retro Graphics Toolkit does not fully support Lua user data please upgrade");
 	}
@@ -749,7 +758,7 @@ bool loadProject(uint32_t id,const char*fname){
 }
 static void saveStrifNot(FILE*fp,const char*str,const char*cmp){
 	if(strcmp(cmp,str)!=0)
-		fputs(cmp,fp);
+		fputs(str,fp);
 	fputc(0,fp);
 }
 static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersion=true){
@@ -794,6 +803,7 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 		Chunk data (zlib compressed)
 	}
 	if(version>=5) sprite data (see documentation in classSprites.cpp)
+	if(version>=8) level data
 	if(version>=8) Lua user data:
 		Format:
 		uint32_t count
@@ -883,6 +893,11 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 		if(saveShared||(projects[id]->share[4]<0))
 			projects[id]->ms->save(fo);
 	}
+	if(haveTemp&pjHaveLevel){
+		if(saveShared||(projects[id]->share[3]<0)){
+			currentProject->lvl->save(fo);
+		}
+	}
 	uint32_t luaSize=projects[id]->lScrpt.size();
 	fwrite(&luaSize,1,sizeof(uint32_t),fo);
 	luaSize=0;
@@ -890,6 +905,7 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 	fwrite(&luaSize,1,sizeof(uint32_t),fo);
 	fwrite(&luaSize,1,sizeof(uint32_t),fo);
 	if(projects[id]->lScrpt.size()){
+		currentProject->lScrpt[curScript].str.assign(window->luaBufProject->text());
 		for(unsigned i=0;i<projects[id]->lScrpt.size();++i){
 			saveStrifNot(fo,projects[id]->lScrpt[i].name.c_str(),(std::to_string(i)).c_str());
 			saveStrifNot(fo,projects[id]->lScrpt[i].str.c_str(),"");

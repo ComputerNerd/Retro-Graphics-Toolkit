@@ -36,10 +36,18 @@ void save_tiles(Fl_Widget*,void*){
 		pickedFile=load_file_generic("Pick a location to save tiles",true);
 	if(pickedFile){
 		uint8_t*savePtr;
-		if(currentProject->isPlanarTiles())
-			savePtr=currentProject->tileC->tDat.data();
-		else
-			savePtr=(uint8_t*)currentProject->tileC->toLinear();
+		enum tileType tt=currentProject->getTileType();
+		switch(tt){
+			case LINEAR:
+				savePtr=(uint8_t*)currentProject->tileC->toLinear();
+			break;
+			case PLANAR_LINE:
+				savePtr=(uint8_t*)currentProject->tileC->toLinePlanar();
+			break;
+			case PLANAR_TILE:
+				savePtr=currentProject->tileC->tDat.data();
+			break;
+		}
 		int compression=compressionAsk();
 		if(compression<0)
 			return;
@@ -59,17 +67,17 @@ void save_tiles(Fl_Widget*,void*){
 				char comment[2048];
 				snprintf(comment,2048,"%d tiles %s",currentProject->tileC->amt,typeToText(compression));
 				if (compression){
-					if(saveBinAsText(compdat,compsize,myfile,type,comment,"tileDat",8)==false){
+					if(!saveBinAsText(compdat,compsize,myfile,type,comment,"tileDat",8)){
 						free(compdat);
 						fl_alert("Error: can not save file %s",the_file.c_str());
-						if(!currentProject->isPlanarTiles())
+						if(tt!=PLANAR_TILE)
 							free(savePtr);
 						return;
 					}
 				}else{
 					if(!saveBinAsText(savePtr,(currentProject->tileC->amt)*currentProject->tileC->tileSize,myfile,type,comment,"tileDat",32)){
 						fl_alert("Error: can not save file %s",the_file.c_str());
-						if(!currentProject->isPlanarTiles())
+						if(tt!=PLANAR_TILE)
 							free(savePtr);
 						return;
 					}
@@ -82,7 +90,7 @@ void save_tiles(Fl_Widget*,void*){
 			}
 			if(compression)
 				free(compdat);
-			if(!currentProject->isPlanarTiles())
+			if(tt!=PLANAR_TILE)
 				free(savePtr);
 		}else
 			fl_alert("Error: can not save file %s",the_file.c_str());
@@ -113,7 +121,7 @@ void load_tiles(Fl_Widget*,void*o){
 		myfile = fopen(the_file.c_str(),"rb");
 		if (likely(myfile!=0)){
 			fseek(myfile, 0L, SEEK_END);
-			file_size = ftell(myfile);//file.tellg();
+			file_size = ftell(myfile);
 			rewind(myfile);
 			unsigned truecolor_multiplier;
 			truecolor_multiplier=256/currentProject->tileC->tileSize;
@@ -162,7 +170,7 @@ void load_tiles(Fl_Widget*,void*o){
 				fread(currentProject->tileC->tDat.data()+offset_tiles_bytes,1,file_size,myfile);
 				fclose(myfile);
 			}
-			if(!currentProject->isPlanarTiles())
+			if(!currentProject->getTileType())
 				currentProject->tileC->toPlanar();
 			currentProject->tileC->truetDat.resize((file_size*truecolor_multiplier)+(offset_tiles_bytes*truecolor_multiplier));
 			for(uint32_t c=offset_tiles;c<(file_size/currentProject->tileC->tileSize)+offset_tiles;c++) {

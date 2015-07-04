@@ -169,7 +169,7 @@ void loadProjectCB(Fl_Widget*,void*){
 		return;
 	pushProject();
 	loadProject(curProjectID,the_file.c_str());
-	switchProject(curProjectID);
+	switchProject(curProjectID,true);
 }
 void saveProjectCB(Fl_Widget*,void*){
 	currentProject->Name.assign(window->TxtBufProject->text());//Update the project text.

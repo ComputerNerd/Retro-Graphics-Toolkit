@@ -23,15 +23,18 @@ struct __attribute__ ((__packed__)) levDat{
 	uint32_t id,dat;
 };
 struct __attribute__ ((__packed__)) levobjDat{//For sprite layout
-	uint32_t x,y,id[3],dat;
+	bool priority;//xor with sprites priority
+	uint32_t x,y,id[3]/*project id,meta id,group id*/,dat;
 };
 enum source{TILES,BLOCKS,CHUNKS};
+struct __attribute__ ((__packed__)) levelInfo{
+	uint32_t w,h,n,d;
+	int32_t repeatx,repeaty,src;
+};
 struct level{
 	Project*prj;
-	std::vector<enum source>s;
 	uint32_t layeramt;
-	std::vector<uint32_t>w;//Allow different sized layers
-	std::vector<uint32_t>h;
+	std::vector<struct levelInfo>lvlI;//Allow different sized layers
 	std::vector<std::vector<struct levDat>*>dat;
 	std::vector<std::vector<struct levobjDat>*>odat;
 	level(Project*prj);
@@ -40,10 +43,10 @@ struct level{
 	void removeLayer(unsigned which);
 	void setId(unsigned x,unsigned y,unsigned layer,unsigned val);
 	void setDat(unsigned x,unsigned y,unsigned layer,unsigned val);
-	uint32_t getId(unsigned x,unsigned y,unsigned layer);
-	uint32_t getDat(unsigned x,unsigned y,unsigned layer);
+	uint32_t getId(unsigned x,unsigned y,unsigned layer)const;
+	uint32_t getDat(unsigned x,unsigned y,unsigned layer)const;
 	void setlayeramt(unsigned amt,bool lastLayerDim);
-	void draw(unsigned x,unsigned y,unsigned zoom,int solo);
+	void draw(unsigned x,unsigned y,unsigned zoom,int solo,bool showSprites)const;
 	void save(FILE*fp);
-	void load(FILE*fp);
+	void load(FILE*fp,uint32_t version);
 };

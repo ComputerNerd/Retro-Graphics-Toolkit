@@ -871,18 +871,13 @@ static int lua_rgt_setTab(lua_State*L){
 	window->the_tabs->value(window->tabsMain[idx]);
 	set_mode_tabs(nullptr,nullptr);
 }
-static int lua_rgt_appendTab(lua_State*L){
-	int rx,ry,rw,rh;
-	window->the_tabs->client_area(rx,ry,rw,rh);
-	window->tabsMain.emplace_back(new Fl_Group(rx, ry, rw, rh, "Lua scripting"));
-}
-static int lua_rgt_endAppendTab(lua_State*L){
-	window->tabsMain[window->tabsMain.size()-1]->end();
-}
 struct keyPair{
 	const char*key;
 	unsigned pair;
 };
+static int lua_rgt_syncProject(lua_State*L){
+	updateProjectTablesLua(L);
+}
 static const luaL_Reg lua_rgtAPI[]={
 	{"redraw",lua_rgt_redraw},
 	{"ditherImage",lua_rgt_ditherImage},
@@ -892,8 +887,7 @@ static const luaL_Reg lua_rgtAPI[]={
 	{"lchToRgb",lua_rgt_lchToRgb},
 	{"rgbToHsl",lua_rgt_rgbToHsl},
 	{"setTab",lua_rgt_setTab},
-	{"appendTab",lua_rgt_appendTab},
-	{"endAppendTab",lua_rgt_endAppendTab},
+	{"syncProject",lua_rgt_syncProject},
 	{0,0}
 };
 static const struct keyPair rgtConsts[]={
@@ -905,6 +899,21 @@ static const struct keyPair rgtConsts[]={
 	{"levelTab",levelEditor},
 	{"settingsTab",settingsTab},
 	{"luaTab",luaTab},
+};
+static int lua_tabs_append(lua_State*L){
+	int rx,ry,rw,rh;
+	window->the_tabs->client_area(rx,ry,rw,rh);
+	window->tabsMain.emplace_back(new Fl_Group(rx, ry, rw, rh, "Lua scripting"));
+}
+static int lua_tabs_endAppend(lua_State*L){
+	window->tabsMain[window->tabsMain.size()-1]->end();
+}
+static const luaL_Reg lua_tabAPI[]={
+	{"appendTab",lua_tabs_append},
+	{"endAppendTab",lua_tabs_endAppend},
+	{"deleteTab",lua_tabs_append},
+	{"getTabs",lua_tabs_append},
+	{0,0}
 };
 void runLuaFunc(lua_State*L,unsigned args,unsigned results){
 	if (lua_pcall(L, args, results, 0) != LUA_OK){

@@ -263,10 +263,10 @@ void tiles::draw_truecolor(uint32_t tile_draw,unsigned x,unsigned y,bool usehfli
 	}else
 		fl_draw_image(grid,x,y,sizew*zoom,sizeh*zoom,3);
 }
-static inline uint_fast32_t cal_offset_zoom_rgb(uint_fast16_t x,uint_fast16_t y,uint_fast16_t zoom,uint8_t channel,struct Project*p){
-	return (y*(zoom*p->tileC->sizew*3))+(x*3)+channel;
+static inline uint_fast32_t cal_offset_zoom_rgb(uint_fast16_t x,uint_fast16_t y,uint_fast16_t zoom,uint8_t channel,struct Project*p,unsigned bpp){
+	return (y*(zoom*p->tileC->sizew*bpp))+(x*bpp)+channel;
 }
-void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,unsigned zoom,unsigned pal_row,bool Usehflip,bool Usevflip,bool isSprite,const uint8_t*extAttr,unsigned plane){
+void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,unsigned zoom,unsigned pal_row,bool Usehflip,bool Usevflip,bool isSprite,const uint8_t*extAttr,unsigned plane,bool alpha){
 	static unsigned DontShow=0;
 	if (amt<=tile_draw){
 		if (unlikely(DontShow==0)){
@@ -276,35 +276,43 @@ void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,unsigned zoom,unsig
 			printf("Warning tried to draw tile # %d at X: %d y: %d\nBut there is only %d tiles.\n",tile_draw,x_off,y_off,amt);
 		return;
 	}
-	static uint8_t * temp_img_ptr;
+	static uint8_t*temp_img_ptr;
 	static unsigned tempPtrSize;
-	if(tempPtrSize<(((sizeh*zoom)*(sizew*zoom))*3)){
-		tempPtrSize=((sizeh*zoom)*(sizew*zoom))*3;
+	unsigned bpp=alpha?4:3;
+	if(tempPtrSize<(((sizeh*zoom)*(sizew*zoom))*bpp)){
+		tempPtrSize=((sizeh*zoom)*(sizew*zoom))*bpp;
 		temp_img_ptr=(uint8_t*)realloc(temp_img_ptr,tempPtrSize);
 	}
 	if(!temp_img_ptr){
-		show_realloc_error(((sizeh*zoom)*(sizew*zoom))*3)
+		show_realloc_error(((sizeh*zoom)*(sizew*zoom))*bpp)
 		return;
 	}
 	for(unsigned y=0;y<sizeh;++y){
 		for(unsigned x=0;x<sizew;++x){
-			unsigned pixOff=getPixel(tile_draw,Usehflip?(sizew-1)-x:x,Usevflip?(sizeh-1)-y:y)*3;
-			if(extAttr)
-				pixOff=prj->tms->maps[plane].getPalRowExt(extAttr,Usevflip?(sizeh-1)-y:y,pixOff?true:false)*3;
-			else if(prj->pal->haveAlt&&isSprite){
+			unsigned rawP=getPixel(tile_draw,Usehflip?(sizew-1)-x:x,Usevflip?(sizeh-1)-y:y);
+			unsigned pixOff=rawP*3;
+			if(extAttr){
+				rawP=prj->tms->maps[plane].getPalRowExt(extAttr,Usevflip?(sizeh-1)-y:y,pixOff?true:false);
+				pixOff=rawP*3;
+			}else if(prj->pal->haveAlt&&isSprite){
 				pixOff+=prj->pal->colorCnt*3;
 				pixOff+=pal_row*prj->pal->perRowalt*3;
 			}else
 				pixOff+=pal_row*prj->pal->perRow*3;
 			for(unsigned i=0;i<zoom;++i){
 				for(unsigned j=0;j<zoom;++j){
-					for(unsigned k=0;k<3;++k)
-						temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+j,(y*zoom)+i,zoom,k,prj)]=prj->pal->rgbPal[pixOff+k];
+					if(rawP||(!alpha)){
+						for(unsigned k=0;k<3;++k)
+							temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+j,(y*zoom)+i,zoom,k,prj,bpp)]=prj->pal->rgbPal[pixOff+k];
+						if(alpha)
+							temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+j,(y*zoom)+i,zoom,3,prj,bpp)]=255;
+					}else
+						memset(&temp_img_ptr[cal_offset_zoom_rgb((x*zoom)+j,(y*zoom)+i,zoom,0,prj,bpp)],0,bpp);
 				}
 			}
 		}
 	}
-	fl_draw_image(temp_img_ptr,x_off,y_off,sizew*zoom,sizeh*zoom,3);
+	fl_draw_image(temp_img_ptr,x_off,y_off,sizew*zoom,sizeh*zoom,bpp);
 }
 void tiles::hflip_truecolor(uint32_t id,uint32_t * out){
 	//out must contain at least tcSize bytes
@@ -334,9 +342,15 @@ void tiles::hflip_tile(uint32_t id,uint8_t * out){
 	}
 }
 void tiles::vflip_tile_ptr(const uint8_t*in,uint8_t*out){
+	uint8_t*tmp;
+	if(in==out){
+		tmp=(uint8_t*)alloca(tileSize);
+		memcpy(tmp,in,tileSize);
+	}else
+		tmp=(uint8_t*)in;
 	for(unsigned y=0;y<sizeh;++y){
 		for(unsigned x=0;x<sizew;++x)
-			setPixel(out,x,(sizeh-1)-y,getPixel(in,x,y));
+			setPixel(out,x,(sizeh-1)-y,getPixel(tmp,x,y));
 	}
 }
 void tiles::vflip_tile(uint32_t id,uint8_t * out){
@@ -349,9 +363,6 @@ void tiles::blank_tile(uint32_t tileUsage){
 	}else
 		memset(&tDat[tileUsage*tileSize],0,tileSize);
 }
-#if _WIN32
-#define bcmp memcmp
-#endif
 void tiles::remove_duplicate_tiles(bool tColor){
 	pushTilemapAll(false);
 	pushTileGroupPrepare(tTypeDelete);
@@ -378,23 +389,23 @@ void tiles::remove_duplicate_tiles(bool tColor){
 				continue;
 			bool rm;
 			if(tColor)
-				rm=!bcmp(&truetDat[cur_tile*tcSize],&truetDat[curT*tcSize],tcSize);
+				rm=!memcmp(&truetDat[cur_tile*tcSize],&truetDat[curT*tcSize],tcSize);
 			else
-				rm=!bcmp(&tDat[cur_tile*tileSize],&tDat[curT*tileSize],tileSize);
+				rm=!memcmp(&tDat[cur_tile*tileSize],&tDat[curT*tileSize],tileSize);
 			if(rm){
 				prj->tms->maps[prj->curPlane].sub_tile_map(curT,cur_tile,false,false);
 				addTileGroup(curT,remap[curT]);
 				remap.erase(remap.begin()+curT);
 				remove_tile_at(curT);
 				tile_remove_c++;
-				continue;//curT does not exist anymore useless to do more comparisons
+				continue;
 			}
 			if(tColor){
 				hflip_truecolor(curT,(uint32_t*)tileTemp);			
-				rm=!bcmp(&truetDat[cur_tile*tcSize],tileTemp,tcSize);
+				rm=!memcmp(&truetDat[cur_tile*tcSize],tileTemp,tcSize);
 			}else{
 				hflip_tile(curT,tileTemp);
-				rm=!bcmp(&tDat[cur_tile*tileSize],tileTemp,tileSize);
+				rm=!memcmp(&tDat[cur_tile*tileSize],tileTemp,tileSize);
 			}
 			if(rm){
 				prj->tms->maps[prj->curPlane].sub_tile_map(curT,cur_tile,true,false);
@@ -406,10 +417,10 @@ void tiles::remove_duplicate_tiles(bool tColor){
 			}
 			if(tColor){
 				vflip_truecolor_ptr(tileTemp,tileTemp);
-				rm=!bcmp(&truetDat[cur_tile*tcSize],tileTemp,tcSize);
+				rm=!memcmp(&truetDat[cur_tile*tcSize],tileTemp,tcSize);
 			}else{
 				vflip_tile_ptr(tileTemp,tileTemp);
-				rm=!bcmp(&tDat[cur_tile*tileSize],tileTemp,tileSize);
+				rm=!memcmp(&tDat[cur_tile*tileSize],tileTemp,tileSize);
 			}
 			if(rm){
 				prj->tms->maps[prj->curPlane].sub_tile_map(curT,cur_tile,true,true);
@@ -421,10 +432,10 @@ void tiles::remove_duplicate_tiles(bool tColor){
 			}
 			if(tColor){
 				vflip_truecolor(curT,tileTemp);
-				rm=!bcmp(&truetDat[cur_tile*tcSize],tileTemp,tcSize);
+				rm=!memcmp(&truetDat[cur_tile*tcSize],tileTemp,tcSize);
 			}else{
 				vflip_tile(curT,tileTemp);
-				rm=!bcmp(&tDat[cur_tile*tileSize],tileTemp,tileSize);
+				rm=!memcmp(&tDat[cur_tile*tileSize],tileTemp,tileSize);
 			}
 			if(rm){
 				prj->tms->maps[prj->curPlane].sub_tile_map(curT,cur_tile,false,true);
@@ -475,36 +486,50 @@ void tiles::tileToTrueCol(const uint8_t*input,uint8_t*output,unsigned row,bool u
 		}
 	}
 }
-void tiles::toPlanar(void){
+void tiles::toPlanar(enum tileType tt){
 	uint8_t*tmp=(uint8_t*)alloca(tileSize);
 	uint8_t*tPtr=tDat.data();
 	unsigned bdr=prj->getBitdepthSysraw();
 	for(unsigned i=0;i<amt;++i){
 		uint8_t*ptr=tmp;
 		memcpy(tmp,tPtr,tileSize);
-		for(unsigned y=0;y<sizeh;++y){
-			for(unsigned x=0;x<sizew;++x){
-				unsigned val;
-				switch(bdr){
-					case 3:
-						if(x&1)
-							val=(*ptr++)&15;
-						else
-							val=*ptr>>4;
-					break;
-					default:
-						val=0;
-						show_default_error
+		switch(tt){
+			case LINEAR:
+				for(unsigned y=0;y<sizeh;++y){
+					for(unsigned x=0;x<sizew;++x){
+						unsigned val;
+						switch(bdr){
+							case 3:
+								if(x&1)
+									val=(*ptr++)&15;
+								else
+									val=*ptr>>4;
+							break;
+							default:
+								val=0;
+								show_default_error
+						}
+						setPixel(tPtr,x,y,val);
+					}
 				}
-				setPixel(tPtr,x,y,val);
-			}
+			break;
+			case PLANAR_LINE:
+				memset(tPtr,0,tileSize);
+				for(unsigned y=0;y<sizeh;++y){
+					for(unsigned b=0;b<=bdr;++b){
+						for(unsigned x=0;x<sizew;++x)
+							setPixel(tPtr,x,y,(((*ptr>>((sizew-1)-x))&1)<<b)|getPixel(tPtr,x,y));
+						++ptr;
+					}
+				}
+			break;
 		}
 		tPtr+=tileSize;
 	}
 }
 void*tiles::toLinear(void){
 	void*pt=malloc(amt*tileSize);
-	uint8_t*ptr=(uint8_t*)ptr;
+	uint8_t*ptr=(uint8_t*)pt;
 	unsigned bdr=prj->getBitdepthSysraw();
 	uint8_t*tPtr=tDat.data();
 	for(unsigned i=0;i<amt;++i){
@@ -519,6 +544,28 @@ void*tiles::toLinear(void){
 							*ptr=val<<4;
 					break;
 				}
+			}
+		}
+		tPtr+=tileSize;
+	}
+	return pt;
+}
+void*tiles::toLinePlanar(void){
+	void*pt=malloc(amt*tileSize);
+	uint8_t*ptr=(uint8_t*)pt;
+	unsigned bdr=prj->getBitdepthSysraw();
+	uint8_t*tPtr=tDat.data();
+	if(sizew>8){
+		show_TODO_error
+		return 0;
+	}
+	for(unsigned i=0;i<amt;++i){
+		for(unsigned y=0;y<sizeh;++y){
+			for(unsigned b=0;b<=bdr;++b){
+				*ptr=0;
+				for(unsigned x=0;x<sizew;++x)
+					*ptr|=((getPixel(tPtr,x,y)>>b)&1)<<((sizew-1)-x);
+				++ptr;
 			}
 		}
 		tPtr+=tileSize;

@@ -19,5 +19,4 @@ void appendLuaScript(Fl_Widget*,void*);
 void deleteLuaScript(Fl_Widget*,void*);
 void setNameLuaScript(Fl_Widget*,void*);
 void switchCurLuaScript(Fl_Widget*,void*);
-void changeCurLuaScript(Fl_Widget*,void*);
 void runCurLuaScript(Fl_Widget*,void*);

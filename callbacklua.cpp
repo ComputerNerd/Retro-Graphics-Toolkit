@@ -35,7 +35,8 @@ void deleteLuaScript(Fl_Widget*,void*){
 		if(currentProject->lScrpt.size()){
 			if(curScript>=currentProject->lScrpt.size()){
 				curScript=currentProject->lScrpt.size()-1;
-				switchCurLuaScript(nullptr,(void*)(intptr_t)curScript);
+				window->luaScriptName->value(currentProject->lScrpt[curScript].name.c_str());
+				window->luaBufProject->text(currentProject->lScrpt[curScript].str.c_str());
 			}
 		}else
 			window->luaEditProject->hide();
@@ -51,17 +52,17 @@ void setNameLuaScript(Fl_Widget*w,void*){
 	window->redraw();
 }
 void switchCurLuaScript(Fl_Widget*,void*o){
+	if(curScript>=0)
+		currentProject->lScrpt[curScript].str.assign(window->luaBufProject->text());
 	curScript=(intptr_t)o;
 	window->luaScriptName->value(currentProject->lScrpt[curScript].name.c_str());
 	window->luaBufProject->text(currentProject->lScrpt[curScript].str.c_str());
 	window->redraw();
 }
-void changeCurLuaScript(Fl_Widget*,void*){
-	currentProject->lScrpt[curScript].str.assign(window->luaBufProject->text());
-}
 void runCurLuaScript(Fl_Widget*,void*){
 	if(curScript>=0){
 		lua_State*L=createLuaState();
+		currentProject->lScrpt[curScript].str.assign(window->luaBufProject->text());
 		runLua(L,currentProject->lScrpt[curScript].str.c_str(),false);
 	}
 }
