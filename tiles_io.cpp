@@ -1,18 +1,18 @@
 /*
-   This file is part of Retro Graphics Toolkit
+	This file is part of Retro Graphics Toolkit
 
-   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or any later version.
+	Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or any later version.
 
-   Retro Graphics Toolkit is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-   GNU General Public License for more details.
+	Retro Graphics Toolkit is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	You should have received a copy of the GNU General Public License
+	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #include "project.h"
 #include "macros.h"
@@ -101,7 +101,7 @@ void save_tiles(Fl_Widget*,void*){
 void load_tiles(Fl_Widget*,void*o){
 	//if o=0 load if o=1 append if o=2 load at
 	size_t file_size;
-	int mode=(uintptr_t)o;
+	unsigned mode=(uintptr_t)o;
 	char * returned=(char*)fl_input("What row should these tiles use?\nEnter 0 to 3 to selected a row or -1 to -4 to auto determine based on tilemap\nWhen specifing a negative number to figure out what the default will be use this formula abs(row)-1","-1");
 	if (unlikely(!returned))
 		return;
@@ -158,20 +158,21 @@ void load_tiles(Fl_Widget*,void*o){
 			}else if(mode==1){
 				offset_tiles=currentProject->tileC->amt;
 				offset_tiles_bytes=offset_tiles*currentProject->tileC->tileSize;
-				currentProject->tileC->tDat.resize(file_size+((currentProject->tileC->amt)*currentProject->tileC->tileSize));
 			}else{
 				currentProject->tileC->tDat.resize(file_size);
 				offset_tiles=0;
 				offset_tiles_bytes=0;
 			}
+			if(mode)
+				currentProject->tileC->tDat.resize(offset_tiles_bytes+file_size);
 			if(compression)
 				output.copy((char *)currentProject->tileC->tDat.data()+offset_tiles_bytes,file_size);
 			else{
 				fread(currentProject->tileC->tDat.data()+offset_tiles_bytes,1,file_size,myfile);
 				fclose(myfile);
 			}
-			if(!currentProject->getTileType())
-				currentProject->tileC->toPlanar();
+			if(currentProject->getTileType()!=PLANAR_TILE)
+				currentProject->tileC->toPlanar(currentProject->getTileType());
 			currentProject->tileC->truetDat.resize((file_size*truecolor_multiplier)+(offset_tiles_bytes*truecolor_multiplier));
 			for(uint32_t c=offset_tiles;c<(file_size/currentProject->tileC->tileSize)+offset_tiles;c++) {
 				if(row < 0){

@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "SMSlib.h"
 #include "palette.h"
 #include "tiles.h"
