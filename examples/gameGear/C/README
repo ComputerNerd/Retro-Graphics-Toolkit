@@ -1,0 +1,15 @@
+This example uses https://github.com/sverx/devkitSMS .
+I decided not to include the library because it may be updated and I may not be
+aware of this. I do not want to host an old version of the library. To compile
+just place SMSlib.c and SMSlib.h in this folder, run make and it will compile
+provided that you have installed SDCC.
+
+Note: I could not compile devkitSMS without modifying it. I needed to add:
+#include <stdbool.h>
+to SMSlib.h
+
+This was with the latest snapshot of SDCC and devkitSMS. For SDCC it is 3.5.2
+#9277. For SMSlib it is commit 33fac1a314e07d807e6b9588592de969e687b647.
+
+This may change in future revisions. Do not assume the change I propose will
+still be needed.
