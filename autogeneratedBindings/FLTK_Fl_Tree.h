@@ -15,4 +15,4 @@
 	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #pragma once
-int luaopen_undoLua(lua_State *L);
+int luaopen_FLTK_Fl_Tree(lua_State *L);

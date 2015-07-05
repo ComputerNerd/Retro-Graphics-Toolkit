@@ -41,6 +41,26 @@
 #include "palette.h"
 #include "callback_project.h"
 #include "lua_zlib.h"
+#include "dub/dub.h"
+#include "FLTK_Fl_Box.h"
+#include "FLTK_Fl_Button.h"
+#include "FLTK_Fl_Chart.h"
+#include "FLTK_Fl_Choice.h"
+#include "FLTK_Fl_Double_Window.h"
+#include "FLTK_Fl_Float_Input.h"
+#include "FLTK_Fl_Group.h"
+#include "FLTK_Fl_Input.h"
+#include "FLTK_Fl_Input_Choice.h"
+#include "FLTK_Fl_Int_Input.h"
+#include "FLTK_Fl_Progress.h"
+#include "FLTK_Fl_Scrollbar.h"
+#include "FLTK_Fl_Slider.h"
+#include "FLTK_Fl_Spinner.h"
+#include "FLTK_Fl_Tree.h"
+#include "FLTK_Fl_Tree_Item.h"
+#include "FLTK_Fl_Tree_Item_Array.h"
+#include "FLTK_Fl_Tree_Prefs.h"
+#include "FLTK_Fl_Value_Slider.h"
 #include "undoLua.h"
 static int panic(lua_State *L){
 	fl_alert("PANIC: unprotected error in call to Lua API (%s)\n",lua_tostring(L, -1));
@@ -205,6 +225,45 @@ static int luafl_draw(lua_State*L){
 	}
 	return 0;
 }
+/** void fl_rectf(int x, int y, int w, int h)
+ * inc/fl_draw.h:206
+ */
+static int FLTK_fl_rectf(lua_State *L) {
+	try {
+		int top__ = lua_gettop(L);
+		if (top__ >= 7) {
+			int x = dub::checkinteger(L, 1);
+			int y = dub::checkinteger(L, 2);
+			int w = dub::checkinteger(L, 3);
+			int h = dub::checkinteger(L, 4);
+			unsigned char r = dub::checkinteger(L, 5);
+			unsigned char g = dub::checkinteger(L, 6);
+			unsigned char b = dub::checkinteger(L, 7);
+			fl_rectf(x, y, w, h, r, g, b);
+			return 0;
+		} else if (top__ >= 5) {
+			int x = dub::checkinteger(L, 1);
+			int y = dub::checkinteger(L, 2);
+			int w = dub::checkinteger(L, 3);
+			int h = dub::checkinteger(L, 4);
+			Fl_Color *c = *((Fl_Color **)dub::checksdata(L, 5, "Fl_Color"));
+			fl_rectf(x, y, w, h, *c);
+			return 0;
+		} else {
+			int x = dub::checkinteger(L, 1);
+			int y = dub::checkinteger(L, 2);
+			int w = dub::checkinteger(L, 3);
+			int h = dub::checkinteger(L, 4);
+			fl_rectf(x, y, w, h);
+			return 0;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "FLTK.fl_rectf: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "FLTK.fl_rectf: Unknown exception");
+	}
+	return lua_error(L);
+}
 static const luaL_Reg lua_flAPI[]={
 	{"alert",luafl_alert},
 	{"ask",luafl_ask},
@@ -219,6 +278,7 @@ static const luaL_Reg lua_flAPI[]={
 	{"eventnames",luafl_eventnames},
 	{"point",luafl_point},
 	{"rect",luafl_rect},
+	{"rectf",FLTK_fl_rectf},
 	{"color",luafl_color},
 	{"arc",luafl_arc},
 	{"begin_complex_polygon",luafl_begin_complex_polygon},
@@ -920,151 +980,6 @@ void runLuaFunc(lua_State*L,unsigned args,unsigned results){
 		luaL_error(L, "error: %s",lua_tostring(L, -1));
 	}
 }
-class Fl_Lua_Window : public Fl_Window{
-public:
-	char*drawFunc=0;
-	char*handleFunc=0;
-	lua_State*L;
-	int baseHandle(int e){
-		return Fl_Window::handle(e);
-	}
-	int handle(int e){
-		if(handleFunc){
-			lua_getglobal(L,handleFunc);
-			lua_pushnumber(L,e);
-			runLuaFunc(L,1,1);
-			int ret=luaL_checkinteger(L,-1);
-			lua_pop(L,1);
-			return ret;
-		}else
-			return baseHandle(e);
-	}
-	void baseDraw(){
-		Fl_Window::draw();
-	}
-	void draw(){
-		if(drawFunc){
-			lua_getglobal(L,drawFunc);
-			runLuaFunc(L,0,0);
-		}else
-			baseDraw();
-	}
-	Fl_Lua_Window(int X, int Y, int W, int H, const char *L=0)
-		: Fl_Window(X, Y, W, H, L){
-		}
-	Fl_Lua_Window(int W, int H, const char *L=0)
-		: Fl_Window(W, H, L) {
-		}
-};
-static int lua_Fl_Window_new(lua_State*L){
-	unsigned width=luaL_checkinteger(L,1);
-	unsigned height=luaL_checkinteger(L,2);
-	bool useXY=false;
-	unsigned x,y;
-	const char*title;
-	if(lua_type(L,3)==LUA_TNUMBER&&lua_type(L,4)==LUA_TNUMBER){
-		unsigned x=luaL_checkinteger(L,3);
-		unsigned y=luaL_checkinteger(L,4);
-		useXY=true;
-		title=luaL_optstring(L,5,0);
-	}else
-		title=luaL_optstring(L,3,0);
-	void*ptr=lua_newuserdata(L,sizeof(void*));
-	Fl_Lua_Window**win=(Fl_Lua_Window**)ptr;
-	luaL_getmetatable(L, "FLTKmeta.Fl_Window");
-	lua_setmetatable(L, -2);
-	if(useXY)
-		*win=new Fl_Lua_Window(x,y,width,height);
-	else
-		*win=new Fl_Lua_Window(width,height);
-	if(title&&title[0])
-		(*win)->copy_label(title);
-	(*win)->L=L;
-	return 1;
-}
-static Fl_Lua_Window*getWin(lua_State*L){
-	Fl_Lua_Window *win = *(Fl_Lua_Window**)luaL_checkudata(L,1,"FLTKmeta.Fl_Window");
-	if(!win)
-		fl_alert("Fl_Window null");
-	return win;
-}
-static int lua_Fl_Window_show(lua_State*L){
-	Fl_Lua_Window*win=getWin(L);
-	if(win)
-		win->show();
-	return 0;
-}
-static int lua_Fl_Window_shown(lua_State*L){
-	Fl_Lua_Window*win=getWin(L);
-	if(win)
-		lua_pushinteger(L,win->shown());
-	return 1;
-}
-static int lua_Fl_Window_gc(lua_State*L){
-	Fl_Lua_Window*win=getWin(L);
-	if(win){
-		if(win->drawFunc)
-			free(win->drawFunc);
-		if(win->handleFunc)
-			free(win->handleFunc);
-		delete win;
-	}
-	return 0;
-}
-static int lua_Fl_Window_end(lua_State*L){
-	Fl_Lua_Window*win=getWin(L);
-	if(win)
-		win->end();
-	return 0;
-}
-static void cpyAndSet(lua_State*L,char**what){
-	if(*what)
-		free(*what);
-	const char*str=luaL_optstring(L,2,0);
-	if(str&&str[0]){
-		*what=strdup(str);
-	}else
-		*what=0;
-}
-static int lua_Fl_Window_setDrawFunction(lua_State*L){
-	Fl_Lua_Window*win=getWin(L);
-	if(win)
-		cpyAndSet(L,&win->drawFunc);
-	return 0;
-}
-static int lua_Fl_Window_setHandleFunction(lua_State*L){
-	Fl_Lua_Window*win=getWin(L);
-	if(win)
-		cpyAndSet(L,&win->handleFunc);
-	return 0;
-}
-static int lua_Fl_Window_baseHandle(lua_State*L){
-	Fl_Lua_Window*win=getWin(L);
-	lua_pushinteger(L,win->baseHandle(luaL_checkinteger(L,2)));
-	return 1;
-}
-static int lua_Fl_Window_baseDraw(lua_State*L){
-	Fl_Lua_Window*win=getWin(L);
-	win->baseDraw();
-	return 0;
-}
-static int lua_Fl_Window_redraw(lua_State*L){
-	Fl_Lua_Window*win=getWin(L);
-	win->redraw();
-	return 0;
-}
-static const luaL_Reg lua_Fl_Window[]={
-	{"new",lua_Fl_Window_new},
-	{"show",lua_Fl_Window_show},
-	{"shown",lua_Fl_Window_shown},
-	{"End",lua_Fl_Window_end},
-	{"baseHandle",lua_Fl_Window_baseHandle},
-	{"baseDraw",lua_Fl_Window_baseDraw},
-	{"setDrawFunction",lua_Fl_Window_setDrawFunction},
-	{"setHandleFunction",lua_Fl_Window_setHandleFunction},
-	{"redraw",lua_Fl_Window_redraw},
-	{0,0}
-};
 void runLua(lua_State*L,const char*str,bool isFile){
 	try{
 		int s;
@@ -1153,6 +1068,16 @@ static const keyPair FLconsts[]={
 	{"Alt_L",FL_Alt_L},
 	{"Alt_R",FL_Alt_R},
 	{"Delete",FL_Delete},
+	{"NORMAL_BUTTON",FL_NORMAL_BUTTON},
+	{"TOGGLE_BUTTON",FL_TOGGLE_BUTTON},
+	{"RADIO_BUTTON",FL_RADIO_BUTTON},
+	{"HIDDEN_BUTTON",FL_HIDDEN_BUTTON},
+	{"VERT_SLIDER",FL_VERT_SLIDER},
+	{"HOR_SLIDER",FL_HOR_SLIDER},
+	{"VERT_FILL_SLIDER",FL_VERT_FILL_SLIDER},
+	{"HOR_FILL_SLIDER",FL_HOR_FILL_SLIDER},
+	{"VERT_NICE_SLIDER",FL_VERT_NICE_SLIDER},
+	{"HOR_NICE_SLIDER",FL_HOR_NICE_SLIDER},
 };
 lua_State*createLuaState(void){
 	lua_State *L = lua_newstate(l_alloc, NULL);
@@ -1173,13 +1098,6 @@ lua_State*createLuaState(void){
 			mkKeyunsigned(L,FLconsts[x].key,FLconsts[x].pair);
 		lua_setglobal(L, "FL");
 
-		luaL_newmetatable(L,"FLTKmeta.Fl_Window");
-		lua_pushvalue(L, -1); /* duplicates the metatable */
-		lua_setfield(L, -2,"__index");
-		lua_pushcfunction(L,lua_Fl_Window_gc);
-		lua_setfield(L, -2, "__gc");
-		luaL_setfuncs(L,lua_Fl_Window,0);
-		lua_setglobal(L,"Fl_Window");
 
 		updateProjectTablesLua(L);
 
@@ -1192,6 +1110,44 @@ lua_State*createLuaState(void){
 		luaopen_zlib(L);
 		lua_setglobal(L, "zlib");
 
+		luaopen_FLTK_Fl_Box(L);
+		lua_setglobal(L, "Fl_Box");
+		luaopen_FLTK_Fl_Button(L);
+		lua_setglobal(L, "Fl_Button");
+		luaopen_FLTK_Fl_Chart(L);
+		lua_setglobal(L, "Fl_Chart");
+		luaopen_FLTK_Fl_Choice(L);
+		lua_setglobal(L, "Fl_Choice");
+		luaopen_FLTK_Fl_Double_Window(L);
+		lua_setglobal(L, "Fl_Window");
+		luaopen_FLTK_Fl_Float_Input(L);
+		lua_setglobal(L, "Fl_Float_Input");
+		luaopen_FLTK_Fl_Group(L);
+		lua_setglobal(L, "Fl_Group");
+		luaopen_FLTK_Fl_Input(L);
+		lua_setglobal(L, "Fl_Input");
+		luaopen_FLTK_Fl_Input_Choice(L);
+		lua_setglobal(L, "Fl_Input_Choice");
+		luaopen_FLTK_Fl_Int_Input(L);
+		lua_setglobal(L, "Fl_Int_Input");
+		luaopen_FLTK_Fl_Progress(L);
+		lua_setglobal(L, "Fl_Progress");
+		luaopen_FLTK_Fl_Scrollbar(L);
+		lua_setglobal(L, "Fl_Scrollbar");
+		luaopen_FLTK_Fl_Slider(L);
+		lua_setglobal(L, "Fl_Slider");
+		luaopen_FLTK_Fl_Spinner(L);
+		lua_setglobal(L, "Fl_Spinner");
+		luaopen_FLTK_Fl_Tree(L);
+		lua_setglobal(L, "Fl_Tree");
+		luaopen_FLTK_Fl_Tree_Item(L);
+		lua_setglobal(L, "Fl_Tree_Item");
+		luaopen_FLTK_Fl_Tree_Item_Array(L);
+		lua_setglobal(L, "Fl_Tree_Item_Array");
+		luaopen_FLTK_Fl_Tree_Prefs(L);
+		lua_setglobal(L, "Fl_Tree_Prefs");
+		luaopen_FLTK_Fl_Value_Slider(L);
+		lua_setglobal(L, "Fl_Value_Slider");
 		luaopen_undoLua(L);
 		lua_setglobal(L, "undo");
 	}else

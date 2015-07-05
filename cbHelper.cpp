@@ -14,5 +14,11 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
-#pragma once
-int luaopen_undoLua(lua_State *L);
+#include "runlua.h"
+#include "cbHelper.h"
+void luaWidgetCallbackHelper(Fl_Widget*,void*i){
+	struct cbInfo*c=(struct cbInfo*)i;
+	lua_getglobal(c->L,c->cb);
+	lua_pushinteger(c->L,c->udat);
+	runLuaFunc(c->L,1,0);
+}

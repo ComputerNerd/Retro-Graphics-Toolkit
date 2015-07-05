@@ -1,12 +1,15 @@
-If you are a Windows user and want to build this you will need Mingw.
+If you are a Windows user and want to build this you will need Mingw or
+Mingw-w64.
 
 First of all in the Retro Graphics Toolkit directory create a folder called lua
-or luawin on windows.
+or luawin if you are compiling for Windows. This folder shall the latest
+version of Lua. The folder should not contain a folder called something to the
+effect of lua/lua-version-number.
 
-Note the only reason for creating a separate folder is to accommodate for the
-fact that I do all my development on GNU/Linux and have a separate instillation
-of GCC as a cross compiler. This allows me to quickly test the windows build
-and *unix build simultaneously.
+Note the only reason for creating a separate folder for Mingw cross compiling
+is to accommodate for the fact that I do all my development on GNU/Linux and
+have a separate instillation of GCC as a cross compiler. This allows me to
+quickly test the Windows build and *Unix build simultaneously.
 
 Extract the latest version of Lua in the newly created folder.
 
@@ -18,7 +21,7 @@ On the line that starts with CFLAGS= remove -DLUA_COMPAT_5_2
 If you are using a cross compiler make sure to take into account it's prefix
 also you will need to modify the AR and RANLIB variables if such is the case.
 
-Also if you are building on windows you must replace this line in the Makefile
+Also if you are building on Windows you must replace this line in the Makefile
 	"AR=$(CC) -shared -o" "RANLIB=strip --strip-unneeded" \
 with
 	"AR=$(CC) -shared -static-libgcc -static-libstdc++ -o" "RANLIB=strip --strip-all" \
@@ -36,12 +39,12 @@ DO NOT RUN MAKE INSTALL.
 
 WINDOWS ONLY BEGIN
 
-This step is only for windows users. On other operating system, the
+This step is only for Windows users. On other operating system, the
 distribution should already have provided FLTK.
 
 You will now need to build FLTK to do this download fltk-1.3.3 and extract it
 into the Retro Graphics Toolkit project folder and build it using either
-./configure if you are on windows or if you are cross compiling you need to
+./configure if you are on Windows or if you are cross compiling you need to
 something like this:
 
 RANLIB=~/mingw/bin/x86_64-w64-mingw32-gcc-ranlib NM=~/mingw/bin/x86_64-w64-mingw32-gcc-nm AR=~/mingw/bin/x86_64-w64-mingw32-gcc-ar CFLAGS="-O2 -flto -fuse-linker-plugin -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=x86_64-w64-mingw32 --build=x86_64-unknown-linux-gnu
@@ -50,7 +53,7 @@ Regardless of how ./configure is ran you will just need to run make and you are 
 
 END OF WINDOWS ONLY SECTION
 
-Now on Linux run make or on windows run make -f make_win note that you may need
+Now on Linux run make or on Windows run make -f make_win note that you may need
 to modify the CXX and CC variables in make_win.
 
 You should now have a compiled version of Retro Graphics Toolkit.

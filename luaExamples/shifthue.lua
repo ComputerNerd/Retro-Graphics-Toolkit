@@ -34,16 +34,62 @@ function hsl_to_rgb(h, s, L)
 
 	return _h2rgb(m1, m2, h+1./3.), _h2rgb(m1, m2, h), _h2rgb(m1, m2, h-1./3.)
 end
-
-if project.have(project.palMask) then
-	shift=tonumber(fl.input("Shift hue by [0,1]","0"))+0.
+function idxHelper(idx)
+	local r,g,b=palette.getRGB(idx)
+	local h,s,l=rgt.rgbToHsl(r/255.,g/255.,b/255.)
+	r,g,b=hsl_to_rgb((h+shift)%1.,s,l)
+	return r*255.//1,g*255.//1,b*255.//1
+end
+function draw()
+	win:baseDraw()
 	if shift~=nil then
+		for row=0,palette.rowCnt-1 do
+			for idx=0,palette.perRow-1 do
+				local r,g,b=idxHelper(row*palette.perRow+idx)
+				fl.rectf((idx+1)*16,(row+1)*16,16,16,r,g,b)
+			end
+		end
+		if palette.haveAlt~=0 then
+			for row=0,palette.rowCntAlt-1 do
+				for idx=0,palette.perRowAlt-1 do
+					local r,g,b=idxHelper(row*palette.perRowAlt+idx+palette.cnt)
+					fl.rectf((idx+1)*16+(palette.perRow+1)*16,(row+1)*16,16,16,r,g,b)
+				end
+			end
+		end
+	end
+end
+shift=0.
+function setShift(unused)
+	shift=sld:value()
+	win:redraw()
+end
+ok=0
+function btnCB(val)
+	ok=val
+	win:hide()
+end
+if project.have(project.palMask) then
+	win=Fl_Window.new(320,200,'Shift hue by')
+	win:set_modal()
+	win:setDrawFunction("draw")
+	sld=Fl_Value_Slider.new(10,166,300,24)
+	sld:Type(FL.HOR_SLIDER)
+	sld:callback('setShift')
+	okbtn=Fl_Button.new((320-64)/2-64-10,134,64,24,"OK")
+	okbtn:callback('btnCB',1)
+	canclebtn=Fl_Button.new((320-64)/2+64+10,134,64,24,"Cancel")
+	canclebtn:callback('btnCB')
+	win:End()
+	win:show()
+	while win:shown()~=0 do
+		Fl.wait()
+	end
+	if ok~=0 then
 		undo.pushPaletteAll()
 		for ent=0,palette.cnt+palette.cntAlt-1,1 do
-			local r,g,b=palette.getRGB(ent)
-			local h,s,l=rgt.rgbToHsl(r/255.,g/255.,b/255.)
-			r,g,b=hsl_to_rgb((h+shift)%1.,s,l)
-			palette.setRGB(ent,r*255.,g*255.,b*255.)
+			local r,g,b=idxHelper(ent)
+			palette.setRGB(ent,r,g,b)
 		end
 		palette.fixSliders()
 	end

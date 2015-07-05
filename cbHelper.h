@@ -15,4 +15,10 @@
 	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #pragma once
-int luaopen_undoLua(lua_State *L);
+#include <FL/Fl_Widget.H>
+struct cbInfo{
+	char*cb;
+	lua_State*L;
+	lua_Integer udat;
+};
+void luaWidgetCallbackHelper(Fl_Widget*,void*i);
