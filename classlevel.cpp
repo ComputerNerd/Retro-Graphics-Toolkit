@@ -31,6 +31,7 @@ level::level(const level&o,Project*prj){
 	this->prj=prj;
 	layeramt=o.layeramt;
 	lvlI=o.lvlI;
+	layernames=o.layernames;
 	dat.resize(o.dat.size());
 	odat.resize(o.odat.size());
 	for(unsigned i=0;i<o.dat.size();++i)
@@ -54,17 +55,30 @@ void level::removeLayer(unsigned which){
 	delete odat[which];
 	odat.erase(odat.begin()+which);
 }
-void level::setId(unsigned x,unsigned y,unsigned layer,unsigned val){
-	(*dat[layer])[(y*lvlI[layer].w)+x].id=val;
+bool level::inRangeLayer(unsigned tst){
+	if(tst>=layeramt){
+		fl_alert("Level layer out of range error");
+		return false;
+	}else
+		return true;
 }
-void level::setDat(unsigned x,unsigned y,unsigned layer,unsigned val){
-	(*dat[layer])[(y*lvlI[layer].w)+x].dat=val;
+struct levelInfo level::getInfo(unsigned layer){
+	return lvlI[layer];
 }
-uint32_t level::getId(unsigned x,unsigned y,unsigned layer)const{
-	return (*dat[layer])[(y*lvlI[layer].w)+x].id;
+void level::setInfo(unsigned layer,struct levelInfo i){
+	lvlI[layer]=i;
 }
-uint32_t level::getDat(unsigned x,unsigned y,unsigned layer)const{
-	return (*dat[layer])[(y*lvlI[layer].w)+x].dat;
+struct levDat level::getlevDat(unsigned layer,unsigned x,unsigned y){
+	return (*(dat[layer]))[y*lvlI[layer].w+x];
+}
+void level::setlevDat(unsigned layer,unsigned x,unsigned y,struct levDat d){
+	(*(dat[layer]))[y*lvlI[layer].w+x]=d;
+}
+struct levobjDat level::getleObjvDat(unsigned layer,unsigned idx){
+	return (*(odat[layer]))[idx];
+}
+void level::setlevObjDat(unsigned layer,unsigned idx,struct levobjDat d){
+	(*(odat[layer]))[idx]=d;
 }
 void level::setlayeramt(unsigned amt,bool lastLayerDim){
 	if(amt>layeramt){
@@ -95,13 +109,6 @@ void level::setlayeramt(unsigned amt,bool lastLayerDim){
 		odat.resize(amt);
 	}
 	layeramt=amt;
-}
-void level::draw(unsigned x,unsigned y,unsigned zoom,int solo,bool showSprites)const{
-	//Painter's algorithm
-	uint32_t d=solo>=0?solo+1:layeramt;
-	while(d--){
-		unsigned xx=x;
-	}
 }
 void level::save(FILE*fp){
 	/*Format

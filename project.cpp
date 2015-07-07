@@ -25,6 +25,8 @@
 #include "gui.h"
 #include "callback_gui.h"
 #include "callbacklua.h"
+#include "luaconfig.h"
+#include "runlua.h"
 struct Project ** projects;
 uint32_t projects_count;
 struct Project * currentProject;
@@ -47,10 +49,7 @@ void changeTileDim(unsigned w,unsigned h,struct Project*p){
 }
 const char*maskToName(unsigned mask){
 	unsigned off=__builtin_ctz(mask);
-	if(off>=6)
-		return maskNames[6];
-	else
-		return maskNames[off];
+	return maskNames[off>=6?6:off];
 }
 bool Project::isShared(uint32_t mask){
 	bool andIt=true;
@@ -156,7 +155,7 @@ void Project::copyClasses(const Project&other){
 	else
 		tms=0;
 	if(isUniqueData(pjHaveChunks))
-		Chunk=new ChunkClass(*other.Chunk);
+		Chunk=new ChunkClass(*other.Chunk,this);
 	else if(isShared(pjHaveChunks))
 		Chunk=other.Chunk;
 	else
@@ -190,7 +189,7 @@ static void initNewProject(unsigned at){
 	projects[at]->tileC=new tiles(projects[at],projects[at]);
 	projects[at]->curPlane=0;
 	projects[at]->tms=new tilemaps(projects[at]);
-	projects[at]->Chunk=new ChunkClass;
+	projects[at]->Chunk=new ChunkClass(projects[at]);
 	projects[at]->ms=new metasprites(projects[at]);
 	projects[at]->Name.assign(defaultName);
 	projects[at]->pal=new palette(projects[at]);
@@ -254,7 +253,7 @@ void setHaveProject(uint32_t id,uint32_t mask,bool set){
 	if((mask&pjHaveChunks)&&(projects[id]->share[3]<0)){
 		if(set){
 			if(!(projects[id]->useMask&pjHaveChunks)){
-				projects[id]->Chunk=new ChunkClass;
+				projects[id]->Chunk=new ChunkClass(projects[id]);
 				projects[id]->useMask|=pjHaveChunks;
 			}
 		}else{
@@ -356,7 +355,7 @@ void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable){
 		}
 		if(what&pjHaveChunks){
 			if((projects[share]->share[chunkEditor]>=0)&&(projects[share]->useMask&pjHaveChunks))
-				projects[share]->Chunk = new ChunkClass(*projects[with]->Chunk);
+				projects[share]->Chunk = new ChunkClass(*projects[with]->Chunk,projects[share]);
 			projects[share]->share[chunkEditor]=-1;//Even if we don't have the data sharing can still be disabled
 		}
 		if(what&pjHaveSprites){
@@ -568,6 +567,8 @@ void switchProject(uint32_t id,bool load){
 	}else{
 		window->spriteglobaltxt->hide();
 	}
+	lua_getglobal(Lconf,"switchProject");
+	runLuaFunc(Lconf,0,0);
 	window->redraw();
 }
 static void fileToStr(FILE*fp,std::string&s,const char*defaultStr){
@@ -624,10 +625,10 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 		projects[id]->subSystem=3;
 	if(version>=8){
 		fread(&projects[id]->settings,1,sizeof(uint32_t),fi);
-		fread(&projects[id]->moreSettings,1,sizeof(uint32_t),fi);
+		fread(&projects[id]->luaSettings,1,sizeof(uint32_t),fi);
 	}else{
 		projects[id]->settings=15<<subsettingsDitherShift|(aWeighted<<nearestColorShift);
-		projects[id]->moreSettings=0;
+		projects[id]->luaSettings=0;
 	}
 	if(projects[id]->useMask&pjHavePal){
 		if(projects[id]->share[0]<0){
@@ -711,6 +712,8 @@ static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t
 				fread(&projects[id]->Chunk->wi,1,sizeof(uint32_t),fi);
 				fread(&projects[id]->Chunk->hi,1,sizeof(uint32_t),fi);
 				fread(&projects[id]->Chunk->amt,1,sizeof(uint32_t),fi);
+				if(version>=8)
+					fread(&projects[id]->Chunk->usePlane,1,sizeof(uint32_t),fi);
 				projects[id]->Chunk->resizeAmt();
 				decompressFromFile(projects[id]->Chunk->chunks.data(),projects[id]->Chunk->wi*projects[id]->Chunk->hi*sizeof(struct ChunkAttrs)*projects[id]->Chunk->amt,fi);
 			}
@@ -839,7 +842,7 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 	fwrite(&gameTemp,1,sizeof(uint32_t),fo);
 	fwrite(&projects[id]->subSystem,sizeof(uint32_t),1,fo);
 	fwrite(&projects[id]->settings,sizeof(uint32_t),1,fo);
-	fwrite(&projects[id]->moreSettings,sizeof(uint32_t),1,fo);
+	fwrite(&projects[id]->luaSettings,sizeof(uint32_t),1,fo);
 	if(haveTemp&pjHavePal){
 		if(saveShared||(projects[id]->share[0]<0))
 			projects[id]->pal->write(fo);
@@ -886,6 +889,7 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 			fwrite(&projects[id]->Chunk->wi,1,sizeof(uint32_t),fo);
 			fwrite(&projects[id]->Chunk->hi,1,sizeof(uint32_t),fo);
 			fwrite(&projects[id]->Chunk->amt,1,sizeof(uint32_t),fo);
+			fwrite(&projects[id]->Chunk->usePlane,1,sizeof(uint32_t),fo);
 			compressToFile(projects[id]->Chunk->chunks.data(),projects[id]->Chunk->wi*projects[id]->Chunk->hi*sizeof(struct ChunkAttrs)*projects[id]->Chunk->amt,fo);
 		}
 	}

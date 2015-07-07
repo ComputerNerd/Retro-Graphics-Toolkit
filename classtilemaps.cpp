@@ -32,16 +32,20 @@ tilemaps::tilemaps(const tilemaps&other,Project*prj){
 }
 void tilemaps::setPlaneCnt(unsigned cnt){
 	unsigned oldCnt=maps.size();
-	maps.resize(cnt,tileMap(prj));
 	if(cnt>oldCnt){
 		planeName.reserve(cnt);
+		maps.reserve(cnt);
 		for(unsigned i=oldCnt;i<cnt;++i){
 			char tmp[16];
 			snprintf(tmp,16,"%u",i);
 			planeName.emplace_back(tmp);
+			maps.emplace_back(tileMap(prj));
 		}
-	}else
+	}else if(cnt<oldCnt){
 		planeName.resize(cnt);
+		for(int i=oldCnt;i>(int)cnt;--i)
+			maps.pop_back();
+	}
 }
 void tilemaps::changePrjPtr(Project*prj){
 	this->prj=prj;

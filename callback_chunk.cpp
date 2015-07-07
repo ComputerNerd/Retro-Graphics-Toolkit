@@ -26,6 +26,11 @@ unsigned ChunkOff[2]={DefaultChunkX,DefaultChunkY};
 unsigned scrollChunks_G[2];
 uint_fast32_t editChunk_G[2];//x,y
 uint32_t selBlock;
+void setCurPlaneChunkCB(Fl_Widget*w,void*){
+	Fl_Value_Slider*v=(Fl_Value_Slider*)w;
+	currentProject->Chunk->usePlane=v->value();
+	window->damage(FL_DAMAGE_USER1);
+}
 void insertChunkCB(Fl_Widget*,void*){
 	pushChunkNew(currentChunk+1);
 	currentProject->Chunk->insert(currentChunk+1);

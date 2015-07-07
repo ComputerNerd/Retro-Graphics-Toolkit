@@ -14,5 +14,8 @@
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
+#pragma once
+#include <FL/Fl_Widget.h>
 void selectLayer(Fl_Widget*,void*);
 void addLayer(Fl_Widget*,void*);
+void removeLayer(Fl_Widget*,void*);

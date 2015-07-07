@@ -23,4 +23,6 @@ For example menu.lua allows you to edit the shortcut keys to various menu items.
 
 dofile "menu.lua"
 dofile "callbacks.lua"
+dofile "gui.lua"
+dofile "project.lua"
 --print('Code will execute here after the window is created but before the GUI controls are added')

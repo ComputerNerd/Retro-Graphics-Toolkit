@@ -40,12 +40,17 @@ for fname in sorted(glob('*.cpp')):
             txt=txt[:idx]+'#include "cbHelper.h"\nclass '+rpl+':public '+baseName+'{\nusing '+baseName+'::'+baseName+';\npublic:\n\tstruct cbInfo ci;\n};\n'+txt[idx:]
             idx=txt.index('delete self;')-len('      ')-1
             txt=txt[:idx]+'\n\tif(self->ci.cb) free(self->ci.cb);\n'+txt[idx:]
+            first=1
+            idx=txt.find(rpl+'_'+rpl)
             while 1:
                 idx=txt.find('retval__ = new',idx)
                 if idx<0:
+                    if first:
+                        print('Could not find constructor')
                     break
                 idx=txt.find('\n',idx)
                 txt=txt[:idx]+'\n\tretval__->ci.L=L;\n\tretval__->ci.cb=0;'+txt[idx:]
+                first=0
             boilerplatefunc='''static int $(REPLACE)_callback(lua_State *L) {
 	try {
 		$(REPLACE) *self = *(($(REPLACE) **)dub::checksdata(L, 1, "FLTK.$(REPLACE)"));

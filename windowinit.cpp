@@ -311,6 +311,11 @@ void editor::_editor(){
 					o->end();
 				} // End of buttons
 			}//end of group
+		
+			lua_getglobal(Lconf,"tabConfig");
+			lua_pushinteger(Lconf,pal_edit);
+			runLuaFunc(Lconf,1,0);
+	
       			tabsMain[pal_edit]->end();
 		} // Fl_Group* o
 		{tabsMain.emplace_back(new Fl_Group(rx, ry, rw, rh, "Tile editor"));
@@ -412,6 +417,9 @@ void editor::_editor(){
 			tile_select->step(1);
 			tile_select->align(FL_ALIGN_LEFT);
 			tile_select->callback(set_tile_current);
+			lua_getglobal(Lconf,"tabConfig");
+			lua_pushinteger(Lconf,tile_edit);
+			runLuaFunc(Lconf,1,0);
 			tabsMain[tile_edit]->end();
 		}
 		{tabsMain.emplace_back(new Fl_Group(rx,ry,rw,rh,"Plane mapping/block editor"));
@@ -435,7 +443,6 @@ void editor::_editor(){
 
 			planeSelect=new Fl_Choice(408,default_palette_bar_offset_y+56,112,24,"Plane selection");
 			planeSelect->align(FL_ALIGN_TOP);
-			updatePlaneTilemapMenu(curProjectID,planeSelect);
 
 			{ Fl_Button *o = new Fl_Button(408, default_palette_bar_offset_y+80,112,24,"Add plane");
 				o->callback(addPlaneTilemap);
@@ -547,19 +554,14 @@ void editor::_editor(){
 			cordDisp[0]=new Fl_Box(tile_place_buttons_x_off,556,128,64);
 			cordDisp[0]->labelsize(12);
 
+			lua_getglobal(Lconf,"tabConfig");
+			lua_pushinteger(Lconf,tile_place);
+			runLuaFunc(Lconf,1,0);
 			tabsMain[tile_place]->end();
 		}
 		{tabsMain.emplace_back(new Fl_Group(rx,ry,rw,rh,"Chunk editor"));
 			useBlocksChunkCBtn=new Fl_Check_Button(8, 48, 152, 24, "Use blocks");
 			useBlocksChunkCBtn->callback(useBlocksCB);
-			chunk_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,512,160,24,"Tile zoom factor:");
-			chunk_tile_size->minimum(1);
-			chunk_tile_size->maximum(16);
-			chunk_tile_size->step(1);
-			chunk_tile_size->value(2);
-			chunk_tile_size->align(FL_ALIGN_TOP);
-			chunk_tile_size->callback(scrollChunkCB);
-			chunk_tile_size->tooltip(TooltipZoom);
 			
 			chunkX = new Fl_Scrollbar(DefaultChunkX-32, DefaultChunkY-32, 800-DefaultChunkX+24, 24);
 			chunkX->value(0,0,0,0);
@@ -609,6 +611,22 @@ void editor::_editor(){
 			chunksize[1]->callback(resizeChunkCB);
 			chunksize[1]->value("16");
 
+			planeSelectChunk = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,480,160,24,"Plane select");
+			planeSelectChunk->minimum(0);
+			planeSelectChunk->maximum(0);
+			planeSelectChunk->step(1);
+			planeSelectChunk->align(FL_ALIGN_TOP);
+			planeSelectChunk->callback(setCurPlaneChunkCB);
+
+			chunk_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off,520,160,24,"Tile zoom factor:");
+			chunk_tile_size->minimum(1);
+			chunk_tile_size->maximum(16);
+			chunk_tile_size->step(1);
+			chunk_tile_size->value(2);
+			chunk_tile_size->align(FL_ALIGN_TOP);
+			chunk_tile_size->callback(scrollChunkCB);
+			chunk_tile_size->tooltip(TooltipZoom);
+
 			cordDisp[1]=new Fl_Box(tile_place_buttons_x_off,556,128,64);
 			cordDisp[1]->labelsize(12);
 
@@ -624,6 +642,9 @@ void editor::_editor(){
 			}
 			updateChunkSize();
 
+			lua_getglobal(Lconf,"tabConfig");
+			lua_pushinteger(Lconf,chunkEditor);
+			runLuaFunc(Lconf,1,0);
 			tabsMain[chunkEditor]->end();
 		}
 		{tabsMain.emplace_back(new Fl_Group(rx,ry,rw,rh,"Sprites"));
@@ -798,9 +819,15 @@ void editor::_editor(){
 				o->end();
 			} // End of buttons
 
+			lua_getglobal(Lconf,"tabConfig");
+			lua_pushinteger(Lconf,spriteEditor);
+			runLuaFunc(Lconf,1,0);
 			tabsMain[spriteEditor]->end();
 		}
 		{tabsMain.emplace_back(new Fl_Group(rx,ry,rw,rh,"Level editor"));
+			lua_getglobal(Lconf,"tabConfig");
+			lua_pushinteger(Lconf,levelEditor);
+			runLuaFunc(Lconf,1,0);
 			tabsMain[levelEditor]->end();
 		}
 		{tabsMain.emplace_back(new Fl_Group(rx,ry,rw,rh,"Settings/projects"));
@@ -871,6 +898,9 @@ void editor::_editor(){
 			TxtEditProject->buffer(TxtBufProject);
 			TxtEditProject->textfont(FL_TIMES);
 			TxtBufProject->text(currentProject->Name.c_str());
+			lua_getglobal(Lconf,"tabConfig");
+			lua_pushinteger(Lconf,settingsTab);
+			runLuaFunc(Lconf,1,0);
 			tabsMain[settingsTab]->end();
 		}
 		{tabsMain.emplace_back(new Fl_Group(rx,ry,rw,rh,"Lua scripting"));
@@ -895,6 +925,9 @@ void editor::_editor(){
 			luaEditProject->buffer(luaBufProject);
 			luaEditProject->textfont(FL_COURIER);
 			luaEditProject->hide();
+			lua_getglobal(Lconf,"tabConfig");
+			lua_pushinteger(Lconf,luaTab);
+			runLuaFunc(Lconf,1,0);
 			tabsMain[luaTab]->end();
 		}
 	}

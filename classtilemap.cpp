@@ -1,18 +1,18 @@
 /*
-   This file is part of Retro Graphics Toolkit
+	This file is part of Retro Graphics Toolkit
 
-   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or any later version.
+	Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or any later version.
 
-   Retro Graphics Toolkit is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-   GNU General Public License for more details.
+	Retro Graphics Toolkit is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	You should have received a copy of the GNU General Public License
+	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #include "class_global.h"
 #include "macros.h"
@@ -25,8 +25,8 @@
 #include "dither.h"
 #include "palette.h"
 #include "gui.h"
-tileMap::tileMap(Project*prj):tileMap(2,2,prj){}
-tileMap::tileMap(uint32_t w,uint32_t h,Project*prj){
+tileMap::tileMap(Project*prj)noexcept:tileMap(2,2,prj){}
+tileMap::tileMap(uint32_t w,uint32_t h,Project*prj)noexcept{
 	this->prj=prj;
 	amt=1;
 	mapSizeW=w;
@@ -39,58 +39,61 @@ tileMap::tileMap(uint32_t w,uint32_t h,Project*prj){
 	else
 		extPalRows=0;
 }
-tileMap::tileMap(const tileMap&other,Project*prj){
-	mapSizeW=other.mapSizeW;
-	mapSizeH=other.mapSizeH;
-	mapSizeHA=other.mapSizeHA;
-	isBlock=other.isBlock;
-	offset=other.offset;
-	if(isBlock){
-		amt=other.amt;
-		mapSizeHA=mapSizeH*amt;
-	}else{
-		amt=1;
-		mapSizeHA=mapSizeH;
+tileMap::tileMap(const tileMap&other,Project*prj)noexcept{
+	if(this!=&other){
+		this->prj=prj;
+		mapSizeW=other.mapSizeW;
+		mapSizeH=other.mapSizeH;
+		mapSizeHA=other.mapSizeHA;
+		isBlock=other.isBlock;
+		offset=other.offset;
+		if(isBlock){
+			amt=other.amt;
+			mapSizeHA=mapSizeH*amt;
+		}else{
+			amt=1;
+			mapSizeHA=mapSizeH;
+		}
+		tileMapDat=(uint8_t*)malloc(mapSizeW*mapSizeHA*TileMapSizePerEntry);
+		memcpy(tileMapDat,other.tileMapDat,mapSizeW*mapSizeHA*TileMapSizePerEntry);
+		if(other.extPalRows){
+			extPalRows=(uint8_t*)malloc(mapSizeW*mapSizeHA*prj->szPerExtPalRow());
+			memcpy(extPalRows,other.extPalRows,mapSizeW*mapSizeHA*prj->szPerExtPalRow());
+		}else
+			extPalRows=0;
 	}
-	tileMapDat=(uint8_t*)malloc(mapSizeW*mapSizeHA*TileMapSizePerEntry);
-	memcpy(tileMapDat,other.tileMapDat,mapSizeW*mapSizeHA*TileMapSizePerEntry);
-	if(other.extPalRows){
-		extPalRows=(uint8_t*)malloc(mapSizeW*mapSizeHA*prj->szPerExtPalRow());
-		memcpy(extPalRows,other.extPalRows,mapSizeW*mapSizeHA*prj->szPerExtPalRow());
-	}else
-		extPalRows=0;
 }
-tileMap::tileMap(const tileMap&other){
+tileMap::tileMap(const tileMap&other)noexcept{
 	tileMap(other,other.prj);
 }
-tileMap& tileMap::operator=(tileMap&& other){
-	mapSizeW=other.mapSizeW;
-	mapSizeH=other.mapSizeH;
-	mapSizeHA=other.mapSizeHA;
-	isBlock=other.isBlock;
-	offset=other.offset;
-	amt=other.amt;
-	tileMapDat=other.tileMapDat;
-	extPalRows=other.extPalRows;
-	other.extPalRows=0;
-	other.tileMapDat=0;
+tileMap::tileMap(tileMap&& other)noexcept{
+	if (this != &other){
+		prj=other.prj;
+		mapSizeW=other.mapSizeW;
+		mapSizeH=other.mapSizeH;
+		mapSizeHA=other.mapSizeHA;
+		isBlock=other.isBlock;
+		offset=other.offset;
+		amt=other.amt;
+		tileMapDat=other.tileMapDat;
+		extPalRows=other.extPalRows;
+		other.extPalRows=0;
+		other.tileMapDat=0;
+	}
+}
+tileMap& tileMap::operator=(tileMap&& other)noexcept{
+	tileMap((tileMap&&)other);
 	return *this;
 }
-tileMap& tileMap::operator=(const tileMap& other){
-	mapSizeW=other.mapSizeW;
-	mapSizeH=other.mapSizeH;
-	mapSizeHA=other.mapSizeHA;
-	isBlock=other.isBlock;
-	offset=other.offset;
-	amt=other.amt;
-	tileMapDat=other.tileMapDat;
-	extPalRows=other.extPalRows;
+tileMap& tileMap::operator=(const tileMap& other)noexcept{
+	tileMap(other,other.prj);
 	return *this;
 }
-tileMap::~tileMap(){
-	if(extPalRows)
-		free(extPalRows);
+tileMap::~tileMap()noexcept{
+	free(extPalRows);
+	extPalRows=0;
 	free(tileMapDat);
+	tileMapDat=0;
 }
 void tileMap::ditherAsImage(bool entire){
 	uint8_t*image;
@@ -787,7 +790,7 @@ bool tileMap::loadFromFile(){
 				}
 			}
 		}
-		if(currentProject->gameSystem==NES){
+		if(prj->gameSystem==NES){
 			//now load attributes
 			if (load_file_generic("Load Attributes")){
 				FILE * fp=fopen(the_file.c_str(),"rb");
@@ -1132,6 +1135,52 @@ void tileMap::drawPart(unsigned offx,unsigned offy,unsigned x,unsigned y,unsigne
 	}
 	if(shadowHighlight)
 		set_palette_type();
+}
+void tileMap::drawBlock(unsigned block,unsigned xo,unsigned yo,unsigned flags,unsigned zoom){
+	uint32_t Ty=block*mapSizeH;
+	if(flags&2)
+		yo+=(mapSizeH-1)*prj->tileC->sizeh*zoom;
+	int xoo;
+	for(uint32_t yb=0;yb<mapSizeH;++yb){
+		xoo=xo;
+		if(flags&1)
+			xoo+=(mapSizeW-1)*prj->tileC->sizew*zoom;
+		for(uint32_t xb=0;xb<mapSizeW;++xb){
+			bool hflip=get_hflip(xb,Ty),vflip=get_vflip(xb,Ty);
+			unsigned row=getPalRow(xb,Ty);
+			uint32_t tile=get_tile(xb,Ty);
+			if(flags==3){//Both
+				if(showTrueColor)
+					prj->tileC->draw_truecolor(tile,xoo,yo,hflip^true,vflip^true,zoom);
+				else
+					prj->tileC->draw_tile(xoo,yo,tile,zoom,row,hflip^true,vflip^true);
+			}else if(flags&2){//Y-flip
+				if(showTrueColor)
+					prj->tileC->draw_truecolor(tile,xoo,yo,hflip,vflip^true,zoom);
+				else
+					prj->tileC->draw_tile(xoo,yo,tile,zoom,row,hflip,vflip^true);
+			}else if(flags&1){//X-flip
+				if(showTrueColor)
+					prj->tileC->draw_truecolor(tile,xoo,yo,hflip^true,vflip,zoom);
+				else
+					prj->tileC->draw_tile(xoo,yo,tile,zoom,row,hflip^true,vflip);
+			}else{//No flip
+				if(showTrueColor)
+					prj->tileC->draw_truecolor(tile,xoo,yo,hflip,vflip,zoom);
+				else
+					prj->tileC->draw_tile(xoo,yo,tile,zoom,row,hflip,vflip);
+			}
+			if(flags&1)
+				xoo-=prj->tileC->sizew*zoom;
+			else
+				xoo+=prj->tileC->sizew*zoom;
+		}
+		if(flags&2)
+			yo-=prj->tileC->sizeh*zoom;
+		else
+			yo+=prj->tileC->sizeh*zoom;
+		++Ty;
+	}
 }
 void tileMap::findFirst(int&x,int&y,unsigned tile)const{
 	for(unsigned j=0;j<mapSizeHA;++j){

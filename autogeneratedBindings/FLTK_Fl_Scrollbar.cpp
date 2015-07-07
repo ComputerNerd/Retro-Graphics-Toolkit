@@ -58,6 +58,8 @@ static int Fl_Lua_Scrollbar_Fl_Lua_Scrollbar(lua_State *L) {
       int H = dub::checkinteger(L, 4);
       const char *Lstr = dub::checkstring(L, 5);
       Fl_Lua_Scrollbar *retval__ = new Fl_Lua_Scrollbar(X, Y, W, H, Lstr);
+	retval__->ci.L=L;
+	retval__->ci.cb=0;
       dub::pushudata(L, retval__, "FLTK.Fl_Lua_Scrollbar", true);
       return 1;
     } else {
@@ -66,6 +68,8 @@ static int Fl_Lua_Scrollbar_Fl_Lua_Scrollbar(lua_State *L) {
       int W = dub::checkinteger(L, 3);
       int H = dub::checkinteger(L, 4);
       Fl_Lua_Scrollbar *retval__ = new Fl_Lua_Scrollbar(X, Y, W, H);
+	retval__->ci.L=L;
+	retval__->ci.cb=0;
       dub::pushudata(L, retval__, "FLTK.Fl_Lua_Scrollbar", true);
       return 1;
     }

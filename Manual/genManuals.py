@@ -47,8 +47,8 @@ if len(sys.argv)<=1:
         f.write(concat)
     args=['xelatex','Manual']
     if subprocess.call(args):
-        print('xelatex faill pass 1')
+        print('xelatex fail pass 1')
     if subprocess.call(args):
-        print('xelatex faill pass 2')
+        print('xelatex fail pass 2')
 else:
     print('Skipping offline manual generation')

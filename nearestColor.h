@@ -17,6 +17,6 @@
 */
 unsigned find_near_color_from_row_rgb(unsigned row,int r,int g,int b,bool alt);
 unsigned find_near_color_from_row(unsigned row,int r,int g,int b,bool alt);
-unsigned choiceTwoColor(unsigned index0,unsigned index1,int rgoal,int ggoal,int bgoal);
+unsigned chooseTwoColor(unsigned index0,unsigned index1,int rgoal,int ggoal,int bgoal);
 unsigned nearestOneChannel(int val,const uint8_t*pal,unsigned amt);
 unsigned nearestColIndex(int red,int green,int blue,uint8_t*pal,unsigned amt,bool checkType=false,unsigned off=0);

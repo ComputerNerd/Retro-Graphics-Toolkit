@@ -16,9 +16,14 @@
 */
 #include "runlua.h"
 #include "cbHelper.h"
+#include <stdexcept>
 void luaWidgetCallbackHelper(Fl_Widget*,void*i){
 	struct cbInfo*c=(struct cbInfo*)i;
-	lua_getglobal(c->L,c->cb);
-	lua_pushinteger(c->L,c->udat);
-	runLuaFunc(c->L,1,0);
+	if(c->cb){
+		if(lua_getglobal(c->L,c->cb)!=LUA_TFUNCTION){
+			throw std::invalid_argument("This is not a function.");
+		}
+		lua_pushinteger(c->L,c->udat);
+		runLuaFunc(c->L,1,0);
+	}
 }

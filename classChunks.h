@@ -14,9 +14,10 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
+#pragma once
 #include <stdint.h>
 #include <vector>
-#pragma once
+#include "project.h"
 struct __attribute__ ((__packed__)) ChunkAttrs{
 	uint32_t block;
 	uint32_t flags;
@@ -26,9 +27,11 @@ public:
 	uint32_t amt;//Amount of chunks
 	uint32_t wi,hi;//How many blocks/Tiles the chunk contains
 	bool useBlocks;
+	unsigned usePlane;
 	std::vector<struct ChunkAttrs> chunks;
-	ChunkClass();
-	ChunkClass(const ChunkClass& other);
+	Project*prj;
+	ChunkClass(Project*prj);
+	ChunkClass(const ChunkClass& other,Project*prj);
 	~ChunkClass();
 	void insert(uint32_t at);
 	void setElm(uint32_t id,uint32_t x,uint32_t y,struct ChunkAttrs c);

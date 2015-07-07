@@ -49,9 +49,16 @@ void updateNameTilemaps(Fl_Widget*w,void*){
 void updatePlaneTilemapMenu(uint32_t id,Fl_Choice*plM){
 	if(plM->size())
 		plM->clear();
-	for(uintptr_t i=0;i<projects[id]->tms->maps.size();++i)
+	size_t sz=projects[id]->tms->maps.size();
+	for(uintptr_t i=0;i<sz;++i)
 		plM->add(projects[id]->tms->planeName[i].c_str(),0,setCurPlaneTilemaps,(void*)i,0);
 	plM->value(projects[id]->curPlane);
+	if(projects[id]->containsData(pjHaveChunks)){
+		if(projects[id]->Chunk->usePlane>=sz)
+			projects[id]->Chunk->usePlane=sz-1;
+		window->planeSelectChunk->value(projects[id]->Chunk->usePlane);
+	}
+	window->planeSelectChunk->maximum(sz-1);
 }
 void updatePlaneTilemapMenu(void){
 	updatePlaneTilemapMenu(curProjectID,window->planeSelect);
@@ -61,5 +68,6 @@ void addPlaneTilemap(Fl_Widget*,void*val){
 	currentProject->tms->setPlaneCnt(currentProject->tms->maps.size()+1);
 	uintptr_t i=currentProject->tms->maps.size()-1;
 	window->planeSelect->add(currentProject->tms->planeName[i].c_str(),0,setCurPlaneTilemaps,(void*)i,0);
+	window->planeSelectChunk->maximum(i);
 	window->redraw();
 }

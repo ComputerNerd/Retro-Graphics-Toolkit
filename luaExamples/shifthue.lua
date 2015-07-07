@@ -92,6 +92,7 @@ if project.have(project.palMask) then
 			palette.setRGB(ent,r,g,b)
 		end
 		palette.fixSliders()
+		rgt.damage()
 	end
 else
 	project.haveMessage(project.palMask)

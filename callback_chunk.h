@@ -22,6 +22,7 @@ extern unsigned ChunkOff[2];
 extern unsigned scrollChunks_G[2];
 extern uint_fast32_t editChunk_G[2];
 extern uint32_t selBlock;
+void setCurPlaneChunkCB(Fl_Widget*w,void*);
 void insertChunkCB(Fl_Widget*,void*);
 void delChunkAtCB(Fl_Widget*,void*);
 void appendChunkCB(Fl_Widget*o,void*);

@@ -20,12 +20,13 @@
 class tileMap{
 private:
 public:
-	tileMap(Project*prj);
-	tileMap(uint32_t w,uint32_t h,Project*prj);
-	tileMap& operator=(tileMap&& other);
-	tileMap& operator=(const tileMap&other);
-	tileMap(const tileMap&other,Project*prj);
-	tileMap(const tileMap&other);
+	tileMap(Project*prj)noexcept;
+	tileMap(uint32_t w,uint32_t h,Project*prj)noexcept;
+	tileMap(tileMap&& other)noexcept;
+	tileMap& operator=(tileMap&& other)noexcept;
+	tileMap& operator=(const tileMap&other)noexcept;
+	tileMap(const tileMap&other,Project*prj)noexcept;
+	tileMap(const tileMap&other)noexcept;
 	~tileMap();
 	struct Project*prj;
 	uint8_t*tileMapDat;/*!< Holds tilemap data*/
@@ -71,6 +72,7 @@ public:
 	void resize_tile_map(uint32_t new_x,uint32_t new_y);
 	bool truecolor_to_image(uint8_t * the_image,int useRow=-1,bool useAlpha=true);
 	void truecolorimageToTiles(uint8_t * image,int rowusage,bool useAlpha=true,bool copyToTruecolor=false,bool convert=true,bool isIndexArray=false);
+	void drawBlock(unsigned block,unsigned xoo,unsigned yo,unsigned flags,unsigned zoom);
 	void drawPart(unsigned offx,unsigned offy,unsigned x,unsigned y,unsigned w,unsigned h,int rowSolo,unsigned zoom,bool trueCol);
 	void findFirst(int&x,int&y,unsigned tile)const;
 	void pickExtAttrs(void);

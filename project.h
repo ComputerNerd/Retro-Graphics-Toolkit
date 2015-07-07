@@ -87,11 +87,11 @@ struct Project{/*!<Holds all data needed for a project based system for example 
 	gameSystemEnum gameSystem;
 	uint32_t subSystem;
 	uint32_t settings;
-	uint32_t moreSettings;
+	uint32_t luaSettings;
 	uint32_t useMask;/*!<Sharing can be used regardless of use mask*/
 	class tilemaps*tms;
-	tiles*tileC;
-	ChunkClass*Chunk;
+	class tiles*tileC;
+	class ChunkClass*Chunk;
 	palette*pal;
 	struct metasprites*ms;
 	struct level*lvl;

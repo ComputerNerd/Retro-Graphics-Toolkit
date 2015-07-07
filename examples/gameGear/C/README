@@ -1,5 +1,5 @@
-This example uses https://github.com/sverx/devkitSMS .
-I decided not to include the library because it may be updated and I may not be
-aware of this. I do not want to host an old version of the library. To compile
-just place SMSlib.c and SMSlib.h in this folder, run make and it will compile
+This example uses https://github.com/sverx/devkitSMS. I decided not to include
+the library because it may be updated and I may not be aware of this. I do not
+want to host an old version of the library. To compile just place SMSlib.c,
+SMSlib.h and peep-rules.txt in this folder, run make and it will compile
 provided that you have installed SDCC.

@@ -20,11 +20,10 @@
 #include <vector>
 #include "project.h"
 struct __attribute__ ((__packed__)) levDat{
-	uint32_t id,dat;
+	uint32_t id,dat,xormask;
 };
 struct __attribute__ ((__packed__)) levobjDat{//For sprite layout
-	bool priority;//xor with sprites priority
-	uint32_t x,y,id[3]/*project id,meta id,group id*/,dat;
+	uint32_t x,y,id[3]/*project id,meta id,group id*/,dat,xormask;
 };
 enum source{TILES,BLOCKS,CHUNKS};
 struct __attribute__ ((__packed__)) levelInfo{
@@ -37,16 +36,19 @@ struct level{
 	std::vector<struct levelInfo>lvlI;//Allow different sized layers
 	std::vector<std::vector<struct levDat>*>dat;
 	std::vector<std::vector<struct levobjDat>*>odat;
+	std::vector<std::string>layernames;
 	level(Project*prj);
 	level(const level&o,Project*prj);
 	void addLayer(unsigned at,bool after);
 	void removeLayer(unsigned which);
-	void setId(unsigned x,unsigned y,unsigned layer,unsigned val);
-	void setDat(unsigned x,unsigned y,unsigned layer,unsigned val);
-	uint32_t getId(unsigned x,unsigned y,unsigned layer)const;
-	uint32_t getDat(unsigned x,unsigned y,unsigned layer)const;
+	bool inRangeLayer(unsigned tst);
+	struct levelInfo getInfo(unsigned layer);
+	void setInfo(unsigned layer,struct levelInfo i);
+	struct levDat getlevDat(unsigned layer,unsigned x,unsigned y);
+	void setlevDat(unsigned layer,unsigned x,unsigned y,struct levDat d);
+	struct levobjDat getleObjvDat(unsigned layer,unsigned idx);
+	void setlevObjDat(unsigned layer,unsigned idx,struct levobjDat d);
 	void setlayeramt(unsigned amt,bool lastLayerDim);
-	void draw(unsigned x,unsigned y,unsigned zoom,int solo,bool showSprites)const;
 	void save(FILE*fp);
 	void load(FILE*fp,uint32_t version);
 };

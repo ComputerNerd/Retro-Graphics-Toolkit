@@ -27,7 +27,7 @@ unsigned find_near_color_from_row_rgb(unsigned row,int r,int g,int b,bool alt){
 unsigned find_near_color_from_row(unsigned row,int r,int g,int b,bool alt){
 	return (find_near_color_from_row_rgb(row,r,g,b,alt)/3)-(row*currentProject->pal->perRow);
 }
-unsigned choiceTwoColor(unsigned index0,unsigned index1,int rgoal,int ggoal,int bgoal){
+unsigned chooseTwoColor(unsigned index0,unsigned index1,int rgoal,int ggoal,int bgoal){
 	uint8_t tmp[6];
 	memcpy(tmp,currentProject->pal->rgbPal+(index0*3),3);
 	memcpy(tmp+3,currentProject->pal->rgbPal+(index1*3),3);

@@ -16,6 +16,7 @@
 */
 #include "class_global.h"
 #include "gui.h"
+#include "callbacktilemaps.h"
 int main(int argc, char **argv){
 	printf("Welcome to Retro graphics Toolkit\nWritten by Sega16/Nintendo8\nBuilt on %s %s\n",__DATE__,__TIME__);
 	Fl::visual(FL_DOUBLE|FL_INDEX);
@@ -23,6 +24,7 @@ int main(int argc, char **argv){
 	Fl::scheme("plastic");
 	fl_register_images();
 	updateTileSelectAmt();
+	updatePlaneTilemapMenu(curProjectID,window->planeSelect);
 	//// For a nicer looking browser under linux, call Fl_File_Icon::load_system_icons();
 	//// (If you do this, you'll need to link with fltk_images)
 	//// NOTE: If you do not load the system icons, the file chooser will still work, but

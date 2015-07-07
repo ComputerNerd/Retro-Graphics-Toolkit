@@ -1,18 +1,18 @@
 /*
-   This file is part of Retro Graphics Toolkit
+	This file is part of Retro Graphics Toolkit
 
-   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or any later version.
+	Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or any later version.
 
-   Retro Graphics Toolkit is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-   GNU General Public License for more details.
+	Retro Graphics Toolkit is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	You should have received a copy of the GNU General Public License
+	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #include "class_global.h"
 #include "callback_chunk.h"
@@ -410,8 +410,7 @@ static inline unsigned cal_offset_truecolor(unsigned x,unsigned y,unsigned rgb,u
 int editor::handle(int event){
 	if(event==FL_PUSH)
 		pushed_g=1;//The slider callback will need to clear this
-	if (Fl_Double_Window::handle(event)) return (1);
-	lua_getglobal(Lconf,"eventCB");
+	lua_getglobal(Lconf,"eventCBfirst");
 	lua_pushinteger(Lconf,event);
 	lua_pushinteger(Lconf,mode_editor);
 	runLuaFunc(Lconf,2,1);
@@ -419,6 +418,7 @@ int editor::handle(int event){
 	lua_pop(Lconf,1);
 	if(ret)
 		return 1;
+	if (Fl_Double_Window::handle(event)) return (1);
 	unsigned tiles_size;
 	switch(event){
 		case FL_PUSH:
@@ -554,5 +554,13 @@ int editor::handle(int event){
 			}
 		break;
 	}
+	lua_getglobal(Lconf,"eventCBlast");
+	lua_pushinteger(Lconf,event);
+	lua_pushinteger(Lconf,mode_editor);
+	runLuaFunc(Lconf,2,1);
+	ret=luaL_checkinteger(Lconf,-1);
+	lua_pop(Lconf,1);
+	if(ret)
+		return 1;
 	return 0;
 }

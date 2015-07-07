@@ -932,7 +932,7 @@ void*ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 						}
 					}
 					if(haveExt){
-						temp=choiceTwoColor(currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x/rgbRowsize,y,false),currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x/rgbRowsize,y,true),r_old,g_old,b_old)*3;
+						temp=chooseTwoColor(currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x/rgbRowsize,y,false),currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x/rgbRowsize,y,true),r_old,g_old,b_old)*3;
 						r_new=currentProject->pal->rgbPal[temp];
 						g_new=currentProject->pal->rgbPal[temp+1];
 						b_new=currentProject->pal->rgbPal[temp+2];
@@ -1051,7 +1051,7 @@ void*ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha,bool colSpa
 					}
 				}else{
 					if(haveExt){
-						temp=choiceTwoColor(currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x/8,y,false),currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x/8,y,true),r_old,g_old,b_old)*3;
+						temp=chooseTwoColor(currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x/8,y,false),currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x/8,y,true),r_old,g_old,b_old)*3;
 						r_new=currentProject->pal->rgbPal[temp];
 						g_new=currentProject->pal->rgbPal[temp+1];
 						b_new=currentProject->pal->rgbPal[temp+2];

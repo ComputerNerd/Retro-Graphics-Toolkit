@@ -556,6 +556,14 @@ static void setUnsignedLua(lua_State*L,const char*tab,const char*var,unsigned va
 	lua_rawset(L, -3);
 	lua_pop(L,1);
 }
+static void setTableUnsignedLua(lua_State*L,const char*tab,const char*subtab,unsigned idx,unsigned val){
+	lua_getglobal(L,tab);
+	lua_pushstring(L,subtab);
+	lua_gettable(L,-2);
+	lua_pushinteger(L,val);
+	lua_rawseti(L,-2,idx);
+	lua_pop(L,1);
+}
 static lua_Integer getLuaInt(lua_State*L,const char*tab,const char*var){
 	lua_getglobal(L,tab);
 	lua_pushstring(L,var);
@@ -588,83 +596,87 @@ static const luaL_Reg lua_tileAPI[]={
 	{"resize",lua_tile_resize},
 	{0,0}
 };
+static unsigned getPlane(lua_State*L){
+	return unsigned(luaL_optinteger(L,1,0))%currentProject->tms->maps.size();
+}
 static int lua_tilemap_dither(lua_State*L){
-	unsigned method=luaL_optinteger(L,1,1);
-	currentProject->tms->maps[currentProject->curPlane].ditherAsImage(method);
+	unsigned method=luaL_optinteger(L,2,1);
+	currentProject->tms->maps[getPlane(L)].ditherAsImage(method);
 	return 0;
 }
 static int lua_tilemap_resize(lua_State*L){
-	currentProject->tms->maps[currentProject->curPlane].resize_tile_map(luaL_optinteger(L,1,1),luaL_optinteger(L,2,1));
-	setUnsignedLua(L,"tilemap","width",currentProject->tms->maps[currentProject->curPlane].mapSizeW);
-	setUnsignedLua(L,"tilemap","height",currentProject->tms->maps[currentProject->curPlane].mapSizeH);
-	setUnsignedLua(L,"tilemap","heightA",currentProject->tms->maps[currentProject->curPlane].mapSizeHA);
+	unsigned plane=getPlane(L);
+	currentProject->tms->maps[plane].resize_tile_map(luaL_optinteger(L,1,1),luaL_optinteger(L,2,1));
+	setTableUnsignedLua(L,"tilemaps","width",plane+1,currentProject->tms->maps[getPlane(L)].mapSizeW);
+	setTableUnsignedLua(L,"tilemaps","height",plane+1,currentProject->tms->maps[getPlane(L)].mapSizeH);
+	setTableUnsignedLua(L,"tilemaps","heightA",plane+1,currentProject->tms->maps[getPlane(L)].mapSizeHA);
 	return 0;
 }
 static int lua_tilemap_getHflip(lua_State*L){
-	lua_pushboolean(L,currentProject->tms->maps[currentProject->curPlane].get_hflip(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0)));
+	lua_pushboolean(L,currentProject->tms->maps[getPlane(L)].get_hflip(luaL_optinteger(L,2,0),luaL_optinteger(L,3,0)));
 	return 1;
 }
 static int lua_tilemap_getVflip(lua_State*L){
-	lua_pushboolean(L,currentProject->tms->maps[currentProject->curPlane].get_vflip(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0)));
+	lua_pushboolean(L,currentProject->tms->maps[getPlane(L)].get_vflip(luaL_optinteger(L,2,0),luaL_optinteger(L,3,0)));
 	return 1;
 }
 static int lua_tilemap_getPrio(lua_State*L){
-	lua_pushboolean(L,currentProject->tms->maps[currentProject->curPlane].get_prio(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0)));
+	lua_pushboolean(L,currentProject->tms->maps[getPlane(L)].get_prio(luaL_optinteger(L,2,0),luaL_optinteger(L,3,0)));
 	return 1;
 }
 static int lua_tilemap_getTile(lua_State*L){
-	lua_pushinteger(L,currentProject->tms->maps[currentProject->curPlane].get_tile(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0)));
+	lua_pushinteger(L,currentProject->tms->maps[getPlane(L)].get_tile(luaL_optinteger(L,2,0),luaL_optinteger(L,3,0)));
 	return 1;
 }
 static int lua_tilemap_getTileRow(lua_State*L){
-	lua_pushinteger(L,currentProject->tms->maps[currentProject->curPlane].get_tileRow(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0)));
+	lua_pushinteger(L,currentProject->tms->maps[getPlane(L)].get_tileRow(luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0)));
 	return 1;
 }
 static int lua_tilemap_getRow(lua_State*L){
-	lua_pushinteger(L,currentProject->tms->maps[currentProject->curPlane].getPalRow(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0)));
+	lua_pushinteger(L,currentProject->tms->maps[getPlane(L)].getPalRow(luaL_optinteger(L,2,0),luaL_optinteger(L,3,0)));
 	return 1;
 }
 static int lua_tilemap_setHflip(lua_State*L){
-	currentProject->tms->maps[currentProject->curPlane].set_hflip(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0));
+	currentProject->tms->maps[getPlane(L)].set_hflip(luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0));
 	return 0;
 }
 static int lua_tilemap_setVflip(lua_State*L){
-	currentProject->tms->maps[currentProject->curPlane].set_vflip(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0));
+	currentProject->tms->maps[getPlane(L)].set_vflip(luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0));
 	return 0;
 }
 static int lua_tilemap_setRow(lua_State*L){
-	currentProject->tms->maps[currentProject->curPlane].set_pal_row(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0));
+	currentProject->tms->maps[getPlane(L)].set_pal_row(luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0));
 	return 0;
 }
 static int lua_tilemap_setFull(lua_State*L){
-	currentProject->tms->maps[currentProject->curPlane].set_tile_full(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0),luaL_optinteger(L,5,0),luaL_optinteger(L,6,0),luaL_optinteger(L,7,0));
+	currentProject->tms->maps[getPlane(L)].set_tile_full(luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0),luaL_optinteger(L,5,0),luaL_optinteger(L,6,0),luaL_optinteger(L,7,0),luaL_optinteger(L,8,0));
 	return 0;
 }
 static int lua_tilemap_setTile(lua_State*L){
-	currentProject->tms->maps[currentProject->curPlane].set_tile(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0));
+	currentProject->tms->maps[getPlane(L)].set_tile(luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0));
 	return 0;
 }
 static int lua_tilemap_setPrio(lua_State*L){
-	currentProject->tms->maps[currentProject->curPlane].set_prio(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0));
+	currentProject->tms->maps[getPlane(L)].set_prio(luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0));
 	return 0;
 }
 static int lua_tilemap_allToRow(lua_State*L){
-	currentProject->tms->maps[currentProject->curPlane].allRowSet(luaL_optinteger(L,1,0));
+	currentProject->tms->maps[getPlane(L)].allRowSet(luaL_optinteger(L,2,0));
 	return 0;
 }
 static int lua_tilemap_toImage(lua_State*L){
 	int row=luaL_optinteger(L,1,-1);
 	bool useAlpha=luaL_optinteger(L,2,0);
 	uint32_t w,h;
-	w=currentProject->tms->maps[currentProject->curPlane].mapSizeW*currentProject->tileC->sizew;
-	h=currentProject->tms->maps[currentProject->curPlane].mapSizeHA*currentProject->tileC->sizeh;
+	w=currentProject->tms->maps[getPlane(L)].mapSizeW*currentProject->tileC->sizew;
+	h=currentProject->tms->maps[getPlane(L)].mapSizeHA*currentProject->tileC->sizeh;
 	unsigned bpp=useAlpha+3;
 	uint8_t*image=(uint8_t *)malloc(w*h*bpp);
 	if(!image){
 		show_malloc_error(w*h*bpp)
 		return 0;
 	}
-	currentProject->tms->maps[currentProject->curPlane].truecolor_to_image(image,row,useAlpha);
+	currentProject->tms->maps[getPlane(L)].truecolor_to_image(image,row,useAlpha);
 	uint8_t*imgptr=image;
 	lua_newtable(L);
 	for(unsigned i=1;i<=w*h*bpp;++i){
@@ -686,12 +698,12 @@ static int lua_tilemap_imageToTiles(lua_State*L){
 	bool convert=luaL_optinteger(L,4,1);
 	unsigned bpp=useAlpha+3;
 	uint32_t w,h;
-	w=currentProject->tms->maps[currentProject->curPlane].mapSizeW*currentProject->tileC->sizew;
-	h=currentProject->tms->maps[currentProject->curPlane].mapSizeHA*currentProject->tileC->sizeh;
+	w=currentProject->tms->maps[getPlane(L)].mapSizeW*currentProject->tileC->sizew;
+	h=currentProject->tms->maps[getPlane(L)].mapSizeHA*currentProject->tileC->sizeh;
 	unsigned sz=w*h*bpp;
 	uint8_t*image=(uint8_t*)malloc(sz);
 	fillucharFromTab(L,1,len,sz,image);
-	currentProject->tms->maps[currentProject->curPlane].truecolorimageToTiles(image,row,useAlpha,copyToTruecol,convert);
+	currentProject->tms->maps[getPlane(L)].truecolorimageToTiles(image,row,useAlpha,copyToTruecol,convert);
 	free(image);
 	return 0;
 }
@@ -754,11 +766,21 @@ static void mkKeyunsigned(lua_State*L,const char*str,unsigned val){
 	lua_rawset(L, -3);
 }
 static int lua_project_set(lua_State*L);
+static int lua_project_getSettings(lua_State*L){
+	lua_pushinteger(L,currentProject->luaSettings);
+	return 1;
+}
+static int lua_project_setSettings(lua_State*L){
+	currentProject->luaSettings=luaL_optinteger(L,1,0);
+	return 0;
+}
 static const luaL_Reg lua_projectAPI[]={
 	{"have",lua_project_rgt_have},
 	{"haveOR",lua_project_rgt_haveOR},
 	{"haveMessage",lua_project_rgt_haveMessage},
 	{"set",lua_project_set},
+	{"getSettings",lua_project_getSettings},
+	{"setSettings",lua_project_setSettings},
 	{0,0}
 };
 #define arLen(ar) (sizeof(ar)/sizeof(ar[0]))
@@ -795,16 +817,35 @@ void updateProjectTablesLua(lua_State*L){
 	}
 
 	lua_pushnil(L);
-	lua_setglobal(L, "tilemap");
+	lua_setglobal(L, "tilemaps");
 	if(currentProject->containsData(pjHaveMap)){
 		lua_createtable(L, 0,(sizeof(lua_tilemapAPI)/sizeof((lua_tilemapAPI)[0]) - 1)+3);
 		luaL_setfuncs(L,lua_tilemapAPI,0);
 
-		mkKeyunsigned(L,"width",currentProject->tms->maps[currentProject->curPlane].mapSizeW);
-		mkKeyunsigned(L,"height",currentProject->tms->maps[currentProject->curPlane].mapSizeH);
-		mkKeyunsigned(L,"heightA",currentProject->tms->maps[currentProject->curPlane].mapSizeHA);
+		lua_pushstring(L,"width");
+		lua_createtable(L,currentProject->tms->maps.size(),0);
+		for(unsigned i=0;i<currentProject->tms->maps.size();++i){
+			lua_pushinteger(L,currentProject->tms->maps[i].mapSizeW);
+			lua_rawseti(L,-2,i+1);
+		}
+		lua_rawset(L,-3);
+		lua_pushstring(L,"height");
+		lua_createtable(L,currentProject->tms->maps.size(),0);
+		for(unsigned i=0;i<currentProject->tms->maps.size();++i){
+			lua_pushinteger(L,currentProject->tms->maps[i].mapSizeH);
+			lua_rawseti(L,-2,i+1);
+		}
+		lua_rawset(L,-3);
+		lua_pushstring(L,"heightA");
+		lua_createtable(L,currentProject->tms->maps.size(),0);
+		for(unsigned i=0;i<currentProject->tms->maps.size();++i){
+			lua_pushinteger(L,currentProject->tms->maps[i].mapSizeHA);
+			lua_rawseti(L,-2,i+1);
+		}
+		mkKeyunsigned(L,"current",currentProject->curPlane);
+		lua_rawset(L,-3);
 
-		lua_setglobal(L, "tilemap");
+		lua_setglobal(L, "tilemaps");
 	}
 
 	lua_pushnil(L);
@@ -855,6 +896,10 @@ static int lua_project_set(lua_State*L){
 }
 static int lua_rgt_redraw(lua_State*L){
 	window->redraw();
+	return 0;
+}
+static int lua_rgt_damage(lua_State*L){
+	window->damage(FL_DAMAGE_USER1);
 	return 0;
 }
 static int lua_rgt_ditherImage(lua_State*L){
@@ -938,8 +983,17 @@ struct keyPair{
 static int lua_rgt_syncProject(lua_State*L){
 	updateProjectTablesLua(L);
 }
+static int lua_rgt_w(lua_State*L){
+	lua_pushinteger(L,window->w());
+	return 1;
+}
+static int lua_rgt_h(lua_State*L){
+	lua_pushinteger(L,window->h());
+	return 1;
+}
 static const luaL_Reg lua_rgtAPI[]={
 	{"redraw",lua_rgt_redraw},
+	{"damage",lua_rgt_damage},
 	{"ditherImage",lua_rgt_ditherImage},
 	{"rgbToLab",lua_rgt_rgbToLab},
 	{"labToRgb",lua_rgt_labToRgb},
@@ -948,6 +1002,8 @@ static const luaL_Reg lua_rgtAPI[]={
 	{"rgbToHsl",lua_rgt_rgbToHsl},
 	{"setTab",lua_rgt_setTab},
 	{"syncProject",lua_rgt_syncProject},
+	{"w",lua_rgt_w},
+	{"h",lua_rgt_h},
 	{0,0}
 };
 static const struct keyPair rgtConsts[]={
@@ -976,8 +1032,12 @@ static const luaL_Reg lua_tabAPI[]={
 	{0,0}
 };
 void runLuaFunc(lua_State*L,unsigned args,unsigned results){
-	if (lua_pcall(L, args, results, 0) != LUA_OK){
-		luaL_error(L, "error: %s",lua_tostring(L, -1));
+	try{
+		if (lua_pcall(L, args, results, 0) != LUA_OK){
+			luaL_error(L, "error: %s",lua_tostring(L, -1));
+		}
+	}catch(...){
+		fl_alert("Lua error while running function\nthrow was called");
 	}
 }
 void runLua(lua_State*L,const char*str,bool isFile){
@@ -1078,6 +1138,11 @@ static const keyPair FLconsts[]={
 	{"HOR_FILL_SLIDER",FL_HOR_FILL_SLIDER},
 	{"VERT_NICE_SLIDER",FL_VERT_NICE_SLIDER},
 	{"HOR_NICE_SLIDER",FL_HOR_NICE_SLIDER},
+	{"VERTICAL",FL_VERTICAL},
+	{"HORIZONTAL",FL_HORIZONTAL},
+	{"LEFT_MOUSE",FL_LEFT_MOUSE},
+	{"MIDDLE_MOUSE",FL_MIDDLE_MOUSE},
+	{"RIGHT_MOUSE",FL_RIGHT_MOUSE},
 };
 lua_State*createLuaState(void){
 	lua_State *L = lua_newstate(l_alloc, NULL);

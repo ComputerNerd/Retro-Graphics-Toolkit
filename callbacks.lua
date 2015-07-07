@@ -29,20 +29,22 @@ function drawCBfirst(tab)
 	
 end
 function drawCBlast(tab)
-	
+	if tab==rgt.levelTab then
+		drawLevel()
+	end
 end
 --[[
--- The event callback takes two arguments.
+-- The event callbacks takes two arguments.
 -- The first of which is the event type.
 -- You can use the FL table to tell what type of event it is. Do not hard code numbers.
 -- The second of which is the tab ID.
 -- See draw callback notes on the tab parameter.
 -- This function must return one value that is zero or one.
 -- ]]
-function eventCB(e,tab)
+function eventCBfirst(e,tab)--WARNING: If you return one it will take precedence over other widgets.
 	--print(fl.eventnames(e),e,tab)
 	--Return 1 if this was used for A WIDGET ONLY. 0 otherwise.
-	if e==FL.SHORTCUT then
+	if e==FL.SHORTCUT then --Override pagedown/pageup if control is pressed
 		if Fl.event_ctrl()~=0 then
 			if Fl.event_key(FL.Page_Up)~=0 then
 				rgt.setTab(tab+1)
@@ -53,6 +55,12 @@ function eventCB(e,tab)
 				return 1
 			end
 		end
+	end
+	return 0
+end
+function eventCBlast(e,tab)--If this function is called you will know that any widget events have already been processed
+	if tab==rgt.levelTab then
+		handleLevel(e)
 	end
 	return 0
 end
