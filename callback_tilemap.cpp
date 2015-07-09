@@ -213,7 +213,7 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 			++w8;
 		if (hr)
 			++h8;
-		if((currentProject->gameSystem==NES)&&(currentProject->subSystem=NES2x2)){
+		if((currentProject->gameSystem==NES)&&(currentProject->subSystem==NES2x2)){
 			if(w8&1)
 				++w8;
 			if(h8&1)

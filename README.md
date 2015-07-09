@@ -9,7 +9,7 @@ Retro Graphics Toolkit is also extensible with Lua scripting support.
 The compiling instructions are in the file INSTALL. Note that Retro Graphics Toolkit is not installed just compiled.
 
 # Dependencies
-Retro Graphics Toolkit needs only fltk installed. It does depend on lua but that is compiled in the same folder.
+Retro Graphics Toolkit needs only FLTK installed. It does depend on Lua but that is compiled in the same folder.
 
 # License
 Retro Graphics Toolkit is licensed under the terms of GPL v3 or later. This can be found in the file called COPYING.
@@ -19,7 +19,7 @@ If you unsure what is part of the Retro Graphics Toolkit project it is anything 
 If you are still unsure just ask.
 Here is the license used by example code
 
-Copyright (c) 2014, Sega16
+Copyright (c) 2014-2015, Sega16
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:

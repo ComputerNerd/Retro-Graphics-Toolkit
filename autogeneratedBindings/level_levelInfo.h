@@ -15,15 +15,4 @@
 	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #pragma once
-enum fileType_t{
-	tCancle=-1,
-	tBinary,
-	tCheader,
-	tASM,
-	tBEX,
-};
-void saveStrifNot(FILE*fp,const char*str,const char*cmp);
-void fileToStr(FILE*fp,std::string&s,const char*defaultStr);
-int clipboardAsk(void);
-fileType_t askSaveType(bool save=true);
-bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,fileType_t type,const char*comment,const char*label,int bits);
+int luaopen_level_levelInfo(lua_State *L,struct levelInfo*i);

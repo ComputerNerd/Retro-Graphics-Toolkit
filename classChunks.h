@@ -45,6 +45,7 @@ public:
 	unsigned getOff(uint32_t id,uint32_t x,uint32_t y)const;
 	void setBlock(uint32_t id,uint32_t x,uint32_t y,uint32_t block);//Which chunk,offset x,offset y (offsets relative to chunk)
 	void setFlag(uint32_t id,uint32_t x,uint32_t y,uint32_t flag);
+	uint32_t getFlag(uint32_t id,uint32_t x,uint32_t y);
 	void setSolid(uint32_t id,uint32_t x,uint32_t y,unsigned solid);
 	void setHflip(uint32_t id,uint32_t x,uint32_t y,bool hflip);
 	void setVflip(uint32_t id,uint32_t x,uint32_t y,bool vflip);

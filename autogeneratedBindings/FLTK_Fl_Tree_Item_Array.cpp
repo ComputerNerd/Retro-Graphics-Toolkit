@@ -291,7 +291,7 @@ static const struct luaL_Reg Fl_Tree_Item_Array_member_methods[] = {
 };
 
 
-int luaopen_FLTK_Fl_Tree_Item_Array(lua_State *L)
+ int luaopen_FLTK_Fl_Tree_Item_Array(lua_State *L)
 {
   // Create the metatable which will contain all the member methods
   luaL_newmetatable(L, "FLTK.Fl_Tree_Item_Array");

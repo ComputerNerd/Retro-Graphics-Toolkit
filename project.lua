@@ -1,4 +1,4 @@
-/*
+--[[
 	This file is part of Retro Graphics Toolkit
 
 	Retro Graphics Toolkit is free software: you can redistribute it and/or modify
@@ -13,17 +13,16 @@
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
-*/
-#pragma once
-enum fileType_t{
-	tCancle=-1,
-	tBinary,
-	tCheader,
-	tASM,
-	tBEX,
-};
-void saveStrifNot(FILE*fp,const char*str,const char*cmp);
-void fileToStr(FILE*fp,std::string&s,const char*defaultStr);
-int clipboardAsk(void);
-fileType_t askSaveType(bool save=true);
-bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,fileType_t type,const char*comment,const char*label,int bits);
+--]]
+function switchProject()
+	rgt.syncProject()
+	if project.have(project.levelMask)~=false then
+		layerSel:clear()
+		for i=1,#level.names do
+			layerSel:add(level.names[i])
+		end
+		layerSel:value(0)
+		layerName:value(level.names[1])
+		lvlsetlayer(0)
+	end
+end

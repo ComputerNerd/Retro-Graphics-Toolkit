@@ -18,7 +18,16 @@ function userGuide(userData)--callback functions **must** have the user data (na
 	fl.alert("The user's guide can be found on the wiki https://github.com/ComputerNerd/Retro-Graphics-Toolkit/wiki or locally in the Manual folder");
 end
 function allMetaDither(unused)
-	rgt.syncProject()--this MUST be called in all callbacks that access the project table BEFORE any project table access.
+	rgt.syncProject()--this MUST be called in all callbacks that access certain tables BEFORE any table access.
+	--[[Tables affected by this rule:
+	--palette
+	--tile
+	--tilemaps
+	--chunks
+	--metasprites
+	--project
+	--]]
+	-- The only reason why the level table is unaffected is because sync is called on a project switch which is enough because the table data is only modified via means of Lua scripting.
 	if project.have(project.spritesMask)==true then
 		for i=0,#metasprites.amt-1 do
 			metasprites.ditherAll(i)
@@ -92,6 +101,10 @@ function generateMenu()
 				{"Sonic 2 (or sonic 3 character)",0,23--[[exportSonicDPLCCB--]],1},
 				{"Sonic 3",0,23--[[exportSonicDPLCCB--]],2},
 				{},
+			{},
+		{"Levels",0,0,0,FL.SUBMENU},
+			{'Load Sonic one level chunk layout',0,'loadS1layout'},
+			{'Save Sonic one level chunk layout',0,'saveS1layout'},
 			{},
 		{"Scripts",0,0,0,FL.SUBMENU},
 			{"Run Lua script",FL.CTRL+string.byte('r'),24--[[runLuaCB--]],0},

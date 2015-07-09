@@ -53,6 +53,8 @@ static int Fl_Lua_Tree_Fl_Lua_Tree(lua_State *L) {
       int H = dub::checkinteger(L, 4);
       const char *Lstr = dub::checkstring(L, 5);
       Fl_Lua_Tree *retval__ = new Fl_Lua_Tree(X, Y, W, H, Lstr);
+	retval__->ci.L=L;
+	retval__->ci.cb=0;
       dub::pushudata(L, retval__, "FLTK.Fl_Lua_Tree", true);
       return 1;
     } else {
@@ -61,6 +63,8 @@ static int Fl_Lua_Tree_Fl_Lua_Tree(lua_State *L) {
       int W = dub::checkinteger(L, 3);
       int H = dub::checkinteger(L, 4);
       Fl_Lua_Tree *retval__ = new Fl_Lua_Tree(X, Y, W, H);
+	retval__->ci.L=L;
+	retval__->ci.cb=0;
       dub::pushudata(L, retval__, "FLTK.Fl_Lua_Tree", true);
       return 1;
     }
@@ -229,18 +233,18 @@ static int Fl_Lua_Tree_add(lua_State *L) {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
     int top__ = lua_gettop(L);
     if (top__ >= 3) {
-      int type__ = lua_type(L, 3);
+      int type__ = lua_type(L, 2);
       if (type__ == LUA_TSTRING) {
-        Fl_Tree_Item *parent_item = *((Fl_Tree_Item **)dub::checksdata(L, 2, "FLTK.Fl_Tree_Item"));
-        const char *name = dub::checkstring(L, 3);
-        Fl_Tree_Item *retval__ = self->add(parent_item, name);
+        const char *path = dub::checkstring(L, 2);
+        Fl_Tree_Item *newitem = *((Fl_Tree_Item **)dub::checksdata(L, 3, "FLTK.Fl_Tree_Item"));
+        Fl_Tree_Item *retval__ = self->add(path, newitem);
         if (!retval__) return 0;
         dub::pushudata(L, retval__, "FLTK.Fl_Tree_Item", false);
         return 1;
       } else {
-        const char *path = dub::checkstring(L, 2);
-        Fl_Tree_Item *newitem = *((Fl_Tree_Item **)dub::checksdata(L, 3, "FLTK.Fl_Tree_Item"));
-        Fl_Tree_Item *retval__ = self->add(path, newitem);
+        Fl_Tree_Item *parent_item = *((Fl_Tree_Item **)dub::checksdata(L, 2, "FLTK.Fl_Tree_Item"));
+        const char *name = dub::checkstring(L, 3);
+        Fl_Tree_Item *retval__ = self->add(parent_item, name);
         if (!retval__) return 0;
         dub::pushudata(L, retval__, "FLTK.Fl_Tree_Item", false);
         return 1;
@@ -1113,7 +1117,7 @@ static int Fl_Lua_Tree_is_selected(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Font Fl_Lua_Tree::item_labelfont() const
+/** int Fl_Lua_Tree::item_labelfont() const
  * inc/Fl_Lua_Tree.h:483
  */
 static int Fl_Lua_Tree_item_labelfont(lua_State *L) {
@@ -1121,11 +1125,11 @@ static int Fl_Lua_Tree_item_labelfont(lua_State *L) {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Font *val = *((Fl_Font **)dub::checksdata(L, 2, "Fl_Font"));
-      self->item_labelfont(*val);
+      int val = dub::checkinteger(L, 2);
+      self->item_labelfont(val);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Font(self->item_labelfont()), "Fl_Font", true);
+      lua_pushnumber(L, self->item_labelfont());
       return 1;
     }
   } catch (std::exception &e) {
@@ -1136,7 +1140,7 @@ static int Fl_Lua_Tree_item_labelfont(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Fontsize Fl_Lua_Tree::item_labelsize() const
+/** int Fl_Lua_Tree::item_labelsize() const
  * inc/Fl_Lua_Tree.h:485
  */
 static int Fl_Lua_Tree_item_labelsize(lua_State *L) {
@@ -1144,7 +1148,7 @@ static int Fl_Lua_Tree_item_labelsize(lua_State *L) {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Fontsize val = dub::checkinteger(L, 2);
+      int val = dub::checkinteger(L, 2);
       self->item_labelsize(val);
       return 0;
     } else {
@@ -1159,7 +1163,7 @@ static int Fl_Lua_Tree_item_labelsize(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Color Fl_Lua_Tree::item_labelfgcolor(void) const
+/** int Fl_Lua_Tree::item_labelfgcolor(void) const
  * inc/Fl_Lua_Tree.h:487
  */
 static int Fl_Lua_Tree_item_labelfgcolor(lua_State *L) {
@@ -1167,11 +1171,11 @@ static int Fl_Lua_Tree_item_labelfgcolor(lua_State *L) {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Color *val = *((Fl_Color **)dub::checksdata(L, 2, "Fl_Color"));
-      self->item_labelfgcolor(*val);
+      int val = dub::checkinteger(L, 2);
+      self->item_labelfgcolor(val);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Color(self->item_labelfgcolor()), "Fl_Color", true);
+      lua_pushnumber(L, self->item_labelfgcolor());
       return 1;
     }
   } catch (std::exception &e) {
@@ -1182,7 +1186,7 @@ static int Fl_Lua_Tree_item_labelfgcolor(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Color Fl_Lua_Tree::item_labelbgcolor(void) const
+/** int Fl_Lua_Tree::item_labelbgcolor(void) const
  * inc/Fl_Lua_Tree.h:489
  */
 static int Fl_Lua_Tree_item_labelbgcolor(lua_State *L) {
@@ -1190,11 +1194,11 @@ static int Fl_Lua_Tree_item_labelbgcolor(lua_State *L) {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Color *val = *((Fl_Color **)dub::checksdata(L, 2, "Fl_Color"));
-      self->item_labelbgcolor(*val);
+      int val = dub::checkinteger(L, 2);
+      self->item_labelbgcolor(val);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Color(self->item_labelbgcolor()), "Fl_Color", true);
+      lua_pushnumber(L, self->item_labelbgcolor());
       return 1;
     }
   } catch (std::exception &e) {
@@ -1205,7 +1209,7 @@ static int Fl_Lua_Tree_item_labelbgcolor(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Color Fl_Lua_Tree::connectorcolor() const
+/** int Fl_Lua_Tree::connectorcolor() const
  * inc/Fl_Lua_Tree.h:491
  */
 static int Fl_Lua_Tree_connectorcolor(lua_State *L) {
@@ -1213,11 +1217,11 @@ static int Fl_Lua_Tree_connectorcolor(lua_State *L) {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Color *val = *((Fl_Color **)dub::checksdata(L, 2, "Fl_Color"));
-      self->connectorcolor(*val);
+      int val = dub::checkinteger(L, 2);
+      self->connectorcolor(val);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Color(self->connectorcolor()), "Fl_Color", true);
+      lua_pushnumber(L, self->connectorcolor());
       return 1;
     }
   } catch (std::exception &e) {
@@ -1556,7 +1560,7 @@ static int Fl_Lua_Tree_sortorder(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Boxtype Fl_Lua_Tree::selectbox() const
+/** int Fl_Lua_Tree::selectbox() const
  * inc/Fl_Lua_Tree.h:529
  */
 static int Fl_Lua_Tree_selectbox(lua_State *L) {
@@ -1564,11 +1568,11 @@ static int Fl_Lua_Tree_selectbox(lua_State *L) {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Boxtype *val = *((Fl_Boxtype **)dub::checksdata(L, 2, "Fl_Boxtype"));
-      self->selectbox(*val);
+      int val = dub::checkinteger(L, 2);
+      self->selectbox((Fl_Boxtype)val);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Boxtype(self->selectbox()), "Fl_Boxtype", true);
+      lua_pushnumber(L, self->selectbox());
       return 1;
     }
   } catch (std::exception &e) {
@@ -2111,7 +2115,6 @@ static int Fl_Lua_Tree_focus(lua_State *L) {
   return dub::error(L);
 }
 
-
 /** Fl_Group* Fl_Widget::parent() const
  * inc/Fl_Widget.h:243
  */
@@ -2280,7 +2283,7 @@ static int Fl_Lua_Tree_size(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Align Fl_Widget::align() const
+/** int Fl_Widget::align() const
  * inc/Fl_Widget.h:337
  */
 static int Fl_Lua_Tree_align(lua_State *L) {
@@ -2288,11 +2291,11 @@ static int Fl_Lua_Tree_align(lua_State *L) {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Align *alignment = *((Fl_Align **)dub::checksdata(L, 2, "Fl_Align"));
-      self->align(*alignment);
+      int alignment = dub::checkinteger(L, 2);
+      self->align(alignment);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Align(self->align()), "Fl_Align", true);
+      lua_pushnumber(L, self->align());
       return 1;
     }
   } catch (std::exception &e) {
@@ -2303,7 +2306,7 @@ static int Fl_Lua_Tree_align(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Boxtype Fl_Widget::box() const
+/** int Fl_Widget::box() const
  * inc/Fl_Widget.h:352
  */
 static int Fl_Lua_Tree_box(lua_State *L) {
@@ -2311,11 +2314,11 @@ static int Fl_Lua_Tree_box(lua_State *L) {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Boxtype *new_box = *((Fl_Boxtype **)dub::checksdata(L, 2, "Fl_Boxtype"));
-      self->box(*new_box);
+      int new_box = dub::checkinteger(L, 2);
+      self->box((Fl_Boxtype)new_box);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Boxtype(self->box()), "Fl_Boxtype", true);
+      lua_pushnumber(L, self->box());
       return 1;
     }
   } catch (std::exception &e) {
@@ -2326,7 +2329,7 @@ static int Fl_Lua_Tree_box(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Color Fl_Widget::color() const
+/** int Fl_Widget::color() const
  * inc/Fl_Widget.h:367
  */
 static int Fl_Lua_Tree_color(lua_State *L) {
@@ -2334,16 +2337,16 @@ static int Fl_Lua_Tree_color(lua_State *L) {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
     int top__ = lua_gettop(L);
     if (top__ >= 3) {
-      Fl_Color *bg = *((Fl_Color **)dub::checksdata(L, 2, "Fl_Color"));
-      Fl_Color *sel = *((Fl_Color **)dub::checksdata(L, 3, "Fl_Color"));
-      self->color(*bg, *sel);
+      int bg = dub::checkinteger(L, 2);
+      int sel = dub::checkinteger(L, 3);
+      self->color(bg, sel);
       return 0;
     } else if (top__ >= 2) {
-      Fl_Color *bg = *((Fl_Color **)dub::checksdata(L, 2, "Fl_Color"));
-      self->color(*bg);
+      int bg = dub::checkinteger(L, 2);
+      self->color(bg);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Color(self->color()), "Fl_Color", true);
+      lua_pushnumber(L, self->color());
       return 1;
     }
   } catch (std::exception &e) {
@@ -2354,7 +2357,7 @@ static int Fl_Lua_Tree_color(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Color Fl_Widget::selection_color() const
+/** int Fl_Widget::selection_color() const
  * inc/Fl_Widget.h:385
  */
 static int Fl_Lua_Tree_selection_color(lua_State *L) {
@@ -2362,11 +2365,11 @@ static int Fl_Lua_Tree_selection_color(lua_State *L) {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Color *a = *((Fl_Color **)dub::checksdata(L, 2, "Fl_Color"));
-      self->selection_color(*a);
+      int a = dub::checkinteger(L, 2);
+      self->selection_color(a);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Color(self->selection_color()), "Fl_Color", true);
+      lua_pushnumber(L, self->selection_color());
       return 1;
     }
   } catch (std::exception &e) {
@@ -2445,7 +2448,7 @@ static int Fl_Lua_Tree_labeltype(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Color Fl_Widget::labelcolor() const
+/** int Fl_Widget::labelcolor() const
  * inc/Fl_Widget.h:461
  */
 static int Fl_Lua_Tree_labelcolor(lua_State *L) {
@@ -2453,11 +2456,11 @@ static int Fl_Lua_Tree_labelcolor(lua_State *L) {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Color *c = *((Fl_Color **)dub::checksdata(L, 2, "Fl_Color"));
-      self->labelcolor(*c);
+      int c = dub::checkinteger(L, 2);
+      self->labelcolor(c);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Color(self->labelcolor()), "Fl_Color", true);
+      lua_pushnumber(L, self->labelcolor());
       return 1;
     }
   } catch (std::exception &e) {
@@ -2468,7 +2471,7 @@ static int Fl_Lua_Tree_labelcolor(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Font Fl_Widget::labelfont() const
+/** int Fl_Widget::labelfont() const
  * inc/Fl_Widget.h:476
  */
 static int Fl_Lua_Tree_labelfont(lua_State *L) {
@@ -2476,11 +2479,11 @@ static int Fl_Lua_Tree_labelfont(lua_State *L) {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Font *f = *((Fl_Font **)dub::checksdata(L, 2, "Fl_Font"));
-      self->labelfont(*f);
+      int f = dub::checkinteger(L, 2);
+      self->labelfont(f);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Font(self->labelfont()), "Fl_Font", true);
+      lua_pushnumber(L, self->labelfont());
       return 1;
     }
   } catch (std::exception &e) {
@@ -2491,7 +2494,7 @@ static int Fl_Lua_Tree_labelfont(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Fontsize Fl_Widget::labelsize() const
+/** int Fl_Widget::labelsize() const
  * inc/Fl_Widget.h:491
  */
 static int Fl_Lua_Tree_labelsize(lua_State *L) {
@@ -2499,7 +2502,7 @@ static int Fl_Lua_Tree_labelsize(lua_State *L) {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Fontsize pix = dub::checkinteger(L, 2);
+      int pix = dub::checkinteger(L, 2);
       self->labelsize(pix);
       return 0;
     } else {
@@ -3087,15 +3090,15 @@ static int Fl_Lua_Tree_do_callback(lua_State *L) {
     if (top__ >= 3) {
       int type__ = lua_type(L, 3);
       void **ptr3__;
-      if ( (ptr3__ = dub::issdata(L, 3, "void", type__)) ) {
+      if ( (ptr3__ = dub::issdata(L, 3, "long", type__)) ) {
         Fl_Widget *o = *((Fl_Widget **)dub::checksdata(L, 2, "FLTK.Fl_Widget"));
-        void *arg = *((void **)ptr3__);
-        self->do_callback(o, arg);
+        long *arg = *((long **)ptr3__);
+        self->do_callback(o, *arg);
         return 0;
       } else {
         Fl_Widget *o = *((Fl_Widget **)dub::checksdata(L, 2, "FLTK.Fl_Widget"));
-        long *arg = *((long **)dub::checksdata(L, 3, "long"));
-        self->do_callback(o, *arg);
+        void *arg = *((void **)dub::checksdata(L, 3, "void"));
+        self->do_callback(o, arg);
         return 0;
       }
     } else if (top__ >= 2) {
@@ -3294,7 +3297,7 @@ static int Fl_Lua_Tree_clear_damage(lua_State *L) {
   return dub::error(L);
 }
 
-/** void Fl_Widget::draw_label(int, int, int, int, Fl_Align) const
+/** void Fl_Widget::draw_label(int, int, int, int, int) const
  * inc/Fl_Widget.h:927
  */
 static int Fl_Lua_Tree_draw_label(lua_State *L) {
@@ -3304,8 +3307,8 @@ static int Fl_Lua_Tree_draw_label(lua_State *L) {
     int p2 = dub::checkinteger(L, 3);
     int p3 = dub::checkinteger(L, 4);
     int p4 = dub::checkinteger(L, 5);
-    Fl_Align *p5 = *((Fl_Align **)dub::checksdata(L, 6, "Fl_Align"));
-    self->draw_label(p1, p2, p3, p4, *p5);
+    int p5 = dub::checkinteger(L, 6);
+    self->draw_label(p1, p2, p3, p4, p5);
     return 0;
   } catch (std::exception &e) {
     lua_pushfstring(L, "draw_label: %s", e.what());
@@ -3441,7 +3444,7 @@ static int Fl_Lua_Tree_use_accents_menu(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Color Fl_Widget::color2() const
+/** int Fl_Widget::color2() const
  * inc/Fl_Widget.h:1000
  */
 static int Fl_Lua_Tree_color2(lua_State *L) {
@@ -3453,7 +3456,7 @@ static int Fl_Lua_Tree_color2(lua_State *L) {
       self->color2(a);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Color(self->color2()), "Fl_Color", true);
+      lua_pushnumber(L, self->color2());
       return 1;
     }
   } catch (std::exception &e) {

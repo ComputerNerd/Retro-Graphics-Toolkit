@@ -42,6 +42,7 @@ tiles::tiles(const tiles&other,Project*prj){
 	tcSize=sizew*sizeh*4;
 	tDat=other.tDat;
 	truetDat=other.truetDat;
+	curBD=other.curBD;
 }
 tiles::~tiles(){
 	tDat.clear();

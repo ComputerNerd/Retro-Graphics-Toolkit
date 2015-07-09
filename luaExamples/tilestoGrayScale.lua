@@ -32,7 +32,7 @@ if project.have(project.tilesMask) then
 		end
 	end
 	if project.have(project.mapMask) then
-		tilemap.dither()
+		tilemaps.dither(tilemaps.current)
 	end
 	if project.have(project.spritesMask) then
 		sprite.ditherAll()

@@ -20,6 +20,8 @@
 #include "nemesis.h"
 #include "kosinski.h"
 #include "enigma.h"
+#include "comper.h"
+#include "saxman.h"
 static const char*const TypeTab[]={"Uncompressed","Nemesis","Kosinski","Enigma","Saxman","Comper"};
 const char*typeToText(int type){
 	return TypeTab[type];
@@ -27,58 +29,46 @@ const char*typeToText(int type){
 int compressionAsk(void){
 	return MenuPopup("Compression?","Select a compression algorithm or use uncompressed",4,TypeTab[0],TypeTab[1],TypeTab[2],TypeTab[3],TypeTab[4],TypeTab[5]);
 }
-static std::string decodeNemKos(const char * filename,size_t &fileSize,bool kos){
+std::string decodeTypeStr(const char * filename,size_t &filesize,int type){
 	std::stringstream outDecomp;
 	FILE * fi=fopen(filename,"rb");
-	fileSize=fseek(fi,0,SEEK_END);
-	fileSize=ftell(fi);
+	filesize=fseek(fi,0,SEEK_END);
+	filesize=ftell(fi);
 	rewind(fi);
-	uint8_t * datcmp=(uint8_t *)malloc(fileSize);
-	fread(datcmp,1,fileSize,fi);
+	uint8_t * datcmp=(uint8_t *)malloc(filesize);
+	fread(datcmp,1,filesize,fi);
 	fclose(fi);
 	std::string input;
-	input.assign((const char *)datcmp,fileSize);
+	input.assign((const char *)datcmp,filesize);
 	free(datcmp);
 	std::istringstream iss(input);
-	if (kos){
-		kosinski decomp;
-		decomp.decode(iss,outDecomp);
-	}else{
-		nemesis decomp;
-		decomp.decode(iss,outDecomp);
-	}
-	printf("Decompressed to %d bytes\n",fileSize);
-	fileSize=outDecomp.str().length();
-	return outDecomp.str();
-}
-static std::string decodeEnigma(const char * filename,size_t &fileSize){
-	//This data must be freed that it returns
-	std::ifstream file (filename, std::ios::in|std::ios::binary|std::ios::ate);
-	fileSize = file.tellg();
-	file.seekg (0, std::ios::beg);//return to the beginning of the file
-	std::ostringstream outDecomp;
-	enigma decomp;
-	std::stringstream iss;
-	iss << file.rdbuf();
-	decomp.decode(iss,outDecomp);
-	fileSize=outDecomp.str().length();
-	printf("Decompressed to %d bytes\n",fileSize);
-	return outDecomp.str();
-}
-std::string decodeTypeStr(const char * filename,size_t &filesize,int type){
 	switch(type){
 		case 1:
-			return decodeNemKos(filename,filesize,false);
+			{nemesis decomp;
+			decomp.decode(iss,outDecomp);}
 		break;
 		case 2:
-			return decodeNemKos(filename,filesize,true);
+			{kosinski decomp;
+			decomp.decode(iss,outDecomp);}
 		break;
 		case 3:
-			return decodeEnigma(filename,filesize);
+			{enigma decomp;
+			decomp.decode(iss,outDecomp);}
+		break;
+		case 4:
+			{saxman decomp;
+			decomp.decode(iss,outDecomp);}
+		break;
+		case 5:
+			{comper decomp;
+			decomp.decode(iss,outDecomp);}
 		break;
 		default:
 			show_default_error
 	}
+	printf("Decompressed to %d bytes\n",filesize);
+	filesize=outDecomp.str().length();
+	return outDecomp.str();
 }
 void*decodeType(const char * filename,size_t &filesize,int type){
 	std::string output=decodeTypeStr(filename,filesize,type);
@@ -86,17 +76,32 @@ void*decodeType(const char * filename,size_t &filesize,int type){
 	output.copy(Dat, filesize);
 	return Dat;
 }
-static void*encodeNemKos(void*in,size_t n,size_t&outSize,bool kos){
+void*encodeType(void*in,size_t n,size_t&outSize,int type){
 	std::string input;
 	input.assign((const char *)in,n);
 	std::istringstream iss(input);
 	std::ostringstream outfun;
-	if(kos){
-		kosinski comp;
-		comp.encode(iss,outfun);
-	}else{
-		nemesis comp;
-		comp.encode(iss,outfun);
+	switch(type){
+		case 1:
+			{nemesis comp;
+			comp.encode(iss,outfun);}
+		break;
+		case 2:
+			{kosinski comp;
+			comp.encode(iss,outfun);}
+		break;
+		case 3:
+			{enigma comp;
+			comp.encode(iss,outfun);}
+		break;
+		case 4:
+			{saxman comp;
+			comp.encode(iss,outfun);}
+		break;
+		case 5:
+			{comper comp;
+			comp.encode(iss,outfun);}
+		break;
 	}
 	outSize=outfun.str().length();
 	uint8_t*compdat=(uint8_t*)malloc(outSize);
@@ -106,34 +111,4 @@ static void*encodeNemKos(void*in,size_t n,size_t&outSize,bool kos){
 	output.copy((char *)compdat,outSize);
 	printf("Compressed to %d from %d\n",outSize,n);
 	return (void*)compdat;
-}
-void*encodeEng(void*in,size_t n,size_t&outSize){
-	std::string input,output;
-	std::ostringstream outcomp;
-	enigma ecomp;
-	input.assign((const char*)in,n);
-	std::stringstream iss(input);
-	ecomp.encode(iss,outcomp);
-	output=outcomp.str();
-	outSize=outcomp.str().length();
-	void*outdat=malloc(outSize);
-	output.copy((char*)outdat,outSize);
-	printf("Compressed to %d from %d\n",outSize,n);
-	return outdat;
-}
-void*encodeType(void*in,size_t n,size_t&outSize,int type){
-	switch(type){
-		case 1:
-			return encodeNemKos(in,n,outSize,false);
-		break;
-		case 2:
-			return encodeNemKos(in,n,outSize,true);
-		break;
-		case 3:
-			return encodeEng(in,n,outSize);
-		break;
-		default:
-			show_default_error
-	}
-	return 0;
 }

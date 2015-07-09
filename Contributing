@@ -1,0 +1,27 @@
+Especially given what can be accomplished via Lua scripting modifying Retro
+Graphics Toolkit to suite your needs or writing a Lua script to what you need
+to do is much faster and easier than writing your own tool. Why reinvent the
+wheel? Why not instead just modify the wheel to suite your needs?
+
+These changes are very likely to benefit other people as well. It is very
+likely that after you make a change to Retro Graphics Toolkit or write a Lua
+script for it you will want to contribute your changes. Fortunately Github
+makes it very easy for you to contribute. All you need to do is fork the
+project and submit a pull request. If you do not like that approach you can
+also submit a patch. 
+
+==============================================================================
+                                      FAQ
+==============================================================================
+
+What if I cannot program but I sill want to help out?
+	* Retro Graphics Toolkit is lacking in documentation. Any additional
+	  documentation helps.
+	* If you do not like writing documentation but want to help
+	  out, you can file bug reports if you find any.
+
+
+What if I want to program something but I am not sure what?
+	* Check the development roadmap Wiki page
+	* If that does not work I have lots of ideas. I can easily give you one.
+

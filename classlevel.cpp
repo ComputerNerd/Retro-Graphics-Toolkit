@@ -17,6 +17,7 @@
 #include <FL/fl_ask.H>
 #include <string.h>
 #include "classlevel.h"
+#include "filemisc.h"
 level::level(Project*prj){
 	this->prj=prj;
 	layeramt=1;
@@ -26,6 +27,7 @@ level::level(Project*prj){
 	dat[0]=new std::vector<struct levDat>;
 	dat[0]->resize(1);
 	odat[0]=new std::vector<struct levobjDat>;
+	layernames.emplace_back("0");
 }
 level::level(const level&o,Project*prj){
 	this->prj=prj;
@@ -54,6 +56,7 @@ void level::removeLayer(unsigned which){
 	dat.erase(dat.begin()+which);
 	delete odat[which];
 	odat.erase(odat.begin()+which);
+	layernames.erase(layernames.begin()+which);
 }
 bool level::inRangeLayer(unsigned tst){
 	if(tst>=layeramt){
@@ -62,20 +65,20 @@ bool level::inRangeLayer(unsigned tst){
 	}else
 		return true;
 }
-struct levelInfo level::getInfo(unsigned layer){
-	return lvlI[layer];
+struct levelInfo*level::getInfo(unsigned layer){
+	return&lvlI.at(layer);
 }
 void level::setInfo(unsigned layer,struct levelInfo i){
 	lvlI[layer]=i;
 }
-struct levDat level::getlevDat(unsigned layer,unsigned x,unsigned y){
-	return (*(dat[layer]))[y*lvlI[layer].w+x];
+struct levDat*level::getlevDat(unsigned layer,unsigned x,unsigned y){
+	return&(dat.at(layer)->at(y*lvlI[layer].w+x));
 }
 void level::setlevDat(unsigned layer,unsigned x,unsigned y,struct levDat d){
 	(*(dat[layer]))[y*lvlI[layer].w+x]=d;
 }
-struct levobjDat level::getleObjvDat(unsigned layer,unsigned idx){
-	return (*(odat[layer]))[idx];
+struct levobjDat*level::getObjDat(unsigned layer,unsigned idx){
+	return&(odat.at(layer)->at(idx));
 }
 void level::setlevObjDat(unsigned layer,unsigned idx,struct levobjDat d){
 	(*(odat[layer]))[idx]=d;
@@ -89,6 +92,7 @@ void level::setlayeramt(unsigned amt,bool lastLayerDim){
 		}
 		dat.reserve(amt);
 		odat.reserve(amt);
+		layernames.reserve(amt);
 		for(unsigned i=layeramt;i<amt;++i){
 			if(lastLayerDim)
 				lvlI.push_back(lvlI[layeramt-1]);
@@ -98,6 +102,7 @@ void level::setlayeramt(unsigned amt,bool lastLayerDim){
 			dat.push_back(vtmp);
 			std::vector<struct levobjDat>*votmp=new std::vector<struct levobjDat>;
 			odat.push_back(votmp);
+			layernames.emplace_back(std::to_string(i));
 		}
 	}else if(amt<layeramt){
 		for(unsigned i=amt;i<layeramt;++i){
@@ -107,8 +112,18 @@ void level::setlayeramt(unsigned amt,bool lastLayerDim){
 		lvlI.resize(amt);
 		dat.resize(amt);
 		odat.resize(amt);
+		layernames.resize(amt);
 	}
 	layeramt=amt;
+}
+void level::resizeLayer(unsigned idx,unsigned nw,unsigned nh){
+	std::vector<struct levDat>tmp=std::vector<struct levDat>(*(dat[idx]));
+	unsigned ow=lvlI[idx].w,oh=lvlI[idx].h;
+	dat[idx]->resize(nw*nh);
+	for(unsigned y=0;y<std::min(oh,nh);++y)
+		std::copy(tmp.begin()+y*ow,tmp.begin()+y*ow+std::min(ow,nw),dat[idx]->begin()+y*nw);
+	lvlI[idx].w=nw;
+	lvlI[idx].h=nh;
 }
 void level::save(FILE*fp){
 	/*Format
@@ -119,8 +134,9 @@ void level::save(FILE*fp){
 	 * Data see struct levobjDat*/
 	fwrite(&layeramt,sizeof(uint32_t),1,fp);
 	for(unsigned i=0;i<layeramt;++i){
+		saveStrifNot(fp,layernames[i].c_str(),std::to_string(i).c_str());
 		fwrite(&lvlI[i],sizeof(struct levelInfo),1,fp);
-		fwrite(dat.data(),dat.size(),sizeof(struct levDat),fp);
+		fwrite(dat[i]->data(),dat[i]->size(),sizeof(struct levDat),fp);
 		uint32_t objamt=odat[i]->size();
 		fwrite(&objamt,1,sizeof(uint32_t),fp);
 		if(objamt)
@@ -132,9 +148,10 @@ void level::load(FILE*fp,uint32_t version){
 	fread(&amtnew,1,sizeof(uint32_t),fp);
 	setlayeramt(amtnew,false);
 	for(unsigned i=0;i<layeramt;++i){
+		fileToStr(fp,layernames[i],std::to_string(i).c_str());
 		uint32_t objamt;
 		fread(&lvlI[i],sizeof(struct levelInfo),1,fp);
-		dat.resize(lvlI[i].w*lvlI[i].h);
+		dat[i]->resize(lvlI[i].w*lvlI[i].h);
 		fread(dat[i]->data(),sizeof(struct levDat),lvlI[i].w*lvlI[i].h,fp);
 		fread(&objamt,sizeof(uint32_t),1,fp);
 		if(objamt){

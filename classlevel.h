@@ -21,14 +21,17 @@
 #include "project.h"
 struct __attribute__ ((__packed__)) levDat{
 	uint32_t id,dat,xormask;
+	int64_t extra;
 };
 struct __attribute__ ((__packed__)) levobjDat{//For sprite layout
-	uint32_t x,y,id[3]/*project id,meta id,group id*/,dat,xormask;
+	uint32_t x,y,prjid,metaid,groupid,dat,xormask;
+	int64_t extra;
 };
 enum source{TILES,BLOCKS,CHUNKS};
 struct __attribute__ ((__packed__)) levelInfo{
-	uint32_t w,h,n,d;
+	uint32_t w,h,nx,dx,ny,dy;
 	int32_t repeatx,repeaty,src;
+	int64_t extra;
 };
 struct level{
 	Project*prj;
@@ -42,13 +45,14 @@ struct level{
 	void addLayer(unsigned at,bool after);
 	void removeLayer(unsigned which);
 	bool inRangeLayer(unsigned tst);
-	struct levelInfo getInfo(unsigned layer);
+	struct levelInfo*getInfo(unsigned layer);
 	void setInfo(unsigned layer,struct levelInfo i);
-	struct levDat getlevDat(unsigned layer,unsigned x,unsigned y);
+	struct levDat*getlevDat(unsigned layer,unsigned x,unsigned y);
 	void setlevDat(unsigned layer,unsigned x,unsigned y,struct levDat d);
-	struct levobjDat getleObjvDat(unsigned layer,unsigned idx);
+	struct levobjDat*getObjDat(unsigned layer,unsigned idx);
 	void setlevObjDat(unsigned layer,unsigned idx,struct levobjDat d);
 	void setlayeramt(unsigned amt,bool lastLayerDim);
+	void resizeLayer(unsigned idx,unsigned nw,unsigned nh);
 	void save(FILE*fp);
 	void load(FILE*fp,uint32_t version);
 };

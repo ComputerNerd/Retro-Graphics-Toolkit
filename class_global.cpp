@@ -23,7 +23,7 @@
 #include "gui.h"
 #include "runlua.h"
 #include "luaconfig.h"
-const char*rtVersionStr="Retro Graphics Toolkit v0.8 NOT COMPLETE";
+const char*rtVersionStr="Retro Graphics Toolkit v0.8 RC1";
 editor *window = new editor(800,600,rtVersionStr);
 static void rect_alpha_grid(uint8_t rgba[4],unsigned x,unsigned y){
 	uint8_t grid[32*32*3];
@@ -550,6 +550,43 @@ int editor::handle(int event){
 				break;
 				case spriteEditor:
 					palBar.checkBox(Fl::event_x(),Fl::event_y(),3);
+				break;
+			}
+		break;
+		case FL_SHORTCUT:
+			switch (mode_editor){
+				case tile_place:
+					if(tileEditModePlace_G){
+						const char*t=Fl::event_text();
+						puts(t);
+						bool nr=false;
+						switch(t[0]){
+							case 'h':
+								if(selTileE_G[0])
+									--selTileE_G[0];
+								nr=true;
+							break;
+							case 'j':
+								if(selTileE_G[1]<(currentProject->tms->maps[currentProject->curPlane].mapSizeHA-1))
+									++selTileE_G[1];
+								nr=true;
+							break;
+							case 'k':
+								if(selTileE_G[1])
+									--selTileE_G[1];
+								nr=true;
+							break;
+							case 'l':
+								if(selTileE_G[0]<(currentProject->tms->maps[currentProject->curPlane].mapSizeW-1))
+									++selTileE_G[0];
+								nr=true;
+							break;
+						}
+						if(nr){
+							updateTileMapGUI(selTileE_G[0],selTileE_G[1]);
+							redraw();
+						}
+					}
 				break;
 			}
 		break;

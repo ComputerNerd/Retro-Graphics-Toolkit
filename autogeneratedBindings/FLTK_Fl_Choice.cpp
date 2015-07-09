@@ -231,13 +231,13 @@ static int Fl_Lua_Choice_find_index(lua_State *L) {
       const char *name = dub::checkstring(L, 2);
       lua_pushnumber(L, self->find_index(name));
       return 1;
-    } else if ( (ptr2__ = dub::issdata(L, 2, "Fl_Callback", type__)) ) {
-      Fl_Callback *cb = *((Fl_Callback **)ptr2__);
-      lua_pushnumber(L, self->find_index(cb));
+    } else if ( (ptr2__ = dub::issdata(L, 2, "FLTK.Fl_Menu_Item", type__)) ) {
+      Fl_Menu_Item *item = *((Fl_Menu_Item **)ptr2__);
+      lua_pushnumber(L, self->find_index(item));
       return 1;
     } else {
-      Fl_Menu_Item *item = *((Fl_Menu_Item **)dub::checksdata(L, 2, "FLTK.Fl_Menu_Item"));
-      lua_pushnumber(L, self->find_index(item));
+      Fl_Callback *cb = *((Fl_Callback **)dub::checksdata(L, 2, "Fl_Callback"));
+      lua_pushnumber(L, self->find_index(cb));
       return 1;
     }
   } catch (std::exception &e) {
@@ -341,16 +341,7 @@ static int Fl_Lua_Choice_insert(lua_State *L) {
     int top__ = lua_gettop(L);
     if (top__ >= 7) {
       int type__ = lua_type(L, 4);
-      if (type__ == LUA_TNUMBER) {
-        int index = dub::checkinteger(L, 2);
-        const char *p2 = dub::checkstring(L, 3);
-        int shortcut = dub::checkinteger(L, 4);
-        Fl_Callback *p4 = *((Fl_Callback **)dub::checksdata(L, 5, "Fl_Callback"));
-        void *p5 = *((void **)dub::checksdata(L, 6, "void"));
-        int p6 = dub::checkinteger(L, 7);
-        lua_pushnumber(L, self->insert(index, p2, shortcut, p4, p5, p6));
-        return 1;
-      } else {
+      if (type__ == LUA_TSTRING) {
         int index = dub::checkinteger(L, 2);
         const char *a = dub::checkstring(L, 3);
         const char *b = dub::checkstring(L, 4);
@@ -359,18 +350,19 @@ static int Fl_Lua_Choice_insert(lua_State *L) {
         int e = dub::checkinteger(L, 7);
         lua_pushnumber(L, self->insert(index, a, b, c, d, e));
         return 1;
-      }
-    } else if (top__ >= 6) {
-      int type__ = lua_type(L, 4);
-      if (type__ == LUA_TNUMBER) {
+      } else {
         int index = dub::checkinteger(L, 2);
         const char *p2 = dub::checkstring(L, 3);
         int shortcut = dub::checkinteger(L, 4);
         Fl_Callback *p4 = *((Fl_Callback **)dub::checksdata(L, 5, "Fl_Callback"));
         void *p5 = *((void **)dub::checksdata(L, 6, "void"));
-        lua_pushnumber(L, self->insert(index, p2, shortcut, p4, p5));
+        int p6 = dub::checkinteger(L, 7);
+        lua_pushnumber(L, self->insert(index, p2, shortcut, p4, p5, p6));
         return 1;
-      } else {
+      }
+    } else if (top__ >= 6) {
+      int type__ = lua_type(L, 4);
+      if (type__ == LUA_TSTRING) {
         int index = dub::checkinteger(L, 2);
         const char *a = dub::checkstring(L, 3);
         const char *b = dub::checkstring(L, 4);
@@ -378,22 +370,30 @@ static int Fl_Lua_Choice_insert(lua_State *L) {
         void *d = *((void **)dub::checksdata(L, 6, "void"));
         lua_pushnumber(L, self->insert(index, a, b, c, d));
         return 1;
-      }
-    } else {
-      int type__ = lua_type(L, 4);
-      if (type__ == LUA_TNUMBER) {
+      } else {
         int index = dub::checkinteger(L, 2);
         const char *p2 = dub::checkstring(L, 3);
         int shortcut = dub::checkinteger(L, 4);
         Fl_Callback *p4 = *((Fl_Callback **)dub::checksdata(L, 5, "Fl_Callback"));
-        lua_pushnumber(L, self->insert(index, p2, shortcut, p4));
+        void *p5 = *((void **)dub::checksdata(L, 6, "void"));
+        lua_pushnumber(L, self->insert(index, p2, shortcut, p4, p5));
         return 1;
-      } else {
+      }
+    } else {
+      int type__ = lua_type(L, 4);
+      if (type__ == LUA_TSTRING) {
         int index = dub::checkinteger(L, 2);
         const char *a = dub::checkstring(L, 3);
         const char *b = dub::checkstring(L, 4);
         Fl_Callback *c = *((Fl_Callback **)dub::checksdata(L, 5, "Fl_Callback"));
         lua_pushnumber(L, self->insert(index, a, b, c));
+        return 1;
+      } else {
+        int index = dub::checkinteger(L, 2);
+        const char *p2 = dub::checkstring(L, 3);
+        int shortcut = dub::checkinteger(L, 4);
+        Fl_Callback *p4 = *((Fl_Callback **)dub::checksdata(L, 5, "Fl_Callback"));
+        lua_pushnumber(L, self->insert(index, p2, shortcut, p4));
         return 1;
       }
     }
@@ -414,15 +414,7 @@ static int Fl_Lua_Choice_add(lua_State *L) {
     int top__ = lua_gettop(L);
     if (top__ >= 6) {
       int type__ = lua_type(L, 3);
-      if (type__ == LUA_TNUMBER) {
-        const char *p1 = dub::checkstring(L, 2);
-        int shortcut = dub::checkinteger(L, 3);
-        Fl_Callback *p3 = *((Fl_Callback **)dub::checksdata(L, 4, "Fl_Callback"));
-        void *p4 = *((void **)dub::checksdata(L, 5, "void"));
-        int p5 = dub::checkinteger(L, 6);
-        lua_pushnumber(L, self->add(p1, shortcut, p3, p4, p5));
-        return 1;
-      } else {
+      if (type__ == LUA_TSTRING) {
         const char *a = dub::checkstring(L, 2);
         const char *b = dub::checkstring(L, 3);
         Fl_Callback *c = *((Fl_Callback **)dub::checksdata(L, 4, "Fl_Callback"));
@@ -430,37 +422,45 @@ static int Fl_Lua_Choice_add(lua_State *L) {
         int e = dub::checkinteger(L, 6);
         lua_pushnumber(L, self->add(a, b, c, d, e));
         return 1;
-      }
-    } else if (top__ >= 5) {
-      int type__ = lua_type(L, 3);
-      if (type__ == LUA_TNUMBER) {
+      } else {
         const char *p1 = dub::checkstring(L, 2);
         int shortcut = dub::checkinteger(L, 3);
         Fl_Callback *p3 = *((Fl_Callback **)dub::checksdata(L, 4, "Fl_Callback"));
         void *p4 = *((void **)dub::checksdata(L, 5, "void"));
-        lua_pushnumber(L, self->add(p1, shortcut, p3, p4));
+        int p5 = dub::checkinteger(L, 6);
+        lua_pushnumber(L, self->add(p1, shortcut, p3, p4, p5));
         return 1;
-      } else {
+      }
+    } else if (top__ >= 5) {
+      int type__ = lua_type(L, 3);
+      if (type__ == LUA_TSTRING) {
         const char *a = dub::checkstring(L, 2);
         const char *b = dub::checkstring(L, 3);
         Fl_Callback *c = *((Fl_Callback **)dub::checksdata(L, 4, "Fl_Callback"));
         void *d = *((void **)dub::checksdata(L, 5, "void"));
         lua_pushnumber(L, self->add(a, b, c, d));
         return 1;
-      }
-    } else if (top__ >= 4) {
-      int type__ = lua_type(L, 3);
-      if (type__ == LUA_TNUMBER) {
+      } else {
         const char *p1 = dub::checkstring(L, 2);
         int shortcut = dub::checkinteger(L, 3);
         Fl_Callback *p3 = *((Fl_Callback **)dub::checksdata(L, 4, "Fl_Callback"));
-        lua_pushnumber(L, self->add(p1, shortcut, p3));
+        void *p4 = *((void **)dub::checksdata(L, 5, "void"));
+        lua_pushnumber(L, self->add(p1, shortcut, p3, p4));
         return 1;
-      } else {
+      }
+    } else if (top__ >= 4) {
+      int type__ = lua_type(L, 3);
+      if (type__ == LUA_TSTRING) {
         const char *a = dub::checkstring(L, 2);
         const char *b = dub::checkstring(L, 3);
         Fl_Callback *c = *((Fl_Callback **)dub::checksdata(L, 4, "Fl_Callback"));
         lua_pushnumber(L, self->add(a, b, c));
+        return 1;
+      } else {
+        const char *p1 = dub::checkstring(L, 2);
+        int shortcut = dub::checkinteger(L, 3);
+        Fl_Callback *p3 = *((Fl_Callback **)dub::checksdata(L, 4, "Fl_Callback"));
+        lua_pushnumber(L, self->add(p1, shortcut, p3));
         return 1;
       }
     } else {
@@ -652,7 +652,7 @@ static int Fl_Lua_Choice_text(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Font Fl_Menu_::textfont() const
+/** int Fl_Menu_::textfont() const
  * inc/Fl_Menu_.h:141
  */
 static int Fl_Lua_Choice_textfont(lua_State *L) {
@@ -660,11 +660,11 @@ static int Fl_Lua_Choice_textfont(lua_State *L) {
     Fl_Lua_Choice *self = *((Fl_Lua_Choice **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Choice"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Font *c = *((Fl_Font **)dub::checksdata(L, 2, "Fl_Font"));
-      self->textfont(*c);
+      int c = dub::checkinteger(L, 2);
+      self->textfont(c);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Font(self->textfont()), "Fl_Font", true);
+      lua_pushnumber(L, self->textfont());
       return 1;
     }
   } catch (std::exception &e) {
@@ -675,7 +675,7 @@ static int Fl_Lua_Choice_textfont(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Fontsize Fl_Menu_::textsize() const
+/** int Fl_Menu_::textsize() const
  * inc/Fl_Menu_.h:145
  */
 static int Fl_Lua_Choice_textsize(lua_State *L) {
@@ -683,7 +683,7 @@ static int Fl_Lua_Choice_textsize(lua_State *L) {
     Fl_Lua_Choice *self = *((Fl_Lua_Choice **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Choice"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Fontsize c = dub::checkinteger(L, 2);
+      int c = dub::checkinteger(L, 2);
       self->textsize(c);
       return 0;
     } else {
@@ -698,7 +698,7 @@ static int Fl_Lua_Choice_textsize(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Color Fl_Menu_::textcolor() const
+/** int Fl_Menu_::textcolor() const
  * inc/Fl_Menu_.h:149
  */
 static int Fl_Lua_Choice_textcolor(lua_State *L) {
@@ -706,11 +706,11 @@ static int Fl_Lua_Choice_textcolor(lua_State *L) {
     Fl_Lua_Choice *self = *((Fl_Lua_Choice **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Choice"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Color *c = *((Fl_Color **)dub::checksdata(L, 2, "Fl_Color"));
-      self->textcolor(*c);
+      int c = dub::checkinteger(L, 2);
+      self->textcolor(c);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Color(self->textcolor()), "Fl_Color", true);
+      lua_pushnumber(L, self->textcolor());
       return 1;
     }
   } catch (std::exception &e) {
@@ -721,7 +721,7 @@ static int Fl_Lua_Choice_textcolor(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Boxtype Fl_Menu_::down_box() const
+/** int Fl_Menu_::down_box() const
  * inc/Fl_Menu_.h:159
  */
 static int Fl_Lua_Choice_down_box(lua_State *L) {
@@ -729,11 +729,11 @@ static int Fl_Lua_Choice_down_box(lua_State *L) {
     Fl_Lua_Choice *self = *((Fl_Lua_Choice **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Choice"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Boxtype *b = *((Fl_Boxtype **)dub::checksdata(L, 2, "Fl_Boxtype"));
-      self->down_box(*b);
+      int b = dub::checkinteger(L, 2);
+      self->down_box((Fl_Boxtype)b);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Boxtype(self->down_box()), "Fl_Boxtype", true);
+      lua_pushnumber(L, self->down_box());
       return 1;
     }
   } catch (std::exception &e) {
@@ -744,7 +744,7 @@ static int Fl_Lua_Choice_down_box(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Color Fl_Menu_::down_color() const
+/** int Fl_Menu_::down_color() const
  * inc/Fl_Menu_.h:164
  */
 static int Fl_Lua_Choice_down_color(lua_State *L) {
@@ -756,7 +756,7 @@ static int Fl_Lua_Choice_down_color(lua_State *L) {
       self->down_color(c);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Color(self->down_color()), "Fl_Color", true);
+      lua_pushnumber(L, self->down_color());
       return 1;
     }
   } catch (std::exception &e) {
@@ -937,7 +937,7 @@ static int Fl_Lua_Choice_position(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Align Fl_Widget::align() const
+/** int Fl_Widget::align() const
  * inc/Fl_Widget.h:337
  */
 static int Fl_Lua_Choice_align(lua_State *L) {
@@ -945,11 +945,11 @@ static int Fl_Lua_Choice_align(lua_State *L) {
     Fl_Lua_Choice *self = *((Fl_Lua_Choice **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Choice"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Align *alignment = *((Fl_Align **)dub::checksdata(L, 2, "Fl_Align"));
-      self->align(*alignment);
+      int alignment = dub::checkinteger(L, 2);
+      self->align(alignment);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Align(self->align()), "Fl_Align", true);
+      lua_pushnumber(L, self->align());
       return 1;
     }
   } catch (std::exception &e) {
@@ -960,7 +960,7 @@ static int Fl_Lua_Choice_align(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Boxtype Fl_Widget::box() const
+/** int Fl_Widget::box() const
  * inc/Fl_Widget.h:352
  */
 static int Fl_Lua_Choice_box(lua_State *L) {
@@ -968,11 +968,11 @@ static int Fl_Lua_Choice_box(lua_State *L) {
     Fl_Lua_Choice *self = *((Fl_Lua_Choice **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Choice"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Boxtype *new_box = *((Fl_Boxtype **)dub::checksdata(L, 2, "Fl_Boxtype"));
-      self->box(*new_box);
+      int new_box = dub::checkinteger(L, 2);
+      self->box((Fl_Boxtype)new_box);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Boxtype(self->box()), "Fl_Boxtype", true);
+      lua_pushnumber(L, self->box());
       return 1;
     }
   } catch (std::exception &e) {
@@ -983,7 +983,7 @@ static int Fl_Lua_Choice_box(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Color Fl_Widget::color() const
+/** int Fl_Widget::color() const
  * inc/Fl_Widget.h:367
  */
 static int Fl_Lua_Choice_color(lua_State *L) {
@@ -991,16 +991,16 @@ static int Fl_Lua_Choice_color(lua_State *L) {
     Fl_Lua_Choice *self = *((Fl_Lua_Choice **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Choice"));
     int top__ = lua_gettop(L);
     if (top__ >= 3) {
-      Fl_Color *bg = *((Fl_Color **)dub::checksdata(L, 2, "Fl_Color"));
-      Fl_Color *sel = *((Fl_Color **)dub::checksdata(L, 3, "Fl_Color"));
-      self->color(*bg, *sel);
+      int bg = dub::checkinteger(L, 2);
+      int sel = dub::checkinteger(L, 3);
+      self->color(bg, sel);
       return 0;
     } else if (top__ >= 2) {
-      Fl_Color *bg = *((Fl_Color **)dub::checksdata(L, 2, "Fl_Color"));
-      self->color(*bg);
+      int bg = dub::checkinteger(L, 2);
+      self->color(bg);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Color(self->color()), "Fl_Color", true);
+      lua_pushnumber(L, self->color());
       return 1;
     }
   } catch (std::exception &e) {
@@ -1011,7 +1011,7 @@ static int Fl_Lua_Choice_color(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Color Fl_Widget::selection_color() const
+/** int Fl_Widget::selection_color() const
  * inc/Fl_Widget.h:385
  */
 static int Fl_Lua_Choice_selection_color(lua_State *L) {
@@ -1019,11 +1019,11 @@ static int Fl_Lua_Choice_selection_color(lua_State *L) {
     Fl_Lua_Choice *self = *((Fl_Lua_Choice **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Choice"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Color *a = *((Fl_Color **)dub::checksdata(L, 2, "Fl_Color"));
-      self->selection_color(*a);
+      int a = dub::checkinteger(L, 2);
+      self->selection_color(a);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Color(self->selection_color()), "Fl_Color", true);
+      lua_pushnumber(L, self->selection_color());
       return 1;
     }
   } catch (std::exception &e) {
@@ -1102,7 +1102,7 @@ static int Fl_Lua_Choice_labeltype(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Color Fl_Widget::labelcolor() const
+/** int Fl_Widget::labelcolor() const
  * inc/Fl_Widget.h:461
  */
 static int Fl_Lua_Choice_labelcolor(lua_State *L) {
@@ -1110,11 +1110,11 @@ static int Fl_Lua_Choice_labelcolor(lua_State *L) {
     Fl_Lua_Choice *self = *((Fl_Lua_Choice **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Choice"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Color *c = *((Fl_Color **)dub::checksdata(L, 2, "Fl_Color"));
-      self->labelcolor(*c);
+      int c = dub::checkinteger(L, 2);
+      self->labelcolor(c);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Color(self->labelcolor()), "Fl_Color", true);
+      lua_pushnumber(L, self->labelcolor());
       return 1;
     }
   } catch (std::exception &e) {
@@ -1125,7 +1125,7 @@ static int Fl_Lua_Choice_labelcolor(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Font Fl_Widget::labelfont() const
+/** int Fl_Widget::labelfont() const
  * inc/Fl_Widget.h:476
  */
 static int Fl_Lua_Choice_labelfont(lua_State *L) {
@@ -1133,11 +1133,11 @@ static int Fl_Lua_Choice_labelfont(lua_State *L) {
     Fl_Lua_Choice *self = *((Fl_Lua_Choice **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Choice"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Font *f = *((Fl_Font **)dub::checksdata(L, 2, "Fl_Font"));
-      self->labelfont(*f);
+      int f = dub::checkinteger(L, 2);
+      self->labelfont(f);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Font(self->labelfont()), "Fl_Font", true);
+      lua_pushnumber(L, self->labelfont());
       return 1;
     }
   } catch (std::exception &e) {
@@ -1148,7 +1148,7 @@ static int Fl_Lua_Choice_labelfont(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Fontsize Fl_Widget::labelsize() const
+/** int Fl_Widget::labelsize() const
  * inc/Fl_Widget.h:491
  */
 static int Fl_Lua_Choice_labelsize(lua_State *L) {
@@ -1156,7 +1156,7 @@ static int Fl_Lua_Choice_labelsize(lua_State *L) {
     Fl_Lua_Choice *self = *((Fl_Lua_Choice **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Choice"));
     int top__ = lua_gettop(L);
     if (top__ >= 2) {
-      Fl_Fontsize pix = dub::checkinteger(L, 2);
+      int pix = dub::checkinteger(L, 2);
       self->labelsize(pix);
       return 0;
     } else {
@@ -1744,15 +1744,15 @@ static int Fl_Lua_Choice_do_callback(lua_State *L) {
     if (top__ >= 3) {
       int type__ = lua_type(L, 3);
       void **ptr3__;
-      if ( (ptr3__ = dub::issdata(L, 3, "void", type__)) ) {
+      if ( (ptr3__ = dub::issdata(L, 3, "long", type__)) ) {
         Fl_Widget *o = *((Fl_Widget **)dub::checksdata(L, 2, "FLTK.Fl_Widget"));
-        void *arg = *((void **)ptr3__);
-        self->do_callback(o, arg);
+        long *arg = *((long **)ptr3__);
+        self->do_callback(o, *arg);
         return 0;
       } else {
         Fl_Widget *o = *((Fl_Widget **)dub::checksdata(L, 2, "FLTK.Fl_Widget"));
-        long *arg = *((long **)dub::checksdata(L, 3, "long"));
-        self->do_callback(o, *arg);
+        void *arg = *((void **)dub::checksdata(L, 3, "void"));
+        self->do_callback(o, arg);
         return 0;
       }
     } else if (top__ >= 2) {
@@ -1923,7 +1923,7 @@ static int Fl_Lua_Choice_clear_damage(lua_State *L) {
   return dub::error(L);
 }
 
-/** void Fl_Widget::draw_label(int, int, int, int, Fl_Align) const
+/** void Fl_Widget::draw_label(int, int, int, int, int) const
  * inc/Fl_Widget.h:927
  */
 static int Fl_Lua_Choice_draw_label(lua_State *L) {
@@ -1933,8 +1933,8 @@ static int Fl_Lua_Choice_draw_label(lua_State *L) {
     int p2 = dub::checkinteger(L, 3);
     int p3 = dub::checkinteger(L, 4);
     int p4 = dub::checkinteger(L, 5);
-    Fl_Align *p5 = *((Fl_Align **)dub::checksdata(L, 6, "Fl_Align"));
-    self->draw_label(p1, p2, p3, p4, *p5);
+    int p5 = dub::checkinteger(L, 6);
+    self->draw_label(p1, p2, p3, p4, p5);
     return 0;
   } catch (std::exception &e) {
     lua_pushfstring(L, "draw_label: %s", e.what());
@@ -2088,7 +2088,7 @@ static int Fl_Lua_Choice_use_accents_menu(lua_State *L) {
   return dub::error(L);
 }
 
-/** Fl_Color Fl_Widget::color2() const
+/** int Fl_Widget::color2() const
  * inc/Fl_Widget.h:1000
  */
 static int Fl_Lua_Choice_color2(lua_State *L) {
@@ -2100,7 +2100,7 @@ static int Fl_Lua_Choice_color2(lua_State *L) {
       self->color2(a);
       return 0;
     } else {
-      dub::pushudata(L, new Fl_Color(self->color2()), "Fl_Color", true);
+      lua_pushnumber(L, self->color2());
       return 1;
     }
   } catch (std::exception &e) {

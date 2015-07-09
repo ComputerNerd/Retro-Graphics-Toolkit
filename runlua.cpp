@@ -14,6 +14,10 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
+
+/** @file runlua.cpp
+ * This file runlua.cpp contains various functions related to the Lua bindings and for running Lua code
+ *  @author Sega16*/
 #include <string>
 #include <FL/Fl_Color_Chooser.H>
 #include <cmath>//Mingw workaround
@@ -26,6 +30,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
+#include <sstream>
 #include "runlua.h"
 #include "lualib.h"
 #include "lauxlib.h"
@@ -42,6 +47,11 @@
 #include "callback_project.h"
 #include "lua_zlib.h"
 #include "dub/dub.h"
+#include "comper.h"
+#include "enigma.h"
+#include "nemesis.h"
+#include "kosinski.h"
+#include "saxman.h"
 #include "FLTK_Fl_Box.h"
 #include "FLTK_Fl_Button.h"
 #include "FLTK_Fl_Chart.h"
@@ -52,6 +62,7 @@
 #include "FLTK_Fl_Input.h"
 #include "FLTK_Fl_Input_Choice.h"
 #include "FLTK_Fl_Int_Input.h"
+#include "FLTK_Fl_Light_Button.h"
 #include "FLTK_Fl_Progress.h"
 #include "FLTK_Fl_Scrollbar.h"
 #include "FLTK_Fl_Slider.h"
@@ -61,6 +72,9 @@
 #include "FLTK_Fl_Tree_Item_Array.h"
 #include "FLTK_Fl_Tree_Prefs.h"
 #include "FLTK_Fl_Value_Slider.h"
+#include "level_levDat.h"
+#include "level_levelInfo.h"
+#include "level_levobjDat.h"
 #include "undoLua.h"
 static int panic(lua_State *L){
 	fl_alert("PANIC: unprotected error in call to Lua API (%s)\n",lua_tostring(L, -1));
@@ -246,8 +260,8 @@ static int FLTK_fl_rectf(lua_State *L) {
 			int y = dub::checkinteger(L, 2);
 			int w = dub::checkinteger(L, 3);
 			int h = dub::checkinteger(L, 4);
-			Fl_Color *c = *((Fl_Color **)dub::checksdata(L, 5, "Fl_Color"));
-			fl_rectf(x, y, w, h, *c);
+			int c = dub::checkinteger(L, 5);
+			fl_rectf(x, y, w, h, c);
 			return 0;
 		} else {
 			int x = dub::checkinteger(L, 1);
@@ -261,6 +275,26 @@ static int FLTK_fl_rectf(lua_State *L) {
 		lua_pushfstring(L, "FLTK.fl_rectf: %s", e.what());
 	} catch (...) {
 		lua_pushfstring(L, "FLTK.fl_rectf: Unknown exception");
+	}
+	return lua_error(L);
+}
+/** void fl_draw_box(int, int x, int y, int w, int h, int)
+ * inc/fl_draw.h:641
+ */
+static int FLTK_fl_draw_box(lua_State *L) {
+	try {
+		int p1 = dub::checkinteger(L, 1);
+		int x = dub::checkinteger(L, 2);
+		int y = dub::checkinteger(L, 3);
+		int w = dub::checkinteger(L, 4);
+		int h = dub::checkinteger(L, 5);
+		int p6 = dub::checkinteger(L, 6);
+		fl_draw_box((Fl_Boxtype)p1, x, y, w, h, p6);
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "FLTK.fl_draw_box: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "FLTK.fl_draw_box: Unknown exception");
 	}
 	return lua_error(L);
 }
@@ -293,6 +327,7 @@ static const luaL_Reg lua_flAPI[]={
 	{"end_points",luafl_end_points},
 	{"end_polygon",luafl_end_polygon},
 	{"draw",luafl_draw},
+	{"draw_box",FLTK_fl_draw_box},
 	{0,0}
 };
 static int luaFl_check(lua_State*L){
@@ -341,6 +376,10 @@ static int luaFl_event_text(lua_State*L){
 	lua_pushlstring(L,Fl::event_text(),Fl::event_length());
 	return 1;
 }
+static int luaFl_event_button(lua_State*L){
+	lua_pushinteger(L,Fl::event_button());
+	return 1;
+}
 static const luaL_Reg lua_FlAPI[]={
 	{"check",luaFl_check},
 	{"wait",luaFl_wait},
@@ -352,6 +391,7 @@ static const luaL_Reg lua_FlAPI[]={
 	{"event_shift",luaFl_event_shift},
 	{"event_length",luaFl_event_length},
 	{"event_text",luaFl_event_text},
+	{"event_button",luaFl_event_button},
 	{0,0}
 };
 static void outofBoundsAlert(const char*what,unsigned val){
@@ -586,6 +626,10 @@ static int lua_tile_resize(lua_State*L){
 	syncTileAmt(L);
 	return 0;
 }
+static int lua_tile_draw(lua_State*L){
+	currentProject->tileC->draw_tile(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0),luaL_optinteger(L,5,0),lua_toboolean(L,6),lua_toboolean(L,7),lua_toboolean(L,8),(const uint8_t*)luaL_optinteger(L,9,0),luaL_optinteger(L,10,0),lua_toboolean(L,11));
+	return 0;
+}
 static const luaL_Reg lua_tileAPI[]={
 	{"getPixelRGBA",lua_tile_getPixelRGBA},
 	{"setPixelRGBA",lua_tile_setPixelRGBA},
@@ -594,6 +638,7 @@ static const luaL_Reg lua_tileAPI[]={
 	{"dither",lua_tile_dither},
 	{"append",lua_tile_append},
 	{"resize",lua_tile_resize},
+	{"draw",lua_tile_draw},
 	{0,0}
 };
 static unsigned getPlane(lua_State*L){
@@ -665,8 +710,8 @@ static int lua_tilemap_allToRow(lua_State*L){
 	return 0;
 }
 static int lua_tilemap_toImage(lua_State*L){
-	int row=luaL_optinteger(L,1,-1);
-	bool useAlpha=luaL_optinteger(L,2,0);
+	int row=luaL_optinteger(L,2,-1);
+	bool useAlpha=luaL_optinteger(L,3,0);
 	uint32_t w,h;
 	w=currentProject->tms->maps[getPlane(L)].mapSizeW*currentProject->tileC->sizew;
 	h=currentProject->tms->maps[getPlane(L)].mapSizeHA*currentProject->tileC->sizeh;
@@ -687,24 +732,28 @@ static int lua_tilemap_toImage(lua_State*L){
 	return 1;
 }
 static int lua_tilemap_imageToTiles(lua_State*L){
-	unsigned len=lua_rawlen(L,1);
+	unsigned len=lua_rawlen(L,2);
 	if(!len){
-		fl_alert("imageToTiles error: parameter 1 must be a table");
+		fl_alert("imageToTiles error: parameter 2 must be a table");
 		return 0;
 	}
-	int row=luaL_optinteger(L,2,-1);
-	bool useAlpha=luaL_optinteger(L,3,0);
-	bool copyToTruecol=luaL_optinteger(L,4,0);
-	bool convert=luaL_optinteger(L,4,1);
+	int row=luaL_optinteger(L,3,-1);
+	bool useAlpha=luaL_optinteger(L,4,0);
+	bool copyToTruecol=luaL_optinteger(L,5,0);
+	bool convert=luaL_optinteger(L,6,1);
 	unsigned bpp=useAlpha+3;
 	uint32_t w,h;
 	w=currentProject->tms->maps[getPlane(L)].mapSizeW*currentProject->tileC->sizew;
 	h=currentProject->tms->maps[getPlane(L)].mapSizeHA*currentProject->tileC->sizeh;
 	unsigned sz=w*h*bpp;
 	uint8_t*image=(uint8_t*)malloc(sz);
-	fillucharFromTab(L,1,len,sz,image);
+	fillucharFromTab(L,2,len,sz,image);
 	currentProject->tms->maps[getPlane(L)].truecolorimageToTiles(image,row,useAlpha,copyToTruecol,convert);
 	free(image);
+	return 0;
+}
+static int lua_tilemap_drawBlock(lua_State*L){
+	currentProject->tms->maps[luaL_optinteger(L,1,0)].drawBlock(luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0),luaL_optinteger(L,5,0),luaL_optinteger(L,6,0));
 	return 0;
 }
 static const luaL_Reg lua_tilemapAPI[]={
@@ -725,6 +774,69 @@ static const luaL_Reg lua_tilemapAPI[]={
 	{"allToRow",lua_tilemap_allToRow},
 	{"toImage",lua_tilemap_toImage},
 	{"imageToTiles",lua_tilemap_imageToTiles},
+	{"drawBlock",lua_tilemap_drawBlock},
+	{0,0}
+};
+static int lua_chunk_draw(lua_State*L){
+	currentProject->Chunk->drawChunk(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0),luaL_optinteger(L,5,0),luaL_optinteger(L,6,0));
+	return 0;
+}
+static int lua_chunk_getBlocks(lua_State*L){
+	lua_pushinteger(L,currentProject->Chunk->getBlock(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0)));
+	return 1;
+}
+static int lua_chunk_setBlocks(lua_State*L){
+	currentProject->Chunk->setBlock(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0));
+	return 0;
+}
+static int lua_chunk_getFlags(lua_State*L){
+	lua_pushinteger(L,currentProject->Chunk->getFlag(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0)));
+	return 1;
+}
+static int lua_chunk_setFlags(lua_State*L){
+	currentProject->Chunk->setFlag(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0));
+	return 0;
+}
+static int lua_chunk_setUseBlocks(lua_State*L){
+	currentProject->Chunk->useBlocks=!!luaL_optinteger(L,1,0);
+	return 0;
+}
+static int lua_chunk_getUseBlocks(lua_State*L){
+	lua_pushinteger(L,currentProject->Chunk->useBlocks);
+	return 1;
+}
+static int lua_chunk_setBlockUse(lua_State*L){
+	unsigned tmp=luaL_optinteger(L,1,0);
+	size_t sz=currentProject->tms->maps.size();
+	if(tmp>=sz)
+		tmp=sz-1;
+	currentProject->Chunk->usePlane=tmp;
+	return 0;
+}
+static int lua_chunk_getBlockUse(lua_State*L){
+	lua_pushinteger(L,currentProject->Chunk->usePlane);
+	return 1;
+}
+static int lua_chunk_resize(lua_State*L){
+	currentProject->Chunk->resize(luaL_optinteger(L,1,1),luaL_optinteger(L,2,1));
+	return 0;
+}
+static int lua_chunk_setAmt(lua_State*L){
+	currentProject->Chunk->resizeAmt(luaL_optinteger(L,1,1));
+	return 0;
+}
+static const luaL_Reg lua_chunkAPI[]={
+	{"getBlocks",lua_chunk_getBlocks},
+	{"getFlags",lua_chunk_getFlags},
+	{"setBlocks",lua_chunk_setBlocks},
+	{"setFlags",lua_chunk_setFlags},
+	{"setUseBlocks",lua_chunk_setUseBlocks},
+	{"getUseBlocks",lua_chunk_getUseBlocks},
+	{"setBlockUse",lua_chunk_setBlockUse},
+	{"getBlockUse",lua_chunk_getBlockUse},
+	{"resize",lua_chunk_resize},
+	{"setAmt",lua_chunk_setAmt},
+	{"draw",lua_chunk_draw},
 	{0,0}
 };
 static int lua_sprite_dither(lua_State*L){
@@ -735,10 +847,79 @@ static int lua_sprite_ditherAll(lua_State*L){
 	ditherGroupAsImage(luaL_optinteger(L,1,0));
 	return 0;
 }
+static int lua_sprite_draw(lua_State*L){
+	int32_t outx,outy;
+	projects[luaL_optinteger(L,1,0)]->ms->sps[luaL_optinteger(L,2,0)].draw(luaL_optinteger(L,3,0),luaL_optinteger(L,4,0),luaL_optinteger(L,5,0),luaL_optinteger(L,6,0),lua_toboolean(L,7),&outx,&outy);
+	lua_pushinteger(L,outx);
+	lua_pushinteger(L,outy);
+	return 2;
+}
 static const luaL_Reg lua_spriteAPI[]={
 	{"dither",lua_sprite_dither},
 	{"ditherAll",lua_sprite_ditherAll},
+	{"draw",lua_sprite_draw},
 	{0,0}
+};
+static void updateLevelTable(lua_State*L);
+static int lua_level_setLayerAmt(lua_State*L){
+	currentProject->lvl->setlayeramt(luaL_optinteger(L,1,0),!!luaL_optinteger(L,2,0));
+	updateLevelTable(L);
+	return 0;
+}
+static int lua_level_setLayerName(lua_State*L){
+	currentProject->lvl->layernames[luaL_optinteger(L,1,0)].assign(luaL_optstring(L,2,""));
+	updateLevelTable(L);
+	return 0;
+}
+static int lua_level_getInfo(lua_State*L){
+	luaopen_level_levelInfo(L,currentProject->lvl->getInfo(luaL_optinteger(L,1,0)));
+	return 1;
+}
+static int lua_level_getObj(lua_State*L){
+	luaopen_level_levobjDat(L,currentProject->lvl->getObjDat(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0)));
+	return 1;
+}
+static int lua_level_getXY(lua_State*L){
+	luaopen_level_levDat(L,currentProject->lvl->getlevDat(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0)));
+	return 1;
+}
+static int lua_level_appendObj(lua_State*L){
+	currentProject->lvl->odat[luaL_optinteger(L,1,0)]->emplace_back();
+	updateLevelTable(L);
+	return 0;
+}
+static int lua_level_delObj(lua_State*L){
+	unsigned idx=luaL_optinteger(L,1,0);
+	currentProject->lvl->odat[idx]->erase(currentProject->lvl->odat[idx]->begin()+luaL_optinteger(L,2,0));
+	updateLevelTable(L);
+	return 0;
+}
+static int lua_level_removeLayer(lua_State*L){
+	currentProject->lvl->removeLayer(luaL_optinteger(L,1,0));
+	updateLevelTable(L);
+	return 0;
+}
+static int lua_level_resizeLayer(lua_State*L){
+	currentProject->lvl->resizeLayer(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0));
+	return 0;
+}
+static const luaL_Reg lua_levelAPI[]={
+	{"setLayerAmt",lua_level_setLayerAmt},
+	{"setLayerName",lua_level_setLayerName},
+	{"getInfo",lua_level_getInfo},
+	{"getObj",lua_level_getObj},
+	{"getXY",lua_level_getXY},
+	{"appendObj",lua_level_appendObj},
+	{"delObj",lua_level_delObj},
+	{"removeLayer",lua_level_removeLayer},
+	{"resizeLayer",lua_level_resizeLayer},
+	{0,0}
+};
+static const struct dub::const_Reg level_const[] = {
+	{ "TILES"        , ::TILES              },
+	{ "BLOCKS"       , ::BLOCKS             },
+	{ "CHUNKS"       , ::CHUNKS             },
+	{ NULL, 0},
 };
 static int lua_project_rgt_have(lua_State*L){
 	lua_pushboolean(L,currentProject->containsData(luaL_optinteger(L,1,pjHavePal)));
@@ -765,6 +946,11 @@ static void mkKeyunsigned(lua_State*L,const char*str,unsigned val){
 	lua_pushinteger(L,val);
 	lua_rawset(L, -3);
 }
+static void mkKeybool(lua_State*L,const char*str,bool val){
+	lua_pushstring(L,str);
+	lua_pushboolean(L,val);
+	lua_rawset(L, -3);
+}
 static int lua_project_set(lua_State*L);
 static int lua_project_getSettings(lua_State*L){
 	lua_pushinteger(L,currentProject->luaSettings);
@@ -774,7 +960,7 @@ static int lua_project_setSettings(lua_State*L){
 	currentProject->luaSettings=luaL_optinteger(L,1,0);
 	return 0;
 }
-static const luaL_Reg lua_projectAPI[]={
+static const luaL_Reg lua_projectAPI[]={/*!This is the project table. The global project contains the following functions*/
 	{"have",lua_project_rgt_have},
 	{"haveOR",lua_project_rgt_haveOR},
 	{"haveMessage",lua_project_rgt_haveMessage},
@@ -784,6 +970,31 @@ static const luaL_Reg lua_projectAPI[]={
 	{0,0}
 };
 #define arLen(ar) (sizeof(ar)/sizeof(ar[0]))
+static void updateLevelTable(lua_State*L){
+	lua_pushnil(L);
+	lua_setglobal(L,"level");
+	if(currentProject->containsData(pjHaveLevel)){
+		lua_createtable(L, 0,(arLen(lua_levelAPI)-1)+(arLen(level_const)-1)+3);
+		luaL_setfuncs(L,lua_levelAPI,0);
+		dub::register_const(L, level_const);
+		lua_pushstring(L,"names");
+		lua_createtable(L,currentProject->lvl->layernames.size(),0);
+		for(unsigned i=0;i<currentProject->lvl->layernames.size();++i){
+			lua_pushstring(L,currentProject->lvl->layernames[i].c_str());
+			lua_rawseti(L,-2,i+1);
+		}
+		lua_rawset(L,-3);
+		mkKeyunsigned(L,"amt",currentProject->lvl->layeramt);
+		lua_pushstring(L,"objamt");
+		lua_createtable(L,currentProject->lvl->layeramt,0);
+		for(unsigned i=0;i<currentProject->lvl->layernames.size();++i){
+			lua_pushinteger(L,currentProject->lvl->odat[i]->size());
+			lua_rawseti(L,-2,i+1);
+		}
+		lua_rawset(L,-3);
+		lua_setglobal(L,"level");
+	}
+}
 void updateProjectTablesLua(lua_State*L){
 	//Retro Graphics Toolkit bindings
 	lua_pushnil(L);
@@ -842,12 +1053,31 @@ void updateProjectTablesLua(lua_State*L){
 			lua_pushinteger(L,currentProject->tms->maps[i].mapSizeHA);
 			lua_rawseti(L,-2,i+1);
 		}
-		mkKeyunsigned(L,"current",currentProject->curPlane);
 		lua_rawset(L,-3);
+
+		lua_pushstring(L,"useBlocks");
+		lua_createtable(L,currentProject->tms->maps.size(),0);
+		for(unsigned i=0;i<currentProject->tms->maps.size();++i){
+			lua_pushboolean(L,currentProject->tms->maps[i].isBlock);
+			lua_rawseti(L,-2,i+1);
+		}
+		lua_rawset(L,-3);
+
+		mkKeyunsigned(L,"current",currentProject->curPlane);
 
 		lua_setglobal(L, "tilemaps");
 	}
-
+	lua_pushnil(L);
+	lua_setglobal(L, "chunks");
+	if(currentProject->containsData(pjHaveChunks)){
+		lua_createtable(L, 0,arLen(lua_chunkAPI)-1+4);
+		luaL_setfuncs(L,lua_chunkAPI,0);
+		mkKeyunsigned(L,"amt",currentProject->Chunk->amt);
+		mkKeyunsigned(L,"width",currentProject->Chunk->wi);
+		mkKeyunsigned(L,"height",currentProject->Chunk->hi);
+		mkKeybool(L,"useBlocks",currentProject->Chunk->useBlocks);
+		lua_setglobal(L, "chunks");
+	}
 	lua_pushnil(L);
 	lua_setglobal(L, "metasprites");
 	if(currentProject->containsData(pjHaveSprites)){
@@ -863,6 +1093,8 @@ void updateProjectTablesLua(lua_State*L){
 		lua_rawset(L,-3);
 		lua_setglobal(L, "metasprites");
 	}
+
+	updateLevelTable(L);
 
 	lua_pushnil(L);
 	lua_setglobal(L, "project");
@@ -884,7 +1116,6 @@ void updateProjectTablesLua(lua_State*L){
 }
 static int lua_project_set(lua_State*L){
 	unsigned off=luaL_optinteger(L,1,0);
-	printf("off = %u\n",off);
 	if((off>=projects_count)||(off==curProjectID))
 		lua_pushboolean(L,false);//Failure
 	else{
@@ -1031,13 +1262,123 @@ static const luaL_Reg lua_tabAPI[]={
 	{"getTabs",lua_tabs_append},
 	{0,0}
 };
+static void tableToSS(lua_State*L,unsigned idx,std::stringstream&ss){
+	int len=lua_rawlen(L,idx);
+	for(int i=1;i<=len;++i){
+		lua_rawgeti(L,idx,i);
+		int tmp=lua_tointeger(L,-1);
+		if(tmp<0)
+			tmp=0;
+		if(tmp>255)
+			tmp=255;
+		lua_pop(L,1);
+		unsigned char tmpc=tmp;
+		ss<<tmpc;
+	}
+	ss.seekp(0,ss.beg);
+}
+static void SStoTable(lua_State*L,std::stringstream&ss){
+	lua_newtable(L);
+	int idx=0;
+	ss.seekg(0,ss.beg);
+	while(!ss.eof()){
+		unsigned char c;
+		ss>>c;
+		lua_pushinteger(L,c);
+		lua_rawseti(L,-2,++idx);
+	}
+}
+#define mkDecompressEx(name,ex) static int lua_##name##Decompress(lua_State*L){ \
+	std::stringstream ss; \
+	if(lua_type(L,1)==LUA_TSTRING){ \
+		std::ifstream ifs (lua_tostring(L,1), std::ifstream::in|std::ifstream::binary); \
+		name decoder; \
+		decoder.decode(ifs,ss,ex); \
+		SStoTable(L,ss); \
+		return 1; \
+	}else if(lua_type(L,1)==LUA_TTABLE){ \
+		std::stringstream ss_src; \
+		tableToSS(L,1,ss_src); \
+		name decoder; \
+		decoder.decode(ss_src,ss,ex); \
+		SStoTable(L,ss); \
+		return 1; \
+	}else \
+		return 0; \
+}
+#define SINGLE_ARG(...) __VA_ARGS__
+mkDecompressEx(comper,luaL_optinteger(L,2,0))
+mkDecompressEx(enigma,SINGLE_ARG(luaL_optinteger(L,2,0),lua_toboolean(L,3)))
+mkDecompressEx(nemesis,luaL_optinteger(L,2,0))
+mkDecompressEx(kosinski,SINGLE_ARG(luaL_optinteger(L,2,0),lua_toboolean(L,3),luaL_optinteger(L,4,16)))
+mkDecompressEx(saxman,SINGLE_ARG(luaL_optinteger(L,2,0),luaL_optinteger(L,3,0)))
+
+#define mkCompress(name) static int lua_##name##Compress(lua_State*L){ \
+	if(lua_type(L,1)==LUA_TTABLE){ \
+		std::stringstream ss_src; \
+		tableToSS(L,1,ss_src); \
+		name encoder; \
+		if(lua_type(L,2)==LUA_TSTRING){ \
+			std::ofstream ofs(lua_tostring(L,2), std::ofstream::out|std::ofstream::binary); \
+			encoder.encode(ss_src,ofs); \
+			return 0; \
+		}else{ \
+			std::stringstream ss; \
+			encoder.encode(ss_src,ss); \
+			SStoTable(L,ss); \
+			return 1; \
+		} \
+	}else \
+		return 0; \
+}
+#define mkCompressEx(name,ex) static int lua_##name##Compress(lua_State*L){ \
+	if(lua_type(L,1)==LUA_TTABLE){ \
+		std::stringstream ss_src; \
+		tableToSS(L,1,ss_src); \
+		name encoder; \
+		if(lua_type(L,2)==LUA_TSTRING){ \
+			std::ofstream ofs(lua_tostring(L,2), std::ofstream::out|std::ofstream::binary); \
+			encoder.encode(ss_src,ofs,ex); \
+			return 0; \
+		}else{ \
+			std::stringstream ss; \
+			encoder.encode(ss_src,ss,ex); \
+			SStoTable(L,ss); \
+			return 1; \
+		} \
+	}else \
+		return 0; \
+}
+mkCompress(comper)
+mkCompressEx(enigma,lua_toboolean(L,2))
+mkCompressEx(kosinski,SINGLE_ARG(luaL_optinteger(L,2,8192),luaL_optinteger(L,3,256),lua_toboolean(L,4),luaL_optinteger(L,5,0x1000),luaL_optinteger(L,6,16)))
+mkCompress(nemesis)
+mkCompressEx(saxman,lua_toboolean(L,2))
+static const luaL_Reg lua_kensAPI[]={
+	{"comperDecompress",lua_comperDecompress},
+	{"comperCompress",lua_comperCompress},
+	{"enigmaDecompress",lua_enigmaDecompress},
+	{"enigmaCompress",lua_enigmaCompress},
+	{"nemesisDecompress",lua_nemesisDecompress},
+	{"nemesisCompress",lua_nemesisCompress},
+	{"kosinskiCcompress",lua_kosinskiCompress},
+	{"kosinskiDecompress",lua_kosinskiDecompress},
+	{"saxmanDecompress",lua_saxmanDecompress},
+	{"saxmanCompress",lua_saxmanCompress},
+	{0,0}
+};
+const char*getTraceback(lua_State*L){
+	
+}
 void runLuaFunc(lua_State*L,unsigned args,unsigned results){
 	try{
 		if (lua_pcall(L, args, results, 0) != LUA_OK){
 			luaL_error(L, "error: %s",lua_tostring(L, -1));
 		}
+	}catch(std::exception &e){
+		fl_alert("Lua error: %s\nlua_tostring(): \%s", e.what(),lua_tostring(L,-1));
 	}catch(...){
-		fl_alert("Lua error while running function\nthrow was called");
+		fl_alert("Lua error while running script\nthrow was called and the exception is unknown\nlua_tostring(): %s",lua_tostring(L,-1));
 	}
 }
 void runLua(lua_State*L,const char*str,bool isFile){
@@ -1063,8 +1404,10 @@ void runLua(lua_State*L,const char*str,bool isFile){
 				lua_pop(L, 1);
 			}
 		}
+	}catch(std::exception &e){
+		fl_alert("Lua error: %s\nlua_tostring(): \%s", e.what(),lua_tostring(L,-1));
 	}catch(...){
-		fl_alert("Lua error while running script\nthrow was called");
+		fl_alert("Lua error while running script\nthrow was called and the exception is unknown\nlua_tostring(): %s",lua_tostring(L,-1));
 	}
 }
 static const keyPair FLconsts[]={
@@ -1143,6 +1486,194 @@ static const keyPair FLconsts[]={
 	{"LEFT_MOUSE",FL_LEFT_MOUSE},
 	{"MIDDLE_MOUSE",FL_MIDDLE_MOUSE},
 	{"RIGHT_MOUSE",FL_RIGHT_MOUSE},
+	{"ALIGN_CENTER",FL_ALIGN_CENTER},
+	{"ALIGN_TOP",FL_ALIGN_TOP},
+	{"ALIGN_BOTTOM",FL_ALIGN_BOTTOM},
+	{"ALIGN_LEFT",FL_ALIGN_LEFT},
+	{"ALIGN_RIGHT",FL_ALIGN_RIGHT},
+	{"ALIGN_INSIDE",FL_ALIGN_INSIDE},
+	{"ALIGN_TEXT_OVER_IMAGE",FL_ALIGN_TEXT_OVER_IMAGE},
+	{"ALIGN_IMAGE_OVER_TEXT",FL_ALIGN_IMAGE_OVER_TEXT},
+	{"ALIGN_CLIP",FL_ALIGN_CLIP},
+	{"ALIGN_WRAP",FL_ALIGN_WRAP},
+	{"ALIGN_IMAGE_NEXT_TO_TEXT",FL_ALIGN_IMAGE_NEXT_TO_TEXT},
+	{"ALIGN_TEXT_NEXT_TO_IMAGE",FL_ALIGN_TEXT_NEXT_TO_IMAGE},
+	{"ALIGN_IMAGE_BACKDROP",FL_ALIGN_IMAGE_BACKDROP},
+	{"ALIGN_TOP_LEFT",FL_ALIGN_TOP_LEFT},
+	{"ALIGN_TOP_RIGHT",FL_ALIGN_TOP_RIGHT},
+	{"ALIGN_BOTTOM_LEFT",FL_ALIGN_BOTTOM_LEFT},
+	{"ALIGN_BOTTOM_RIGHT",FL_ALIGN_BOTTOM_RIGHT},
+	{"ALIGN_LEFT_TOP",FL_ALIGN_LEFT_TOP},
+	{"ALIGN_RIGHT_TOP",FL_ALIGN_RIGHT_TOP},
+	{"ALIGN_LEFT_BOTTOM",FL_ALIGN_LEFT_BOTTOM},
+	{"ALIGN_RIGHT_BOTTOM",FL_ALIGN_RIGHT_BOTTOM},
+	{"ALIGN_NOWRAP",FL_ALIGN_NOWRAP},
+	{"ALIGN_POSITION_MASK",FL_ALIGN_POSITION_MASK},
+	{"ALIGN_IMAGE_MASK",FL_ALIGN_IMAGE_MASK},
+	{"HELVETICA",FL_HELVETICA},
+	{"HELVETICA_BOLD",FL_HELVETICA_BOLD},
+	{"HELVETICA_ITALIC",FL_HELVETICA_ITALIC},
+	{"HELVETICA_BOLD_ITALIC",FL_HELVETICA_BOLD_ITALIC},
+	{"COURIER",FL_COURIER},
+	{"COURIER_BOLD",FL_COURIER_BOLD},
+	{"COURIER_ITALIC",FL_COURIER_ITALIC},
+	{"COURIER_BOLD_ITALIC",FL_COURIER_BOLD_ITALIC},
+	{"TIMES",FL_TIMES},
+	{"TIMES_BOLD",FL_TIMES_BOLD},
+	{"TIMES_ITALIC",FL_TIMES_ITALIC},
+	{"TIMES_BOLD_ITALIC",FL_TIMES_BOLD_ITALIC},
+	{"SYMBOL",FL_SYMBOL},
+	{"SCREEN",FL_SCREEN},
+	{"SCREEN_BOLD",FL_SCREEN_BOLD},
+	{"ZAPF_DINGBATS",FL_ZAPF_DINGBATS},
+	{"FREE_FONT",FL_FREE_FONT},
+	{"BOLD",FL_BOLD},
+	{"ITALIC",FL_ITALIC},
+	{"BOLD_ITALIC",FL_BOLD_ITALIC},
+	{"FOREGROUND_COLOR",FL_FOREGROUND_COLOR},
+	{"BACKGROUND2_COLOR",FL_BACKGROUND2_COLOR},
+	{"INACTIVE_COLOR",FL_INACTIVE_COLOR},
+	{"SELECTION_COLOR",FL_SELECTION_COLOR},
+	{"GRAY0",FL_GRAY0},
+	{"DARK3",FL_DARK3},
+	{"DARK2",FL_DARK2},
+	{"DARK1",FL_DARK1},
+	{"BACKGROUND_COLOR",FL_BACKGROUND_COLOR},
+	{"LIGHT1",FL_LIGHT1},
+	{"LIGHT2",FL_LIGHT2},
+	{"LIGHT3",FL_LIGHT3},
+	{"BLACK",FL_BLACK},
+	{"RED",FL_RED},
+	{"GREEN",FL_GREEN},
+	{"YELLOW",FL_YELLOW},
+	{"BLUE",FL_BLUE},
+	{"MAGENTA",FL_MAGENTA},
+	{"CYAN",FL_CYAN},
+	{"DARK_RED",FL_DARK_RED},
+	{"DARK_GREEN",FL_DARK_GREEN},
+	{"DARK_YELLOW",FL_DARK_YELLOW},
+	{"DARK_BLUE",FL_DARK_BLUE},
+	{"DARK_MAGENTA",FL_DARK_MAGENTA},
+	{"DARK_CYAN",FL_DARK_CYAN},
+	{"WHITE",FL_WHITE},
+	{"FREE_COLOR",FL_FREE_COLOR},
+	{"NUM_FREE_COLOR",FL_NUM_FREE_COLOR},
+	{"GRAY_RAMP",FL_GRAY_RAMP},
+	{"NUM_GRAY",FL_NUM_GRAY},
+	{"GRAY",FL_GRAY},
+	{"COLOR_CUBE",FL_COLOR_CUBE},
+	{"NUM_RED",FL_NUM_RED},
+	{"NUM_GREEN",FL_NUM_GREEN},
+	{"NUM_BLUE",FL_NUM_BLUE},
+	{"CURSOR_DEFAULT",FL_CURSOR_DEFAULT},
+	{"CURSOR_ARROW",FL_CURSOR_ARROW},
+	{"CURSOR_CROSS",FL_CURSOR_CROSS},
+	{"CURSOR_WAIT",FL_CURSOR_WAIT},
+	{"CURSOR_INSERT",FL_CURSOR_INSERT},
+	{"CURSOR_HAND",FL_CURSOR_HAND},
+	{"CURSOR_HELP",FL_CURSOR_HELP},
+	{"CURSOR_MOVE",FL_CURSOR_MOVE},
+	{"CURSOR_NS",FL_CURSOR_NS},
+	{"CURSOR_WE",FL_CURSOR_WE},
+	{"CURSOR_NWSE",FL_CURSOR_NWSE},
+	{"CURSOR_NESW",FL_CURSOR_NESW},
+	{"CURSOR_N",FL_CURSOR_N},
+	{"CURSOR_NE",FL_CURSOR_NE},
+	{"CURSOR_E",FL_CURSOR_E},
+	{"CURSOR_SE",FL_CURSOR_SE},
+	{"CURSOR_S",FL_CURSOR_S},
+	{"CURSOR_SW",FL_CURSOR_SW},
+	{"CURSOR_W",FL_CURSOR_W},
+	{"CURSOR_NW",FL_CURSOR_NW},
+	{"CURSOR_NONE",FL_CURSOR_NONE},
+	{"READ",FL_READ},
+	{"WRITE",FL_WRITE},
+	{"EXCEPT",FL_EXCEPT},
+	{"RGB",FL_RGB},
+	{"INDEX",FL_INDEX},
+	{"SINGLE",FL_SINGLE},
+	{"DOUBLE",FL_DOUBLE},
+	{"ACCUM",FL_ACCUM},
+	{"ALPHA",FL_ALPHA},
+	{"DEPTH",FL_DEPTH},
+	{"STENCIL",FL_STENCIL},
+	{"RGB8",FL_RGB8},
+	{"MULTISAMPLE",FL_MULTISAMPLE},
+	{"STEREO",FL_STEREO},
+	{"FAKE_SINGLE",FL_FAKE_SINGLE},
+	{"IMAGE_WITH_ALPHA",FL_IMAGE_WITH_ALPHA},
+	{"DAMAGE_CHILD",FL_DAMAGE_CHILD},
+	{"DAMAGE_EXPOSE",FL_DAMAGE_EXPOSE},
+	{"DAMAGE_SCROLL",FL_DAMAGE_SCROLL},
+	{"DAMAGE_OVERLAY",FL_DAMAGE_OVERLAY},
+	{"DAMAGE_USER1",FL_DAMAGE_USER1},
+	{"DAMAGE_USER2",FL_DAMAGE_USER2},
+	{"DAMAGE_ALL",FL_DAMAGE_ALL},
+	{"WHEN_NEVER",FL_WHEN_NEVER},
+	{"WHEN_CHANGED",FL_WHEN_CHANGED},
+	{"WHEN_NOT_CHANGED",FL_WHEN_NOT_CHANGED},
+	{"WHEN_RELEASE",FL_WHEN_RELEASE},
+	{"WHEN_RELEASE_ALWAYS",FL_WHEN_RELEASE_ALWAYS},
+	{"WHEN_ENTER_KEY",FL_WHEN_ENTER_KEY},
+	{"WHEN_ENTER_KEY_ALWAYS",FL_WHEN_ENTER_KEY_ALWAYS},
+	{"WHEN_ENTER_KEY_CHANGED",FL_WHEN_ENTER_KEY_CHANGED},
+	{"NO_BOX",FL_NO_BOX},
+	{"FLAT_BOX,",FL_FLAT_BOX},
+	{"UP_BOX,",FL_UP_BOX},
+	{"DOWN_BOX,",FL_DOWN_BOX},
+	{"UP_FRAME,",FL_UP_FRAME},
+	{"DOWN_FRAME,",FL_DOWN_FRAME},
+	{"THIN_UP_BOX,",FL_THIN_UP_BOX},
+	{"THIN_DOWN_BOX,",FL_THIN_DOWN_BOX},
+	{"THIN_UP_FRAME,",FL_THIN_UP_FRAME},
+	{"THIN_DOWN_FRAME,",FL_THIN_DOWN_FRAME},
+	{"ENGRAVED_BOX,",FL_ENGRAVED_BOX},
+	{"EMBOSSED_BOX,",FL_EMBOSSED_BOX},
+	{"ENGRAVED_FRAME,",FL_ENGRAVED_FRAME},
+	{"EMBOSSED_FRAME,",FL_EMBOSSED_FRAME},
+	{"BORDER_BOX,",FL_BORDER_BOX},
+	{"_SHADOW_BOX,",_FL_SHADOW_BOX},
+	{"BORDER_FRAME,",FL_BORDER_FRAME},
+	{"_SHADOW_FRAME,",_FL_SHADOW_FRAME},
+	{"_ROUNDED_BOX,",_FL_ROUNDED_BOX},
+	{"_RSHADOW_BOX,",_FL_RSHADOW_BOX},
+	{"_ROUNDED_FRAME,",_FL_ROUNDED_FRAME},
+	{"_RFLAT_BOX,",_FL_RFLAT_BOX},
+	{"_ROUND_UP_BOX,",_FL_ROUND_UP_BOX},
+	{"_ROUND_DOWN_BOX,",_FL_ROUND_DOWN_BOX},
+	{"_DIAMOND_UP_BOX,",_FL_DIAMOND_UP_BOX},
+	{"_DIAMOND_DOWN_BOX,",_FL_DIAMOND_DOWN_BOX},
+	{"_OVAL_BOX,",_FL_OVAL_BOX},
+	{"_OSHADOW_BOX,",_FL_OSHADOW_BOX},
+	{"_OVAL_FRAME,",_FL_OVAL_FRAME},
+	{"_OFLAT_BOX,",_FL_OFLAT_BOX},
+	{"_PLASTIC_UP_BOX,",_FL_PLASTIC_UP_BOX},
+	{"_PLASTIC_DOWN_BOX,",_FL_PLASTIC_DOWN_BOX},
+	{"_PLASTIC_UP_FRAME,",_FL_PLASTIC_UP_FRAME},
+	{"_PLASTIC_DOWN_FRAME,",_FL_PLASTIC_DOWN_FRAME},
+	{"_PLASTIC_THIN_UP_BOX,",_FL_PLASTIC_THIN_UP_BOX},
+	{"_PLASTIC_THIN_DOWN_BOX,",_FL_PLASTIC_THIN_DOWN_BOX},
+	{"_PLASTIC_ROUND_UP_BOX,",_FL_PLASTIC_ROUND_UP_BOX},
+	{"_PLASTIC_ROUND_DOWN_BOX,",_FL_PLASTIC_ROUND_DOWN_BOX},
+	{"_GTK_UP_BOX,",_FL_GTK_UP_BOX},
+	{"_GTK_DOWN_BOX,",_FL_GTK_DOWN_BOX},
+	{"_GTK_UP_FRAME,",_FL_GTK_UP_FRAME},
+	{"_GTK_DOWN_FRAME,",_FL_GTK_DOWN_FRAME},
+	{"_GTK_THIN_UP_BOX,",_FL_GTK_THIN_UP_BOX},
+	{"_GTK_THIN_DOWN_BOX,",_FL_GTK_THIN_DOWN_BOX},
+	{"_GTK_THIN_UP_FRAME,",_FL_GTK_THIN_UP_FRAME},
+	{"_GTK_THIN_DOWN_FRAME,",_FL_GTK_THIN_DOWN_FRAME},
+	{"_GTK_ROUND_UP_BOX,",_FL_GTK_ROUND_UP_BOX},
+	{"_GTK_ROUND_DOWN_BOX,",_FL_GTK_ROUND_DOWN_BOX},
+	{"_GLEAM_UP_BOX,",_FL_GLEAM_UP_BOX},
+	{"_GLEAM_DOWN_BOX,",_FL_GLEAM_DOWN_BOX},
+	{"_GLEAM_UP_FRAME,",_FL_GLEAM_UP_FRAME},
+	{"_GLEAM_DOWN_FRAME,",_FL_GLEAM_DOWN_FRAME},
+	{"_GLEAM_THIN_UP_BOX,",_FL_GLEAM_THIN_UP_BOX},
+	{"_GLEAM_THIN_DOWN_BOX,",_FL_GLEAM_THIN_DOWN_BOX},
+	{"_GLEAM_ROUND_UP_BOX,",_FL_GLEAM_ROUND_UP_BOX},
+	{"_GLEAM_ROUND_DOWN_BOX,",_FL_GLEAM_ROUND_DOWN_BOX},
+	{"FREE_BOXTYPE",FL_FREE_BOXTYPE},
 };
 lua_State*createLuaState(void){
 	lua_State *L = lua_newstate(l_alloc, NULL);
@@ -1172,6 +1703,9 @@ lua_State*createLuaState(void){
 			mkKeyunsigned(L,rgtConsts[x].key,rgtConsts[x].pair);
 		lua_setglobal(L, "rgt");
 
+		luaL_newlib(L,lua_kensAPI);
+		lua_setglobal(L, "kens");
+
 		luaopen_zlib(L);
 		lua_setglobal(L, "zlib");
 
@@ -1195,6 +1729,8 @@ lua_State*createLuaState(void){
 		lua_setglobal(L, "Fl_Input_Choice");
 		luaopen_FLTK_Fl_Int_Input(L);
 		lua_setglobal(L, "Fl_Int_Input");
+		luaopen_FLTK_Fl_Light_Button(L);
+		lua_setglobal(L, "Fl_Light_Button");
 		luaopen_FLTK_Fl_Progress(L);
 		lua_setglobal(L, "Fl_Progress");
 		luaopen_FLTK_Fl_Scrollbar(L);

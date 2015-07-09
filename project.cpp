@@ -27,6 +27,7 @@
 #include "callbacklua.h"
 #include "luaconfig.h"
 #include "runlua.h"
+#include "filemisc.h"
 struct Project ** projects;
 uint32_t projects_count;
 struct Project * currentProject;
@@ -571,16 +572,6 @@ void switchProject(uint32_t id,bool load){
 	runLuaFunc(Lconf,0,0);
 	window->redraw();
 }
-static void fileToStr(FILE*fp,std::string&s,const char*defaultStr){
-	char d=fgetc(fp);
-	if(d){
-		s.clear();
-		do{
-			s.push_back(d);
-		}while((d=fgetc(fp)));
-	}else
-		s.assign(defaultStr);
-}
 static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t version=currentProjectVersionNUM){
 	if(fgetc(fi)!='R'){
 		invaildProject();
@@ -758,11 +749,6 @@ bool loadProject(uint32_t id,const char*fname){
 	if(loadProjectFile(id,fi))
 		fclose(fi);
 	return true;
-}
-static void saveStrifNot(FILE*fp,const char*str,const char*cmp){
-	if(strcmp(cmp,str)!=0)
-		fputs(str,fp);
-	fputc(0,fp);
 }
 static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersion=true){
 	/*!

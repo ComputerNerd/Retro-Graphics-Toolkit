@@ -18,10 +18,10 @@ if project.have(project.tilesMask+project.mapMask) then
 			L1,c1,h1=rgt.rgbToLch(L1,c1,h1)
 			L2,c2,h2=rgt.rgbToLch(L2,c2,h2)
 			-- Calculate tile
-			tile.resize(tilemap.height)
-			for j=0,tilemap.height-1 do
-				for i=0,tilemap.width-1 do
-					tilemap.setTile(i,j,j)
+			tile.resize(tilemaps.height[tilemaps.current+1])
+			for j=0,tilemaps.height[tilemaps.current+1]-1 do
+				for i=0,tilemaps.width[tilemaps.current+1]-1 do
+					tilemaps.setTile(tilemaps.current,i,j,j)
 				end
 			end
 			local Ls,cs,hs
@@ -43,7 +43,7 @@ if project.have(project.tilesMask+project.mapMask) then
 				end
 				palette.fixSliders()
 			end
-			Ls,cs,hs = (L2-L1)/(tilemap.heightA*tile.height),(c2-c1)/(tilemap.heightA*tile.height),hueDir(h1,h2)/(tilemap.heightA*tile.height)
+			Ls,cs,hs = (L2-L1)/(tilemaps.heightA[tilemaps.current+1]*tile.height[tilemaps.current+1]),(c2-c1)/(tilemap.heightA[tilemaps.current+1]*tile.height[tilemaps.current+1]),hueDir(h1,h2)/(tilemap.heightA[tilemaps.current+1]*tile.height[tilemaps.current+1])
 			for t=0,tile.amt-1 do
 				local gr={}
 				for i=0,tile.height-1 do

@@ -1,24 +1,39 @@
 /*
-   This file is part of Retro Graphics Toolkit
+	This file is part of Retro Graphics Toolkit
 
-   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or any later version.
+	Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or any later version.
 
-   Retro Graphics Toolkit is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-   GNU General Public License for more details.
+	Retro Graphics Toolkit is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	You should have received a copy of the GNU General Public License
+	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #include <stdio.h>
 #include <stdint.h>
 #include "gui.h"
 #include "filemisc.h"
 #include "includes.h"
+void saveStrifNot(FILE*fp,const char*str,const char*cmp){
+	if(strcmp(cmp,str)!=0)
+		fputs(str,fp);
+	fputc(0,fp);
+}
+void fileToStr(FILE*fp,std::string&s,const char*defaultStr){
+	char d=fgetc(fp);
+	if(d){
+		s.clear();
+		do{
+			s.push_back(d);
+		}while((d=fgetc(fp)));
+	}else
+		s.assign(defaultStr);
+}
 int clipboardAsk(void){
 	return fl_choice("File or clipboard?","File","Clipboard","Cancel");
 }

@@ -10,7 +10,7 @@ local function manIt(c_r,c_i,maxit)
 	local zrsqr = (z_r * z_r)
 	local zisqr = (z_i * z_i)
 	local q=square(c_r-0.25)+square(c_i);
-	if ((q*(q+(c_r-0.25)))) < (square(c_i)/4) then
+	if ((q*(q+(c_r-0.25)))) < (square(c_i)/4.) then
 		return 0,0,0
 	end
 	repeat
@@ -26,9 +26,9 @@ local function manIt(c_r,c_i,maxit)
 			z_r=zrsqr-zisqr+c_r
 			zrsqr=square(z_r)
 			zisqr=square(z_i)
-			if (zrsqr + zisqr) > 4 then
-				local color=p*16777215/maxit
-				return bit32.extract(color,0,8),bit32.extract(color,8,8),bit32.extract(color,16,8)
+			if (zrsqr + zisqr) > 4. then
+				local color=p*16777215//maxit
+				return color&255,(color>>8)&255,(color>>16)&255
 			end
 			if (z_r == ckr) and (z_i == cki) then
 				return 0,0,0
@@ -37,18 +37,17 @@ local function manIt(c_r,c_i,maxit)
 		end
 	until ptot ~= maxit
 	return 0,0,0
-
 end
 if project.have(mapMask) then
 	local maxit=tonumber(fl.input("Maximum iterations","16000"))
 	if maxit~=nil then
-		tile.resize(tilemap.width*tilemap.height)
-		for j=0,tilemap.height-1 do
-			for i=0,tilemap.width-1 do
-				tilemap.setTile(i,j,(j*tilemap.width)+i)
+		tile.resize(tilemaps.width[tilemaps.current+1]*tilemaps.height[tilemaps.current+1])
+		for j=0,tilemaps.height[tilemaps.current+1]-1 do
+			for i=0,tilemaps.width[tilemaps.current+1]-1 do
+				tilemaps.setTile(tilemaps.current,i,j,(j*tilemaps.width[tilemaps.current+1])+i)
 			end
 		end
-		local width,height=tilemap.width*tile.width,tilemap.heightA*tile.height
+		local width,height=tilemaps.width[tilemaps.current+1]*tile.width,tilemaps.heightA[tilemaps.current+1]*tile.height
 		-- [-2,1],[-1,1]
 		local sx,sy=3/width,2/height
 		local x,y
@@ -65,7 +64,7 @@ if project.have(mapMask) then
 			end
 			y=y+sy
 		end
-		tilemap.imageToTiles(img,-1,0,1)
+		tilemaps.imageToTiles(tilemaps.current,img,-1,0,1)
 		rgt.redraw()
 	end
 else
