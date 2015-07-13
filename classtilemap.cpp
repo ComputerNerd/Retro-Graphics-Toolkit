@@ -1341,3 +1341,17 @@ size_t tileMap::getExtAttrsSize(void)const{
 	else
 		return mapSizeW*mapSizeHA*sz;
 }
+void tileMap::removeBlock(unsigned id){
+	if(isBlock){
+		if(id<(amt-1)){
+			size_t perElmB=mapSizeW*mapSizeH*TileMapSizePerEntry;
+			memmove(tileMapDat+id*perElmB,tileMapDat+(id+1)*perElmB,(amt-id-1)*perElmB);
+			if(extPalRows){
+				size_t perElmE=getExtAttrsSize();
+				memmove(extPalRows+id*perElmE,extPalRows+(id+1)*perElmE,(amt-id-1)*perElmE);
+			}
+		}
+		if(id<amt)
+			blockAmt(amt-1);
+	}
+}

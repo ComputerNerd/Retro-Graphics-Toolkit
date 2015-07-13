@@ -414,3 +414,22 @@ void ChunkClass::resize(uint32_t wnew,uint32_t hnew){
 	free(tmp);
 	scrollChunks();
 }
+void ChunkClass::subBlock(unsigned oid,unsigned nid){
+	uint_fast32_t x,y,i;
+	int_fast32_t temp;
+	for(i=0;i<amt;++i){
+		for(y=0;y<hi;++y){
+			for(x=0;x<wi;++x){
+				temp=getBlock(i,x,y);
+				if (temp == oid)
+					setBlock(i,x,y,nid);
+				else if (temp > oid){
+					temp--;
+					if (temp < 0)
+						temp=0;
+					setBlock(i,x,y,temp);
+				}
+			}
+		}
+	}
+}

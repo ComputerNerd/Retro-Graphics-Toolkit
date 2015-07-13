@@ -159,11 +159,13 @@ void load_tiles(Fl_Widget*,void*o){
 				offset_tiles=currentProject->tileC->amt;
 				offset_tiles_bytes=offset_tiles*currentProject->tileC->tileSize;
 			}else{
-				currentProject->tileC->tDat.resize(file_size);
 				offset_tiles=0;
 				offset_tiles_bytes=0;
 			}
-			if(mode)
+			if(mode==2){
+				if(offset_tiles+(file_size/currentProject->tileC->tileSize)>=currentProject->tileC->amt)
+					currentProject->tileC->tDat.resize(offset_tiles_bytes+file_size);
+			}else
 				currentProject->tileC->tDat.resize(offset_tiles_bytes+file_size);
 			if(compression)
 				output.copy((char *)currentProject->tileC->tDat.data()+offset_tiles_bytes,file_size);
@@ -172,8 +174,12 @@ void load_tiles(Fl_Widget*,void*o){
 				fclose(myfile);
 			}
 			if(currentProject->getTileType()!=PLANAR_TILE)
-				currentProject->tileC->toPlanar(currentProject->getTileType());
-			currentProject->tileC->truetDat.resize((file_size*truecolor_multiplier)+(offset_tiles_bytes*truecolor_multiplier));
+				currentProject->tileC->toPlanar(currentProject->getTileType(),offset_tiles,offset_tiles+(file_size/currentProject->tileC->tileSize));
+			if(mode==2){
+				if(offset_tiles+(file_size/currentProject->tileC->tileSize)>=currentProject->tileC->amt)
+					currentProject->tileC->truetDat.resize((file_size*truecolor_multiplier)+(offset_tiles_bytes*truecolor_multiplier));
+			}else
+				currentProject->tileC->truetDat.resize((file_size*truecolor_multiplier)+(offset_tiles_bytes*truecolor_multiplier));
 			for(uint32_t c=offset_tiles;c<(file_size/currentProject->tileC->tileSize)+offset_tiles;c++) {
 				if(row < 0){
 					uint32_t x,y;
@@ -191,8 +197,15 @@ doTile:
 				}else
 					currentProject->tileC->tileToTrueCol(&currentProject->tileC->tDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetDat[(c*256)],defaultRow,true,alphaZero);
 			}
-			currentProject->tileC->amt=(file_size/currentProject->tileC->tileSize);
-			currentProject->tileC->amt+=offset_tiles;
+			if(mode==2){
+				if(offset_tiles+(file_size/currentProject->tileC->tileSize)>=currentProject->tileC->amt){
+					currentProject->tileC->amt=(file_size/currentProject->tileC->tileSize);
+					currentProject->tileC->amt+=offset_tiles;
+				}
+			}else{
+				currentProject->tileC->amt=(file_size/currentProject->tileC->tileSize);
+				currentProject->tileC->amt+=offset_tiles;
+			}
 			updateTileSelectAmt();
 			window->tile_select->value(0);
 			window->tile_select_2->value(0);

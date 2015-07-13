@@ -1,18 +1,18 @@
 /*
-   This file is part of Retro Graphics Toolkit
+	This file is part of Retro Graphics Toolkit
 
-   Retro Graphics Toolkit is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or any later version.
+	Retro Graphics Toolkit is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or any later version.
 
-   Retro Graphics Toolkit is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-   GNU General Public License for more details.
+	Retro Graphics Toolkit is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	You should have received a copy of the GNU General Public License
+	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
+	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
 */
 #include "quant.h"
 #include "color_compare.h"
@@ -416,7 +416,8 @@ static void colorAmtExceed(void){
 	fl_alert("No more room for colors\nYou should not be seeing this message please report this.");
 }
 static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,unsigned offsetPal,Fl_Progress *progress,Fl_Window*pwin,unsigned maxCol,unsigned yuv,unsigned alg,bool isSprite=false){
-	progress->maximum(1.0);
+	if(progress)
+		progress->maximum(1.0);
 	unsigned off2=offsetPal*2;
 	unsigned off3=offsetPal*3;
 	unsigned colors_found;
@@ -438,12 +439,16 @@ static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,unsigned 
 		h*=currentProject->tileC->sizeh;
 		currentProject->tms->maps[currentProject->curPlane].truecolor_to_image(image,row,false);
 	}
-	progress->label("Dithering to colorspace");
-	Fl::check();
+	if(progress){
+		progress->label("Dithering to colorspace");
+		Fl::check();
+	}
 	if(!yuv)
 		ditherImage(image,w,h,false,true);
-	progress->label("Quantizing image");
-	Fl::check();
+	if(progress){
+		progress->label("Quantizing image");
+		Fl::check();
+	}
 	colors_found=count_colors(image,w,h,&found_colors[0],false);
 	printf("Unique colors %d\n",colors_found);
 	if (colors_found <= maxCol){
@@ -579,15 +584,19 @@ try_again_color:
 						can_go_again=false;
 					char tmp[1024];
 					snprintf(tmp,1024,"Found only %d colors trying again with %d",new_colors,colorz);
-					pwin->copy_label(tmp);
+					tmp[sizeof(tmp)-1]=0;
+					if(pwin){
+						pwin->copy_label(tmp);
+						Fl::check();
+					}
 					puts(tmp);
-					Fl::check();
 					goto try_again_color;
 				}
 			}
 		if (new_colors > maxCol){
 			can_go_again=false;
-			pwin->label("Too many colors");
+			if(pwin)
+				pwin->label("Too many colors");
 			colorz--;
 			goto try_again_color;
 		}
@@ -634,7 +643,6 @@ struct settings{//TODO avoid hardcoding palette row amount
 };
 static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 	struct settings*set=(struct settings*)s;
-	char temp[16];
 	uint8_t * image;
 	uint32_t w,h;
 	if(set->sprite){
@@ -683,8 +691,8 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 	}else
 		rowAuto=0;
 	pushPaletteAll();//Save the old palette
-	Fl_Window *win;
-	Fl_Progress *progress;
+	Fl_Window *win=0;
+	Fl_Progress *progress=0;
 	mkProgress(&win,&progress);
 	image = (uint8_t *)malloc(w*h*3);
 	if (rows==1){
@@ -720,10 +728,12 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 		}
 	}
 	free(image);
-	win->remove(progress);// remove progress bar from window
-	delete(progress);// deallocate it
-	//w->draw();
-	delete win;
+	if(progress){
+		win->remove(progress);// remove progress bar from window
+		delete(progress);// deallocate it
+	}
+	if(win)
+		delete win;
 	palBar.updateSliders();
 	if(set->ditherAfter){
 		if(set->sprite){

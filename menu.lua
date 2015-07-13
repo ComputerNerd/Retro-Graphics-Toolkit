@@ -36,6 +36,53 @@ function allMetaDither(unused)
 		project.haveMessage(project.spritesMask)
 	end
 end
+function removeDuplicateBlocks(unused)
+	rgt.syncProject()
+	if project.have(project.mapMask) then
+		for i=0,#tilemaps.useBlocks-1 do
+			print('width',tilemaps.width[i+1],'height',tilemaps.height[i+1])
+			if tilemaps.useBlocks[i+1] then
+				local a=0
+				while a<tilemaps.heightA[i+1] do
+					local b=tilemaps.heightA[i+1]-tilemaps.height[i+1]
+					while b>=0 do
+						if a~=b then
+							local equ=true
+							for j=0,tilemaps.height[i+1]-1 do
+								for k=0,tilemaps.width[i+1]-1 do
+									if tilemaps.getRaw(i,k,a+j)~=tilemaps.getRaw(i,k,b+j) then
+										equ=false
+										break
+									end
+								end
+								if not equ then
+									break
+								end
+							end
+							if equ then
+								local aa,bb=a//tilemaps.height[i+1],b//tilemaps.height[i+1]
+								print(aa,bb)
+								tilemaps.removeBlock(i,bb)
+								if project.have(project.chunksMask) and i==chunks.usePlane then
+									chunks.subBlock(bb,aa)
+								end
+								if project.have(project.levelMask) then
+									level.subBlock(i,bb,aa)
+								end
+							end
+						end
+						b=b-tilemaps.height[i+1]
+					end
+					a=a+tilemaps.height[i+1]
+				end
+			else
+				fl.alert(string.format('Skipping plane %d -- it does not use blocks',i))
+			end
+		end
+	else
+		project.haveMessage(project.mapMast)
+	end
+end
 function generateMenu()
 --[[ This function shall return a table containing menu items that will be added to the main menu.
 --   The table shall be a two dimensional array. The first dimension specifies the amount of menu items.
@@ -67,10 +114,10 @@ function generateMenu()
 			{"Export tile map and if NES attributes",0,11--[[save_map--]],0},
 			{},
 		{"Projects",0,0,0,FL.SUBMENU},
-			{"Load project",FL.CTRL+FL.SHIFT+string.byte('o'),12--[[loadProjectCB--]],0},
-			{"Save project",FL.CTRL+FL.SHIFT+string.byte('s'),13--[[saveProjectCB--]],0},
 			{"Load project group",FL.CTRL+string.byte('o'),14--[[loadAllProjectsCB--]],0},
 			{"Save project group",FL.CTRL+string.byte('s'),15--[[saveAllProjectsCB--]],0},
+			{"Load project",FL.CTRL+FL.SHIFT+string.byte('o'),12--[[loadProjectCB--]],0},
+			{"Save project",FL.CTRL+FL.SHIFT+string.byte('s'),13--[[saveProjectCB--]],0},
 			{},
 		{"Chunks",0,0,0,FL.SUBMENU},
 			{"Import sonic 1 chunks",0,16--[[ImportS1CBChunks--]],0},
@@ -137,6 +184,7 @@ function generateMenu()
 		{"File tile map with selection including attributes",0,44--[[fill_tile_map_with_tile--]],0},
 		{"Fix out of range tiles (replace with current attributes in plane editor)",0,45--[[FixOutOfRangeCB--]],0},
 		{"Pick extended attributes",0,46--[[pickExtAttrsCB--]],0},
+		{'Remove duplicate blocks',0,'removeDuplicateBlocks'},
 		{},
 	{"Sprite actions",0,0,0,FL.SUBMENU},
 		{"Generate optimal palette for selected sprite",0,25--[[generate_optimal_palette--]],1},

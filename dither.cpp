@@ -60,9 +60,9 @@ static uint8_t nearest_color_chan(uint8_t val,uint8_t chan,uint8_t row){
 	unsigned max_rgb=0;
 	if(useMode==255)
 		return (val&128)?255:0;
-	row*=currentProject->pal->perRow*3;
 	if(currentProject->pal->haveAlt&&isSpriteG)
 		row+=currentProject->pal->colorCnt;
+	row*=currentProject->pal->perRow*3;
 	for (i=row; i<max_rgb+row; i+=3){
 		int_fast32_t Rdiff = (int_fast32_t) val - (int_fast32_t)currentProject->pal->rgbPal[i+chan];
 		distanceSquared = Rdiff*Rdiff;
@@ -741,6 +741,7 @@ static void progressUpdate(Fl_Window**win,Fl_Progress**progress,time_t&lasttime,
 		}
 		char txtbuf[128];
 		snprintf(txtbuf,sizeof(txtbuf),"%d/%d",cur,total);
+		txtbuf[sizeof(txtbuf)-1]=0;
 		(*progress)->copy_label(txtbuf);
 		(*progress)->value(cur);
 		Fl::check();

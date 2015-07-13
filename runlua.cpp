@@ -298,6 +298,185 @@ static int FLTK_fl_draw_box(lua_State *L) {
 	}
 	return lua_error(L);
 }
+/** const char* fl_filename_name(const char *filename)
+ * inc/filename.h:54
+ */
+static int FLTK_fl_filename_name(lua_State *L) {
+	try {
+		const char *filename = dub::checkstring(L, 1);
+		lua_pushstring(L, fl_filename_name(filename));
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "FLTK.fl_filename_name: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "FLTK.fl_filename_name: Unknown exception");
+	}
+	return lua_error(L);
+}
+
+/** const char* fl_filename_ext(const char *buf)
+ * inc/filename.h:55
+ */
+static int FLTK_fl_filename_ext(lua_State *L) {
+	try {
+		const char *buf = dub::checkstring(L, 1);
+		lua_pushstring(L, fl_filename_ext(buf));
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "FLTK.fl_filename_ext: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "FLTK.fl_filename_ext: Unknown exception");
+	}
+	return lua_error(L);
+}
+
+/** char* fl_filename_setext(char *to, int tolen, const char *ext)
+ * inc/filename.h:56
+ */
+static int FLTK_fl_filename_setext(lua_State *L) {
+	try {
+		char *to =(char*)dub::checkstring(L, 1);
+		int tolen = dub::checkinteger(L, 2);
+		const char *ext = dub::checkstring(L, 3);
+		lua_pushstring(L, fl_filename_setext(to, tolen, ext));
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "FLTK.fl_filename_setext: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "FLTK.fl_filename_setext: Unknown exception");
+	}
+	return lua_error(L);
+}
+
+/** int fl_filename_expand(char *to, int tolen, const char *from)
+ * inc/filename.h:57
+ */
+static int FLTK_fl_filename_expand(lua_State *L) {
+	try {
+		char *to =(char*)dub::checkstring(L, 1);
+		int tolen = dub::checkinteger(L, 2);
+		const char *from = dub::checkstring(L, 3);
+		lua_pushnumber(L, fl_filename_expand(to, tolen, from));
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "FLTK.fl_filename_expand: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "FLTK.fl_filename_expand: Unknown exception");
+	}
+	return lua_error(L);
+}
+
+/** int fl_filename_absolute(char *to, int tolen, const char *from)
+ * inc/filename.h:58
+ */
+static int FLTK_fl_filename_absolute(lua_State *L) {
+	try {
+		char *to =(char*)dub::checkstring(L, 1);
+		int tolen = dub::checkinteger(L, 2);
+		const char *from = dub::checkstring(L, 3);
+		lua_pushnumber(L, fl_filename_absolute(to, tolen, from));
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "FLTK.fl_filename_absolute: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "FLTK.fl_filename_absolute: Unknown exception");
+	}
+	return lua_error(L);
+}
+
+/** int fl_filename_relative(char *to, int tolen, const char *from)
+ * inc/filename.h:59
+ */
+static int FLTK_fl_filename_relative(lua_State *L) {
+	try {
+		char *to =(char*)dub::checkstring(L, 1);
+		int tolen = dub::checkinteger(L, 2);
+		const char *from = dub::checkstring(L, 3);
+		lua_pushnumber(L, fl_filename_relative(to, tolen, from));
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "FLTK.fl_filename_relative: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "FLTK.fl_filename_relative: Unknown exception");
+	}
+	return lua_error(L);
+}
+
+/** int fl_filename_match(const char *name, const char *pattern)
+ * inc/filename.h:60
+ */
+static int FLTK_fl_filename_match(lua_State *L) {
+	try {
+		const char *name = dub::checkstring(L, 1);
+		const char *pattern = dub::checkstring(L, 2);
+		lua_pushnumber(L, fl_filename_match(name, pattern));
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "FLTK.fl_filename_match: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "FLTK.fl_filename_match: Unknown exception");
+	}
+	return lua_error(L);
+}
+
+/** int fl_filename_isdir(const char *name)
+ * inc/filename.h:61
+ */
+static int FLTK_fl_filename_isdir(lua_State *L) {
+	try {
+		const char *name = dub::checkstring(L, 1);
+		lua_pushnumber(L, fl_filename_isdir(name));
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "FLTK.fl_filename_isdir: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "FLTK.fl_filename_isdir: Unknown exception");
+	}
+	return lua_error(L);
+}
+
+/** int fl_filename_list(const char *d, struct dirent ***l, Fl_File_Sort_F *s=fl_numericsort)
+ * inc/filename.h:125
+ */
+static int FLTK_fl_filename_list(lua_State *L) {
+	try {
+		int top__ = lua_gettop(L);
+		if (top__ >= 3) {
+			const char *d = dub::checkstring(L, 1);
+			dirent** *l = *((dirent** **)dub::checksdata(L, 2, "dirent**"));
+			Fl_File_Sort_F *s = *((Fl_File_Sort_F **)dub::checksdata(L, 3, "Fl_File_Sort_F"));
+			lua_pushnumber(L, fl_filename_list(d, l, s));
+			return 1;
+		} else {
+			const char *d = dub::checkstring(L, 1);
+			dirent** *l = *((dirent** **)dub::checksdata(L, 2, "dirent**"));
+			lua_pushnumber(L, fl_filename_list(d, l));
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "FLTK.fl_filename_list: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "FLTK.fl_filename_list: Unknown exception");
+	}
+	return lua_error(L);
+}
+
+/** void fl_filename_free_list(struct dirent ***l, int n)
+ * inc/filename.h:127
+ */
+static int FLTK_fl_filename_free_list(lua_State *L) {
+	try {
+		dirent** *l = *((dirent** **)dub::checksdata(L, 1, "dirent**"));
+		int n = dub::checkinteger(L, 2);
+		fl_filename_free_list(l, n);
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "FLTK.fl_filename_free_list: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "FLTK.fl_filename_free_list: Unknown exception");
+	}
+	return lua_error(L);
+}
 static const luaL_Reg lua_flAPI[]={
 	{"alert",luafl_alert},
 	{"ask",luafl_ask},
@@ -328,6 +507,16 @@ static const luaL_Reg lua_flAPI[]={
 	{"end_polygon",luafl_end_polygon},
 	{"draw",luafl_draw},
 	{"draw_box",FLTK_fl_draw_box},
+	{"filename_name", FLTK_fl_filename_name },
+	{"filename_ext", FLTK_fl_filename_ext },
+	{"filename_setext", FLTK_fl_filename_setext },
+	{"filename_expand", FLTK_fl_filename_expand },
+	{"filename_absolute", FLTK_fl_filename_absolute },
+	{"filename_relative", FLTK_fl_filename_relative },
+	{"filename_match", FLTK_fl_filename_match },
+	{"filename_isdir", FLTK_fl_filename_isdir },
+	{"filename_list", FLTK_fl_filename_list },
+	{"filename_free_list", FLTK_fl_filename_free_list },
 	{0,0}
 };
 static int luaFl_check(lua_State*L){
@@ -630,6 +819,10 @@ static int lua_tile_draw(lua_State*L){
 	currentProject->tileC->draw_tile(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0),luaL_optinteger(L,5,0),lua_toboolean(L,6),lua_toboolean(L,7),lua_toboolean(L,8),(const uint8_t*)luaL_optinteger(L,9,0),luaL_optinteger(L,10,0),lua_toboolean(L,11));
 	return 0;
 }
+static int lua_tile_remove(lua_State*L){
+	currentProject->tileC->remove_tile_at(luaL_optinteger(L,1,0));
+	return 0;
+}
 static const luaL_Reg lua_tileAPI[]={
 	{"getPixelRGBA",lua_tile_getPixelRGBA},
 	{"setPixelRGBA",lua_tile_setPixelRGBA},
@@ -639,6 +832,7 @@ static const luaL_Reg lua_tileAPI[]={
 	{"append",lua_tile_append},
 	{"resize",lua_tile_resize},
 	{"draw",lua_tile_draw},
+	{"remove",lua_tile_remove},
 	{0,0}
 };
 static unsigned getPlane(lua_State*L){
@@ -756,6 +950,29 @@ static int lua_tilemap_drawBlock(lua_State*L){
 	currentProject->tms->maps[luaL_optinteger(L,1,0)].drawBlock(luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0),luaL_optinteger(L,5,0),luaL_optinteger(L,6,0));
 	return 0;
 }
+static int lua_tilemap_getRaw(lua_State*L){
+	lua_pushinteger(L,currentProject->tms->maps[getPlane(L)].getRaw(luaL_optinteger(L,2,0),luaL_optinteger(L,3,0)));
+	return 1;
+}
+static int lua_tilemap_setRaw(lua_State*L){
+	currentProject->tms->maps[getPlane(L)].setRaw(luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0));
+	return 0;
+}
+static int lua_tilemap_removeBlock(lua_State*L){
+	unsigned pl=getPlane(L);
+	currentProject->tms->maps[pl].removeBlock(luaL_optinteger(L,2,0));
+	setTableUnsignedLua(L,"tilemaps","width",pl+1,currentProject->tms->maps[pl].mapSizeW);
+	setTableUnsignedLua(L,"tilemaps","height",pl+1,currentProject->tms->maps[pl].mapSizeH);
+	setTableUnsignedLua(L,"tilemaps","heightA",pl+1,currentProject->tms->maps[pl].mapSizeHA);
+	setTableUnsignedLua(L,"tilemaps","amt",pl+1,currentProject->tms->maps[pl].amt);
+	if(pl==currentProject->curPlane)
+		window->map_amt->value(std::to_string(currentProject->tms->maps[pl].amt).c_str());
+	return 0;
+}
+static int lua_tilemap_subTile(lua_State*L){
+	currentProject->tms->maps[getPlane(L)].sub_tile_map(lua_tointeger(L,2),lua_tointeger(L,3),lua_toboolean(L,4),lua_toboolean(L,5));
+	return 0;
+}
 static const luaL_Reg lua_tilemapAPI[]={
 	{"dither",lua_tilemap_dither},
 	{"resize",lua_tilemap_resize},
@@ -775,6 +992,10 @@ static const luaL_Reg lua_tilemapAPI[]={
 	{"toImage",lua_tilemap_toImage},
 	{"imageToTiles",lua_tilemap_imageToTiles},
 	{"drawBlock",lua_tilemap_drawBlock},
+	{"getRaw",lua_tilemap_getRaw},
+	{"setRaw",lua_tilemap_setRaw},
+	{"removeBlock",lua_tilemap_removeBlock},
+	{"subTile",lua_tilemap_subTile},
 	{0,0}
 };
 static int lua_chunk_draw(lua_State*L){
@@ -798,7 +1019,7 @@ static int lua_chunk_setFlags(lua_State*L){
 	return 0;
 }
 static int lua_chunk_setUseBlocks(lua_State*L){
-	currentProject->Chunk->useBlocks=!!luaL_optinteger(L,1,0);
+	currentProject->Chunk->useBlocks=lua_toboolean(L,1);
 	return 0;
 }
 static int lua_chunk_getUseBlocks(lua_State*L){
@@ -825,6 +1046,10 @@ static int lua_chunk_setAmt(lua_State*L){
 	currentProject->Chunk->resizeAmt(luaL_optinteger(L,1,1));
 	return 0;
 }
+static int lua_chunk_subBlock(lua_State*L){
+	currentProject->Chunk->subBlock(lua_tointeger(L,1),lua_tointeger(L,2));
+	return 0;
+}
 static const luaL_Reg lua_chunkAPI[]={
 	{"getBlocks",lua_chunk_getBlocks},
 	{"getFlags",lua_chunk_getFlags},
@@ -837,6 +1062,7 @@ static const luaL_Reg lua_chunkAPI[]={
 	{"resize",lua_chunk_resize},
 	{"setAmt",lua_chunk_setAmt},
 	{"draw",lua_chunk_draw},
+	{"subBlock",lua_chunk_subBlock},
 	{0,0}
 };
 static int lua_sprite_dither(lua_State*L){
@@ -862,7 +1088,7 @@ static const luaL_Reg lua_spriteAPI[]={
 };
 static void updateLevelTable(lua_State*L);
 static int lua_level_setLayerAmt(lua_State*L){
-	currentProject->lvl->setlayeramt(luaL_optinteger(L,1,0),!!luaL_optinteger(L,2,0));
+	currentProject->lvl->setlayeramt(luaL_optinteger(L,1,0),lua_toboolean(L,2));
 	updateLevelTable(L);
 	return 0;
 }
@@ -903,6 +1129,10 @@ static int lua_level_resizeLayer(lua_State*L){
 	currentProject->lvl->resizeLayer(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0));
 	return 0;
 }
+static int lua_level_subBlock(lua_State*L){
+	currentProject->lvl->subBlock(lua_tointeger(L,1),lua_tointeger(L,2),lua_tointeger(L,3));
+	return 0;
+}
 static const luaL_Reg lua_levelAPI[]={
 	{"setLayerAmt",lua_level_setLayerAmt},
 	{"setLayerName",lua_level_setLayerName},
@@ -913,6 +1143,7 @@ static const luaL_Reg lua_levelAPI[]={
 	{"delObj",lua_level_delObj},
 	{"removeLayer",lua_level_removeLayer},
 	{"resizeLayer",lua_level_resizeLayer},
+	{"subBlock",lua_level_subBlock},
 	{0,0}
 };
 static const struct dub::const_Reg level_const[] = {
@@ -960,11 +1191,17 @@ static int lua_project_setSettings(lua_State*L){
 	currentProject->luaSettings=luaL_optinteger(L,1,0);
 	return 0;
 }
+static int lua_project_update(lua_State*L){
+	switchProjectSlider(curProjectID);
+	updateProjectTablesLua(L);
+	return 0;
+}
 static const luaL_Reg lua_projectAPI[]={/*!This is the project table. The global project contains the following functions*/
 	{"have",lua_project_rgt_have},
 	{"haveOR",lua_project_rgt_haveOR},
 	{"haveMessage",lua_project_rgt_haveMessage},
 	{"set",lua_project_set},
+	{"update",lua_project_update},
 	{"getSettings",lua_project_getSettings},
 	{"setSettings",lua_project_setSettings},
 	{0,0}
@@ -1030,7 +1267,7 @@ void updateProjectTablesLua(lua_State*L){
 	lua_pushnil(L);
 	lua_setglobal(L, "tilemaps");
 	if(currentProject->containsData(pjHaveMap)){
-		lua_createtable(L, 0,(sizeof(lua_tilemapAPI)/sizeof((lua_tilemapAPI)[0]) - 1)+3);
+		lua_createtable(L, 0,(sizeof(lua_tilemapAPI)/sizeof((lua_tilemapAPI)[0]) - 1)+5);
 		luaL_setfuncs(L,lua_tilemapAPI,0);
 
 		lua_pushstring(L,"width");
@@ -1063,6 +1300,14 @@ void updateProjectTablesLua(lua_State*L){
 		}
 		lua_rawset(L,-3);
 
+		lua_pushstring(L,"amt");
+		lua_createtable(L,currentProject->tms->maps.size(),0);
+		for(unsigned i=0;i<currentProject->tms->maps.size();++i){
+			lua_pushinteger(L,currentProject->tms->maps[i].amt);
+			lua_rawseti(L,-2,i+1);
+		}
+		lua_rawset(L,-3);
+
 		mkKeyunsigned(L,"current",currentProject->curPlane);
 
 		lua_setglobal(L, "tilemaps");
@@ -1070,11 +1315,12 @@ void updateProjectTablesLua(lua_State*L){
 	lua_pushnil(L);
 	lua_setglobal(L, "chunks");
 	if(currentProject->containsData(pjHaveChunks)){
-		lua_createtable(L, 0,arLen(lua_chunkAPI)-1+4);
+		lua_createtable(L, 0,arLen(lua_chunkAPI)-1+5);
 		luaL_setfuncs(L,lua_chunkAPI,0);
 		mkKeyunsigned(L,"amt",currentProject->Chunk->amt);
 		mkKeyunsigned(L,"width",currentProject->Chunk->wi);
 		mkKeyunsigned(L,"height",currentProject->Chunk->hi);
+		mkKeyunsigned(L,"usePlane",currentProject->Chunk->usePlane);
 		mkKeybool(L,"useBlocks",currentProject->Chunk->useBlocks);
 		lua_setglobal(L, "chunks");
 	}

@@ -157,7 +157,11 @@ function drawLevel()
 			elseif src==level.BLOCKS then
 				tilemaps.drawBlock(plane,a.id,xxs,ys,a.dat&3,lvlZoom)
 			elseif src==level.CHUNKS then
-				chunks.draw(a.id,xxs,ys,lvlZoom,0,0)
+				if a.id<chunks.amt then
+					chunks.draw(a.id,xxs,ys,lvlZoom,0,0)
+				else
+					print('a.id>=chunks.amt',a.id,chunks.amt)
+				end
 			else
 				invalidSource(src)
 			end

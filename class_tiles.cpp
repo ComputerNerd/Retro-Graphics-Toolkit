@@ -191,11 +191,11 @@ void tiles::truecolor_to_tile_ptr(unsigned palette_row,uint32_t cur_tile,uint8_t
 	}
 }
 void tiles::draw_truecolor(uint32_t tile_draw,unsigned x,unsigned y,bool usehflip,bool usevflip,unsigned zoom){
-	static uint8_t DontShow=0;
-	if (amt<=tile_draw){
+	static bool DontShow;
+	if (tile_draw>=amt){
 		if (unlikely(!DontShow)){
 			fl_alert("Warning tried to draw truecolor tile # %d at X: %d y: %d\nBut there is only %d tiles.\nNote that this message will not be shown again.\n Instead it will be outputted to stdout",tile_draw,x,y,amt);
-			DontShow=1;
+			DontShow=true;
 		}else
 			printf("Warning tried to draw truecolor tile # %d at X: %d y: %d\nBut there is only %d tiles.\n",tile_draw,x,y,amt);
 		return;
@@ -268,11 +268,11 @@ static inline uint_fast32_t cal_offset_zoom_rgb(uint_fast16_t x,uint_fast16_t y,
 	return (y*(zoom*p->tileC->sizew*bpp))+(x*bpp)+channel;
 }
 void tiles::draw_tile(int x_off,int y_off,uint32_t tile_draw,unsigned zoom,unsigned pal_row,bool Usehflip,bool Usevflip,bool isSprite,const uint8_t*extAttr,unsigned plane,bool alpha){
-	static unsigned DontShow=0;
-	if (amt<=tile_draw){
-		if (unlikely(DontShow==0)){
+	static bool DontShow;
+	if (tile_draw>=amt){
+		if (unlikely(!DontShow)){
 			fl_alert("Warning tried to draw tile # %d at X: %d y: %d\nBut there is only %d tiles.\nNote that this message will not be shown again.\n Instead it will be outputted to stdout",tile_draw,x_off,y_off,amt);
-			DontShow=1;
+			DontShow=true;
 		}else
 			printf("Warning tried to draw tile # %d at X: %d y: %d\nBut there is only %d tiles.\n",tile_draw,x_off,y_off,amt);
 		return;
@@ -487,11 +487,13 @@ void tiles::tileToTrueCol(const uint8_t*input,uint8_t*output,unsigned row,bool u
 		}
 	}
 }
-void tiles::toPlanar(enum tileType tt){
+void tiles::toPlanar(enum tileType tt,unsigned mi,int mx){
 	uint8_t*tmp=(uint8_t*)alloca(tileSize);
-	uint8_t*tPtr=tDat.data();
+	uint8_t*tPtr=tDat.data()+(mi*tileSize);
 	unsigned bdr=prj->getBitdepthSysraw();
-	for(unsigned i=0;i<amt;++i){
+	if(mx<0)
+		mx=amt;
+	for(unsigned i=mi;i<mx;++i){
 		uint8_t*ptr=tmp;
 		memcpy(tmp,tPtr,tileSize);
 		switch(tt){

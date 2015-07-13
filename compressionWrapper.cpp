@@ -27,47 +27,37 @@ const char*typeToText(int type){
 	return TypeTab[type];
 }
 int compressionAsk(void){
-	return MenuPopup("Compression?","Select a compression algorithm or use uncompressed",4,TypeTab[0],TypeTab[1],TypeTab[2],TypeTab[3],TypeTab[4],TypeTab[5]);
+	return MenuPopup("Compression?","Select a compression algorithm or use uncompressed",6,TypeTab[0],TypeTab[1],TypeTab[2],TypeTab[3],TypeTab[4],TypeTab[5]);
 }
 std::string decodeTypeStr(const char * filename,size_t &filesize,int type){
 	std::stringstream outDecomp;
-	FILE * fi=fopen(filename,"rb");
-	filesize=fseek(fi,0,SEEK_END);
-	filesize=ftell(fi);
-	rewind(fi);
-	uint8_t * datcmp=(uint8_t *)malloc(filesize);
-	fread(datcmp,1,filesize,fi);
-	fclose(fi);
-	std::string input;
-	input.assign((const char *)datcmp,filesize);
-	free(datcmp);
-	std::istringstream iss(input);
+	std::ifstream ifs (filename, std::ifstream::in|std::ifstream::binary);
 	switch(type){
 		case 1:
 			{nemesis decomp;
-			decomp.decode(iss,outDecomp);}
+			decomp.decode(ifs,outDecomp);}
 		break;
 		case 2:
 			{kosinski decomp;
-			decomp.decode(iss,outDecomp);}
+			decomp.decode(ifs,outDecomp);}
 		break;
 		case 3:
 			{enigma decomp;
-			decomp.decode(iss,outDecomp);}
+			decomp.decode(ifs,outDecomp);}
 		break;
 		case 4:
 			{saxman decomp;
-			decomp.decode(iss,outDecomp);}
+			decomp.decode(ifs,outDecomp);}
 		break;
 		case 5:
 			{comper decomp;
-			decomp.decode(iss,outDecomp);}
+			decomp.decode(ifs,outDecomp);}
 		break;
 		default:
 			show_default_error
 	}
-	printf("Decompressed to %d bytes\n",filesize);
 	filesize=outDecomp.str().length();
+	printf("Decompressed to %d bytes\n",filesize);
 	return outDecomp.str();
 }
 void*decodeType(const char * filename,size_t &filesize,int type){

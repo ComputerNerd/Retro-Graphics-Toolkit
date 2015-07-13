@@ -97,8 +97,7 @@ void level::setlayeramt(unsigned amt,bool lastLayerDim){
 			if(lastLayerDim)
 				lvlI.push_back(lvlI[layeramt-1]);
 			std::vector<struct levDat>*vtmp=new std::vector<struct levDat>;
-			if(lastLayerDim)
-				vtmp->resize(lvlI[i].w*lvlI[i].h);
+			vtmp->resize(lvlI[i].w*lvlI[i].h);
 			dat.push_back(vtmp);
 			std::vector<struct levobjDat>*votmp=new std::vector<struct levobjDat>;
 			odat.push_back(votmp);
@@ -157,6 +156,30 @@ void level::load(FILE*fp,uint32_t version){
 		if(objamt){
 			odat[i]->resize(objamt);
 			fread(odat[i]->data(),sizeof(struct levobjDat),odat[i]->size(),fp);
+		}
+	}
+}
+void level::subBlock(int plane,unsigned oid,unsigned nid){
+	uint_fast32_t x,y,i;
+	int_fast32_t temp;
+	for(i=0;i<layeramt;++i){
+		struct levelInfo*in=getInfo(i);
+		if((in->src&3)==BLOCKS){
+			if(plane>=0){
+				if(plane==in->src>>2)
+					continue;
+			}
+			for(y=0;y<in->h;++y){
+				for(x=0;x<in->w;++x){
+					struct levDat*l=getlevDat(i,x,y);
+					if (l->id == oid)
+						l->id=nid;
+					else if (l->id > oid){
+						if(l->id>0)
+							l->id--;
+					}
+				}
+			}
 		}
 	}
 }

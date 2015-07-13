@@ -59,4 +59,5 @@ public:
 	void importSonic1(const char * filename,bool append);
 	void exportSonic1(void)const;
 	void resize(uint32_t wnew,uint32_t hnew);
+	void subBlock(unsigned oid,unsigned nid);
 };
