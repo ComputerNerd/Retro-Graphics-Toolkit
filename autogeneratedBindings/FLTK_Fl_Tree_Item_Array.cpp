@@ -115,6 +115,7 @@ static int Fl_Tree_Item_Array_swap(lua_State *L) {
 /** int Fl_Tree_Item_Array::move(int to, int from)
  * inc/Fl_Tree_Item_Array.h:87
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Tree_Item_Array_move(lua_State *L) {
   try {
     Fl_Tree_Item_Array *self = *((Fl_Tree_Item_Array **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Item_Array"));
@@ -129,10 +130,12 @@ static int Fl_Tree_Item_Array_move(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Tree_Item_Array::deparent(int pos)
  * inc/Fl_Tree_Item_Array.h:88
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Tree_Item_Array_deparent(lua_State *L) {
   try {
     Fl_Tree_Item_Array *self = *((Fl_Tree_Item_Array **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Item_Array"));
@@ -146,10 +149,12 @@ static int Fl_Tree_Item_Array_deparent(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Tree_Item_Array::reparent(Fl_Tree_Item *item, Fl_Tree_Item *newparent, int pos)
  * inc/Fl_Tree_Item_Array.h:89
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Tree_Item_Array_reparent(lua_State *L) {
   try {
     Fl_Tree_Item_Array *self = *((Fl_Tree_Item_Array **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Item_Array"));
@@ -165,6 +170,7 @@ static int Fl_Tree_Item_Array_reparent(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** void Fl_Tree_Item_Array::clear()
  * inc/Fl_Tree_Item_Array.h:90
@@ -220,6 +226,7 @@ static int Fl_Tree_Item_Array_insert(lua_State *L) {
 /** void Fl_Tree_Item_Array::replace(int pos, Fl_Tree_Item *new_item)
  * inc/Fl_Tree_Item_Array.h:93
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Tree_Item_Array_replace(lua_State *L) {
   try {
     Fl_Tree_Item_Array *self = *((Fl_Tree_Item_Array **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Item_Array"));
@@ -234,6 +241,7 @@ static int Fl_Tree_Item_Array_replace(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** void Fl_Tree_Item_Array::remove(int index)
  * inc/Fl_Tree_Item_Array.h:94
@@ -277,13 +285,21 @@ static const struct luaL_Reg Fl_Tree_Item_Array_member_methods[] = {
   { "__index"      , Fl_Tree_Item_Array__get_ },
   { "total"        , Fl_Tree_Item_Array_total },
   { "swap"         , Fl_Tree_Item_Array_swap },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "move"         , Fl_Tree_Item_Array_move },
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "deparent"     , Fl_Tree_Item_Array_deparent },
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "reparent"     , Fl_Tree_Item_Array_reparent },
+#endif
   { "clear"        , Fl_Tree_Item_Array_clear },
   { "add"          , Fl_Tree_Item_Array_add },
   { "insert"       , Fl_Tree_Item_Array_insert },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "replace"      , Fl_Tree_Item_Array_replace },
+#endif
   { "remove"       , Fl_Tree_Item_Array_remove },
   { "__tostring"   , Fl_Tree_Item_Array___tostring },
   { "deleted"      , dub::isDeleted       },

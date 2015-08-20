@@ -123,6 +123,7 @@ static int Fl_Tree_Item_h(lua_State *L) {
 /** int Fl_Tree_Item::label_x() const
  * inc/Fl_Tree_Item.h:144
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Tree_Item_label_x(lua_State *L) {
   try {
     Fl_Tree_Item *self = *((Fl_Tree_Item **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Item"));
@@ -135,10 +136,12 @@ static int Fl_Tree_Item_label_x(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Tree_Item::label_y() const
  * inc/Fl_Tree_Item.h:147
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Tree_Item_label_y(lua_State *L) {
   try {
     Fl_Tree_Item *self = *((Fl_Tree_Item **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Item"));
@@ -151,10 +154,12 @@ static int Fl_Tree_Item_label_y(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Tree_Item::label_w() const
  * inc/Fl_Tree_Item.h:151
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Tree_Item_label_w(lua_State *L) {
   try {
     Fl_Tree_Item *self = *((Fl_Tree_Item **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Item"));
@@ -167,10 +172,12 @@ static int Fl_Tree_Item_label_w(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Tree_Item::label_h() const
  * inc/Fl_Tree_Item.h:154
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Tree_Item_label_h(lua_State *L) {
   try {
     Fl_Tree_Item *self = *((Fl_Tree_Item **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Item"));
@@ -183,6 +190,7 @@ static int Fl_Tree_Item_label_h(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** void Fl_Tree_Item::draw(int X, int &Y, int W, Fl_Widget *tree, Fl_Tree_Item *itemfocus, const Fl_Tree_Prefs &prefs, int lastchild=1)
  * inc/Fl_Tree_Item.h:160
@@ -572,6 +580,7 @@ static int Fl_Tree_Item_swap_children(lua_State *L) {
 /** const Fl_Tree_Item* Fl_Tree_Item::find_child_item(const char *name) const
  * inc/Fl_Tree_Item.h:249
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Tree_Item_find_child_item(lua_State *L) {
   try {
     Fl_Tree_Item *self = *((Fl_Tree_Item **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Item"));
@@ -596,6 +605,7 @@ static int Fl_Tree_Item_find_child_item(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** const Fl_Tree_Item* Fl_Tree_Item::find_item(char **arr) const
  * inc/Fl_Tree_Item.h:253
@@ -619,6 +629,7 @@ static int Fl_Tree_Item_find_item(lua_State *L) {
 /** Fl_Tree_Item* Fl_Tree_Item::add(const Fl_Tree_Prefs &prefs, const char *new_label, Fl_Tree_Item *newitem)
  * inc/Fl_Tree_Item.h:258
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Tree_Item_add(lua_State *L) {
   try {
     Fl_Tree_Item *self = *((Fl_Tree_Item **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Item"));
@@ -667,6 +678,7 @@ static int Fl_Tree_Item_add(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** Fl_Tree_Item* Fl_Tree_Item::insert(const Fl_Tree_Prefs &prefs, const char *new_label, int pos=0)
  * inc/Fl_Tree_Item.h:272
@@ -722,6 +734,7 @@ static int Fl_Tree_Item_insert_above(lua_State *L) {
 /** Fl_Tree_Item* Fl_Tree_Item::deparent(int index)
  * inc/Fl_Tree_Item.h:274
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Tree_Item_deparent(lua_State *L) {
   try {
     Fl_Tree_Item *self = *((Fl_Tree_Item **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Item"));
@@ -737,10 +750,12 @@ static int Fl_Tree_Item_deparent(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Tree_Item::reparent(Fl_Tree_Item *newchild, int index)
  * inc/Fl_Tree_Item.h:275
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Tree_Item_reparent(lua_State *L) {
   try {
     Fl_Tree_Item *self = *((Fl_Tree_Item **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Item"));
@@ -755,10 +770,12 @@ static int Fl_Tree_Item_reparent(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Tree_Item::move(int to, int from)
  * inc/Fl_Tree_Item.h:276
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Tree_Item_move(lua_State *L) {
   try {
     Fl_Tree_Item *self = *((Fl_Tree_Item **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Item"));
@@ -794,10 +811,12 @@ static int Fl_Tree_Item_move(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Tree_Item::move_above(Fl_Tree_Item *item)
  * inc/Fl_Tree_Item.h:278
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Tree_Item_move_above(lua_State *L) {
   try {
     Fl_Tree_Item *self = *((Fl_Tree_Item **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Item"));
@@ -811,10 +830,12 @@ static int Fl_Tree_Item_move_above(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Tree_Item::move_below(Fl_Tree_Item *item)
  * inc/Fl_Tree_Item.h:279
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Tree_Item_move_below(lua_State *L) {
   try {
     Fl_Tree_Item *self = *((Fl_Tree_Item **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Item"));
@@ -828,10 +849,12 @@ static int Fl_Tree_Item_move_below(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Tree_Item::move_into(Fl_Tree_Item *item, int pos=0)
  * inc/Fl_Tree_Item.h:280
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Tree_Item_move_into(lua_State *L) {
   try {
     Fl_Tree_Item *self = *((Fl_Tree_Item **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Item"));
@@ -853,6 +876,7 @@ static int Fl_Tree_Item_move_into(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Tree_Item::depth() const
  * inc/Fl_Tree_Item.h:281
@@ -1000,6 +1024,7 @@ static int Fl_Tree_Item_prev_displayed(lua_State *L) {
 /** Fl_Tree_Item* Fl_Tree_Item::next_visible(Fl_Tree_Prefs &prefs)
  * inc/Fl_Tree_Item.h:289
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Tree_Item_next_visible(lua_State *L) {
   try {
     Fl_Tree_Item *self = *((Fl_Tree_Item **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Item"));
@@ -1015,10 +1040,12 @@ static int Fl_Tree_Item_next_visible(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** Fl_Tree_Item* Fl_Tree_Item::prev_visible(Fl_Tree_Prefs &prefs)
  * inc/Fl_Tree_Item.h:290
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Tree_Item_prev_visible(lua_State *L) {
   try {
     Fl_Tree_Item *self = *((Fl_Tree_Item **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Item"));
@@ -1034,6 +1061,7 @@ static int Fl_Tree_Item_prev_visible(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** Fl_Tree_Item* Fl_Tree_Item::parent()
  * inc/Fl_Tree_Item.h:293
@@ -1475,10 +1503,18 @@ static const struct luaL_Reg Fl_Tree_Item_member_methods[] = {
   { "y"            , Fl_Tree_Item_y       },
   { "w"            , Fl_Tree_Item_w       },
   { "h"            , Fl_Tree_Item_h       },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "label_x"      , Fl_Tree_Item_label_x },
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "label_y"      , Fl_Tree_Item_label_y },
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "label_w"      , Fl_Tree_Item_label_w },
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "label_h"      , Fl_Tree_Item_label_h },
+#endif
   { "draw"         , Fl_Tree_Item_draw    },
   { "show_self"    , Fl_Tree_Item_show_self },
   { "label"        , Fl_Tree_Item_label   },
@@ -1496,17 +1532,31 @@ static const struct luaL_Reg Fl_Tree_Item_member_methods[] = {
   { "remove_child" , Fl_Tree_Item_remove_child },
   { "clear_children", Fl_Tree_Item_clear_children },
   { "swap_children", Fl_Tree_Item_swap_children },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "find_child_item", Fl_Tree_Item_find_child_item },
   { "find_item"    , Fl_Tree_Item_find_item },
   { "add"          , Fl_Tree_Item_add     },
+#endif
   { "insert"       , Fl_Tree_Item_insert  },
   { "insert_above" , Fl_Tree_Item_insert_above },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "deparent"     , Fl_Tree_Item_deparent },
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "reparent"     , Fl_Tree_Item_reparent },
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "move"         , Fl_Tree_Item_move    },
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "move_above"   , Fl_Tree_Item_move_above },
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "move_below"   , Fl_Tree_Item_move_below },
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "move_into"    , Fl_Tree_Item_move_into },
+#endif
   { "depth"        , Fl_Tree_Item_depth   },
   { "prev"         , Fl_Tree_Item_prev    },
   { "next"         , Fl_Tree_Item_next    },
@@ -1515,8 +1565,12 @@ static const struct luaL_Reg Fl_Tree_Item_member_methods[] = {
   { "update_prev_next", Fl_Tree_Item_update_prev_next },
   { "next_displayed", Fl_Tree_Item_next_displayed },
   { "prev_displayed", Fl_Tree_Item_prev_displayed },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "next_visible" , Fl_Tree_Item_next_visible },
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "prev_visible" , Fl_Tree_Item_prev_visible },
+#endif
   { "parent"       , Fl_Tree_Item_parent  },
   { "open"         , Fl_Tree_Item_open    },
   { "close"        , Fl_Tree_Item_close   },

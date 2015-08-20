@@ -55,5 +55,5 @@ struct level{
 	void resizeLayer(unsigned idx,unsigned nw,unsigned nh);
 	void save(FILE*fp);
 	void load(FILE*fp,uint32_t version);
-	void subBlock(int plane,unsigned oid,unsigned nid);
+	void subType(unsigned oid,unsigned nid,enum source s,int plane);
 };

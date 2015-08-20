@@ -52,6 +52,16 @@ const char*maskToName(unsigned mask){
 	unsigned off=__builtin_ctz(mask);
 	return maskNames[off>=6?6:off];
 }
+void Project::haveMessage(uint32_t mask){
+	std::string msg="Current project:";
+	for(unsigned x=0;x<=pjMaxMaskBit;++x){
+		if(mask&(1<<x)){
+			msg.append(currentProject->containsData(1<<x)?"\nhas ":"\ndoes not have ");
+			msg.append(maskToName(1<<x));
+		}
+	}
+	fl_alert(msg.c_str());
+}
 bool Project::isShared(uint32_t mask){
 	bool andIt=true;
 	for(unsigned m=0;m<=pjMaxMaskBit;++m){

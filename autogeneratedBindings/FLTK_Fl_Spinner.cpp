@@ -1513,6 +1513,7 @@ static int Fl_Lua_Spinner_clear_changed(lua_State *L) {
 /** void Fl_Widget::clear_active()
  * inc/Fl_Widget.h:784
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Spinner_clear_active(lua_State *L) {
   try {
     Fl_Lua_Spinner *self = *((Fl_Lua_Spinner **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Spinner"));
@@ -1525,6 +1526,7 @@ static int Fl_Lua_Spinner_clear_active(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** void Fl_Widget::set_active()
  * inc/Fl_Widget.h:790
@@ -1890,6 +1892,7 @@ static int Fl_Lua_Spinner_window(lua_State *L) {
 /** Fl_Window* Fl_Widget::top_window() const
  * inc/Fl_Widget.h:939
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Spinner_top_window(lua_State *L) {
   try {
     Fl_Lua_Spinner *self = *((Fl_Lua_Spinner **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Spinner"));
@@ -1904,10 +1907,12 @@ static int Fl_Lua_Spinner_top_window(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** Fl_Window* Fl_Widget::top_window_offset(int &xoff, int &yoff) const
  * inc/Fl_Widget.h:940
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Spinner_top_window_offset(lua_State *L) {
   try {
     Fl_Lua_Spinner *self = *((Fl_Lua_Spinner **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Spinner"));
@@ -1924,6 +1929,7 @@ static int Fl_Lua_Spinner_top_window_offset(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** virtual Fl_Window* Fl_Widget::as_window()
  * inc/Fl_Widget.h:979
@@ -1964,6 +1970,7 @@ static int Fl_Lua_Spinner_as_gl_window(lua_State *L) {
 /** int Fl_Widget::use_accents_menu()
  * inc/Fl_Widget.h:995
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Spinner_use_accents_menu(lua_State *L) {
   try {
     Fl_Lua_Spinner *self = *((Fl_Lua_Spinner **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Spinner"));
@@ -1976,6 +1983,7 @@ static int Fl_Lua_Spinner_use_accents_menu(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** Fl_Color Fl_Widget::color2() const
  * inc/Fl_Widget.h:1000
@@ -2088,7 +2096,9 @@ static const struct luaL_Reg Fl_Lua_Spinner_member_methods[] = {
   { "changed"      , Fl_Lua_Spinner_changed   },
   { "set_changed"  , Fl_Lua_Spinner_set_changed },
   { "clear_changed", Fl_Lua_Spinner_clear_changed },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "clear_active" , Fl_Lua_Spinner_clear_active },
+#endif
   { "set_active"   , Fl_Lua_Spinner_set_active },
   { "take_focus"   , Fl_Lua_Spinner_take_focus },
   { "set_visible_focus", Fl_Lua_Spinner_set_visible_focus },
@@ -2107,11 +2117,17 @@ static const struct luaL_Reg Fl_Lua_Spinner_member_methods[] = {
   { "draw_label"   , Fl_Lua_Spinner_draw_label },
   { "measure_label", Fl_Lua_Spinner_measure_label },
   { "window"       , Fl_Lua_Spinner_window    },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "top_window"   , Fl_Lua_Spinner_top_window },
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "top_window_offset", Fl_Lua_Spinner_top_window_offset },
+#endif
   { "as_window"    , Fl_Lua_Spinner_as_window },
   { "as_gl_window" , Fl_Lua_Spinner_as_gl_window },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "use_accents_menu", Fl_Lua_Spinner_use_accents_menu },
+#endif
   { "color2"       , Fl_Lua_Spinner_color2    },
   { "__tostring"   , Fl_Lua_Spinner___tostring },
   { "deleted"      , dub::isDeleted       },

@@ -24,31 +24,41 @@ static bool comparatorHSL(const HSLpair& l,const HSLpair& r){
 	return l.first < r.first;
 }
 void sortBy(unsigned type,bool perRow){
-	unsigned totalCol=currentProject->pal->colorCnt+currentProject->pal->colorCntalt;
-	HSLpair* MapHSL=new HSLpair[totalCol];
-	for(unsigned x=0;x<totalCol*3;x+=3){
-		double h,l,s;
-		rgbToHsl255(currentProject->pal->rgbPal[x],currentProject->pal->rgbPal[x+1],currentProject->pal->rgbPal[x+2],&h,&s,&l);
-		MapHSL[x/3].first=pickIt(h,s,l,type);
-		MapHSL[x/3].second=x/3;
+	unsigned totalCol[2]={currentProject->pal->colorCnt,currentProject->pal->colorCntalt};
+	unsigned off=0;
+	unsigned offe=0;
+	unsigned offr=0;
+	for(unsigned p=0;p<2;++p){
+		HSLpair* MapHSL=new HSLpair[totalCol[p]];
+		for(unsigned x=0;x<totalCol[p]*3;x+=3){
+			double h,l,s;
+			rgbToHsl255(currentProject->pal->rgbPal[x+offr],currentProject->pal->rgbPal[x+1+offr],currentProject->pal->rgbPal[x+2+offr],&h,&s,&l);
+			MapHSL[x/3].first=pickIt(h,s,l,type);
+			MapHSL[x/3].second=x/3;
+		}
+		if(perRow){
+			for(unsigned i=0;i<currentProject->pal->rowCntPal+currentProject->pal->rowCntPalalt;++i)
+				std::sort(MapHSL+(currentProject->pal->perRow*i),MapHSL+(currentProject->pal->perRow*(i+1)),comparatorHSL);
+		}else
+			std::sort(MapHSL,MapHSL+(totalCol[p]),comparatorHSL);
+		uint8_t* newPal=(uint8_t*)alloca((totalCol[p])*currentProject->pal->esize);
+		uint8_t* newPalRgb=(uint8_t*)alloca(totalCol[p]*3);
+		uint8_t* newPalType=(uint8_t*)alloca(totalCol[p]);
+		for(unsigned x=0;x<totalCol[p];++x){
+			memcpy(newPal+(x*currentProject->pal->esize),currentProject->pal->palDat+(MapHSL[x].second*currentProject->pal->esize)+offe,currentProject->pal->esize);
+			memcpy(newPalRgb+(x*3),currentProject->pal->rgbPal+(MapHSL[x].second*3)+offr,3);
+			newPalType[x]=currentProject->pal->palType[MapHSL[x].second+off];
+		}
+		memcpy(currentProject->pal->palDat+offe,newPal,totalCol[p]*currentProject->pal->esize);
+		memcpy(currentProject->pal->rgbPal+offr,newPalRgb,totalCol[p]*3);
+		memcpy(currentProject->pal->palType+off,newPalType,totalCol[p]);
+		delete[] MapHSL;
+		off=totalCol[p];
+		offe=off*currentProject->pal->esize;
+		offr=off*3;
+		if(!currentProject->pal->haveAlt)
+			break;
 	}
-	if(perRow){
-		for(unsigned i=0;i<currentProject->pal->rowCntPal+currentProject->pal->rowCntPalalt;++i)
-			std::sort(MapHSL+(currentProject->pal->perRow*i),MapHSL+(currentProject->pal->perRow*(i+1)),comparatorHSL);
-	}else
-		std::sort(MapHSL,MapHSL+(totalCol),comparatorHSL);
-	uint8_t* newPal=(uint8_t*)alloca((totalCol)*currentProject->pal->esize);
-	uint8_t* newPalRgb=(uint8_t*)alloca(totalCol*currentProject->pal->esize*3);
-	uint8_t* newPalType=(uint8_t*)alloca(totalCol);
-	for(unsigned x=0;x<totalCol;++x){
-		memcpy(newPal+(x*currentProject->pal->esize),currentProject->pal->palDat+(MapHSL[x].second*currentProject->pal->esize),currentProject->pal->esize);
-		memcpy(newPalRgb+(x*3),currentProject->pal->rgbPal+(MapHSL[x].second*3),3);
-		newPalType[x]=currentProject->pal->palType[MapHSL[x].second];
-	}
-	memcpy(currentProject->pal->palDat,newPal,totalCol*currentProject->pal->esize);
-	memcpy(currentProject->pal->rgbPal,newPalRgb,totalCol*3);
-	memcpy(currentProject->pal->palType,newPalType,totalCol);
-	delete[] MapHSL;
 }
 const uint8_t palTabGameGear[]={0,17,34,51,68,85,102,119,136,153,170,187,204,221,236,255};
 const uint8_t palTabMasterSystem[]={0,85,170,255};//From http://segaretro.org/Palette

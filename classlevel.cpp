@@ -159,15 +159,17 @@ void level::load(FILE*fp,uint32_t version){
 		}
 	}
 }
-void level::subBlock(int plane,unsigned oid,unsigned nid){
+void level::subType(unsigned oid,unsigned nid,enum source s,int plane){
 	uint_fast32_t x,y,i;
 	int_fast32_t temp;
 	for(i=0;i<layeramt;++i){
 		struct levelInfo*in=getInfo(i);
-		if((in->src&3)==BLOCKS){
-			if(plane>=0){
-				if(plane==in->src>>2)
-					continue;
+		if((in->src&3)==s){
+			if(s==BLOCKS){
+				if(plane>=0){
+					if(plane==in->src>>2)
+						continue;
+				}
 			}
 			for(y=0;y<in->h;++y){
 				for(x=0;x<in->w;++x){

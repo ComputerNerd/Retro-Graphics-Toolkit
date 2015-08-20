@@ -1249,6 +1249,7 @@ static int Fl_Lua_Chart_clear_changed(lua_State *L) {
 /** void Fl_Widget::clear_active()
  * inc/Fl_Widget.h:784
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Chart_clear_active(lua_State *L) {
   try {
     Fl_Lua_Chart *self = *((Fl_Lua_Chart **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Chart"));
@@ -1261,10 +1262,12 @@ static int Fl_Lua_Chart_clear_active(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** void Fl_Widget::set_active()
  * inc/Fl_Widget.h:790
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Chart_set_active(lua_State *L) {
   try {
     Fl_Lua_Chart *self = *((Fl_Lua_Chart **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Chart"));
@@ -1277,6 +1280,7 @@ static int Fl_Lua_Chart_set_active(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Widget::take_focus()
  * inc/Fl_Widget.h:799
@@ -1626,6 +1630,7 @@ static int Fl_Lua_Chart_window(lua_State *L) {
 /** Fl_Window* Fl_Widget::top_window() const
  * inc/Fl_Widget.h:939
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Chart_top_window(lua_State *L) {
   try {
     Fl_Lua_Chart *self = *((Fl_Lua_Chart **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Chart"));
@@ -1640,10 +1645,12 @@ static int Fl_Lua_Chart_top_window(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** Fl_Window* Fl_Widget::top_window_offset(int &xoff, int &yoff) const
  * inc/Fl_Widget.h:940
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Chart_top_window_offset(lua_State *L) {
   try {
     Fl_Lua_Chart *self = *((Fl_Lua_Chart **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Chart"));
@@ -1660,6 +1667,7 @@ static int Fl_Lua_Chart_top_window_offset(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** virtual Fl_Group* Fl_Widget::as_group()
  * inc/Fl_Widget.h:965
@@ -1718,6 +1726,7 @@ static int Fl_Lua_Chart_as_gl_window(lua_State *L) {
 /** int Fl_Widget::use_accents_menu()
  * inc/Fl_Widget.h:995
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Chart_use_accents_menu(lua_State *L) {
   try {
     Fl_Lua_Chart *self = *((Fl_Lua_Chart **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Chart"));
@@ -1730,6 +1739,7 @@ static int Fl_Lua_Chart_use_accents_menu(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Widget::color2() const
  * inc/Fl_Widget.h:1000
@@ -1826,8 +1836,12 @@ static const struct luaL_Reg Fl_Lua_Chart_member_methods[] = {
   { "changed"      , Fl_Lua_Chart_changed     },
   { "set_changed"  , Fl_Lua_Chart_set_changed },
   { "clear_changed", Fl_Lua_Chart_clear_changed },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "clear_active" , Fl_Lua_Chart_clear_active },
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "set_active"   , Fl_Lua_Chart_set_active  },
+#endif
   { "take_focus"   , Fl_Lua_Chart_take_focus  },
   { "set_visible_focus", Fl_Lua_Chart_set_visible_focus },
   { "clear_visible_focus", Fl_Lua_Chart_clear_visible_focus },
@@ -1845,12 +1859,18 @@ static const struct luaL_Reg Fl_Lua_Chart_member_methods[] = {
   { "draw_label"   , Fl_Lua_Chart_draw_label  },
   { "measure_label", Fl_Lua_Chart_measure_label },
   { "window"       , Fl_Lua_Chart_window      },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "top_window"   , Fl_Lua_Chart_top_window  },
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "top_window_offset", Fl_Lua_Chart_top_window_offset },
+#endif
   { "as_group"     , Fl_Lua_Chart_as_group    },
   { "as_window"    , Fl_Lua_Chart_as_window   },
   { "as_gl_window" , Fl_Lua_Chart_as_gl_window },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "use_accents_menu", Fl_Lua_Chart_use_accents_menu },
+#endif
   { "color2"       , Fl_Lua_Chart_color2      },
   { "__tostring"   , Fl_Lua_Chart___tostring  },
   { "deleted"      , dub::isDeleted       },

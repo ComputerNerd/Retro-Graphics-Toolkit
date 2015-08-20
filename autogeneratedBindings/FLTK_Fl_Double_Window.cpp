@@ -263,6 +263,7 @@ static int Fl_Lua_Double_Window_Fl_Lua_Double_Window(lua_State *L) {
 /** void Fl_Window::shape(const Fl_Image *img)
  * inc/Fl_Window.h:145
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Double_Window_shape(lua_State *L) {
   try {
     Fl_Lua_Double_Window *self = *((Fl_Lua_Double_Window **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Double_Window"));
@@ -276,6 +277,7 @@ static int Fl_Lua_Double_Window_shape(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** virtual int Fl_Window::handle(int)
  * inc/Fl_Window.h:243
@@ -432,6 +434,7 @@ static int Fl_Lua_Double_Window_non_modal(lua_State *L) {
 /** void Fl_Window::clear_modal_states()
  * inc/Fl_Window.h:339
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Double_Window_clear_modal_states(lua_State *L) {
   try {
     Fl_Lua_Double_Window *self = *((Fl_Lua_Double_Window **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Double_Window"));
@@ -444,6 +447,7 @@ static int Fl_Lua_Double_Window_clear_modal_states(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** void Fl_Window::set_menu_window()
  * inc/Fl_Window.h:354
@@ -719,6 +723,7 @@ static int Fl_Lua_Double_Window_xclass(lua_State *L) {
 /** void Fl_Window::icon(const Fl_RGB_Image *)
  * inc/Fl_Window.h:468
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Double_Window_icon(lua_State *L) {
   try {
     Fl_Lua_Double_Window *self = *((Fl_Lua_Double_Window **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Double_Window"));
@@ -746,6 +751,7 @@ static int Fl_Lua_Double_Window_icon(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Window::shown()
  * inc/Fl_Window.h:485
@@ -766,6 +772,7 @@ static int Fl_Lua_Double_Window_shown(lua_State *L) {
 /** void Fl_Window::wait_for_expose()
  * inc/Fl_Window.h:530
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Double_Window_wait_for_expose(lua_State *L) {
   try {
     Fl_Lua_Double_Window *self = *((Fl_Lua_Double_Window **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Double_Window"));
@@ -778,6 +785,7 @@ static int Fl_Lua_Double_Window_wait_for_expose(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** void Fl_Window::fullscreen()
  * inc/Fl_Window.h:543
@@ -840,6 +848,7 @@ static int Fl_Lua_Double_Window_fullscreen_active(lua_State *L) {
 /** void Fl_Window::fullscreen_screens(int top, int bottom, int left, int right)
  * inc/Fl_Window.h:567
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Double_Window_fullscreen_screens(lua_State *L) {
   try {
     Fl_Lua_Double_Window *self = *((Fl_Lua_Double_Window **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Double_Window"));
@@ -856,6 +865,7 @@ static int Fl_Lua_Double_Window_fullscreen_screens(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** void Fl_Window::iconize()
  * inc/Fl_Window.h:583
@@ -2073,6 +2083,7 @@ static int Fl_Lua_Double_Window_clear_changed(lua_State *L) {
 /** void Fl_Widget::clear_active()
  * inc/Fl_Widget.h:784
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Double_Window_clear_active(lua_State *L) {
   try {
     Fl_Lua_Double_Window *self = *((Fl_Lua_Double_Window **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Double_Window"));
@@ -2085,10 +2096,12 @@ static int Fl_Lua_Double_Window_clear_active(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** void Fl_Widget::set_active()
  * inc/Fl_Widget.h:790
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Double_Window_set_active(lua_State *L) {
   try {
     Fl_Lua_Double_Window *self = *((Fl_Lua_Double_Window **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Double_Window"));
@@ -2101,6 +2114,7 @@ static int Fl_Lua_Double_Window_set_active(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Widget::take_focus()
  * inc/Fl_Widget.h:799
@@ -2450,6 +2464,7 @@ static int Fl_Lua_Double_Window_window(lua_State *L) {
 /** Fl_Window* Fl_Widget::top_window() const
  * inc/Fl_Widget.h:939
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Double_Window_top_window(lua_State *L) {
   try {
     Fl_Lua_Double_Window *self = *((Fl_Lua_Double_Window **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Double_Window"));
@@ -2464,10 +2479,12 @@ static int Fl_Lua_Double_Window_top_window(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** Fl_Window* Fl_Widget::top_window_offset(int &xoff, int &yoff) const
  * inc/Fl_Widget.h:940
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Double_Window_top_window_offset(lua_State *L) {
   try {
     Fl_Lua_Double_Window *self = *((Fl_Lua_Double_Window **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Double_Window"));
@@ -2484,6 +2501,7 @@ static int Fl_Lua_Double_Window_top_window_offset(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** virtual class Fl_Gl_Window* Fl_Widget::as_gl_window()
  * inc/Fl_Widget.h:991
@@ -2506,6 +2524,7 @@ static int Fl_Lua_Double_Window_as_gl_window(lua_State *L) {
 /** int Fl_Widget::use_accents_menu()
  * inc/Fl_Widget.h:995
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Double_Window_use_accents_menu(lua_State *L) {
   try {
     Fl_Lua_Double_Window *self = *((Fl_Lua_Double_Window **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Double_Window"));
@@ -2518,6 +2537,7 @@ static int Fl_Lua_Double_Window_use_accents_menu(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Widget::color2() const
  * inc/Fl_Widget.h:1000
@@ -2562,7 +2582,9 @@ static const struct luaL_Reg Fl_Lua_Double_Window_member_methods[] = {
   { "hide"         , Fl_Lua_Double_Window_hide },
   { "__gc"         , Fl_Lua_Double_Window__Fl_Lua_Double_Window },
   { "new"          , Fl_Lua_Double_Window_Fl_Lua_Double_Window },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "shape"        , Fl_Lua_Double_Window_shape },
+#endif
   { "handle"       , Fl_Lua_Double_Window_handle },
   { "border"       , Fl_Lua_Double_Window_border },
   { "clear_border" , Fl_Lua_Double_Window_clear_border },
@@ -2572,7 +2594,9 @@ static const struct luaL_Reg Fl_Lua_Double_Window_member_methods[] = {
   { "modal"        , Fl_Lua_Double_Window_modal },
   { "set_non_modal", Fl_Lua_Double_Window_set_non_modal },
   { "non_modal"    , Fl_Lua_Double_Window_non_modal },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "clear_modal_states", Fl_Lua_Double_Window_clear_modal_states },
+#endif
   { "set_menu_window", Fl_Lua_Double_Window_set_menu_window },
   { "menu_window"  , Fl_Lua_Double_Window_menu_window },
   { "set_tooltip_window", Fl_Lua_Double_Window_set_tooltip_window },
@@ -2584,13 +2608,19 @@ static const struct luaL_Reg Fl_Lua_Double_Window_member_methods[] = {
   { "iconlabel"    , Fl_Lua_Double_Window_iconlabel },
   { "copy_label"   , Fl_Lua_Double_Window_copy_label },
   { "xclass"       , Fl_Lua_Double_Window_xclass },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "icon"         , Fl_Lua_Double_Window_icon },
+#endif
   { "shown"        , Fl_Lua_Double_Window_shown },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "wait_for_expose", Fl_Lua_Double_Window_wait_for_expose },
+#endif
   { "fullscreen"   , Fl_Lua_Double_Window_fullscreen },
   { "fullscreen_off", Fl_Lua_Double_Window_fullscreen_off },
   { "fullscreen_active", Fl_Lua_Double_Window_fullscreen_active },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "fullscreen_screens", Fl_Lua_Double_Window_fullscreen_screens },
+#endif
   { "iconize"      , Fl_Lua_Double_Window_iconize },
   { "x_root"       , Fl_Lua_Double_Window_x_root },
   { "y_root"       , Fl_Lua_Double_Window_y_root },
@@ -2654,8 +2684,12 @@ static const struct luaL_Reg Fl_Lua_Double_Window_member_methods[] = {
   { "changed"      , Fl_Lua_Double_Window_changed },
   { "set_changed"  , Fl_Lua_Double_Window_set_changed },
   { "clear_changed", Fl_Lua_Double_Window_clear_changed },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "clear_active" , Fl_Lua_Double_Window_clear_active },
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "set_active"   , Fl_Lua_Double_Window_set_active },
+#endif
   { "take_focus"   , Fl_Lua_Double_Window_take_focus },
   { "set_visible_focus", Fl_Lua_Double_Window_set_visible_focus },
   { "clear_visible_focus", Fl_Lua_Double_Window_clear_visible_focus },
@@ -2673,10 +2707,16 @@ static const struct luaL_Reg Fl_Lua_Double_Window_member_methods[] = {
   { "draw_label"   , Fl_Lua_Double_Window_draw_label },
   { "measure_label", Fl_Lua_Double_Window_measure_label },
   { "window"       , Fl_Lua_Double_Window_window },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "top_window"   , Fl_Lua_Double_Window_top_window },
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "top_window_offset", Fl_Lua_Double_Window_top_window_offset },
+#endif
   { "as_gl_window" , Fl_Lua_Double_Window_as_gl_window },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "use_accents_menu", Fl_Lua_Double_Window_use_accents_menu },
+#endif
   { "color2"       , Fl_Lua_Double_Window_color2 },
   { "__tostring"   , Fl_Lua_Double_Window___tostring },
   {"baseHandle",lua_Fl_Window_baseHandle},

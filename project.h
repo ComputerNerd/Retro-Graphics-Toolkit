@@ -62,6 +62,7 @@ struct Project{/*!<Holds all data needed for a project based system for example 
 	Project(const Project&other);
 	void copyClasses(const Project&other);
 	~Project();
+	void haveMessage(uint32_t mask);
 	bool isShared(uint32_t mask);
 	bool isUniqueData(uint32_t mask);
 	bool containsData(uint32_t mask);

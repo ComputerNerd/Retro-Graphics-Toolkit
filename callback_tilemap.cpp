@@ -99,34 +99,27 @@ void set_grid_placer(Fl_Widget*,void*){
 }
 
 void save_tilemap_as_image(Fl_Widget*,void*){
-	if(load_file_generic("Save png as",true)==true){
-		uint32_t w=currentProject->tms->maps[currentProject->curPlane].mapSizeW*8;
-		uint32_t h=currentProject->tms->maps[currentProject->curPlane].mapSizeHA*8;
-		uint8_t * image=(uint8_t*)malloc(w*h*3);
-		uint8_t * imageold=image;
-		if(image==0)
-			show_malloc_error(w*h*3)
-		uint8_t temptile[192];
-		uint32_t x,y;
-		uint32_t w3=w*3;//do this once instead of thousands of times in the loop
-		uint32_t w21=w*21;
-		uint32_t w24_24=(w*24)-24;
-		uint8_t * tempptr,yy;
-		for(y=0;y<h;y+=8){
-			for(x=0;x<w;x+=8){
-				currentProject->tileC->tileToTrueCol(currentProject->tileC->tDat.data()+(currentProject->tms->maps[currentProject->curPlane].get_tile(x/8,y/8)*currentProject->tileC->tileSize),temptile,currentProject->tms->maps[currentProject->curPlane].getPalRow(x/8,y/8),false);
-				tempptr=temptile;
-				for(yy=0;yy<8;++yy){
-					memcpy(image,tempptr,24);
-					image+=w3;
-					tempptr+=24;
+	if(currentProject->containsData(pjHaveTiles|pjHaveMap)){
+		if(load_file_generic("Save PNG as",true)){
+			uint32_t w=currentProject->tms->maps[currentProject->curPlane].mapSizeW*currentProject->tileC->sizew;
+			uint32_t h=currentProject->tms->maps[currentProject->curPlane].mapSizeHA*currentProject->tileC->sizeh;
+			uint8_t * image=(uint8_t*)malloc(w*h);
+			uint8_t * imageold=image;
+			if(!image)
+				show_malloc_error(w*h)
+			for(unsigned y=0;y<h;y+=currentProject->tileC->sizeh){
+				for(unsigned x=0;x<w;x+=currentProject->tileC->sizew){
+					unsigned tCur=currentProject->tms->maps[currentProject->curPlane].get_tile(x/currentProject->tileC->sizew,y/currentProject->tileC->sizeh);
+					unsigned off=currentProject->tms->maps[currentProject->curPlane].getPalRow(x/currentProject->tileC->sizew,y/currentProject->tileC->sizeh)*currentProject->pal->perRow;
+					for(unsigned yy=0;yy<currentProject->tileC->sizeh;++yy){
+						for(unsigned xx=0;xx<currentProject->tileC->sizew;++xx)
+							image[x+xx+((y+yy)*w)]=currentProject->tileC->getPixel(tCur,xx,yy)+off;
+					}
 				}
-				image-=w24_24;
 			}
-			image+=w21;
+			savePNG(the_file.c_str(),w,h,(void*)imageold,currentProject->pal->rgbPal,currentProject->pal->colorCnt);
+			free(imageold);
 		}
-		savePNG(the_file.c_str(),w,h,(void*)imageold);
-		free(imageold);
 	}
 }
 void save_tilemap_as_colspace(Fl_Widget*,void*){
@@ -201,7 +194,6 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		uint32_t w,h;
 		w=loaded_image->w();
 		h=loaded_image->h();
-		printf("image width: %d image height: %d\n",w,h);
 		uint32_t w8,h8;
 		uint32_t wt,ht;
 		int wr,hr;
@@ -234,6 +226,7 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		uint8_t * imgptr=(uint8_t *)loaded_image->data()[0];
 		//now we can convert to tiles
 		unsigned depth=loaded_image->d();
+		printf("image width: %u image height: %u depth: %u\n",w,h,depth);
 		if (unlikely(depth != 3 && depth != 4 && depth!=1)){
 			fl_alert("Please use color depth of 1,3 or 4\nYou Used %d",loaded_image->d());
 			loaded_image->release();

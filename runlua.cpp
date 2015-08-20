@@ -1050,6 +1050,10 @@ static int lua_chunk_subBlock(lua_State*L){
 	currentProject->Chunk->subBlock(lua_tointeger(L,1),lua_tointeger(L,2));
 	return 0;
 }
+static int lua_chunk_removeAt(lua_State*L){
+	currentProject->Chunk->removeAt(lua_tointeger(L,1));
+	return 0;
+}
 static const luaL_Reg lua_chunkAPI[]={
 	{"getBlocks",lua_chunk_getBlocks},
 	{"getFlags",lua_chunk_getFlags},
@@ -1063,6 +1067,7 @@ static const luaL_Reg lua_chunkAPI[]={
 	{"setAmt",lua_chunk_setAmt},
 	{"draw",lua_chunk_draw},
 	{"subBlock",lua_chunk_subBlock},
+	{"removeAt",lua_chunk_removeAt},
 	{0,0}
 };
 static int lua_sprite_dither(lua_State*L){
@@ -1129,8 +1134,8 @@ static int lua_level_resizeLayer(lua_State*L){
 	currentProject->lvl->resizeLayer(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0));
 	return 0;
 }
-static int lua_level_subBlock(lua_State*L){
-	currentProject->lvl->subBlock(lua_tointeger(L,1),lua_tointeger(L,2),lua_tointeger(L,3));
+static int lua_level_subType(lua_State*L){
+	currentProject->lvl->subType(lua_tointeger(L,1),lua_tointeger(L,2),(enum source)lua_tointeger(L,3),lua_tointeger(L,4));
 	return 0;
 }
 static const luaL_Reg lua_levelAPI[]={
@@ -1143,7 +1148,7 @@ static const luaL_Reg lua_levelAPI[]={
 	{"delObj",lua_level_delObj},
 	{"removeLayer",lua_level_removeLayer},
 	{"resizeLayer",lua_level_resizeLayer},
-	{"subBlock",lua_level_subBlock},
+	{"subType",lua_level_subType},
 	{0,0}
 };
 static const struct dub::const_Reg level_const[] = {
@@ -1162,14 +1167,7 @@ static int lua_project_rgt_haveOR(lua_State*L){
 }
 static int lua_project_rgt_haveMessage(lua_State*L){
 	unsigned mask=luaL_optinteger(L,1,pjHavePal);
-	std::string msg="Current project:";
-	for(unsigned x=0;x<=pjMaxMaskBit;++x){
-		if(mask&(1<<x)){
-			msg.append(currentProject->containsData(1<<x)?"\nhas ":"\ndoes not have ");
-			msg.append(maskToName(1<<x));
-		}
-	}
-	fl_alert(msg.c_str());
+	currentProject->haveMessage(mask);
 	return 0;
 }
 static void mkKeyunsigned(lua_State*L,const char*str,unsigned val){
@@ -1685,10 +1683,12 @@ static const keyPair FLconsts[]={
 	{"Pause",FL_Pause},
 	{"Scroll_Lock",FL_Scroll_Lock},
 	{"Escape",FL_Escape},
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 	{"Kana",FL_Kana},
 	{"Eisu",FL_Eisu},
 	{"Yen",FL_Yen},
 	{"JIS_Underscore",FL_JIS_Underscore},
+#endif
 	{"Home",FL_Home},
 	{"Left",FL_Left},
 	{"Up",FL_Up},
@@ -1911,14 +1911,30 @@ static const keyPair FLconsts[]={
 	{"_GTK_THIN_DOWN_FRAME,",_FL_GTK_THIN_DOWN_FRAME},
 	{"_GTK_ROUND_UP_BOX,",_FL_GTK_ROUND_UP_BOX},
 	{"_GTK_ROUND_DOWN_BOX,",_FL_GTK_ROUND_DOWN_BOX},
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 	{"_GLEAM_UP_BOX,",_FL_GLEAM_UP_BOX},
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 	{"_GLEAM_DOWN_BOX,",_FL_GLEAM_DOWN_BOX},
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 	{"_GLEAM_UP_FRAME,",_FL_GLEAM_UP_FRAME},
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 	{"_GLEAM_DOWN_FRAME,",_FL_GLEAM_DOWN_FRAME},
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 	{"_GLEAM_THIN_UP_BOX,",_FL_GLEAM_THIN_UP_BOX},
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 	{"_GLEAM_THIN_DOWN_BOX,",_FL_GLEAM_THIN_DOWN_BOX},
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 	{"_GLEAM_ROUND_UP_BOX,",_FL_GLEAM_ROUND_UP_BOX},
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 	{"_GLEAM_ROUND_DOWN_BOX,",_FL_GLEAM_ROUND_DOWN_BOX},
+#endif
 	{"FREE_BOXTYPE",FL_FREE_BOXTYPE},
 };
 lua_State*createLuaState(void){

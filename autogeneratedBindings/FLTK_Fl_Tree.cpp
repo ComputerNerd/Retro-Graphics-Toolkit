@@ -187,6 +187,7 @@ static int Fl_Lua_Tree_root_label(lua_State *L) {
 /** Fl_Tree_Item* Fl_Lua_Tree::root()
  * inc/Fl_Lua_Tree.h:375
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Tree_root(lua_State *L) {
   try {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
@@ -208,6 +209,7 @@ static int Fl_Lua_Tree_root(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** const Fl_Tree_Prefs& Fl_Lua_Tree::prefs() const
  * inc/Fl_Lua_Tree.h:377
@@ -228,6 +230,7 @@ static int Fl_Lua_Tree_prefs(lua_State *L) {
 /** Fl_Tree_Item* Fl_Lua_Tree::add(const char *path)
  * inc/Fl_Lua_Tree.h:385
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Tree_add(lua_State *L) {
   try {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
@@ -263,6 +266,7 @@ static int Fl_Lua_Tree_add(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** Fl_Tree_Item* Fl_Lua_Tree::insert_above(Fl_Tree_Item *above, const char *name)
  * inc/Fl_Lua_Tree.h:389
@@ -468,6 +472,7 @@ static int Fl_Lua_Tree_first_visible(lua_State *L) {
 /** Fl_Tree_Item* Fl_Lua_Tree::first_visible_item()
  * inc/Fl_Lua_Tree.h:411
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Tree_first_visible_item(lua_State *L) {
   try {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
@@ -482,6 +487,7 @@ static int Fl_Lua_Tree_first_visible_item(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** Fl_Tree_Item* Fl_Lua_Tree::next(Fl_Tree_Item *item=0)
  * inc/Fl_Lua_Tree.h:412
@@ -576,6 +582,7 @@ static int Fl_Lua_Tree_last_visible(lua_State *L) {
 /** Fl_Tree_Item* Fl_Lua_Tree::last_visible_item()
  * inc/Fl_Lua_Tree.h:416
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Tree_last_visible_item(lua_State *L) {
   try {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
@@ -590,6 +597,7 @@ static int Fl_Lua_Tree_last_visible_item(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** Fl_Tree_Item* Fl_Lua_Tree::first_selected_item()
  * inc/Fl_Lua_Tree.h:420
@@ -612,6 +620,7 @@ static int Fl_Lua_Tree_first_selected_item(lua_State *L) {
 /** Fl_Tree_Item* Fl_Lua_Tree::last_selected_item()
  * inc/Fl_Lua_Tree.h:421
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Tree_last_selected_item(lua_State *L) {
   try {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
@@ -626,10 +635,12 @@ static int Fl_Lua_Tree_last_selected_item(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** Fl_Tree_Item* Fl_Lua_Tree::next_item(Fl_Tree_Item *item, int dir=FL_Down, bool visible=false)
  * inc/Fl_Lua_Tree.h:422
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Tree_next_item(lua_State *L) {
   try {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
@@ -663,10 +674,12 @@ static int Fl_Lua_Tree_next_item(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** Fl_Tree_Item* Fl_Lua_Tree::next_selected_item(Fl_Tree_Item *item=0)
  * inc/Fl_Lua_Tree.h:427
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Tree_next_selected_item(lua_State *L) {
   try {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
@@ -697,6 +710,7 @@ static int Fl_Lua_Tree_next_selected_item(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Lua_Tree::open(Fl_Tree_Item *item, int docallback=1)
  * inc/Fl_Lua_Tree.h:434
@@ -1040,6 +1054,7 @@ static int Fl_Lua_Tree_select_all(lua_State *L) {
 /** int Fl_Lua_Tree::extend_selection_dir(Fl_Tree_Item *from, Fl_Tree_Item *to, int dir, int val, bool visible)
  * inc/Fl_Lua_Tree.h:455
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Tree_extend_selection_dir(lua_State *L) {
   try {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
@@ -1057,6 +1072,7 @@ static int Fl_Lua_Tree_extend_selection_dir(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** void Fl_Lua_Tree::set_item_focus(Fl_Tree_Item *item)
  * inc/Fl_Lua_Tree.h:475
@@ -1609,6 +1625,7 @@ static int Fl_Lua_Tree_selectmode(lua_State *L) {
 /** void Fl_Lua_Tree::recalc_tree()
  * inc/Fl_Lua_Tree.h:544
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Tree_recalc_tree(lua_State *L) {
   try {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
@@ -1621,6 +1638,7 @@ static int Fl_Lua_Tree_recalc_tree(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Lua_Tree::displayed(Fl_Tree_Item *item)
  * inc/Fl_Lua_Tree.h:545
@@ -1758,6 +1776,7 @@ static int Fl_Lua_Tree_vposition(lua_State *L) {
 /** int Fl_Lua_Tree::hposition() const
  * inc/Fl_Lua_Tree.h:554
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Tree_hposition(lua_State *L) {
   try {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
@@ -1777,6 +1796,7 @@ static int Fl_Lua_Tree_hposition(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Lua_Tree::is_scrollbar(Fl_Widget *w)
  * inc/Fl_Lua_Tree.h:557
@@ -1837,6 +1857,7 @@ static int Fl_Lua_Tree_is_vscroll_visible(lua_State *L) {
 /** int Fl_Lua_Tree::is_hscroll_visible() const
  * inc/Fl_Lua_Tree.h:561
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Tree_is_hscroll_visible(lua_State *L) {
   try {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
@@ -1849,6 +1870,7 @@ static int Fl_Lua_Tree_is_hscroll_visible(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** void Fl_Lua_Tree::callback_item(Fl_Tree_Item *item)
  * inc/Fl_Lua_Tree.h:566
@@ -2980,6 +3002,7 @@ static int Fl_Lua_Tree_clear_changed(lua_State *L) {
 /** void Fl_Widget::clear_active()
  * inc/Fl_Widget.h:784
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Tree_clear_active(lua_State *L) {
   try {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
@@ -2992,10 +3015,12 @@ static int Fl_Lua_Tree_clear_active(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** void Fl_Widget::set_active()
  * inc/Fl_Widget.h:790
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Tree_set_active(lua_State *L) {
   try {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
@@ -3008,6 +3033,7 @@ static int Fl_Lua_Tree_set_active(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Widget::take_focus()
  * inc/Fl_Widget.h:799
@@ -3357,6 +3383,7 @@ static int Fl_Lua_Tree_window(lua_State *L) {
 /** Fl_Window* Fl_Widget::top_window() const
  * inc/Fl_Widget.h:939
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Tree_top_window(lua_State *L) {
   try {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
@@ -3371,10 +3398,12 @@ static int Fl_Lua_Tree_top_window(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** Fl_Window* Fl_Widget::top_window_offset(int &xoff, int &yoff) const
  * inc/Fl_Widget.h:940
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Tree_top_window_offset(lua_State *L) {
   try {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
@@ -3391,6 +3420,7 @@ static int Fl_Lua_Tree_top_window_offset(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** virtual Fl_Window* Fl_Widget::as_window()
  * inc/Fl_Widget.h:979
@@ -3431,6 +3461,7 @@ static int Fl_Lua_Tree_as_gl_window(lua_State *L) {
 /** int Fl_Widget::use_accents_menu()
  * inc/Fl_Widget.h:995
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Tree_use_accents_menu(lua_State *L) {
   try {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
@@ -3443,6 +3474,7 @@ static int Fl_Lua_Tree_use_accents_menu(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Widget::color2() const
  * inc/Fl_Widget.h:1000
@@ -3488,9 +3520,13 @@ static const struct luaL_Reg Fl_Lua_Tree_member_methods[] = {
   { "show_self"    , Fl_Lua_Tree_show_self    },
   { "resize"       , Fl_Lua_Tree_resize       },
   { "root_label"   , Fl_Lua_Tree_root_label   },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "root"         , Fl_Lua_Tree_root         },
+#endif
   { "prefs"        , Fl_Lua_Tree_prefs        },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "add"          , Fl_Lua_Tree_add          },
+#endif
   { "insert_above" , Fl_Lua_Tree_insert_above },
   { "insert"       , Fl_Lua_Tree_insert       },
   { "remove"       , Fl_Lua_Tree_remove       },
@@ -3502,16 +3538,26 @@ static const struct luaL_Reg Fl_Lua_Tree_member_methods[] = {
   { "item_clicked" , Fl_Lua_Tree_item_clicked },
   { "first"        , Fl_Lua_Tree_first        },
   { "first_visible", Fl_Lua_Tree_first_visible },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "first_visible_item", Fl_Lua_Tree_first_visible_item },
+#endif
   { "next"         , Fl_Lua_Tree_next         },
   { "prev"         , Fl_Lua_Tree_prev         },
   { "last"         , Fl_Lua_Tree_last         },
   { "last_visible" , Fl_Lua_Tree_last_visible },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "last_visible_item", Fl_Lua_Tree_last_visible_item },
+#endif
   { "first_selected_item", Fl_Lua_Tree_first_selected_item },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "last_selected_item", Fl_Lua_Tree_last_selected_item },
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "next_item"    , Fl_Lua_Tree_next_item    },
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "next_selected_item", Fl_Lua_Tree_next_selected_item },
+#endif
   { "open"         , Fl_Lua_Tree_open         },
   { "open_toggle"  , Fl_Lua_Tree_open_toggle  },
   { "close"        , Fl_Lua_Tree_close        },
@@ -3523,7 +3569,9 @@ static const struct luaL_Reg Fl_Lua_Tree_member_methods[] = {
   { "deselect_all" , Fl_Lua_Tree_deselect_all },
   { "select_only"  , Fl_Lua_Tree_select_only  },
   { "select_all"   , Fl_Lua_Tree_select_all   },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "extend_selection_dir", Fl_Lua_Tree_extend_selection_dir },
+#endif
   { "set_item_focus", Fl_Lua_Tree_set_item_focus },
   { "get_item_focus", Fl_Lua_Tree_get_item_focus },
   { "is_selected"  , Fl_Lua_Tree_is_selected  },
@@ -3548,7 +3596,9 @@ static const struct luaL_Reg Fl_Lua_Tree_member_methods[] = {
   { "sortorder"    , Fl_Lua_Tree_sortorder    },
   { "selectbox"    , Fl_Lua_Tree_selectbox    },
   { "selectmode"   , Fl_Lua_Tree_selectmode   },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "recalc_tree"  , Fl_Lua_Tree_recalc_tree  },
+#endif
   { "displayed"    , Fl_Lua_Tree_displayed    },
   { "show_item"    , Fl_Lua_Tree_show_item    },
   { "show_item_top", Fl_Lua_Tree_show_item_top },
@@ -3556,11 +3606,15 @@ static const struct luaL_Reg Fl_Lua_Tree_member_methods[] = {
   { "show_item_bottom", Fl_Lua_Tree_show_item_bottom },
   { "display"      , Fl_Lua_Tree_display      },
   { "vposition"    , Fl_Lua_Tree_vposition    },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "hposition"    , Fl_Lua_Tree_hposition    },
+#endif
   { "is_scrollbar" , Fl_Lua_Tree_is_scrollbar },
   { "scrollbar_size", Fl_Lua_Tree_scrollbar_size },
   { "is_vscroll_visible", Fl_Lua_Tree_is_vscroll_visible },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "is_hscroll_visible", Fl_Lua_Tree_is_hscroll_visible },
+#endif
   { "callback_item", Fl_Lua_Tree_callback_item },
   { "callback_reason", Fl_Lua_Tree_callback_reason },
   { "load"         , Fl_Lua_Tree_load         },
@@ -3619,8 +3673,12 @@ static const struct luaL_Reg Fl_Lua_Tree_member_methods[] = {
   { "changed"      , Fl_Lua_Tree_changed      },
   { "set_changed"  , Fl_Lua_Tree_set_changed  },
   { "clear_changed", Fl_Lua_Tree_clear_changed },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "clear_active" , Fl_Lua_Tree_clear_active },
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "set_active"   , Fl_Lua_Tree_set_active   },
+#endif
   { "take_focus"   , Fl_Lua_Tree_take_focus   },
   { "set_visible_focus", Fl_Lua_Tree_set_visible_focus },
   { "clear_visible_focus", Fl_Lua_Tree_clear_visible_focus },
@@ -3638,11 +3696,17 @@ static const struct luaL_Reg Fl_Lua_Tree_member_methods[] = {
   { "draw_label"   , Fl_Lua_Tree_draw_label   },
   { "measure_label", Fl_Lua_Tree_measure_label },
   { "window"       , Fl_Lua_Tree_window       },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "top_window"   , Fl_Lua_Tree_top_window   },
+#endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "top_window_offset", Fl_Lua_Tree_top_window_offset },
+#endif
   { "as_window"    , Fl_Lua_Tree_as_window    },
   { "as_gl_window" , Fl_Lua_Tree_as_gl_window },
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "use_accents_menu", Fl_Lua_Tree_use_accents_menu },
+#endif
   { "color2"       , Fl_Lua_Tree_color2       },
   { "__tostring"   , Fl_Lua_Tree___tostring   },
   { "deleted"      , dub::isDeleted       },
