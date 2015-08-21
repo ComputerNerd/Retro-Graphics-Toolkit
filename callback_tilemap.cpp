@@ -253,10 +253,16 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		bool grayscale;
 		unsigned remap[256];
 		if(depth==1){
-			grayscale=handle1byteImg(loaded_image,remap);
+			unsigned numcol;
+			grayscale=handle1byteImg(loaded_image,remap,&numcol);
 			if(!grayscale){
 				palMap=(uint8_t*)loaded_image->data()[1];
 				imgptr=(uint8_t*)loaded_image->data()[2];
+				if(fl_ask("Overwrite palette? This can be undone if you change your mind.")){
+					pushPaletteAll();
+					for(unsigned i=0;i<std::min(currentProject->pal->colorCnt+currentProject->pal->colorCntalt,numcol);++i)
+						currentProject->pal->rgbToEntry(palMap[i*4+1],palMap[i*4+2],palMap[i*4+3],i);
+				}
 			}
 		}
 		for(uint32_t y=0,tcnt=0;y<ht;++y){

@@ -296,7 +296,7 @@ bool getMaskColorImg(Fl_Shared_Image*loaded_image,bool grayscale,unsigned*remap,
 	delete win;
 	return retOkay;
 }
-bool handle1byteImg(Fl_Shared_Image*loaded_image,unsigned*remap){
+bool handle1byteImg(Fl_Shared_Image*loaded_image,unsigned*remap,unsigned*numcol){
 	char*timgptr=(char*)loaded_image->data()[0];
 	//See if grayscale or colormapped xpm
 	if(isdigit(*timgptr)){
@@ -305,8 +305,9 @@ bool handle1byteImg(Fl_Shared_Image*loaded_image,unsigned*remap){
 		 * Avoid this by verifying width and height*/
 		if(strtol(timgptr,&timgptr,10)==loaded_image->w()){
 			if(strtol(timgptr,&timgptr,10)==loaded_image->h()){
-				unsigned numcolors;
-				numcolors=abs(strtol(timgptr,&timgptr,10));
+				unsigned numcolors=abs(strtol(timgptr,&timgptr,10));
+				if(numcol)
+					*numcol=numcolors;
 				uint8_t*palMap=(uint8_t*)loaded_image->data()[1];
 				std::fill(remap,remap+256,0);
 				for(unsigned xx=0;xx<numcolors*4;xx+=4)

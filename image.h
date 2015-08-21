@@ -16,4 +16,4 @@
 */
 #pragma once
 bool getMaskColorImg(Fl_Shared_Image*loaded_image,bool grayscale,unsigned*remap,uint8_t*palMap,uint8_t*mask,bool&alphaSel);//mask must pointer to an array or byte with atleast 1 byte for 1 bpp images or 3 bytes for 3 bpp and 4 bpp images returns true if ok false if cancel
-bool handle1byteImg(Fl_Shared_Image*loaded_image,unsigned*remap);//Returns true if grayscale false if gif
+bool handle1byteImg(Fl_Shared_Image*loaded_image,unsigned*remap,unsigned*numcol=nullptr);//Returns true if grayscale false if gif

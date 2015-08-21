@@ -214,6 +214,7 @@ static int Fl_Lua_Tree_root(lua_State *L) {
 /** const Fl_Tree_Prefs& Fl_Lua_Tree::prefs() const
  * inc/Fl_Lua_Tree.h:377
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Tree_prefs(lua_State *L) {
   try {
     Fl_Lua_Tree *self = *((Fl_Lua_Tree **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Tree"));
@@ -226,6 +227,7 @@ static int Fl_Lua_Tree_prefs(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** Fl_Tree_Item* Fl_Lua_Tree::add(const char *path)
  * inc/Fl_Lua_Tree.h:385
@@ -3523,7 +3525,9 @@ static const struct luaL_Reg Fl_Lua_Tree_member_methods[] = {
 #if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "root"         , Fl_Lua_Tree_root         },
 #endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "prefs"        , Fl_Lua_Tree_prefs        },
+#endif
 #if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "add"          , Fl_Lua_Tree_add          },
 #endif

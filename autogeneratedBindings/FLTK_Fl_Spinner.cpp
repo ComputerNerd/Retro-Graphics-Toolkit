@@ -1531,6 +1531,7 @@ static int Fl_Lua_Spinner_clear_active(lua_State *L) {
 /** void Fl_Widget::set_active()
  * inc/Fl_Widget.h:790
  */
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Spinner_set_active(lua_State *L) {
   try {
     Fl_Lua_Spinner *self = *((Fl_Lua_Spinner **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Spinner"));
@@ -1543,6 +1544,7 @@ static int Fl_Lua_Spinner_set_active(lua_State *L) {
   }
   return dub::error(L);
 }
+#endif
 
 /** int Fl_Widget::take_focus()
  * inc/Fl_Widget.h:799
@@ -2099,7 +2101,9 @@ static const struct luaL_Reg Fl_Lua_Spinner_member_methods[] = {
 #if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "clear_active" , Fl_Lua_Spinner_clear_active },
 #endif
+#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
   { "set_active"   , Fl_Lua_Spinner_set_active },
+#endif
   { "take_focus"   , Fl_Lua_Spinner_take_focus },
   { "set_visible_focus", Fl_Lua_Spinner_set_visible_focus },
   { "clear_visible_focus", Fl_Lua_Spinner_clear_visible_focus },
