@@ -1,15 +1,14 @@
 If you are a Windows user and want to build this you will need Mingw or
 Mingw-w64.
 
+Note that Lua needs to be compiled locally. Do not use your systems
+installation of Lua. This is because Lua is compiled with a c++ compiler in
+order to take advantage of zero cost exceptions.
+
 First of all in the Retro Graphics Toolkit directory create a folder called lua
 or luawin if you are compiling for Windows. This folder shall the latest
 version of Lua. The folder should not contain a folder called something to the
 effect of lua/lua-version-number.
-
-Note the only reason for creating a separate folder for Mingw cross compiling
-is to accommodate for the fact that I do all my development on GNU/Linux and
-have a separate instillation of GCC as a cross compiler. This allows me to
-quickly test the Windows build and *Unix build simultaneously.
 
 Extract the latest version of Lua in the newly created folder.
 
