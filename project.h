@@ -29,6 +29,7 @@
 #include "classtilemaps.h"
 #include "classlevel.h"
 #include "metasprites.h"
+#include "palette.h"
 #define currentProjectVersionNUM 8
 extern uint32_t curProjectID;
 enum luaLocEnum{PALETTE_C,TILEMAP_C,CHUNK_C,SPRITE_C,LEVEL_C,GLOBAL_C/*Not allowed for luaControl*/,CUSTOM_TAB_0/*And so on*/};
@@ -78,6 +79,16 @@ struct Project{/*!<Holds all data needed for a project based system for example 
 	int getBitdepthSysraw(void)const;
 	int getBitdepthSys(void)const{
 		return getBitdepthSysraw()+1;
+	}
+	int getPalTab(void)const{
+		palTab=palTabPtr[(subSystem>>3)&7];
+		return (subSystem>>3)&7;
+	}
+	void setPalTab(unsigned val){
+		val&=7;
+		subSystem&=~(7<<3);
+		subSystem|=val<<3;
+		palTab=palTabPtr[val];
 	}
 	unsigned szPerExtPalRow(void);
 	unsigned extAttrTilesPerByte(void);

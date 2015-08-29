@@ -667,6 +667,10 @@ static int lua_palette_sortByHSL(lua_State*L){
 	sortBy(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0));
 	return 0;
 }
+static int lua_palette_paletteToRgb(lua_State*L){
+	currentProject->pal->paletteToRgb();
+	return 0;
+}
 static const luaL_Reg lua_paletteAPI[]={
 	{"getRGB",lua_palette_getRGB},
 	{"setRGB",lua_palette_setRGB},
@@ -676,6 +680,7 @@ static const luaL_Reg lua_paletteAPI[]={
 	{"maxInRow",lua_palette_maxInRow},
 	{"getType",lua_palette_getType},
 	{"sortByHSL",lua_palette_sortByHSL},
+	{"toRgbAll",lua_palette_paletteToRgb},
 	{0,0}
 };
 static unsigned inRangeTile(unsigned tile){
@@ -1194,6 +1199,14 @@ static int lua_project_update(lua_State*L){
 	updateProjectTablesLua(L);
 	return 0;
 }
+static int lua_project_getPalTab(lua_State*L){
+	lua_pushinteger(L,currentProject->getPalTab());
+	return 1;
+}
+static int lua_project_setPalTab(lua_State*L){
+	currentProject->setPalTab(luaL_optinteger(L,1,0));
+	return 0;
+}
 static const luaL_Reg lua_projectAPI[]={/*!This is the project table. The global project contains the following functions*/
 	{"have",lua_project_rgt_have},
 	{"haveOR",lua_project_rgt_haveOR},
@@ -1202,6 +1215,8 @@ static const luaL_Reg lua_projectAPI[]={/*!This is the project table. The global
 	{"update",lua_project_update},
 	{"getSettings",lua_project_getSettings},
 	{"setSettings",lua_project_setSettings},
+	{"getPalTab",lua_project_getPalTab},
+	{"setPalTab",lua_project_setPalTab},
 	{0,0}
 };
 #define arLen(ar) (sizeof(ar)/sizeof(ar[0]))
@@ -1354,6 +1369,8 @@ void updateProjectTablesLua(lua_State*L){
 	mkKeyunsigned(L,"gameSystem",currentProject->gameSystem);
 	mkKeyunsigned(L,"segaGenesis",segaGenesis);
 	mkKeyunsigned(L,"NES",NES);
+	mkKeyunsigned(L,"gameGear",gameGear);
+	mkKeyunsigned(L,"masterSystem",masterSystem);
 	mkKeyunsigned(L,"count",projects_count);
 	mkKeyunsigned(L,"curProjectID",curProjectID);
 	lua_setglobal(L, "project");

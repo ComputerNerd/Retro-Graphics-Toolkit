@@ -26,6 +26,8 @@
 #include "undo.h"
 #include "class_global.h"
 #include "palette.h"
+#include "runlua.h"
+#include "luaconfig.h"
 static const char* GPLv3="This program is free software: you can redistribute it and/or modify\n"
 	"it under the terms of the GNU General Public License as published by\n"
 	"the Free Software Foundation, either version 3 of the License, or\n"
@@ -123,17 +125,21 @@ static void palCopyConvert(unsigned cols){
 }
 void set_game_system(Fl_Widget*,void* selection){
 	gameSystemEnum sel=(gameSystemEnum)(intptr_t)selection;
+	const gameSystemEnum gold=currentProject->gameSystem;
 	if(unlikely(sel==currentProject->gameSystem)){
 		fl_alert("You are already in that mode");
 		return;
 	}
 	pushProject();
+	lua_getglobal(Lconf,"switchSystemBefore");
+	lua_pushinteger(Lconf,gold);
+	lua_pushinteger(Lconf,sel);
+	runLuaFunc(Lconf,2,0);
 	if(sel==NES){
 		updateNesTab(0,false);
 		updateNesTab(0,true);
 	}
 	unsigned msprt=window->metaspritesel->value();
-	gameSystemEnum gold=currentProject->gameSystem;
 	uint32_t sold=currentProject->subSystem;
 	unsigned bd=currentProject->getBitdepthSys();
 	unsigned bdold=bd;
@@ -425,6 +431,10 @@ freeIt:
 			}
 		}
 	}
+	lua_getglobal(Lconf,"switchSystemAfter");
+	lua_pushinteger(Lconf,gold);
+	lua_pushinteger(Lconf,sel);
+	runLuaFunc(Lconf,2,0);
 	window->redraw();
 }
 void trueColTileToggle(Fl_Widget*,void*){

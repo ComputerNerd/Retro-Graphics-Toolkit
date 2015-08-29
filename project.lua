@@ -16,6 +16,10 @@
 --]]
 function switchProject()
 	rgt.syncProject()
+	palTabSel:value(project.getPalTab())--Fixes internal pointer
+	if project.have(project.palMask)~=false then
+		palette.toRgbAll()
+	end
 	if project.have(project.levelMask)~=false then
 		layerSel:clear()
 		for i=1,#level.names do

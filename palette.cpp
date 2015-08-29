@@ -62,8 +62,12 @@ void sortBy(unsigned type,bool perRow){
 }
 const uint8_t palTabGameGear[]={0,17,34,51,68,85,102,119,136,153,170,187,204,221,236,255};
 const uint8_t palTabMasterSystem[]={0,85,170,255};//From http://segaretro.org/Palette
-const uint8_t palTab[]=   {0,49,87,119,146,174,206,255,0,27,49,71,87,103,119,130,130,146,157,174,190,206,228,255};//from http://gendev.spritesmind.net/forum/viewtopic.php?t=1389
-const uint8_t palTabEmu[]={0,36,72,108,144,180,216,252,0,18,36,54,72, 90,108,126,126,144,162,180,198,216,234,252};
+const uint8_t*palTab=palTabGenReal;
+const uint8_t*palTabPtr[]={palTabGenReal,palTabGen255div7,palTabGen36,palTabGen32};
+const uint8_t palTabGenReal[]=   {0,49,87,119,146,174,206,255,0,27,49,71,87,103,119,130,130,146,157,174,190,206,228,255};//from http://gendev.spritesmind.net/forum/viewtopic.php?t=1389
+const uint8_t palTabGen255div7[]={0,36,73,109,146,182,219,255,0,18,36,55,73,91 ,109,128,128,146,164,182,200,219,237,255};
+const uint8_t palTabGen36[]=     {0,36,72,108,144,180,216,252,0,18,36,54,72,90 ,108,126,126,144,162,180,198,216,234,252};
+const uint8_t palTabGen32[]=     {0,32,64, 96,128,160,192,224,0,16,32,48,64,80 ,96 ,112,112,128,144,160,176,192,208,224};
 void set_palette_type_force(unsigned type){
 	palTypeGen=type;
 	//now reconvert all the colors

@@ -26,6 +26,7 @@ enum TMS9918SubSys{MODE_0,MODE_1,MODE_2,MODE_3};
  * These are not compatible when switching systems
  * For the Sega Genesis, Master System and Game Gear bits 1-0 contain bit depth 0 means 1 bit
  * For the Sega Genesis bit 2 sets if shadow highlight is enabled and bit 3 sets if highlight should be displayed instead of shadow
+ * For the Sega Genesis bit 5-3 contain which palette table is used.
  * For the NES bit 1 contains bit depth 1 if 2 bit 0 if 1 bit
  * For the TMS9918 bits 1-0 contain the subsystem
  * For palette framebuffer bits 2-0 contain bit depth add 1 to get actual just like the others
