@@ -23,7 +23,7 @@
 #include "gui.h"
 #include "runlua.h"
 #include "luaconfig.h"
-const char*rtVersionStr="Retro Graphics Toolkit v0.8 RC1";
+const char*rtVersionStr="Retro Graphics Toolkit v0.8 RC1.1";
 editor *window = new editor(800,600,rtVersionStr);
 static void rect_alpha_grid(uint8_t rgba[4],unsigned x,unsigned y){
 	uint8_t grid[32*32*3];
