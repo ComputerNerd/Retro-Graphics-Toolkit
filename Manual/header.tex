@@ -1,4 +1,4 @@
-\documentclass[letterpaper,11pt,openany]{memoir}
+\documentclass[letterpaper,12pt,openany]{memoir}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{amssymb,amsmath}
@@ -19,7 +19,7 @@
 \fi
 % use microtype if available
 \IfFileExists{microtype.sty}{\usepackage{microtype}}{}
-\usepackage[margin=.5in]{geometry}
+\usepackage{fullpage}
 \usepackage{listings}
 \usepackage{graphicx}
 % Redefine \includegraphics so that, unless explicit options are
@@ -62,18 +62,12 @@
 \setlength{\emergencystretch}{3em}  % prevent overfull lines
 \setcounter{secnumdepth}{0}
 
-\author{}
-\date{}
+\title{Retro Graphics Toolkit user's manual}
+\author{Sega16}
 
 \begin{document}
 \frontmatter
-\HUGE
-\centerline{Retro Graphics Toolkit user's manual}
-
-\Large
-\centerline{Sega16}
-
-\normalsize
+\maketitle
 \newpage
 {
 \hypersetup{linkcolor=black}

@@ -21,6 +21,10 @@
 #include "gui.h"
 #include "class_global.h"
 void save_tiles(Fl_Widget*,void*){
+	if(!currentProject->containsData(pjHaveTiles)){
+		currentProject->haveMessage(pjHaveTiles);
+		return;
+	}
 	fileType_t type=askSaveType();
 	int clipboard;
 	if(type){
@@ -100,6 +104,10 @@ void save_tiles(Fl_Widget*,void*){
 }
 void load_tiles(Fl_Widget*,void*o){
 	//if o=0 load if o=1 append if o=2 load at
+	if(!currentProject->containsData(pjHaveTiles)){
+		currentProject->haveMessage(pjHaveTiles);
+		return;
+	}
 	size_t file_size;
 	unsigned mode=(uintptr_t)o;
 	char * returned=(char*)fl_input("What row should these tiles use?\nEnter 0 to 3 to selected a row or -1 to -4 to auto determine based on tilemap\nWhen specifing a negative number to figure out what the default will be use this formula abs(row)-1","-1");
@@ -238,6 +246,10 @@ void load_truecolor_tiles(Fl_Widget*,void*){
 	}
 }
 void save_tiles_truecolor(Fl_Widget*,void*){
+	if(!currentProject->containsData(pjHaveTiles)){
+		currentProject->haveMessage(pjHaveTiles);
+		return;
+	}
 	if (load_file_generic("Save truecolor tiles",true)){
 		FILE * myfile;
 		myfile = fopen(the_file.c_str(),"wb");
