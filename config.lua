@@ -27,4 +27,5 @@ dofile "gui.lua"
 dofile "level.lua"
 dofile "project.lua"
 dofile "system.lua"
+dofile "filereader.lua"
 --print('Code will execute here after the window is created but before the GUI controls are added')

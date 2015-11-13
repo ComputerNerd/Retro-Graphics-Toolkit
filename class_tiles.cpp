@@ -622,7 +622,7 @@ void tiles::changeDim(unsigned w,unsigned h,unsigned bd){
 	setDim(w,h,bd);
 	//If going to a smaller dimension break up the tiles; discard tile data keep only truecolor data.
 	if(sw>w&&sh>h){
-		uint8_t  __restrict__ *src=old->truetDat.data(),*dst=truetDat.data();
+		uint8_t*src=old->truetDat.data(),*dst=truetDat.data();
 		for(unsigned i=0;i<amto;++i){
 			for(unsigned y=0;y<sh;++y){
 				for(unsigned x=0;x<sw/w;++x){

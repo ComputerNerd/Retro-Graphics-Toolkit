@@ -20,6 +20,8 @@
 #include "filereader.h"
 #include "filemisc.h"
 #include "gui.h"
+#include "luaconfig.h"
+#include "runlua.h"
 static const char*skipWS(const char*ptr){
 	while(isspace(*ptr++));
 	return ptr-1;
@@ -64,41 +66,14 @@ filereader::filereader(const char*title,bool relptr,unsigned offbits,bool be){
 		}else{
 			char*tmp=(char*)malloc(st.st_size);
 			fread(tmp,1,st.st_size,fp);
-			for(const char*ptr=tmp;ptr<(tmp+st.st_size);){
-				if(isspace(*ptr))
-					++ptr;
-				else if(isalpha(*ptr)){
-					if(tp==tCheader){
-						unsigned cbits=0;
-						static const char*keywords[]={"static","const","unsigned"};
-						static const unsigned lens[]={sizeof("static"),sizeof("const"),sizeof("unsigned")};
-						for(unsigned i=0;i<sizeof(keywords)/sizeof(keywords[0]);++i){
-							if(!strncmp(ptr,keywords[i],lens[i])){
-								ptr+=lens[i];
-								continue;
-							}
-						}
-						static const char*types[]={"char","int8_t","short","int16_t","int","int32_t","long","long long","int64_t"};
-						static const unsigned tbits[]={8,8,16,16,32,32,32,64,64};
-						static const unsigned tlens[]={sizeof("char"),sizeof("int8_t"),sizeof("short"),sizeof("int16_t"),sizeof("int"),sizeof("int32_t"),sizeof("long"),sizeof("long long"),sizeof("int64_t")};
-						for(unsigned i=0;i<sizeof(keywords)/sizeof(keywords[0]);++i){
-							if(!strncmp(ptr,keywords[i],lens[i])){
-								ptr+=lens[i];
-								cbits=tbits[i];
-								ptr+=tlens[i];
-								break;
-							}
-						}
-						if(cbits){
-							//Label found
-							break;
-						}
-					}
-				}else{
-					fl_alert("Error: unrecognized character %c",*ptr);
-					break;
-				}
-			}
+			//This is handled by Lua code so the user can modify the behavior of this function with ease
+			lua_getglobal(Lconf,"filereaderProcessText");
+			lua_pushinteger(Lconf,tp);
+			lua_pushboolean(Lconf,relptr);
+			lua_pushinteger(Lconf,offbits);
+			lua_pushboolean(Lconf,be);
+			lua_pushstring(Lconf,tmp);
+			runLuaFunc(Lconf,5,1);
 			free(tmp);
 		}
 		fclose(fp);

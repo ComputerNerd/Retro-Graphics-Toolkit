@@ -166,7 +166,6 @@ void fill_tile(Fl_Widget* o, void*){
 		pushTile(currentProject->tileC->current_tile,tTypeTile);
 		unsigned color;
 		color=palBar.selBox[2];
-		uint8_t * tile_ptr_temp;
 		for(unsigned y=0;y<currentProject->tileC->sizeh;++y){
 			for(unsigned x=0;x<currentProject->tileC->sizew;++x)
 				currentProject->tileC->setPixel(currentProject->tileC->current_tile,x,y,color);

@@ -28,7 +28,7 @@ struct spriteGroup{
 	std::vector<int32_t> offy;
 	std::vector<uint32_t> loadat;//Where the sprite will be loaded in game (useful for games that overwrite tiles in VRAM for animation purposes such as the Sonic series of games and many more.)
 	std::string name;//Useful for nice formated output
-	std::vector<class sprite> list;
+	std::vector<struct sprite> list;
 };
 class sprites{
 	private:

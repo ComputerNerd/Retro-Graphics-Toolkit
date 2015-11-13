@@ -12,6 +12,7 @@ import glob
 import subprocess
 import fileinput
 import sys
+import re
 for name in sorted(glob.glob('Pandoc/*.md')):
     githubPath='Retro-Graphics-Toolkit.wiki/'+os.path.basename(name)
     if os.path.isfile(githubPath):
@@ -43,6 +44,17 @@ if len(sys.argv)<=1:
             concat += open(name).read()
     concat += open('footer.tex').read()
     concat=concat.replace('includegraphics{https://raw.githubusercontent.com/ComputerNerd/Retro-Graphics-Toolkit/master/','includegraphics{../')
+    i=0
+    while True:
+        fs=[m.start() for m in re.finditer('{\\[}{\\[}',concat)]
+        fm=[m.start() for m in re.finditer('\\textbar{}',concat)]
+        fe=[m.start() for m in re.finditer('{\\]}{\\]}',concat)]
+        if len(found)-1>=i:
+            break
+        before=concat[0:fs[i]]
+        after=concat[fs[i]+6:]
+        after=after.replace('\\textbar{}',
+        i+=1
     with open("Manual.tex",'w') as f:
         f.write(concat)
     args=['xelatex','Manual']

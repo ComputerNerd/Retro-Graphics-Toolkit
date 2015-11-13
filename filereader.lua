@@ -1,4 +1,4 @@
-/*
+--[[
 	This file is part of Retro Graphics Toolkit
 
 	Retro Graphics Toolkit is free software: you can redistribute it and/or modify
@@ -13,9 +13,7 @@
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
-*/
-#pragma once
-#include "lualib.h"
-#include "lauxlib.h"
-extern lua_State*Lconf;
-void startLuaConf(void);
+--]]
+function filereaderProcessText(tp,relptr,offbits,be,inp)-- Converts text to tables
+	
+end

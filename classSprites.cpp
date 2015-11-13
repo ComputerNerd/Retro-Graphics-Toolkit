@@ -1619,7 +1619,7 @@ void sprites::importImg(uint32_t to){
 		}
 		bool useMask=fl_ask("Use mask color?");
 		uint8_t mask[3];
-		bool useAlpha;
+		bool useAlpha=false;
 		if(useMask){
 			if(!getMaskColorImg(loaded_image,grayscale,remap,palMap,mask,useAlpha)){
 				loaded_image->release();

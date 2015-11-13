@@ -237,7 +237,7 @@ void paletteBar::checkBox(int x,int y,unsigned tab){
 	if (x >= currentProject->pal->perRow)
 		return;
 	y/=boxSize;
-	if (y >= (all?currentProject->pal->rowCntPal:1))
+	if (y >= (all[tab]?currentProject->pal->rowCntPal:1))
 		return;
 	selBox[tab]=x;
 	if(all[tab])

@@ -52,6 +52,7 @@
 #include "nemesis.h"
 #include "kosinski.h"
 #include "saxman.h"
+#include "filemisc.h"
 #include "FLTK_Fl_Box.h"
 #include "FLTK_Fl_Button.h"
 #include "FLTK_Fl_Chart.h"
@@ -1180,6 +1181,11 @@ static void mkKeyunsigned(lua_State*L,const char*str,unsigned val){
 	lua_pushinteger(L,val);
 	lua_rawset(L, -3);
 }
+static void mkKeyint(lua_State*L,const char*str,int val){
+	lua_pushstring(L,str);
+	lua_pushinteger(L,val);
+	lua_rawset(L, -3);
+}
 static void mkKeybool(lua_State*L,const char*str,bool val){
 	lua_pushstring(L,str);
 	lua_pushboolean(L,val);
@@ -1472,8 +1478,13 @@ struct keyPair{
 	const char*key;
 	unsigned pair;
 };
+struct keyPairi{
+	const char*key;
+	int pair;
+};
 static int lua_rgt_syncProject(lua_State*L){
 	updateProjectTablesLua(L);
+	return 0;
 }
 static int lua_rgt_w(lua_State*L){
 	lua_pushinteger(L,window->w());
@@ -1498,7 +1509,7 @@ static const luaL_Reg lua_rgtAPI[]={
 	{"h",lua_rgt_h},
 	{0,0}
 };
-static const struct keyPair rgtConsts[]={
+static const struct keyPairi rgtConsts[]={
 	{"paletteTab",pal_edit},
 	{"tileTab",tile_edit},
 	{"planeTab",tile_place},
@@ -1507,6 +1518,11 @@ static const struct keyPair rgtConsts[]={
 	{"levelTab",levelEditor},
 	{"settingsTab",settingsTab},
 	{"luaTab",luaTab},
+	{"tCancle",tCancle},
+	{"tBinary",tBinary},
+	{"tCheader",tCheader},
+	{"tASM",tASM},
+	{"tBEX",tBEX}
 };
 static int lua_tabs_append(lua_State*L){
 	int rx,ry,rw,rh;
@@ -1979,7 +1995,7 @@ lua_State*createLuaState(void){
 		lua_createtable(L,0,arLen(rgtConsts)+arLen(lua_rgtAPI)-1);
 		luaL_setfuncs(L,lua_rgtAPI,0);
 		for(unsigned x=0;x<arLen(rgtConsts);++x)
-			mkKeyunsigned(L,rgtConsts[x].key,rgtConsts[x].pair);
+			mkKeyint(L,rgtConsts[x].key,rgtConsts[x].pair);
 		lua_setglobal(L, "rgt");
 
 		luaL_newlib(L,lua_kensAPI);

@@ -1,8 +1,8 @@
-If you are a Windows user and want to build this you will need Mingw or
-Mingw-w64.
+If you are a Windows user and want to compile Retro Graphics Toolkit you will
+need Mingw or Mingw-w64.
 
 Note that Lua needs to be compiled locally. Do not use your systems
-installation of Lua. This is because Lua is compiled with a c++ compiler in
+installation of Lua. This is because Lua is compiled with a C++ compiler in
 order to take advantage of zero cost exceptions.
 
 First of all in the Retro Graphics Toolkit directory create a folder called lua
@@ -13,7 +13,7 @@ effect of lua/lua-version-number.
 Extract the latest version of Lua in the newly created folder.
 
 Now edit the makefile in src. Edit the line that starts with CC=gcc and change
-it to: CC=g++
+it to: CC=g++ or CC=clang++
 
 On the line that starts with CFLAGS= remove -DLUA_COMPAT_5_2
 
@@ -25,7 +25,7 @@ Also if you are building on Windows you must replace this line in the Makefile
 with
 	"AR=$(CC) -shared -static-libgcc -static-libstdc++ -o" "RANLIB=strip --strip-all" \
 
-Lua can be build using c++ which is what we are doing this is to take advantage
+Lua can be build using C++ which is what we are doing this is to take advantage
 of GCC's support for zero cost exception handling using throw.
 
 The reason Lua is built even though many distributions already provide Lua is
@@ -34,23 +34,29 @@ with a different configuration does not overwrite your system's instillation of
 Lua.
 
 Now run make Linux or make Mingw depending on your system platform.
+
 DO NOT RUN MAKE INSTALL.
 
-WINDOWS ONLY BEGIN
+===============================================================================
+			       WINDOWS ONLY BEGIN
+===============================================================================
 
 This step is only for Windows users. On other operating system, the
 distribution should already have provided FLTK.
 
 You will now need to build FLTK to do this download fltk-1.3.3 and extract it
 into the Retro Graphics Toolkit project folder and build it using either
-./configure if you are on Windows or if you are cross compiling you need to
+./configure if you are on Windows or if you are cross compiling you need to do
 something like this:
 
 RANLIB=~/mingw/bin/x86_64-w64-mingw32-gcc-ranlib NM=~/mingw/bin/x86_64-w64-mingw32-gcc-nm AR=~/mingw/bin/x86_64-w64-mingw32-gcc-ar CFLAGS="-O2 -flto -fuse-linker-plugin -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=x86_64-w64-mingw32 --build=x86_64-unknown-linux-gnu
 
-Regardless of how ./configure is ran you will just need to run make and you are done building FLTK.
+Regardless of how ./configure is ran you will just need to run make and you are
+done building FLTK.
 
-END OF WINDOWS ONLY SECTION
+===============================================================================
+			  END OF WINDOWS ONLY SECTION
+===============================================================================
 
 Now on Linux run make or on Windows run make -f make_win note that you may need
 to modify the CXX and CC variables in make_win.
