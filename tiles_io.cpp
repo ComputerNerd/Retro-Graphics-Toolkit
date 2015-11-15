@@ -20,6 +20,7 @@
 #include "compressionWrapper.h"
 #include "gui.h"
 #include "class_global.h"
+#include "filereader.h"
 void save_tiles(Fl_Widget*,void*){
 	if(!currentProject->containsData(pjHaveTiles)){
 		currentProject->haveMessage(pjHaveTiles);
@@ -123,127 +124,112 @@ void load_tiles(Fl_Widget*,void*o){
 	uint8_t defaultRow=row >= 0 ? row:abs(row)-1;
 	int compression=compressionAsk();
 	bool alphaZero=fl_ask("Set color #0 to alpha 0 instead of 255")?true:false;
-	if (load_file_generic()){
-		FILE * myfile;
-		std::string output;
-		myfile = fopen(the_file.c_str(),"rb");
-		if (likely(myfile!=0)){
-			fseek(myfile, 0L, SEEK_END);
-			file_size = ftell(myfile);
-			rewind(myfile);
-			unsigned truecolor_multiplier;
-			truecolor_multiplier=256/currentProject->tileC->tileSize;
-			if(compression)
-				output=decodeTypeStr(the_file.c_str(),file_size,compression);
-			else{
-				if ((file_size/currentProject->tileC->tileSize)*currentProject->tileC->tileSize != file_size){
-					fl_alert("Error: This is not a valid tile file each tile is %d bytes and this file is not a multiple of %d so it is not a valid tile file",currentProject->tileC->tileSize,currentProject->tileC->tileSize);
-					fclose(myfile);
-					return;//return so that the file does not get loaded
-				}
-			}
-			uint32_t offset_tiles;
-			uint32_t offset_tiles_bytes;
-			if(mode==2){
-				const char * str=fl_input("Counting from zero which tile should this start at?");
-				if(!str){
-					return;
-					fclose(myfile);
-				}
-				if(!verify_str_number_only((char*)str)){
-					return;
-					fclose(myfile);
-				}
-				int off=atoi(str);
-				if(off>=0){
-					offset_tiles=off;
-					offset_tiles_bytes=offset_tiles*currentProject->tileC->tileSize;
-				}else{
-					fl_alert("You must enter a number greater than or equal to zero");
-					fclose(myfile);
-					return;
-				}
-			}else if(mode==1){
-				offset_tiles=currentProject->tileC->amt;
-				offset_tiles_bytes=offset_tiles*currentProject->tileC->tileSize;
-			}else{
-				offset_tiles=0;
-				offset_tiles_bytes=0;
-			}
-			if(mode==2){
-				if(offset_tiles+(file_size/currentProject->tileC->tileSize)>=currentProject->tileC->amt)
-					currentProject->tileC->tDat.resize(offset_tiles_bytes+file_size);
-			}else
-				currentProject->tileC->tDat.resize(offset_tiles_bytes+file_size);
-			if(compression)
-				output.copy((char *)currentProject->tileC->tDat.data()+offset_tiles_bytes,file_size);
-			else{
-				fread(currentProject->tileC->tDat.data()+offset_tiles_bytes,1,file_size,myfile);
-				fclose(myfile);
-			}
-			if(currentProject->getTileType()!=PLANAR_TILE)
-				currentProject->tileC->toPlanar(currentProject->getTileType(),offset_tiles,offset_tiles+(file_size/currentProject->tileC->tileSize));
-			if(mode==2){
-				if(offset_tiles+(file_size/currentProject->tileC->tileSize)>=currentProject->tileC->amt)
-					currentProject->tileC->truetDat.resize((file_size*truecolor_multiplier)+(offset_tiles_bytes*truecolor_multiplier));
-			}else
-				currentProject->tileC->truetDat.resize((file_size*truecolor_multiplier)+(offset_tiles_bytes*truecolor_multiplier));
-			for(uint32_t c=offset_tiles;c<(file_size/currentProject->tileC->tileSize)+offset_tiles;c++) {
-				if(row < 0){
-					uint32_t x,y;
-					uint8_t foundRow=defaultRow;
-					for(y=0;y<currentProject->tms->maps[currentProject->curPlane].mapSizeHA;++y){
-						for(x=0;x<currentProject->tms->maps[currentProject->curPlane].mapSizeW;++x){
-							if(currentProject->tms->maps[currentProject->curPlane].get_tile(x,y) == c) {
-								foundRow=currentProject->tms->maps[currentProject->curPlane].getPalRow(x,y);
-								goto doTile;
-							}
-						}
-					}
-doTile:
-					currentProject->tileC->tileToTrueCol(&currentProject->tileC->tDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetDat[(c*256)],foundRow,true,alphaZero);
-				}else
-					currentProject->tileC->tileToTrueCol(&currentProject->tileC->tDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetDat[(c*256)],defaultRow,true,alphaZero);
-			}
-			if(mode==2){
-				if(offset_tiles+(file_size/currentProject->tileC->tileSize)>=currentProject->tileC->amt){
-					currentProject->tileC->amt=(file_size/currentProject->tileC->tileSize);
-					currentProject->tileC->amt+=offset_tiles;
-				}
-			}else{
-				currentProject->tileC->amt=(file_size/currentProject->tileC->tileSize);
-				currentProject->tileC->amt+=offset_tiles;
-			}
-			updateTileSelectAmt();
-			window->tile_select->value(0);
-			window->tile_select_2->value(0);
-			window->redraw();
-		}else
-			fl_alert("The file %s Cannot be loaded",the_file.c_str());
+	void*output;
+	filereader f=filereader("Load tiles");
+	if(f.amt==0)
+		return;
+	unsigned idx=f.selDat();
+	file_size = f.lens[idx];
+	unsigned truecolor_multiplier;
+	truecolor_multiplier=256/currentProject->tileC->tileSize;
+	if(compression)
+		output=decodeTypeRam((uint8_t*)f.dat[idx],f.lens[idx],file_size,compression);
+	else{
+		if (file_size%currentProject->tileC->tileSize){
+			fl_alert("Error: This is not a valid tile file each tile is %d bytes and this file is not a multiple of %d so it is not a valid tile file",currentProject->tileC->tileSize,currentProject->tileC->tileSize);
+			return;
+		}
 	}
+	uint32_t offset_tiles;
+	uint32_t offset_tiles_bytes;
+	if(mode==2){
+		const char * str=fl_input("Counting from zero which tile should this start at?");
+		if(!str){
+			return;
+		}
+		if(!verify_str_number_only((char*)str)){
+			return;
+		}
+		int off=atoi(str);
+		if(off>=0){
+			offset_tiles=off;
+			offset_tiles_bytes=offset_tiles*currentProject->tileC->tileSize;
+		}else{
+			fl_alert("You must enter a number greater than or equal to zero");
+			return;
+		}
+	}else if(mode==1){
+		offset_tiles=currentProject->tileC->amt;
+		offset_tiles_bytes=offset_tiles*currentProject->tileC->tileSize;
+	}else{
+		offset_tiles=0;
+		offset_tiles_bytes=0;
+	}
+	if(mode==2){
+		if(offset_tiles+(file_size/currentProject->tileC->tileSize)>=currentProject->tileC->amt)
+			currentProject->tileC->tDat.resize(offset_tiles_bytes+file_size);
+	}else
+		currentProject->tileC->tDat.resize(offset_tiles_bytes+file_size);
+	if(compression){
+		memcpy(currentProject->tileC->tDat.data()+offset_tiles_bytes,output,file_size);
+		free(output);
+	}else
+		memcpy(currentProject->tileC->tDat.data()+offset_tiles_bytes,f.dat[idx],file_size);
+	if(currentProject->getTileType()!=PLANAR_TILE)
+		currentProject->tileC->toPlanar(currentProject->getTileType(),offset_tiles,offset_tiles+(file_size/currentProject->tileC->tileSize));
+	if(mode==2){
+		if(offset_tiles+(file_size/currentProject->tileC->tileSize)>=currentProject->tileC->amt)
+			currentProject->tileC->truetDat.resize((file_size*truecolor_multiplier)+(offset_tiles_bytes*truecolor_multiplier));
+	}else
+		currentProject->tileC->truetDat.resize((file_size*truecolor_multiplier)+(offset_tiles_bytes*truecolor_multiplier));
+	for(uint32_t c=offset_tiles;c<(file_size/currentProject->tileC->tileSize)+offset_tiles;c++) {
+		if(row < 0){
+			uint32_t x,y;
+			uint8_t foundRow=defaultRow;
+			for(y=0;y<currentProject->tms->maps[currentProject->curPlane].mapSizeHA;++y){
+				for(x=0;x<currentProject->tms->maps[currentProject->curPlane].mapSizeW;++x){
+					if(currentProject->tms->maps[currentProject->curPlane].get_tile(x,y) == c) {
+						foundRow=currentProject->tms->maps[currentProject->curPlane].getPalRow(x,y);
+						goto doTile;
+					}
+				}
+			}
+doTile:
+			currentProject->tileC->tileToTrueCol(&currentProject->tileC->tDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetDat[(c*256)],foundRow,true,alphaZero);
+		}else
+			currentProject->tileC->tileToTrueCol(&currentProject->tileC->tDat[(c*currentProject->tileC->tileSize)],&currentProject->tileC->truetDat[(c*256)],defaultRow,true,alphaZero);
+	}
+	if(mode==2){
+		if(offset_tiles+(file_size/currentProject->tileC->tileSize)>=currentProject->tileC->amt){
+			currentProject->tileC->amt=(file_size/currentProject->tileC->tileSize);
+			currentProject->tileC->amt+=offset_tiles;
+		}
+	}else{
+		currentProject->tileC->amt=(file_size/currentProject->tileC->tileSize);
+		currentProject->tileC->amt+=offset_tiles;
+	}
+	updateTileSelectAmt();
+	window->tile_select->value(0);
+	window->tile_select_2->value(0);
+	window->redraw();
 }
 void load_truecolor_tiles(Fl_Widget*,void*){
 	//start by loading the file
-	uint32_t file_size;
-	if (load_file_generic() == true){
-		FILE * myfile;
-		myfile = fopen(the_file.c_str(),"rb");
-		fseek(myfile, 0L, SEEK_END);
-		file_size = ftell(myfile);
-		if (file_size&255){
-			fl_alert("Error: this file is not a multiple of 256 so it is not a valid truecolor tiles. The file size is: %d",file_size);
-			fclose(myfile);
-			return;
-		}
-		currentProject->tileC->truetDat.resize(file_size);
-		currentProject->tileC->tDat.resize(file_size*currentProject->tileC->tileSize/currentProject->tileC->tcSize);
-		rewind(myfile);
-		fread(currentProject->tileC->truetDat.data(),file_size,1,myfile);
-		fclose(myfile);
-		currentProject->tileC->amt=file_size/256;
-		updateTileSelectAmt();
-		window->redraw();
+	filereader f=filereader("Load truecolor tiles");
+	if(!f.amt)
+		return;
+	unsigned i=f.selDat();
+	size_t file_size = f.lens[i];
+	if (file_size&255){
+		fl_alert("Error: this file is not a multiple of 256 so it is not a valid truecolor tiles. The file size is: %d",file_size);
+		return;
 	}
+	currentProject->tileC->truetDat.resize(file_size);
+	currentProject->tileC->tDat.resize(file_size*currentProject->tileC->tileSize/currentProject->tileC->tcSize);
+	memcpy(currentProject->tileC->truetDat.data(),f.dat[i],file_size);
+	currentProject->tileC->amt=file_size/256;
+	updateTileSelectAmt();
+	window->redraw();
 }
 void save_tiles_truecolor(Fl_Widget*,void*){
 	if(!currentProject->containsData(pjHaveTiles)){

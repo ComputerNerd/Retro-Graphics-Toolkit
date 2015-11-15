@@ -56,7 +56,7 @@ public:
 	unsigned getSolid(uint32_t id,uint32_t x,uint32_t y)const;
 	void drawChunk(uint32_t id,int xo,int yo,int zoom,int scrollX=0,int scrollY=0);
 	void scrollChunks(void);
-	void importSonic1(const char * filename,bool append);
+	void importSonic1(bool append);
 	void exportSonic1(void)const;
 	void resize(uint32_t wnew,uint32_t hnew);
 	void subBlock(unsigned oid,unsigned nid);

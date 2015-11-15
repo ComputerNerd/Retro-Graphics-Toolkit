@@ -101,7 +101,7 @@ static inline uint32_t sq(uint32_t x){
 }
 uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_found,bool useAlpha){
 	/*!
-	Scans for colors in an image stops at over 256 as if there is an excess of 256 colors there is no reason to countinue
+	Scans for colors in an image stops at over 256 as if there is an excess of 256 colors there is no reason to continue
 	*/
 	uint32_t colors_amount=3;
 	colors_found[0]=*image_ptr++;
@@ -134,12 +134,10 @@ uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_
 				colors_amount+=3;
 			}
 			if (colors_amount >= 765){
-				printf("\nOver 255 colors timing out no need for operation to countinue.\n");
+				printf("\nOver 255 colors timing out no need for operation to continue.\n");
 				return colors_amount/3;
 			}
 		}
-			//update progress
-			//printf("counting colors %% %f Colors Found: %d\r",((float)y/(float)h)*100.0,colors_amount/3);
 	}
 	putchar('\n');
 	return colors_amount/3;

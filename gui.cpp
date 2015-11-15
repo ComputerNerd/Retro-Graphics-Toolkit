@@ -147,7 +147,29 @@ static void setRet(Fl_Widget*,void*r){
 		returnVal=PopC->value();
 	winP->hide();
 }
-int MenuPopup(const char * title,const char * text,unsigned num,...){
+int menuPopupVector(const char * title,const char * text,std::vector<std::string>&slst){
+	winP=new Fl_Window(480,128,title);
+	winP->begin();
+	if(text)
+		new Fl_Box(FL_NO_BOX,8,8,464,88,text);
+	PopC=new Fl_Choice(8,96,192,24);
+	for(std::string &s:slst)	// Loop until all numbers are added
+		PopC->add(s.c_str(),0,0,0,0);
+	PopC->value(0);
+	Fl_Button * Ok=new Fl_Button(200,96,64,24,fl_ok);
+	Ok->callback(setRet,0);
+	Fl_Button * Cancel=new Fl_Button(264,96,64,24,fl_cancel);
+	Cancel->callback(setRet,(void*)1);
+	winP->end();
+	winP->set_modal();
+	winP->show();
+	while(winP->shown())
+		Fl::wait();
+	delete winP;
+	return returnVal;
+	return -1;
+}
+int MenuPopup(const char * title,const char * text,unsigned num,unsigned def,...){
 	if(num){
 		winP=new Fl_Window(480,128,title);
 		winP->begin();
@@ -158,10 +180,10 @@ int MenuPopup(const char * title,const char * text,unsigned num,...){
 		va_start(arguments,num);	// Initializing arguments to store all values after num
 		for(unsigned x=0;x<num;++x)	// Loop until all numbers are added
 			PopC->add(va_arg(arguments, const char*),0,0,0,0);
-		PopC->value(0);
-		Fl_Button * Ok=new Fl_Button(200,96,64,24,"Okay");
+		PopC->value(def);
+		Fl_Button * Ok=new Fl_Button(200,96,64,24,fl_ok);
 		Ok->callback(setRet,0);
-		Fl_Button * Cancel=new Fl_Button(264,96,64,24,"Cancel");
+		Fl_Button * Cancel=new Fl_Button(264,96,64,24,fl_cancel);
 		Cancel->callback(setRet,(void*)1);
 		winP->end();
 		winP->set_modal();

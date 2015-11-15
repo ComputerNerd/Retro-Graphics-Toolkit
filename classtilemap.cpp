@@ -25,6 +25,7 @@
 #include "dither.h"
 #include "palette.h"
 #include "gui.h"
+#include "filereader.h"
 tileMap::tileMap(Project*prj)noexcept:tileMap(2,2,prj){}
 tileMap::tileMap(uint32_t w,uint32_t h,Project*prj)noexcept{
 	this->prj=prj;
@@ -637,192 +638,183 @@ static void zero_error_tile_map(int32_t x){
 }
 bool tileMap::loadFromFile(){
 	//start by loading the file
-	/*Only will return false when there is a malloc error or file error
-	the file saving user cancellation and not entering the number correctly return true*/
+	/*Only will return false when there is a malloc error or file error.
+	Return true upon user cancellation or the user not entering a number correctly.*/
+	filereader f=filereader("Load a tilemap");
+	if(f.amt==0)
+		return true;
 	size_t file_size;
-	if (load_file_generic("Load tile map data")){
-		int compression=compressionAsk();
-		//get width and height
-		int blocksLoad=fl_ask("Are you loading blocks?");
-		std::string tilemap_file=the_file;
-		int32_t w,h;
-		char * str_ptr;
-		if(blocksLoad)
-			str_ptr=(char *)fl_input("Enter block width");
-		else
-			str_ptr=(char *)fl_input("Enter width");
-		if (!str_ptr)
-			return true;
-		if (!verify_str_number_only(str_ptr))
-			return true;
-		w=atoi(str_ptr);
-		if (w <= 0){
-			zero_error_tile_map(w);
-			return true;
-		}
-		if (prj->gameSystem == NES && (w & 1)&&(prj->subSystem&NES2x2)){
-			fl_alert("Error unlike in Sega genesis mode NES mode needs the width and height to be a multiple to 2");
-			return true;
-		}
-		if(blocksLoad)
-			str_ptr=(char *)fl_input("Enter block height");
-		else
-			str_ptr=(char *)fl_input("Enter height");
-		if (!str_ptr)
-			return true;
-		if (!verify_str_number_only(str_ptr))
-			return true;
-		h=atoi(str_ptr);
-		if (h <= 0){
-			zero_error_tile_map(h);
-			return true;
-		}
-		if (prj->gameSystem == NES && (h & 1)&&(prj->subSystem&NES2x2)){
-			fl_alert("Error unlike in Sega genesis mode NES mode needs the width and height the be a multiple to 2");
-			return true;
-		}
-		//we can now load the map
-		int32_t offset;
-		str_ptr=(char *)fl_input("Enter offset\nThis number will be subtracted from the tilemap's tile value can be positive or negative");
-		if(!str_ptr)
-			return true;
-		if (!verify_str_number_only(str_ptr))
-			return true;
-		offset=atoi(str_ptr);
-		window->tmapOffset->value(str_ptr);
-		this->offset=offset;
-		window->BlocksCBtn->value(blocksLoad?1:0);
-		FILE*fp;
-		if(!compression){
-			fp=fopen(tilemap_file.c_str(),"rb");
-			fseek(fp,0,SEEK_END);
-			file_size = ftell(fp);
-			rewind(fp);
-		}
-		size_t size_temp;
-		std::string output;
-		if(compression)
-			output=decodeTypeStr(tilemap_file.c_str(),file_size,compression);
-		uint32_t blocksLoaded=file_size/w/h;
-		switch (prj->gameSystem){
-			case segaGenesis:
-			case masterSystem:
-			case gameGear:
-				if(blocksLoad)
-					size_temp=blocksLoaded*w*h;
-				else
-					size_temp=w*h*2;//Size of data that is to be loaded
-				blocksLoaded/=2;
-			break;
-			case NES:
-				if(blocksLoad)
-					size_temp=blocksLoaded*w*h;
-				else
-					size_temp=w*h;
-			break;
-			default:
-				show_default_error
-		}
-		printf("W %d H %d blocks loaded %d\n",w,h,blocksLoaded);
-		window->updateMapWH();
-		mapSizeW=w;
-		mapSizeH=h;
-		if(blocksLoad)
-			amt=blocksLoaded;
-		else
-			amt=1;
-		mapSizeHA=mapSizeH*amt;
-		if(size_temp>file_size)
-			fl_alert("Warning: The Tile map that you are attempting to load is smaller than a tile map that has the width and height that you specified\nThis missing data will be padded with tile zero");
-		//start converting to tile
-		//free(tile_map);
-		tileMapDat = (uint8_t *)realloc(tileMapDat,(w*h)*4*amt);
-		uint8_t * tempMap = (uint8_t *) malloc(size_temp);
-		if (unlikely(!tileMapDat))
-			show_malloc_error(size_temp)
-		if (compression)
-			output.copy((char *)tempMap, file_size);
-		else if (!compression){
-			fread((char *)tempMap,size_temp,1,fp);
-			fclose(fp);
-		}
-		uint32_t x,y;
-		for (y=0;y<mapSizeH*amt;++y){
-			for (x=0;x<mapSizeW;++x){
-				switch (prj->gameSystem){
-					case segaGenesis:
-						if (((x+(y*w)+1)*2) <= file_size){
-							int temp=*tempMap++;
-							//set attributes
-							tileMapDat[((y*mapSizeW)+x)*4]=(uint8_t)temp&0xF8;
-							temp&=7;
-							temp<<=8;
-							temp|=*tempMap++;
-							if (temp-offset > 0)
-								set_tile(x,y,(int32_t)temp-offset);
-							else
-								set_tile(x,y,0);
-						}else
-							set_tile(x,y,0);
-					break;
-					case masterSystem:
-					case gameGear:
-						if (((x+(y*w)+1)*2) <= file_size){
-							uint8_t attrs=*tempMap++;
-							uint16_t tile=*tempMap++;
-							tile|=(attrs&1)<<8;
-							set_tile_full(x,y,tile,(attrs>>3)&1,(attrs>>1)&1,(attrs>>2)&1,(attrs>>4)&1);
-						}else
-							set_tile(x,y,0);
-					break;
-					case NES:
-						if ((x+(y*w)+1) <= file_size){
-							int temp=*tempMap++;
-							if (temp-offset > 0)
-								set_tile(x,y,(int32_t)temp-offset);
-							else
-								set_tile(x,y,0);
-						}else
-							set_tile(x,y,0);
-					break;
-					default:
-						show_default_error
-				}
-			}
-		}
-		if(prj->gameSystem==NES){
-			//now load attributes
-			if (load_file_generic("Load Attributes")){
-				FILE * fp=fopen(the_file.c_str(),"rb");
-				fseek(fp, 0L, SEEK_END);
-				uint32_t sz=ftell(fp);
-				rewind(fp);
-				uint8_t* tempbuf=(uint8_t*)alloca(sz);
-				fread(tempbuf,1,sz,fp);
-				for (y=0;y<mapSizeH*amt;y+=4){
-					for (x=0;x<mapSizeW;x+=4){
-						set_pal_row(x,y,*tempbuf&3);
-						set_pal_row(x,y+1,*tempbuf&3);
-						set_pal_row(x+1,y,*tempbuf&3);
-						set_pal_row(x+1,y+1,*tempbuf&3);
-
-						set_pal_row(x+2,y,((*tempbuf)>>2)&3);
-						set_pal_row(x+2,y+1,((*tempbuf)>>2)&3);
-						set_pal_row(x+3,y,((*tempbuf)>>2)&3);
-						set_pal_row(x+3,y+1,((*tempbuf)>>2)&3);
-
-						++tempbuf;
-					}
-				}
-				fclose(fp);
-			}
-		}
-		tempMap-=file_size;
-		free(tempMap);
-		isBlock=blocksLoad;
-		toggleBlocks(blocksLoad);
-		window->redraw();
+	int compression=compressionAsk();
+	//get width and height
+	int blocksLoad=fl_ask("Are you loading blocks?");
+	std::string tilemap_file=the_file;
+	int32_t w,h;
+	char * str_ptr;
+	if(blocksLoad)
+		str_ptr=(char *)fl_input("Enter block width");
+	else
+		str_ptr=(char *)fl_input("Enter width");
+	if (!str_ptr)
+		return true;
+	if (!verify_str_number_only(str_ptr))
+		return true;
+	w=atoi(str_ptr);
+	if (w <= 0){
+		zero_error_tile_map(w);
+		return true;
 	}
+	if (prj->gameSystem == NES && (w & 1)&&(prj->subSystem&NES2x2)){
+		fl_alert("Error unlike in Sega Genesis mode NES mode needs the width and height to be a multiple to 2");
+		return true;
+	}
+	if(blocksLoad)
+		str_ptr=(char *)fl_input("Enter block height");
+	else
+		str_ptr=(char *)fl_input("Enter height");
+	if (!str_ptr)
+		return true;
+	if (!verify_str_number_only(str_ptr))
+		return true;
+	h=atoi(str_ptr);
+	if (h <= 0){
+		zero_error_tile_map(h);
+		return true;
+	}
+	if (prj->gameSystem == NES && (h & 1)&&(prj->subSystem&NES2x2)){
+		fl_alert("Error unlike in Sega Genesis mode NES mode needs the width and height the be a multiple to 2");
+		return true;
+	}
+	//we can now load the map
+	int32_t offset;
+	str_ptr=(char *)fl_input("Enter offset\nThis number will be subtracted from the tilemap's tile value can be positive or negative");
+	if(!str_ptr)
+		return true;
+	if (!verify_str_number_only(str_ptr))
+		return true;
+	offset=atoi(str_ptr);
+	window->tmapOffset->value(str_ptr);
+	this->offset=offset;
+	window->BlocksCBtn->value(blocksLoad?1:0);
+	unsigned index=f.selDat();
+	file_size=f.lens[index];
+	size_t size_temp;
+	uint8_t*output;
+	if(compression)
+		output=(uint8_t*)decodeTypeRam((uint8_t*)f.dat[index],f.lens[index],file_size,compression);
+	uint32_t blocksLoaded=file_size/w/h;
+	switch (prj->gameSystem){
+		case segaGenesis:
+		case masterSystem:
+		case gameGear:
+			if(blocksLoad)
+				size_temp=blocksLoaded*w*h;
+			else
+				size_temp=w*h*2;//Size of data that is to be loaded
+			blocksLoaded/=2;
+			break;
+		case NES:
+			if(blocksLoad)
+				size_temp=blocksLoaded*w*h;
+			else
+				size_temp=w*h;
+			break;
+		default:
+			show_default_error
+	}
+	printf("W %d H %d blocks loaded %d\n",w,h,blocksLoaded);
+	window->updateMapWH();
+	mapSizeW=w;
+	mapSizeH=h;
+	if(blocksLoad)
+		amt=blocksLoaded;
+	else
+		amt=1;
+	mapSizeHA=mapSizeH*amt;
+	if(size_temp>file_size)
+		fl_alert("Warning: The Tile map that you are attempting to load is smaller than a tile map that has the width and height that you specified\nThis missing data will be padded with tile zero");
+	//start converting to tile
+	//free(tile_map);
+	tileMapDat = (uint8_t *)realloc(tileMapDat,(w*h)*4*amt);
+	uint8_t * tempMap = (uint8_t *) malloc(size_temp);
+	if (unlikely(!tileMapDat))
+		show_malloc_error(size_temp)
+			if (compression){
+				memcpy(tempMap,output,file_size);
+				free(output);
+			}else
+				memcpy(tempMap,f.dat[index],size_temp);
+	uint32_t x,y;
+	for (y=0;y<mapSizeH*amt;++y){
+		for (x=0;x<mapSizeW;++x){
+			switch (prj->gameSystem){
+				case segaGenesis:
+					if (((x+(y*w)+1)*2) <= file_size){
+						int temp=*tempMap++;
+						//set attributes
+						tileMapDat[((y*mapSizeW)+x)*4]=(uint8_t)temp&0xF8;
+						temp&=7;
+						temp<<=8;
+						temp|=*tempMap++;
+						if (temp-offset > 0)
+							set_tile(x,y,(int32_t)temp-offset);
+						else
+							set_tile(x,y,0);
+					}else
+						set_tile(x,y,0);
+					break;
+				case masterSystem:
+				case gameGear:
+					if (((x+(y*w)+1)*2) <= file_size){
+						uint8_t attrs=*tempMap++;
+						uint16_t tile=*tempMap++;
+						tile|=(attrs&1)<<8;
+						set_tile_full(x,y,tile,(attrs>>3)&1,(attrs>>1)&1,(attrs>>2)&1,(attrs>>4)&1);
+					}else
+						set_tile(x,y,0);
+					break;
+				case NES:
+					if ((x+(y*w)+1) <= file_size){
+						int temp=*tempMap++;
+						if (temp-offset > 0)
+							set_tile(x,y,(int32_t)temp-offset);
+						else
+							set_tile(x,y,0);
+					}else
+						set_tile(x,y,0);
+					break;
+				default:
+					show_default_error
+			}
+		}
+	}
+	if(prj->gameSystem==NES){
+		//now load attributes
+		filereader f2=filereader("Load Attributes");
+		if(f2.amt){
+			unsigned indx2=f.selDat();
+			uint8_t* tempbuf=(uint8_t*)f.dat[indx2];
+			for (y=0;y<mapSizeH*amt;y+=4){
+				for (x=0;x<mapSizeW;x+=4){
+					set_pal_row(x,y,*tempbuf&3);
+					set_pal_row(x,y+1,*tempbuf&3);
+					set_pal_row(x+1,y,*tempbuf&3);
+					set_pal_row(x+1,y+1,*tempbuf&3);
+
+					set_pal_row(x+2,y,((*tempbuf)>>2)&3);
+					set_pal_row(x+2,y+1,((*tempbuf)>>2)&3);
+					set_pal_row(x+3,y,((*tempbuf)>>2)&3);
+					set_pal_row(x+3,y+1,((*tempbuf)>>2)&3);
+
+					++tempbuf;
+				}
+			}
+		}
+	}
+	tempMap-=file_size;
+	free(tempMap);
+	isBlock=blocksLoad;
+	toggleBlocks(blocksLoad);
+	window->redraw();
 	return true;
 }
 void tileMap::sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vflip){
@@ -866,7 +858,7 @@ void tileMap::set_tile_full(uint32_t x,uint32_t y,uint32_t tile,unsigned palette
 	n = Pattern name
 	*/
 	//the extended tile mapping format is a generic format it goes like this
-	//The first byte stores attributes in Sega genesis format except with no tile data
+	//The first byte stores attributes in Sega Genesis format except with no tile data
 	//the next two bytes store the tile number
 	flags=palette_row<<5;
 	flags|=use_hflip<<3;

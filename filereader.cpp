@@ -22,15 +22,6 @@
 #include "gui.h"
 #include "luaconfig.h"
 #include "runlua.h"
-static const char*skipWS(const char*ptr){
-	while(isspace(*ptr++));
-	return ptr-1;
-}
-static const char*nextLine(const char*ptr){
-	while(*ptr!='\n'&&*ptr!='\r')
-		++ptr;
-	return ptr;
-}
 filereader::filereader(const char*title,bool relptr,unsigned offbits,bool be){
 	char*fname;
 	if(title)
@@ -38,7 +29,19 @@ filereader::filereader(const char*title,bool relptr,unsigned offbits,bool be){
 	else
 		fname=loadsavefile();
 	if(fname){
-		fileType_t tp=askSaveType();
+		char*ext=(char*)fl_filename_ext(fname);
+		ext=strdup(ext);
+		for(char*p=ext;*p;++p)
+			*p=tolower(*p);
+		fileType_t def=tBinary;
+		if(!strcmp(ext,".asm"))
+			def=tASM;
+		else if(!strcmp(ext,".bex"))
+			def=tBEX;
+		else if(!strcmp(ext,".h"))
+			def=tCheader;
+		free(ext);
+		fileType_t tp=askSaveType(false,def);
 		if(tp==tCancle){
 			amt=0;
 			free(fname);
@@ -46,7 +49,6 @@ filereader::filereader(const char*title,bool relptr,unsigned offbits,bool be){
 		}
 		struct stat st;
 		FILE*fp=fopen(fname,tp==tBinary?"rb":"r");
-		free(fname);
 		if(!fp){
 			fl_alert("An error has occurred: %s",strerror(errno));
 			amt=0;
@@ -58,25 +60,55 @@ filereader::filereader(const char*title,bool relptr,unsigned offbits,bool be){
 			fclose(fp);
 			return;
 		}
-		if(tp==tBinary){
-			lens.push_back(st.st_size);
-			lenTotal=st.st_size;
-			dat.push_back(std::vector<uint8_t>(lenTotal));
-			fread(dat[0].data(),1,lenTotal,fp);
-		}else{
-			char*tmp=(char*)malloc(st.st_size);
-			fread(tmp,1,st.st_size,fp);
-			//This is handled by Lua code so the user can modify the behavior of this function with ease
-			lua_getglobal(Lconf,"filereaderProcessText");
-			lua_pushinteger(Lconf,tp);
-			lua_pushboolean(Lconf,relptr);
-			lua_pushinteger(Lconf,offbits);
-			lua_pushboolean(Lconf,be);
-			lua_pushstring(Lconf,tmp);
-			runLuaFunc(Lconf,5,1);
-			free(tmp);
-		}
+		char*tmp=(char*)malloc(st.st_size);
+		fread(tmp,1,st.st_size,fp);
 		fclose(fp);
+		//This is handled by Lua code so the user can modify the behavior of this function with ease
+		lua_getglobal(Lconf,"filereaderProcessText");
+		lua_pushinteger(Lconf,tp);
+		lua_pushboolean(Lconf,relptr);
+		lua_pushinteger(Lconf,offbits);
+		lua_pushboolean(Lconf,be);
+		lua_pushlstring(Lconf,tmp,st.st_size);//Lua makes a copy of the string
+		lua_pushstring(Lconf,fname);
+		free(fname);
+		free(tmp);
+		runLuaFunc(Lconf,6,1);
+		size_t len=lua_rawlen(Lconf,-1);
+		if(len){
+			lenTotal=0;
+			amt=len;
+			for(size_t i=1;i<=len;++i){
+				lua_rawgeti(Lconf,-1,i);
+				//Get its name
+				lua_rawgeti(Lconf,-1,1);
+				names.emplace_back(lua_tostring(Lconf,-1));
+				lua_pop(Lconf,1);
+				//Get its data
+				lua_rawgeti(Lconf,-1,2);
+				size_t ln;
+				const char*src=lua_tolstring(Lconf,-1,&ln);
+				void*dst=malloc(ln);
+				memcpy(dst,src,ln);
+				lens.push_back(ln);
+				dat.push_back(dst);
+				lenTotal+=ln;
+				lua_pop(Lconf,2);
+			}
+		}else
+			amt=0;
+		lua_pop(Lconf,1);
 	}else
 		amt=0;
+}
+filereader::~filereader(){
+	for(void*elm:dat)
+		free(elm);
+}
+
+unsigned filereader::selDat(void){
+	if(amt>1){
+		return menuPopupVector("Select an array","There are multiple arrays. Which one should be loaded?",names);
+	}else
+		return 0;
 }

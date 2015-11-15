@@ -23,6 +23,7 @@
 #include "gui.h"
 #include "class_global.h"
 #include "compressionWrapper.h"
+#include "filereader.h"
 ChunkClass::ChunkClass(Project*prj){
 	this->prj=prj;
 	chunks.resize(256);
@@ -246,7 +247,7 @@ static inline uint16_t swap_word(uint16_t w){
 static void errorNum(void){
 	fl_alert("Please enter a value greater than zero");
 }
-void ChunkClass::importSonic1(const char * filename,bool append){
+void ChunkClass::importSonic1(bool append){
 	if(fl_ask("Custom width and height?")){
 		char*ptr=(char*)fl_input("Width");
 		if(!ptr)
@@ -278,18 +279,15 @@ void ChunkClass::importSonic1(const char * filename,bool append){
 	if(compression<0)
 		return;
 	pushChunksAll();
-	uint16_t* Dat;
+	uint16_t* dat;
 	size_t fileSize;
+	filereader f=filereader("Select a Sonic One chunk file");
+	unsigned i=f.selDat();
 	if(compression)
-		Dat=(uint16_t*)decodeType(filename,fileSize,compression);
+		dat=(uint16_t*)decodeTypeRam((uint8_t*)f.dat[i],f.lens[i],fileSize,compression);
 	else{
-		FILE * fi=fopen(filename,"rb");
-		fseek(fi,0,SEEK_END);
-		fileSize=ftell(fi);
-		rewind(fi);
-		Dat=(uint16_t*)malloc(fileSize);
-		fread(Dat,1,fileSize,fi);
-		fclose(fi);
+		dat=(uint16_t*)f.dat[i];
+		fileSize=f.lens[i];
 	}
 	uint32_t off;
 	if(append)
@@ -301,23 +299,24 @@ void ChunkClass::importSonic1(const char * filename,bool append){
 	chunks.resize(amt*wi*hi);
 	struct ChunkAttrs*cptr=chunks.data();
 	cptr+=off*wi*hi;
-	uint16_t * DatC=Dat;
+	uint16_t * datC=dat;
 	for(uint32_t l=0;l<(fileSize/(wi*hi*2));++l){
 		for(uint32_t y=0;y<hi;++y){
 			for(uint32_t x=0;x<wi;++x){
 				#if _WIN32
-				*DatC=swap_word(*DatC);
+				*datC=swap_word(*datC);
 				#else
-				*DatC=be16toh(*DatC);
+				*datC=be16toh(*datC);
 				#endif
-				cptr->block=*DatC&1023;
-				cptr->flags=(*DatC>>11)&15;
+				cptr->block=*datC&1023;
+				cptr->flags=(*datC>>11)&15;
 				++cptr;
-				++DatC;
+				++datC;
 			}
 		}
 	}
-	free(Dat);
+	if(compression)
+		free(dat);
 }
 void ChunkClass::exportSonic1(void)const{
 	FILE*fp;

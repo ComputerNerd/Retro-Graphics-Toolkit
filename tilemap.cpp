@@ -112,10 +112,10 @@ static double getHH(uint32_t cur_tile,int type){
 	return hh;
 }
 void tileMap::pickRow(unsigned amount){
-	int type=MenuPopup("Pick tile row based on...","Please pick what most defines the image",9,"Hue","Saturation","Lightness","Hue*saturation","Hue*Lightness","Lightness*saturation","Hue+saturation","Hue+lightness","Lightness+saturation");
+	int type=MenuPopup("Pick tile row based on...","Please pick what most defines the image",9,0,"Hue","Saturation","Lightness","Hue*saturation","Hue*Lightness","Lightness*saturation","Hue+saturation","Hue+lightness","Lightness+saturation");
 	if(type<0)
 		return;
-	int method=MenuPopup("Select a method","This depends on the image",3,"Average","Histogram section with most occurrences","Histogram peak");
+	int method=MenuPopup("Select a method","This depends on the image",3,0,"Average","Histogram section with most occurrences","Histogram peak");
 	if(method<0)
 		return;
 	pushTilemapAll(true);
@@ -248,7 +248,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 		fl_alert("This function needs more than one palette row to work");
 		return;
 	}
-	int alg=MenuPopup("Select picking algorithm","Pick which method you think works better for this image.",6,"ciede2000","Weighted","Mean squared error","Hue difference","Saturation difference","Lightness difference");
+	int alg=MenuPopup("Select picking algorithm","Pick which method you think works better for this image.",6,0,"ciede2000","Weighted","Mean squared error","Hue difference","Saturation difference","Lightness difference");
 	if(alg<0)
 		return;
 	pushTilemapAll(true);
@@ -685,7 +685,7 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 	if((rows==1)&&(!set->sprite))
 		rowAuto = fl_ask("Would you like all tiles on the tilemap to be set to row %d? (This is where all generated colors will appear)",firstRow);
 	else if(!set->sprite){
-		rowAuto = MenuPopup("Palette setting","How would you like the palette map to be handled",4,"Don't change anything","Pick based on hue","Generate contiguous palette then pick based on delta","Quantizer's choice");
+		rowAuto = MenuPopup("Palette setting","How would you like the palette map to be handled",4,0,"Don't change anything","Pick based on hue","Generate contiguous palette then pick based on delta","Quantizer's choice");
 		if(rowAuto<0)
 			return;
 	}else
