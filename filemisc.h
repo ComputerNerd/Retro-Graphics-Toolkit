@@ -25,5 +25,5 @@ enum fileType_t{
 void saveStrifNot(FILE*fp,const char*str,const char*cmp);
 void fileToStr(FILE*fp,std::string&s,const char*defaultStr);
 int clipboardAsk(void);
-fileType_t askSaveType(bool save=true);
+fileType_t askSaveType(bool save=true,fileType_t def=tBinary);
 bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,fileType_t type,const char*comment,const char*label,int bits);

@@ -27,7 +27,7 @@ const char*typeToText(int type){
 	return TypeTab[type];
 }
 int compressionAsk(void){
-	return MenuPopup("Compression?","Select a compression algorithm or use uncompressed",6,TypeTab[0],TypeTab[1],TypeTab[2],TypeTab[3],TypeTab[4],TypeTab[5]);
+	return MenuPopup("Compression?","Select a compression algorithm or use uncompressed",6,0,TypeTab[0],TypeTab[1],TypeTab[2],TypeTab[3],TypeTab[4],TypeTab[5]);
 }
 std::string decodeTypeStr(const char * filename,size_t &filesize,int type){
 	std::stringstream outDecomp;
@@ -65,6 +65,41 @@ void*decodeType(const char * filename,size_t &filesize,int type){
 	char * Dat=(char *)malloc(filesize);
 	output.copy(Dat, filesize);
 	return Dat;
+}
+void*decodeTypeRam(uint8_t*dat,size_t inputSize,size_t &filesize,int type){
+	std::stringstream ss,outDecomp;
+	for(size_t i=0;i<inputSize;++i)
+		ss<<dat[i];
+	switch(type){
+		case 1:
+			{nemesis decomp;
+			decomp.decode(ss,outDecomp);}
+		break;
+		case 2:
+			{kosinski decomp;
+			decomp.decode(ss,outDecomp);}
+		break;
+		case 3:
+			{enigma decomp;
+			decomp.decode(ss,outDecomp);}
+		break;
+		case 4:
+			{saxman decomp;
+			decomp.decode(ss,outDecomp);}
+		break;
+		case 5:
+			{comper decomp;
+			decomp.decode(ss,outDecomp);}
+		break;
+		default:
+			show_default_error
+	}
+	filesize=outDecomp.str().length();
+	printf("Decompressed to %d bytes\n",filesize);
+	std::string out=outDecomp.str();
+	char * dat=(char *)malloc(filesize);
+	out.copy(dat, filesize);
+	return (void*)dat;
 }
 void*encodeType(void*in,size_t n,size_t&outSize,int type){
 	std::string input;

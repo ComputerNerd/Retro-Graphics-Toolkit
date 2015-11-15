@@ -37,8 +37,8 @@ void fileToStr(FILE*fp,std::string&s,const char*defaultStr){
 int clipboardAsk(void){
 	return fl_choice("File or clipboard?","File","Clipboard","Cancel");
 }
-fileType_t askSaveType(bool save){
-	return (fileType_t)MenuPopup(save?"How would you like the file saved?":"What type of file is this?","Set if the file is saved as binary, C header, bex, or asm",4,"Binary","C header","ASM","BEX");
+fileType_t askSaveType(bool save,fileType_t def){
+	return (fileType_t)MenuPopup(save?"How would you like the file saved?":"What type of file is this?","Set if the file is saved as binary, C header, bex, or asm",4,(unsigned)def,"Binary","C header","ASM","BEX");
 }
 bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,fileType_t type,const char*comment,const char*label,int bits){
 	/*!

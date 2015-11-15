@@ -20,7 +20,9 @@
 struct filereader{
 	size_t amt,lenTotal;
 	std::vector<size_t>lens;
-	std::vector<std::vector<uint8_t>>dat;
+	std::vector<void*>dat;
 	std::vector<std::string>names;
 	filereader(const char*title=nullptr,bool relptr=false,unsigned offbits=16,bool be=true);
+	unsigned selDat(void);
+	~filereader();
 };

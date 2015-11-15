@@ -80,11 +80,9 @@ void solidCB(Fl_Widget*o,void*){
 }
 void ImportS1CBChunks(Fl_Widget*,void*a){
 	bool append=(uintptr_t)a?true:false;
-	if(load_file_generic("Pick chunk data from sonic 1")){
-		currentProject->Chunk->importSonic1(the_file.c_str(),append);
-		window->chunk_select->maximum(currentProject->Chunk->amt-1);
-		window->redraw();
-	}
+	currentProject->Chunk->importSonic1(append);
+	window->chunk_select->maximum(currentProject->Chunk->amt-1);
+	window->redraw();
 }
 void currentChunkCB(Fl_Widget*,void*){
 	currentChunk=window->chunk_select->value();

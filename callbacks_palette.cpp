@@ -23,6 +23,7 @@
 #include "classpalettebar.h"
 #include "gui.h"
 #include "palette.h"
+#include "filereader.h"
 void sortRowbyCB(Fl_Widget*,void*){
 	unsigned type=fl_choice("Sort each row by","Hue","Saturation","Lightness");
 	pushPaletteAll();
@@ -222,39 +223,15 @@ void loadPalette(Fl_Widget*, void*){
 	if (!verify_str_number_only(inputTemp))
 		return;
 	offset=atoi(inputTemp);
-	unsigned palSize=currentProject->pal->colorCnt+currentProject->pal->colorCntalt;
+	size_t palSize=currentProject->pal->colorCnt+currentProject->pal->colorCntalt;
 	palSize*=currentProject->pal->esize;
 	offset*=currentProject->pal->esize;
-	if(load_file_generic("Load palette") == true){
-		FILE * fi=fopen(the_file.c_str(), "rb");
-		if(fi){
-			//copy 32 bytes to the palette buffer
-			fseek(fi,0,SEEK_END);
-			file_size = ftell(fi);
-			if (file_size > palSize-offset){
-				fl_alert("Error: The file size is bigger than %d (%d-%d) bytes\nMaybe there is extra data or you loaded the wrong file?\n",palSize-offset,palSize,offset);
-				fclose(fi);
-				return;//end function due to errors
-			}
-			//read the palette to the buffer
-			rewind(fi);
-			fread(currentProject->pal->palDat+offset,1,file_size,fi);
-			fclose(fi);
-			//now convert each value to rgb
-			switch (currentProject->gameSystem){
-				case segaGenesis:
-					set_palette_type();
-				break;
-				case NES:
-					updateEmphesis();
-				break;
-				default:
-					currentProject->pal->paletteToRgb();
-			}
-			window->redraw();
-		}else
-			fl_alert("Error opening file");
-	}
+	filereader f=filereader("Load palette");
+	unsigned i=f.selDat();
+	memcpy(currentProject->pal->palDat+offset,f.dat[i],std::min(f.lens[i]-offset,palSize));
+	//now convert each value to rgb
+	currentProject->pal->paletteToRgb();
+	window->redraw();
 }
 void set_ditherAlg(Fl_Widget*,void* typeset){
 	if((uintptr_t)typeset==0)
@@ -288,8 +265,9 @@ void setPalType(Fl_Widget*,void*type){
 	window->redraw();
 }
 void pickNearAlg(Fl_Widget*,void*){
+	unsigned old=(currentProject->settings>>nearestColorShift)&nearestColorSettingsMask;
 	currentProject->settings&=~(nearestColorSettingsMask<<nearestColorShift);
-	currentProject->settings|=MenuPopup("Nearest color algorithm selection","Select an algorithm",4,"ciede2000","Weighted","Euclidean distance","CIE76")<<nearestColorShift;
+	currentProject->settings|=MenuPopup("Nearest color algorithm selection","Select an algorithm",4,old,"ciede2000","Weighted","Euclidean distance","CIE76")<<nearestColorShift;
 }
 static bool isModeEditor(void){
 	if(mode_editor!=tile_edit){

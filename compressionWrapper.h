@@ -18,5 +18,6 @@
 const char*typeToText(int type);
 int compressionAsk(void);
 std::string decodeTypeStr(const char * filename,size_t &filesize,int type);
+void*decodeTypeRam(uint8_t*dat,size_t inputSize,size_t &filesize,int type);
 void*decodeType(const char * filename,size_t &filesize,int type);
 void*encodeType(void*in,size_t n,size_t&outSize,int type);
