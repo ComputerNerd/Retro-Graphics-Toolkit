@@ -26,7 +26,7 @@ void ditherGroupAsImage(unsigned msprt);
 void ditherSpriteAsImageAllCB(Fl_Widget*,void*);
 void ditherSpriteAsImageCB(Fl_Widget*,void*);
 void setDrawSpriteCB(Fl_Widget*,void*m);
-void SpriteSheetimportCB(Fl_Widget*o,void*);
+void spriteSheetimportCB(Fl_Widget*o,void*);
 void exportSonicDPLCCB(Fl_Widget*o,void*t);
 void assignSpriteAllMetanameCB(Fl_Widget*o,void*);
 void assignSpritemetaNameCB(Fl_Widget*o,void*);

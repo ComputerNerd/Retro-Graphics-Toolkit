@@ -214,6 +214,10 @@ doTile:
 	window->redraw();
 }
 void load_truecolor_tiles(Fl_Widget*,void*){
+	if(!currentProject->containsData(pjHaveTiles)){
+		currentProject->haveMessage(pjHaveTiles);
+		return;
+	}
 	//start by loading the file
 	filereader f=filereader("Load truecolor tiles");
 	if(!f.amt)

@@ -6,7 +6,7 @@ Retro Graphics Toolkit supports many advanced features that many popular graphic
 Retro Graphics Toolkit is also extensible with Lua scripting support.
 
 # Compiling
-The compiling instructions are in the file INSTALL. Note that Retro Graphics Toolkit is not installed just compiled.
+The compiling instructions are in the file COMPILE.
 
 # Dependencies
 Retro Graphics Toolkit needs only FLTK installed. It does depend on Lua but that is compiled in the same folder.

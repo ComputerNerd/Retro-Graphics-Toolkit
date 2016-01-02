@@ -44,8 +44,15 @@ struct palette{
 	uint16_t to_sega_genesis_color(uint16_t pal_index);
 	unsigned calMaxPerRow(unsigned row);
 	void swapEntry(unsigned one,unsigned two);
+	bool shouldAddCol(unsigned off,unsigned r,unsigned g,unsigned b,bool sprite);
 	unsigned getMaxRows(bool alt) const{
 		return (alt&&haveAlt)?rowCntPalalt:rowCntPal;
+	}
+	unsigned getMaxCols(bool alt)const{
+		return (alt&&haveAlt)?colorCntalt:colorCnt;
+	}
+	unsigned getPerRow(bool alt)const{
+		return (alt&&haveAlt)?perRowalt:perRow;
 	}
 	void paletteToRgb(void){
 		for(unsigned i=0;i<colorCnt+colorCntalt;++i){

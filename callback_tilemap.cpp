@@ -99,6 +99,10 @@ void set_grid_placer(Fl_Widget*,void*){
 }
 
 void save_tilemap_as_image(Fl_Widget*,void*){
+	if(!currentProject->containsData(pjHaveMap|pjHaveTiles)){
+		currentProject->haveMessage(pjHaveMap|pjHaveTiles);
+		return;
+	}
 	if(currentProject->containsData(pjHaveTiles|pjHaveMap)){
 		if(load_file_generic("Save PNG as",true)){
 			uint32_t w=currentProject->tms->maps[currentProject->curPlane].mapSizeW*currentProject->tileC->sizew;
@@ -123,6 +127,10 @@ void save_tilemap_as_image(Fl_Widget*,void*){
 	}
 }
 void save_tilemap_as_colspace(Fl_Widget*,void*){
+	if(!currentProject->containsData(pjHaveMap|pjHaveTiles)){
+		currentProject->haveMessage(pjHaveMap|pjHaveTiles);
+		return;
+	}
 	if(load_file_generic("Save png as",true)==true){
 		uint32_t w=currentProject->tms->maps[currentProject->curPlane].mapSizeW*8;
 		uint32_t h=currentProject->tms->maps[currentProject->curPlane].mapSizeHA*8;
@@ -134,11 +142,19 @@ void save_tilemap_as_colspace(Fl_Widget*,void*){
 	}
 }
 void load_tile_map(Fl_Widget*,void*){
+	if(!currentProject->containsData(pjHaveMap)){
+		currentProject->haveMessage(pjHaveMap);
+		return;
+	}
 	pushTilemapAll(false);
 	if(unlikely(!currentProject->tms->maps[currentProject->curPlane].loadFromFile()))
 		fl_alert("Error: Cannot load file %s",the_file.c_str());
 }
 void save_map(Fl_Widget*,void*){
+	if(!currentProject->containsData(pjHaveMap)){
+		currentProject->haveMessage(pjHaveMap);
+		return;
+	}
 	if(unlikely(!currentProject->tms->maps[currentProject->curPlane].saveToFile()))
 		fl_alert("Error: can not save file %s\nTry making sure that you have permission to save the file here",the_file.c_str());
 }
@@ -170,6 +186,10 @@ void dither_tilemap_as_imageCB(Fl_Widget*,void*){
 	window->redraw();
 }
 void load_image_to_tilemap(Fl_Widget*,void*o){
+	if(!currentProject->containsData(pjHaveTiles|pjHaveMap)){
+		currentProject->haveMessage(pjHaveTiles|pjHaveMap);
+		return;
+	}
 	Fl_Shared_Image * loaded_image;
 	bool over=(uintptr_t)o&1;
 	bool tilesonly=(uintptr_t)o>>1;

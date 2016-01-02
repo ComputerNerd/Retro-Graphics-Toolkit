@@ -54,6 +54,21 @@ RANLIB=~/mingw/bin/x86_64-w64-mingw32-gcc-ranlib NM=~/mingw/bin/x86_64-w64-mingw
 Regardless of how ./configure is ran you will just need to run make and you are
 done building FLTK.
 
+
+Optional step to reduce binary size: Run these two commands in the lib
+directory where GCC was compiled. Do likewise in the folder called
+x86_64-w64-mingw32 (may be different depending on how you compiled your mingw
+toolchain)
+
+
+find -name '*.o' -o  -name '*.a' -exec x86_64-w64-mingw32-strip  -R '.rdata$zzz' {} \;
+
+find -name '*.o' -o  -name '*.a' -exec x86_64-w64-mingw32-ranlib  {} \;
+
+The purpose of these two commands is to remove all the GCC version strings. If
+you don't run this command you will hundreds of duplicate GCC version strings
+in the final binary.
+
 ===============================================================================
 			  END OF WINDOWS ONLY SECTION
 ===============================================================================
@@ -62,3 +77,4 @@ Now on Linux run make or on Windows run make -f make_win note that you may need
 to modify the CXX and CC variables in make_win.
 
 You should now have a compiled version of Retro Graphics Toolkit.
+

@@ -43,16 +43,20 @@ void delChunkAtCB(Fl_Widget*,void*){
 	window->chunk_select->maximum(currentProject->Chunk->amt-1);
 	window->redraw();
 }
-void appendChunkCB(Fl_Widget*o,void*){
+void appendChunkCB(Fl_Widget*,void*){
 	pushChunkAppend();
 	currentProject->Chunk->resizeAmt(currentProject->Chunk->amt+1);
 	window->chunk_select->maximum(currentProject->Chunk->amt-1);
 	window->redraw();
 }
-void saveChunkS1CB(Fl_Widget*o,void*){
+void saveChunkS1CB(Fl_Widget*,void*){
+	if(!currentProject->containsData(pjHaveChunks)){
+		currentProject->haveMessage(pjHaveChunks);
+		return;
+	}
 	currentProject->Chunk->exportSonic1();
 }
-void resizeChunkCB(Fl_Widget*o,void*){
+void resizeChunkCB(Fl_Widget*,void*){
 	int32_t wtmp=SafeTxtInput(window->chunksize[0]);
 	int32_t htmp=SafeTxtInput(window->chunksize[1]);
 	pushChunkResize(wtmp,htmp);
@@ -79,7 +83,11 @@ void solidCB(Fl_Widget*o,void*){
 	}
 }
 void ImportS1CBChunks(Fl_Widget*,void*a){
-	bool append=(uintptr_t)a?true:false;
+	if(!currentProject->containsData(pjHaveChunks)){
+		currentProject->haveMessage(pjHaveChunks);
+		return;
+	}
+	bool append=!!(uintptr_t)a;
 	currentProject->Chunk->importSonic1(append);
 	window->chunk_select->maximum(currentProject->Chunk->amt-1);
 	window->redraw();
@@ -91,7 +99,7 @@ void currentChunkCB(Fl_Widget*,void*){
 }
 void useBlocksCB(Fl_Widget*o,void*){
 	Fl_Check_Button*b=(Fl_Check_Button*)o;
-	bool use=b->value()?true:false;
+	bool use=!!b->value();
 	if(use){
 		if(!(currentProject->tms->maps[currentProject->curPlane].isBlock)){
 			fl_alert("You cannot use blocks without blocks");

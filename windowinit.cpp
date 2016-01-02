@@ -118,7 +118,7 @@ static void(*const mainCBtab[])(Fl_Widget*,void*)={
 	ImportS1CBChunks,//16
 	saveChunkS1CB,//17
 	SpriteimportCB,//18
-	SpriteSheetimportCB,//19
+	spriteSheetimportCB,//19
 	importSonicMappingCB,//20
 	importSonicDPLCCB,//21
 	exportSonicMappingCB,//22

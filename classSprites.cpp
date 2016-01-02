@@ -143,7 +143,7 @@ void sprites::freeOptmizations(unsigned which){
 			}
 		}
 	}
-	//More blank column removal this time when a blank column is detect the sprite's offset will be adjusted
+	//More blank column removal this time when a blank column is detected the sprite's offset will be adjusted
 	for(int i=groups[which].list.size()-1;i>=0;--i){
 		for(unsigned w=0,ctile=groups[which].list[i].starttile;w<groups[which].list[i].w;++w){
 			bool notBlank=false;

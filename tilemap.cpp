@@ -422,11 +422,7 @@ static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,unsigned 
 	unsigned off3=offsetPal*3;
 	unsigned colors_found;
 	unsigned w,h;
-	unsigned maxPal;
-	if(isSprite&&currentProject->pal->haveAlt)
-		maxPal=currentProject->pal->colorCntalt;
-	else
-		maxPal=currentProject->pal->colorCnt;
+	unsigned maxPal=maxCol;
 	unsigned msprt=window->metaspritesel->value();
 	if(isSprite){
 		w=currentProject->ms->sps[msprt].width(curSpritegroup);
@@ -453,30 +449,31 @@ static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,unsigned 
 	printf("Unique colors %d\n",colors_found);
 	if (colors_found <= maxCol){
 		printf("%d colors\n",colors_found);
+		unsigned offsetTmp=offsetPal;
 		for (unsigned x=0;x<colors_found;x++){
 			uint_fast8_t r,g,b;
 againFun:
-			if (currentProject->pal->palType[x+offsetPal]){
-				++offsetPal;
-				off3+=3;
-				off2+=2;
-				if(offsetPal>=maxPal){
-					colorAmtExceed();
-					break;
-				}
+			if (currentProject->pal->palType[offsetTmp]){
+				++offsetTmp;
+				if(offsetTmp>=maxPal)
+					goto actullyNeededReduction;
 				goto againFun;
 			}
 			r=found_colors[(x*3)];
 			g=found_colors[(x*3)+1];
 			b=found_colors[(x*3)+2];
 			printf("R=%d G=%d B=%d\n",r,g,b);
-			currentProject->pal->rgbToEntry(r,g,b,x+offsetPal);
-			currentProject->pal->updateRGBindex(x+offsetPal);
+			if(currentProject->pal->shouldAddCol(offsetTmp,r,g,b,isSprite)){
+				currentProject->pal->rgbToEntry(r,g,b,offsetTmp);
+				currentProject->pal->updateRGBindex(offsetTmp);
+				++offsetTmp;
+			}
 		}
 		if(currentProject->gameSystem==NES)
 			updateEmphesis();
 		window->redraw();
 	}else{
+actullyNeededReduction:
 		printf("More than %d colors reducing to %d colors\n",maxCol,maxCol);
 		uint8_t user_pal[3][256];			
 		uint8_t rgb_pal2[768];
@@ -574,7 +571,7 @@ try_again_color:
 					show_default_error
 			}
 		}
-		unsigned new_colors = count_colors(rgb_pal2,colorz,1,&rgb_pal3[off3]);
+		unsigned new_colors = count_colors(rgb_pal2,colorz,1,rgb_pal3);
 		printf("Unique colors in palette %u\n",new_colors);
 			if (new_colors < maxCol){
 				if (can_go_again == true){
@@ -600,22 +597,29 @@ try_again_color:
 			colorz--;
 			goto try_again_color;
 		}
-		unsigned off3o=off3;
+		unsigned offsetTmp=offsetPal;
 		for (unsigned x=0;x<maxCol;x++){
-			uint_fast8_t r,g,b;
 againNerd:
-			if (currentProject->pal->palType[x+offsetPal]){
-				++offsetPal;
-				off3+=3;
-				off2+=2;
-				if(offsetPal>=maxPal){
-					colorAmtExceed();
-					break;
+			if (currentProject->pal->palType[offsetTmp]){
+				++offsetTmp;
+				if(offsetTmp>=maxPal){
+					if(maxCol>1){
+						--maxCol;
+						printf("Needed to reduce colors generated due to locked colors %u\n",maxCol);
+					}else{
+						fl_alert("Cannot reduce maximum colors to make this happen...aborting");
+						return;	
+					}
+					goto try_again_color;
 				}
 				goto againNerd;
 			}
-			memcpy(currentProject->pal->rgbPal+off3+(x*3),rgb_pal3+off3o+(x*3),3);
-			currentProject->pal->rgbToEntry(currentProject->pal->rgbPal[(x*3)+off3],currentProject->pal->rgbPal[(x*3)+1+off3],currentProject->pal->rgbPal[(x*3)+2+off3],x+offsetPal);
+			unsigned r=rgb_pal3[x*3],g=rgb_pal3[x*3+1],b=rgb_pal3[x*3+2];
+			if(currentProject->pal->shouldAddCol(offsetTmp,r,g,b,isSprite)){
+				memcpy(currentProject->pal->rgbPal+(offsetTmp*3),rgb_pal3+(x*3),3);
+				currentProject->pal->rgbToEntry(r,g,b,offsetTmp);
+				++offsetTmp;
+			}
 		}
 		if(currentProject->gameSystem==NES)
 			updateEmphesis();
@@ -679,7 +683,6 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 			++rows;
 	}
 	printf("First row: %u\n",firstRow);
-	uint32_t colors_found;
 	uint8_t found_colors[768];
 	int rowAuto;
 	if((rows==1)&&(!set->sprite))
@@ -709,7 +712,10 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 		Fl::check();
 	}else{
 		if(rowAuto==2){
-			reduceImage(image,found_colors,-1,0,progress,win,set->perRow[0]+set->perRow[1]+set->perRow[2]+set->perRow[3],set->colSpace,set->alg);
+			unsigned coltarget=0;
+			for(unsigned i=0;i<currentProject->pal->getMaxRows(set->sprite);++i)
+				coltarget+=set->perRow[i];	
+			reduceImage(image,found_colors,-1,0,progress,win,coltarget,set->colSpace,set->alg);
 			currentProject->tms->maps[currentProject->curPlane].pickRowDelta(true,progress);
 			window->damage(FL_DAMAGE_USER1);
 			Fl::check();
@@ -760,8 +766,8 @@ static void setValInt(Fl_Int_Input*i,unsigned val){
 static void setPerRow(Fl_Widget*w,void*x){
 	uintptr_t which=(uintptr_t)x;
 	unsigned val=SafeTxtInput((Fl_Int_Input*)w,false);
-	if((val+setG->off[which])>currentProject->pal->calMaxPerRow(which)){
-		val=currentProject->pal->calMaxPerRow(which)-setG->off[which];
+	if((val+setG->off[which])>currentProject->pal->getPerRow(setG->sprite)){
+		val=currentProject->pal->getPerRow(setG->sprite)-setG->off[which];
 		setValInt((Fl_Int_Input*)w,val);
 	}
 	setG->perRow[which]=val;
@@ -769,13 +775,13 @@ static void setPerRow(Fl_Widget*w,void*x){
 static void setPerRowoff(Fl_Widget*w,void*x){
 	uintptr_t which=(uintptr_t)x;
 	unsigned val=SafeTxtInputZeroAllowed((Fl_Int_Input*)w,false);
-	if(val>=currentProject->pal->calMaxPerRow(which)){
-		val=currentProject->pal->calMaxPerRow(which)-1;
+	if(val>=currentProject->pal->getPerRow(setG->sprite)){
+		val=currentProject->pal->getPerRow(setG->sprite)-1;
 		setValInt((Fl_Int_Input*)w,val);
 	}
 	setG->off[which]=val;
-	if((val+setG->perRow[which])>currentProject->pal->calMaxPerRow(which)){
-		setG->perRow[which]=currentProject->pal->calMaxPerRow(which)-val;
+	if((val+setG->perRow[which])>currentProject->pal->getPerRow(setG->sprite)){
+		setG->perRow[which]=currentProject->pal->getPerRow(setG->sprite)-val;
 		setValInt(perrow[which],setG->perRow[which]);
 	}
 }
@@ -817,6 +823,10 @@ static void setParmChoiceCB(Fl_Widget*w,void*in){
 	*val=c->value();
 }
 void generate_optimal_palette(Fl_Widget*,void*sprite){
+	if(!currentProject->containsData(pjHavePal)){
+		currentProject->haveMessage(pjHavePal);
+		return;
+	}
 	static bool openAlready;
 	if(openAlready){
 		fl_alert("Window already open");
@@ -826,7 +836,7 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	struct settings set;
 	setG=&set;
 	memset(&set,0,sizeof(struct settings));
-	set.sprite=sprite?true:false;
+	set.sprite=!!sprite;
 	set.ditherAfter=set.entireRow=true;
 	winG = new Fl_Window(400,300,"Palette generation settings");
 	winG->begin();
@@ -834,9 +844,7 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	rowlabel1->labelsize(12);
 	Fl_Box*rowlabel2=new Fl_Box(120,8,96,12,"Offset per row:");
 	rowlabel2->labelsize(12);
-	int spRow=currentProject->fixedSpirtePalRow();
-	if(!sprite)
-		spRow=-1;
+	int spRow=sprite?currentProject->fixedSpirtePalRow():-1;
 	for(unsigned i=0;i<currentProject->pal->getMaxRows(sprite?true:false);++i){
 		if(spRow>=0&&i!=spRow)
 			continue;
@@ -852,8 +860,8 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 		perrowoffset[i]->copy_label(tmp);
 		perrow[i]->callback(setPerRow,(void*)(uintptr_t)i);
 		perrowoffset[i]->callback(setPerRowoff,(void*)(uintptr_t)i);
-		snprintf(tmp,sizeof(tmp),"%d",currentProject->pal->calMaxPerRow(i));
-		set.perRow[i]=currentProject->pal->calMaxPerRow(i);
+		snprintf(tmp,sizeof(tmp),"%d",currentProject->pal->getPerRow(set.sprite));
+		set.perRow[i]=currentProject->pal->getPerRow(set.sprite);
 		perrow[i]->value(tmp);
 		perrowoffset[i]->value("0");
 		perrow[i]->when(FL_WHEN_RELEASE|FL_WHEN_ENTER_KEY);

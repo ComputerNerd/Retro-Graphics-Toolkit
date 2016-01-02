@@ -282,3 +282,11 @@ void palette::swapEntry(unsigned one,unsigned two){
 	memcpy(rgbPal+(two*3),rgbPal+(one*3),3);
 	memcpy(rgbPal+(one*3),rgb,3);
 }
+bool palette::shouldAddCol(unsigned off,unsigned r,unsigned g,unsigned b,bool sprite){
+	off-=off%getPerRow(sprite);
+	for(unsigned i=off*3;i<(off+getPerRow(sprite))*3;i+=3){
+		if(rgbPal[i]==r&&rgbPal[i+1]==g&&rgbPal[i+2]==b&&palType[i/3]<2)
+			return false;
+	}
+	return true;
+}

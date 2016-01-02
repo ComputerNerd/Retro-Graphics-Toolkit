@@ -30,6 +30,10 @@ uint32_t curSpritemeta;
 int32_t spriteEndDraw[2];
 bool centerSpriteDraw_G;
 void palRowstCB(Fl_Widget*,void*){
+	if(!currentProject->containsData(pjHaveSprites)){
+		currentProject->haveMessage(pjHaveSprites);
+		return;
+	}
 	unsigned msprt=window->metaspritesel->value();
 	unsigned st=currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].starttile;
 	unsigned palrow=currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].palrow;
@@ -43,6 +47,10 @@ void palRowstCB(Fl_Widget*,void*){
 	window->redraw();
 }
 void optimizeSpritesCB(Fl_Widget*,void*){
+	if(!currentProject->containsData(pjHaveSprites)){
+		currentProject->haveMessage(pjHaveSprites);
+		return;
+	}
 	unsigned msprt=window->metaspritesel->value();
 	for(unsigned i=0;i<currentProject->ms->sps[msprt].amt;++i){
 		currentProject->ms->sps[msprt].freeOptmizations(i);
@@ -90,9 +98,17 @@ void ditherGroupAsImage(unsigned msprt){
 	window->redraw();
 }
 void ditherSpriteAsImageAllCB(Fl_Widget*,void*){
+	if(!currentProject->containsData(pjHaveSprites)){
+		currentProject->haveMessage(pjHaveSprites);
+		return;
+	}
 	ditherGroupAsImage(window->metaspritesel->value());
 }
 void ditherSpriteAsImageCB(Fl_Widget*,void*){
+	if(!currentProject->containsData(pjHaveSprites)){
+		currentProject->haveMessage(pjHaveSprites);
+		return;
+	}
 	unsigned msprt=window->metaspritesel->value();
 	ditherSpriteAsImage(msprt,curSpritegroup);
 	window->redraw();
@@ -101,7 +117,11 @@ void setDrawSpriteCB(Fl_Widget*,void*m){
 	centerSpriteDraw_G=(m)?true:false;
 	window->redraw();
 }
-void SpriteSheetimportCB(Fl_Widget*o,void*){
+void spriteSheetimportCB(Fl_Widget*o,void*){
+	if(!currentProject->containsData(pjHaveSprites)){
+		currentProject->haveMessage(pjHaveSprites);
+		return;
+	}
 	unsigned msprt=window->metaspritesel->value();
 	currentProject->ms->sps[msprt].importSpriteSheet();
 	window->updateSpriteSliders();
@@ -119,6 +139,10 @@ void assignSpritemetaNameCB(Fl_Widget*o,void*){
 	window->redraw();
 }
 void exportSonicDPLCCB(Fl_Widget*o,void*t){
+	if(!currentProject->containsData(pjHaveSprites)){
+		currentProject->haveMessage(pjHaveSprites);
+		return;
+	}
 	unsigned msprt=window->metaspritesel->value();
 	currentProject->ms->sps[msprt].exportDPLC((gameType_t)(uintptr_t)t);
 }
@@ -157,6 +181,10 @@ void alignSpriteCB(Fl_Widget*,void*t){
 	window->redraw();
 }
 void importSonicDPLCCB(Fl_Widget*o,void*t){
+	if(!currentProject->containsData(pjHaveSprites)){
+		currentProject->haveMessage(pjHaveSprites);
+		return;
+	}
 	unsigned msprt=window->metaspritesel->value();
 	currentProject->ms->sps[msprt].importDPLC((gameType_t)(uintptr_t)t);
 	window->updateSpriteSliders();
@@ -176,10 +204,18 @@ void setoffspriteCB(Fl_Widget*o,void*y){
 	window->redraw();
 }
 void exportSonicMappingCB(Fl_Widget*o,void*t){
+	if(!currentProject->containsData(pjHaveSprites)){
+		currentProject->haveMessage(pjHaveSprites);
+		return;
+	}
 	unsigned msprt=window->metaspritesel->value();
 	currentProject->ms->sps[msprt].exportMapping((gameType_t)(uintptr_t)t);
 }
 void importSonicMappingCB(Fl_Widget*o,void*t){
+	if(!currentProject->containsData(pjHaveSprites)){
+		currentProject->haveMessage(pjHaveSprites);
+		return;
+	}
 	unsigned msprt=window->metaspritesel->value();
 	currentProject->ms->sps[msprt].importMapping((gameType_t)(uintptr_t)t);
 	window->updateSpriteSliders();
@@ -210,6 +246,10 @@ void spriteVflipCB(Fl_Widget*,void*){
 	window->redraw();
 }
 void SpriteimportCB(Fl_Widget*,void*append){
+	if(!currentProject->containsData(pjHaveSprites)){
+		currentProject->haveMessage(pjHaveSprites);
+		return;
+	}
 	unsigned msprt=window->metaspritesel->value();
 	if((uintptr_t)append)
 		currentProject->ms->sps[msprt].importImg(currentProject->ms->sps[msprt].amt);//This works due to the fact that amt counts from one and the function counts from zero

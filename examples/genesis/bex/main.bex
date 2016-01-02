@@ -1,4 +1,4 @@
-	'Displays the devster logo`
+	'Displays the devster logo
 	palettes palDat,0,0,64
 	loadtiles tileDat,165,128
 	print "Image converted using"

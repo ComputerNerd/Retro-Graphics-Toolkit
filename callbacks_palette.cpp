@@ -25,6 +25,10 @@
 #include "palette.h"
 #include "filereader.h"
 void sortRowbyCB(Fl_Widget*,void*){
+	if(!currentProject->containsData(pjHavePal)){
+		currentProject->haveMessage(pjHavePal);
+		return;
+	}
 	unsigned type=fl_choice("Sort each row by","Hue","Saturation","Lightness");
 	pushPaletteAll();
 	sortBy(type,true);
@@ -32,6 +36,10 @@ void sortRowbyCB(Fl_Widget*,void*){
 	window->redraw();
 }
 void save_palette(Fl_Widget*,void*){
+	if(!currentProject->containsData(pjHavePal)){
+		currentProject->haveMessage(pjHavePal);
+		return;
+	}
 	char temp[4];
 	snprintf(temp,4,"%u",currentProject->pal->colorCnt-1);
 	char * returned=(char *)fl_input("Counting from zero enter the first entry that you want saved\nFor NES to save the sprite palette the first entry is 16","0");
@@ -215,6 +223,10 @@ void update_palette(Fl_Widget* o, void* v){
 	window->redraw();//update the palette
 }
 void loadPalette(Fl_Widget*, void*){
+	if(!currentProject->containsData(pjHavePal)){
+		currentProject->haveMessage(pjHavePal);
+		return;
+	}
 	uint32_t file_size;
 	unsigned offset;
 	char * inputTemp=(char *)fl_input("Counting from zero enter the first entry that you want the palette to start at\nFor NES to load a sprite palette enter 16 or greater","0");
@@ -277,6 +289,10 @@ static bool isModeEditor(void){
 		return true;
 }
 void rgb_pal_to_entry(Fl_Widget*,void*){
+	if(!currentProject->containsData(pjHavePal)){
+		currentProject->haveMessage(pjHavePal);
+		return;
+	}
 	//this function will convert a rgb value to the nearest palette entry
 	if(currentProject->isFixedPalette())
 		return;
@@ -290,6 +306,10 @@ void rgb_pal_to_entry(Fl_Widget*,void*){
 	window->redraw();
 }
 void entryToRgb(Fl_Widget*,void*){
+	if(!currentProject->containsData(pjHavePal)){
+		currentProject->haveMessage(pjHavePal);
+		return;
+	}
 	if(!isModeEditor())
 		return;
 	unsigned en=palBar.getEntry(1)*3;
@@ -302,6 +322,10 @@ void entryToRgb(Fl_Widget*,void*){
 	window->redraw();
 }
 void clearPalette(Fl_Widget*,void*){
+	if(!currentProject->containsData(pjHavePal)){
+		currentProject->haveMessage(pjHavePal);
+		return;
+	}
 	if(fl_ask("This will set all colors to 0 are you sure you want to do this?\nYou can undo this by pressing pressing CTRL+Z")){
 		pushPaletteAll();
 		currentProject->pal->clear();

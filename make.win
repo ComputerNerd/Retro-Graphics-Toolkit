@@ -23,8 +23,9 @@ EXECUTABLE=RetroGraphicsToolkit.exe
 all: $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
+	$(STRIP) -R .comment -R .note -R '.rdata$$zzz' -s $(OBJECTS)
 	$(CXX) $(OBJECTS) $(LDFLAGS) -o $@
-	$(STRIP) $(EXECUTABLE)
+	$(STRIP) -R .comment -R .note -R '.rdata$$zzz' -s $(EXECUTABLE)
 .c.o:
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 .cc.o:
