@@ -28,7 +28,7 @@ extern unsigned SpriteOff[2];
 extern bool show_grid_placer;
 extern unsigned tile_zoom_edit;
 extern uint8_t truecolor_temp[4];
-extern std::string the_file;//TODO refractor
+extern std::string the_file;//TODO refactor
 extern unsigned mode_editor;/*!<Variable is used to determine which "mode" the user is in for example palette editing or map editing*/
 extern bool show_grid;
 extern bool G_hflip[2];
@@ -38,6 +38,17 @@ extern bool showTrueColor;
 extern bool rowSolo;
 extern bool tileEditModePlace_G;
 extern uint32_t selTileE_G[2];
+#define messageWrap(format,...) \
+	if(window) \
+		fl_message(format,##__VA_ARGS__); \
+	else \
+		printf(format,##__VA_ARGS__);
+
+#define alertWrap(format,...) \
+	if(window) \
+		fl_alert(format,## __VA_ARGS__); \
+	else \
+		fprintf(stderr,format,##__VA_ARGS__);
 
 void mkProgress(Fl_Window**winP,Fl_Progress**progress);
 int SafeTxtInput(Fl_Int_Input*in,bool redraw=true);

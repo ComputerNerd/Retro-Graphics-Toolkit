@@ -28,6 +28,7 @@
 #include "luaconfig.h"
 #include "runlua.h"
 #include "filemisc.h"
+extern editor *window;
 struct Project ** projects;
 uint32_t projects_count;
 struct Project * currentProject;
@@ -277,13 +278,15 @@ void setHaveProject(uint32_t id,uint32_t mask,bool set){
 	if((mask&pjHaveSprites)&&(projects[id]->share[4]<0)){
 		if(set){
 			if(!(projects[id]->useMask&pjHaveSprites)){
-				window->spriteglobaltxt->show();
+				if(window)
+					window->spriteglobaltxt->show();
 				projects[id]->ms=new metasprites(projects[id]);
 				projects[id]->useMask|=pjHaveSprites;
 			}
 		}else{
 			if(projects[id]->useMask&pjHaveSprites){
-				window->spriteglobaltxt->hide();
+				if(window)
+					window->spriteglobaltxt->hide();
 				delete projects[id]->ms;
 				projects[id]->useMask&=~pjHaveSprites;
 			}
@@ -404,6 +407,8 @@ int reallocProject(size_t amt){
 	return 0;
 }
 void changeProjectAmt(void){
+	if(!window)
+		return;
 	if(curProjectID>=projects_count)
 		switchProjectSlider(projects_count-1,false);
 	window->projectSelect->maximum(projects_count-1);
@@ -451,6 +456,8 @@ extern Fl_Menu_Item subSysNES[];
 extern Fl_Menu_Item subSysGenesis[];
 extern Fl_Menu_Item subSysTMS9918[];
 void switchProjectSlider(uint32_t id,bool oldExists){
+	if(!window)
+		return;
 	if(oldExists)
 		currentProject->Name.assign(window->TxtBufProject->text());//Save text to old project
 	window->projectSelect->value(id);
@@ -460,6 +467,8 @@ void switchProjectSlider(uint32_t id,bool oldExists){
 }
 extern int curScript;
 static void updateLuaScriptWindow(uint32_t id,bool load=false){
+	if(!window)
+		return;
 	if((curScript>=0)&&(!load))
 		currentProject->lScrpt[curScript].str.assign(window->luaBufProject->text());
 	window->luaScriptSel->clear();
@@ -477,21 +486,26 @@ static void updateLuaScriptWindow(uint32_t id,bool load=false){
 	}
 }
 void switchProject(uint32_t id,bool load){
-	updateLuaScriptWindow(id,load);
-	window->TxtBufProject->text(projects[id]->Name.c_str());//Make editor displays new text
-	window->gameSysSel->value(projects[id]->gameSystem);
-	window->ditherPower->value((projects[id]->settings>>subsettingsDitherShift)&subsettingsDitherMask);
-	window->ditherAlgSel->value(projects[id]->settings&subsettingsDitherMask);
-	if((projects[id]->settings&subsettingsDitherMask))
-		window->ditherPower->hide();
-	else
-		window->ditherPower->show();
+	if(window){
+		updateLuaScriptWindow(id,load);
+		window->TxtBufProject->text(projects[id]->Name.c_str());//Make editor displays new text
+		window->gameSysSel->value(projects[id]->gameSystem);
+		window->ditherPower->value((projects[id]->settings>>subsettingsDitherShift)&subsettingsDitherMask);
+		window->ditherAlgSel->value(projects[id]->settings&subsettingsDitherMask);
+		
+		if((projects[id]->settings&subsettingsDitherMask))
+			window->ditherPower->hide();
+		else
+			window->ditherPower->show();
+	}
 	if(projects[id]->containsData(pjHavePal))
 		projects[id]->pal->setVars(projects[id]->gameSystem);
 	switch(projects[id]->gameSystem){
 		case segaGenesis:
-			window->subSysC->copy(subSysGenesis);
-			window->subSysC->value((projects[id]->subSystem&sgSHmask)>>sgSHshift);
+			if(window){
+				window->subSysC->copy(subSysGenesis);
+				window->subSysC->value((projects[id]->subSystem&sgSHmask)>>sgSHshift);
+			}
 			if(projects[id]->containsData(pjHaveTiles))
 				projects[id]->tileC->tileSize=32;
 			if(projects[id]->containsData(pjHavePal)){
@@ -500,8 +514,10 @@ void switchProject(uint32_t id,bool load){
 			}
 		break;
 		case NES:
-			window->subSysC->copy(subSysNES);
-			window->subSysC->value(projects[id]->subSystem&1);
+			if(window){
+				window->subSysC->copy(subSysNES);
+				window->subSysC->value(projects[id]->subSystem&1);
+			}
 			if(projects[id]->containsData(pjHaveTiles))
 				projects[id]->tileC->tileSize=16;
 			if(projects[id]->containsData(pjHavePal)){
@@ -580,7 +596,8 @@ void switchProject(uint32_t id,bool load){
 	}
 	lua_getglobal(Lconf,"switchProject");
 	runLuaFunc(Lconf,0,0);
-	window->redraw();
+	if(window)
+		window->redraw();
 }
 static bool loadProjectFile(uint32_t id,FILE * fi,bool loadVersion=true,uint32_t version=currentProjectVersionNUM){
 	if(fgetc(fi)!='R'){
@@ -913,11 +930,9 @@ static bool saveProjectFile(uint32_t id,FILE * fo,bool saveShared,bool saveVersi
 	}
 	return true;
 }
-bool saveProject(uint32_t id){
+bool saveProject(uint32_t id,const char*fname){
 	//Start by creating a save file dialog
-	if(!load_file_generic("Save project as...",true))
-		return true;
-	FILE * fo=fopen(the_file.c_str(),"wb");
+	FILE * fo=fopen(fname,"wb");
 	saveProjectFile(id,fo,true);
 	fclose(fo);
 	return true;

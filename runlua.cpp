@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
 
 /** @file runlua.cpp
@@ -77,6 +77,8 @@
 #include "level_levelInfo.h"
 #include "level_levobjDat.h"
 #include "undoLua.h"
+#include "posix.h"
+#include "callback_tilemap.h"
 static int panic(lua_State *L){
 	fl_alert("PANIC: unprotected error in call to Lua API (%s)\n",lua_tostring(L, -1));
 	throw 0;//Otherwise abort() would be called when not needed
@@ -337,9 +339,12 @@ static int FLTK_fl_filename_ext(lua_State *L) {
 static int FLTK_fl_filename_setext(lua_State *L) {
 	try {
 		char *to =(char*)dub::checkstring(L, 1);
-		int tolen = dub::checkinteger(L, 2);
-		const char *ext = dub::checkstring(L, 3);
-		lua_pushstring(L, fl_filename_setext(to, tolen, ext));
+		const char *ext = dub::checkstring(L, 2);
+		size_t blen=strlen(to)+strlen(ext);
+		char*tmpbuf=(char*)malloc(blen);
+		strcpy(tmpbuf,to);
+		lua_pushstring(L, fl_filename_setext(tmpbuf, blen, ext));
+		free(tmpbuf);
 		return 1;
 	} catch (std::exception &e) {
 		lua_pushfstring(L, "FLTK.fl_filename_setext: %s", e.what());
@@ -570,6 +575,10 @@ static int luaFl_event_button(lua_State*L){
 	lua_pushinteger(L,Fl::event_button());
 	return 1;
 }
+static int luaFl_scheme(lua_State*L){
+	Fl::scheme(lua_tostring(L,1));
+	return 0;
+}
 static const luaL_Reg lua_FlAPI[]={
 	{"check",luaFl_check},
 	{"wait",luaFl_wait},
@@ -582,6 +591,7 @@ static const luaL_Reg lua_FlAPI[]={
 	{"event_length",luaFl_event_length},
 	{"event_text",luaFl_event_text},
 	{"event_button",luaFl_event_button},
+	{"scheme",luaFl_scheme},
 	{0,0}
 };
 static void outofBoundsAlert(const char*what,unsigned val){
@@ -776,6 +786,26 @@ static int lua_tile_setTileRGBA(lua_State*L){
 	}
 	return 0;
 }
+static int lua_tile_compareTileRGBA(lua_State*L){
+	unsigned tile1=luaL_optinteger(L,1,0);
+	unsigned tile2=luaL_optinteger(L,2,0);
+	if(inRangeTile(tile1)&&inRangeTile(tile2)&&(tile1!=tile2)){
+		unsigned diffSum=0;
+		uint8_t*off1=currentProject->tileC->truetDat.data()+(tile1*currentProject->tileC->tcSize);
+		uint8_t*off2=currentProject->tileC->truetDat.data()+(tile2*currentProject->tileC->tcSize);
+		for(unsigned i=0;i<currentProject->tileC->tcSize;i+=4){
+			int tmp=0;
+			for(unsigned j=0;j<3;++j)
+				tmp+=*off1++-*off2++;
+			++off1;
+			++off2;
+			diffSum+=tmp*tmp;
+		}
+		lua_pushinteger(L,diffSum);
+		return 1;
+	}
+	return 0;
+}
 static int lua_tile_dither(lua_State*L){
 	unsigned tile=luaL_optinteger(L,1,0);
 	unsigned row=luaL_optinteger(L,2,0);
@@ -834,6 +864,7 @@ static const luaL_Reg lua_tileAPI[]={
 	{"setPixelRGBA",lua_tile_setPixelRGBA},
 	{"getTileRGBA",lua_tile_getTileRGBA},
 	{"setTileRGBA",lua_tile_setTileRGBA},
+	{"compareTileRGBA",lua_tile_compareTileRGBA},
 	{"dither",lua_tile_dither},
 	{"append",lua_tile_append},
 	{"resize",lua_tile_resize},
@@ -979,6 +1010,13 @@ static int lua_tilemap_subTile(lua_State*L){
 	currentProject->tms->maps[getPlane(L)].sub_tile_map(lua_tointeger(L,2),lua_tointeger(L,3),lua_toboolean(L,4),lua_toboolean(L,5));
 	return 0;
 }
+static int luaL_optboolean (lua_State *L, int narg, int def){
+	return lua_isboolean(L, narg) ? lua_toboolean(L, narg) : def;
+}
+static int lua_tilemap_loadImage(lua_State*L){
+	load_image_to_tilemap(lua_tostring(L,1),luaL_optboolean(L,2,false),luaL_optboolean(L,3,false),luaL_optboolean(L,4,false));
+	return 0;
+}
 static const luaL_Reg lua_tilemapAPI[]={
 	{"dither",lua_tilemap_dither},
 	{"resize",lua_tilemap_resize},
@@ -1002,6 +1040,7 @@ static const luaL_Reg lua_tilemapAPI[]={
 	{"setRaw",lua_tilemap_setRaw},
 	{"removeBlock",lua_tilemap_removeBlock},
 	{"subTile",lua_tilemap_subTile},
+	{"loadImage",lua_tilemap_loadImage},
 	{0,0}
 };
 static int lua_chunk_draw(lua_State*L){
@@ -1213,6 +1252,22 @@ static int lua_project_setPalTab(lua_State*L){
 	currentProject->setPalTab(luaL_optinteger(L,1,0));
 	return 0;
 }
+static int lua_project_load(lua_State*L){
+	loadProject(lua_tointeger(L,2),lua_tostring(L,1));
+	return 0;
+}
+static int lua_project_save(lua_State*L){
+	saveProject(lua_tointeger(L,2),lua_tostring(L,1));
+	return 0;
+}
+static int lua_project_append(lua_State*L){
+	appendProject();
+	return 0;
+}
+static int lua_project_remove(lua_State*L){
+	removeProject(lua_tointeger(L,1));
+	return 0;
+}
 static const luaL_Reg lua_projectAPI[]={/*!This is the project table. The global project contains the following functions*/
 	{"have",lua_project_rgt_have},
 	{"haveOR",lua_project_rgt_haveOR},
@@ -1223,6 +1278,10 @@ static const luaL_Reg lua_projectAPI[]={/*!This is the project table. The global
 	{"setSettings",lua_project_setSettings},
 	{"getPalTab",lua_project_getPalTab},
 	{"setPalTab",lua_project_setPalTab},
+	{"load",lua_project_load},
+	{"save",lua_project_save},
+	{"append",lua_project_append},
+	{"remove",lua_project_remove},
 	{0,0}
 };
 #define arLen(ar) (sizeof(ar)/sizeof(ar[0]))
@@ -2046,6 +2105,64 @@ lua_State*createLuaState(void){
 		lua_setglobal(L, "Fl_Value_Slider");
 		luaopen_undoLua(L);
 		lua_setglobal(L, "undo");
+
+#ifndef __MINGW32__
+		luaopen_posix_sys_time(L);
+		lua_setglobal(L, "time");
+		luaopen_posix_sys_msg(L);
+		lua_setglobal(L, "msg");
+		luaopen_posix_sys_times(L);
+		lua_setglobal(L, "times");
+		luaopen_posix_sys_resource(L);
+		lua_setglobal(L, "resource");
+		luaopen_posix_sys_utsname(L);
+		lua_setglobal(L, "utsname");
+		luaopen_posix_sys_wait(L);
+		lua_setglobal(L, "wait");
+		luaopen_posix_sys_stat(L);
+		lua_setglobal(L, "stat");
+		luaopen_posix_sys_socket(L);
+		lua_setglobal(L, "socket");
+		//luaopen_posix_sys_statvfs(L);
+		luaopen_posix_grp(L);
+		lua_setglobal(L, "grp");
+		luaopen_posix_time(L);
+		lua_setglobal(L, "time");
+		luaopen_posix_dirent(L);
+		lua_setglobal(L, "dirent");
+		luaopen_posix_glob(L);
+		lua_setglobal(L, "glob");
+		luaopen_posix_syslog(L);
+		lua_setglobal(L, "syslog");
+		luaopen_posix_stdlib(L);
+		lua_setglobal(L, "stdlib");
+		luaopen_posix_termio(L);
+		lua_setglobal(L, "termio");
+		luaopen_posix_ctype(L);
+		lua_setglobal(L, "ctype");
+		luaopen_posix_fcntl(L);
+		lua_setglobal(L, "fcntl");
+		luaopen_posix_poll(L);
+		lua_setglobal(L, "poll");
+		luaopen_posix_signal(L);
+		lua_setglobal(L, "signal");
+		luaopen_posix_utime(L);
+		lua_setglobal(L, "utime");
+		luaopen_posix_pwd(L);
+		lua_setglobal(L, "pwd");
+		luaopen_posix_errno(L);
+		lua_setglobal(L, "errno");
+		luaopen_posix_stdio(L);
+		lua_setglobal(L, "stdio");
+		luaopen_posix_sched(L);
+		lua_setglobal(L, "sched");
+		luaopen_posix_fnmatch(L);
+		lua_setglobal(L, "fnmatch");
+#endif
+		luaopen_posix_libgen(L);
+		lua_setglobal(L, "libgen");
+		luaopen_posix_unistd(L);
+		lua_setglobal(L, "unistd");
 	}else
 		fl_alert("lua_newstate failed");
 	return L;

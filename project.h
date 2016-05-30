@@ -132,7 +132,7 @@ bool removeProject(uint32_t id);
 void switchProjectSlider(uint32_t id,bool oldExists=true);
 void switchProject(uint32_t id,bool load=false);
 bool loadProject(uint32_t id,const char*fname);
-bool saveProject(uint32_t id);
+bool saveProject(uint32_t id,const char*fname);
 bool saveAllProjects(void);
 bool loadAllProjects(const char*fname);
 #define pjHavePal 1

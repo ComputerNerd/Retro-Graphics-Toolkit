@@ -14,18 +14,5 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 --]]
-
---[[
-This file allows you control various aspects of Retro Graphics Toolkit.
-For purposes of organization files are separated and included in this main file.
-For example menu.lua allows you to edit the shortcut keys to various menu items.
---]]
 Fl.scheme('plastic')
-dofile "menu.lua"
-dofile "callbacks.lua"
-dofile "gui.lua"
-dofile "level.lua"
-dofile "project.lua"
-dofile "system.lua"
-dofile "filereader.lua"
---print('Code will execute here after the window is created but before the GUI controls are added')
+dofile "projectHeadless.lua"

@@ -173,7 +173,11 @@ void loadProjectCB(Fl_Widget*,void*){
 }
 void saveProjectCB(Fl_Widget*,void*){
 	currentProject->Name.assign(window->TxtBufProject->text());//Update the project text.
-	saveProject(curProjectID);
+	char*fname=loadsavefile("Save project as ...",true);
+	if(fname){
+		saveProject(curProjectID,fname);
+		free((void*)fname);
+	}
 }
 void switchProjectCB(Fl_Widget*o,void*){
 	Fl_Slider* s=(Fl_Slider*)o;

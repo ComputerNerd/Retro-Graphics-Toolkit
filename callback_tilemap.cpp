@@ -147,21 +147,23 @@ void load_tile_map(Fl_Widget*,void*){
 		return;
 	}
 	pushTilemapAll(false);
-	if(unlikely(!currentProject->tms->maps[currentProject->curPlane].loadFromFile()))
-		fl_alert("Error: Cannot load file %s",the_file.c_str());
+	if(unlikely(!currentProject->tms->maps[currentProject->curPlane].loadFromFile())){
+		alertWrap("Error: Cannot load file %s",the_file.c_str());
+	}
 }
 void save_map(Fl_Widget*,void*){
 	if(!currentProject->containsData(pjHaveMap)){
 		currentProject->haveMessage(pjHaveMap);
 		return;
 	}
-	if(unlikely(!currentProject->tms->maps[currentProject->curPlane].saveToFile()))
-		fl_alert("Error: can not save file %s\nTry making sure that you have permission to save the file here",the_file.c_str());
+	if(unlikely(!currentProject->tms->maps[currentProject->curPlane].saveToFile())){
+		alertWrap("Error: can not save file %s\nTry making sure that you have permission to save the file here",the_file.c_str());
+	}
 }
 void fill_tile_map_with_tile(Fl_Widget*,void*){
 	pushTilemapAll(false);
 	if (mode_editor != tile_place){
-		fl_alert("To prevent accidental modification to the tile map be in plane editing mode");
+		alertWrap("To prevent accidental modification to the tile map be in plane editing mode");
 		return;
 	}
 	if(fl_ask("This will erase the entire tilemap and fill it with the currently selected tile\nAre you sure you want to do this?")){
@@ -185,12 +187,186 @@ void dither_tilemap_as_imageCB(Fl_Widget*,void*){
 	Fl::check();
 	window->redraw();
 }
-void load_image_to_tilemap(Fl_Widget*,void*o){
+void load_image_to_tilemap(const char*fname,bool over,bool tilesonly,bool append){
+	Fl_Shared_Image*loaded_image=Fl_Shared_Image::get(fname);
+	if(!loaded_image){
+		fl_alert("Error loading image");
+		return;
+	}
+	unsigned tilebitw,tilebith;
+	tilebitw=currentProject->tileC->sizew;
+	tilebith=currentProject->tileC->sizeh;
+	if((currentProject->subSystem&NES2x2)&&(currentProject->gameSystem==NES)){
+		tilebitw*=2;
+		tilebith*=2;
+	}
+	uint32_t w,h;
+	w=loaded_image->w();
+	h=loaded_image->h();
+	uint32_t w8,h8;
+	uint32_t wt,ht;
+	int wr,hr;
+	wr=w%tilebitw;
+	hr=h%tilebith;
+	w8=w/currentProject->tileC->sizew;
+	h8=h/currentProject->tileC->sizeh;
+	if (wr)
+		++w8;
+	if (hr)
+		++h8;
+	if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
+		if(w8&1)
+			++w8;
+		if(h8&1)
+			++h8;
+	}
+	if(over){
+		if((w8!=currentProject->tms->maps[currentProject->curPlane].mapSizeW)||(h8!=currentProject->tms->maps[currentProject->curPlane].mapSizeHA)){
+			alertWrap("When importing over tilemap width and height must be the same");
+			loaded_image->release();
+			return;
+		}
+	}
+	wt=w8*currentProject->tileC->sizew;
+	ht=h8*currentProject->tileC->sizeh;
+	if(wr||hr){
+		messageWrap("When width and/or height is not a multiple of %d,%d the image will be centered.\nThe width of this image is %d and the height is %d",tilebitw,tilebith,w,h);
+	}
+	//start by copying the data
+	uint8_t * imgptr=(uint8_t *)loaded_image->data()[0];
+	//now we can convert to tiles
+	unsigned depth=loaded_image->d();
+	printf("image width: %u image height: %u depth: %u\n",w,h,depth);
+	if (unlikely(depth != 3 && depth != 4 && depth!=1)){
+		alertWrap("Please use color depth of 1,3 or 4\nYou Used %d",loaded_image->d());
+		loaded_image->release();
+		return;
+	}else
+		printf("Image depth %d\n",loaded_image->d());
+
+	pushTilesAll(tTypeBoth);
+	unsigned appendoff;
+	if(!over){
+		if(append)
+			appendoff=currentProject->tileC->amt;
+		else
+			appendoff=0;
+		currentProject->tileC->resizeAmt(w8*h8+appendoff);
+		updateTileSelectAmt();
+	}else
+		appendoff=0;
+	unsigned center[3];
+	center[0]=(wt-w)/2;
+	center[1]=(ht-h)/2;
+	center[2]=wt-w-center[0];
+	uint8_t*palMap;
+	bool grayscale;
+	unsigned remap[256];
+	if(depth==1){
+		unsigned numcol;
+		grayscale=handle1byteImg(loaded_image,remap,&numcol);
+		if(!grayscale){
+			palMap=(uint8_t*)loaded_image->data()[1];
+			imgptr=(uint8_t*)loaded_image->data()[2];
+			if(fl_ask("Overwrite palette? This can be undone if you change your mind.")){
+				pushPaletteAll();
+				for(unsigned i=0;i<std::min(currentProject->pal->colorCnt+currentProject->pal->colorCntalt,numcol);++i)
+					currentProject->pal->rgbToEntry(palMap[i*4+1],palMap[i*4+2],palMap[i*4+3],i);
+			}
+		}
+	}
+	for(uint32_t y=0,tcnt=0;y<ht;++y){
+		if(y%currentProject->tileC->sizeh)
+			tcnt-=wt/currentProject->tileC->sizew;
+		if((!((y<center[1])||(y>=(h+center[1]))))&&(depth==1)&&(!grayscale))
+			imgptr=(uint8_t*)loaded_image->data()[y+2-center[1]];
+		for(uint32_t x=0;x<wt;x+=currentProject->tileC->sizew,++tcnt){
+			uint32_t ctile;
+			if(over){
+				ctile=currentProject->tms->maps[currentProject->curPlane].get_tile(x/currentProject->tileC->sizew,y/currentProject->tileC->sizeh);
+				//See if ctile is allocated
+				if(ctile>=currentProject->tileC->amt){
+					//tile on map but not a tile associated with it
+					imgptr+=currentProject->tileC->sizew*depth;
+					continue;
+				}
+			}else
+				ctile=tcnt;
+			ctile+=appendoff;
+			uint8_t*ttile=currentProject->tileC->truetDat.data()+((ctile*currentProject->tileC->tcSize)+((y%currentProject->tileC->sizeh)*currentProject->tileC->sizew*4));
+			//First take care of border
+			unsigned line=currentProject->tileC->sizew;
+			if((y<center[1])||(y>=(h+center[1])))
+				memset(ttile,0,line*4);
+			else{
+				if(x<center[0]){
+					memset(ttile,0,center[0]*4);
+					line-=center[0];
+					ttile+=center[0]*4;
+				}else if(x>=(wt-currentProject->tileC->sizew))
+					line-=center[2];
+				switch (depth){
+					case 1:
+						for(unsigned xx=0;xx<line;++xx){
+							if(grayscale){
+								*ttile++=*imgptr;
+								*ttile++=*imgptr;
+								*ttile++=*imgptr++;
+								*ttile++=255;
+							}else{
+								if(*imgptr==' '){
+									memset(ttile,0,4);
+									ttile+=4;
+									++imgptr;
+								}else{
+									unsigned p=(*imgptr++);
+									*ttile++=palMap[remap[p]+1];
+									*ttile++=palMap[remap[p]+2];
+									*ttile++=palMap[remap[p]+3];
+									*ttile++=255;
+								}
+							}
+						}
+					break;
+					case 3:
+						for(unsigned xx=0;xx<line;++xx){
+							*ttile++=*imgptr++;
+							*ttile++=*imgptr++;
+							*ttile++=*imgptr++;
+							*ttile++=255;
+						}
+					break;
+					case 4:
+						memcpy(ttile,imgptr,line*4);
+						imgptr+=line*4;
+						ttile+=line*4;
+					break;
+				}
+				if(x>=(wt-currentProject->tileC->sizew))
+					memset(ttile,0,center[2]*4);
+			}
+		}
+	}
+	loaded_image->release();
+	if((!over)&&(!tilesonly)){
+		pushTilemapAll(false);
+		currentProject->tms->maps[currentProject->curPlane].resize_tile_map(w8,h8);
+		uint32_t tilecounter=appendoff;
+		for (uint32_t y=0;y<h8;++y){
+			for (uint32_t x=0;x<w8;++x){
+				currentProject->tms->maps[currentProject->curPlane].set_tile_full(x,y,tilecounter,0,false,false,false);
+				++tilecounter;
+			}
+		}
+	}
+	if(window)
+		window->redraw();
+}
+void load_image_to_tilemapCB(Fl_Widget*,void*o){
 	if(!currentProject->containsData(pjHaveTiles|pjHaveMap)){
 		currentProject->haveMessage(pjHaveTiles|pjHaveMap);
 		return;
 	}
-	Fl_Shared_Image * loaded_image;
 	bool over=(uintptr_t)o&1;
 	bool tilesonly=(uintptr_t)o>>1;
 	bool append;
@@ -198,178 +374,10 @@ void load_image_to_tilemap(Fl_Widget*,void*o){
 		append=false;
 	else
 		append=fl_choice("Append tiles or overwrite starting at 0?","Overwrite","Append",0);
-	if (load_file_generic("Load image")){
-		loaded_image=Fl_Shared_Image::get(the_file.c_str());
-		if(!loaded_image){
-			fl_alert("Error loading image");
-			return;
-		}
-		unsigned tilebitw,tilebith;
-		tilebitw=currentProject->tileC->sizew;
-		tilebith=currentProject->tileC->sizeh;
-		if((currentProject->subSystem&NES2x2)&&(currentProject->gameSystem==NES)){
-			tilebitw*=2;
-			tilebith*=2;
-		}
-		uint32_t w,h;
-		w=loaded_image->w();
-		h=loaded_image->h();
-		uint32_t w8,h8;
-		uint32_t wt,ht;
-		int wr,hr;
-		wr=w%tilebitw;
-		hr=h%tilebith;
-		w8=w/currentProject->tileC->sizew;
-		h8=h/currentProject->tileC->sizeh;
-		if (wr)
-			++w8;
-		if (hr)
-			++h8;
-		if((currentProject->gameSystem==NES)&&(currentProject->subSystem&NES2x2)){
-			if(w8&1)
-				++w8;
-			if(h8&1)
-				++h8;
-		}
-		if(over){
-			if((w8!=currentProject->tms->maps[currentProject->curPlane].mapSizeW)||(h8!=currentProject->tms->maps[currentProject->curPlane].mapSizeHA)){
-				fl_alert("When importing over tilemap width and height must be the same");
-				loaded_image->release();
-				return;
-			}
-		}
-		wt=w8*currentProject->tileC->sizew;
-		ht=h8*currentProject->tileC->sizeh;
-		if(wr||hr)
-			fl_alert("When width and/or height is not a multiple of %d,%d the image will be centered.\nThe width of this image is %d and the height is %d",tilebitw,tilebith,w,h);
-		//start by copying the data
-		uint8_t * imgptr=(uint8_t *)loaded_image->data()[0];
-		//now we can convert to tiles
-		unsigned depth=loaded_image->d();
-		printf("image width: %u image height: %u depth: %u\n",w,h,depth);
-		if (unlikely(depth != 3 && depth != 4 && depth!=1)){
-			fl_alert("Please use color depth of 1,3 or 4\nYou Used %d",loaded_image->d());
-			loaded_image->release();
-			return;
-		}else
-			printf("Image depth %d\n",loaded_image->d());
-
-		pushTilesAll(tTypeBoth);
-		unsigned appendoff;
-		if(!over){
-			if(append)
-				appendoff=currentProject->tileC->amt;
-			else
-				appendoff=0;
-			currentProject->tileC->resizeAmt(w8*h8+appendoff);
-			updateTileSelectAmt();
-		}else
-			appendoff=0;
-		unsigned center[3];
-		center[0]=(wt-w)/2;
-		center[1]=(ht-h)/2;
-		center[2]=wt-w-center[0];
-		uint8_t*palMap;
-		bool grayscale;
-		unsigned remap[256];
-		if(depth==1){
-			unsigned numcol;
-			grayscale=handle1byteImg(loaded_image,remap,&numcol);
-			if(!grayscale){
-				palMap=(uint8_t*)loaded_image->data()[1];
-				imgptr=(uint8_t*)loaded_image->data()[2];
-				if(fl_ask("Overwrite palette? This can be undone if you change your mind.")){
-					pushPaletteAll();
-					for(unsigned i=0;i<std::min(currentProject->pal->colorCnt+currentProject->pal->colorCntalt,numcol);++i)
-						currentProject->pal->rgbToEntry(palMap[i*4+1],palMap[i*4+2],palMap[i*4+3],i);
-				}
-			}
-		}
-		for(uint32_t y=0,tcnt=0;y<ht;++y){
-			if(y%currentProject->tileC->sizeh)
-				tcnt-=wt/currentProject->tileC->sizew;
-			if((!((y<center[1])||(y>=(h+center[1]))))&&(depth==1)&&(!grayscale))
-				imgptr=(uint8_t*)loaded_image->data()[y+2-center[1]];
-			for(uint32_t x=0;x<wt;x+=currentProject->tileC->sizew,++tcnt){
-				uint32_t ctile;
-				if(over){
-					ctile=currentProject->tms->maps[currentProject->curPlane].get_tile(x/currentProject->tileC->sizew,y/currentProject->tileC->sizeh);
-					//See if ctile is allocated
-					if(ctile>=currentProject->tileC->amt){
-						//tile on map but not a tile associated with it
-						imgptr+=currentProject->tileC->sizew*depth;
-						continue;
-					}
-				}else
-					ctile=tcnt;
-				ctile+=appendoff;
-				uint8_t*ttile=currentProject->tileC->truetDat.data()+((ctile*currentProject->tileC->tcSize)+((y%currentProject->tileC->sizeh)*currentProject->tileC->sizew*4));
-				//First take care of border
-				unsigned line=currentProject->tileC->sizew;
-				if((y<center[1])||(y>=(h+center[1])))
-					memset(ttile,0,line*4);
-				else{
-					if(x<center[0]){
-						memset(ttile,0,center[0]*4);
-						line-=center[0];
-						ttile+=center[0]*4;
-					}else if(x>=(wt-currentProject->tileC->sizew))
-						line-=center[2];
-					switch (depth){
-						case 1:
-							for(unsigned xx=0;xx<line;++xx){
-								if(grayscale){
-									*ttile++=*imgptr;
-									*ttile++=*imgptr;
-									*ttile++=*imgptr++;
-									*ttile++=255;
-								}else{
-									if(*imgptr==' '){
-										memset(ttile,0,4);
-										ttile+=4;
-										++imgptr;
-									}else{
-										unsigned p=(*imgptr++);
-										*ttile++=palMap[remap[p]+1];
-										*ttile++=palMap[remap[p]+2];
-										*ttile++=palMap[remap[p]+3];
-										*ttile++=255;
-									}
-								}
-							}
-						break;
-						case 3:
-							for(unsigned xx=0;xx<line;++xx){
-								*ttile++=*imgptr++;
-								*ttile++=*imgptr++;
-								*ttile++=*imgptr++;
-								*ttile++=255;
-							}
-						break;
-						case 4:
-							memcpy(ttile,imgptr,line*4);
-							imgptr+=line*4;
-							ttile+=line*4;
-						break;
-					}
-					if(x>=(wt-currentProject->tileC->sizew))
-						memset(ttile,0,center[2]*4);
-				}
-			}
-		}
-		loaded_image->release();
-		if((!over)&&(!tilesonly)){
-			pushTilemapAll(false);
-			currentProject->tms->maps[currentProject->curPlane].resize_tile_map(w8,h8);
-			uint32_t tilecounter=appendoff;
-			for (uint32_t y=0;y<h8;++y){
-				for (uint32_t x=0;x<w8;++x){
-					currentProject->tms->maps[currentProject->curPlane].set_tile_full(x,y,tilecounter,0,false,false,false);
-					++tilecounter;
-				}
-			}
-		}
-		window->redraw();
+	char*fname=loadsavefile("Select an image");
+	if(fname){
+		load_image_to_tilemap(fname,over,tilesonly,append);
+		free((void*)fname);
 	}
 }
 void set_prioCB(Fl_Widget*,void*o){

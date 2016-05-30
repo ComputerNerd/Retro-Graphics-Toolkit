@@ -415,7 +415,7 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 static void colorAmtExceed(void){
 	fl_alert("No more room for colors\nYou should not be seeing this message please report this.");
 }
-static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,unsigned offsetPal,Fl_Progress *progress,Fl_Window*pwin,unsigned maxCol,unsigned yuv,unsigned alg,bool isSprite=false){
+static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,unsigned offsetPal,Fl_Progress *progress,Fl_Window*pwin,unsigned maxCol,unsigned yuv,unsigned alg,bool isSprite=false,bool ditherBefore=true){
 	if(progress)
 		progress->maximum(1.0);
 	unsigned off2=offsetPal*2;
@@ -439,7 +439,7 @@ static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,unsigned 
 		progress->label("Dithering to colorspace");
 		Fl::check();
 	}
-	if(!yuv)
+	if((!yuv)&&ditherBefore)
 		ditherImage(image,w,h,false,true);
 	if(progress){
 		progress->label("Quantizing image");

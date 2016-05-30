@@ -104,7 +104,7 @@ static void(*const mainCBtab[])(Fl_Widget*,void*)={
 	load_truecolor_tiles,//2
 	save_tiles,//3
 	save_tiles_truecolor,//4
-	load_image_to_tilemap,//5
+	load_image_to_tilemapCB,//5
 	loadPalette,//6
 	save_palette,//7
 	load_tile_map,//8

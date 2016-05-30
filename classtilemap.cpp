@@ -239,10 +239,12 @@ void tileMap::resizeBlocks(uint32_t wn,uint32_t hn){
 		mapSizeW=wn;
 		mapSizeH=hn;
 		mapSizeHA=mapSizeH*amt;
-		char tmp[16];
-		snprintf(tmp,16,"%u",amt);
-		window->map_amt->value(tmp);
-	}else{
+		if(window){
+			char tmp[16];
+			snprintf(tmp,16,"%u",amt);
+			window->map_amt->value(tmp);
+		}
+	}else if(window){
 		window->updateMapWH();
 	}
 	ScrollUpdate();
@@ -318,25 +320,27 @@ void tileMap::toggleBlocks(bool set){
 			mapSizeHA=mapSizeH;
 		}
 	}
-	window->updateMapWH();
-	if(set){
-		window->map_w->label("Block width");
-		window->map_w->callback(resizeBlocksCB);
-		window->map_h->label("Block height");
-		window->map_h->callback(resizeBlocksCB);
-		window->map_amt->show();
-		char tmp[16];
-		snprintf(tmp,16,"%u",amt);
-		window->map_amt->value(tmp);
-	}else{
-		window->map_w->callback(callback_resize_map);
-		window->map_w->label(MapWidthTxt);
-		window->map_h->callback(callback_resize_map);
-		window->map_h->label(MapHeightTxt);
-		window->map_amt->hide();
+	if(window){
+		window->updateMapWH();
+		if(set){
+			window->map_w->label("Block width");
+			window->map_w->callback(resizeBlocksCB);
+			window->map_h->label("Block height");
+			window->map_h->callback(resizeBlocksCB);
+			window->map_amt->show();
+			char tmp[16];
+			snprintf(tmp,16,"%u",amt);
+			window->map_amt->value(tmp);
+		}else{
+			window->map_w->callback(callback_resize_map);
+			window->map_w->label(MapWidthTxt);
+			window->map_h->callback(callback_resize_map);
+			window->map_h->label(MapHeightTxt);
+			window->map_amt->hide();
+		}
+		updateTileSelectAmt();
+		ScrollUpdate();
 	}
-	updateTileSelectAmt();
-	ScrollUpdate();
 }
 bool tileMap::get_hflip(uint32_t x,uint32_t y)const{
 	if(inRange(x,y))
@@ -692,9 +696,11 @@ bool tileMap::loadFromFile(){
 	if (!verify_str_number_only(str_ptr))
 		return true;
 	offset=atoi(str_ptr);
-	window->tmapOffset->value(str_ptr);
+	if(window)
+		window->tmapOffset->value(str_ptr);
 	this->offset=offset;
-	window->BlocksCBtn->value(blocksLoad?1:0);
+	if(window)
+		window->BlocksCBtn->value(blocksLoad?1:0);
 	unsigned index=f.selDat();
 	file_size=f.lens[index];
 	size_t size_temp;
@@ -722,7 +728,8 @@ bool tileMap::loadFromFile(){
 			show_default_error
 	}
 	printf("W %d H %d blocks loaded %d\n",w,h,blocksLoaded);
-	window->updateMapWH();
+	if(window)
+		window->updateMapWH();
 	mapSizeW=w;
 	mapSizeH=h;
 	if(blocksLoad)
@@ -814,7 +821,8 @@ bool tileMap::loadFromFile(){
 	free(tempMap);
 	isBlock=blocksLoad;
 	toggleBlocks(blocksLoad);
-	window->redraw();
+	if(window)
+		window->redraw();
 	return true;
 }
 void tileMap::sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vflip){
@@ -893,6 +901,8 @@ void tileMap::set_prio(uint32_t x,uint32_t y,bool prio_set){
 		tileMapDat[((y*mapSizeW)+x)*4] &= ~(1 << 7);
 }
 void tileMap::ScrollUpdate(void){
+	if(!window)
+		return;
 	uint32_t old_scroll=window->map_x_scroll->value();
 	uint32_t tile_size_placer=window->place_tile_size->value();
 	int32_t map_scroll=mapSizeW-((window->w()-map_off_x)/tile_size_placer/8);
@@ -980,8 +990,10 @@ void tileMap::resize_tile_map(uint32_t new_x,uint32_t new_y){
 	mapSizeHA=mapSizeH;
 	if(isBlock)
 		mapSizeH/=amt;
-	ScrollUpdate();
-	window->updateMapWH();
+	if(window){
+		ScrollUpdate();
+		window->updateMapWH();
+	}
 }
 bool tileMap::truecolor_to_image(uint8_t * the_image,int useRow,bool useAlpha){
 	/*!

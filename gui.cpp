@@ -66,7 +66,7 @@ static void fixVal(Fl_Int_Input*in,int val,bool redraw){
 	char tmp[16];
 	snprintf(tmp,16,"%d",val);
 	in->value(tmp);
-	if(redraw)
+	if(redraw&&window)
 		window->redraw();
 }
 int SafeTxtInput(Fl_Int_Input*in,bool redraw){
@@ -97,6 +97,8 @@ static void checkMaxSlider(uint32_t newMax,Fl_Slider*s){
 		s->value(newMax);
 }
 void updateTileSelectAmt(uint32_t newMax){
+	if(!window)
+		return;
 	char tmp[128];
 	snprintf(tmp,128,"Total tiles: %d",newMax);
 	window->totalTiles->copy_label(tmp);
