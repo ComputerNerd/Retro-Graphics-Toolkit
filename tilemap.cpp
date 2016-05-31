@@ -602,9 +602,9 @@ try_again_color:
 againNerd:
 			if (currentProject->pal->palType[offsetTmp]){
 				++offsetTmp;
-				if(offsetTmp>=maxPal){
+				if(offsetTmp>(maxPal+offsetPal)){
 					if(maxCol>1){
-						--maxCol;
+						--colorz;
 						printf("Needed to reduce colors generated due to locked colors %u\n",maxCol);
 					}else{
 						fl_alert("Cannot reduce maximum colors to make this happen...aborting");
