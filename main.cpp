@@ -14,6 +14,10 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
+#ifdef _WIN32
+#include <windows.h>
+#endif
+#include <stdlib.h>
 #include <unistd.h>
 #include <libgen.h>
 #include "class_global.h"
@@ -77,14 +81,22 @@ int main(int argc, char **argv){
 		lua_State*Lheadless=createLuaState();
 		// Create arg table just like Lua standalone
 		std::string pathbld="./headlessExamples/";
-		char*examplePath;
+		#ifdef _WIN32
+			char examplePath[MAX_PATH];
+		#else
+			char*examplePath;
+		#endif
 		if(useExampleFolder){
 			pathbld+=argv[2];
+#ifdef _WIN32
+			GetFullPathName(pathbld.c_str(),sizeof(examplePath),examplePath,nullptr);
+#else
 			examplePath=realpath(pathbld.c_str(),nullptr);
 			if(!examplePath){
 				fl_alert("realpath failure");
 				return 1;
 			}
+#endif
 			argv[2]=examplePath;
 		}
 		createargtable(Lheadless,argv,argc,2);
@@ -94,7 +106,9 @@ int main(int argc, char **argv){
 #endif
 		if(useExampleFolder){
 			runLua(Lheadless,examplePath);
-			free(examplePath);
+#ifndef _WIN32
+		free(examplePath);
+#endif
 		}else
 			runLua(Lheadless,argv[2]);
 		return 0;
