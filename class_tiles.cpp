@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
 #include <exception>
 #include <ctime>
@@ -26,6 +26,7 @@
 #include "undo.h"
 #include "classpalettebar.h"
 #include "gui.h"
+#include "compressionWrapper.h"
 tiles::tiles(struct Project*prj){
 	current_tile=0;
 	amt=1;
@@ -633,4 +634,64 @@ void tiles::changeDim(unsigned w,unsigned h,unsigned bd){
 	}
 	updateTileSelectAmt();
 	delete old;
+}
+void tiles::save(const char*fname,fileType_t type,bool clipboard,int compression,const char*label){
+	uint8_t*savePtr;
+	enum tileType tt=prj->getTileType();
+	switch(tt){
+		case LINEAR:
+			savePtr=(uint8_t*)toLinear();
+		break;
+		case PLANAR_LINE:
+			savePtr=(uint8_t*)toLinePlanar();
+		break;
+		case PLANAR_TILE:
+			savePtr=tDat.data();
+		break;
+	}
+	FILE* myfile;
+	uint8_t* compdat;
+	size_t compsize;
+	if(clipboard)
+		myfile=0;
+	else if(type)
+		myfile = fopen(fname,"w");
+	else
+		myfile = fopen(fname,"wb");
+	if (likely(myfile||clipboard)){
+		if(compression)
+			compdat=(uint8_t*)encodeType(savePtr,tileSize*amt,compsize,compression);
+		if (type){
+			char comment[2048];
+			snprintf(comment,2048,"%d tiles %s",amt,typeToText(compression));
+			if (compression){
+				if(!saveBinAsText(compdat,compsize,myfile,type,comment,label,8)){
+					free(compdat);
+					fl_alert("Error: can not save file %s",the_file.c_str());
+					if(tt!=PLANAR_TILE)
+						free(savePtr);
+					return;
+				}
+			}else{
+				if(!saveBinAsText(savePtr,(amt)*tileSize,myfile,type,comment,label,32)){
+					fl_alert("Error: can not save file %s",the_file.c_str());
+					if(tt!=PLANAR_TILE)
+						free(savePtr);
+					return;
+				}
+			}
+		}else{
+			if(compression)
+				fwrite(compdat,1,compsize,myfile);
+			else
+				fwrite(savePtr,tileSize,(amt),myfile);
+		}
+		if(compression)
+			free(compdat);
+		if(tt!=PLANAR_TILE)
+			free(savePtr);
+	}else
+		fl_alert("Error: can not save file %s",the_file.c_str());
+	if(myfile)
+		fclose(myfile);
 }

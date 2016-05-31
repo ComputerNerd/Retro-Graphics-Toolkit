@@ -12,7 +12,7 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
 #include "macros.h"
 #include "gui.h"
@@ -28,6 +28,7 @@
 #include "palette.h"
 #include "runlua.h"
 #include "luaconfig.h"
+#include "callbacksprites.h"
 static const char* GPLv3="This program is free software: you can redistribute it and/or modify\n"
 	"it under the terms of the GNU General Public License as published by\n"
 	"the Free Software Foundation, either version 3 of the License, or\n"
@@ -139,7 +140,7 @@ void set_game_system(Fl_Widget*,void* selection){
 		updateNesTab(0,false);
 		updateNesTab(0,true);
 	}
-	unsigned msprt=window->metaspritesel->value();
+	unsigned msprt=curSpritemeta;
 	uint32_t sold=currentProject->subSystem;
 	unsigned bd=currentProject->getBitdepthSys();
 	unsigned bdold=bd;
@@ -147,6 +148,7 @@ void set_game_system(Fl_Widget*,void* selection){
 	if(currentProject->containsData(pjHaveTiles))
 		tilesOld=new tiles(*currentProject->tileC,currentProject);
 	if(currentProject->containsData(pjHavePal)){
+		palBar.sysCache=-1;
 		switch(sel){
 			case segaGenesis:
 				if(currentProject->gameSystem==NES||currentProject->gameSystem==masterSystem||currentProject->gameSystem==gameGear){
@@ -276,12 +278,16 @@ void set_game_system(Fl_Widget*,void* selection){
 			currentProject->subSystem=0;
 			currentProject->setBitdepthSys(bd);
 			if(currentProject->containsData(pjHaveSprites)){
-				window->spritesize[0]->maximum(4);
-				window->spritesize[1]->maximum(4);
+				if(window){
+					window->spritesize[0]->maximum(4);
+					window->spritesize[1]->maximum(4);
+				}
 				currentProject->ms->sps[msprt].enforceMax(4,4);
 			}
-			window->subSysC->copy(subSysGenesis);
-			window->subSysC->value((currentProject->subSystem&sgSHmask)>>sgSHshift);
+			if(window){
+				window->subSysC->copy(subSysGenesis);
+				window->subSysC->value((currentProject->subSystem&sgSHmask)>>sgSHshift);
+			}
 		break;
 		case NES:
 			bd=2;
@@ -299,12 +305,16 @@ void set_game_system(Fl_Widget*,void* selection){
 					currentProject->tms->maps[currentProject->curPlane].resize_tile_map(currentProject->tms->maps[currentProject->curPlane].mapSizeW,currentProject->tms->maps[currentProject->curPlane].mapSizeHA+1);
 			}
 			if(currentProject->containsData(pjHaveSprites)){
-				window->spritesize[0]->maximum(1);
-				window->spritesize[1]->maximum(2);
+				if(window){
+					window->spritesize[0]->maximum(1);
+					window->spritesize[1]->maximum(2);
+				}
 				currentProject->ms->sps[msprt].enforceMax(1,2);
 			}
-			window->subSysC->copy(subSysNES);
-			window->subSysC->value(currentProject->subSystem&NES2x2);
+			if(window){
+				window->subSysC->copy(subSysNES);
+				window->subSysC->value(currentProject->subSystem&NES2x2);
+			}
 		break;
 		case masterSystem:
 		case gameGear:
@@ -313,8 +323,10 @@ void set_game_system(Fl_Widget*,void* selection){
 			bd=4;
 			currentProject->setBitdepthSys(bd);
 			if(currentProject->containsData(pjHaveSprites)){
-				window->spritesize[0]->maximum(1);
-				window->spritesize[1]->maximum(2);
+				if(window){
+					window->spritesize[0]->maximum(1);
+					window->spritesize[1]->maximum(2);
+				}
 				currentProject->ms->sps[msprt].enforceMax(1,2);
 			}
 		break;
@@ -325,12 +337,16 @@ void set_game_system(Fl_Widget*,void* selection){
 			bd=1;
 			currentProject->setBitdepthSys(bd);
 			if(currentProject->containsData(pjHaveSprites)){
-				window->spritesize[0]->maximum(1);
-				window->spritesize[1]->maximum(2);
+				if(window){
+					window->spritesize[0]->maximum(1);
+					window->spritesize[1]->maximum(2);
+				}
 				currentProject->ms->sps[msprt].enforceMax(1,2);
 			}
-			window->subSysC->copy(subSysTMS9918);
-			window->subSysC->value(currentProject->getTMS9918subSys());
+			if(window){
+				window->subSysC->copy(subSysTMS9918);
+				window->subSysC->value(currentProject->getTMS9918subSys());
+			}
 		break;
 		case frameBufferPal:
 			{currentProject->gameSystem=frameBufferPal;
@@ -351,7 +367,8 @@ void set_game_system(Fl_Widget*,void* selection){
 			currentProject->ms->sps[msprt].allToPalRow(spRow);
 			palBar.changeRow(spRow,3);
 		}
-		window->updateSpriteSliders();
+		if(window)
+			window->updateSpriteSliders();
 	}
 	if(currentProject->containsData(pjHaveTiles)){
 		if((!((sel==masterSystem||sel==gameGear)&&(gold==NES)&&currentProject->containsData(pjHaveMap)))&&(bd==bdold))
@@ -435,7 +452,8 @@ freeIt:
 	lua_pushinteger(Lconf,gold);
 	lua_pushinteger(Lconf,sel);
 	runLuaFunc(Lconf,2,0);
-	window->redraw();
+	if(window)
+		window->redraw();
 }
 void trueColTileToggle(Fl_Widget*,void*){
 	showTrueColor^=true;

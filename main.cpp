@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
 #include <unistd.h>
 #include <libgen.h>
@@ -20,6 +20,7 @@
 #include "gui.h"
 #include "callbacktilemaps.h"
 #include "runlua.h"
+#include "luaconfig.h"
 const char*rtVersionStr="Retro Graphics Toolkit v0.8 RC2";
 editor*window=nullptr;
 
@@ -72,8 +73,7 @@ int main(int argc, char **argv){
 #endif
 	if(headless){
 		// Run Lua script.
-		lua_State*Lconf=createLuaState();
-		runLua(Lconf,"configHeadless.lua");
+		startLuaConf("configHeadless.lua");
 		lua_State*Lheadless=createLuaState();
 		// Create arg table just like Lua standalone
 		std::string pathbld="./headlessExamples/";

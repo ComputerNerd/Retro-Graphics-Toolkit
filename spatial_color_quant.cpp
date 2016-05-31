@@ -1026,7 +1026,7 @@ int scolorq_wrapper(uint8_t*in255,uint8_t*out,uint8_t user_pal[3][256],uint32_t 
 
 	// Check the output file before we begin the long part
 	if (out == NULL) {
-		fl_alert("What happened to allocating memory before function call?");
+		fl_alert("What happened to allocating memory before a function call?");
 		return -1;
 	}
 

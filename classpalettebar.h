@@ -12,7 +12,7 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
 #pragma once
 #define tabsWithPalette 4
@@ -23,8 +23,8 @@ private:
 	bool tiny[tabsWithPalette];
 	bool all[tabsWithPalette];
 	bool alt[tabsWithPalette];
-	uint32_t sysCache;
 public:
+	int32_t sysCache;
 	Fl_Slider*slide[tabsWithPalette][3];
 	unsigned selRow[tabsWithPalette];
 	unsigned selBox[tabsWithPalette];

@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
 #include <stdint.h>
 #include <cstdarg>
@@ -196,6 +196,27 @@ int MenuPopup(const char * title,const char * text,unsigned num,unsigned def,...
 		delete winP;
 		return returnVal;
 	}
+	return -1;
+}
+int menuPopupArray(const char * title,const char * text,unsigned def,const Fl_Menu_Item*arr){
+	winP=new Fl_Window(480,128,title);
+	winP->begin();
+	if(text)
+		new Fl_Box(FL_NO_BOX,8,8,464,88,text);
+	PopC=new Fl_Choice(8,96,192,24);
+	PopC->copy(arr);
+	PopC->value(def);
+	Fl_Button * Ok=new Fl_Button(200,96,64,24,fl_ok);
+	Ok->callback(setRet,0);
+	Fl_Button * Cancel=new Fl_Button(264,96,64,24,fl_cancel);
+	Cancel->callback(setRet,(void*)1);
+	winP->end();
+	winP->set_modal();
+	winP->show();
+	while(winP->shown())
+		Fl::wait();
+	delete winP;
+	return returnVal;
 	return -1;
 }
 bool load_file_generic(const char * the_tile,bool save_file){//Warning this function sets global variable string the_file

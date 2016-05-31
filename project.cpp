@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
 #include "includes.h"
 #include "project.h"
@@ -498,8 +498,10 @@ void switchProject(uint32_t id,bool load){
 		else
 			window->ditherPower->show();
 	}
-	if(projects[id]->containsData(pjHavePal))
+	if(projects[id]->containsData(pjHavePal)){
+		palBar.sysCache=-1;
 		projects[id]->pal->setVars(projects[id]->gameSystem);
+	}
 	switch(projects[id]->gameSystem){
 		case segaGenesis:
 			if(window){
@@ -536,8 +538,10 @@ void switchProject(uint32_t id,bool load){
 		break;
 		case TMS9918:
 			setGameSysTMS9918(projects[id]);
-			window->subSysC->copy(subSysTMS9918);
-			window->subSysC->value(projects[id]->getTMS9918subSys());
+			if(window){
+				window->subSysC->copy(subSysTMS9918);
+				window->subSysC->value(projects[id]->getTMS9918subSys());
+			}
 			if(projects[id]->containsData(pjHavePal))
 				palBar.setSys();
 			if(projects[id]->containsData(pjHaveTiles))
@@ -548,52 +552,55 @@ void switchProject(uint32_t id,bool load){
 	}
 	//Make sure sliders have correct values
 	if(projects[id]->containsData(pjHaveMap)){
-		updatePlaneTilemapMenu(id,window->planeSelect);
-		window->updateMapWH(projects[id]->tms->maps[projects[id]->curPlane].mapSizeW,projects[id]->tms->maps[projects[id]->curPlane].mapSizeH);
-		char tmp[16];
-		snprintf(tmp,16,"%u",projects[id]->tms->maps[projects[id]->curPlane].amt);
-		window->map_amt->value(tmp);
+		if(window){
+			updatePlaneTilemapMenu(id,window->planeSelect);
+			window->updateMapWH(projects[id]->tms->maps[projects[id]->curPlane].mapSizeW,projects[id]->tms->maps[projects[id]->curPlane].mapSizeH);
+			char tmp[16];
+			snprintf(tmp,16,"%u",projects[id]->tms->maps[projects[id]->curPlane].amt);
+			window->map_amt->value(tmp);
+		}
 	}
-	if(projects[id]->containsData(pjHaveTiles))
+	if(projects[id]->containsData(pjHaveTiles)&&window)
 		updateTileSelectAmt(projects[id]->tileC->amt);
 	for(int x=0;x<shareAmtPj;++x){
-		window->sharePrj[x]->value(projects[id]->share[x]<0?0:1);
-		window->havePrj[x]->value(projects[id]->useMask>>x&1);
-		if(projects[id]->share[x]<0)
-			window->havePrj[x]->show();
-		else
-			window->havePrj[x]->hide();
-		if(projects[id]->useMask>>x&1){
-			if(window->tabsHidden[x]){
-				window->the_tabs->insert(*window->tabsMain[x],x);
-				window->tabsHidden[x]=false;
-			}
-		}else{
-			if(!window->tabsHidden[x]){
-				if(projects[id]->share[x]<0){
-					window->the_tabs->remove(window->tabsMain[x]);
-					window->tabsHidden[x]=true;
+		if(window){
+			window->sharePrj[x]->value(projects[id]->share[x]<0?0:1);
+			window->havePrj[x]->value(projects[id]->useMask>>x&1);
+			if(projects[id]->share[x]<0)
+				window->havePrj[x]->show();
+			else
+				window->havePrj[x]->hide();
+			if(projects[id]->useMask>>x&1){
+				if(window->tabsHidden[x]){
+					window->the_tabs->insert(*window->tabsMain[x],x);
+					window->tabsHidden[x]=false;
+				}
+			}else{
+				if(!window->tabsHidden[x]){
+					if(projects[id]->share[x]<0){
+						window->the_tabs->remove(window->tabsMain[x]);
+						window->tabsHidden[x]=true;
+					}
 				}
 			}
 		}
 	}
-	if(projects[id]->containsData(pjHaveMap))
+	if(projects[id]->containsData(pjHaveMap)&&window)
 		window->BlocksCBtn->value(projects[id]->tms->maps[projects[id]->curPlane].isBlock?1:0);
-	if(projects[id]->containsData(pjHaveChunks)){
+	if(projects[id]->containsData(pjHaveChunks)&&window){
 		window->chunk_select->maximum(projects[id]->Chunk->amt-1);
 		window->updateChunkSize(projects[id]->Chunk->wi,projects[id]->Chunk->hi);
 	}
 	if(projects[id]->containsData(pjHaveMap))
 		projects[id]->tms->maps[projects[id]->curPlane].toggleBlocks(projects[id]->tms->maps[projects[id]->curPlane].isBlock);
-	if(projects[id]->containsData(pjHaveChunks))
+	if(projects[id]->containsData(pjHaveChunks)&&window)
 		window->updateBlockTilesChunk(id);
-	if(projects[id]->containsData(pjHaveSprites)){
+	if(projects[id]->containsData(pjHaveSprites)&&window){
 		window->updateSpriteSliders(id);
 		window->spriteglobaltxt->show();
 		window->spriteglobaltxt->value(projects[id]->ms->name.c_str());
-	}else{
+	}else if(window)
 		window->spriteglobaltxt->hide();
-	}
 	lua_getglobal(Lconf,"switchProject");
 	runLuaFunc(Lconf,0,0);
 	if(window)

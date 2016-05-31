@@ -12,9 +12,10 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
 #pragma once
+#include "filemisc.h"
 struct palette{
 	Project*prj;
 	uint8_t*rgbPal;
@@ -45,6 +46,7 @@ struct palette{
 	unsigned calMaxPerRow(unsigned row);
 	void swapEntry(unsigned one,unsigned two);
 	bool shouldAddCol(unsigned off,unsigned r,unsigned g,unsigned b,bool sprite);
+	void savePalette(const char*fname,unsigned start,unsigned end,bool skipzero,fileType_t type,int clipboard,const char*label="palDat");
 	unsigned getMaxRows(bool alt) const{
 		return (alt&&haveAlt)?rowCntPalalt:rowCntPal;
 	}

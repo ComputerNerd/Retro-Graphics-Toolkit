@@ -682,6 +682,11 @@ static int lua_palette_paletteToRgb(lua_State*L){
 	currentProject->pal->paletteToRgb();
 	return 0;
 }
+static int lua_palette_save(lua_State*L){
+	//void savePalette(const char*fname,unsigned start,unsigned end,bool skipzero,fileType_t type,int clipboard,const char*label="palDat");
+	currentProject->pal->savePalette(lua_tostring(L,1),lua_tointeger(L,2),lua_tointeger(L,3),lua_toboolean(L,4),(fileType_t)lua_tointeger(L,5),lua_toboolean(L,6),lua_tostring(L,7));
+	return 0;
+}
 static const luaL_Reg lua_paletteAPI[]={
 	{"getRGB",lua_palette_getRGB},
 	{"setRGB",lua_palette_setRGB},
@@ -692,6 +697,7 @@ static const luaL_Reg lua_paletteAPI[]={
 	{"getType",lua_palette_getType},
 	{"sortByHSL",lua_palette_sortByHSL},
 	{"toRgbAll",lua_palette_paletteToRgb},
+	{"save",lua_palette_save},
 	{0,0}
 };
 static unsigned inRangeTile(unsigned tile){
@@ -859,6 +865,15 @@ static int lua_tile_remove(lua_State*L){
 	currentProject->tileC->remove_tile_at(luaL_optinteger(L,1,0));
 	return 0;
 }
+static int lua_tile_removeDuplicate(lua_State*L){
+	currentProject->tileC->remove_duplicate_tiles(lua_toboolean(L,1));
+	return 0;
+}
+static int lua_tile_save(lua_State*L){
+	//void save(const char*fname,fileType_t type,bool clipboard,int compression);
+	currentProject->tileC->save(lua_tostring(L,1),(fileType_t)lua_tointeger(L,2),lua_toboolean(L,3),lua_tointeger(L,4),lua_tostring(L,5));
+	return 0;
+}
 static const luaL_Reg lua_tileAPI[]={
 	{"getPixelRGBA",lua_tile_getPixelRGBA},
 	{"setPixelRGBA",lua_tile_setPixelRGBA},
@@ -870,6 +885,8 @@ static const luaL_Reg lua_tileAPI[]={
 	{"resize",lua_tile_resize},
 	{"draw",lua_tile_draw},
 	{"remove",lua_tile_remove},
+	{"removeDuplicate",lua_tile_removeDuplicate},
+	{"save",lua_tile_save},
 	{0,0}
 };
 static unsigned getPlane(lua_State*L){
@@ -1017,6 +1034,23 @@ static int lua_tilemap_loadImage(lua_State*L){
 	load_image_to_tilemap(lua_tostring(L,1),luaL_optboolean(L,2,false),luaL_optboolean(L,3,false),luaL_optboolean(L,4,false));
 	return 0;
 }
+static int lua_tilemap_generate_optimal_paletteapply(lua_State *L) {
+  try {
+    settings *s = *((settings **)dub::checksdata(L, 1, "settings"));
+    generate_optimal_paletteapply(nullptr, s);
+    return 0;
+  } catch (std::exception &e) {
+    lua_pushfstring(L, "generate_optimal_paletteapply: %s", e.what());
+  } catch (...) {
+    lua_pushfstring(L, "generate_optimal_paletteapply: Unknown exception");
+  }
+  return dub::error(L);
+}
+static int lua_tilemap_save(lua_State*L){
+	//bool tileMap::saveToFile(const char*fname,fileType_t type,int clipboard,int compression,const char*nesFname){
+	currentProject->tms->maps[getPlane(L)].saveToFile(lua_tostring(L,2),(fileType_t)lua_tointeger(L,3),lua_toboolean(L,4),lua_tointeger(L,5),lua_tostring(L,6),luaL_optstring(L,7,nullptr),luaL_optstring(L,8,nullptr));
+	return 0;
+}
 static const luaL_Reg lua_tilemapAPI[]={
 	{"dither",lua_tilemap_dither},
 	{"resize",lua_tilemap_resize},
@@ -1041,8 +1075,276 @@ static const luaL_Reg lua_tilemapAPI[]={
 	{"removeBlock",lua_tilemap_removeBlock},
 	{"subTile",lua_tilemap_subTile},
 	{"loadImage",lua_tilemap_loadImage},
+	{"generatePalette",lua_tilemap_generate_optimal_paletteapply},
+	{"save",lua_tilemap_save},
 	{0,0}
 };
+/** Set attributes (key, value)
+ * 
+ */
+static int settings__set_(lua_State *L) {
+
+  settings *self = *((settings **)dub::checksdata_n(L, 1, "settings"));
+  const char *key = luaL_checkstring(L, 2);
+  int key_h = dub::hash(key, 10);
+  switch(key_h) {
+    case 9: {
+      if (DUB_ASSERT_KEY(key, "sprite")) break;
+      self->sprite = luaL_checkboolean(L, 3);
+      return 0;
+    }
+    case 0: {
+      if (DUB_ASSERT_KEY(key, "alg")) break;
+      self->alg = luaL_checkinteger(L, 3);
+      return 0;
+    }
+    case 2: {
+      if (DUB_ASSERT_KEY(key, "ditherAfter")) break;
+      self->ditherAfter = luaL_checkboolean(L, 3);
+      return 0;
+    }
+    case 5: {
+      if (DUB_ASSERT_KEY(key, "entireRow")) break;
+      self->entireRow = luaL_checkboolean(L, 3);
+      return 0;
+    }
+    case 8: {
+      if (DUB_ASSERT_KEY(key, "colSpace")) break;
+      self->colSpace = luaL_checkinteger(L, 3);
+      return 0;
+    }
+    case 1: {
+      if (DUB_ASSERT_KEY(key, "rowAuto")) break;
+      self->rowAuto = luaL_checkinteger(L, 3);
+      return 0;
+    }
+  }
+  if (lua_istable(L, 1)) {
+    lua_rawset(L, 1);
+  } else {
+    luaL_error(L, KEY_EXCEPTION_MSG, key);
+  }
+  return 0;
+}
+
+/** Get attributes (key)
+ * 
+ */
+static int settings__get_(lua_State *L) {
+
+  settings *self = *((settings **)dub::checksdata_n(L, 1, "settings", true));
+  const char *key = luaL_checkstring(L, 2);
+  // <self> "key" <mt>
+  // rawget(mt, key)
+  lua_pushvalue(L, 2);
+  // <self> "key" <mt> "key"
+  lua_rawget(L, -2);
+  if (!lua_isnil(L, -1)) {
+    // Found method.
+    return 1;
+  } else {
+    // Not in mt = attribute access.
+    lua_pop(L, 2);
+  }
+  int key_h = dub::hash(key, 10);
+  switch(key_h) {
+    case 9: {
+      if (DUB_ASSERT_KEY(key, "sprite")) break;
+      lua_pushboolean(L, self->sprite);
+      return 1;
+    }
+    case 0: {
+      if (DUB_ASSERT_KEY(key, "alg")) break;
+      lua_pushinteger(L, self->alg);
+      return 1;
+    }
+    case 2: {
+      if (DUB_ASSERT_KEY(key, "ditherAfter")) break;
+      lua_pushboolean(L, self->ditherAfter);
+      return 1;
+    }
+    case 5: {
+      if (DUB_ASSERT_KEY(key, "entireRow")) break;
+      lua_pushboolean(L, self->entireRow);
+      return 1;
+    }
+    case 8: {
+      if (DUB_ASSERT_KEY(key, "colSpace")) break;
+      lua_pushinteger(L, self->colSpace);
+      return 1;
+    }
+    case 1: {
+      if (DUB_ASSERT_KEY(key, "rowAuto")) break;
+      lua_pushinteger(L, self->rowAuto);
+      return 1;
+    }
+  }
+  return 0;
+}
+
+/** settings()
+ * 
+ */
+static int settings_settings(lua_State *L) {
+  try {
+    settings *retval__ = new settings();
+    dub::pushudata(L, retval__, "settings", true);
+    return 1;
+  } catch (std::exception &e) {
+    lua_pushfstring(L, "new: %s", e.what());
+  } catch (...) {
+    lua_pushfstring(L, "new: Unknown exception");
+  }
+  return dub::error(L);
+}
+
+/** Read off(size_t i)
+ * 
+ */
+static int settings_off(lua_State *L) {
+  try {
+    settings *self = *((settings **)dub::checksdata(L, 1, "settings"));
+    int top__ = lua_gettop(L);
+    if (top__ >= 3) {
+      size_t i = dub::checkinteger(L, 2);
+      unsigned v = dub::checkinteger(L, 3);
+      if (!i || i > MAX_ROWS_PALETTE) return 0;
+      self->off[i-1] = v;
+      return 0;
+    } else {
+      size_t i = dub::checkinteger(L, 2);
+      if (!i || i > MAX_ROWS_PALETTE) return 0;
+      lua_pushinteger(L, self->off[i-1]);
+      return 1;
+    }
+  } catch (std::exception &e) {
+    lua_pushfstring(L, "off: %s", e.what());
+  } catch (...) {
+    lua_pushfstring(L, "off: Unknown exception");
+  }
+  return dub::error(L);
+}
+
+/** Read perRow(size_t i)
+ * 
+ */
+static int settings_perRow(lua_State *L) {
+  try {
+    settings *self = *((settings **)dub::checksdata(L, 1, "settings"));
+    int top__ = lua_gettop(L);
+    if (top__ >= 3) {
+      size_t i = dub::checkinteger(L, 2);
+      unsigned v = dub::checkinteger(L, 3);
+      if (!i || i > MAX_ROWS_PALETTE) return 0;
+      self->perRow[i-1] = v;
+      return 0;
+    } else {
+      size_t i = dub::checkinteger(L, 2);
+      if (!i || i > MAX_ROWS_PALETTE) return 0;
+      lua_pushinteger(L, self->perRow[i-1]);
+      return 1;
+    }
+  } catch (std::exception &e) {
+    lua_pushfstring(L, "perRow: %s", e.what());
+  } catch (...) {
+    lua_pushfstring(L, "perRow: Unknown exception");
+  }
+  return dub::error(L);
+}
+
+/** Read useRow(size_t i)
+ * 
+ */
+static int settings_useRow(lua_State *L) {
+  try {
+    settings *self = *((settings **)dub::checksdata(L, 1, "settings"));
+    int top__ = lua_gettop(L);
+    if (top__ >= 3) {
+      size_t i = dub::checkinteger(L, 2);
+      bool v = dub::checkboolean(L, 3);
+      if (!i || i > MAX_ROWS_PALETTE) return 0;
+      self->useRow[i-1] = v;
+      return 0;
+    } else {
+      size_t i = dub::checkinteger(L, 2);
+      if (!i || i > MAX_ROWS_PALETTE) return 0;
+      lua_pushboolean(L, self->useRow[i-1]);
+      return 1;
+    }
+  } catch (std::exception &e) {
+    lua_pushfstring(L, "useRow: %s", e.what());
+  } catch (...) {
+    lua_pushfstring(L, "useRow: Unknown exception");
+  }
+  return dub::error(L);
+}
+
+/** Read rowAutoEx(size_t i)
+ * 
+ */
+static int settings_rowAutoEx(lua_State *L) {
+  try {
+    settings *self = *((settings **)dub::checksdata(L, 1, "settings"));
+    int top__ = lua_gettop(L);
+    if (top__ >= 3) {
+      size_t i = dub::checkinteger(L, 2);
+      int v = dub::checkinteger(L, 3);
+      if (!i || i > 2) return 0;
+      self->rowAutoEx[i-1] = v;
+      return 0;
+    } else {
+      size_t i = dub::checkinteger(L, 2);
+      if (!i || i > 2) return 0;
+      lua_pushinteger(L, self->rowAutoEx[i-1]);
+      return 1;
+    }
+  } catch (std::exception &e) {
+    lua_pushfstring(L, "rowAutoEx: %s", e.what());
+  } catch (...) {
+    lua_pushfstring(L, "rowAutoEx: Unknown exception");
+  }
+  return dub::error(L);
+}
+
+
+
+// --=============================================== __tostring
+static int settings___tostring(lua_State *L) {
+  settings *self = *((settings **)dub::checksdata_n(L, 1, "settings"));
+  lua_pushfstring(L, "settings: %p", self);
+  
+  return 1;
+}
+
+// --=============================================== METHODS
+
+static const struct luaL_Reg settings_member_methods[] = {
+  { "__newindex"   , settings__set_       },
+  { "__index"      , settings__get_       },
+  { "new"          , settings_settings    },
+  { "off"          , settings_off         },
+  { "perRow"       , settings_perRow      },
+  { "useRow"       , settings_useRow      },
+  { "rowAutoEx"    , settings_rowAutoEx   },
+  { "__tostring"   , settings___tostring  },
+  { "deleted"      , dub::isDeleted       },
+  { NULL, NULL},
+};
+
+
+DUB_EXPORT int luaopen_settings(lua_State *L)
+{
+  // Create the metatable which will contain all the member methods
+  luaL_newmetatable(L, "settings");
+  // <mt>
+
+  // register member methods
+  dub::fregister(L, settings_member_methods);
+  // setup meta-table
+  dub::setup(L, "settings");
+  // <mt>
+  return 1;
+}
 static int lua_chunk_draw(lua_State*L){
 	currentProject->Chunk->drawChunk(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0),luaL_optinteger(L,3,0),luaL_optinteger(L,4,0),luaL_optinteger(L,5,0),luaL_optinteger(L,6,0));
 	return 0;
@@ -1268,6 +1570,10 @@ static int lua_project_remove(lua_State*L){
 	removeProject(lua_tointeger(L,1));
 	return 0;
 }
+static int lua_project_setSystem(lua_State*L){
+	set_game_system(nullptr,(void*)(uintptr_t)lua_tointeger(L,1));
+	return 0;
+}
 static const luaL_Reg lua_projectAPI[]={/*!This is the project table. The global project contains the following functions*/
 	{"have",lua_project_rgt_have},
 	{"haveOR",lua_project_rgt_haveOR},
@@ -1282,6 +1588,7 @@ static const luaL_Reg lua_projectAPI[]={/*!This is the project table. The global
 	{"save",lua_project_save},
 	{"append",lua_project_append},
 	{"remove",lua_project_remove},
+	{"setSystem",lua_project_setSystem},
 	{0,0}
 };
 #define arLen(ar) (sizeof(ar)/sizeof(ar[0]))
@@ -2055,6 +2362,10 @@ lua_State*createLuaState(void){
 		luaL_setfuncs(L,lua_rgtAPI,0);
 		for(unsigned x=0;x<arLen(rgtConsts);++x)
 			mkKeyint(L,rgtConsts[x].key,rgtConsts[x].pair);
+		mkKeyunsigned(L,"Binary",tBinary);
+		mkKeyunsigned(L,"Cheader",tCheader);
+		mkKeyunsigned(L,"ASM",tASM);
+		mkKeyunsigned(L,"BEX",tBEX);
 		lua_setglobal(L, "rgt");
 
 		luaL_newlib(L,lua_kensAPI);
@@ -2163,6 +2474,8 @@ lua_State*createLuaState(void){
 		lua_setglobal(L, "libgen");
 		luaopen_posix_unistd(L);
 		lua_setglobal(L, "unistd");
+		luaopen_settings(L);
+		lua_setglobal(L, "settings");
 	}else
 		fl_alert("lua_newstate failed");
 	return L;

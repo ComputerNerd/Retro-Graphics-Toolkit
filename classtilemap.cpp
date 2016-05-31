@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
 #include "class_global.h"
 #include "macros.h"
@@ -470,149 +470,123 @@ static int bondsCheckTile(int tile,int mx,unsigned x,unsigned y){
 	}
 	return tile;
 }
-bool tileMap::saveToFile(){
-	/*!
-	Saves tilemap to file returns true on success or cancellation
-	returns false if there was an error but remember if the user cancels this it is not an error
-	*/
-	//first see how this file should be saved
+bool tileMap::saveToFile(const char*fname,fileType_t type,int clipboard,int compression,const char*label,const char*nesFname,const char*labelNES){
 	uint32_t x,y;
 	FILE * myfile;
 	size_t fileSize;
-	int compression;
 	uint8_t* mapptr;
-	fileType_t type=askSaveType();
-	int clipboard;
-	if(type){
-		clipboard=clipboardAsk();
-		if(clipboard==2)
-			return true;
-	}else
-		clipboard=0;
-	bool pickedFile;
 	if(clipboard)
-		pickedFile=true;
+		myfile=0;
+	else if(type)
+		myfile = fopen(fname,"w");
 	else
-		pickedFile=load_file_generic("Save tilemap to",true);
-	if(pickedFile){
-		compression=compressionAsk();
-		if(compression<0)
-			return true;
-		if(clipboard)
-			myfile=0;
-		else if(type)
-			myfile = fopen(the_file.c_str(),"w");
-		else
-			myfile = fopen(the_file.c_str(),"wb");
-		if (likely(myfile||clipboard)){
-			switch (prj->gameSystem){
-				case segaGenesis:
-					{uint16_t * TheMap;
-					fileSize=(mapSizeW*mapSizeH*amt)*2;
-					TheMap = (uint16_t*)malloc(fileSize);
-					for (y=0;y<mapSizeH*amt;++y){
-						for (x=0;x<mapSizeW;++x){
-							int tile=get_tile(x,y);
-							tile+=offset;
-							tile=bondsCheckTile(tile,2047,x,y);
-							#if _WIN32
-							tile=swap_word(tile);//mingw appears not to provide htobe16 function
-							#else
-							tile=htobe16(tile);//needs to be big endian
-							#endif
-							*TheMap=(uint16_t)tileMapDat[((y*mapSizeW)+x)*4];//get attributes
-							*TheMap++|=(uint16_t)tile;//add tile
-						}
+		myfile = fopen(fname,"wb");
+	if (likely(myfile||clipboard)){
+		switch (prj->gameSystem){
+			case segaGenesis:
+				{uint16_t * TheMap;
+				fileSize=(mapSizeW*mapSizeH*amt)*2;
+				TheMap = (uint16_t*)malloc(fileSize);
+				for (y=0;y<mapSizeH*amt;++y){
+					for (x=0;x<mapSizeW;++x){
+						int tile=get_tile(x,y);
+						tile+=offset;
+						tile=bondsCheckTile(tile,2047,x,y);
+						#if _WIN32
+						tile=swap_word(tile);//mingw appears not to provide htobe16 function
+						#else
+						tile=htobe16(tile);//needs to be big endian
+						#endif
+						*TheMap=(uint16_t)tileMapDat[((y*mapSizeW)+x)*4];//get attributes
+						*TheMap++|=(uint16_t)tile;//add tile
 					}
-					TheMap-=mapSizeW*mapSizeH*amt;//return to beginning so it can be freeded and the file saved
-					mapptr=(uint8_t*)TheMap;}
-				break;
-				case masterSystem:
-				case gameGear:
-					{uint8_t * TheMap;
-					fileSize=(mapSizeW*mapSizeH*amt)*2;
-					TheMap = (uint8_t*)malloc(fileSize);
-					for (y=0;y<mapSizeH*amt;++y){
-						for (x=0;x<mapSizeW;++x){
-							/*
-							 MSB          LSB
-							 ---pcvhn nnnnnnnn
-
-							 - = Unused. Some games use these bits as flags for collision and damage
-							     zones. (such as Wonderboy in Monster Land, Zillion 2)
-							 p = Priority flag. When set, sprites will be displayed underneath the
-							     background pattern in question.
-							 c = Palette select.
-							 v = Vertical flip flag.
-							 h = Horizontal flip flag.
-							 n = Pattern index, any one of 512 patterns in VRAM can be selected.
-							 */
-							int tile=get_tile(x,y);
-							tile+=offset;
-							tile=bondsCheckTile(tile,511,x,y);
-							*TheMap++=tile&255;
-							*TheMap++=((tile>>8)&1)|(get_hflip(x,y)<<1)|(get_vflip(x,y)<<2)|(getPalRow(x,y)<<3)|(get_prio(x,y)<<4);
-						}
-					}
-					TheMap-=mapSizeW*mapSizeH*amt*2;//return to beginning so it can be freeded and the file saved
-					mapptr=TheMap;}
-				break;
-				case NES:
-					{uint8_t * TheMap;
-					fileSize=mapSizeW*mapSizeH*amt;
-					TheMap = (uint8_t *)malloc(fileSize);
-					for (y=0;y<mapSizeH*amt;++y){
-						for (x=0;x<mapSizeW;++x){
-							int tile=get_tile(x,y);
-							tile+=offset;
-							tile=bondsCheckTile(tile,255,x,y);
-							*TheMap++=tile;
-						}
-					}
-					TheMap-=mapSizeW*mapSizeH*amt;//return to beginning so it can be freeded and the file sized
-					mapptr=TheMap;}
-				break;
-				default:
-					show_default_error
-			}
-			if(compression){
-				void*TheMap=mapptr;
-				mapptr=(uint8_t*)encodeType(TheMap,fileSize,fileSize,compression);
-				free(TheMap);
-			}
-			if(type){
-				char temp[2048];
-				snprintf(temp,2048,"Width %d Height %d %s",mapSizeW,mapSizeH*amt,typeToText(compression));
-				int bits;
-				if((prj->gameSystem==segaGenesis)&&(!compression))
-					bits=16;
-				else
-					bits=8;
-				if(!saveBinAsText(mapptr,fileSize,myfile,type,temp,"mapDat",bits)){
-					free(mapptr);
-					return false;
 				}
-			}else
-				fwrite(mapptr,1,fileSize,myfile);
-			free(mapptr);
-			if(myfile)
-				fclose(myfile);
-			puts("File Saved");
+				TheMap-=mapSizeW*mapSizeH*amt;//return to beginning so it can be freeded and the file saved
+				mapptr=(uint8_t*)TheMap;}
+			break;
+			case masterSystem:
+			case gameGear:
+				{uint8_t * TheMap;
+				fileSize=(mapSizeW*mapSizeH*amt)*2;
+				TheMap = (uint8_t*)malloc(fileSize);
+				for (y=0;y<mapSizeH*amt;++y){
+					for (x=0;x<mapSizeW;++x){
+						/*
+						 MSB          LSB
+						 ---pcvhn nnnnnnnn
+
+						 - = Unused. Some games use these bits as flags for collision and damage
+						     zones. (such as Wonderboy in Monster Land, Zillion 2)
+						 p = Priority flag. When set, sprites will be displayed underneath the
+						     background pattern in question.
+						 c = Palette select.
+						 v = Vertical flip flag.
+						 h = Horizontal flip flag.
+						 n = Pattern index, any one of 512 patterns in VRAM can be selected.
+						 */
+						int tile=get_tile(x,y);
+						tile+=offset;
+						tile=bondsCheckTile(tile,511,x,y);
+						*TheMap++=tile&255;
+						*TheMap++=((tile>>8)&1)|(get_hflip(x,y)<<1)|(get_vflip(x,y)<<2)|(getPalRow(x,y)<<3)|(get_prio(x,y)<<4);
+					}
+				}
+				TheMap-=mapSizeW*mapSizeH*amt*2;//return to beginning so it can be freeded and the file saved
+				mapptr=TheMap;}
+			break;
+			case NES:
+				{uint8_t * TheMap;
+				fileSize=mapSizeW*mapSizeH*amt;
+				TheMap = (uint8_t *)malloc(fileSize);
+				for (y=0;y<mapSizeH*amt;++y){
+					for (x=0;x<mapSizeW;++x){
+						int tile=get_tile(x,y);
+						tile+=offset;
+						tile=bondsCheckTile(tile,255,x,y);
+						*TheMap++=tile;
+					}
+				}
+				TheMap-=mapSizeW*mapSizeH*amt;//return to beginning so it can be freeded and the file sized
+				mapptr=TheMap;}
+			break;
+			default:
+				show_default_error
+		}
+		if(compression){
+			void*TheMap=mapptr;
+			mapptr=(uint8_t*)encodeType(TheMap,fileSize,fileSize,compression);
+			free(TheMap);
+		}
+		if(type){
+			char temp[2048];
+			snprintf(temp,2048,"Width %d Height %d %s",mapSizeW,mapSizeH*amt,typeToText(compression));
+			int bits;
+			if((prj->gameSystem==segaGenesis)&&(!compression))
+				bits=16;
+			else
+				bits=8;
+			if(!saveBinAsText(mapptr,fileSize,myfile,type,temp,label,bits)){
+				free(mapptr);
+				return false;
+			}
 		}else
-			return false;
-	}
+			fwrite(mapptr,1,fileSize,myfile);
+		free(mapptr);
+		if(myfile)
+			fclose(myfile);
+		puts("File Saved");
+	}else
+		return false;
 	if (prj->gameSystem == NES){
 		if(clipboard)
-			fl_alert("Copy the data to clipboard and press okay after this tilemap attributes will be copied to clipboard");
-		else
-			pickedFile=load_file_generic("Save attributes to",true);
-		if(pickedFile){
+			fl_alert("The tilemap is currently on the clipboard. Paste this now and then press okay to place the attributes on the clipboard");
+		if(nesFname){
 			if(clipboard)
 				myfile=0;
 			else if(type)
-				myfile = fopen(the_file.c_str(),"w");
+				myfile = fopen(nesFname,"w");
 			else
-				myfile = fopen(the_file.c_str(),"wb");
+				myfile = fopen(nesFname,"wb");
 			if (likely(myfile||clipboard)) {
 				uint8_t * AttrMap = (uint8_t *)malloc(((mapSizeW+2)/4)*((mapSizeHA+2)/4));
 				uint8_t * freeAttrMap=AttrMap;
@@ -622,18 +596,61 @@ bool tileMap::saveToFile(){
 					}
 				}
 				if(type){
-					if(saveBinAsText(freeAttrMap,((mapSizeW+2)/4)*((mapSizeHA+2)/4),myfile,type,0,"mapDatAttr",8)==false)
+					if(saveBinAsText(freeAttrMap,((mapSizeW+2)/4)*((mapSizeHA+2)/4),myfile,type,0,labelNES,8)==false)
 						return false;
 				}else
 					fwrite(freeAttrMap,1,((mapSizeW+2)/4)*((mapSizeHA+2)/4),myfile);		
 				free(freeAttrMap);
 				if(myfile)
 					fclose(myfile);
-				puts("File Saved");
 			}else
 				return false;
 		}
 	}
+	return true;
+}
+bool tileMap::saveToFile(void){
+	/*!
+	Saves tilemap to file returns true on success or cancellation
+	returns false if there was an error but remember if the user cancels this it is not an error
+	*/
+	//first see how this file should be saved
+	uint32_t x,y;
+	int compression;
+	fileType_t type=askSaveType();
+	int clipboard;
+	if(type){
+		clipboard=clipboardAsk();
+		if(clipboard==2)
+			return true;
+	}else
+		clipboard=0;
+	bool pickedFile;
+	char*fname=0,*nesFname=0;
+	if(clipboard)
+		pickedFile=true;
+	else
+		fname=loadsavefile("Save tilemap to...",true);
+	if(!fname)
+		return true;
+	if(fname){
+		if(prj->gameSystem==NES){
+			nesFname=loadsavefile("Save tilemap attributes to...",true);
+			if(!nesFname){
+				free(fname);
+				return true;
+			}
+		}
+		compression=compressionAsk();
+		if(compression<0){
+			free(fname);
+			free(nesFname);
+			return true;
+		}
+		saveToFile(fname,type,clipboard,compression,nesFname);
+	}
+	free(fname);
+	free(nesFname);
 	return true;
 }
 static void zero_error_tile_map(int32_t x){

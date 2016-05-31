@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
 #include "project.h"
 #include "macros.h"
@@ -40,67 +40,10 @@ void save_tiles(Fl_Widget*,void*){
 	else
 		pickedFile=load_file_generic("Pick a location to save tiles",true);
 	if(pickedFile){
-		uint8_t*savePtr;
-		enum tileType tt=currentProject->getTileType();
-		switch(tt){
-			case LINEAR:
-				savePtr=(uint8_t*)currentProject->tileC->toLinear();
-			break;
-			case PLANAR_LINE:
-				savePtr=(uint8_t*)currentProject->tileC->toLinePlanar();
-			break;
-			case PLANAR_TILE:
-				savePtr=currentProject->tileC->tDat.data();
-			break;
-		}
 		int compression=compressionAsk();
 		if(compression<0)
 			return;
-		FILE* myfile;
-		uint8_t* compdat;
-		size_t compsize;
-		if(clipboard)
-			myfile=0;
-		else if(type)
-			myfile = fopen(the_file.c_str(),"w");
-		else
-			myfile = fopen(the_file.c_str(),"wb");
-		if (likely(myfile||clipboard)){
-			if(compression)
-				compdat=(uint8_t*)encodeType(savePtr,currentProject->tileC->tileSize*(currentProject->tileC->amt),compsize,compression);
-			if (type){
-				char comment[2048];
-				snprintf(comment,2048,"%d tiles %s",currentProject->tileC->amt,typeToText(compression));
-				if (compression){
-					if(!saveBinAsText(compdat,compsize,myfile,type,comment,"tileDat",8)){
-						free(compdat);
-						fl_alert("Error: can not save file %s",the_file.c_str());
-						if(tt!=PLANAR_TILE)
-							free(savePtr);
-						return;
-					}
-				}else{
-					if(!saveBinAsText(savePtr,(currentProject->tileC->amt)*currentProject->tileC->tileSize,myfile,type,comment,"tileDat",32)){
-						fl_alert("Error: can not save file %s",the_file.c_str());
-						if(tt!=PLANAR_TILE)
-							free(savePtr);
-						return;
-					}
-				}
-			}else{
-				if(compression)
-					fwrite(compdat,1,compsize,myfile);
-				else
-					fwrite(savePtr,currentProject->tileC->tileSize,(currentProject->tileC->amt),myfile);
-			}
-			if(compression)
-				free(compdat);
-			if(tt!=PLANAR_TILE)
-				free(savePtr);
-		}else
-			fl_alert("Error: can not save file %s",the_file.c_str());
-		if(myfile)
-			fclose(myfile);
+		currentProject->tileC->save(the_file.c_str(),type,clipboard,compression);
 	}
 }
 void load_tiles(Fl_Widget*,void*o){

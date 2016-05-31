@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
 #include <stdint.h>
 int savePNG(const char * fileName,uint32_t width,uint32_t height,void * ptr,uint8_t*pal=nullptr,unsigned pn=0);

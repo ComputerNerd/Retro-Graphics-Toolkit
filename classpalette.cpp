@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
 #include <stdint.h>
 #include <string.h>
@@ -24,6 +24,7 @@
 #include "system.h"
 #include "color_convert.h"
 #include "nearestColor.h"
+#include "gui.h"
 static const uint8_t TMS9918Palette[]={
   0,   0,   0,
   0,   0,   0,
@@ -289,4 +290,62 @@ bool palette::shouldAddCol(unsigned off,unsigned r,unsigned g,unsigned b,bool sp
 			return false;
 	}
 	return true;
+}
+void palette::savePalette(const char*fname,unsigned start,unsigned end,bool skipzero,fileType_t type,int clipboard,const char*label){
+	uint8_t bufskip[32];
+	unsigned szskip=0;
+	if(skipzero){
+		uint8_t*bufptr=bufskip;
+		for(unsigned i=start;i<end;++i){
+			if((i&3)||(i==0)){
+				*bufptr++=palDat[i];
+				++szskip;
+			}
+		}
+	}
+	FILE * myfile;
+	if(clipboard)
+		myfile=0;//When file is null for the function saveBinAsText clipboard will be used
+	else if(type)
+		myfile = fopen(fname,"w");
+	else
+		myfile = fopen(fname,"wb");
+	if (likely(myfile||clipboard)){
+		//save the palette
+		if (type){
+			char comment[512];
+			snprintf(comment,512,"Colors %d-%d",start,end-1);
+			int bits=esize*8;;
+			start*=esize;
+			end*=esize;
+			if(skipzero){
+				if (!saveBinAsText(bufskip,szskip,myfile,type,comment,label,bits)){
+					fl_alert("Error: can not save file %s",fname);
+					return;
+				}
+			}else{
+				if (!saveBinAsText(palDat+start,end-start,myfile,type,comment,label,bits)){
+					fl_alert("Error: can not save file %s",fname);
+					return;
+				}
+			}
+		}else{
+			start*=esize;
+			end*=esize;
+			if(skipzero){
+				if (fwrite(bufskip,1,szskip,myfile)==0){
+					fl_alert("Error: can not save file %s",fname);
+					return;
+				}
+			}else{
+				if (fwrite(palDat+start,1,end-start,myfile)==0){
+					fl_alert("Error: can not save file %s",fname);
+					return;
+				}
+			}
+		}
+		if(myfile)
+			fclose(myfile);
+	}else
+		alertWrap("Cannot open file %s",fname);
 }

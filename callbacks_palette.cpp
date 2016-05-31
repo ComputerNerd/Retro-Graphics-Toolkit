@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
 #include "macros.h"
 #include "class_global.h"
@@ -55,19 +55,8 @@ void save_palette(Fl_Widget*,void*){
 		return;
 	unsigned end = atoi(returned)+1;
 	bool skipzero;
-	uint8_t bufskip[32];
-	unsigned szskip=0;
 	if(currentProject->gameSystem==NES){
 		skipzero=fl_ask("Would you like to skip saving color 0 for all rows except zero?");
-		if(skipzero){
-			uint8_t*bufptr=bufskip;
-			for(unsigned i=start;i<end;++i){
-				if((i&3)||(i==0)){
-					*bufptr++=currentProject->pal->palDat[i];
-					++szskip;
-				}
-			}
-		}
 	}else
 		skipzero=false;
 	fileType_t type=askSaveType();
@@ -83,53 +72,8 @@ void save_palette(Fl_Widget*,void*){
 		pickedFile=true;
 	else
 		pickedFile=load_file_generic("Save palette",true);
-	if(pickedFile){
-		FILE * myfile;
-		if(clipboard)
-			myfile=0;//When file is null for the function saveBinAsText clipboard will be used
-		else if(type)
-			myfile = fopen(the_file.c_str(),"w");
-		else
-			myfile = fopen(the_file.c_str(),"wb");
-		if (likely(myfile||clipboard)){
-			//save the palette
-			if (type){
-				char comment[512];
-				snprintf(comment,512,"Colors %d-%d",start,end-1);
-				int bits=currentProject->pal->esize*8;;
-				start*=currentProject->pal->esize;
-				end*=currentProject->pal->esize;
-				if(skipzero){
-					if (!saveBinAsText(bufskip,szskip,myfile,type,comment,"palDat",bits)){
-						fl_alert("Error: can not save file %s",the_file.c_str());
-						return;
-					}
-				}else{
-					if (!saveBinAsText(currentProject->pal->palDat+start,end-start,myfile,type,comment,"palDat",bits)){
-						fl_alert("Error: can not save file %s",the_file.c_str());
-						return;
-					}
-				}
-			}else{
-				start*=currentProject->pal->esize;
-				end*=currentProject->pal->esize;
-				if(skipzero){
-					if (fwrite(bufskip,1,szskip,myfile)==0){
-						fl_alert("Error: can not save file %s",the_file.c_str());
-						return;
-					}
-				}else{
-					if (fwrite(currentProject->pal->palDat+start,1,end-start,myfile)==0){
-						fl_alert("Error: can not save file %s",the_file.c_str());
-						return;
-					}
-				}
-			}
-			if(myfile)
-				fclose(myfile);
-		}else
-			fl_alert("Cannot open file %s",the_file.c_str());
-	}
+	if(pickedFile)
+		currentProject->pal->savePalette(the_file.c_str(),start,end,skipzero,type,clipboard);
 }
 void update_palette(Fl_Widget* o, void* v){
 	//first get the color and draw the box

@@ -1,4 +1,4 @@
-/*
+--[[ 
 	This file is part of Retro Graphics Toolkit
 
 	Retro Graphics Toolkit is free software: you can redistribute it and/or modify
@@ -12,12 +12,14 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
-*/
-#include "luaconfig.h"
-#include "runlua.h"
-lua_State*Lconf;
-void startLuaConf(const char*fname){
-	Lconf=createLuaState();
-	runLua(Lconf,fname);
-}
+	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+--]]
+
+function switchSystemBefore(old,new)
+	print('Before')
+end
+
+function switchSystemAfter(old,new)
+	print('After')
+end
+

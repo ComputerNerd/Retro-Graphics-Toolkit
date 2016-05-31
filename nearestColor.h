@@ -13,7 +13,7 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
 unsigned find_near_color_from_row_rgb(unsigned row,int r,int g,int b,bool alt);
 unsigned find_near_color_from_row(unsigned row,int r,int g,int b,bool alt);

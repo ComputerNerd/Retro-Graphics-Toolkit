@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
 #include "quant.h"
 #include "color_compare.h"
@@ -111,13 +111,41 @@ static double getHH(uint32_t cur_tile,int type){
 	}
 	return hh;
 }
-void tileMap::pickRow(unsigned amount){
-	int type=MenuPopup("Pick tile row based on...","Please pick what most defines the image",9,0,"Hue","Saturation","Lightness","Hue*saturation","Hue*Lightness","Lightness*saturation","Hue+saturation","Hue+lightness","Lightness+saturation");
-	if(type<0)
-		return;
-	int method=MenuPopup("Select a method","This depends on the image",3,0,"Average","Histogram section with most occurrences","Histogram peak");
-	if(method<0)
-		return;
+static const Fl_Menu_Item hueChoices[]={
+	{"Hue",0,0,0},
+	{"Saturation",0,0,0},
+	{"Lightness",0,0,0},
+	{"Hue*saturation",0,0,0},
+	{"Hue*Lightness",0,0,0},
+	{"Lightness*saturation",0,0,0},
+	{"Hue+saturation",0,0,0},
+	{"Hue+lightness",0,0,0},
+	{"Lightness+saturation",0,0,0},
+	{0}
+};
+static const Fl_Menu_Item hueMethodChoices[]={
+	{"Average",0,0,0},
+	{"Histogram section with most occurrences (stretch)",0,0,0},
+	{"Histogram section with most occurrences",0,0,0},
+	{"Histogram peak (stretch)",0,0,0},
+	{"Histogram peak",0,0,0},
+	{0}
+};
+static const char*hueLblSel="Pick tile row based on";
+static const char*hueTooltip="Please pick what most defines the image";
+static const char*hueMethodLbl="Select a method";
+static const char*hueMethodTooltip="This depends on the image";
+void tileMap::pickRow(unsigned amount,int type,int method){
+	if(type<0){
+		type=menuPopupArray(hueLblSel,hueTooltip,0,hueChoices);
+		if(type<0)
+			return;
+	}
+	if(method<0){
+		method=menuPopupArray(hueMethodLbl,hueMethodTooltip,0,hueMethodChoices);
+		if(method<0)
+			return;
+	}
 	pushTilemapAll(true);
 	double divide=(double)amount;//convert to double
 	uint32_t x,y;
@@ -133,7 +161,8 @@ void tileMap::pickRow(unsigned amount){
 	}
 	uint32_t*hist,sz,stretch,maxh,minh;
 	if(method){
-		stretch=fl_ask("Stretch histogram?");
+		stretch=method&1;
+		method=(method+1)>>1;
 		if(type>=6)
 			sz=2000;
 		else
@@ -243,20 +272,49 @@ static unsigned pick4Delta(Type*ptr,unsigned amt){
 static inline uint32_t sqri(int x){
 	return x*x;
 }
-void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
+static const Fl_Menu_Item deltaChoices[]={
+	{"ciede2000",0,0,0},
+	{"Weighted",0,0,0},
+	{"Mean squared error",0,0,0},
+	{"Hue difference",0,0,0},
+	{"Saturation difference",0,0,0},
+	{"Lightness difference",0,0,0},
+	{0}
+};
+static const char*deltaAlgLbl="Select picking algorithm";
+static const char*deltaAlgTooltip="Pick which method you think works better for this image.";
+static const Fl_Menu_Item deltaOrderChoices[]={
+	{"Don't sort",0,0,0},
+	{"Hue -- per row",0,0,0},
+	{"Saturation -- per row",0,0,0},
+	{"Lightness -- per row",0,0,0},
+	{"Hue -- globally",0,0,0},
+	{"Saturation -- globally",0,0,0},
+	{"Lightness -- globally",0,0,0},
+	{0}
+};
+static const char*deltaOrderLbl="Sort palette by:";
+static const char*deltaOrderTooltip="Select an option other than Don't sort to sort the palette by least to most using the select component.";
+void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress,int alg,int order){
 	if(currentProject->pal->rowCntPal<=1){
 		fl_alert("This function needs more than one palette row to work");
 		return;
 	}
-	int alg=MenuPopup("Select picking algorithm","Pick which method you think works better for this image.",6,0,"ciede2000","Weighted","Mean squared error","Hue difference","Saturation difference","Lightness difference");
-	if(alg<0)
-		return;
+	if(alg<0){
+		alg=menuPopupArray(deltaAlgLbl,deltaAlgTooltip,0,deltaChoices);
+		if(alg<0)
+			return;
+	}
 	pushTilemapAll(true);
 	pushTilesAll(tTypeTile);
-	if(fl_ask("Would you like the palette to be ordered by hue or light or saturation")){
-		unsigned type=fl_choice("What do you want it ordered by","Hue","Saturation","Lightness");
+	if(order<0){
+		order=menuPopupArray(deltaAlgLbl,deltaAlgTooltip,0,deltaOrderChoices);
+		if(order<0)
+			return;
+	}
+	if(order>0){
 		pushPaletteAll();
-		sortBy(type,false);
+		sortBy(order>3?order-4:order-1,order<4);
 	}
 	unsigned type_temp=palTypeGen;
 	uint8_t tempSet=0;
@@ -373,8 +431,10 @@ void tileMap::pickRowDelta(bool showProgress,Fl_Progress *progress){
 		if(showProgress){
 			if((a%(w*4*8*16))==0){
 				progress->value(ytile);
-				window->redraw();
-				Fl::check();
+				if(window){
+					window->redraw();
+					Fl::check();
+				}
 			}
 		}
 		xtile=0;
@@ -423,7 +483,7 @@ static void reduceImage(uint8_t * image,uint8_t * found_colors,int row,unsigned 
 	unsigned colors_found;
 	unsigned w,h;
 	unsigned maxPal=maxCol;
-	unsigned msprt=window->metaspritesel->value();
+	unsigned msprt=curSpritemeta;
 	if(isSprite){
 		w=currentProject->ms->sps[msprt].width(curSpritegroup);
 		h=currentProject->ms->sps[msprt].height(curSpritegroup);
@@ -471,7 +531,8 @@ againFun:
 		}
 		if(currentProject->gameSystem==NES)
 			updateEmphesis();
-		window->redraw();
+		if(window)
+			window->redraw();
 	}else{
 actullyNeededReduction:
 		printf("More than %d colors reducing to %d colors\n",maxCol,maxCol);
@@ -634,23 +695,12 @@ againNerd:
 			free(imageuse);
 	}
 }
-struct settings{//TODO avoid hardcoding palette row amount
-	bool sprite;//Are we generating the palette for a sprite
-	unsigned off[MAX_ROWS_PALETTE];//Offsets for each row
-	unsigned col;//How many colors are to be generated
-	unsigned alg;//Which algorithm should be used
-	bool ditherAfter;//After color quantization should the image be dithered
-	bool entireRow;//If true dither entire tilemap at once or false dither each row separately
-	unsigned colSpace;//Which colorspace should the image be quantized in
-	unsigned perRow[MAX_ROWS_PALETTE];//How many colors will be generated per row
-	bool useRow[MAX_ROWS_PALETTE];
-};
-static void generate_optimal_paletteapply(Fl_Widget*,void*s){
+void generate_optimal_paletteapply(Fl_Widget*,void*s){
 	struct settings*set=(struct settings*)s;
 	uint8_t * image;
 	uint32_t w,h;
 	if(set->sprite){
-		unsigned msprt=window->metaspritesel->value();
+		unsigned msprt=curSpritemeta;
 		w=currentProject->ms->sps[msprt].width(curSpritegroup);
 		h=currentProject->ms->sps[msprt].height(curSpritegroup);
 	}else{
@@ -686,13 +736,15 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 	uint8_t found_colors[768];
 	int rowAuto;
 	if((rows==1)&&(!set->sprite))
-		rowAuto = fl_ask("Would you like all tiles on the tilemap to be set to row %d? (This is where all generated colors will appear)",firstRow);
+		rowAuto = set->rowAuto;
 	else if(!set->sprite){
-		rowAuto = MenuPopup("Palette setting","How would you like the palette map to be handled",4,0,"Don't change anything","Pick based on hue","Generate contiguous palette then pick based on delta","Quantizer's choice");
+		rowAuto = set->rowAuto;
 		if(rowAuto<0)
 			return;
-	}else
+	}else{
+		puts("rowAuto forced to zero");
 		rowAuto=0;
+	}
 	pushPaletteAll();//Save the old palette
 	Fl_Window *win=0;
 	Fl_Progress *progress=0;
@@ -708,27 +760,33 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 			reduceImage(image,found_colors,-1,off,progress,win,set->perRow[firstRow],set->colSpace,set->alg,true);
 		}else
 			reduceImage(image,found_colors,-1,firstRow*currentProject->pal->perRow+set->off[firstRow],progress,win,set->perRow[firstRow],set->colSpace,set->alg);
-		window->damage(FL_DAMAGE_USER1);
-		Fl::check();
+		if(window){
+			window->damage(FL_DAMAGE_USER1);
+			Fl::check();
+		}
 	}else{
 		if(rowAuto==2){
 			unsigned coltarget=0;
 			for(unsigned i=0;i<currentProject->pal->getMaxRows(set->sprite);++i)
 				coltarget+=set->perRow[i];	
 			reduceImage(image,found_colors,-1,0,progress,win,coltarget,set->colSpace,set->alg);
-			currentProject->tms->maps[currentProject->curPlane].pickRowDelta(true,progress);
-			window->damage(FL_DAMAGE_USER1);
-			Fl::check();
+			currentProject->tms->maps[currentProject->curPlane].pickRowDelta(true,progress,set->rowAutoEx[0],set->rowAutoEx[1]);
+			if(window){
+				window->damage(FL_DAMAGE_USER1);
+				Fl::check();
+			}
 		}else{
 			if (rowAuto==1)
-				currentProject->tms->maps[currentProject->curPlane].pickRow(maxRows-firstRow);
+				currentProject->tms->maps[currentProject->curPlane].pickRow(maxRows-firstRow,set->rowAutoEx[0],set->rowAutoEx[1]);
 			else if(rowAuto==3)
 				currentProject->tms->maps[currentProject->curPlane].pickTileRowQuantChoice(maxRows-firstRow);
 			for (unsigned i=firstRow;i<maxRows;++i){
 				if(set->useRow[i]){
 					reduceImage(image,found_colors,i,(i*currentProject->pal->perRow)+set->off[i],progress,win,set->perRow[i],set->colSpace,set->alg);
-					window->damage(FL_DAMAGE_USER1);
-					Fl::check();
+					if(window){
+						window->damage(FL_DAMAGE_USER1);
+						Fl::check();
+					}
 				}
 			}
 		}
@@ -749,8 +807,10 @@ static void generate_optimal_paletteapply(Fl_Widget*,void*s){
 			currentProject->tms->maps[currentProject->curPlane].ditherAsImage(set->entireRow);
 		}
 	}
-	window->redraw();
-	Fl::check();
+	if(window){
+		window->redraw();
+		Fl::check();
+	}
 }
 static Fl_Window*winG;
 struct settings*setG;
@@ -788,10 +848,15 @@ static void setPerRowoff(Fl_Widget*w,void*x){
 static void doneCB(Fl_Widget*,void*){
 	winG->hide();
 }
-static void toggleBoolCB(Fl_Widget*,void*ptr){
+static void toggleBoolCB(Fl_Widget*o,void*ptr){
 	bool*val=(bool*)ptr;
-	*val^=true;
+	Fl_Check_Button*c=(Fl_Check_Button*)o;
+	*val=!!c->value();
 }
+static Fl_Choice*palchoice;
+static Fl_Choice*deltaalgchoice,*huealgchoice;
+static Fl_Choice*deltaorderchoice,*huemethodchoice;
+static Fl_Check_Button*forceBtn;
 static void rowShowCB(Fl_Widget*,void*x){
 	uintptr_t which=(uintptr_t)x;
 	setG->useRow[which]^=true;
@@ -801,6 +866,23 @@ static void rowShowCB(Fl_Widget*,void*x){
 	}else{
 		perrow[which]->hide();
 		perrowoffset[which]->hide();
+	}
+	unsigned rowCnt=0;
+	int spRow=setG->sprite?currentProject->fixedSpirtePalRow():-1;
+	for(unsigned i=0;i<currentProject->pal->getMaxRows(setG->sprite);++i){
+		if(spRow>=0&&i!=spRow)
+			continue;
+		if(setG->useRow[i])
+			++rowCnt;
+	}
+	if(rowCnt<=1){
+		palchoice->hide();
+		forceBtn->show();
+		setG->rowAuto=!!forceBtn->value();
+	}else{
+		palchoice->show();
+		forceBtn->hide();
+		setG->rowAuto=palchoice->value();
 	}
 }
 static const Fl_Menu_Item colorReducationChoices[]={
@@ -817,10 +899,43 @@ static const Fl_Menu_Item colorSpaceChoices[]={
 	{"YCbCr",0,0,0},
 	{0}
 };
+static const Fl_Menu_Item palChoices[]={
+	{"Don't change anything",0,0,0},
+	{"Pick based on hue",0,0,0},
+	{"Generate contiguous palette then pick based on delta",0,0,0},
+	{"Quantizer's choice",0,0,0},
+	{0}
+};
 static void setParmChoiceCB(Fl_Widget*w,void*in){
 	unsigned*val=(unsigned*)in;
 	Fl_Choice*c=(Fl_Choice*)w;
 	*val=c->value();
+}
+static void setPalChoiceCB(Fl_Widget*w,void*in){
+	unsigned*val=(unsigned*)in;
+	Fl_Choice*c=(Fl_Choice*)w;
+	*val=c->value();
+	if(*val==1){
+		huealgchoice->show();
+		huealgchoice->value(0);
+		huemethodchoice->show();
+		huemethodchoice->value(0);
+	}else{
+		huealgchoice->hide();
+		huemethodchoice->hide();
+	}
+	if(*val==2){
+		deltaalgchoice->show();
+		deltaalgchoice->value(0);
+		deltaorderchoice->show();
+		deltaorderchoice->value(0);
+	}else{
+		deltaalgchoice->hide();
+		deltaorderchoice->hide();
+	}
+	if(*val==1||*val==2)
+		memset(setG->rowAutoEx,0,sizeof(setG->rowAutoEx));
+	
 }
 void generate_optimal_palette(Fl_Widget*,void*sprite){
 	if(!currentProject->containsData(pjHavePal)){
@@ -838,14 +953,15 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	memset(&set,0,sizeof(struct settings));
 	set.sprite=!!sprite;
 	set.ditherAfter=set.entireRow=true;
-	winG = new Fl_Window(400,300,"Palette generation settings");
+	winG = new Fl_Window(450,300,"Palette generation settings");
 	winG->begin();
 	Fl_Box*rowlabel1=new Fl_Box(24,8,96,12,"Colors per row:");
 	rowlabel1->labelsize(12);
 	Fl_Box*rowlabel2=new Fl_Box(120,8,96,12,"Offset per row:");
 	rowlabel2->labelsize(12);
 	int spRow=sprite?currentProject->fixedSpirtePalRow():-1;
-	for(unsigned i=0;i<currentProject->pal->getMaxRows(sprite?true:false);++i){
+	unsigned rowCnt=0;
+	for(unsigned i=0;i<currentProject->pal->getMaxRows(!!sprite);++i){
 		if(spRow>=0&&i!=spRow)
 			continue;
 		set.useRow[i]=true;
@@ -866,6 +982,7 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 		perrowoffset[i]->value("0");
 		perrow[i]->when(FL_WHEN_RELEASE|FL_WHEN_ENTER_KEY);
 		perrowoffset[i]->when(FL_WHEN_RELEASE|FL_WHEN_ENTER_KEY);
+		++rowCnt;
 	}
 	Fl_Button*preview=new Fl_Button(86,268,56,24,"Preview");
 	preview->callback(generate_optimal_paletteapply,(void*)&set);
@@ -874,14 +991,58 @@ void generate_optimal_palette(Fl_Widget*,void*sprite){
 	Fl_Check_Button*dit=new Fl_Check_Button(216,2,176,24,"Dither after completion");
 	dit->set();
 	dit->callback(toggleBoolCB,&set.ditherAfter);
-	Fl_Choice*algsel=new Fl_Choice(240,40,128,24,"Color reduction algorithm:");
+
+	Fl_Choice*algsel=new Fl_Choice(240,40,176,24,"Color reduction algorithm:");
 	algsel->align(FL_ALIGN_TOP);
 	algsel->copy(colorReducationChoices);
 	algsel->callback(setParmChoiceCB,(void*)&set.alg);
-	Fl_Choice*colsel=new Fl_Choice(240,80,128,24,"Using colorspace:");
+
+	Fl_Choice*colsel=new Fl_Choice(240,80,176,24,"Using colorspace:");
 	colsel->align(FL_ALIGN_TOP);
 	colsel->copy(colorSpaceChoices);
 	colsel->callback(setParmChoiceCB,(void*)&set.colSpace);
+
+	palchoice=new Fl_Choice(240,120,176,24,"Palette setting:");
+	palchoice->tooltip("How would you like the palette map to be handled");
+	palchoice->align(FL_ALIGN_TOP);
+	palchoice->copy(palChoices);
+	palchoice->callback(setPalChoiceCB,(void*)&set.rowAuto);
+	if(rowCnt<=1)
+		palchoice->hide();
+
+	forceBtn=new Fl_Check_Button(216,104,176,24,"For all tiles to selected row");
+	forceBtn->callback(toggleBoolCB,&set.rowAuto);
+	if(rowCnt>1)
+		forceBtn->hide();
+
+	huealgchoice=new Fl_Choice(240,160,176,24,hueLblSel);
+	huealgchoice->tooltip(hueTooltip);
+	huealgchoice->align(FL_ALIGN_TOP);
+	huealgchoice->copy(hueChoices);
+	huealgchoice->callback(setParmChoiceCB,(void*)&set.rowAutoEx[0]);
+	huealgchoice->hide();
+
+	huemethodchoice=new Fl_Choice(240,200,176,24,hueMethodLbl);
+	huemethodchoice->tooltip(hueMethodTooltip);
+	huemethodchoice->align(FL_ALIGN_TOP);
+	huemethodchoice->copy(hueMethodChoices);
+	huemethodchoice->callback(setParmChoiceCB,(void*)&set.rowAutoEx[1]);
+	huemethodchoice->hide();
+	
+	deltaalgchoice=new Fl_Choice(240,160,176,24,deltaAlgLbl);
+	deltaalgchoice->tooltip(deltaAlgTooltip);
+	deltaalgchoice->align(FL_ALIGN_TOP);
+	deltaalgchoice->copy(deltaChoices);
+	deltaalgchoice->callback(setParmChoiceCB,(void*)&set.rowAutoEx[0]);
+	deltaalgchoice->hide();
+
+	deltaorderchoice=new Fl_Choice(240,200,176,24,deltaOrderLbl);
+	deltaorderchoice->tooltip(deltaOrderTooltip);
+	deltaorderchoice->align(FL_ALIGN_TOP);
+	deltaorderchoice->copy(deltaOrderChoices);
+	deltaorderchoice->callback(setParmChoiceCB,(void*)&set.rowAutoEx[1]);
+	deltaorderchoice->hide();
+
 	winG->end();
 	winG->show();
 	while(winG->shown())

@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
 #include <stdexcept>
 #include "includes.h"
@@ -56,87 +56,91 @@ unsigned paletteBar::getEntry(unsigned tab)const{
 void paletteBar::setSys(bool upSlide){
 	if(sysCache!=currentProject->gameSystem){
 		currentProject->pal->setVars(currentProject->gameSystem);
-		for(unsigned i=0;i<TABS_WITH_ROW_BUTTONS*MAX_ROWS_PALETTE;i+=MAX_ROWS_PALETTE){
-			for(unsigned j=0;j<currentProject->pal->rowCntPal;++j)
-				window->palRTE[i+j]->show();
-			for(unsigned j=currentProject->pal->rowCntPal;j<MAX_ROWS_PALETTE;++j)
-				window->palRTE[i+j]->hide();
-		}
-		for(unsigned j=0;j<tabsWithPalette;++j){
-			for(unsigned i=0;i<3;++i){
-				if(currentProject->isFixedPalette())
-					slide[j][i]->hide();
-				else{
-					slide[j][i]->show();
-					switch(currentProject->gameSystem){
-						case segaGenesis:
-							slide[j][i]->label(namesGen[i]);
-							slide[j][i]->maximum(7);
-						break;
-						case masterSystem:
-							slide[j][i]->label(namesGen[i]);
-							slide[j][i]->maximum(3);
-						break;
-						case gameGear:
-							slide[j][i]->label(namesGen[i]);
-							slide[j][i]->maximum(15);
-						break;
-						case NES:
-							slide[j][i]->label(namesNES[i]);
-						break;
-						default:
-							show_default_error
+		if(window){
+			for(unsigned i=0;i<TABS_WITH_ROW_BUTTONS*MAX_ROWS_PALETTE;i+=MAX_ROWS_PALETTE){
+				for(unsigned j=0;j<currentProject->pal->rowCntPal;++j)
+					window->palRTE[i+j]->show();
+				for(unsigned j=currentProject->pal->rowCntPal;j<MAX_ROWS_PALETTE;++j)
+					window->palRTE[i+j]->hide();
+			}
+			for(unsigned j=0;j<tabsWithPalette;++j){
+				for(unsigned i=0;i<3;++i){
+					if(currentProject->isFixedPalette())
+						slide[j][i]->hide();
+					else{
+						slide[j][i]->show();
+						switch(currentProject->gameSystem){
+							case segaGenesis:
+								slide[j][i]->label(namesGen[i]);
+								slide[j][i]->maximum(7);
+							break;
+							case masterSystem:
+								slide[j][i]->label(namesGen[i]);
+								slide[j][i]->maximum(3);
+							break;
+							case gameGear:
+								slide[j][i]->label(namesGen[i]);
+								slide[j][i]->maximum(15);
+							break;
+							case NES:
+								slide[j][i]->label(namesNES[i]);
+							break;
+							default:
+								show_default_error
+						}
 					}
 				}
-			}
-			switch(currentProject->gameSystem){
-				case segaGenesis:
-				case masterSystem:
-				case gameGear:
-					if(sysCache==NES){
-						slide[j][1]->labelsize(13);
-						slide[j][2]->labelsize(14);
-						slide[j][2]->resize(slide[j][2]->x()-16,slide[j][2]->y(),slide[j][2]->w()+16,slide[j][2]->h());
-						slide[j][2]->callback(update_palette, (void*)2);
-					}
-				break;
-				case NES:
-					slide[j][0]->maximum(15);
-					slide[j][1]->maximum(3);
-					slide[j][1]->labelsize(14);
-					slide[j][2]->labelsize(12);
-					slide[j][2]->value(0);
-					slide[j][2]->maximum(7);
-					slide[j][2]->resize(slide[j][2]->x()+16,slide[j][2]->y(),slide[j][2]->w()-16,slide[j][2]->h());
-					slide[j][2]->callback(updateEmphesisCB);
-				break;
-				case TMS9918:
-					//Do nothing
-				break;
-				default:
-					show_default_error
-			}
-			selBox[j]%=currentProject->pal->perRow;
-			if(alt[j]&&currentProject->pal->haveAlt){
-				if(selRow[j]>=currentProject->pal->rowCntPalalt)
-					selRow[j]=currentProject->pal->rowCntPalalt-1;
-			}else{
-				if(selRow[j]>=currentProject->pal->rowCntPal)
-					selRow[j]=currentProject->pal->rowCntPal-1;
+				switch(currentProject->gameSystem){
+					case segaGenesis:
+					case masterSystem:
+					case gameGear:
+						if(sysCache==NES){
+							slide[j][1]->labelsize(13);
+							slide[j][2]->labelsize(14);
+							slide[j][2]->resize(slide[j][2]->x()-16,slide[j][2]->y(),slide[j][2]->w()+16,slide[j][2]->h());
+							slide[j][2]->callback(update_palette, (void*)2);
+						}
+					break;
+					case NES:
+						slide[j][0]->maximum(15);
+						slide[j][1]->maximum(3);
+						slide[j][1]->labelsize(14);
+						slide[j][2]->labelsize(12);
+						slide[j][2]->value(0);
+						slide[j][2]->maximum(7);
+						slide[j][2]->resize(slide[j][2]->x()+16,slide[j][2]->y(),slide[j][2]->w()-16,slide[j][2]->h());
+						slide[j][2]->callback(updateEmphesisCB);
+					break;
+					case TMS9918:
+						//Do nothing
+					break;
+					default:
+						show_default_error
+				}
+				selBox[j]%=currentProject->pal->perRow;
+				if(alt[j]&&currentProject->pal->haveAlt){
+					if(selRow[j]>=currentProject->pal->rowCntPalalt)
+						selRow[j]=currentProject->pal->rowCntPalalt-1;
+				}else{
+					if(selRow[j]>=currentProject->pal->rowCntPal)
+						selRow[j]=currentProject->pal->rowCntPal-1;
+				}
 			}
 		}
 		sysCache=currentProject->gameSystem;
 	}else
 		puts("Warning: syscache is same as gameSystem");
-	if(upSlide)
+	if(upSlide&&window)
 		updateSliders();
 }
 void paletteBar::updateSize(unsigned tab){
-	ox[tab]=(float)((float)window->w()/800.f)*(float)baseOffx[tab];
-	oy[tab]=(float)((float)window->h()/600.f)*(float)baseOffy[tab];
+	if(window){
+		ox[tab]=(float)((float)window->w()/800.f)*(float)baseOffx[tab];
+		oy[tab]=(float)((float)window->h()/600.f)*(float)baseOffy[tab];
+	}
 }
 void paletteBar::updateSlider(unsigned tab){
-	if(currentProject->isFixedPalette())
+	if(currentProject->isFixedPalette()||(!window))
 		return;
 	unsigned idx=getEntry(tab);
 	if(currentProject->pal->palType[idx]){

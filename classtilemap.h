@@ -12,11 +12,12 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2015)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
 #pragma once
 #define TileMapSizePerEntry 4
 #include "project.h"
+#include "filemisc.h"
 class tileMap{
 private:
 public:
@@ -63,11 +64,12 @@ public:
 	void set_tile(uint32_t x,uint32_t y,uint32_t tile);
 	void set_prio(uint32_t x,uint32_t y,bool prio_set);
 	void allRowSet(unsigned row);
-	bool saveToFile();
+	bool saveToFile(const char*fname,fileType_t type,int clipboard,int compression,const char*label="mapDat",const char*nesFname=nullptr,const char*labelNES="attrMapDat");
+	bool saveToFile(void);
 	bool loadFromFile();
 	void sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip,bool vflip);
-	void pickRow(unsigned amount);
-	void pickRowDelta(bool showProgress=false,Fl_Progress *progress=0);
+	void pickRow(unsigned amount,int type=-1,int method=-1);
+	void pickRowDelta(bool showProgress=false,Fl_Progress *progress=nullptr,int alg=-1,int order=-1);
 	void ScrollUpdate(void);
 	void resize_tile_map(uint32_t new_x,uint32_t new_y);
 	bool truecolor_to_image(uint8_t * the_image,int useRow=-1,bool useAlpha=true);
