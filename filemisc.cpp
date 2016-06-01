@@ -93,6 +93,7 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,fileType_t type,const cha
 	}
 	switch(type){
 		case tCheader:
+			temp.append("#include <stdint.h>\n");
 			temp.append("const uint");
 			snprintf(tmp,16,"%d",bits);
 			temp.append(tmp);
