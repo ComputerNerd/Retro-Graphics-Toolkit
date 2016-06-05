@@ -37,7 +37,7 @@ void sortBy(unsigned type,bool perRow){
 			MapHSL[x/3].second=x/3;
 		}
 		if(perRow){
-			for(unsigned i=0;i<currentProject->pal->rowCntPal+currentProject->pal->rowCntPalalt;++i)
+			for(unsigned i=0;i<(p?currentProject->pal->rowCntPalalt:currentProject->pal->rowCntPal);++i)
 				std::sort(MapHSL+(currentProject->pal->perRow*i),MapHSL+(currentProject->pal->perRow*(i+1)),comparatorHSL);
 		}else
 			std::sort(MapHSL,MapHSL+(totalCol[p]),comparatorHSL);

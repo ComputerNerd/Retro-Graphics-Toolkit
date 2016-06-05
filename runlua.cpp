@@ -674,8 +674,11 @@ static int lua_palette_getType(lua_State*L){
 	lua_pushinteger(L,currentProject->pal->palType[luaL_optinteger(L,1,0)]);
 	return 1;
 }
+static int luaL_optboolean (lua_State *L, int narg, int def){
+	return lua_isboolean(L, narg) ? lua_toboolean(L, narg) : def;
+}
 static int lua_palette_sortByHSL(lua_State*L){
-	sortBy(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0));
+	sortBy(luaL_optinteger(L,1,0),luaL_optboolean(L,2,true));
 	return 0;
 }
 static int lua_palette_paletteToRgb(lua_State*L){
@@ -897,12 +900,15 @@ static int lua_tilemap_dither(lua_State*L){
 	currentProject->tms->maps[getPlane(L)].ditherAsImage(method);
 	return 0;
 }
+static void fixTilemapSizes(lua_State*L,unsigned plane){
+	setTableUnsignedLua(L,"tilemaps","width",plane+1,currentProject->tms->maps[plane].mapSizeW);
+	setTableUnsignedLua(L,"tilemaps","height",plane+1,currentProject->tms->maps[plane].mapSizeH);
+	setTableUnsignedLua(L,"tilemaps","heightA",plane+1,currentProject->tms->maps[plane].mapSizeHA);
+}
 static int lua_tilemap_resize(lua_State*L){
 	unsigned plane=getPlane(L);
 	currentProject->tms->maps[plane].resize_tile_map(luaL_optinteger(L,1,1),luaL_optinteger(L,2,1));
-	setTableUnsignedLua(L,"tilemaps","width",plane+1,currentProject->tms->maps[getPlane(L)].mapSizeW);
-	setTableUnsignedLua(L,"tilemaps","height",plane+1,currentProject->tms->maps[getPlane(L)].mapSizeH);
-	setTableUnsignedLua(L,"tilemaps","heightA",plane+1,currentProject->tms->maps[getPlane(L)].mapSizeHA);
+	fixTilemapSizes(L,plane);
 	return 0;
 }
 static int lua_tilemap_getHflip(lua_State*L){
@@ -1015,9 +1021,7 @@ static int lua_tilemap_setRaw(lua_State*L){
 static int lua_tilemap_removeBlock(lua_State*L){
 	unsigned pl=getPlane(L);
 	currentProject->tms->maps[pl].removeBlock(luaL_optinteger(L,2,0));
-	setTableUnsignedLua(L,"tilemaps","width",pl+1,currentProject->tms->maps[pl].mapSizeW);
-	setTableUnsignedLua(L,"tilemaps","height",pl+1,currentProject->tms->maps[pl].mapSizeH);
-	setTableUnsignedLua(L,"tilemaps","heightA",pl+1,currentProject->tms->maps[pl].mapSizeHA);
+	fixTilemapSizes(L,pl);
 	setTableUnsignedLua(L,"tilemaps","amt",pl+1,currentProject->tms->maps[pl].amt);
 	if(pl==currentProject->curPlane)
 		window->map_amt->value(std::to_string(currentProject->tms->maps[pl].amt).c_str());
@@ -1027,11 +1031,10 @@ static int lua_tilemap_subTile(lua_State*L){
 	currentProject->tms->maps[getPlane(L)].sub_tile_map(lua_tointeger(L,2),lua_tointeger(L,3),lua_toboolean(L,4),lua_toboolean(L,5));
 	return 0;
 }
-static int luaL_optboolean (lua_State *L, int narg, int def){
-	return lua_isboolean(L, narg) ? lua_toboolean(L, narg) : def;
-}
 static int lua_tilemap_loadImage(lua_State*L){
 	load_image_to_tilemap(lua_tostring(L,1),luaL_optboolean(L,2,false),luaL_optboolean(L,3,false),luaL_optboolean(L,4,false));
+	fixTilemapSizes(L,0);
+	syncTileAmt(L);
 	return 0;
 }
 static int lua_tilemap_generate_optimal_paletteapply(lua_State *L) {
@@ -1049,6 +1052,14 @@ static int lua_tilemap_generate_optimal_paletteapply(lua_State *L) {
 static int lua_tilemap_save(lua_State*L){
 	//bool tileMap::saveToFile(const char*fname,fileType_t type,int clipboard,int compression,const char*nesFname){
 	currentProject->tms->maps[getPlane(L)].saveToFile(lua_tostring(L,2),(fileType_t)lua_tointeger(L,3),lua_toboolean(L,4),lua_tointeger(L,5),lua_tostring(L,6),luaL_optstring(L,7,nullptr),luaL_optstring(L,8,nullptr));
+	return 0;
+}
+static int lua_tilemap_pickRowDelta(lua_State*L){
+	currentProject->tms->maps[getPlane(L)].pickRowDelta(false,nullptr,lua_tointeger(L,2),lua_tointeger(L,3));
+	return 0;
+}
+static int lua_tilemap_pickRow(lua_State*L){
+	currentProject->tms->maps[getPlane(L)].pickRow(lua_tointeger(L,2),lua_tointeger(L,3),lua_tointeger(L,4));
 	return 0;
 }
 static const luaL_Reg lua_tilemapAPI[]={
@@ -1077,6 +1088,8 @@ static const luaL_Reg lua_tilemapAPI[]={
 	{"loadImage",lua_tilemap_loadImage},
 	{"generatePalette",lua_tilemap_generate_optimal_paletteapply},
 	{"save",lua_tilemap_save},
+	{"pickRowDelta",lua_tilemap_pickRowDelta},
+	{"pickRow",lua_tilemap_pickRow},
 	{0,0}
 };
 /** Set attributes (key, value)
@@ -1417,12 +1430,17 @@ static const luaL_Reg lua_chunkAPI[]={
 	{"removeAt",lua_chunk_removeAt},
 	{0,0}
 };
-static int lua_sprite_dither(lua_State*L){
+static int lua_sprite_ditherGroup(lua_State*L){
 	ditherSpriteAsImage(luaL_optinteger(L,1,0),luaL_optinteger(L,2,0));
 	return 0;
 }
-static int lua_sprite_ditherAll(lua_State*L){
+static int lua_sprite_ditherGroupAll(lua_State*L){
 	ditherGroupAsImage(luaL_optinteger(L,1,0));
+	return 0;
+}
+static int lua_sprite_ditherAll(lua_State*L){
+	for(unsigned i=0;i<currentProject->ms->sps.size();++i)
+		ditherGroupAsImage(i);
 	return 0;
 }
 static int lua_sprite_draw(lua_State*L){
@@ -1433,7 +1451,8 @@ static int lua_sprite_draw(lua_State*L){
 	return 2;
 }
 static const luaL_Reg lua_spriteAPI[]={
-	{"dither",lua_sprite_dither},
+	{"ditherGroup",lua_sprite_dither},
+	{"ditherGroupAll",lua_sprite_ditherGroup},
 	{"ditherAll",lua_sprite_ditherAll},
 	{"draw",lua_sprite_draw},
 	{0,0}

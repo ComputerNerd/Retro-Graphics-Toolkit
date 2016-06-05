@@ -68,16 +68,32 @@ for k,v in pairs(args.images) do
 	tilemaps.save(0,fl.filename_setext(v,'_map'..datatExt),datat,false,args.tile_map_compression,baselabel..'_map',fl.filename_setext(v,'_attributes'..datatExt),baselabel..'_attributes')
 	tile.save(fl.filename_setext(v,'_tiles'..datatExt),datat,false,args.tile_compression,baselabel..'_tiles')
 	if datat==rgt.Cheader then
-		function createHeader(fname,lbl)
+		function createHeader(fname,lbl,extra)
 			io.output(fname)
 			io.write('extern const uint8_t '..lbl..'[];\n')
+			if extra~=nil and extra~='' then
+				io.write(extra)
+			end
+			io.close()
 		end
-		createHeader(fl.filename_setext(v,'_pal'..'.h'),baselabel..'_pal')
-		createHeader(fl.filename_setext(v,'_map'..'.h'),baselabel..'_map')
-		createHeader(fl.filename_setext(v,'_tiles'..'.h'),baselabel..'_tiles')
+		createHeader(fl.filename_setext(v,'_pal'..'.h'),baselabel..'_pal',nil)
+		maplbl=baselabel..'_map'
+		maplblu=maplbl:upper()
+		createHeader(fl.filename_setext(v,'_map'..'.h'),maplbl,string.format("#define %s_W %d\n#define %s_H %d\n",maplblu,tilemaps.width[1],maplblu,tilemaps.heightA[1]))
+		tileslbl=baselabel..'_tiles'
+		tileslblu=tileslbl:upper()
+		createHeader(fl.filename_setext(v,'_tiles'..'.h'),tileslbl,string.format('#define %s_CNT %d\n',tileslblu,tile.amt))
 		if sys==project.NES then
-			createHeader(fl.filename_setext(v,'_attributes'..'.h'),baselabel..'_attributes')
+			createHeader(fl.filename_setext(v,'_attributes'..'.h'),baselabel..'_attributes',nil)
 		end
+		io.output(fl.filename_setext(v,'.h'))
+		io.write('#include "'..fl.filename_setext(v,'_pal'..'.h')..'"\n')
+		io.write('#include "'..fl.filename_setext(v,'_map'..'.h')..'"\n')
+		io.write('#include "'..fl.filename_setext(v,'_tiles'..'.h')..'"\n')
+		if sys==project.NES then
+			io.write('#include "'..fl.filename_setext(v,'_attributes'..'.h')..'"\n')
+		end
+		io.close()
 	end
 	--project.save(fl.filename_setext(v,'.rgt'))
 	project.append()
