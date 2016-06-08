@@ -25,8 +25,10 @@ sprite::sprite(){
 	palrow=0;
 	hflip=vflip=false;
 	prio=false;
+	offx=offy=0;
+	loadat=0;
 }
-sprite::sprite(uint32_t wi,uint32_t hi,uint32_t palrowset,uint32_t settile,bool hf,bool vf,bool pri){
+sprite::sprite(uint32_t wi,uint32_t hi,uint32_t palrowset,uint32_t settile,bool hf,bool vf,bool pri,uint32_t la,int32_t ox,int32_t oy){
 	w=wi;
 	h=hi;
 	palrow=palrowset;
@@ -34,6 +36,9 @@ sprite::sprite(uint32_t wi,uint32_t hi,uint32_t palrowset,uint32_t settile,bool 
 	hflip=hf;
 	vflip=vf;
 	prio=pri;
+	loadat=la;
+	offx=ox;
+	offy=oy;
 }
 void sprite::draw(unsigned x,unsigned y,unsigned zoom){
 	unsigned yy=y;

@@ -545,14 +545,6 @@ static void cpyResizeGeneric(uint8_t*dst,uint8_t*src,uint32_t w,uint32_t h,uint3
 		currentProject->ms->sps[us->metaid].groups[us->id].list[us->subid].which=us->val; \
 	} \
 	window->updateSpriteSliders();}
-#define mkSpritePop2(which) {struct undoSpriteVal*us=(struct undoSpriteVal*)uptr->ptr; \
-	if(redo) \
-		currentProject->ms->sps[us->metaid].groups[us->id].which[us->subid]=us->valnew; \
-	else{ \
-		us->valnew=currentProject->ms->sps[us->metaid].groups[us->id].which[us->subid]; \
-		currentProject->ms->sps[us->metaid].groups[us->id].which[us->subid]=us->val; \
-	} \
-	window->updateSpriteSliders();}
 #define mkSpritePopbool(which) {struct undoSpriteValbool*us=(struct undoSpriteValbool*)uptr->ptr; \
 	if(redo) \
 		currentProject->ms->sps[us->metaid].groups[us->id].list[us->subid].which=us->valnew; \
@@ -1031,13 +1023,13 @@ static void UndoRedo(bool redo){
 			mkSpritePop(starttile)
 		break;
 		case uSpriteloadat:
-			mkSpritePop2(loadat)
+			mkSpritePop(loadat)
 		break;
 		case uSpriteoffx:
-			mkSpritePop2(offx)
+			mkSpritePop(offx)
 		break;
 		case uSpriteoffy:
-			mkSpritePop2(offy)
+			mkSpritePop(offy)
 		break;
 		case uSpriteprio:
 			mkSpritePopbool(prio)
@@ -1430,24 +1422,14 @@ void pushSpritePalrow(void){
 void pushSpriteStarttile(void){
 	mkSpritePush(uSpritestarttile,starttile);
 }
-#define mkSpritePush2(thetype,which) pushEventPrepare(); \
-	struct undoEvent*uptr=undoBuf+pos; \
-	uptr->type=thetype; \
-	uptr->ptr=malloc(sizeof(struct undoSpriteVal)); \
-	memUsed+=sizeof(struct undoSpriteVal); \
-	struct undoSpriteVal*us=(struct undoSpriteVal*)uptr->ptr; \
-	us->id=curSpritegroup; \
-	us->subid=curSprite; \
-	us->metaid=window->metaspritesel->value(); \
-	us->val=currentProject->ms->sps[us->metaid].groups[us->id].which[us->subid]
 void pushSpriteLoadat(void){
-	mkSpritePush2(uSpriteloadat,loadat);
+	mkSpritePush(uSpriteloadat,loadat);
 }
 void pushSpriteOffx(void){
-	mkSpritePush2(uSpriteoffx,offx);
+	mkSpritePush(uSpriteoffx,offx);
 }
 void pushSpriteOffy(void){
-	mkSpritePush2(uSpriteoffy,offy);
+	mkSpritePush(uSpriteoffy,offy);
 }
 #define mkSpritePushbool(thetype,which) pushEventPrepare(); \
 	struct undoEvent*uptr=undoBuf+pos; \

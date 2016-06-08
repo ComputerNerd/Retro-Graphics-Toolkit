@@ -24,9 +24,6 @@
 #include "gamedef.h"
 #include "project.h"
 struct spriteGroup{
-	std::vector<int32_t> offx;
-	std::vector<int32_t> offy;
-	std::vector<uint32_t> loadat;//Where the sprite will be loaded in game (useful for games that overwrite tiles in VRAM for animation purposes such as the Sonic series of games and many more.)
 	std::string name;//Useful for nice formated output
 	std::vector<struct sprite> list;
 };
@@ -52,7 +49,7 @@ class sprites{
 		~sprites();
 		void fixDel(unsigned at,unsigned amt);
 		void freeOptmizations(unsigned which);
-		void importSpriteSheet(void);
+		void importSpriteSheet(const char*fname=nullptr);
 		void exportDPLC(gameType_t game)const;
 		void importDPLC(gameType_t game);
 		void exportMapping(gameType_t game)const;

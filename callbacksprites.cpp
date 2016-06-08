@@ -117,7 +117,7 @@ void setDrawSpriteCB(Fl_Widget*,void*m){
 	centerSpriteDraw_G=(m)?true:false;
 	window->redraw();
 }
-void spriteSheetimportCB(Fl_Widget*o,void*){
+void spriteSheetimportCB(Fl_Widget*,void*){
 	if(!currentProject->containsData(pjHaveSprites)){
 		currentProject->haveMessage(pjHaveSprites);
 		return;
@@ -138,7 +138,7 @@ void assignSpritemetaNameCB(Fl_Widget*o,void*){
 	currentProject->ms->sps[msprt].name.assign(i->value());
 	window->redraw();
 }
-void exportSonicDPLCCB(Fl_Widget*o,void*t){
+void exportSonicDPLCCB(Fl_Widget*,void*t){
 	if(!currentProject->containsData(pjHaveSprites)){
 		currentProject->haveMessage(pjHaveSprites);
 		return;
@@ -161,26 +161,26 @@ void alignSpriteCB(Fl_Widget*,void*t){
 		with=curSprite+1;
 	switch((uintptr_t)t){
 		case 0://Left
-			currentProject->ms->sps[msprt].groups[curSpritegroup].offx[curSprite]=currentProject->ms->sps[msprt].groups[curSpritegroup].offx[with]-(currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].w*8);
-			currentProject->ms->sps[msprt].groups[curSpritegroup].offy[curSprite]=currentProject->ms->sps[msprt].groups[curSpritegroup].offy[with];
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offx=currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offx-(currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].w*8);
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offy=currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offy;
 		break;
 		case 1://Right
-			currentProject->ms->sps[msprt].groups[curSpritegroup].offx[curSprite]=currentProject->ms->sps[msprt].groups[curSpritegroup].offx[with]+(currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].w*8);
-			currentProject->ms->sps[msprt].groups[curSpritegroup].offy[curSprite]=currentProject->ms->sps[msprt].groups[curSpritegroup].offy[with];
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offx=currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offx+(currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].w*8);
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offy=currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offy;
 		break;
 		case 2://Top
-			currentProject->ms->sps[msprt].groups[curSpritegroup].offx[curSprite]=currentProject->ms->sps[msprt].groups[curSpritegroup].offx[with];
-			currentProject->ms->sps[msprt].groups[curSpritegroup].offy[curSprite]=currentProject->ms->sps[msprt].groups[curSpritegroup].offy[with]-(currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].h*8);
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offx=currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offx;
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offy=currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offy-(currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].h*8);
 		break;
 		case 3://Bottom
-			currentProject->ms->sps[msprt].groups[curSpritegroup].offx[curSprite]=currentProject->ms->sps[msprt].groups[curSpritegroup].offx[with];
-			currentProject->ms->sps[msprt].groups[curSpritegroup].offy[curSprite]=currentProject->ms->sps[msprt].groups[curSpritegroup].offy[with]+(currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].h*8);
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offx=currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offx;
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offy=currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offy+(currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].h*8);
 		break;
 	}
 	window->updateSpriteSliders();
 	window->redraw();
 }
-void importSonicDPLCCB(Fl_Widget*o,void*t){
+void importSonicDPLCCB(Fl_Widget*,void*t){
 	if(!currentProject->containsData(pjHaveSprites)){
 		currentProject->haveMessage(pjHaveSprites);
 		return;
@@ -196,14 +196,14 @@ void setoffspriteCB(Fl_Widget*o,void*y){
 	int tmp=atoi(i->value());
 	if(y){
 		pushSpriteOffy();
-		currentProject->ms->sps[msprt].groups[curSpritegroup].offy[curSprite]=tmp;	
+		currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offy=tmp;	
 	}else{
 		pushSpriteOffx();
-		currentProject->ms->sps[msprt].groups[curSpritegroup].offx[curSprite]=tmp;	
+		currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offx=tmp;	
 	}
 	window->redraw();
 }
-void exportSonicMappingCB(Fl_Widget*o,void*t){
+void exportSonicMappingCB(Fl_Widget*,void*t){
 	if(!currentProject->containsData(pjHaveSprites)){
 		currentProject->haveMessage(pjHaveSprites);
 		return;
@@ -211,7 +211,7 @@ void exportSonicMappingCB(Fl_Widget*o,void*t){
 	unsigned msprt=window->metaspritesel->value();
 	currentProject->ms->sps[msprt].exportMapping((gameType_t)(uintptr_t)t);
 }
-void importSonicMappingCB(Fl_Widget*o,void*t){
+void importSonicMappingCB(Fl_Widget*,void*t){
 	if(!currentProject->containsData(pjHaveSprites)){
 		currentProject->haveMessage(pjHaveSprites);
 		return;
@@ -327,7 +327,7 @@ void setvalueSpriteCB(Fl_Widget*o,void*which){
 		break;
 		case 4:
 			pushSpriteItem(Loadat)
-			currentProject->ms->sps[msprt].groups[curSpritegroup].loadat[curSprite]=val;
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].loadat=val;
 		break;
 	}
 	window->redraw();

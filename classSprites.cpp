@@ -44,9 +44,6 @@ sprites::sprites(Project*prj){
 	groups.push_back(spriteGroup());
 	groups[0].list.push_back(sprite());
 	groups[0].name.assign(spriteDefName);
-	groups[0].offx.push_back(0);
-	groups[0].offy.push_back(0);
-	groups[0].loadat.push_back(0);
 	name.assign(spritesName);
 	extraOptDPLC=false;
 }
@@ -59,20 +56,14 @@ sprites::sprites(const sprites&other,Project*prj){
 	for(uint32_t j=0;j<other.groups.size();++j){
 		unsigned sz=other.groups[j].list.size();
 		groups[j].list.reserve(sz);
-		groups[j].offx=other.groups[j].offx;
-		groups[j].offy=other.groups[j].offy;
-		groups[j].loadat=other.groups[j].loadat;
 		groups[j].name=other.groups[j].name;
 		for(uint32_t i=0;i<sz;++i)
-			groups[j].list.push_back(sprite(other.groups[j].list[i].w,other.groups[j].list[i].h,other.groups[j].list[i].palrow,other.groups[j].list[i].starttile,other.groups[j].list[i].hflip,other.groups[j].list[i].vflip,other.groups[j].list[i].prio));
+			groups[j].list.push_back(sprite(other.groups[j].list[i].w,other.groups[j].list[i].h,other.groups[j].list[i].palrow,other.groups[j].list[i].starttile,other.groups[j].list[i].hflip,other.groups[j].list[i].vflip,other.groups[j].list[i].prio,other.groups[j].list[i].loadat,other.groups[j].list[i].offx,other.groups[j].list[i].offy));
 	}
 	amt=other.amt;
 }
 sprites::~sprites(){
 	for(uint32_t j=0;j<amt;++j){
-		groups[j].list.clear();
-		groups[j].offx.clear();
-		groups[j].offy.clear();
 		groups[j].list.clear();
 		groups[j].name.clear();
 	}
@@ -91,7 +82,7 @@ void sprites::fixDel(unsigned at,unsigned tamt){
 		for(unsigned j=0;j<groups[i].list.size();++j){
 			if(groups[i].list[j].starttile>=at){
 				groups[i].list[j].starttile-=tamt;
-				groups[i].loadat[j]-=tamt;
+				groups[i].list[j].loadat-=tamt;
 			}
 		}
 	}
@@ -153,7 +144,7 @@ void sprites::freeOptmizations(unsigned which){
 				break;
 			}else{
 				--groups[which].list[i].w;
-				groups[which].offx[i]+=8;
+				groups[which].list[i].offx+=8;
 				for(int td=ctile-1;td>=ctile-groups[which].list[i].h;--td)
 					prj->tileC->remove_tile_at(td);
 				fixDel(ctile-groups[which].list[i].h,groups[which].list[i].h);
@@ -195,7 +186,7 @@ void sprites::freeOptmizations(unsigned which){
 					prj->tileC->remove_tile_at(delWhich);
 					fixDel(delWhich+1,1);
 				}
-				groups[which].offy[i]+=8;
+				groups[which].list[i].offy+=8;
 				--groups[which].list[i].h;
 				h=0;
 			}
@@ -350,9 +341,9 @@ bool sprites::recttoSprite(int x0,int x1,int y0,int y1,int where,Fl_Shared_Image
 			groups[where].list[cnt].w=dimx/8;
 			groups[where].list[cnt].h=dimy/8;
 			groups[where].list[cnt].starttile=tilecnt;
-			groups[where].offx[cnt]=x;
-			groups[where].offy[cnt]=y;
-			groups[where].loadat[cnt]=tilecnt;
+			groups[where].list[cnt].offx=x;
+			groups[where].list[cnt].offy=y;
+			groups[where].list[cnt].loadat=tilecnt;
 			tilecnt+=(dimx/8)*(dimy/8);
 			for(unsigned i=0;i<dimx;i+=8){
 				for(unsigned j=0;j<dimy;j+=8){
@@ -454,9 +445,14 @@ bool sprites::recttoSprite(int x0,int x1,int y0,int y1,int where,Fl_Shared_Image
 		}
 	}
 }
-void sprites::importSpriteSheet(void){
-	if(load_file_generic("Load image")){
-		Fl_Shared_Image * loaded_image=Fl_Shared_Image::get(the_file.c_str());
+void sprites::importSpriteSheet(const char*fname){
+	if(!fname){
+		if(!load_file_generic("Load image"))
+			return;
+		fname=the_file.c_str();
+	}
+	if(fname){
+		Fl_Shared_Image * loaded_image=Fl_Shared_Image::get(fname);
 		if(!loaded_image){
 			fl_alert("Error loading image");
 			return;
@@ -618,28 +614,31 @@ void sprites::importSpriteSheet(void){
 			std::vector<bool> deleted;
 			deleted.resize(rects.size()/4);
 			//Now show the window allowing user to adjust sprite settings
-			win=new Fl_Double_Window(640,480,"Sprite selection");
-			win->begin();
-			win->resizable(win);
-			Fl_Button * Ok=new Fl_Button(256,448,64,24,"Okay");
-			Ok->callback(RetCB,(void*)1);
-			Fl_Button * Cancel=new Fl_Button(320,448,64,24,"Cancel");
-			Cancel->callback(RetCB,0);
-			Fl_Scroll*scroll=new Fl_Scroll(8,8,624,440);
-			box=new RectBox(8,8,w,h);
-			box->scroll=scroll;
-			box->rects=&rects;
-			box->deleted=&deleted;
-			box->image(loaded_image);
-			scroll->end();
-			win->end();
-			win->set_modal();
-			win->show();
-			Fl::check();
+			if(window){
+				win=new Fl_Double_Window(640,480,"Sprite selection");
+				win->begin();
+				win->resizable(win);
+				Fl_Button * Ok=new Fl_Button(256,448,64,24,"Okay");
+				Ok->callback(RetCB,(void*)1);
+				Fl_Button * Cancel=new Fl_Button(320,448,64,24,"Cancel");
+				Cancel->callback(RetCB,0);
+				Fl_Scroll*scroll=new Fl_Scroll(8,8,624,440);
+				box=new RectBox(8,8,w,h);
+				box->scroll=scroll;
+				box->rects=&rects;
+				box->deleted=&deleted;
+				box->image(loaded_image);
+				scroll->end();
+				win->end();
+				win->set_modal();
+				win->show();
+				Fl::check();
 
-			while(win->shown())
-				Fl::wait();
-			delete win;
+				while(win->shown())
+					Fl::wait();
+				delete win;
+			}else
+				retOkay=true;
 			if(retOkay){
 				for(unsigned i=0;i<rects.size();i+=4){
 					recttoSprite(rects[i],rects[i+1],rects[i+2],rects[i+3],-1,loaded_image,grayscale,remap,palMap,mask,true,useAlpha);
@@ -673,7 +672,7 @@ void sprites::exportMapping(gameType_t game)const{
 				if((groups[j].list.size())&&(!checkDupmapping(j,dup))){
 					fprintf(fp,"%s:\n\tdc.b %d\n",groups[j].name.c_str(),(int)groups[j].list.size());
 					for(uint32_t i=0;i<groups[j].list.size();++i)
-						fprintf(fp,"\tdc.b %d,%u,%u,%u,%d\n",groups[j].offy[i],((groups[j].list[i].w-1)<<2)|(groups[j].list[i].h-1),(groups[j].list[i].prio<<7)|(groups[j].list[i].palrow<<5)|(groups[j].list[i].vflip<<4)|(groups[j].list[i].hflip<<3)|((groups[j].loadat[i]>>8)&7),groups[j].loadat[i]&255,groups[j].offx[i]);
+						fprintf(fp,"\tdc.b %d,%u,%u,%u,%d\n",groups[j].list[i].offy,((groups[j].list[i].w-1)<<2)|(groups[j].list[i].h-1),(groups[j].list[i].prio<<7)|(groups[j].list[i].palrow<<5)|(groups[j].list[i].vflip<<4)|(groups[j].list[i].hflip<<3)|((groups[j].list[i].loadat>>8)&7),groups[j].list[i].loadat&255,groups[j].list[i].offx);
 				}
 			}
 			fputs("\teven\n",fp);
@@ -698,11 +697,11 @@ void sprites::exportMapping(gameType_t game)const{
 					tmpbuf.push_back(amtg&255);
 					acum+=2;
 					for(unsigned j=0;j<groups[i].list.size();++j){
-						int8_t off=groups[i].offy[j];
+						int8_t off=groups[i].list[j].offy;
 						tmpbuf.push_back(off);
 						uint8_t tmp=((groups[i].list[j].w-1)<<2)|(groups[i].list[j].h-1);
 						tmpbuf.push_back(tmp);
-						unsigned tile=groups[i].loadat[j];
+						unsigned tile=groups[i].list[j].loadat;
 						if(tile>2047){
 							printf("Tile overflow was %d\n",tile);
 							tile=2047;
@@ -718,9 +717,9 @@ void sprites::exportMapping(gameType_t game)const{
 							tmp=tile&255;
 							tmpbuf.push_back(tmp);
 						}
-						int8_t tmpi=groups[i].offx[j]>>8;
+						int8_t tmpi=groups[i].list[j].offx>>8;
 						tmpbuf.push_back(tmpi);
-						tmpi=groups[i].offx[j]&255;
+						tmpi=groups[i].list[j].offx&255;
 						tmpbuf.push_back(tmpi);
 						if(game==tSonic2)
 							acum+=8;
@@ -790,7 +789,7 @@ void sprites::mappingItem(void*in,uint32_t id,gameType_t game){
 				 * Y is the y-flip-flag. If Y is set, the mapping will be flipped vertically.
 				 * AAA AAAA AAAA is the tile index. */
 				int8_t*bufi=(int8_t*)buf;
-				groups[id].offy[i]=bufi[0];
+				groups[id].list[i].offy=bufi[0];
 				groups[id].list[i].w=((buf[1]>>2)&3)+1;
 				groups[id].list[i].h=(buf[1]&3)+1;
 				groups[id].list[i].prio=(buf[2]&(1<<7))>>7;
@@ -800,8 +799,8 @@ void sprites::mappingItem(void*in,uint32_t id,gameType_t game){
 				uint16_t tile=(buf[2]&7)<<8;
 				tile|=buf[3];
 				groups[id].list[i].starttile=tile;
-				groups[id].loadat[i]=tile;
-				groups[id].offx[i]=bufi[4];
+				groups[id].list[i].loadat=tile;
+				groups[id].list[i].offx=bufi[4];
 			}
 		}else
 			return;
@@ -826,7 +825,7 @@ void sprites::mappingItem(void*in,uint32_t id,gameType_t game){
 		setAmtingroup(id,amtgroup);
 		for(unsigned i=0;i<amtgroup;++i){
 			int8_t*bufi=(int8_t*)buf;
-			groups[id].offy[i]=*bufi++;
+			groups[id].list[i].offy=*bufi++;
 			uint8_t*bufu=(uint8_t*)bufi;
 			groups[id].list[i].w=((*bufu>>2)&3)+1;
 			groups[id].list[i].h=((*bufu++)&3)+1;
@@ -835,13 +834,13 @@ void sprites::mappingItem(void*in,uint32_t id,gameType_t game){
 			if(game==tSonic2)
 				++buf;//Skip two player data
 			groups[id].list[i].starttile=tmp&2047;
-			groups[id].loadat[i]=tmp&2047;
+			groups[id].list[i].loadat=tmp&2047;
 			groups[id].list[i].prio=(tmp>>15)&1;
 			groups[id].list[i].palrow=(tmp>>13)&3;
 			groups[id].list[i].vflip=(tmp>>12)&1;
 			groups[id].list[i].hflip=(tmp>>11)&1;
 			bufi=(int8_t*)buf;
-			groups[id].offx[i]=(bufi[0]<<8)|bufi[1];
+			groups[id].list[i].offx=(bufi[0]<<8)|bufi[1];
 			++buf;
 		}
 	}
@@ -861,8 +860,8 @@ void sprites::handleDPLC(unsigned which,void*buf,unsigned n){
 		b8+=2;
 	}
 	for(unsigned i=0;i<groups[which].list.size();++i){
-		if(groups[which].loadat[i]<range)
-			groups[which].list[i].starttile=vram[groups[which].loadat[i]];
+		if(groups[which].list[i].loadat<range)
+			groups[which].list[i].starttile=vram[groups[which].list[i].loadat];
 		else
 			printf("Out of bounds %u %u\n",which,i);
 	}
@@ -881,7 +880,7 @@ void sprites::DplcItem(void*in,uint32_t which,gameType_t game){
 		char*txt=(char*)in;
 		unsigned amtd;
 		if(txt=strstr(txt,"dc.b")){
-			txt+=strlen("dc.b");
+			txt+=sizeof("dc.b")-1;
 			while(isspace(*txt++));
 			--txt;
 			if(*txt=='$')
@@ -976,15 +975,15 @@ bool sprites::checkDupmapping(uint32_t id,uint32_t&which)const{
 					match=false;
 					break;
 				}
-				if(groups[i].loadat[j]!=groups[id].loadat[j]){
+				if(groups[i].list[j].loadat!=groups[id].list[j].loadat){
 					match=false;
 					break;
 				}
-				if(groups[i].offx[j]!=groups[id].offx[j]){
+				if(groups[i].list[j].offx!=groups[id].list[j].offx){
 					match=false;
 					break;
 				}
-				if(groups[i].offy[j]!=groups[id].offy[j]){
+				if(groups[i].list[j].offy!=groups[id].list[j].offy){
 					match=false;
 					break;
 				}
@@ -1346,9 +1345,9 @@ void sprites::spriteGroupToImage(uint8_t*img,uint32_t id,int row,bool alpha){
 	else
 		bpp=3;
 	memset(img,0,w*h*bpp);
-	for(uint32_t i=0;i<groups[id].offx.size();++i){
-		int32_t xoff=groups[id].offx[i];
-		int32_t yoff=groups[id].offy[i];
+	for(uint32_t i=0;i<groups[id].list.size();++i){
+		int32_t xoff=groups[id].list[i].offx;
+		int32_t yoff=groups[id].list[i].offy;
 		xoff-=minx;
 		yoff-=miny;
 		uint32_t ttile=groups[id].list[i].starttile;
@@ -1369,9 +1368,9 @@ void sprites::spriteImageToTiles(uint8_t*img,uint32_t id,int rowUsage,bool alpha
 	uint8_t tcTemp[256];
 	uint32_t w=abs(maxx-minx);
 	uint32_t h=abs(maxy-miny);
-	for(uint32_t i=0;i<groups[id].offx.size();++i){
-		int32_t xoff=groups[id].offx[i];
-		int32_t yoff=groups[id].offy[i];
+	for(uint32_t i=0;i<groups[id].list.size();++i){
+		int32_t xoff=groups[id].list[i].offx;
+		int32_t yoff=groups[id].list[i].offy;
 		xoff-=minx;
 		yoff-=miny;
 		uint32_t ttile=groups[id].list[i].starttile;
@@ -1386,21 +1385,21 @@ void sprites::spriteImageToTiles(uint8_t*img,uint32_t id,int rowUsage,bool alpha
 	}
 }
 void sprites::minmaxoffy(uint32_t id,int32_t&miny,int32_t&maxy)const{
-	miny=maxy=groups[id].offy[0];
-	for(uint32_t i=0;i<groups[id].offy.size();++i){
-		if(groups[id].offy[i]<miny)
-			miny=groups[id].offy[i];
-		int32_t tmpy=groups[id].offy[i]+(groups[id].list[i].h*prj->tileC->sizeh);
+	miny=maxy=groups[id].list[0].offy;
+	for(uint32_t i=0;i<groups[id].list.size();++i){
+		if(groups[id].list[i].offy<miny)
+			miny=groups[id].list[i].offy;
+		int32_t tmpy=groups[id].list[i].offy+(groups[id].list[i].h*prj->tileC->sizeh);
 		if(tmpy>maxy)
 			maxy=tmpy;
 	}
 }
 void sprites::minmaxoffx(uint32_t id,int32_t&minx,int32_t&maxx)const{
-	minx=maxx=groups[id].offx[0];
-	for(uint32_t i=0;i<groups[id].offx.size();++i){
-		if(groups[id].offx[i]<minx)
-			minx=groups[id].offx[i];
-		int32_t tmpx=groups[id].offx[i]+(groups[id].list[i].w*prj->tileC->sizew);
+	minx=maxx=groups[id].list[0].offx;
+	for(uint32_t i=0;i<groups[id].list.size();++i){
+		if(groups[id].list[i].offx<minx)
+			minx=groups[id].list[i].offx;
+		int32_t tmpx=groups[id].list[i].offx+(groups[id].list[i].w*prj->tileC->sizew);
 		if(tmpx>maxx)
 			maxx=tmpx;
 	}
@@ -1425,10 +1424,10 @@ void sprites::draw(uint32_t id,uint32_t x,uint32_t y,int32_t zoom,bool mode,int3
 		}
 		maxx=maxy=0;
 		for(uint32_t i=0;i<groups[id].list.size();++i){
-			int xoff=x+(groups[id].offx[i]*zoom);
+			int xoff=x+(groups[id].list[i].offx*zoom);
 			if(!mode)
 				xoff-=minx*zoom;
-			int yoff=y+(groups[id].offy[i]*zoom);
+			int yoff=y+(groups[id].list[i].offy*zoom);
 			if(!mode)
 				yoff-=miny*zoom;
 			if(maxx<(xoff+(groups[id].list[i].w*zoom*8)))
@@ -1454,15 +1453,9 @@ void sprites::setAmt(uint32_t amtnew){
 		for(unsigned n=amt;n<amtnew;++n){
 			groups[n].list.push_back(sprite());
 			groups[n].name.assign(spriteDefName);
-			groups[n].offx.push_back(0);
-			groups[n].offy.push_back(0);
-			groups[n].loadat.push_back(0);
 		}
 	}else if(amtnew<amt){
 		for(unsigned n=amtnew;n<amt;++n){
-			groups[n].offx.clear();
-			groups[n].offy.clear();
-			groups[n].loadat.clear();
 			groups[n].name.clear();
 			groups[n].list.clear();
 		}
@@ -1475,9 +1468,6 @@ void sprites::setAmtingroup(uint32_t id,uint32_t amtnew){
 	if(amtold==amtnew)
 		return;
 	groups[id].list.resize(amtnew);
-	groups[id].offx.resize(amtnew);
-	groups[id].offy.resize(amtnew);
-	groups[id].loadat.resize(amtnew);
 }
 bool sprites::save(FILE*fp)const{
 	/* Format:
@@ -1510,9 +1500,9 @@ bool sprites::save(FILE*fp)const{
 			fputs(groups[n].name.c_str(),fp);
 		fputc(0,fp);
 		for(uint32_t i=0;i<amtgroup;++i){
-			fwrite(&groups[n].offx[i],sizeof(int32_t),1,fp);
-			fwrite(&groups[n].offy[i],sizeof(int32_t),1,fp);
-			fwrite(&groups[n].loadat[i],sizeof(uint32_t),1,fp);
+			fwrite(&groups[n].list[i].offx,sizeof(int32_t),1,fp);
+			fwrite(&groups[n].list[i].offy,sizeof(int32_t),1,fp);
+			fwrite(&groups[n].list[i].loadat,sizeof(uint32_t),1,fp);
 			fwrite(&groups[n].list[i].w,sizeof(uint32_t),1,fp);
 			fwrite(&groups[n].list[i].h,sizeof(uint32_t),1,fp);
 			fwrite(&groups[n].list[i].starttile,sizeof(uint32_t),1,fp);
@@ -1542,7 +1532,8 @@ bool sprites::load(FILE*fp,uint32_t version){
 				name.push_back(a);
 			}while(a=fgetc(fp));
 		}
-		window->spriteglobaltxt->value(name.c_str());
+		if(window)
+			window->spriteglobaltxt->value(name.c_str());
 		for(unsigned n=0;n<amt;++n){
 			uint32_t amtgroup;
 			fread(&amtgroup,sizeof(int32_t),1,fp);
@@ -1555,9 +1546,9 @@ bool sprites::load(FILE*fp,uint32_t version){
 				}while(a=fgetc(fp));
 			}
 			for(uint32_t i=0;i<amtgroup;++i){
-				fread(&groups[n].offx[i],sizeof(int32_t),1,fp);
-				fread(&groups[n].offy[i],sizeof(int32_t),1,fp);
-				fread(&groups[n].loadat[i],sizeof(uint32_t),1,fp);
+				fread(&groups[n].list[i].offx,sizeof(int32_t),1,fp);
+				fread(&groups[n].list[i].offy,sizeof(int32_t),1,fp);
+				fread(&groups[n].list[i].loadat,sizeof(uint32_t),1,fp);
 				fread(&groups[n].list[i].w,sizeof(uint32_t),1,fp);
 				fread(&groups[n].list[i].h,sizeof(uint32_t),1,fp);
 				fread(&groups[n].list[i].starttile,sizeof(uint32_t),1,fp);
@@ -1639,9 +1630,6 @@ void sprites::del(uint32_t id){
 		return;
 	}
 	if(id<amt){
-		groups[id].offx.clear();
-		groups[id].offy.clear();
-		groups[id].loadat.clear();
 		groups[id].name.clear();
 		groups[id].list.clear();
 		groups.erase(groups.begin()+id);
@@ -1656,9 +1644,6 @@ void sprites::delingroup(uint32_t id,uint32_t subid){
 		return;
 	}
 	if(subid<amtold){
-		groups[id].offx.erase(groups[id].offx.begin()+subid);
-		groups[id].offy.erase(groups[id].offy.begin()+subid);
-		groups[id].loadat.erase(groups[id].loadat.begin()+subid);
 		groups[id].list.erase(groups[id].list.begin()+subid);
 	}else
 		fl_alert("You cannot delete what does not exist");
@@ -1670,7 +1655,7 @@ void sprites::enforceMax(unsigned wmax,unsigned hmax){
 			if((groups[j].list[i].w>wmax)||(groups[j].list[i].h>hmax)){
 				//Divide it up into more sprites
 				unsigned w=groups[j].list[i].w,h=groups[j].list[i].h;
-				unsigned snew=((w+(wmax/2))/wmax)*((h+(hmax/2))/hmax)-1,start=groups[j].list.size(),st=groups[j].list[i].starttile,la=groups[j].loadat[i];
+				unsigned snew=((w+(wmax/2))/wmax)*((h+(hmax/2))/hmax)-1,start=groups[j].list.size(),st=groups[j].list[i].starttile,la=groups[j].list[i].loadat;
 				if(groups[j].list[i].w>wmax)
 					groups[j].list[i].w=wmax;
 				if(groups[j].list[i].h>hmax)
@@ -1690,10 +1675,10 @@ void sprites::enforceMax(unsigned wmax,unsigned hmax){
 							groups[j].list[a].h=h%hmax;
 						else
 							groups[j].list[a].h=hmax;
-						groups[j].offx[a]=groups[j].offx[i]+(x*wmax*8);
-						groups[j].offy[a]=groups[j].offy[i]+(y*hmax*8);
+						groups[j].list[a].offx=groups[j].list[i].offx+(x*wmax*8);
+						groups[j].list[a].offy=groups[j].list[i].offy+(y*hmax*8);
 						groups[j].list[a].starttile=st;
-						groups[j].loadat[a]=la;
+						groups[j].list[a].loadat=la;
 						st+=groups[j].list[a].w*groups[j].list[a].h;
 						la+=groups[j].list[a].w*groups[j].list[a].h;
 						++a;

@@ -18,12 +18,13 @@
 #include <stdint.h>
 struct sprite{
 	uint32_t w,h;//In tiles
-	uint32_t starttile;
-	uint32_t palrow;
+	uint32_t starttile,palrow;
+	uint32_t loadat;//Where the sprite will be loaded in game (useful for games that overwrite tiles in VRAM for animation purposes such as the Sonic series of games and many more.)
+	int32_t offx,offy;
 	bool hflip,vflip;
 	bool prio;
 	sprite();
-	sprite(uint32_t wi,uint32_t hi,uint32_t palrowset,uint32_t settile,bool hf,bool vf,bool pri);
+	sprite(uint32_t wi,uint32_t hi,uint32_t palrowset,uint32_t settile,bool hf,bool vf,bool pri,uint32_t la,int32_t ox,int32_t oy);
 	void draw(unsigned x,unsigned y,unsigned zoom);
 	void toImage(uint8_t*img);
 };

@@ -70,7 +70,7 @@ void ChunkClass::removeAt(uint32_t at){
 		exit(1);
 	}
 	--amt;
-	if(window->chunk_select->value()>=amt){
+	if(window&&window->chunk_select->value()>=amt){
 		window->chunk_select->value(amt-1);
 		currentChunk=amt-1;
 	}
@@ -78,7 +78,7 @@ void ChunkClass::removeAt(uint32_t at){
 void ChunkClass::resizeAmt(uint32_t amtnew){
 	chunks.resize(amtnew*wi*hi);
 	amt=amtnew;
-	if(window->chunk_select->value()>=amt){
+	if(window&&window->chunk_select->value()>=amt){
 		window->chunk_select->value(amt-1);
 		currentChunk=amt-1;
 	}

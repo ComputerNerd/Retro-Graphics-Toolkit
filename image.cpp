@@ -16,6 +16,7 @@
 */
 #include "includes.h"
 #include "image.h"
+#include "class_global.h"
 #include <FL/Fl_Color_Chooser.H>
 #include <FL/Fl_Scroll.H>
 static Fl_Window * win;
@@ -230,71 +231,82 @@ bool getMaskColorImg(Fl_Shared_Image*loaded_image,bool grayscale,unsigned*remap,
 		free(histb);
 	if(hista)
 		free(hista);
-	rc=(double)r/255.0;
-	gc=(double)g/255.0;
-	bc=(double)b/255.0;
-	win=new Fl_Double_Window(640,480,"Background color selection");
-	win->begin();
-	win->resizable(win);
-	Fl_Button * Ok=new Fl_Button(52,448,64,24,"Okay");
-	Ok->callback(RetCB,(void*)1);
-	Fl_Button * Cancel=new Fl_Button(116,448,64,24,"Cancel");
-	Cancel->callback(RetCB,0);
-	Fl_Color_Chooser*colsel=new Fl_Color_Chooser(16,32,208,156,"Background color\nif incorrect click on the image");
-	colsel->rgb(rc,gc,bc);
-	colsel->mode(1);
-	Fl_Scroll*scroll=new Fl_Scroll(232,16,408,464);
-	box=new ScrollBox(232,16,w,h);
-	box->scroll=scroll;
-	box->w=w;
-	box->h=h;
-	box->depth=depth;
-	box->remap=remap;
-	box->palMap=palMap;
-	box->r=r;
-	box->g=g;
-	box->b=b;
-	box->ent=ent;
-	box->colsel=colsel;
-	box->grayscale=grayscale;
-	box->loaded_image=loaded_image;
-	box->image(loaded_image);
-	scroll->end();
-	if(((depth==1)&&(!grayscale)&&(hista[0]))||(depth==4)){
-		Fl_Group*g=new Fl_Group(8,240,240,72);
-		Fl_Round_Button*ua,*um;
-		if(useAlpha){
-			ua=new Fl_Round_Button(8,240,128,72,"Use alpha\nchannel\nDetected as such");
-			ua->set();
-			colsel->hide();
-		}else
-			ua=new Fl_Round_Button(8,240,128,48,"Use alpha\nchannel");
-		ua->callback(setAlphaCB,(void*)1);
-		ua->type(FL_RADIO_BUTTON);
-		if(useAlpha)
-			um=new Fl_Round_Button(144,240,96,48,"Use mask\ncolor");
-		else{
-			um=new Fl_Round_Button(144,240,96,72,"Use mask\ncolor\nDetected as such");
-			um->set();
+	if(window){
+		rc=(double)r/255.0;
+		gc=(double)g/255.0;
+		bc=(double)b/255.0;
+		win=new Fl_Double_Window(640,480,"Background color selection");
+		win->begin();
+		win->resizable(win);
+		Fl_Button * Ok=new Fl_Button(52,448,64,24,"Okay");
+		Ok->callback(RetCB,(void*)1);
+		Fl_Button * Cancel=new Fl_Button(116,448,64,24,"Cancel");
+		Cancel->callback(RetCB,0);
+		Fl_Color_Chooser*colsel=new Fl_Color_Chooser(16,32,208,156,"Background color\nif incorrect click on the image");
+		colsel->rgb(rc,gc,bc);
+		colsel->mode(1);
+		Fl_Scroll*scroll=new Fl_Scroll(232,16,408,464);
+		box=new ScrollBox(232,16,w,h);
+		box->scroll=scroll;
+		box->w=w;
+		box->h=h;
+		box->depth=depth;
+		box->remap=remap;
+		box->palMap=palMap;
+		box->r=r;
+		box->g=g;
+		box->b=b;
+		box->ent=ent;
+		box->colsel=colsel;
+		box->grayscale=grayscale;
+		box->loaded_image=loaded_image;
+		box->image(loaded_image);
+		scroll->end();
+		if(((depth==1)&&(!grayscale)&&(hista[0]))||(depth==4)){
+			Fl_Group*g=new Fl_Group(8,240,240,72);
+			Fl_Round_Button*ua,*um;
+			if(useAlpha){
+				ua=new Fl_Round_Button(8,240,128,72,"Use alpha\nchannel\nDetected as such");
+				ua->set();
+				colsel->hide();
+			}else
+				ua=new Fl_Round_Button(8,240,128,48,"Use alpha\nchannel");
+			ua->callback(setAlphaCB,(void*)1);
+			ua->type(FL_RADIO_BUTTON);
+			if(useAlpha)
+				um=new Fl_Round_Button(144,240,96,48,"Use mask\ncolor");
+			else{
+				um=new Fl_Round_Button(144,240,96,72,"Use mask\ncolor\nDetected as such");
+				um->set();
+			}
+			um->callback(setAlphaCB,0);
+			um->type(FL_RADIO_BUTTON);
+			g->end();
 		}
-		um->callback(setAlphaCB,0);
-		um->type(FL_RADIO_BUTTON);
-		g->end();
+		win->end();
+		win->set_modal();
+		win->show();
+		while(win->shown())
+			Fl::wait();
+		if(depth>1){
+			mask[0]=box->r;
+			mask[1]=box->g;
+			mask[2]=box->b;
+		}else
+			*mask=box->ent;
+		alphaSel=useAlpha;
+		delete win;
+		return retOkay;
+	}else{
+		if(depth>1){
+			mask[0]=r;
+			mask[1]=g;
+			mask[2]=b;
+		}else
+			mask[0]=ent;
+		alphaSel=useAlpha;
+		return true;
 	}
-	win->end();
-	win->set_modal();
-	win->show();
-	while(win->shown())
-		Fl::wait();
-	if(depth>1){
-		mask[0]=box->r;
-		mask[1]=box->g;
-		mask[2]=box->b;
-	}else
-		*mask=box->ent;
-	alphaSel=useAlpha;
-	delete win;
-	return retOkay;
 }
 bool handle1byteImg(Fl_Shared_Image*loaded_image,unsigned*remap,unsigned*numcol){
 	char*timgptr=(char*)loaded_image->data()[0];

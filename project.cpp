@@ -124,17 +124,8 @@ void compactPrjMem(void){
 			for(uint32_t j=0;j<projects[i]->ms->sps.size();++j){
 				for(uint32_t n=0;n<projects[i]->ms->sps[j].amt;++n){
 					Cold+=projects[i]->ms->sps[j].groups[n].list.capacity();
-					Cold+=projects[i]->ms->sps[j].groups[n].list.capacity();
-					Cold+=projects[i]->ms->sps[j].groups[n].offx.capacity();
-					Cold+=projects[i]->ms->sps[j].groups[n].offy.capacity();
-					projects[i]->ms->sps[j].groups[n].loadat.shrink_to_fit();
-					projects[i]->ms->sps[j].groups[n].offx.shrink_to_fit();
-					projects[i]->ms->sps[j].groups[n].offy.shrink_to_fit();
-					projects[i]->ms->sps[j].groups[n].loadat.shrink_to_fit();
+					projects[i]->ms->sps[j].groups[n].list.shrink_to_fit();
 					Cnew+=projects[i]->ms->sps[j].groups[n].list.capacity();
-					Cnew+=projects[i]->ms->sps[j].groups[n].list.capacity();
-					Cnew+=projects[i]->ms->sps[j].groups[n].offx.capacity();
-					Cnew+=projects[i]->ms->sps[j].groups[n].offy.capacity();
 				}
 				Cold+=projects[i]->ms->sps[j].groups.capacity();
 				projects[i]->ms->sps[j].groups.shrink_to_fit();

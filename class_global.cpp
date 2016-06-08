@@ -128,7 +128,7 @@ void editor::updateSpriteSliders(uint32_t prj){
 			curSprite=projects[prj]->ms->sps[curSpritemeta].groups[curSpritegroup].list.size()-1;
 		}
 		spritest->value(projects[prj]->ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].starttile);
-		spriteslat->value(projects[prj]->ms->sps[curSpritemeta].groups[curSpritegroup].loadat[curSprite]);
+		spriteslat->value(projects[prj]->ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].loadat);
 		spritesize[0]->value(projects[prj]->ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].w);
 		spritesize[1]->value(projects[prj]->ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].h);
 		if(fixedRow<0)
@@ -136,9 +136,9 @@ void editor::updateSpriteSliders(uint32_t prj){
 		else
 			spritepalrow->hide();
 		char tmp[16];
-		intstr(projects[prj]->ms->sps[curSpritemeta].groups[curSpritegroup].offx[curSprite],tmp);
+		intstr(projects[prj]->ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].offx,tmp);
 		spritesoff[0]->value(tmp);
-		intstr(projects[prj]->ms->sps[curSpritemeta].groups[curSpritegroup].offy[curSprite],tmp);
+		intstr(projects[prj]->ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].offy,tmp);
 		spritesoff[1]->value(tmp);
 		spritehflip->value(projects[prj]->ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].hflip);
 		spritevflip->value(projects[prj]->ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].vflip);
