@@ -49,7 +49,7 @@ into the Retro Graphics Toolkit project folder and build it using either
 ./configure if you are on Windows or if you are cross compiling you need to do
 something like this:
 
-RANLIB=~/mingw/bin/x86_64-w64-mingw32-gcc-ranlib NM=~/mingw/bin/x86_64-w64-mingw32-gcc-nm AR=~/mingw/bin/x86_64-w64-mingw32-gcc-ar CFLAGS="-O2 -flto -fuse-linker-plugin -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=x86_64-w64-mingw32 --build=x86_64-unknown-linux-gnu
+RANLIB=~/mingw/bin/x86_64-w64-mingw32-gcc-ranlib NM=~/mingw/bin/x86_64-w64-mingw32-gcc-nm AR=~/mingw/bin/x86_64-w64-mingw32-gcc-ar CFLAGS="-O2 -flto=16 -fuse-linker-plugin -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=x86_64-w64-mingw32 --build=x86_64-unknown-linux-gnu
 
 Regardless of how ./configure is ran you will just need to run make and you are
 done building FLTK.

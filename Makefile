@@ -1,12 +1,12 @@
 CPPFLAGS=
-CC=clang
-CXX=clang++
+CC=gcc
+CXX=g++
 
 include Makefile.common
 
-CFLAGS := -march=native -c -O3 -pipe -march=native -fomit-frame-pointer
+CFLAGS += -march=native -flto -fuse-linker-plugin -s -O3 -pipe -march=native -fomit-frame-pointer
 CXXFLAGS := $(CFLAGS) -fno-rtti -std=gnu++11
-LDFLAGS := -O3 -march=native -fno-rtti -std=gnu++11 -L/usr/lib/fltk/ -lfltk_images -lfltk -lpng -ljpeg -lXft -lXext -lXinerama -lX11 -lz -s -Llua/src -llua -ldl
+LDFLAGS := -flto -O3 -march=native -fuse-linker-plugin -s -fno-rtti -std=gnu++11 -L/usr/lib/fltk/ -lfltk_images -lfltk -lpng -ljpeg -lXft -lXext -lXinerama -lX11 -lz -s -Llua/src -llua -ldl
 
 EXECUTABLE := RetroGraphicsToolkit
 
