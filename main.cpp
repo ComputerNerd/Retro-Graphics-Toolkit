@@ -55,8 +55,11 @@ int main(int argc, char **argv){
 #ifdef _WIN32
 	char olddirname[MAX_PATH];
 	getcwd(olddirname,sizeof(olddirname));
-#else
+#elif defined(_GNU_SOURCE)
 	const char*olddirname=get_current_dir_name();
+#else
+	char olddirname[PATH_MAX];
+	getcwd(olddirname,sizeof(olddirname));
 #endif
 	char*tmp=strdup(argv[0]);
 	chdir(dirname(tmp));
@@ -101,7 +104,7 @@ int main(int argc, char **argv){
 		}
 		createargtable(Lheadless,argv,argc,2);
 		chdir(olddirname);
-#ifndef _WIN32
+#ifdef _GNU_SOURCE
 		free((void*)olddirname);
 #endif
 		if(useExampleFolder){
