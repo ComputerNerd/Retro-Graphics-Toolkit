@@ -4,7 +4,7 @@ CXX=clang++
 
 include Makefile.common
 
-CFLAGS := -Wall -Wextra -O0 -ggdb3
+CFLAGS += -Wall -Wextra -O0 -ggdb3
 CXXFLAGS := $(CFLAGS) -std=gnu++11
 LDFLAGS := -L/usr/lib/fltk/ -lfltk_images -lfltk -lpng -ljpeg -lXft -lXext -lXinerama -lX11 -lz -Llua/src -llua -ldl
 
