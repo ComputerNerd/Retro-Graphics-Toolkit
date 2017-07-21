@@ -13,7 +13,7 @@ effect of lua/lua-version-number.
 Extract the latest version of Lua in the newly created folder.
 
 Now edit the makefile in src. Edit the line that starts with CC=gcc and change
-it to: CC=g++ or CC=clang++
+it to: CC=g++ or CC=clang++ removing anything that follows it.
 
 On the line that starts with CFLAGS= remove -DLUA_COMPAT_5_2
 
@@ -25,15 +25,25 @@ Also if you are building on Windows you must replace this line in the Makefile
 with
 	"AR=$(CC) -shared -static-libgcc -static-libstdc++ -o" "RANLIB=strip --strip-all" \
 
-Lua can be build using C++ which is what we are doing this is to take advantage
-of GCC's support for zero cost exception handling using throw.
+If you are building on Mac OS X replace (in lua/src/Makefile):
+	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_MACOSX" SYSLIBS="-lreadline" CC=cc
+with
+	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_MACOSX" SYSLIBS="-lreadline"
+
+In other words remove CC=cc from the end of the line.
+
+We need to use clang++ instead of clang.
+
+We build Lua using C++ in order to take advantage of of zero cost exception
+handling using throw.
 
 The reason Lua is built even though many distributions already provide Lua is
 so that the latest version is used and so that this version which may be built
 with a different configuration does not overwrite your system's instillation of
 Lua.
 
-Now run make Linux or make Mingw depending on your system platform.
+Now run make linux, make macosx, or make mingw depending on what system Retro
+Graphics Toolkit is being compiled for.
 
 DO NOT RUN MAKE INSTALL.
 
