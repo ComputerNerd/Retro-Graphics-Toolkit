@@ -30,9 +30,14 @@ If you are building on Mac OS X replace (in lua/src/Makefile):
 with
 	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_MACOSX" SYSLIBS="-lreadline"
 
+If you are building on Linux replace (in lua/src/Makefile):
+	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_LINUX" SYSLIBS="-Wl,-E -ldl -lreadline" CC=cc
+with
+	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_LINUX" SYSLIBS="-Wl,-E -ldl -lreadline"
+
 In other words remove CC=cc from the end of the line.
 
-We need to use clang++ instead of clang.
+We should not override the CC variable which we specified earlier. We need to use the system's C++ compiler.
 
 We build Lua using C++ in order to take advantage of of zero cost exception
 handling using throw.

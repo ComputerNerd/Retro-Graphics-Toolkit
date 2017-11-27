@@ -33,7 +33,7 @@ enum undoTypes_t{
 	uTileGroup,
 	uTilePixel,
 	uTileAppend,//No struct
-	uTileAppendgroupdat,//uTileGroup could be adapted for this but using separate code ram is saved
+	uTileAppendgroupdat,//uTileGroup could be adapted for this but instead we use separate code in order to save ram.
 	uTileNew,//No struct reuses ptr for insert tile after
 	uTilemap,
 	uTilemapattr,
@@ -74,7 +74,7 @@ enum undoTypes_t{
 	uProjectAppend,//no struct
 	uProjectAll,
 };
-struct undoEvent{//This struct merely holds which type of undo this is and one value if ptr is not used.
+struct undoEvent{//This struct only holds which type of undo this is and one value if ptr is not used.
 	undoTypes_t type;
 	uint32_t prjId;//Project affected
 	union{
@@ -83,7 +83,7 @@ struct undoEvent{//This struct merely holds which type of undo this is and one v
 		int32_t vi;
 	};
 };
-struct undoTile{//The purpose of this struct if to completely undo a tile
+struct undoTile{//The purpose of this struct is to completely undo a tile
 	tileTypeMask_t type;
 	uint32_t id;
 	void*ptrnew;
