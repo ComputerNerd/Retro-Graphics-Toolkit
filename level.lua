@@ -12,34 +12,45 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 --]]
 lvlCurLayer=0
 curLayerInfo=nil
 editX,editY=0,0
 szX,szY=0,0
+
 function setSizePer()
 	local src=curLayerInfo.src&3
 	local plane=(curLayerInfo.src>>2)+1
+
 	rgt.syncProject()
+
+	local p = projects.current
+
+	local tileW = p.tiles.w
+	local tileH = p.tiles.h
+	local tilemap = p.tilemaps[plane]
+
 	if src==level.TILES then
-		szX=tile.width
-		szY=tile.height
+		szX = tileW
+		szY = tileH
 	elseif src==level.BLOCKS then
-		szX=tilemaps.width[plane]*tile.width
-		szY=tilemaps.height[plane]*tile.height
+		szX = tilemap.w * tileW
+		szY = tilemap.h * tileH
 	elseif src==level.CHUNKS then
-		szX=chunks.width*tile.width
-		szY=chunks.height*tile.height
+		szX = chunks.width * tileW
+		szY = chunks.height * tileH
 		if chunks.useBlocks~=false then
-			szX=szX*tilemaps.width[plane]
-			szY=szY*tilemaps.height[plane]
+			szX = szX * tilemap.w
+			szY = szY * tilemap.h
 		end
 	end
 end
+
 lvlZoom=1
 scrollX,scrollY=0,0
 xOff,yOff=168,72
+
 function setScrollBounds()
 	local w,h=szX*lvlZoom*curLayerInfo.w,szY*lvlZoom*curLayerInfo.h
 	if w<rgt.w()-xOff then
@@ -57,6 +68,7 @@ function setScrollBounds()
 		lvlScrolly:bounds(0,curLayerInfo.h)
 	end
 end
+
 function lvlsetlayer(layer)
 	lvlCurLayer=layer
 	layerName:value(level.names[lvlCurLayer+1])
@@ -77,20 +89,24 @@ function lvlsetlayer(layer)
 		updateSpriteSliders(level.getObj(lvlCurLayer,spriteEdit))
 	end
 end
+
 function checkCurLayerBounds()
 	if lvlCurLayer>=level.amt then
 		lvlsetlayer(level.amt-1)
 	end
 end
+
 function lvlsetLayerCB(unused)
 	lvlsetlayer(layerSel:value())
 	rgt.damage()
 end
+
 function lvlappend(unused)
 	level.setLayerAmt(level.amt+1)
 	layerSel:add(level.names[level.amt])
 	rgt.redraw()
 end
+
 function lvldelete(unused)
 	if level.amt>1 then
 		level.removeLayer(lvlCurLayer)
@@ -101,43 +117,54 @@ function lvldelete(unused)
 		fl.alert("You must have a minimum of one layer. If do not want a level disable it via means of the have level option in project settings")
 	end
 end
+
 function lvlscrollCB(unused)
 	scrollX=lvlScrollx:value()
 	scrollY=lvlScrolly:value()
 	rgt.redraw()
 end
+
 showSprites=true
+
 function lvlshowspirtes(unused)
 	showSprites=spriteBtn:value()~=0
 	rgt.damage()
 end
+
 function setLayerName(unused)
 	level.setLayerName(lvlCurLayer,layerName:value())
 	layerSel:replace(lvlCurLayer,level.names[lvlCurLayer+1])
 	rgt.redraw()
 end
+
 function setLvlzoomCB(unused)
 	lvlZoom=tSizeScrl:value()
 	setScrollBounds()
 	rgt.damage()
 end
+
 function invalidSource(src)
 	fl.alert(string.format("%d is not a valid source",src))
 end
+
 function selSlideUpdateMax(src)
+	local p = projects.current
+
 	if src==level.TILES then
-		selSlide:maximum(tile.amt-1)
+		selSlide:maximum(#p.tiles - 1)
 	elseif src==level.BLOCKS then
 		local plane=(curLayerInfo.src>>2)+1
-		selSlide:maximum(tilemaps.heightA[plane]//tilemaps.height[plane]-1)
+		local tilemap = p.tilemaps[plane]
+		selSlide:maximum(tilemap.hAll // tilemap.h - 1)
 	elseif src==level.CHUNKS then
-		selSlide:maximum(chunks.amt-1)
+		selSlide:maximum(chunks.amt - 1)
 	else
 		invalidSource(src)
 	end
-
 end
+
 editModeLevel=false
+
 function drawLevel()
 	xOff=168*rgt.w()//800
 	yOff=72*rgt.h()//600
@@ -281,7 +308,7 @@ function handleLevel(e)
 				spriteEdit=level.objamt[lvlCurLayer+1]-1
 				spriteSel:value(spriteEdit)
 				local info=level.getObj(lvlCurLayer,spriteEdit)
-				updateSpriteSliders(info)
+				updateSpriteSlidrs(info)
 				info.x=x
 				info.y=y
 				info.prjid=prj
@@ -415,7 +442,8 @@ function loadS1layout(unused)
 end
 function saveS1layout(unused)
 	rgt.syncProject()
-	if project.have(project.levelMask) then
+	local p = projects.current
+	if p:have(project.levelMask) then
 		if curLayerInfo.w<=256 and curLayerInfo.h<=256 then
 			local fname=fl.file_chooser("Save layout")
 			if not (fname == nil or fname == '') then
@@ -430,10 +458,10 @@ function saveS1layout(unused)
 				end
 			end
 		else
-			fl.alert("The header one allows one byte for width and height. The maximum width and height is 256")
+			fl.alert("The header only allows one byte for width and height. The maximum width and height is 256")
 		end
 	else
-		project.haveMessage(project.levelMask)
+		p:haveMessage(project.levelMask)
 	end
 end
 function appendSpriteCB(unused)

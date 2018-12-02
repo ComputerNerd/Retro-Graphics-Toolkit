@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 def toTex(basename):
     print('Converting to latex '+basename+'.md')
-    if subprocess.call(['pandoc','-S','--listings','-f','markdown','-V geometry:margin=.5in','-o',basename+'.tex',basename+'.md']):
+    if subprocess.call(['pandoc','--listings','-f','markdown','-V geometry:margin=.5in','-o',basename+'.tex',basename+'.md']):
         print('pandoc failure')
 def toGithub(inmd,outmd):
     print('Converting to github markdown '+inmd)
-    if subprocess.call(['pandoc','-S','-f','markdown','-t','markdown_github','-o',outmd,inmd]):
+    if subprocess.call(['pandoc','-f','markdown','-t','markdown_github+smart','-o',outmd,inmd]):
         print('pandoc failure')
     f = open(outmd,'r+')
     txt=f.read()

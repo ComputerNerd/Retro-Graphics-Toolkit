@@ -12,17 +12,17 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
-void setSegaPalType(Fl_Widget*,void*x);
-void setNesTile(Fl_Widget*o,void*);
-void saveAllProjectsCB(Fl_Widget*,void*);
-void loadAllProjectsCB(Fl_Widget*,void*o);
-void haveCB(Fl_Widget*o,void*mask);
-void switchShareCB(Fl_Widget*o,void*mask);
-void shareProjectCB(Fl_Widget*o,void*mask);
-void loadProjectCB(Fl_Widget*,void*);
-void saveProjectCB(Fl_Widget*,void*);
-void switchProjectCB(Fl_Widget*o,void*);
-void appendProjectCB(Fl_Widget*,void*);
-void deleteProjectCB(Fl_Widget*,void*);
+void setSegaPalType(Fl_Widget*, void*x);
+void setNesTile(Fl_Widget*o, void*);
+void saveAllProjectsCB(Fl_Widget*, void*);
+void loadAllProjectsCB(Fl_Widget*, void*o);
+void haveCB(Fl_Widget*o, void*mask);
+void switchShareCB(Fl_Widget*o, void*mask);
+void shareProjectCB(Fl_Widget*o, void*mask);
+void loadProjectCB(Fl_Widget*, void*);
+void saveProjectCB(Fl_Widget*, void*);
+void switchProjectCB(Fl_Widget*o, void*);
+void appendProjectCB(Fl_Widget*, void*);
+void deleteProjectCB(Fl_Widget*, void*);

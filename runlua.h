@@ -12,13 +12,13 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
 #include "lua.h"
 #include <FL/Fl_Widget.H>
 void updateProjectTablesLua(lua_State*L);
-void runLuaFunc(lua_State*L,unsigned args,unsigned results);
-void runLua(lua_State*L,const char*str,bool isFile=true);
+void runLuaFunc(lua_State*L, unsigned args, unsigned results);
+void runLua(lua_State*L, const char*str, bool isFile = true);
 lua_State*createLuaState(void);
-void runLuaCB(Fl_Widget*,void*);
+void runLuaCB(Fl_Widget*, void*);

@@ -12,7 +12,7 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #include "includes.h"
 #include "color_compare.h"
@@ -23,26 +23,30 @@
 #include "classpalettebar.h"
 #include "class_global.h"
 #include "gui.h"
-uint8_t nespaltab[64*3];
-uint8_t nespaltab_alt[64*3];
-unsigned nearest_color_index(int val,unsigned startindex){
-	return nearestOneChannel(val,palTab+startindex,8);
+uint8_t nespaltab[64 * 3];
+uint8_t nespaltab_alt[64 * 3];
+unsigned nearest_color_index(int val, unsigned startindex) {
+	return nearestOneChannel(val, palTab + startindex, 8);
 }
-unsigned nearest_color_index(int val){
-	return nearest_color_index(val,palTypeGen);
+unsigned nearest_color_index(int val) {
+	return nearest_color_index(val, palTypeGen);
 }
-static double max3(double a,double b,double c){
+static double max3(double a, double b, double c) {
 	if ((a > b) && (a > c))
 		return a;
+
 	if (b > c)
 		return b;
+
 	return c;
 }
-static double min3(double a,double b,double c){
+static double min3(double a, double b, double c) {
 	if ((a < b) && (a < c))
 		return a;
+
 	if (b < c)
 		return b;
+
 	return c;
 }
 /**
@@ -56,18 +60,18 @@ static double min3(double a,double b,double c){
  * @param   Number  b       The blue color value
  * @return  Array           The HSL representation
  */
-void rgbToHsl255(unsigned r,unsigned g,unsigned b,double * hh,double * ss,double * ll){
-	double rd=double(r)/255.0,gd=double(g)/255.0,bd=double(b)/255.0;
-	rgbToHsl(rd,gd,bd,hh,ss,ll);
+void rgbToHsl255(unsigned r, unsigned g, unsigned b, double * hh, double * ss, double * ll) {
+	double rd = double(r) / 255.0, gd = double(g) / 255.0, bd = double(b) / 255.0;
+	rgbToHsl(rd, gd, bd, hh, ss, ll);
 }
-void rgbToHsl(double r,double g,double b,double * hh,double * ss,double * ll){
+void rgbToHsl(double r, double g, double b, double * hh, double * ss, double * ll) {
 	double max = max3(r, g, b);
 	double min = min3(r, g, b);
 	double h, s, l = (max + min) / 2.0;
 
-	if(max == min)
+	if (max == min)
 		h = s = 0.0; // achromatic
-	else{
+	else {
 		double d = max - min;
 		s = l > 0.5 ? d / (2.0 - max - min) : d / (max + min);
 		/*if (max == r)
@@ -79,117 +83,132 @@ void rgbToHsl(double r,double g,double b,double * hh,double * ss,double * ll){
 		h /= 6.0;*/
 
 		//From: http://easyrgb.com/index.php?X=MATH&H=18#text18
-		double del_R = ((( max - r )/6.0) + (d/2.0)) / d;
-		double del_G = ((( max - g )/6.0) + (d/2.0)) / d;
-		double del_B = ((( max - b )/6.0) + (d/2.0)) / d;
+		double del_R = ((( max - r ) / 6.0) + (d / 2.0)) / d;
+		double del_G = ((( max - g ) / 6.0) + (d / 2.0)) / d;
+		double del_B = ((( max - b ) / 6.0) + (d / 2.0)) / d;
 
 		if      (r == max ) h = del_B - del_G;
-		else if (g == max ) h = (1.0/3.0) + del_R - del_B;
-		else if (b == max ) h = (2.0/3.0) + del_G - del_R;
+		else if (g == max ) h = (1.0 / 3.0) + del_R - del_B;
+		else if (b == max ) h = (2.0 / 3.0) + del_G - del_R;
 
 		if (h < 0.0) h += 1.0;
+
 		if (h > 1.0) h -= 1.0;
 	}
-	if(h>1.0)
-		printf("Warning %f\n",h);
-	*hh=h;
-	*ll=l;
-	*ss=s;
+
+	if (h > 1.0)
+		printf("Warning %f\n", h);
+
+	*hh = h;
+	*ll = l;
+	*ss = s;
 }
-static inline uint32_t sq(uint32_t x){
-	return x*x;
+static inline uint32_t sq(uint32_t x) {
+	return x * x;
 }
-uint32_t count_colors(uint8_t * image_ptr,uint32_t w,uint32_t h,uint8_t *colors_found,bool useAlpha){
+uint32_t count_colors(uint8_t * image_ptr, uint32_t w, uint32_t h, uint8_t *colors_found, bool useAlpha) {
 	/*!
 	Scans for colors in an image stops at over 256 as if there is an excess of 256 colors there is no reason to continue
 	*/
-	uint32_t colors_amount=3;
-	colors_found[0]=*image_ptr++;
-	colors_found[1]=*image_ptr++;
-	colors_found[2]=*image_ptr++;
+	uint32_t colors_amount = 3;
+	colors_found[0] = *image_ptr++;
+	colors_found[1] = *image_ptr++;
+	colors_found[2] = *image_ptr++;
+
 	if (useAlpha)
 		++image_ptr;
-	uint8_t start=1;
+
+	uint8_t start = 1;
 	uint32_t y;
-	for (y=0;y<h;++y){
-		for (uint32_t x=start;x<w;++x){
-			start=0;
-			uint8_t r,g,b;
-			r=*image_ptr++;
-			g=*image_ptr++;
-			b=*image_ptr++;
+
+	for (y = 0; y < h; ++y) {
+		for (uint32_t x = start; x < w; ++x) {
+			start = 0;
+			uint8_t r, g, b;
+			r = *image_ptr++;
+			g = *image_ptr++;
+			b = *image_ptr++;
+
 			if (useAlpha)
 				image_ptr++;
-			bool new_col=true;
-			for (uint32_t c=0;c<colors_amount;c+=3){
-				if (r == colors_found[c] && g == colors_found[c+1] && b == colors_found[c+2]){
-					new_col=false;
+
+			bool new_col = true;
+
+			for (uint32_t c = 0; c < colors_amount; c += 3) {
+				if (r == colors_found[c] && g == colors_found[c + 1] && b == colors_found[c + 2]) {
+					new_col = false;
 					break;//exit loop
 				}
 			}
-			if (new_col){
-				colors_found[colors_amount]=r;
-				colors_found[colors_amount+1]=g;
-				colors_found[colors_amount+2]=b;
-				colors_amount+=3;
+
+			if (new_col) {
+				colors_found[colors_amount] = r;
+				colors_found[colors_amount + 1] = g;
+				colors_found[colors_amount + 2] = b;
+				colors_amount += 3;
 			}
-			if (colors_amount >= 765){
+
+			if (colors_amount >= 765) {
 				printf("\nOver 255 colors timing out no need for operation to continue.\n");
-				return colors_amount/3;
+				return colors_amount / 3;
 			}
 		}
 	}
+
 	putchar('\n');
-	return colors_amount/3;
+	return colors_amount / 3;
 }
-void updateNesTab(unsigned emps,bool alt){
+void updateNesTab(unsigned emps, bool alt) {
 	uint32_t rgb_out;
-	if(alt){
-		for(unsigned temp=0;temp<64;++temp){
-			rgb_out=nesPalToRgb(temp|emps);
-			nespaltab_alt[temp*3]=(rgb_out>>16)&255;//red
-			nespaltab_alt[temp*3+1]=(rgb_out>>8)&255;//green
-			nespaltab_alt[temp*3+2]=rgb_out&255;//blue
+
+	if (alt) {
+		for (unsigned temp = 0; temp < 64; ++temp) {
+			rgb_out = nesPalToRgb(temp | emps);
+			nespaltab_alt[temp * 3] = (rgb_out >> 16) & 255; //red
+			nespaltab_alt[temp * 3 + 1] = (rgb_out >> 8) & 255; //green
+			nespaltab_alt[temp * 3 + 2] = rgb_out & 255; //blue
 		}
-	}else{
-		for(unsigned temp=0;temp<64;++temp){
-			rgb_out=nesPalToRgb(temp|emps);
-			nespaltab[temp*3]=(rgb_out>>16)&255;//red
-			nespaltab[temp*3+1]=(rgb_out>>8)&255;//green
-			nespaltab[temp*3+2]=rgb_out&255;//blue
+	} else {
+		for (unsigned temp = 0; temp < 64; ++temp) {
+			rgb_out = nesPalToRgb(temp | emps);
+			nespaltab[temp * 3] = (rgb_out >> 16) & 255; //red
+			nespaltab[temp * 3 + 1] = (rgb_out >> 8) & 255; //green
+			nespaltab[temp * 3 + 2] = rgb_out & 255; //blue
 		}
 	}
 }
-void updateEmphesis(void){
+void updateEmphesis(void) {
 	/*76543210
 	  ||||||||
 	  ||||++++- Hue (phase)
 	  ||++----- Value (voltage)
 	  ++------- Unimplemented, reads back as 0*/
-	unsigned emps=(currentProject->subSystem>>NESempShift)&NESempMask;
-	unsigned empsSprite=(currentProject->subSystem>>NESempShiftAlt)&NESempMask;
-	emps<<=6;
-	empsSprite<<=6;
+	unsigned emps = (currentProject->subSystem >> NESempShift)&NESempMask;
+	unsigned empsSprite = (currentProject->subSystem >> NESempShiftAlt)&NESempMask;
+	emps <<= 6;
+	empsSprite <<= 6;
 	uint32_t rgb_out;
-	updateNesTab(emps,false);
-	updateNesTab(empsSprite,true);
-	for(unsigned c=0;c<48;c+=3){
-		rgb_out=nesPalToRgb(currentProject->pal->palDat[c/3]|emps);
-		currentProject->pal->rgbPal[c]=(rgb_out>>16)&255;//red
-		currentProject->pal->rgbPal[c+1]=(rgb_out>>8)&255;//green
-		currentProject->pal->rgbPal[c+2]=rgb_out&255;//blue
+	updateNesTab(emps, false);
+	updateNesTab(empsSprite, true);
+
+	for (unsigned c = 0; c < 48; c += 3) {
+		rgb_out = nesPalToRgb(currentProject->pal->palDat[c / 3] | emps);
+		currentProject->pal->rgbPal[c] = (rgb_out >> 16) & 255; //red
+		currentProject->pal->rgbPal[c + 1] = (rgb_out >> 8) & 255; //green
+		currentProject->pal->rgbPal[c + 2] = rgb_out & 255; //blue
 	}
-	for(unsigned c=48;c<96;c+=3){
-		rgb_out=nesPalToRgb(currentProject->pal->palDat[c/3]|empsSprite);
-		currentProject->pal->rgbPal[c]=(rgb_out>>16)&255;//red
-		currentProject->pal->rgbPal[c+1]=(rgb_out>>8)&255;//green
-		currentProject->pal->rgbPal[c+2]=rgb_out&255;//blue
+
+	for (unsigned c = 48; c < 96; c += 3) {
+		rgb_out = nesPalToRgb(currentProject->pal->palDat[c / 3] | empsSprite);
+		currentProject->pal->rgbPal[c] = (rgb_out >> 16) & 255; //red
+		currentProject->pal->rgbPal[c + 1] = (rgb_out >> 8) & 255; //green
+		currentProject->pal->rgbPal[c + 2] = rgb_out & 255; //blue
 	}
 }
-void updateEmphesisCB(Fl_Widget*,void*){
-	currentProject->subSystem&=~((NESempMask<<NESempShift)|(NESempMask<<NESempShiftAlt));
-	currentProject->subSystem|=(unsigned)palBar.slide[palBar.toTab(mode_editor)][2]->value()<<NESempShift;
-	currentProject->subSystem|=(unsigned)palBar.slide[palBar.toTab(spriteEditor)][2]->value()<<NESempShiftAlt;
+void updateEmphesisCB(Fl_Widget*, void*) {
+	currentProject->subSystem &= ~((NESempMask << NESempShift) | (NESempMask << NESempShiftAlt));
+	currentProject->subSystem |= (unsigned)palBar.slide[palBar.toTab(mode_editor)][2]->value() << NESempShift;
+	currentProject->subSystem |= (unsigned)palBar.slide[palBar.toTab(spriteEditor)][2]->value() << NESempShiftAlt;
 	updateEmphesis();
 	window->redraw();
 }

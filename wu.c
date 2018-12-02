@@ -48,7 +48,7 @@ The author thanks Tom Lane at Tom_Lane@G.GP.CS.CMU.EDU for much of
 additional documentation and a cure to a previous bug.
 
 Free to distribute, comments and suggestions are appreciated.
-**********************************************************************/	
+**********************************************************************/
 #include <stdint.h>
 #include <math.h>
 #include <stdlib.h>
@@ -57,9 +57,10 @@ Free to distribute, comments and suggestions are appreciated.
 #define	RED	2
 #define	GREEN	1
 #define BLUE	0
-static int quan_sqrt=0;
-struct box { int r0, r1, g0, g1, b0, b1, vol;	// min value, exclusive. max value, inclusive
-		};
+static int quan_sqrt = 0;
+struct box {
+	int r0, r1, g0, g1, b0, b1, vol;	// min value, exclusive. max value, inclusive
+};
 
 /* Histogram is in elements 1..HISTSIZE along each axis,
  * element 0 is for base or marginal value
@@ -72,37 +73,40 @@ static int	*wt, *mr, *mg, *mb;
 static int	size; // image size
 static int	K;    // color look-up table size
 
-static void Hist3d(uint8_t * inbuf,int* vwt,int* vmr,int* vmg,int* vmb){ 	// build 3-D color histogram of counts, r/g/b, c^2
+static void Hist3d(uint8_t * inbuf, int* vwt, int* vmr, int* vmg, int* vmb) { 	// build 3-D color histogram of counts, r/g/b, c^2
 	register int ind, r, g, b;
 	int	     inr, ing, inb, table[256];
 	register long int i;
-		
-	for(i=0; i<256; ++i) table[i]=i*i;
 
-	for(i=0; i<size; ++i)
+	for (i = 0; i < 256; ++i) table[i] = i * i;
+
+	for (i = 0; i < size; ++i)
 	{
 		r = inbuf[0];
 		g = inbuf[1];
 		b = inbuf[2];
 		inbuf += 3;
-		inr=(r>>3)+1; 
-		ing=(g>>3)+1; 
-		inb=(b>>3)+1; 
-		ind=(inr<<10)+(inr<<6)+inr+(ing<<5)+ing+inb;
+		inr = (r >> 3) + 1;
+		ing = (g >> 3) + 1;
+		inb = (b >> 3) + 1;
+		ind = (inr << 10) + (inr << 6) + inr + (ing << 5) + ing + inb;
 		// [inr][ing][inb]
 		++vwt[ind];
 		vmr[ind] += r;
 		vmg[ind] += g;
 		vmb[ind] += b;
-		m2[ind] += table[r]+table[g]+table[b];
+		m2[ind] += table[r] + table[g] + table[b];
 	}
 
 	if (!quan_sqrt) return;
+
 	// "Diameter weighting" in action
 	for (i = 0; i < 33 * 33 * 33; i++)
 	{
 		double d;
+
 		if (!vwt[i]) continue;
+
 		d = vwt[i];
 		d = (vwt[i] = sqrt(d)) / d;
 		vmr[i] *= d;
@@ -125,24 +129,26 @@ static void Hist3d(uint8_t * inbuf,int* vwt,int* vmr,int* vmg,int* vmb){ 	// bui
  */
 
 
-static void M3d(int* vwt,int* vmr,int* vmg,int* vmb){	// compute cumulative moments.
+static void M3d(int* vwt, int* vmr, int* vmg, int* vmb) {	// compute cumulative moments.
 	register unsigned short int ind1, ind2;
 	register unsigned char i, r, g, b;
 	long int line, line_r, line_g, line_b, area[33], area_r[33], area_g[33], area_b[33];
 	double line2, area2[33];
 
-	for(r=1; r<=32; ++r)
+	for (r = 1; r <= 32; ++r)
 	{
-		for(i=0; i<=32; ++i) area2[i]=area[i]=area_r[i]=area_g[i]=area_b[i]=0;
-		for(g=1; g<=32; ++g)
+		for (i = 0; i <= 32; ++i) area2[i] = area[i] = area_r[i] = area_g[i] = area_b[i] = 0;
+
+		for (g = 1; g <= 32; ++g)
 		{
 			line2 = line = line_r = line_g = line_b = 0;
-			for(b=1; b<=32; ++b)
+
+			for (b = 1; b <= 32; ++b)
 			{
-				ind1 = (r<<10) + (r<<6) + r + (g<<5) + g + b;	// [r][g][b]
+				ind1 = (r << 10) + (r << 6) + r + (g << 5) + g + b;	// [r][g][b]
 				line += vwt[ind1];
-				line_r += vmr[ind1]; 
-				line_g += vmg[ind1]; 
+				line_r += vmr[ind1];
+				line_g += vmg[ind1];
 				line_b += vmb[ind1];
 				line2 += m2[ind1];
 				area[b] += line;
@@ -162,15 +168,15 @@ static void M3d(int* vwt,int* vmr,int* vmg,int* vmb){	// compute cumulative mome
 }
 
 
-static long int Vol(struct box* cube, int mmt[33][33][33]){			// Compute sum over a box of any given statistic
-	return( mmt[cube->r1][cube->g1][cube->b1]
-		-mmt[cube->r1][cube->g1][cube->b0]
-		-mmt[cube->r1][cube->g0][cube->b1]
-		+mmt[cube->r1][cube->g0][cube->b0]
-		-mmt[cube->r0][cube->g1][cube->b1]
-		+mmt[cube->r0][cube->g1][cube->b0]
-		+mmt[cube->r0][cube->g0][cube->b1]
-		-mmt[cube->r0][cube->g0][cube->b0] );
+static long int Vol(struct box* cube, int mmt[33][33][33]) {			// Compute sum over a box of any given statistic
+	return ( mmt[cube->r1][cube->g1][cube->b1]
+	         - mmt[cube->r1][cube->g1][cube->b0]
+	         - mmt[cube->r1][cube->g0][cube->b1]
+	         + mmt[cube->r1][cube->g0][cube->b0]
+	         - mmt[cube->r0][cube->g1][cube->b1]
+	         + mmt[cube->r0][cube->g1][cube->b0]
+	         + mmt[cube->r0][cube->g0][cube->b1]
+	         - mmt[cube->r0][cube->g0][cube->b0] );
 }
 
 /* The next two routines allow a slightly more efficient calculation
@@ -179,79 +185,85 @@ static long int Vol(struct box* cube, int mmt[33][33][33]){			// Compute sum ove
  * and with the specified new upper bound.
  */
 
-static long int Bottom(struct box *cube, unsigned char dir, int mmt[33][33][33]){
+static long int Bottom(struct box *cube, unsigned char dir, int mmt[33][33][33]) {
 // Compute part of Vol(cube, mmt) that doesn't depend on r1, g1, or b1
 // (depending on dir)
-	switch(dir)
+	switch (dir)
 	{
-		case RED:
-			return( -mmt[cube->r0][cube->g1][cube->b1]
-				+mmt[cube->r0][cube->g1][cube->b0]
-				+mmt[cube->r0][cube->g0][cube->b1]
-				-mmt[cube->r0][cube->g0][cube->b0] );
-			break;
-		case GREEN:
-			return( -mmt[cube->r1][cube->g0][cube->b1]
-				+mmt[cube->r1][cube->g0][cube->b0]
-				+mmt[cube->r0][cube->g0][cube->b1]
-				-mmt[cube->r0][cube->g0][cube->b0] );
-			break;
-		case BLUE:
-			return( -mmt[cube->r1][cube->g1][cube->b0]
-				+mmt[cube->r1][cube->g0][cube->b0]
-				+mmt[cube->r0][cube->g1][cube->b0]
-				-mmt[cube->r0][cube->g0][cube->b0] );
-			break;
+	case RED:
+		return ( -mmt[cube->r0][cube->g1][cube->b1]
+		         + mmt[cube->r0][cube->g1][cube->b0]
+		         + mmt[cube->r0][cube->g0][cube->b1]
+		         - mmt[cube->r0][cube->g0][cube->b0] );
+		break;
+
+	case GREEN:
+		return ( -mmt[cube->r1][cube->g0][cube->b1]
+		         + mmt[cube->r1][cube->g0][cube->b0]
+		         + mmt[cube->r0][cube->g0][cube->b1]
+		         - mmt[cube->r0][cube->g0][cube->b0] );
+		break;
+
+	case BLUE:
+		return ( -mmt[cube->r1][cube->g1][cube->b0]
+		         + mmt[cube->r1][cube->g0][cube->b0]
+		         + mmt[cube->r0][cube->g1][cube->b0]
+		         - mmt[cube->r0][cube->g0][cube->b0] );
+		break;
 	}
+
 	return 0;
 }
 
 
-static long int Top(struct box* cube,unsigned char  dir,int pos, int mmt[33][33][33]){
+static long int Top(struct box* cube, unsigned char  dir, int pos, int mmt[33][33][33]) {
 // Compute remainder of Vol(cube, mmt), substituting pos for
 // r1, g1, or b1 (depending on dir)
-	switch(dir)
+	switch (dir)
 	{
-		case RED:
-			return( mmt[pos][cube->g1][cube->b1] 
-				-mmt[pos][cube->g1][cube->b0]
-				-mmt[pos][cube->g0][cube->b1]
-				+mmt[pos][cube->g0][cube->b0] );
-			break;
-		case GREEN:
-			return( mmt[cube->r1][pos][cube->b1] 
-				-mmt[cube->r1][pos][cube->b0]
-				-mmt[cube->r0][pos][cube->b1]
-				+mmt[cube->r0][pos][cube->b0] );
-			break;
-		case BLUE:
-			return( mmt[cube->r1][cube->g1][pos]
-				-mmt[cube->r1][cube->g0][pos]
-				-mmt[cube->r0][cube->g1][pos]
-				+mmt[cube->r0][cube->g0][pos] );
-			break;
+	case RED:
+		return ( mmt[pos][cube->g1][cube->b1]
+		         - mmt[pos][cube->g1][cube->b0]
+		         - mmt[pos][cube->g0][cube->b1]
+		         + mmt[pos][cube->g0][cube->b0] );
+		break;
+
+	case GREEN:
+		return ( mmt[cube->r1][pos][cube->b1]
+		         - mmt[cube->r1][pos][cube->b0]
+		         - mmt[cube->r0][pos][cube->b1]
+		         + mmt[cube->r0][pos][cube->b0] );
+		break;
+
+	case BLUE:
+		return ( mmt[cube->r1][cube->g1][pos]
+		         - mmt[cube->r1][cube->g0][pos]
+		         - mmt[cube->r0][cube->g1][pos]
+		         + mmt[cube->r0][cube->g0][pos] );
+		break;
 	}
+
 	return 0;
 }
 
 
-static double Var(struct box *cube){
+static double Var(struct box *cube) {
 // Compute the weighted variance of a box
 // NB: as with the raw statistics, this is really the variance * size
 	double dr, dg, db, xx;
 
-	dr = Vol(cube, mr); 
-	dg = Vol(cube, mg); 
+	dr = Vol(cube, mr);
+	dg = Vol(cube, mg);
 	db = Vol(cube, mb);
-	xx =     m2[ 33*33*cube->r1 + 33*cube->g1 + cube->b1] 
-		-m2[ 33*33*cube->r1 + 33*cube->g1 + cube->b0]
-		-m2[ 33*33*cube->r1 + 33*cube->g0 + cube->b1]
-		+m2[ 33*33*cube->r1 + 33*cube->g0 + cube->b0]
-		-m2[ 33*33*cube->r0 + 33*cube->g1 + cube->b1]
-		+m2[ 33*33*cube->r0 + 33*cube->g1 + cube->b0]
-		+m2[ 33*33*cube->r0 + 33*cube->g0 + cube->b1]
-		-m2[ 33*33*cube->r0 + 33*cube->g0 + cube->b0];
-	return( xx - (dr*dr+dg*dg+db*db)/(double)Vol(cube,wt) );    
+	xx =     m2[ 33 * 33 * cube->r1 + 33 * cube->g1 + cube->b1]
+	         - m2[ 33 * 33 * cube->r1 + 33 * cube->g1 + cube->b0]
+	         - m2[ 33 * 33 * cube->r1 + 33 * cube->g0 + cube->b1]
+	         + m2[ 33 * 33 * cube->r1 + 33 * cube->g0 + cube->b0]
+	         - m2[ 33 * 33 * cube->r0 + 33 * cube->g1 + cube->b1]
+	         + m2[ 33 * 33 * cube->r0 + 33 * cube->g1 + cube->b0]
+	         + m2[ 33 * 33 * cube->r0 + 33 * cube->g0 + cube->b1]
+	         - m2[ 33 * 33 * cube->r0 + 33 * cube->g0 + cube->b0];
+	return ( xx - (dr * dr + dg * dg + db * db) / (double)Vol(cube, wt) );
 }
 
 /* We want to minimize the sum of the variances of two subboxes.
@@ -262,7 +274,7 @@ static double Var(struct box *cube){
  */
 
 
-static double Maximize(struct box *cube,unsigned char dir,int first,int last,int* cut,long int whole_r,long int whole_g,long int whole_b,long int whole_w){
+static double Maximize(struct box *cube, unsigned char dir, int first, int last, int* cut, long int whole_r, long int whole_g, long int whole_b, long int whole_w) {
 	register long int half_r, half_g, half_b, half_w;
 	long int base_r, base_g, base_b, base_w;
 	register int i;
@@ -275,36 +287,39 @@ static double Maximize(struct box *cube,unsigned char dir,int first,int last,int
 	max = 0.0;
 	*cut = -1;
 
-	for(i=first; i<last; ++i)
+	for (i = first; i < last; ++i)
 	{
 		half_r = base_r + Top(cube, dir, i, mr);
 		half_g = base_g + Top(cube, dir, i, mg);
 		half_b = base_b + Top(cube, dir, i, mb);
 		half_w = base_w + Top(cube, dir, i, wt);
+
 		// now half_x is sum over lower half of box, if split at i
 		if (half_w == 0)
-		{				// subbox could be empty of pixels!
+		{	// subbox could be empty of pixels!
 			continue;		// never split into an empty box
 		}
-		else temp = ((double)half_r*half_r + (double)half_g*half_g + (double)half_b*half_b)/half_w;
+		else temp = ((double)half_r * half_r + (double)half_g * half_g + (double)half_b * half_b) / half_w;
 
 		half_r = whole_r - half_r;
 		half_g = whole_g - half_g;
 		half_b = whole_b - half_b;
 		half_w = whole_w - half_w;
+
 		if (half_w == 0)
-		{				// subbox could be empty of pixels!
+		{	// subbox could be empty of pixels!
 			continue;		// never split into an empty box
 		}
-		else temp += ((double)half_r*half_r + (double)half_g*half_g + (double)half_b*half_b)/half_w;
+		else temp += ((double)half_r * half_r + (double)half_g * half_g + (double)half_b * half_b) / half_w;
 
 		if (temp > max)
 		{
-			max=temp;
-			*cut=i;
+			max = temp;
+			*cut = i;
 		}
 	}
-	return(max);
+
+	return (max);
 }
 
 static int Cut(struct box *set1, struct box *set2)
@@ -319,20 +334,20 @@ static int Cut(struct box *set1, struct box *set2)
 	whole_b = Vol(set1, mb);
 	whole_w = Vol(set1, wt);
 
-	maxr = Maximize(set1, RED, set1->r0+1, set1->r1, &cutr, whole_r, whole_g, whole_b, whole_w);
-	maxg = Maximize(set1, GREEN, set1->g0+1, set1->g1, &cutg, whole_r, whole_g, whole_b, whole_w);
-	maxb = Maximize(set1, BLUE, set1->b0+1, set1->b1, &cutb, whole_r, whole_g, whole_b, whole_w);
+	maxr = Maximize(set1, RED, set1->r0 + 1, set1->r1, &cutr, whole_r, whole_g, whole_b, whole_w);
+	maxg = Maximize(set1, GREEN, set1->g0 + 1, set1->g1, &cutg, whole_r, whole_g, whole_b, whole_w);
+	maxb = Maximize(set1, BLUE, set1->b0 + 1, set1->b1, &cutb, whole_r, whole_g, whole_b, whole_w);
 
-	if( (maxr>=maxg)&&(maxr>=maxb) )
+	if ( (maxr >= maxg) && (maxr >= maxb) )
 	{
 		dir = RED;
+
 		if (cutr < 0) return 0;		// can't split the box
 	}
-	else
-	if( (maxg>=maxr)&&(maxg>=maxb) ) 
+	else if ( (maxg >= maxr) && (maxg >= maxb) )
 		dir = GREEN;
 	else
-		dir = BLUE; 
+		dir = BLUE;
 
 	set2->r1 = set1->r1;
 	set2->g1 = set1->g1;
@@ -340,24 +355,27 @@ static int Cut(struct box *set1, struct box *set2)
 
 	switch (dir)
 	{
-		case RED:
-			set2->r0 = set1->r1 = cutr;
-			set2->g0 = set1->g0;
-			set2->b0 = set1->b0;
-			break;
-		case GREEN:
-			set2->g0 = set1->g1 = cutg;
-			set2->r0 = set1->r0;
-			set2->b0 = set1->b0;
-			break;
-		case BLUE:
-			set2->b0 = set1->b1 = cutb;
-			set2->r0 = set1->r0;
-			set2->g0 = set1->g0;
-			break;
+	case RED:
+		set2->r0 = set1->r1 = cutr;
+		set2->g0 = set1->g0;
+		set2->b0 = set1->b0;
+		break;
+
+	case GREEN:
+		set2->g0 = set1->g1 = cutg;
+		set2->r0 = set1->r0;
+		set2->b0 = set1->b0;
+		break;
+
+	case BLUE:
+		set2->b0 = set1->b1 = cutb;
+		set2->r0 = set1->r0;
+		set2->g0 = set1->g0;
+		break;
 	}
-	set1->vol=(set1->r1-set1->r0)*(set1->g1-set1->g0)*(set1->b1-set1->b0);
-	set2->vol=(set2->r1-set2->r0)*(set2->g1-set2->g0)*(set2->b1-set2->b0);
+
+	set1->vol = (set1->r1 - set1->r0) * (set1->g1 - set1->g0) * (set1->b1 - set1->b0);
+	set2->vol = (set2->r1 - set2->r0) * (set2->g1 - set2->g0) * (set2->b1 - set2->b0);
 
 	return 1;
 }
@@ -367,13 +385,13 @@ static void Mark(struct box *cube, int label, unsigned char *tag)
 {
 	register int r, g, b;
 
-	for(r=cube->r0+1; r<=cube->r1; ++r)
-		for(g=cube->g0+1; g<=cube->g1; ++g)
-			for(b=cube->b0+1; b<=cube->b1; ++b)
-				tag[(r<<10) + (r<<6) + r + (g<<5) + g + b] = label;
+	for (r = cube->r0 + 1; r <= cube->r1; ++r)
+		for (g = cube->g0 + 1; g <= cube->g1; ++g)
+			for (b = cube->b0 + 1; b <= cube->b1; ++b)
+				tag[(r << 10) + (r << 6) + r + (g << 5) + g + b] = label;
 }
 
-int wu_quant(unsigned char *inbuf, int width, int height, int quant_to, uint8_t pal[3][256]){
+int wu_quant(unsigned char *inbuf, int width, int height, int quant_to, uint8_t pal[3][256]) {
 	void *mem;
 	struct box	cube[MAXCOLOR];
 	unsigned char	*tag;
@@ -382,7 +400,7 @@ int wu_quant(unsigned char *inbuf, int width, int height, int quant_to, uint8_t 
 	double		vv[MAXCOLOR], temp;
 
 	K = quant_to;
-	size = width*height;
+	size = width * height;
 
 	/*mem = multialloc(MA_ALIGN_DOUBLE,
 		&m2, 33*33*33 * sizeof(double),
@@ -391,14 +409,16 @@ int wu_quant(unsigned char *inbuf, int width, int height, int quant_to, uint8_t 
 		&mg, 33*33*33 * sizeof(int),
 		&mb, 33*33*33 * sizeof(int),
 		&tag, 33*33*33, NULL);*/
-	mem=calloc(1,(33*33*33 * sizeof(double))+(4*33*33*33 * sizeof(int))+(33*33*33));
+	mem = calloc(1, (33 * 33 * 33 * sizeof(double)) + (4 * 33 * 33 * 33 * sizeof(int)) + (33 * 33 * 33));
+
 	if (!mem) return (-1);
-	m2=mem;
-	wt=mem+(33*33*33 * sizeof(double));
-	mr=mem+(33*33*33 * sizeof(int))+(33*33*33 * sizeof(double));
-	mg=mem+(2*33*33*33 * sizeof(int))+(33*33*33 * sizeof(double));
-	mb=mem+(3*33*33*33 * sizeof(int))+(33*33*33 * sizeof(double));
-	tag=mem+(4*33*33*33 * sizeof(int))+(33*33*33 * sizeof(double));
+
+	m2 = mem;
+	wt = mem + (33 * 33 * 33 * sizeof(double));
+	mr = mem + (33 * 33 * 33 * sizeof(int)) + (33 * 33 * 33 * sizeof(double));
+	mg = mem + (2 * 33 * 33 * 33 * sizeof(int)) + (33 * 33 * 33 * sizeof(double));
+	mb = mem + (3 * 33 * 33 * 33 * sizeof(int)) + (33 * 33 * 33 * sizeof(double));
+	tag = mem + (4 * 33 * 33 * 33 * sizeof(int)) + (33 * 33 * 33 * sizeof(double));
 
 	Hist3d(inbuf, wt, mr, mg, mb);
 	puts("Hist3d done");
@@ -408,20 +428,23 @@ int wu_quant(unsigned char *inbuf, int width, int height, int quant_to, uint8_t 
 	cube[0].r1 = cube[0].g1 = cube[0].b1 = 32;
 	next = 0;
 
-	for(i=1; i<K; ++i)
+	for (i = 1; i < K; ++i)
 	{
 		if (Cut(&cube[next], &cube[i]))
-		{		// volume test ensures we won't try to cut one-cell box
-			vv[next] = (cube[next].vol>1) ? Var(&cube[next]) : 0.0;
-			vv[i] = (cube[i].vol>1) ? Var(&cube[i]) : 0.0;
+		{	// volume test ensures we won't try to cut one-cell box
+			vv[next] = (cube[next].vol > 1) ? Var(&cube[next]) : 0.0;
+			vv[i] = (cube[i].vol > 1) ? Var(&cube[i]) : 0.0;
 		}
 		else
 		{
 			vv[next] = 0.0;		// don't try to split this box again
 			i--;  	   		// didn't create box i
 		}
-		next = 0; temp = vv[0];
-		for(k=1; k<=i; ++k)
+
+		next = 0;
+		temp = vv[0];
+
+		for (k = 1; k <= i; ++k)
 			if (vv[k] > temp)
 			{
 				temp = vv[k];
@@ -430,15 +453,16 @@ int wu_quant(unsigned char *inbuf, int width, int height, int quant_to, uint8_t 
 
 		if (temp <= 0.0)
 		{
-			K = i+1;		// Only got K boxes
+			K = i + 1;		// Only got K boxes
 			break;
 		}
 	}
 
-	for(k=0; k<K; ++k)
+	for (k = 0; k < K; ++k)
 	{
 		Mark(&cube[k], k, tag);
 		weight = Vol(&cube[k], wt);
+
 		if (weight)
 		{
 			pal[0][k] = Vol(&cube[k], mr) / weight;
@@ -447,6 +471,7 @@ int wu_quant(unsigned char *inbuf, int width, int height, int quant_to, uint8_t 
 		}
 		else pal[0][k] = pal[1][k] = pal[2][k] = 0;	// Bogus box
 	}
+
 	free(mem);
 	puts("Wu done");
 	return (0);

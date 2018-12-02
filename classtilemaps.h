@@ -12,27 +12,27 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
 #include "includes.h"
 #include "classtilemap.h"
-class tilemaps{
+class tilemaps {
 public:
 	Project*prj;
 	std::vector<class tileMap> maps;
 	std::vector<std::string> planeName;
 	tilemaps(Project*prj);
-	tilemaps(const tilemaps&other,Project*prj);
+	tilemaps(const tilemaps&other, Project*prj);
 	void setPlaneCnt(unsigned cnt);
-	void assignNum(unsigned i){
+	void assignNum(unsigned i) {
 		char tmp[16];
-		snprintf(tmp,16,"%u",i);
+		snprintf(tmp, 16, "%u", i);
 		planeName[i].assign(tmp);
 	}
-	void removePlane(unsigned which){
-		maps.erase(maps.begin()+which);
-		planeName.erase(planeName.begin()+which);
+	void removePlane(unsigned which) {
+		maps.erase(maps.begin() + which);
+		planeName.erase(planeName.begin() + which);
 	}
 	void changePrjPtr(Project*prj);
 };

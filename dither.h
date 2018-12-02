@@ -12,8 +12,8 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
 #include <inttypes.h>
-void*ditherImage(uint8_t * image,uint32_t w,uint32_t h,bool useAlpha=false,bool colSpace=false,bool forceRow=false,unsigned forcedrow=0,bool isChunk=false,uint32_t idChunk=0,bool isSprite=false,bool toIndex=false);
+void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha = false, bool colSpace = false, bool forceRow = false, unsigned forcedrow = 0, bool isChunk = false, uint32_t idChunk = 0, bool isSprite = false, bool toIndex = false);

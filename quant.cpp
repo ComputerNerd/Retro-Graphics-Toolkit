@@ -55,7 +55,7 @@ typedef struct
 {
 	unsigned char palette_index, red, green, blue;
 	unsigned long distance;
-	unsigned long squares[255+255+1];
+	unsigned long squares[255 + 255 + 1];
 } CLOSEST_INFO;
 
 static void	copy_pal(unsigned char userpal[3][256]);
@@ -139,16 +139,19 @@ int dl1quant(unsigned char *inbuf, int width, int height, int quant_to, unsigned
 		did_init = 1;
 		dlq_init();
 	}
+
 	if (dlq_start() == 0)
 	{
 		dlq_finish();
 		return 1;
 	}
+
 	if (build_table1(inbuf, (unsigned long)width * (unsigned long)height) == 0)
 	{
 		dlq_finish();
 		return 1;
 	}
+
 	reduce_table1(quant_to);
 	set_palette1(0, 0);
 
@@ -177,14 +180,15 @@ static void dlq_init(void)
 	for (i = 0; i < 256; i++)
 	{
 		r_offset[i] = (i & 128) << 7 | (i & 64) << 5 | (i & 32) << 3 |
-			(i & 16)  << 1 | (i & 8)  >> 1;
+		              (i & 16)  << 1 | (i & 8)  >> 1;
 		g_offset[i] = (i & 128) << 6 | (i & 64) << 4 | (i & 32) << 2 |
-			(i & 16)  << 0 | (i & 8)  >> 2;
+		              (i & 16)  << 0 | (i & 8)  >> 2;
 		b_offset[i] = (i & 128) << 5 | (i & 64) << 3 | (i & 32) << 1 |
-			(i & 16)  >> 1 | (i & 8)  >> 3;
+		              (i & 16)  >> 1 | (i & 8)  >> 3;
 	}
 
-	for (i = -255; i <= 255; i++) c_info.squares[i+255] = i*i;
+	for (i = -255; i <= 255; i++) c_info.squares[i + 255] = i * i;
+
 	squares1 = c_info.squares + 255;
 }
 
@@ -208,13 +212,19 @@ static int dlq_start(void)
 static void dlq_finish(void)
 {
 	if (rgb_table1[0] != NULL) free(rgb_table1[0]);
+
 	if (rgb_table1[1] != NULL) free(rgb_table1[1]);
+
 	if (rgb_table1[2] != NULL) free(rgb_table1[2]);
+
 	if (rgb_table1[3] != NULL) free(rgb_table1[3]);
+
 	if (rgb_table1[4] != NULL) free(rgb_table1[4]);
+
 	if (rgb_table1[5] != NULL) free(rgb_table1[5]);
 
 	if (heap != NULL) free(heap);
+
 	if (dl_image != NULL) free(dl_image);
 }
 
@@ -225,6 +235,7 @@ static int build_table1(unsigned char *image, unsigned long pixels)
 	long j;
 
 	heap = (FCUBE *) malloc(sizeof(FCUBE) * 32769);
+
 	if (heap == NULL) return 0;
 
 	for (i = 0; i < pixels; i++)
@@ -240,9 +251,11 @@ static int build_table1(unsigned char *image, unsigned long pixels)
 	}
 
 	tot_colors = 0;
+
 	for (i = 0; i < 32768; i++)
 	{
 		cur_count = rgb_table1[5][i].pixel_count;
+
 		if (cur_count)
 		{
 			heap[++tot_colors].level = 5;
@@ -250,6 +263,7 @@ static int build_table1(unsigned char *image, unsigned long pixels)
 			rgb_table1[5][i].pixels_in_cube = cur_count;
 
 			head = i;
+
 			for (j = 4; j >= 0; j--)
 			{
 				tail = head & 0x7;
@@ -269,15 +283,15 @@ static void fixheap(unsigned long id)
 {
 	unsigned char thres_level = heap[id].level;
 	unsigned long thres_index = heap[id].index, index, half_totc = tot_colors >> 1,
-	thres_val = rgb_table1[thres_level][thres_index].pixels_in_cube;
+	              thres_val = rgb_table1[thres_level][thres_index].pixels_in_cube;
 
 	while (id <= half_totc)
 	{
 		index = id << 1;
 
 		if (index < tot_colors)
-		if (rgb_table1[heap[index].level][heap[index].index].pixels_in_cube
-			> rgb_table1[heap[index+1].level][heap[index+1].index].pixels_in_cube)
+			if (rgb_table1[heap[index].level][heap[index].index].pixels_in_cube
+			        > rgb_table1[heap[index + 1].level][heap[index + 1].index].pixels_in_cube)
 				index++;
 
 		if (thres_val <= rgb_table1[heap[index].level][heap[index].index].pixels_in_cube)
@@ -288,6 +302,7 @@ static void fixheap(unsigned long id)
 			id = index;
 		}
 	}
+
 	heap[id].level = thres_level;
 	heap[id].index = thres_index;
 }
@@ -305,6 +320,7 @@ static void reduce_table1(int num_colors)
 			heap[1].level = t_level;
 			heap[1].index = t_index;
 		}
+
 		rgb_table1[t_level][t_index].pixel_count += rgb_table1[tmp_level][tmp_index].pixel_count;
 		rgb_table1[t_level][t_index].r += rgb_table1[tmp_level][tmp_index].r;
 		rgb_table1[t_level][t_index].g += rgb_table1[tmp_level][tmp_index].g;
@@ -348,7 +364,7 @@ static void set_palette1(int index, int level)
 
 static void	build_table3(unsigned char *image, int size);
 inline static unsigned long	calc_err(int, int);
-static int reduce_table3(int num_colors,bool showProgress,Fl_Progress *progress);
+static int reduce_table3(int num_colors, bool showProgress, Fl_Progress *progress);
 static void	set_palette3(void);
 static int	bestcolor3(int r, int g, int b);
 
@@ -395,10 +411,10 @@ static int	bestcolor3(int r, int g, int b);
  *
  */
 
-static long sqr_tbl[255+255+1], *squares3;
+static long sqr_tbl[255 + 255 + 1], *squares3;
 
 int dl3floste(unsigned char *inbuf, unsigned char *outbuf, int width, int height,
-			int quant_to, int dither, unsigned char userpal[3][256])
+              int quant_to, int dither, unsigned char userpal[3][256])
 {
 	// This procedure was written by M.Tyler to quantize with current palette
 
@@ -407,8 +423,9 @@ int dl3floste(unsigned char *inbuf, unsigned char *outbuf, int width, int height
 	if (init_table() == 0) return 1;
 
 	tot_colors = quant_to;
-	for (i=0; i<quant_to; i++)
-		for (j=0; j<3; j++)
+
+	for (i = 0; i < quant_to; i++)
+		for (j = 0; j < 3; j++)
 			Nerdpalette[j][i] = userpal[j][i];
 
 	if (quantize_image3(inbuf, outbuf, width, height, dither) == 0)
@@ -416,17 +433,21 @@ int dl3floste(unsigned char *inbuf, unsigned char *outbuf, int width, int height
 		free(rgb_table3);
 		return 1;
 	}
+
 	free(rgb_table3);
 
 	return 0;
 }
 
 //static uint8_t useageYUV;
-int dl3quant(unsigned char *inbuf, int width, int height, int quant_to, unsigned char userpal[3][256],bool showProgress,Fl_Progress *progress){
+int dl3quant(unsigned char *inbuf, int width, int height, int quant_to, unsigned char userpal[3][256], bool showProgress, Fl_Progress *progress) {
 	//useageYUV=yuv;
 	if (init_table() == 0) return 1;
+
 	build_table3(inbuf, width * height);
-	if ( reduce_table3(quant_to,showProgress,progress)) return 0;	// Return if stop button pressed
+
+	if ( reduce_table3(quant_to, showProgress, progress)) return 0;	// Return if stop button pressed
+
 	set_palette3();
 	copy_pal(userpal);
 	return 0;		// Success
@@ -440,7 +461,7 @@ static int init_table(void)
 
 	if (rgb_table3 == NULL) return 0;
 
-	for (i = (-255); i <= 255; i++) sqr_tbl[i+255] = i*i;
+	for (i = (-255); i <= 255; i++) sqr_tbl[i + 255] = i * i;
 
 	squares3 = sqr_tbl + 255;
 
@@ -461,7 +482,7 @@ static void build_table3(unsigned char *image, int size)
 
 	for (i = 0; i < size; i++)
 	{
-		index = ((image[0]&248)<<7) + ((image[1]&248)<<2) + (image[2]>>3);
+		index = ((image[0] & 248) << 7) + ((image[1] & 248) << 2) + (image[2] >> 3);
 		/*if(useageYUV)
 			rgb_table3[index].r += image[0]*5/2;
 		else*/
@@ -473,6 +494,7 @@ static void build_table3(unsigned char *image, int size)
 	}
 
 	tot_colors = 0;
+
 	for (i = 0; i < 32768; i++)
 		if (rgb_table3[i].pixel_count)
 		{
@@ -516,15 +538,18 @@ static void recount_next(int i)
 	unsigned long err, cur_err;
 
 	err = ~0L;
+
 	for (j = i + 1; j < tot_colors; j++)
 	{
 		cur_err = calc_err(i, j);
+
 		if (cur_err < err)
 		{
 			err = cur_err;
 			c2 = j;
 		}
 	}
+
 	rgb_table3[i].err = err;
 	rgb_table3[i].cc = c2;
 }
@@ -535,12 +560,14 @@ static void recount_dist(int c1)
 	unsigned long cur_err;
 
 	recount_next(c1);
+
 	for (i = 0; i < c1; i++)
 	{
 		if (rgb_table3[i].cc == c1) recount_next(i);
 		else
 		{
 			cur_err = calc_err(i, c1);
+
 			if (cur_err < rgb_table3[i].err)
 			{
 				rgb_table3[i].err = cur_err;
@@ -550,56 +577,63 @@ static void recount_dist(int c1)
 	}
 }
 
-static int reduce_table3(int num_colors,bool showProgress,Fl_Progress *progress)
+static int reduce_table3(int num_colors, bool showProgress, Fl_Progress *progress)
 {
-	int i, c1=0, c2=0, grand_total, bailout = FALSE;
+	int i, c1 = 0, c2 = 0, grand_total, bailout = FALSE;
 	unsigned long err;
 	// Make the progress bar
 
 	if (!progress)
-		showProgress=false;
+		showProgress = false;
+
 	if (showProgress)
 		progress->label("Quantize Pass 1");
 	else
 		puts("Quantize Pass 1");
+
 	for (i = 0; i < (tot_colors - 1); i++)
 	{
 		//if ( i%32 == 0 ) printf("%% %f\r",((float)i) / (tot_colors-1)); //bailout = progress_update( ((float) i) / (tot_colors-1) );
 		//if (bailout) goto stop;
-		if ( i%512 == 0 )
+		if ( i % 512 == 0 )
 		{
 			if (showProgress)
 			{
-				progress->value(((float)i) / (tot_colors-1));
+				progress->value(((float)i) / (tot_colors - 1));
 				Fl::check();
 			}
 		}
+
 		recount_next(i);
 	}
 
 	rgb_table3[i].err = ~0L;
 	rgb_table3[i].cc = tot_colors;
 
-	grand_total = tot_colors-num_colors;
+	grand_total = tot_colors - num_colors;
+
 	if (showProgress)
 		progress->label("Quantize Pass 2");
 	else
 		puts("Quantize Pass 2");
+
 	while (tot_colors > num_colors)
 	{
 		//if ( (tot_colors-num_colors)%8 == 0 )
 		//	printf("%% %f\r",((float) (grand_total-tot_colors+num_colors))/grand_total); //progress_update( ((float) (grand_total-tot_colors+num_colors)) /
-				//grand_total );
+		//grand_total );
 		//if (bailout) goto stop;
-		if ( (tot_colors-num_colors)%384 == 0 )
+		if ( (tot_colors - num_colors) % 384 == 0 )
 		{
 			if (showProgress)
 			{
-				progress->value(((float) (grand_total-tot_colors+num_colors))/grand_total);
+				progress->value(((float) (grand_total - tot_colors + num_colors)) / grand_total);
 				Fl::check();
 			}
 		}
+
 		err = ~0L;
+
 		for (i = 0; i < tot_colors; i++)
 		{
 			if (rgb_table3[i].err < err)
@@ -608,6 +642,7 @@ static int reduce_table3(int num_colors,bool showProgress,Fl_Progress *progress)
 				c1 = i;
 			}
 		}
+
 		c2 = rgb_table3[c1].cc;
 		rgb_table3[c2].r += rgb_table3[c1].r;
 		rgb_table3[c2].g += rgb_table3[c1].g;
@@ -617,8 +652,8 @@ static int reduce_table3(int num_colors,bool showProgress,Fl_Progress *progress)
 		tot_colors--;
 
 		rgb_table3[c1] = rgb_table3[tot_colors];
-		rgb_table3[tot_colors-1].err = ~0L;
-		rgb_table3[tot_colors-1].cc = tot_colors;
+		rgb_table3[tot_colors - 1].err = ~0L;
+		rgb_table3[tot_colors - 1].cc = tot_colors;
 
 		for (i = 0; i < c1; i++)
 		{
@@ -631,8 +666,10 @@ static int reduce_table3(int num_colors,bool showProgress,Fl_Progress *progress)
 		}
 
 		recount_dist(c1);
+
 		if (c2 != tot_colors) recount_dist(c2);
 	}
+
 stop:
 	return 0;
 }
@@ -649,6 +686,7 @@ static void set_palette3(void)
 		Nerdpalette[1][i] = rgb_table3[i].gg;
 		Nerdpalette[2][i] = rgb_table3[i].bb;
 	}
+
 	free(rgb_table3);
 }
 
@@ -670,7 +708,7 @@ static int quantize_image3(unsigned char *in, unsigned char *out, int width, int
 	}
 	else
 	{
-		range_tbl =(unsigned char *) malloc(3 * 256);
+		range_tbl = (unsigned char *) malloc(3 * 256);
 		range = range_tbl + 256;
 		lookup  = (signed short *) malloc(sizeof(short) * 32768);
 		erowerr = (signed short *) malloc(sizeof(short) * err_len);
@@ -679,13 +717,18 @@ static int quantize_image3(unsigned char *in, unsigned char *out, int width, int
 		dith_max = dith_max_tbl + 256;
 
 		if (range_tbl == NULL || lookup == NULL ||
-			erowerr == NULL || orowerr == NULL || dith_max_tbl == NULL)
+		        erowerr == NULL || orowerr == NULL || dith_max_tbl == NULL)
 		{
 			if (range_tbl != NULL) free(range_tbl);
+
 			if (lookup != NULL) free(lookup);
+
 			if (erowerr != NULL) free(erowerr);
+
 			if (orowerr != NULL) free(orowerr);
+
 			if (dith_max_tbl != NULL) free(dith_max_tbl);
+
 			return 0;
 		}
 
@@ -705,6 +748,7 @@ static int quantize_image3(unsigned char *in, unsigned char *out, int width, int
 			dith_max_tbl[i] = -DITHER_MAX;
 			dith_max_tbl[i + 256] = DITHER_MAX;
 		}
+
 		for (i = -DITHER_MAX; i <= DITHER_MAX; i++)
 			dith_max_tbl[i + 256] = i;
 
@@ -724,14 +768,17 @@ static int quantize_image3(unsigned char *in, unsigned char *out, int width, int
 				thisrowerr = erowerr + 3;
 				nextrowerr = orowerr + width * 3;
 			}
+
 			nextrowerr[0] = nextrowerr[1] = nextrowerr[2] = 0;
+
 			for (j = 0; j < width; j++)
 			{
 				r_pix = range[((thisrowerr[0] + 8) >> 4) + in[0]];
 				g_pix = range[((thisrowerr[1] + 8) >> 4) + in[1]];
 				b_pix = range[((thisrowerr[2] + 8) >> 4) + in[2]];
 
-				offset = (r_pix&248) << 7 | (g_pix&248) << 2 | b_pix >> 3;
+				offset = (r_pix & 248) << 7 | (g_pix & 248) << 2 | b_pix >> 3;
+
 				if (lookup[offset] < 0)
 					lookup[offset] = bestcolor3(r_pix, g_pix, b_pix);
 
@@ -741,40 +788,42 @@ static int quantize_image3(unsigned char *in, unsigned char *out, int width, int
 				b_pix = dith_max[b_pix - Nerdpalette[2][lookup[offset]]];
 
 				two_val = r_pix * 2;
-				nextrowerr[0-3]  = r_pix;
+				nextrowerr[0 - 3]  = r_pix;
 				r_pix += two_val;
-				nextrowerr[0+3] += r_pix;
+				nextrowerr[0 + 3] += r_pix;
 				r_pix += two_val;
 				nextrowerr[0  ] += r_pix;
 				r_pix += two_val;
-				thisrowerr[0+3] += r_pix;
+				thisrowerr[0 + 3] += r_pix;
 				two_val = g_pix * 2;
-				nextrowerr[1-3]  = g_pix;
+				nextrowerr[1 - 3]  = g_pix;
 				g_pix += two_val;
-				nextrowerr[1+3] += g_pix;
+				nextrowerr[1 + 3] += g_pix;
 				g_pix += two_val;
 				nextrowerr[1  ] += g_pix;
 				g_pix += two_val;
-				thisrowerr[1+3] += g_pix;
+				thisrowerr[1 + 3] += g_pix;
 				two_val = b_pix * 2;
-				nextrowerr[2-3]  = b_pix;
+				nextrowerr[2 - 3]  = b_pix;
 				b_pix += two_val;
-				nextrowerr[2+3] += b_pix;
+				nextrowerr[2 + 3] += b_pix;
 				b_pix += two_val;
 				nextrowerr[2  ] += b_pix;
 				b_pix += two_val;
-				thisrowerr[2+3] += b_pix;
+				thisrowerr[2 + 3] += b_pix;
 
 				thisrowerr += 3;
 				nextrowerr -= 3;
 				in  += dir * 3;
 				out += dir;
 			}
+
 			if ((i % 2) == 1)
 			{
 				in  += (width + 1) * 3;
 				out += (width + 1);
 			}
+
 			odd_scanline = !odd_scanline;
 		}
 
@@ -784,26 +833,30 @@ static int quantize_image3(unsigned char *in, unsigned char *out, int width, int
 		free(orowerr);
 		free(dith_max_tbl);
 	}
+
 	return 1;
 }
 
 static int bestcolor3(int r, int g, int b)
 {
-	unsigned long i, bestcolor=0, curdist, mindist;
+	unsigned long i, bestcolor = 0, curdist, mindist;
 	long rdist, gdist, bdist;
 
 	mindist = 200000;
+
 	for (i = 0; i < tot_colors; i++)
 	{
 		rdist = Nerdpalette[0][i] - r;
 		gdist = Nerdpalette[1][i] - g;
 		bdist = Nerdpalette[2][i] - b;
 		curdist = squares3[rdist] + squares3[gdist] + squares3[bdist];
+
 		if (curdist < mindist)
 		{
 			mindist = curdist;
 			bestcolor = i;
 		}
 	}
+
 	return bestcolor;
 }

@@ -16,10 +16,12 @@
 --]]
 
 function switchSystemBefore(old,new)
-	if new==project.segaGenesis then
-		palTabSel:show()
-	else
-		palTabSel:hide()
+	if is_headless == 0 then
+		if new==project.segaGenesis then
+			palTabSel:show()
+		else
+			palTabSel:hide()
+		end
 	end
 end
 

@@ -12,11 +12,11 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
 #include <inttypes.h>
-struct settings{//TODO avoid hardcoding palette row amount
+struct settings { //TODO avoid hardcoding palette row amount
 	bool sprite;//Are we generating the palette for a sprite
 	unsigned off[MAX_ROWS_PALETTE];//Offsets for each row
 	unsigned alg;//Which algorithm should be used
@@ -28,6 +28,6 @@ struct settings{//TODO avoid hardcoding palette row amount
 	unsigned rowAuto;
 	int rowAutoEx[2];
 };
-void sub_tile_map(uint32_t oldTile,uint32_t newTile,bool hflip=false,bool vflip=false);
-void generate_optimal_palette(Fl_Widget*,void * row);
-void generate_optimal_paletteapply(Fl_Widget*,void*s);
+void sub_tile_map(uint32_t oldTile, uint32_t newTile, bool hflip = false, bool vflip = false);
+void generate_optimal_palette(Fl_Widget*, void * row);
+void generate_optimal_paletteapply(Fl_Widget*, void*s);

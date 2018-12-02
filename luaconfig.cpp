@@ -12,12 +12,14 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #include "luaconfig.h"
 #include "runlua.h"
 lua_State*Lconf;
-void startLuaConf(const char*fname){
-	Lconf=createLuaState();
-	runLua(Lconf,fname);
+void startLuaConf(const char*fname, bool isHeadless) {
+	Lconf = createLuaState();
+	lua_pushinteger(Lconf, (int)isHeadless);
+	lua_setglobal(Lconf, "is_headless");
+	runLua(Lconf, fname);
 }

@@ -20,12 +20,17 @@ This file allows you control various aspects of Retro Graphics Toolkit.
 For purposes of organization files are separated and included in this main file.
 For example menu.lua allows you to edit the shortcut keys to various menu items.
 --]]
+
 Fl.scheme('plastic')
-dofile "menu.lua"
-dofile "callbacks.lua"
-dofile "gui.lua"
-dofile "level.lua"
+if is_headless == 0 then
+	dofile "menu.lua"
+	dofile "callbacks.lua"
+	dofile "gui.lua"
+	dofile "level.lua"
+end
 dofile "project.lua"
 dofile "system.lua"
-dofile "filereader.lua"
+if is_headless == 0 then
+	dofile "filereader.lua"
+end
 --print('Code will execute here after the window is created but before the GUI controls are added')

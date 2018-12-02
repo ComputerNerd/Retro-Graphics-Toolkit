@@ -12,7 +12,7 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #include "includes.h"
 #include "gui.h"
@@ -22,118 +22,156 @@
 #include "enigma.h"
 #include "comper.h"
 #include "saxman.h"
-static const char*const TypeTab[]={"Uncompressed","Nemesis","Kosinski","Enigma","Saxman","Comper"};
-const char*typeToText(int type){
+static const char*const TypeTab[] = {"Uncompressed", "Nemesis", "Kosinski", "Enigma", "Saxman", "Comper"};
+const char*typeToText(int type) {
 	return TypeTab[type];
 }
-int compressionAsk(void){
-	return MenuPopup("Compression?","Select a compression algorithm or use uncompressed",6,0,TypeTab[0],TypeTab[1],TypeTab[2],TypeTab[3],TypeTab[4],TypeTab[5]);
+int compressionAsk(void) {
+	return MenuPopup("Compression?", "Select a compression algorithm or use uncompressed", 6, 0, TypeTab[0], TypeTab[1], TypeTab[2], TypeTab[3], TypeTab[4], TypeTab[5]);
 }
-std::string decodeTypeStr(const char * filename,size_t &filesize,int type){
+std::string decodeTypeStr(const char * filename, size_t &filesize, int type) {
 	std::stringstream outDecomp;
-	std::ifstream ifs (filename, std::ifstream::in|std::ifstream::binary);
-	switch(type){
-		case 1:
-			{nemesis decomp;
-			decomp.decode(ifs,outDecomp);}
-		break;
-		case 2:
-			{kosinski decomp;
-			decomp.decode(ifs,outDecomp);}
-		break;
-		case 3:
-			{enigma decomp;
-			decomp.decode(ifs,outDecomp);}
-		break;
-		case 4:
-			{saxman decomp;
-			decomp.decode(ifs,outDecomp);}
-		break;
-		case 5:
-			{comper decomp;
-			decomp.decode(ifs,outDecomp);}
-		break;
-		default:
-			show_default_error
+	std::ifstream ifs (filename, std::ifstream::in | std::ifstream::binary);
+
+	switch (type) {
+	case 1:
+	{	nemesis decomp;
+		decomp.decode(ifs, outDecomp);
 	}
-	filesize=outDecomp.str().length();
-	printf("Decompressed to %d bytes\n",filesize);
+	break;
+
+	case 2:
+	{	kosinski decomp;
+		decomp.decode(ifs, outDecomp);
+	}
+	break;
+
+	case 3:
+	{	enigma decomp;
+		decomp.decode(ifs, outDecomp);
+	}
+	break;
+
+	case 4:
+	{	saxman decomp;
+		decomp.decode(ifs, outDecomp);
+	}
+	break;
+
+	case 5:
+	{	comper decomp;
+		decomp.decode(ifs, outDecomp);
+	}
+	break;
+
+	default:
+		show_default_error
+	}
+
+	filesize = outDecomp.str().length();
+	printf("Decompressed to %d bytes\n", filesize);
 	return outDecomp.str();
 }
-void*decodeType(const char * filename,size_t &filesize,int type){
-	std::string output=decodeTypeStr(filename,filesize,type);
-	char * Dat=(char *)malloc(filesize);
+void*decodeType(const char * filename, size_t &filesize, int type) {
+	std::string output = decodeTypeStr(filename, filesize, type);
+	char * Dat = (char *)malloc(filesize);
 	output.copy(Dat, filesize);
 	return Dat;
 }
-void*decodeTypeRam(uint8_t*dat,size_t inputSize,size_t &filesize,int type){
-	std::stringstream ss,outDecomp;
-	for(size_t i=0;i<inputSize;++i)
-		ss<<dat[i];
-	switch(type){
-		case 1:
-			{nemesis decomp;
-			decomp.decode(ss,outDecomp);}
-		break;
-		case 2:
-			{kosinski decomp;
-			decomp.decode(ss,outDecomp);}
-		break;
-		case 3:
-			{enigma decomp;
-			decomp.decode(ss,outDecomp);}
-		break;
-		case 4:
-			{saxman decomp;
-			decomp.decode(ss,outDecomp);}
-		break;
-		case 5:
-			{comper decomp;
-			decomp.decode(ss,outDecomp);}
-		break;
-		default:
-			show_default_error
+void*decodeTypeRam(uint8_t*dat, size_t inputSize, size_t &filesize, int type) {
+	std::stringstream ss, outDecomp;
+
+	for (size_t i = 0; i < inputSize; ++i)
+		ss << dat[i];
+
+	switch (type) {
+	case 1:
+	{	nemesis decomp;
+		decomp.decode(ss, outDecomp);
 	}
-	filesize=outDecomp.str().length();
-	printf("Decompressed to %d bytes\n",filesize);
-	std::string out=outDecomp.str();
-	dat=(uint8_t*)malloc(filesize);
+	break;
+
+	case 2:
+	{	kosinski decomp;
+		decomp.decode(ss, outDecomp);
+	}
+	break;
+
+	case 3:
+	{	enigma decomp;
+		decomp.decode(ss, outDecomp);
+	}
+	break;
+
+	case 4:
+	{	saxman decomp;
+		decomp.decode(ss, outDecomp);
+	}
+	break;
+
+	case 5:
+	{	comper decomp;
+		decomp.decode(ss, outDecomp);
+	}
+	break;
+
+	default:
+		show_default_error
+	}
+
+	filesize = outDecomp.str().length();
+	printf("Decompressed to %d bytes\n", filesize);
+	std::string out = outDecomp.str();
+	dat = (uint8_t*)malloc(filesize);
 	out.copy((char*)dat, filesize);
 	return (void*)dat;
 }
-void*encodeType(void*in,size_t n,size_t&outSize,int type){
+void*encodeType(void*in, size_t n, size_t&outSize, int type) {
 	std::string input;
-	input.assign((const char *)in,n);
+	input.assign((const char *)in, n);
 	std::istringstream iss(input);
 	std::ostringstream outfun;
-	switch(type){
-		case 1:
-			{nemesis comp;
-			comp.encode(iss,outfun);}
-		break;
-		case 2:
-			{kosinski comp;
-			comp.encode(iss,outfun);}
-		break;
-		case 3:
-			{enigma comp;
-			comp.encode(iss,outfun);}
-		break;
-		case 4:
-			{saxman comp;
-			comp.encode(iss,outfun);}
-		break;
-		case 5:
-			{comper comp;
-			comp.encode(iss,outfun);}
-		break;
+
+	switch (type) {
+	case 1:
+	{	nemesis comp;
+		comp.encode(iss, outfun);
 	}
-	outSize=outfun.str().length();
-	uint8_t*compdat=(uint8_t*)malloc(outSize);
-	if(!compdat)
+	break;
+
+	case 2:
+	{	kosinski comp;
+		comp.encode(iss, outfun);
+	}
+	break;
+
+	case 3:
+	{	enigma comp;
+		comp.encode(iss, outfun);
+	}
+	break;
+
+	case 4:
+	{	saxman comp;
+		comp.encode(iss, outfun);
+	}
+	break;
+
+	case 5:
+	{	comper comp;
+		comp.encode(iss, outfun);
+	}
+	break;
+	}
+
+	outSize = outfun.str().length();
+	uint8_t*compdat = (uint8_t*)malloc(outSize);
+
+	if (!compdat)
 		show_malloc_error(outSize)
-	std::string output=outfun.str();
-	output.copy((char *)compdat,outSize);
-	printf("Compressed to %d from %d\n",outSize,n);
+		std::string output = outfun.str();
+
+	output.copy((char *)compdat, outSize);
+	printf("Compressed to %d from %d\n", outSize, n);
 	return (void*)compdat;
 }

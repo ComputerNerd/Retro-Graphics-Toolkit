@@ -12,12 +12,12 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
 const char*typeToText(int type);
 int compressionAsk(void);
-std::string decodeTypeStr(const char * filename,size_t &filesize,int type);
-void*decodeTypeRam(uint8_t*dat,size_t inputSize,size_t &filesize,int type);
-void*decodeType(const char * filename,size_t &filesize,int type);
-void*encodeType(void*in,size_t n,size_t&outSize,int type);
+std::string decodeTypeStr(const char * filename, size_t &filesize, int type);
+void*decodeTypeRam(uint8_t*dat, size_t inputSize, size_t &filesize, int type);
+void*decodeType(const char * filename, size_t &filesize, int type);
+void*encodeType(void*in, size_t n, size_t&outSize, int type);

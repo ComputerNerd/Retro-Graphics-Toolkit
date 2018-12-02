@@ -12,7 +12,7 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
-bool decompressFromFile(void * ptr,int size,FILE * fi);
-bool compressToFile(void * ptr,int size,FILE * fo);
+bool decompressFromFile(void * ptr, int size, FILE * fi);
+bool compressToFile(void * ptr, int size, FILE * fo);

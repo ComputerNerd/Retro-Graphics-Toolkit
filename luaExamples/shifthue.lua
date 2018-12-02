@@ -69,7 +69,8 @@ function btnCB(val)
 	ok=val
 	win:hide()
 end
-if project.have(project.palMask) then
+local p = projects[projects.current]
+if p:have(project.palMask) then
 	win=Fl_Window.new(320,200,'Shift hue by')
 	win:set_modal()
 	win:setDrawFunction("draw")

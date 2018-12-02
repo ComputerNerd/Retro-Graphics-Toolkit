@@ -12,18 +12,18 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
-enum fileType_t{
-	tCancle=-1,
+enum fileType_t {
+	tCancle = -1,
 	tBinary,
 	tCheader,
 	tASM,
 	tBEX,
 };
-void saveStrifNot(FILE*fp,const char*str,const char*cmp);
-void fileToStr(FILE*fp,std::string&s,const char*defaultStr);
+void saveStrifNot(FILE*fp, const char*str, const char*cmp);
+void fileToStr(FILE*fp, std::string&s, const char*defaultStr);
 int clipboardAsk(void);
-fileType_t askSaveType(bool save=true,fileType_t def=tBinary);
-bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,fileType_t type,const char*comment,const char*label,int bits);
+fileType_t askSaveType(bool save = true, fileType_t def = tBinary);
+bool saveBinAsText(void * ptr, size_t sizeBin, FILE * fp, fileType_t type, const char*comment, const char*label, int bits);

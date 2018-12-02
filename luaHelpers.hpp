@@ -16,21 +16,26 @@
 */
 #ifndef LUA_HELPERS_HPP
 #define LUA_HELPERS_HPP
+#include <stdint.h>
 #include "lualib.h"
 #include "lauxlib.h"
 
 #define arLen(ar) (sizeof(ar)/sizeof(ar[0]))
 
-struct keyPair{
+struct keyPair {
 	const char*key;
 	unsigned pair;
 };
-struct keyPairi{
+struct keyPairi {
 	const char*key;
 	int pair;
 };
 
-void mkKeyunsigned(lua_State*L,const char*str,unsigned val);
-void mkKeyint(lua_State*L,const char*str,int val);
-void mkKeybool(lua_State*L,const char*str,bool val);
+void mkKeyunsigned(lua_State*L, const char*str, unsigned val);
+void mkKeyint(lua_State*L, const char*str, int val);
+void mkKeybool(lua_State*L, const char*str, bool val);
+size_t getSizeTUserData(lua_State*L);
+int luaL_optboolean (lua_State *L, int narg, int def);
+void fillucharFromTab(lua_State*L, unsigned index, unsigned len, unsigned sz, uint8_t*ptr);
+void outofBoundsAlert(const char*what, unsigned val);
 #endif

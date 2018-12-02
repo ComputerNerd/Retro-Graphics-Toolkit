@@ -16,12 +16,14 @@ parser:option('-t --tile-compression','Specify as index 0="Uncompressed",1="Neme
 parser:argument('images','You can specify one or more images.\nIn the same directory the output will be stored with the same base filename but different extensions and with one of the following appended to the base filename:\n\t_tiles\n\t_palette\n\t_map')
 	:args('+')
 local args = parser:parse()
+
 local sysmap={G=project.segaGenesis,N=project.NES,GG=project.gameGear,M=project.masterSystem}
 local datatmap={C=rgt.Cheader,A=rgt.ASM,Be=rgt.BEX,Bi=rgt.Binary}
 local sys=sysmap[args.system]
 local datat=datatmap[args.data]
 local datatExtmap={[rgt.Cheader]='.c',[rgt.ASM]='.asm',[rgt.BEX]='.bex',[rgt.Binary]='.bin'}
 local datatExt=datatExtmap[datat]
+
 for k,v in pairs(args.images) do
 	if sys~=project.segaGenesis then
 		print('Setting to',sys)

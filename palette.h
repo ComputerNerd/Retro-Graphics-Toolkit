@@ -12,7 +12,7 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
 extern const uint8_t palTabGameGear[];
@@ -24,6 +24,6 @@ extern const uint8_t palTabGen255div7[];
 extern const uint8_t palTabGen36[];
 extern const uint8_t palTabGen32[];
 extern unsigned palTypeGen;
-void sortBy(unsigned type,bool perRow);
+void sortBy(unsigned type, bool perRow);
 void set_palette_type(void);
 void set_palette_type_force(unsigned type);

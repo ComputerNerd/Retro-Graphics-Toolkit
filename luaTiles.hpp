@@ -1,4 +1,4 @@
---[[
+/*
 	This file is part of Retro Graphics Toolkit
 
 	Retro Graphics Toolkit is free software: you can redistribute it and/or modify
@@ -12,12 +12,12 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
---]]
-function switchProject()
-	rgt.syncProject()
-	if project.have(project.palMask)~=false then
-		palette.toRgbAll()
-	end
-end
+	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+*/
+#ifndef LUA_TILES_HPP
+#define LUA_TILES_HPP
+#include "lualib.h"
+#include "lauxlib.h"
 
+int luaopen_Tiles(lua_State *L, unsigned idx);
+#endif

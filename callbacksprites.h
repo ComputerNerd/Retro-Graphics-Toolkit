@@ -12,37 +12,37 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 extern uint32_t curSprite;
 extern uint32_t curSpritegroup;
 extern uint32_t curSpritemeta;
 extern int32_t spriteEndDraw[2];
 extern bool centerSpriteDraw_G;
-void palRowstCB(Fl_Widget*,void*);
-void optimizeSpritesCB(Fl_Widget*,void*);
-void ditherSpriteAsImage(unsigned msprt,unsigned which);
+void palRowstCB(Fl_Widget*, void*);
+void optimizeSpritesCB(Fl_Widget*, void*);
+void ditherSpriteAsImage(unsigned msprt, unsigned which);
 void ditherGroupAsImage(unsigned msprt);
-void ditherSpriteAsImageAllCB(Fl_Widget*,void*);
-void ditherSpriteAsImageCB(Fl_Widget*,void*);
-void setDrawSpriteCB(Fl_Widget*,void*m);
-void spriteSheetimportCB(Fl_Widget*o,void*);
-void exportSonicDPLCCB(Fl_Widget*o,void*t);
-void assignSpriteAllMetanameCB(Fl_Widget*o,void*);
-void assignSpritemetaNameCB(Fl_Widget*o,void*);
-void alignSpriteCB(Fl_Widget*,void*t);
-void importSonicDPLCCB(Fl_Widget*o,void*t);
-void spritePrioCB(Fl_Widget*,void*);
-void setoffspriteCB(Fl_Widget*o,void*y);
-void exportSonicMappingCB(Fl_Widget*o,void*);
-void importSonicMappingCB(Fl_Widget*o,void*);
-void assignSpritegroupnameCB(Fl_Widget*o,void*);
-void spriteHflipCB(Fl_Widget*,void*);
-void spriteVflipCB(Fl_Widget*,void*);
-void SpriteimportCB(Fl_Widget*,void*);
-void selSpriteCB(Fl_Widget*w,void*);
-void selspriteGroup(Fl_Widget*o,void*);
-void selspriteMeta(Fl_Widget*o,void*);
-void appendSpriteCB(Fl_Widget*,void*);
-void delSpriteCB(Fl_Widget*,void*);
-void setvalueSpriteCB(Fl_Widget*o,void*which);
+void ditherSpriteAsImageAllCB(Fl_Widget*, void*);
+void ditherSpriteAsImageCB(Fl_Widget*, void*);
+void setDrawSpriteCB(Fl_Widget*, void*m);
+void spriteSheetimportCB(Fl_Widget*o, void*);
+void exportSonicDPLCCB(Fl_Widget*o, void*t);
+void assignSpriteAllMetanameCB(Fl_Widget*o, void*);
+void assignSpritemetaNameCB(Fl_Widget*o, void*);
+void alignSpriteCB(Fl_Widget*, void*t);
+void importSonicDPLCCB(Fl_Widget*o, void*t);
+void spritePrioCB(Fl_Widget*, void*);
+void setoffspriteCB(Fl_Widget*o, void*y);
+void exportSonicMappingCB(Fl_Widget*o, void*);
+void importSonicMappingCB(Fl_Widget*o, void*);
+void assignSpritegroupnameCB(Fl_Widget*o, void*);
+void spriteHflipCB(Fl_Widget*, void*);
+void spriteVflipCB(Fl_Widget*, void*);
+void SpriteimportCB(Fl_Widget*, void*);
+void selSpriteCB(Fl_Widget*w, void*);
+void selspriteGroup(Fl_Widget*o, void*);
+void selspriteMeta(Fl_Widget*o, void*);
+void appendSpriteCB(Fl_Widget*, void*);
+void delSpriteCB(Fl_Widget*, void*);
+void setvalueSpriteCB(Fl_Widget*o, void*which);

@@ -12,17 +12,17 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #include <vector>
 #include <string>
 #include <stdint.h>
-struct filereader{
-	size_t amt,lenTotal;
+struct filereader {
+	size_t amt, lenTotal;
 	std::vector<size_t>lens;
 	std::vector<void*>dat;
 	std::vector<std::string>names;
-	filereader(const char*title=nullptr,bool relptr=false,unsigned offbits=16,bool be=true);
+	filereader(const char*title = nullptr, bool relptr = false, unsigned offbits = 16, bool be = true);
 	unsigned selDat(void);
 	~filereader();
 };

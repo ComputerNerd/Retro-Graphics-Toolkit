@@ -1,2 +1,2 @@
-	fl.beep()
-	fl.alert("Error:\na beep has occurred")
+fl.beep()
+fl.alert("a beep has occurred")

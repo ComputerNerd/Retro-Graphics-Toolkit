@@ -12,12 +12,12 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
-void setCurPlaneTilemaps(Fl_Widget*,void*val);
-void removeTilemapsPlane(Fl_Widget*,void*val);
-void updateNameTilemaps(Fl_Widget*w,void*);
-void updatePlaneTilemapMenu(uint32_t id,Fl_Choice*plM);
+void setCurPlaneTilemaps(Fl_Widget*, void*val);
+void removeTilemapsPlane(Fl_Widget*, void*val);
+void updateNameTilemaps(Fl_Widget*w, void*);
+void updatePlaneTilemapMenu(uint32_t id, Fl_Choice*plM);
 void updatePlaneTilemapMenu(void);
-void addPlaneTilemap(Fl_Widget*,void*val);
+void addPlaneTilemap(Fl_Widget*, void*val);

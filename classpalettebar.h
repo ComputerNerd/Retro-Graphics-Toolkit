@@ -12,14 +12,14 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
 #define tabsWithPalette 4
-class paletteBar{
+class paletteBar {
 private:
-	unsigned ox[tabsWithPalette],oy[tabsWithPalette];
-	unsigned baseOffx[tabsWithPalette],baseOffy[tabsWithPalette];
+	unsigned ox[tabsWithPalette], oy[tabsWithPalette];
+	unsigned baseOffx[tabsWithPalette], baseOffy[tabsWithPalette];
 	bool tiny[tabsWithPalette];
 	bool all[tabsWithPalette];
 	bool alt[tabsWithPalette];
@@ -29,20 +29,20 @@ public:
 	unsigned selRow[tabsWithPalette];
 	unsigned selBox[tabsWithPalette];
 	unsigned getEntry(unsigned tab)const;
-	void addTab(unsigned tab,bool all=false,bool tiny=false,bool alt=false);
-	void setSys(bool upSlide=true);
+	void addTab(unsigned tab, bool all = false, bool tiny = false, bool alt = false);
+	void setSys(bool upSlide = true);
 	void updateSize(unsigned tab);
 	void updateSlider(unsigned tab);
-	void updateSliders(void){
-		for(unsigned i=0;i<tabsWithPalette;++i)
+	void updateSliders(void) {
+		for (unsigned i = 0; i < tabsWithPalette; ++i)
 			updateSlider(i);
 	}
 	unsigned toTab(unsigned realtab);
-	void changeRow(unsigned row,unsigned tab){
-		selRow[tab]=row;
+	void changeRow(unsigned row, unsigned tab) {
+		selRow[tab] = row;
 		updateSlider(tab);
 	}
-	void checkBox(int x,int y,unsigned tab);
+	void checkBox(int x, int y, unsigned tab);
 	void drawBoxes(unsigned tab);
 };
 extern paletteBar palBar;

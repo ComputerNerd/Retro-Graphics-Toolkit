@@ -12,18 +12,18 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
 #include "project.h"
 #include "classSprites.h"
-struct metasprites{
+struct metasprites {
 	Project*prj;
 	std::vector<class sprites>sps;
 	std::string name;
 	metasprites(Project*prj);
-	metasprites(const metasprites&o,Project*prj);
+	metasprites(const metasprites&o, Project*prj);
 	void setPrjPtr(Project*prj);
-	void load(FILE*fp,uint32_t version);
+	void load(FILE*fp, uint32_t version);
 	void save(FILE*fp);
 };

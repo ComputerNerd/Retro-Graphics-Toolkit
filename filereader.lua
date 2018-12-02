@@ -49,7 +49,7 @@ function packCommaStr(w,pstr,hexstr)
 end
 function filereaderProcessText(tp,relptr,offbits,be,t,fname)-- Converts text to tables
 	if relptr==true then
-		-- Unused
+		-- Not yet supported.
 		fl.alert('Error: should be unreachable')
 	else
 		if tp==rgt.tBinary then

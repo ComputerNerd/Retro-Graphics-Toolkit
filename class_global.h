@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
 #include "includes.h"
@@ -21,25 +21,25 @@
 #include <inttypes.h>
 extern int pushed_g;
 #define TABS_WITH_ROW_BUTTONS 2
-class editor : public Fl_Double_Window{
+class editor : public Fl_Double_Window {
 private:
 	Fl_Menu_Bar *menu;
 	void _editor();
 	void draw_non_gui();
 	unsigned tilesSpriteOff[2];
 public:
-	std::vector<std::pair<unsigned,int64_t>>*keepUserdat;
-	std::vector<std::pair<std::string,int64_t>>*luaCallback;
+	std::vector<std::pair<unsigned, int64_t>>*keepUserdat;
+	std::vector<std::pair<std::string, int64_t>>*luaCallback;
 	void updateChunkSel(void);
-	void updateMapWH(uint32_t w,uint32_t h);
+	void updateMapWH(uint32_t w, uint32_t h);
 	void updateMapWH(void);
-	void updateTileMapGUI(uint32_t x,uint32_t y);
+	void updateTileMapGUI(uint32_t x, uint32_t y);
 	void updateBlockTilesChunk(uint32_t prj);
 	void updateBlockTilesChunk(void);
 	void updateSpriteSliders(uint32_t prj);
 	void updateSpriteSliders(void);
-	void updateChunkGUI(uint32_t tx,uint32_t ty);
-	void updateChunkSize(uint32_t wi,uint32_t hi);
+	void updateChunkGUI(uint32_t tx, uint32_t ty);
+	void updateChunkSize(uint32_t wi, uint32_t hi);
 	void updateChunkSize(void);
 	bool tabsHidden[shareAmtPj];
 	Fl_Box* cordDisp[2];//The purpose of this is to display coordinates of tile in plane and chunk editor
@@ -92,7 +92,7 @@ public:
 	Fl_Slider* projectSelect;
 	Fl_Tabs* the_tabs;
 	Fl_Round_Button* palType[12];
-	Fl_Round_Button* palRTE[MAX_ROWS_PALETTE*TABS_WITH_ROW_BUTTONS];
+	Fl_Round_Button* palRTE[MAX_ROWS_PALETTE * TABS_WITH_ROW_BUTTONS];
 	Fl_Check_Button* hflipCB[2];
 	Fl_Check_Button* vflipCB[2];
 	Fl_Check_Button* prioCB[2];

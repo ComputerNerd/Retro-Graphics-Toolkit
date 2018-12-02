@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #define shareAmtPj 6
 #ifndef _PROJECT_H
@@ -32,33 +32,33 @@
 #include "palette.h"
 #define currentProjectVersionNUM 8
 extern uint32_t curProjectID;
-enum luaLocEnum{PALETTE_C,TILEMAP_C,CHUNK_C,SPRITE_C,LEVEL_C,GLOBAL_C/*Not allowed for luaControl*/,CUSTOM_TAB_0/*And so on*/};
-struct luaDat{
+enum luaLocEnum {PALETTE_C, TILEMAP_C, CHUNK_C, SPRITE_C, LEVEL_C, GLOBAL_C/*Not allowed for luaControl*/, CUSTOM_TAB_0/*And so on*/};
+struct luaDat {
 	uint32_t len;
 	std::string name;
 	enum luaLocEnum datLoc;
 	void*dat;
 };
-enum luaControlType{INPUT_T,RADIO_T,INT_INPUT_T,CHECKBOX_T,CHOICE_T};
-struct inputLua{
-	std::string label,value;
+enum luaControlType {INPUT_T, RADIO_T, INT_INPUT_T, CHECKBOX_T, CHOICE_T};
+struct inputLua {
+	std::string label, value;
 };
-struct intInputLua{
+struct intInputLua {
 	std::string label;
 	int64_t val;
 };
-struct luaControl{
+struct luaControl {
 	uint32_t len;
 	enum luaLocEnum ctrlLoc;
 	enum luaControlType ctrlType;
 	bool cbInFile;
-	std::string callback,callbackwhere;
+	std::string callback, callbackwhere;
 	void*info;
 };
-struct luaScript{
-	std::string str,name;
+struct luaScript {
+	std::string str, name;
 };
-struct Project{/*!<Holds all data needed for a project based system for example tile screen and level 1 are 2 separate projects*/
+struct Project { /*!<Holds all data needed for a project based system for example tile screen and level 1 are 2 separate projects*/
 	Project();
 	Project(const Project&other);
 	void copyClasses(const Project&other);
@@ -68,27 +68,27 @@ struct Project{/*!<Holds all data needed for a project based system for example 
 	bool isUniqueData(uint32_t mask);
 	bool containsData(uint32_t mask);
 	bool containsDataOR(uint32_t mask);
-	enum TMS9918SubSys getTMS9918subSys()const{
-		return (enum TMS9918SubSys)(subSystem&3);
+	enum TMS9918SubSys getTMS9918subSys()const {
+		return (enum TMS9918SubSys)(subSystem & 3);
 	}
-	void setTMS9918subSys(enum TMS9918SubSys sys){
-		subSystem&=~3;
-		subSystem|=sys;
+	void setTMS9918subSys(enum TMS9918SubSys sys) {
+		subSystem &= ~3;
+		subSystem |= sys;
 	}
 	void setBitdepthSys(unsigned bd);
 	int getBitdepthSysraw(void)const;
-	int getBitdepthSys(void)const{
-		return getBitdepthSysraw()+1;
+	int getBitdepthSys(void)const {
+		return getBitdepthSysraw() + 1;
 	}
-	int getPalTab(void)const{
-		palTab=palTabPtr[(subSystem>>3)&7];
-		return (subSystem>>3)&7;
+	int getPalTab(void)const {
+		palTab = palTabPtr[(subSystem >> 3) & 7];
+		return (subSystem >> 3) & 7;
 	}
-	void setPalTab(unsigned val){
-		val&=7;
-		subSystem&=~(7<<3);
-		subSystem|=val<<3;
-		palTab=palTabPtr[val];
+	void setPalTab(unsigned val) {
+		val &= 7;
+		subSystem &= ~(7 << 3);
+		subSystem |= val << 3;
+		palTab = palTabPtr[val];
 	}
 	unsigned szPerExtPalRow(void);
 	unsigned extAttrTilesPerByte(void);
@@ -118,21 +118,21 @@ extern struct Project ** projects;
 extern uint32_t projects_count;//holds how many projects there are this is needed for realloc when adding or removing function
 extern struct Project * currentProject;
 extern Fl_Slider* curPrj;
-void changeTileDim(unsigned w,unsigned h,struct Project*p);
+void changeTileDim(unsigned w, unsigned h, struct Project*p);
 const char*maskToName(unsigned mask);
 void compactPrjMem(void);
 void initProject(void) __attribute__((constructor(101)));/*!< this needs to be ran before class constructors*/
-void setHaveProject(uint32_t id,uint32_t mask,bool set);
-void shareProject(uint32_t share,uint32_t with,uint32_t what,bool enable);
+void setHaveProject(uint32_t id, uint32_t mask, bool set);
+void shareProject(uint32_t share, uint32_t with, uint32_t what, bool enable);
 void prjChangePtr(unsigned id);
 int reallocProject(size_t amt);
 void changeProjectAmt(void);
 bool appendProject();
 bool removeProject(uint32_t id);
-void switchProjectSlider(uint32_t id,bool oldExists=true);
-void switchProject(uint32_t id,bool load=false);
-bool loadProject(uint32_t id,const char*fname);
-bool saveProject(uint32_t id,const char*fname);
+void switchProjectSlider(uint32_t id, bool oldExists = true);
+void switchProject(uint32_t id, bool load = false);
+bool loadProject(uint32_t id, const char*fname);
+bool saveProject(uint32_t id, const char*fname);
 bool saveAllProjects(void);
 bool loadAllProjects(const char*fname);
 #define pjHavePal 1

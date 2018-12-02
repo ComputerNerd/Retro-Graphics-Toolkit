@@ -12,44 +12,48 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #include "classtilemaps.h"
-tilemaps::tilemaps(Project*prj){
-	this->prj=prj;
+tilemaps::tilemaps(Project*prj) {
+	this->prj = prj;
 	maps.emplace_back(prj);
 	planeName.emplace_back("0");
 }
-tilemaps::tilemaps(const tilemaps&other,Project*prj){
-	this->prj=prj;
-	unsigned cnt=other.maps.size();
+tilemaps::tilemaps(const tilemaps&other, Project*prj) {
+	this->prj = prj;
+	unsigned cnt = other.maps.size();
 	maps.reserve(cnt);
 	planeName.reserve(cnt);
-	for(unsigned i=0;i<cnt;++i){
-		maps.emplace_back(other.maps[i],prj);
+
+	for (unsigned i = 0; i < cnt; ++i) {
+		maps.emplace_back(other.maps[i], prj);
 		planeName.emplace_back(other.planeName[i].c_str());
 	}
 }
-void tilemaps::setPlaneCnt(unsigned cnt){
-	unsigned oldCnt=maps.size();
-	if(cnt>oldCnt){
+void tilemaps::setPlaneCnt(unsigned cnt) {
+	unsigned oldCnt = maps.size();
+
+	if (cnt > oldCnt) {
 		planeName.reserve(cnt);
 		maps.reserve(cnt);
-		for(unsigned i=oldCnt;i<cnt;++i){
+
+		for (unsigned i = oldCnt; i < cnt; ++i) {
 			char tmp[16];
-			snprintf(tmp,16,"%u",i);
+			snprintf(tmp, 16, "%u", i);
 			planeName.emplace_back(tmp);
 			maps.emplace_back(tileMap(prj));
 		}
-	}else if(cnt<oldCnt){
+	} else if (cnt < oldCnt) {
 		planeName.resize(cnt);
-		for(int i=oldCnt;i>(int)cnt;--i)
+
+		for (int i = oldCnt; i > (int)cnt; --i)
 			maps.pop_back();
 	}
 }
-void tilemaps::changePrjPtr(Project*prj){
-	this->prj=prj;
-	for(unsigned i=0;i<maps.size();++i){
-		maps[i].prj=prj;
-	}
+void tilemaps::changePrjPtr(Project*prj) {
+	this->prj = prj;
+
+	for (unsigned i = 0; i < maps.size(); ++i)
+		maps[i].prj = prj;
 }

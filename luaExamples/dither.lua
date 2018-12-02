@@ -1,8 +1,12 @@
-if project.have(project.mapMask+project.palMask) then
-	img=tilemaps.toImage(tilemaps.current,-1,1)
-	rgt.ditherImage(img,tilemap.width*tile.width,tilemap.height*tile.height,1)
-	tilemaps.imageToTiles(tilemaps.current,img,-1,1)
+local p = projects.current
+if p:have(project.mapMask+project.palMask) then
+	local tilemap = p.tilemaps[p.tilemaps.current]
+	local img = tilemap:toImage(-1, true)
+
+	rgt.ditherImage(img,tilemap.width * tile.width,tilemap.height * tile.height, 1)
+	tilemap:imageToTiles(img, -1, true)
+
 	rgt.redraw()
 else
-	project.haveMessage(project.mapMask+project.palMask)
+	p:haveMessage(project.mapMask+project.palMask)
 end

@@ -16,17 +16,26 @@
 --]]
 function switchProject()
 	rgt.syncProject()
-	palTabSel:value(project.getPalTab())--Fixes internal pointer
-	if project.have(project.palMask)~=false then
-		palette.toRgbAll()
+
+	local p = projects.current
+
+	if is_headless == 0 then
+		palTabSel:value(p:getPalType())--Fixes internal pointer
 	end
-	if project.have(project.levelMask)~=false then
-		layerSel:clear()
-		for i=1,#level.names do
-			layerSel:add(level.names[i])
+
+	if p:have(project.palMask) ~= false then
+		p.palette:toRgbAll()
+	end
+
+	if is_headless == 0 then
+		if p:have(project.levelMask) ~= false then
+			layerSel:clear()
+			for i=1,#level.names do
+				layerSel:add(level.names[i])
+			end
+			layerSel:value(0)
+			layerName:value(level.names[1])
+			lvlsetlayer(0)
 		end
-		layerSel:value(0)
-		layerName:value(level.names[1])
-		lvlsetlayer(0)
 	end
 end

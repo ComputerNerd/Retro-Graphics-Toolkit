@@ -12,19 +12,19 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
 #include <stdint.h>
-struct sprite{
-	uint32_t w,h;//In tiles
-	uint32_t starttile,palrow;
+struct sprite {
+	uint32_t w, h; //In tiles
+	uint32_t starttile, palrow;
 	uint32_t loadat;//Where the sprite will be loaded in game (useful for games that overwrite tiles in VRAM for animation purposes such as the Sonic series of games and many more.)
-	int32_t offx,offy;
-	bool hflip,vflip;
+	int32_t offx, offy;
+	bool hflip, vflip;
 	bool prio;
 	sprite();
-	sprite(uint32_t wi,uint32_t hi,uint32_t palrowset,uint32_t settile,bool hf,bool vf,bool pri,uint32_t la,int32_t ox,int32_t oy);
-	void draw(unsigned x,unsigned y,unsigned zoom);
+	sprite(uint32_t wi, uint32_t hi, uint32_t palrowset, uint32_t settile, bool hf, bool vf, bool pri, uint32_t la, int32_t ox, int32_t oy);
+	void draw(unsigned x, unsigned y, unsigned zoom);
 	void toImage(uint8_t*img);
 };

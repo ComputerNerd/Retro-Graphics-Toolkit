@@ -14,19 +14,52 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
+#include <algorithm>
+#include <cstring>
+#include <FL/fl_ask.H>
 #include "luaHelpers.hpp"
-void mkKeyunsigned(lua_State*L,const char*str,unsigned val){
-	lua_pushstring(L,str);
-	lua_pushinteger(L,val);
+void mkKeyunsigned(lua_State*L, const char*str, unsigned val) {
+	lua_pushstring(L, str);
+	lua_pushinteger(L, val);
 	lua_rawset(L, -3);
 }
-void mkKeyint(lua_State*L,const char*str,int val){
-	lua_pushstring(L,str);
-	lua_pushinteger(L,val);
+void mkKeyint(lua_State*L, const char*str, int val) {
+	lua_pushstring(L, str);
+	lua_pushinteger(L, val);
 	lua_rawset(L, -3);
 }
-void mkKeybool(lua_State*L,const char*str,bool val){
-	lua_pushstring(L,str);
-	lua_pushboolean(L,val);
+void mkKeybool(lua_State*L, const char*str, bool val) {
+	lua_pushstring(L, str);
+	lua_pushboolean(L, val);
 	lua_rawset(L, -3);
+}
+size_t getSizeTUserData(lua_State*L) {
+	const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
+	return *idxPtr;
+}
+int luaL_optboolean (lua_State *L, int narg, int def) {
+	return lua_isboolean(L, narg) ? lua_toboolean(L, narg) : def;
+}
+void fillucharFromTab(lua_State*L, unsigned index, unsigned len, unsigned sz, uint8_t*ptr) { //len amount in table sz expected size
+	unsigned to = std::min(len, sz);
+
+	for (unsigned i = 1; i <= to; ++i) {
+		lua_rawgeti(L, index, i);
+		int tmp = lua_tointeger(L, -1);
+
+		if (tmp < 0)
+			tmp = 0;
+
+		if (tmp > 255)
+			tmp = 255;
+
+		*ptr++ = tmp;
+		lua_pop(L, 1);
+	}
+
+	if (sz > len)
+		std::memset(ptr, 0, sz - len);
+}
+void outofBoundsAlert(const char*what, unsigned val) {
+	fl_alert("Error tried to access out of bound %s %u", what, val);
 }

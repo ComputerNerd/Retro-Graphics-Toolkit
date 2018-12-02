@@ -12,13 +12,13 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
 #include <FL/Fl_Widget.H>
-struct cbInfo{
+struct cbInfo {
 	char*cb;
 	lua_State*L;
 	lua_Integer udat;
 };
-void luaWidgetCallbackHelper(Fl_Widget*,void*i);
+void luaWidgetCallbackHelper(Fl_Widget*, void*i);

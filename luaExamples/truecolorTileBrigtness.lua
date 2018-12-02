@@ -1,17 +1,22 @@
 -- Multiplies all pixels in all tiles by m
-if project.have(project.tilesMask) then
+local p = projects.current
+if p:have(project.tilesMask) then
 	m=tonumber(fl.input("Enter a multiplier m>1 brightens m<1 darkens","1"))
 	if m~=nil then
-		for i=0,tile.amt-1,1 do
-			for y=0,tile.height-1,1 do
-				for x=0,tile.width-1,1 do
-					local r,g,b,a=tile.getPixelRGBA(i,x,y)
-					tile.setPixelRGBA(i,x,y,r*m,g*m,b*m,a)
+		for i=1, tile.amt do
+			local tile = p.tiles[i]
+			for y=1, tile.height do
+				local row = tile[y]
+				for x=1, tile.width do
+					local pixel = row[x].rgba
+					pixel.r = math.floor(pixel.r * m)
+					pixel.g = math.floor(pixel.g * m)
+					pixel.b = math.floor(pixel.b * m)
 				end
 			end
 		end
 		rgt.redraw()
 	end
 else
-	project.haveMessage(project.tilesMask)
+	p:haveMessage(project.tilesMask)
 end

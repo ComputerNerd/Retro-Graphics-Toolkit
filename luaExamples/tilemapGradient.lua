@@ -1,70 +1,65 @@
 -- Sets all tiles to a gradient
-local function hueDir(h1,h2)
-	if math.abs(h2-h1)>180. then
-		if h2>h1 then
-			return -(360.-h2+h1)
-		else
-			return 360.-h1+h2
-		end
-	else
-		return h2-h1
-	end
-end
-if project.have(project.tilesMask+project.mapMask) then
-	local ret,L1,c1,h1=fl.color_chooser("First color")
+local p = projects.current
+if p:have(project.tilesMask+project.mapMask) then
+	local tilemap = p.tilemaps[p.tilemaps.current]
+	local ret,r1,g1,b1=fl.color_chooser("First color")
 	if ret~=0 then
-		local ret,L2,c2,h2=fl.color_chooser("Second color")
+		local ret,r2,g2,b2=fl.color_chooser("Second color")
 		if ret~=0 then
-			L1,c1,h1=rgt.rgbToLch(L1,c1,h1)
-			L2,c2,h2=rgt.rgbToLch(L2,c2,h2)
-			-- Calculate tile
-			tile.resize(tilemaps.height[tilemaps.current+1])
-			for j=0,tilemaps.height[tilemaps.current+1]-1 do
-				for i=0,tilemaps.width[tilemaps.current+1]-1 do
-					tilemaps.setTile(tilemaps.current,i,j,j)
+			-- We need the same number of tiles as the tilemap height.
+			p.tiles:resize(tilemap.h)
+			
+			-- Fill the tilemap.
+			for j=0,tilemap.h - 1 do
+				for i=0, tilemap.w - 1 do
+					tilemap[j + 1][i + 1].tile = j -- CAUTION: in Lua arrays start with one.
 				end
 			end
-			local Ls,cs,hs
-			if project.have(project.palMask) then
-				local Lt,ct,ht = L1,c1,h1
-				Ls,cs,hs = (L2-L1)/palette.maxInRow(0),(c2-c1)/palette.maxInRow(0),hueDir(h1,h2)/palette.maxInRow(0)
-				for i=0,palette.maxInRow(0)-1 do
-					local r,g,b=rgt.lchToRgb(Lt,ct,ht)
-					palette.setRGB(i,r*255.,g*255.,b*255.)
-					Lt=Lt+Ls
-					ct=ct+cs
-					ht=ht+hs
-					if(ht>360.) then
-						ht=ht-360.
-					end
-					if(ht<0.) then
-						ht=ht+360.
-					end
+
+			local rs,gs,bs
+			if p:have(project.palMask) then
+				local rt, gt, bt = r1, g1, b1
+				local maxInRow = p.palette:maxInRow(0)
+				rs = (r2 - r1) / maxInRow
+				gs = (g2 - g1) / maxInRow
+				bs = (b2 - b1) / maxInRow
+				for i=1, maxInRow do
+
+					local paletteEntry = p.palette[i]
+					paletteEntry.r = math.floor(rt*255.) -- Must be an integer.
+					paletteEntry.g = math.floor(gt*255.)
+					paletteEntry.b = math.floor(bt*255.)
+					paletteEntry:convertFromRGB() -- This must be called after setting .r, .g, .b
+
+					rt = rt + rs
+					gt = gt + gs
+					bt = bt + bs
+
 				end
 				palette.fixSliders()
 			end
-			Ls,cs,hs = (L2-L1)/(tilemaps.heightA[tilemaps.current+1]*tile.height[tilemaps.current+1]),(c2-c1)/(tilemap.heightA[tilemaps.current+1]*tile.height[tilemaps.current+1]),hueDir(h1,h2)/(tilemap.heightA[tilemaps.current+1]*tile.height[tilemaps.current+1])
-			for t=0,tile.amt-1 do
-				local gr={}
-				for i=0,tile.height-1 do
-					local r,g,b=rgt.lchToRgb(L1,c1,h1)
-					for j=0,tile.width*4-1,4 do
-						gr[(i*tile.width*4)+j+1]=r*255.
-						gr[(i*tile.width*4)+j+2]=g*255.
-						gr[(i*tile.width*4)+j+3]=b*255.
-						gr[(i*tile.width*4)+j+4]=255.
+
+			local tilemapHeightPixels = tilemap.hAll * p.tiles.h
+			rs = (r2 - r1) / tilemapHeightPixels
+			gs = (g2 - g1) / tilemapHeightPixels
+			bs = (b2 - b1) / tilemapHeightPixels
+
+			for t=1, #p.tiles do
+				local tile = p.tiles[t]
+				for i=1, p.tiles.h do
+					local row = tile.rgba[i]
+					for j=1, p.tiles.w do
+						local pixel = row[j] -- We can access each value like an array or like a struct.
+						pixel.r = math.floor(r1 * 255.)
+						pixel.g = math.floor(g1 * 255.)
+						pixel.b = math.floor(b1 * 255.)
+						pixel.a = 255
 					end
-					L1=L1+Ls
-					c1=c1+cs
-					h1=h1+hs
-					if(h1>360.) then
-						h1=h1-360.
-					end
-					if(h1<0) then
-						h1=h1+360.
-					end
+					r1 = r1 + rs
+					g1 = g1 + gs
+					b1 = b1 + bs
+					
 				end
-				tile.setTileRGBA(t,gr)
 			end
 		end
 	end

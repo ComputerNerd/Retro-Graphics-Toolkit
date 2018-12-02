@@ -12,15 +12,15 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
 #include <stdint.h>
 #define MAX_ROWS_PALETTE 4//TODO refractor to allow "unlimited" rows
 //System declarations
-enum tileType{LINEAR,PLANAR_TILE,PLANAR_LINE};
-enum gameSystemEnum{segaGenesis,NES,masterSystem,gameGear,TMS9918,SNES,frameBufferPal,frameBuffer};
-enum TMS9918SubSys{MODE_0,MODE_1,MODE_2,MODE_3};
+enum tileType {LINEAR, PLANAR_TILE, PLANAR_LINE};
+enum gameSystemEnum {segaGenesis, NES, masterSystem, gameGear, TMS9918, SNES, frameBufferPal, frameBuffer};
+enum TMS9918SubSys {MODE_0, MODE_1, MODE_2, MODE_3};
 /* Subsystem declarations
  * Subsystem as the name implies depends on which system is selected
  * These are not compatible when switching systems

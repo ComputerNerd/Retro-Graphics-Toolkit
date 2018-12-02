@@ -12,35 +12,38 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #include <stdio.h>
 #include <stdint.h>
 #include "gui.h"
 #include "filemisc.h"
 #include "includes.h"
-void saveStrifNot(FILE*fp,const char*str,const char*cmp){
-	if(strcmp(cmp,str)!=0)
-		fputs(str,fp);
-	fputc(0,fp);
+void saveStrifNot(FILE*fp, const char*str, const char*cmp) {
+	if (strcmp(cmp, str) != 0)
+		fputs(str, fp);
+
+	fputc(0, fp);
 }
-void fileToStr(FILE*fp,std::string&s,const char*defaultStr){
-	char d=fgetc(fp);
-	if(d){
+void fileToStr(FILE*fp, std::string&s, const char*defaultStr) {
+	char d = fgetc(fp);
+
+	if (d) {
 		s.clear();
-		do{
+
+		do {
 			s.push_back(d);
-		}while((d=fgetc(fp)));
-	}else
+		} while ((d = fgetc(fp)));
+	} else
 		s.assign(defaultStr);
 }
-int clipboardAsk(void){
-	return fl_choice("File or clipboard?","File","Clipboard","Cancel");
+int clipboardAsk(void) {
+	return fl_choice("File or clipboard?", "File", "Clipboard", "Cancel");
 }
-fileType_t askSaveType(bool save,fileType_t def){
-	return (fileType_t)MenuPopup(save?"How would you like the file saved?":"What type of file is this?","Set if the file is saved as binary, C header, bex, or asm",4,(unsigned)def,"Binary","C header","ASM","BEX");
+fileType_t askSaveType(bool save, fileType_t def) {
+	return (fileType_t)MenuPopup(save ? "How would you like the file saved?" : "What type of file is this?", "Set if the file is saved as binary, C header, bex, or asm", 4, (unsigned)def, "Binary", "C header", "ASM", "BEX");
 }
-bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,fileType_t type,const char*comment,const char*label,int bits){
+bool saveBinAsText(void * ptr, size_t sizeBin, FILE * fp, fileType_t type, const char*comment, const char*label, int bits) {
 	/*!
 	This function saves binary data as plain text useful for c headers each byte is separated by a comma
 	To use the clipboard specify file as NULL
@@ -50,121 +53,151 @@ bool saveBinAsText(void * ptr,size_t sizeBin,FILE * fp,fileType_t type,const cha
 	2 - asm
 	3 - bex
 	*/
-	bits=8;
-	uint8_t * dat8=(uint8_t *)ptr;
-	uint16_t * dat16=(uint16_t *)ptr;
-	uint32_t * dat32=(uint32_t *)ptr;
-	char endc=',';
+	bits = 8;
+	uint8_t * dat8 = (uint8_t *)ptr;
+	uint16_t * dat16 = (uint16_t *)ptr;
+	uint32_t * dat32 = (uint32_t *)ptr;
+	char endc = ',';
 	std::string temp;
-	unsigned mask=(bits/8)-1;
+	unsigned mask = (bits / 8) - 1;
 	char tmp[16];
-	if(mask){
-		if(sizeBin&mask){
-			fl_alert("Error file type unaligned to %d bits",bits);
+
+	if (mask) {
+		if (sizeBin & mask) {
+			fl_alert("Error file type unaligned to %d bits", bits);
 			return false;
 		}
-		sizeBin/=mask+1;
+
+		sizeBin /= mask + 1;
 	}
-	switch(bits){
-		case 8:
-			mask=31;
+
+	switch (bits) {
+	case 8:
+		mask = 31;
 		break;
-		case 16:
-			mask=15;
+
+	case 16:
+		mask = 15;
 		break;
-		case 32:
-			mask=7;
+
+	case 32:
+		mask = 7;
 		break;
 	}
-	if(comment){
-		switch(type){
-			case tCheader:
-				temp.assign("// ");
+
+	if (comment) {
+		switch (type) {
+		case tCheader:
+			temp.assign("// ");
 			break;
-			case tASM:
-				temp.assign("; ");
+
+		case tASM:
+			temp.assign("; ");
 			break;
-			case tBEX:
-				temp.assign("' ");
+
+		case tBEX:
+			temp.assign("' ");
 			break;
 		}
+
 		temp.append(comment);
 		temp.push_back('\n');
 	}
-	switch(type){
-		case tCheader:
-			temp.append("#include <stdint.h>\n");
-			temp.append("const uint");
-			snprintf(tmp,16,"%d",bits);
-			temp.append(tmp);
-			temp.append("_t ");
-			temp.append(label);
-			temp.append("[]={");
+
+	switch (type) {
+	case tCheader:
+		temp.append("#include <stdint.h>\n");
+		temp.append("const uint");
+		snprintf(tmp, 16, "%d", bits);
+		temp.append(tmp);
+		temp.append("_t ");
+		temp.append(label);
+		temp.append("[]={");
 		break;
-		case tASM:
-		case tBEX:
-			temp.append(label);
-			temp.push_back(':');
+
+	case tASM:
+	case tBEX:
+		temp.append(label);
+		temp.push_back(':');
 		break;
 	}
-	for (size_t x=0;x<sizeBin;++x){
-		if ((x&mask)==0){
+
+	for (size_t x = 0; x < sizeBin; ++x) {
+		if ((x & mask) == 0) {
 			temp.push_back('\n');
-			switch(type){
-				case 2:
-					switch(bits){
-						case 8:
-							temp.append("\tdc.b ");
-						break;
-						case 16:
-							temp.append("\tdc.w ");
-						break;
-						case 32:
-							temp.append("\tdc.l ");
-						break;
-					}
+
+			switch (type) {
+			case 2:
+				switch (bits) {
+				case 8:
+					temp.append("\tdc.b ");
+					break;
+
+				case 16:
+					temp.append("\tdc.w ");
+					break;
+
+				case 32:
+					temp.append("\tdc.l ");
+					break;
+				}
+
 				break;
-				case 3:
-					switch(bits){
-						case 8:
-							temp.append("\tdata ");
-						break;
-						case 16:
-							temp.append("\tdataint ");
-						break;
-						case 32:
-							temp.append("\tdatalong ");
-						break;
-					}
+
+			case 3:
+				switch (bits) {
+				case 8:
+					temp.append("\tdata ");
+					break;
+
+				case 16:
+					temp.append("\tdataint ");
+					break;
+
+				case 32:
+					temp.append("\tdatalong ");
+					break;
+				}
+
 				break;
 			}
 		}
-		if(((x&mask)==mask)&&(type!=1))
-			endc=0;
+
+		if (((x & mask) == mask) && (type != 1))
+			endc = 0;
 		else
-			endc=',';
-		if(x==(sizeBin-1))
-			endc='\n';
-		switch(bits){
-			case 8:
-				snprintf(tmp,16,"%u",*dat8++);
+			endc = ',';
+
+		if (x == (sizeBin - 1))
+			endc = '\n';
+
+		switch (bits) {
+		case 8:
+			snprintf(tmp, 16, "%u", *dat8++);
 			break;
-			case 16:
-				snprintf(tmp,16,"%u",*dat16++);
+
+		case 16:
+			snprintf(tmp, 16, "%u", *dat16++);
 			break;
-			case 32:
-				snprintf(tmp,16,"%u",*dat32++);
+
+		case 32:
+			snprintf(tmp, 16, "%u", *dat32++);
 			break;
 		}
+
 		temp.append(tmp);
-		if(endc)
+
+		if (endc)
 			temp.push_back(endc);
 	}
-	if(type==1)
+
+	if (type == 1)
 		temp.append("};\n");
-	if(fp)
-		fputs(temp.c_str(),fp);
+
+	if (fp)
+		fputs(temp.c_str(), fp);
 	else
-		Fl::copy(temp.c_str(),temp.length(),1);
+		Fl::copy(temp.c_str(), temp.length(), 1);
+
 	return true;
 }

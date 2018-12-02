@@ -12,19 +12,19 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
 #include <FL/Fl_Int_Input.H>
 #include "includes.h"
 #include "guidefs.h"
 #include "class_global.h"
-extern unsigned map_scroll_pos_x,map_scroll_pos_y;
-extern unsigned map_off_x,map_off_y;
-extern unsigned tile_edit_offset_x,tile_edit_offset_y;
+extern unsigned map_scroll_pos_x, map_scroll_pos_y;
+extern unsigned map_off_x, map_off_y;
+extern unsigned tile_edit_offset_x, tile_edit_offset_y;
 extern unsigned tile_placer_tile_offset_y;
-extern unsigned tile_edit_truecolor_off_x,tile_edit_truecolor_off_y;
-extern unsigned true_color_box_x,true_color_box_y;
+extern unsigned tile_edit_truecolor_off_x, tile_edit_truecolor_off_y;
+extern unsigned true_color_box_x, true_color_box_y;
 extern unsigned SpriteOff[2];
 extern bool show_grid_placer;
 extern unsigned tile_zoom_edit;
@@ -51,14 +51,14 @@ extern uint32_t selTileE_G[2];
 	else \
 		fprintf(stderr,format,##__VA_ARGS__);
 
-void mkProgress(Fl_Window**winP,Fl_Progress**progress);
-int SafeTxtInput(Fl_Int_Input*in,bool redraw=true);
-int SafeTxtInputZeroAllowed(Fl_Int_Input*in,bool redraw=true);
+void mkProgress(Fl_Window**winP, Fl_Progress**progress);
+int SafeTxtInput(Fl_Int_Input*in, bool redraw = true);
+int SafeTxtInputZeroAllowed(Fl_Int_Input*in, bool redraw = true);
 void updateTileSelectAmt(void);
 void updateTileSelectAmt(uint32_t newMax);
-int menuPopupVector(const char * title,const char * text,std::vector<std::string>&slst);
-int MenuPopup(const char * title,const char * text,unsigned num,unsigned def,...);
-int menuPopupArray(const char * title,const char * text,unsigned def,const Fl_Menu_Item*arr);
-bool load_file_generic(const char * the_tile="Pick a file",bool save_file=false);
-char*loadsavefile(const char * the_tile="Pick a file",bool save_file=false);
+int menuPopupVector(const char * title, const char * text, std::vector<std::string>&slst);
+int MenuPopup(const char * title, const char * text, unsigned num, unsigned def, ...);
+int menuPopupArray(const char * title, const char * text, unsigned def, const Fl_Menu_Item*arr);
+bool load_file_generic(const char * the_tile = "Pick a file", bool save_file = false);
+char*loadsavefile(const char * the_tile = "Pick a file", bool save_file = false);
 bool verify_str_number_only(char * str);

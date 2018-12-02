@@ -12,11 +12,11 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #include <FL/Fl_Widget.H>
-void appendLuaScript(Fl_Widget*,void*);
-void deleteLuaScript(Fl_Widget*,void*);
-void setNameLuaScript(Fl_Widget*,void*);
-void switchCurLuaScript(Fl_Widget*,void*);
-void runCurLuaScript(Fl_Widget*,void*);
+void appendLuaScript(Fl_Widget*, void*);
+void deleteLuaScript(Fl_Widget*, void*);
+void setNameLuaScript(Fl_Widget*, void*);
+void switchCurLuaScript(Fl_Widget*, void*);
+void runCurLuaScript(Fl_Widget*, void*);
