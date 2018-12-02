@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 def toTex(basename):
     print('Converting to latex '+basename+'.md')
-    if subprocess.call(['pandoc','--listings','-f','markdown','-V geometry:margin=.5in','-o',basename+'.tex',basename+'.md']):
+    if subprocess.call(['pandoc','--listings','-f','markdown', '-t', 'latex+smart', '-V', 'geometry:margin=.5in','-o',basename+'.tex',basename+'.md']):
         print('pandoc failure')
 def toGithub(inmd,outmd):
     print('Converting to github markdown '+inmd)
-    if subprocess.call(['pandoc','-f','markdown','-t','markdown_github+smart','-o',outmd,inmd]):
+    if subprocess.call(['pandoc','-f','markdown','-t','gfm+smart','-o',outmd,inmd]):
         print('pandoc failure')
     f = open(outmd,'r+')
     txt=f.read()
@@ -30,9 +30,8 @@ for name in sorted(glob.glob('Pandoc/*.md')):
         toGithub(name,githubPath)
 if len(sys.argv)<=1:
     for name in sorted(glob.glob('Pandoc/*.md')):
-        basename=extension = os.path.splitext(name)[0]
-        texname=basename
-        texname+='.tex'
+        basename = os.path.splitext(name)[0]
+        texname = basename + '.tex'
         if os.path.isfile(texname):
             # Check if md file is newer than tex file
             if os.stat(name).st_mtime>os.stat(texname).st_mtime:
