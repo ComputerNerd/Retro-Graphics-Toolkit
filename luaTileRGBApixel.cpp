@@ -39,15 +39,18 @@ static int tileRGBApixel__set_(lua_State *L) {
 		}
 	} else if (type == LUA_TSTRING) {
 		const char*k = luaL_checkstring(L, 2);
-		if (!strcmp("r", k)) {
+
+		if (!strcmp("r", k))
 			rgbaPixel[0] = luaL_checkinteger(L, 3);
-		} else if (!strcmp("g", k)) {
+
+		else if (!strcmp("g", k))
 			rgbaPixel[1] = luaL_checkinteger(L, 3);
-		} else if (!strcmp("b", k)) {
+
+		else if (!strcmp("b", k))
 			rgbaPixel[2] = luaL_checkinteger(L, 3);
-		} else if (!strcmp("a", k)) {
+
+		else if (!strcmp("a", k))
 			rgbaPixel[3] = luaL_checkinteger(L, 3);
-		}
 
 	}
 

@@ -120,15 +120,15 @@ static int paletteEntry__get_(lua_State *L) {
 		} else if (!strcmp("type", k)) {
 			lua_pushinteger(L, projects[projectIDX]->pal->palType[luaL_optinteger(L, 1, 0)]);
 			return 1;
-		} else if (!strcmp("convertFromRGB", k)){
+		} else if (!strcmp("convertFromRGB", k)) {
 			lua_pushcfunction(L, &lua_palette_convertFromRGB);
-			return 1;			
+			return 1;
 		} else if (!strcmp("setRGB", k)) {
 			lua_pushcfunction(L, &lua_palette_setRGB);
-			return 1;			
+			return 1;
 		} else if (!strcmp("pType", k)) {
 			lua_pushinteger(L, projects[projectIDX]->pal->palType[entryIDX]);
-			return 1;			
+			return 1;
 		}
 	}
 

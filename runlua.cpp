@@ -79,8 +79,10 @@ static void *l_alloc(void *ud, void *ptr, size_t osize, size_t nsize) {
 }
 static int lua_palette_fixSliders(lua_State*L) {
 	set_mode_tabs(0, 0);
+
 	if (window)
 		window->redraw();
+
 	return 0;
 }
 static int lua_palette_sortByHSL(lua_State*L) {
@@ -940,11 +942,13 @@ static int lua_project_set(lua_State*L) {
 static int lua_rgt_redraw(lua_State*L) {
 	if (window)
 		window->redraw();
+
 	return 0;
 }
 static int lua_rgt_damage(lua_State*L) {
 	if (window)
 		window->damage(FL_DAMAGE_USER1);
+
 	return 0;
 }
 static int lua_rgt_ditherImage(lua_State*L) {
@@ -1078,15 +1082,18 @@ static const struct keyPairi rgtConsts[] = {
 };
 static int lua_tabs_append(lua_State*L) {
 	int rx, ry, rw, rh;
+
 	if (window) {
 		window->the_tabs->client_area(rx, ry, rw, rh);
 		window->tabsMain.emplace_back(new Fl_Group(rx, ry, rw, rh, "Lua scripting"));
 	}
+
 	return 0;
 }
 static int lua_tabs_endAppend(lua_State*L) {
 	if (window)
 		window->tabsMain[window->tabsMain.size() - 1]->end();
+
 	return 0;
 }
 static const luaL_Reg lua_tabAPI[] = {

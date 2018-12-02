@@ -90,10 +90,10 @@ static int tilemapEntry__get_(lua_State *L) {
 		} else if (!strcmp("row", k)) {
 			lua_pushinteger(L, tm->getPalRow(entryIDX, columnIDX));
 			return 1;
-		} else if (!strcmp("getTileRow", k)){
+		} else if (!strcmp("getTileRow", k)) {
 			lua_pushcfunction(L, &lua_tilemap_getTileRow);
 			return 1;
-		} else if (!strcmp("setFull", k)){
+		} else if (!strcmp("setFull", k)) {
 			lua_pushcfunction(L, &lua_tilemap_setFull);
 			return 1;
 		}

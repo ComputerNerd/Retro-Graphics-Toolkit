@@ -35,7 +35,7 @@ static int projects__get_(lua_State *L) {
 		if (!strcmp("currentIdx", k)) {
 			lua_pushinteger(L, curProjectID + 1);
 			return 1;
-		} else if(!strcmp("current", k)) {
+		} else if (!strcmp("current", k)) {
 			luaopen_Project(L, curProjectID);
 			return 1;
 		}
