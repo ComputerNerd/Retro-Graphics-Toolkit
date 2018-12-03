@@ -1248,7 +1248,7 @@ bool tileMap::truecolor_to_image(uint8_t * the_image, int useRow, bool useAlpha)
 }
 void tileMap::truecolorimageToTiles(uint8_t * image, int rowusage, bool useAlpha, bool copyToTruecolor, bool convert, bool isIndexArray) {
 	if (isIndexArray && useAlpha) {
-		fl_alert("Invalid parameters");
+		fl_alert("Invalid parameters for truecolorimageToTiles.");
 		return;
 	}
 
@@ -1261,7 +1261,7 @@ void tileMap::truecolorimageToTiles(uint8_t * image, int rowusage, bool useAlpha
 	uint_fast32_t w = mapSizeW * prj->tileC->sizew;
 	uint_fast32_t h = mapSizeHA * prj->tileC->sizeh;
 
-	for (uint_fast32_t a = 0; a < (h * w * pSize) - w * pSize; a += w * pTile) { //a tiles y
+	for (uint_fast32_t a = 0; a < h * w * pSize; a += w * pTile) { //a tiles y
 		for (uint_fast32_t b = 0; b < w * pSize; b += pTile) { //b tiles x
 			int32_t current_tile;
 
@@ -1283,18 +1283,14 @@ void tileMap::truecolorimageToTiles(uint8_t * image, int rowusage, bool useAlpha
 			{	uint8_t*truecolor_tile_ptr = truecolor_tile;
 
 				for (uint32_t y = 0; y < w * pTile; y += w * pSize) { //pixels y
-					if (isIndexArray) {
-						memcpy(truecolor_tile_ptr, &image[a + b + y], prj->tileC->sizew);
-						truecolor_tile_ptr += prj->tileC->sizew;
-					} else if (useAlpha || isIndexArray) {
-						memcpy(truecolor_tile_ptr, &image[a + b + y], prj->tileC->sizew * 4);
-						truecolor_tile_ptr += prj->tileC->sizew * 4;
+					if (useAlpha || isIndexArray) {
+						memcpy(truecolor_tile_ptr, &image[a + b + y], prj->tileC->sizew * pSize);
+						truecolor_tile_ptr += prj->tileC->sizew * pSize;
 					} else {
 						for (uint8_t xx = 0; xx < prj->tileC->sizew * 3; xx += 3) {
 							memcpy(truecolor_tile_ptr, &image[a + b + y + xx], 3);
 							truecolor_tile_ptr += 3;
-							*truecolor_tile_ptr = 255;
-							++truecolor_tile_ptr;
+							*truecolor_tile_ptr++ = 255;
 						}
 					}
 				}

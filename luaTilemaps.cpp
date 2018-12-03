@@ -35,6 +35,9 @@ static int tilemaps__get_(lua_State *L) {
 		const char*k = luaL_checkstring(L, 2);
 
 		if (!strcmp("current", k)) {
+			luaopen_Tilemap(L, idx, projects[idx]->curPlane);
+			return 1;
+		} else if (!strcmp("currentIdx", k)) {
 			lua_pushinteger(L, projects[idx]->curPlane + 1);
 			return 1;
 		}

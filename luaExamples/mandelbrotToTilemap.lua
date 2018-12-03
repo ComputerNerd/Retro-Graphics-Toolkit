@@ -44,12 +44,11 @@ local p = projects.current
 if p:have(project.mapMask) then
 	local maxit = tonumber(fl.input("Maximum iterations","16000"))
 	if maxit ~= nil then
-		local tilemap = p.tilemaps[p.tilemaps.current]
+		local tilemap = p.tilemaps.current
 		p.tiles:resize(tilemap.w * tilemap.h)
 
 		for j = 0, tilemap.h -1 do
 			local row = tilemap[j + 1]
-			print(row)
 			for i = 0, tilemap.w - 1 do
 				row[i + 1].tile = j * tilemap.w + i
 			end
@@ -74,7 +73,8 @@ if p:have(project.mapMask) then
 			end
 			y = y + sy
 		end
-		tilemap:imageToTiles(img, -1, 0, 1)
+		-- Paramaters: image, -1 for all rows, has alpha channel false for 3 bpp, true for 4 bpp, copy to true color tiles, convert
+		tilemap:imageToTiles(img, -1, false, true)
 		rgt.redraw()
 	end
 else

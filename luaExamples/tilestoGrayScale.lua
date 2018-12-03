@@ -1,6 +1,6 @@
 -- The project is for constants and static functions.
 -- The projects table is treated as an array.
-local p = projects[projects.current]
+local p = projects.current
 if p:have(project.tilesMask) then
 --[[ Although as of writing this comment Retro Graphics Toolkit uses only tiles that use a palette
      meaning that having tiles implies a palette this could change latter
@@ -41,7 +41,7 @@ if p:have(project.tilesMask) then
 	end
 	if p:have(project.mapMask) then
 		-- Set all tiles to use row zero.
-		local tilemap = p.tilemaps[p.tilemaps.current]
+		local tilemap = p.tilemaps.current
 		print(tilemap.hAll)
 		for j = 1, tilemap.hAll do
 			for i = 1, tilemap.w do

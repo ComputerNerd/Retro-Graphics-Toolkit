@@ -1,7 +1,7 @@
 -- Sets all tiles to a gradient
 local p = projects.current
 if p:have(project.tilesMask+project.mapMask) then
-	local tilemap = p.tilemaps[p.tilemaps.current]
+	local tilemap = p.tilemaps.current
 	local ret,r1,g1,b1=fl.color_chooser("First color")
 	if ret~=0 then
 		local ret,r2,g2,b2=fl.color_chooser("Second color")

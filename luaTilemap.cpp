@@ -55,7 +55,7 @@ static int lua_tilemap_imageToTiles(lua_State*L) {
 	int row = luaL_optinteger(L, 3, -1);
 	bool useAlpha = luaL_optboolean(L, 4, false);
 	bool copyToTruecol = luaL_optboolean(L, 5, false);
-	bool convert = luaL_optinteger(L, 6, 1);
+	bool convert = luaL_optboolean(L, 6, false);
 	unsigned bpp = useAlpha + 3;
 	uint32_t w, h;
 	w = projects[projectIDX]->tms->maps[tilemapIDX].mapSizeW * projects[projectIDX]->tileC->sizew;

@@ -1,6 +1,6 @@
 local p = projects.current
 if p:have(project.mapMask+project.palMask) then
-	local tilemap = p.tilemaps[p.tilemaps.current]
+	local tilemap = p.tilemaps.current
 	local img = tilemap:toImage(-1, true)
 
 	rgt.ditherImage(img,tilemap.width * tile.width,tilemap.height * tile.height, 1)

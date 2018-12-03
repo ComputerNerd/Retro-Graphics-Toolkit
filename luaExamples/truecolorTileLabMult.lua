@@ -1,4 +1,4 @@
-local p = projects[projects.current]
+local p = projects.current
 if p:have(project.tilesMask) then
 	local Lm = tonumber(fl.input("Enter L multiplier","1"))
 	local am = tonumber(fl.input("Enter a multiplier","1"))

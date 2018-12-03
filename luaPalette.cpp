@@ -97,7 +97,7 @@ static int palette__len_(lua_State *L) {
 }
 
 static int palette___tostring(lua_State *L) {
-	lua_pushfstring(L, "palette table: %p", projects[getSizeTUserData(L)]->tms);
+	lua_pushfstring(L, "palette table: %p", projects[getSizeTUserData(L)]->pal);
 	return 1;
 }
 
