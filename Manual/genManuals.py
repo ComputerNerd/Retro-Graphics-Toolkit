@@ -21,6 +21,7 @@ import subprocess
 import fileinput
 import sys
 import re
+import shutil
 for name in sorted(glob.glob('Pandoc/*.md')):
     githubPath='Retro-Graphics-Toolkit.wiki/'+os.path.basename(name)
     if os.path.isfile(githubPath):
@@ -70,5 +71,7 @@ if len(sys.argv)<=1:
         print('xelatex fail pass 1')
     if subprocess.call(args):
         print('xelatex fail pass 2')
+    shutil.move('Manual.pdf', 'Manual_comp.pdf')
+    subprocess.call(['qpdf', '--normalize-content=n', '--compress-streams=n', '--decode-level=all', 'Manual_comp.pdf', 'Manual.pdf'])
 else:
     print('Skipping offline manual generation')
