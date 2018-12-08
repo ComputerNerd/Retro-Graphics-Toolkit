@@ -457,11 +457,11 @@ void tileMap::set_pal_row(uint32_t x, uint32_t y, unsigned row) {
 		tileMapDat[((y * mapSizeW) + x) * 4] |= row << 5;
 	}
 }
-uint32_t tileMap::get_tile(uint32_t x, uint32_t y)const {
+int32_t tileMap::get_tile(uint32_t x, uint32_t y)const {
 	//first calculate which tile we want
 	if ((mapSizeW <= x) || (mapSizeHA) <= y) {
 		printf("Error tile (%d,%d) does not exist on this map\n", x, y);
-		return 0;
+		return -1;
 	}
 
 	uint32_t selected_tile = ((y * mapSizeW) + x) * 4;
@@ -1346,12 +1346,14 @@ void tileMap::drawPart(unsigned offx, unsigned offy, unsigned x, unsigned y, uns
 				bool hflip = get_hflip(i, j);
 				bool vflip = get_vflip(i, j);
 				bool prio = get_prio(i, j);
-				uint32_t tile = get_tile(i, j);
+				int32_t tile = get_tile(i, j);
 
-				if (trueCol)
-					prj->tileC->draw_truecolor(tile, ox, offy, hflip, vflip, zoom);
-				else
-					prj->tileC->draw_tile(ox, offy, tile, zoom, palRow, hflip, vflip, false, extPalRows ? getExtPtr(i, j) : 0, prj->curPlane);
+				if (tile >= 0) {
+					if (trueCol)
+						prj->tileC->draw_truecolor(tile, ox, offy, hflip, vflip, zoom);
+					else
+						prj->tileC->draw_tile(ox, offy, tile, zoom, palRow, hflip, vflip, false, extPalRows ? getExtPtr(i, j) : 0, prj->curPlane);
+				}
 			}
 
 			ox += prj->tileC->sizew * zoom;
@@ -1380,28 +1382,30 @@ void tileMap::drawBlock(unsigned block, unsigned xo, unsigned yo, unsigned flags
 		for (uint32_t xb = 0; xb < mapSizeW; ++xb) {
 			bool hflip = get_hflip(xb, Ty), vflip = get_vflip(xb, Ty);
 			unsigned row = getPalRow(xb, Ty);
-			uint32_t tile = get_tile(xb, Ty);
+			int32_t tile = get_tile(xb, Ty);
 
-			if (flags == 3) { //Both
-				if (showTrueColor)
-					prj->tileC->draw_truecolor(tile, xoo, yo, hflip ^ true, vflip ^ true, zoom);
-				else
-					prj->tileC->draw_tile(xoo, yo, tile, zoom, row, hflip ^ true, vflip ^ true);
-			} else if (flags & 2) { //Y-flip
-				if (showTrueColor)
-					prj->tileC->draw_truecolor(tile, xoo, yo, hflip, vflip ^ true, zoom);
-				else
-					prj->tileC->draw_tile(xoo, yo, tile, zoom, row, hflip, vflip ^ true);
-			} else if (flags & 1) { //X-flip
-				if (showTrueColor)
-					prj->tileC->draw_truecolor(tile, xoo, yo, hflip ^ true, vflip, zoom);
-				else
-					prj->tileC->draw_tile(xoo, yo, tile, zoom, row, hflip ^ true, vflip);
-			} else { //No flip
-				if (showTrueColor)
-					prj->tileC->draw_truecolor(tile, xoo, yo, hflip, vflip, zoom);
-				else
-					prj->tileC->draw_tile(xoo, yo, tile, zoom, row, hflip, vflip);
+			if (tile >= 0) {
+				if (flags == 3) { //Both
+					if (showTrueColor)
+						prj->tileC->draw_truecolor(tile, xoo, yo, hflip ^ true, vflip ^ true, zoom);
+					else
+						prj->tileC->draw_tile(xoo, yo, tile, zoom, row, hflip ^ true, vflip ^ true);
+				} else if (flags & 2) { //Y-flip
+					if (showTrueColor)
+						prj->tileC->draw_truecolor(tile, xoo, yo, hflip, vflip ^ true, zoom);
+					else
+						prj->tileC->draw_tile(xoo, yo, tile, zoom, row, hflip, vflip ^ true);
+				} else if (flags & 1) { //X-flip
+					if (showTrueColor)
+						prj->tileC->draw_truecolor(tile, xoo, yo, hflip ^ true, vflip, zoom);
+					else
+						prj->tileC->draw_tile(xoo, yo, tile, zoom, row, hflip ^ true, vflip);
+				} else { //No flip
+					if (showTrueColor)
+						prj->tileC->draw_truecolor(tile, xoo, yo, hflip, vflip, zoom);
+					else
+						prj->tileC->draw_tile(xoo, yo, tile, zoom, row, hflip, vflip);
+				}
 			}
 
 			if (flags & 1)
@@ -1486,7 +1490,7 @@ void tileMap::pickExtAttrs(void) {
 			for (unsigned j = 0; j < mapSizeHA; ++j) {
 				for (unsigned i = 0; i < mapSizeW; ++i) {
 					unsigned hist[16];
-					unsigned tile = get_tile(i, j);
+					int32_t tile = get_tile(i, j);
 					attrs[tile].second = tile;
 
 					if (tile < prj->tileC->amt) {

@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #include "luaTile.hpp"
 #include "luaTileRGBArow.hpp"
@@ -20,11 +20,21 @@
 #include "project.h"
 #include "dub/dub.h"
 
-/* static int lua_tile_setTileRGBA(lua_State*L) {
-	unsigned tile = luaL_optinteger(L, 1, 0);
+static unsigned inRangeTile(unsigned tile, size_t projectIDX) {
+	if (tile >= projects[projectIDX]->tileC->amt) {
+		outofBoundsAlert("tile", tile);
+		return 0;
+	}
 
-	if (inRangeTile(tile)) {
-		uint8_t*tptr = ((uint8_t*)currentProject->tileC->truetDat.data() + (tile * currentProject->tileC->tcSize));
+	return 1;
+}
+static int lua_tile_setTileRGBA(lua_State*L) {
+	getIdxPtrChk
+	size_t projectIDX = *idxPtr;
+	size_t tile = idxPtr[1];
+
+	if (inRangeTile(tile, projectIDX)) {
+		uint8_t*tptr = ((uint8_t*)projects[projectIDX]->tileC->truetDat.data() + (tile * projects[projectIDX]->tileC->tcSize));
 		unsigned len = lua_rawlen(L, 2);
 
 		if (!len) {
@@ -32,13 +42,78 @@
 			return 0;
 		}
 
-		fillucharFromTab(L, 2, len, currentProject->tileC->tcSize, tptr);
+		fillucharFromTab(L, 2, len, projects[projectIDX]->tileC->tcSize, tptr);
 	}
 
 	return 0;
-}*/
+}
 
+static int lua_tile_compareTileRGBA(lua_State*L) {
+	getIdxPtrChk
+	size_t projectIDX = *idxPtr;
+	size_t tile1 = idxPtr[1];
+	unsigned tile2 = luaL_optinteger(L, 2, 0);
+
+	if (inRangeTile(tile1, projectIDX) && inRangeTile(tile2, projectIDX) && (tile1 != tile2)) {
+		unsigned diffSum = 0;
+		uint8_t*off1 = projects[projectIDX]->tileC->truetDat.data() + (tile1 * projects[projectIDX]->tileC->tcSize);
+		uint8_t*off2 = projects[projectIDX]->tileC->truetDat.data() + (tile2 * projects[projectIDX]->tileC->tcSize);
+
+		for (unsigned i = 0; i < projects[projectIDX]->tileC->tcSize; i += 4) {
+			int tmp = 0;
+
+			for (unsigned j = 0; j < 3; ++j)
+				tmp += *off1++ -*off2++;
+
+			++off1;
+			++off2;
+			diffSum += tmp * tmp;
+		}
+
+		lua_pushinteger(L, diffSum);
+		return 1;
+	}
+
+	return 0;
+}
+static int lua_tile_dither(lua_State*L) {
+	getIdxPtrChk
+	size_t projectIDX = *idxPtr;
+	size_t tile = idxPtr[1];
+
+	unsigned row = luaL_optinteger(L, 2, 0);
+	bool useAlt = luaL_optboolean(L, 3, false);
+
+	if (inRangeTile(tile, projectIDX))
+		projects[projectIDX]->tileC->truecolor_to_tile(row, tile, useAlt);
+
+	return 0;
+}
+
+static int lua_tile_draw(lua_State*L) {
+	getIdxPtrChk
+	size_t projectIDX = *idxPtr;
+	size_t tile = idxPtr[1];
+
+	projects[projectIDX]->tileC->draw_tile(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0),
+	                                       tile, luaL_optinteger(L, 4, 0),
+	                                       luaL_optinteger(L, 5, 0), lua_toboolean(L, 6),
+	                                       lua_toboolean(L, 7), lua_toboolean(L, 8),
+	                                       (const uint8_t*)luaL_optinteger(L, 9, 0),
+	                                       luaL_optinteger(L, 10, 0), lua_toboolean(L, 11));
+	return 0;
+}
+
+static int lua_tile_remove(lua_State*L) {
+	getIdxPtrChk
+	size_t projectIDX = *idxPtr;
+	size_t tileIDX = idxPtr[1];
+
+	projects[projectIDX]->tileC->remove_tile_at(tileIDX);
+	return 0;
+}
 static int tile__get_(lua_State *L) {
+	checkAlreadyExists
 	int type = lua_type(L, 2);
 
 	if (type == LUA_TSTRING) {
@@ -48,22 +123,7 @@ static int tile__get_(lua_State *L) {
 
 		const char*k = luaL_checkstring(L, 2);
 
-		if (!strcmp("current", k)) {
-			lua_pushinteger(L, projects[idx]->tileC->current_tile + 1);
-			return 1;
-		} else if (!strcmp("tileSize", k)) {
-			lua_pushinteger(L, projects[idx]->tileC->tileSize);
-			return 1;
-		} else if (!strcmp("tcSize", k)) {
-			lua_pushinteger(L, projects[idx]->tileC->tcSize);
-			return 1;
-		} else if (!strcmp("w", k)) {
-			lua_pushinteger(L, projects[idx]->tileC->sizew);
-			return 1;
-		} else if (!strcmp("h", k)) {
-			lua_pushinteger(L, projects[idx]->tileC->sizeh);
-			return 1;
-		} else if (!strcmp("rgba", k)) {
+		if (!strcmp("rgba", k)) {
 			luaopen_TileRGBArow(L, idx, tileIDX);
 			return 1;
 		}
@@ -80,6 +140,10 @@ static int tile___tostring(lua_State * L) {
 static const struct luaL_Reg tile_member_methods[] = {
 	{ "__index", tile__get_       },
 	{ "__tostring", tile___tostring  },
+	{ "compareTileRGBA", lua_tile_compareTileRGBA},
+	{ "dither", lua_tile_dither},
+	{ "draw", lua_tile_draw},
+	{ "remove", lua_tile_remove},
 	{ "deleted", dub::isDeleted    },
 	{ NULL, NULL},
 };

@@ -50,7 +50,7 @@ public:
 	bool get_hflip(uint32_t x, uint32_t y)const;
 	bool get_vflip(uint32_t x, uint32_t y)const;
 	bool get_prio(uint32_t x, uint32_t y)const;
-	uint32_t get_tile(uint32_t x, uint32_t y)const;
+	int32_t get_tile(uint32_t x, uint32_t y)const;
 	int32_t get_tileRow(uint32_t x, uint32_t y, unsigned useRow)const;
 	unsigned getPalRow(uint32_t x, uint32_t y)const;
 	static unsigned getPalRowExt(const uint8_t*ptr, uint32_t y, bool fg);

@@ -14,21 +14,21 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
-#include "luaTilemapRow.hpp"
-#include "luaTilemapEntry.hpp"
+#include "luaChunkRow.hpp"
+#include "luaChunkEntry.hpp"
 #include "luaHelpers.hpp"
 #include "project.h"
 #include "dub/dub.h"
-static int tilemapRow__get_(lua_State *L) {
+static int chunkRow__get_(lua_State *L) {
 	int type = lua_type(L, 2);
 
 	if (type == LUA_TNUMBER) {
-		const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
+		getIdxPtrChk
 
 		int k = luaL_checkinteger(L, 2) - 1;
 
-		if (k >= 0 && k < projects[idxPtr[0]]->tms->maps[idxPtr[1]].mapSizeW) {
-			luaopen_TilemapEntry(L, idxPtr[0], idxPtr[1], idxPtr[2], k);
+		if (k >= 0 && k < projects[idxPtr[0]]->Chunk->wi) {
+			luaopen_ChunkEntry(L, idxPtr[0], idxPtr[1], idxPtr[2], k);
 			return 1;
 		}
 	}
@@ -36,45 +36,41 @@ static int tilemapRow__get_(lua_State *L) {
 	return 0;
 }
 
-static int tilemapRow__len_(lua_State *L) {
-	const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
-	size_t projectIDX = *idxPtr;
-	size_t tilemapIDX = idxPtr[1];
-
-	lua_pushinteger(L, projects[projectIDX]->tms->maps[tilemapIDX].mapSizeW);
+static int chunkRow__len_(lua_State *L) {
+	lua_pushinteger(L, projects[getSizeTUserData(L)]->Chunk->wi);
 	return 1;
 }
 
-static int tilemapRow___tostring(lua_State *L) {
+static int chunkRow___tostring(lua_State *L) {
 	const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
-	lua_pushfstring(L, "Tilemap row: %d from tilemap: %d from project: %d", idxPtr[2], idxPtr[1], idxPtr[0]);
+	lua_pushfstring(L, "Chunk row: %d from chunk: %d from project: %d", idxPtr[2], idxPtr[1], idxPtr[0]);
 	return 1;
 }
 
-static const struct luaL_Reg tilemapRow_member_methods[] = {
-	{ "__index", tilemapRow__get_       },
-	{ "__len", tilemapRow__len_       },
-	{ "__tostring", tilemapRow___tostring  },
+static const struct luaL_Reg chunkRow_member_methods[] = {
+	{ "__index", chunkRow__get_       },
+	{ "__len", chunkRow__len_       },
+	{ "__tostring", chunkRow___tostring  },
 	{ "deleted", dub::isDeleted    },
 	{ NULL, NULL},
 };
 
-int luaopen_TilemapRow(lua_State *L, size_t projectIDX, size_t tilemapIDX, size_t rowIDX) {
+int luaopen_ChunkRow(lua_State *L, size_t projectIDX, size_t chunkIDX, size_t rowIDX) {
 	// Create the metatable which will contain all the member methods
-	luaL_newmetatable(L, "tilemapRow");
+	luaL_newmetatable(L, "chunkRow");
 	// <mt>
 
 	// register member methods
-	dub::fregister(L, tilemapRow_member_methods);
-	dub::setup(L, "tilemapRow");
+	dub::fregister(L, chunkRow_member_methods);
+	dub::setup(L, "chunkRow");
 	// setup meta-table
 
 	size_t* idxUserData = (size_t*)lua_newuserdata(L, sizeof(size_t) * 3);
 	idxUserData[0] = projectIDX;
-	idxUserData[1] = tilemapIDX;
+	idxUserData[1] = chunkIDX;
 	idxUserData[2] = rowIDX;
 
-	luaL_getmetatable(L, "tilemapRow");
+	luaL_getmetatable(L, "chunkRow");
 	lua_setmetatable(L, -2);
 	return 1;
 }

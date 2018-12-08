@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 --]]
 lvlCurLayer=0
 curLayerInfo=nil
@@ -26,23 +26,24 @@ function setSizePer()
 	rgt.syncProject()
 
 	local p = projects.current
+	local chunks = p.chunks
 
-	local tileW = p.tiles.w
-	local tileH = p.tiles.h
+	local tileW = p.tiles.width
+	local tileH = p.tiles.height
 	local tilemap = p.tilemaps[plane]
 
 	if src==level.TILES then
 		szX = tileW
 		szY = tileH
 	elseif src==level.BLOCKS then
-		szX = tilemap.w * tileW
-		szY = tilemap.h * tileH
+		szX = tilemap.width * tileW
+		szY = tilemap.height * tileH
 	elseif src==level.CHUNKS then
 		szX = chunks.width * tileW
 		szY = chunks.height * tileH
 		if chunks.useBlocks~=false then
-			szX = szX * tilemap.w
-			szY = szY * tilemap.h
+			szX = szX * tilemap.width
+			szY = szY * tilemap.height
 		end
 	end
 end
@@ -149,6 +150,7 @@ end
 
 function selSlideUpdateMax(src)
 	local p = projects.current
+	local chunks = p.chunks
 
 	if src==level.TILES then
 		selSlide:maximum(#p.tiles - 1)
@@ -157,7 +159,7 @@ function selSlideUpdateMax(src)
 		local tilemap = p.tilemaps[plane]
 		selSlide:maximum(tilemap.hAll // tilemap.h - 1)
 	elseif src==level.CHUNKS then
-		selSlide:maximum(chunks.amt - 1)
+		selSlide:maximum(#chunks - 1)
 	else
 		invalidSource(src)
 	end
@@ -172,6 +174,7 @@ function drawLevel()
 	local xs,ys=xOff,yOff
 	local src=curLayerInfo.src&3
 	rgt.syncProject()
+	local p = projects.current
 	for j=scrollY,curLayerInfo.h-1 do
 		local xxs=xs
 		for i=scrollX,curLayerInfo.w-1 do
@@ -180,14 +183,18 @@ function drawLevel()
 			local plane=(curLayerInfo.src>>2)
 			--print('a',a,'a.dat',a.dat,'lvlCurLayer',lvlCurLayer)
 			if src==level.TILES then
-				tile.draw(xxs,ys,a.id,lvlZoom,(a.dat>>2)&3,a.dat&1,a.dat&2,false,0--[[TODO extended attributes--]],plane,false)
+				local tile = p.tiles[a.id + 1]
+				if tile ~= nil then
+					tile:draw(xxs,ys,lvlZoom,(a.dat>>2)&3,a.dat&1,a.dat&2,false,0--[[TODO extended attributes--]],plane,false)
+				end
 			elseif src==level.BLOCKS then
 				tilemaps.drawBlock(plane,a.id,xxs,ys,a.dat&3,lvlZoom)
 			elseif src==level.CHUNKS then
-				if a.id<chunks.amt then
-					chunks.draw(a.id,xxs,ys,lvlZoom,0,0)
+				local chunks = p.chunks
+				if a.id<#chunks then
+					chunks[a.id + 1]:draw(xxs,ys,lvlZoom,0,0)
 				else
-					print('a.id>=chunks.amt',a.id,chunks.amt)
+					print('a.id>=chunks.amt',a.id,#chunks)
 				end
 			else
 				invalidSource(src)
@@ -391,7 +398,8 @@ function handleLevel(e)
 	end
 end
 function setLayerSrc(val)
-	if val==level.BLOCKS and tilemaps.useBlocks[(curLayerInfo.src>>2)+1]~=true then
+	local p = projects.current
+	if val==level.BLOCKS and p.tilemaps[1].useBlocks[(curLayerInfo.src>>2)+1]~=true then
 		fl.alert("You must first enable blocks in the plane editor")
 		lvlSrc:value(curLayerInfo.src&3)
 		return

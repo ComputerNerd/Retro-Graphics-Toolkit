@@ -26,7 +26,7 @@
 #include "callbacktilemaps.h"
 #include "runlua.h"
 #include "luaconfig.h"
-const char*rtVersionStr = "Retro Graphics Toolkit v0.8 RC2";
+const char*rtVersionStr = "Retro Graphics Toolkit v0.8 RC3";
 editor*window = nullptr;
 
 //From lua.c

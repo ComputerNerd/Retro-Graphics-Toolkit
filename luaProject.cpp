@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #include "dub/dub.h"
 #include "luaHelpers.hpp"
@@ -20,6 +20,7 @@
 #include "luaProject.hpp"
 #include "luaTilemaps.hpp"
 #include "luaTiles.hpp"
+#include "luaChunks.hpp"
 #include "project.h"
 
 static int project__set_(lua_State *L) {
@@ -33,12 +34,12 @@ static int project__set_(lua_State *L) {
 
 	return 0;
 }
-static int lua_project_rgt_have(lua_State*L) {
+static int lua_project_have(lua_State*L) {
 	lua_pushboolean(L, projects[getSizeTUserData(L)]->containsData(luaL_optinteger(L, 2, pjHavePal)));
 	return 1;
 }
 
-static int lua_project_rgt_haveOR(lua_State*L) {
+static int lua_project_haveOR(lua_State*L) {
 	lua_pushboolean(L, projects[getSizeTUserData(L)]->containsDataOR(luaL_optinteger(L, 2, pjHavePal)));
 	return 1;
 }
@@ -63,13 +64,15 @@ static int lua_project_save(lua_State*L) {
 	return 0;
 }
 
-static int lua_project_rgt_haveMessage(lua_State*L) {
+static int lua_project_haveMessage(lua_State*L) {
 	unsigned mask = luaL_optinteger(L, 2, pjHavePal);
 	projects[getSizeTUserData(L)]->haveMessage(mask);
 	return 0;
 }
 
 static int project__get_(lua_State *L) {
+	checkAlreadyExists
+
 	int type = lua_type(L, 2);
 
 	if (type == LUA_TSTRING) {
@@ -95,29 +98,13 @@ static int project__get_(lua_State *L) {
 				luaopen_Palette(L, idx);
 				return 1;
 			}
+		} else if (!strcmp("chunks", k)) {
+			if (projects[idx]->containsData(pjHaveChunks)) {
+				luaopen_Chunks(L, idx);
+				return 1;
+			}
 		} else if (!strcmp("settings", k)) {
 			lua_pushinteger(L, projects[idx]->luaSettings);
-			return 1;
-		} else if (!strcmp("have", k)) {
-			lua_pushcfunction(L, &lua_project_rgt_have);
-			return 1;
-		} else if (!strcmp("haveOR", k)) {
-			lua_pushcfunction(L, &lua_project_rgt_haveOR);
-			return 1;
-		} else if (!strcmp("haveMessage", k)) {
-			lua_pushcfunction(L, &lua_project_rgt_haveMessage);
-			return 1;
-		} else if (!strcmp("setPalType", k)) {
-			lua_pushcfunction(L, &lua_project_setPalTab);
-			return 1;
-		} else if (!strcmp("getPalType", k)) {
-			lua_pushcfunction(L, &lua_project_getPalTab);
-			return 1;
-		} else if (!strcmp("load", k)) {
-			lua_pushcfunction(L, &lua_project_load);
-			return 1;
-		} else if (!strcmp("save", k)) {
-			lua_pushcfunction(L, &lua_project_save);
 			return 1;
 		}
 	}
@@ -128,7 +115,7 @@ static int project__get_(lua_State *L) {
 static int project___tostring(lua_State *L) {
 	const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
 	size_t idx = *idxPtr;
-	lua_pushfstring(L, "project table: %p Entries: %d", projects[idx], projects_count);
+	lua_pushfstring(L, "project table: %p", projects[idx]);
 	return 1;
 }
 
@@ -138,6 +125,13 @@ static const struct luaL_Reg project_member_methods[] = {
 	{ "__index", project__get_       },
 	{ "__tostring", project___tostring  },
 	{ "deleted", dub::isDeleted      },
+	{ "have", lua_project_have},
+	{ "haveOR", lua_project_haveOR},
+	{ "haveMessage", lua_project_haveMessage},
+	{ "setPalType", lua_project_setPalTab},
+	{ "getPalType", lua_project_getPalTab},
+	{ "load", lua_project_load},
+	{ "save", lua_project_save},
 	{ NULL, NULL},
 };
 

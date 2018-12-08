@@ -33,10 +33,10 @@
 #include "class_global.h"
 static void addHist(uint32_t cur_tile, int type, uint32_t*hist, unsigned sz) {
 	double szz = (double)sz;
-	uint8_t * truePtr = &currentProject->tileC->truetDat[cur_tile * 256];
+	uint8_t * truePtr = &currentProject->tileC->truetDat[cur_tile * currentProject->tileC->tcSize];
 	double h, l, s;
 
-	for (unsigned z = 0; z < 256; z += 4) {
+	for (unsigned z = 0; z < currentProject->tileC->tcSize; z += 4) {
 		rgbToHsl255(truePtr[0], truePtr[1], truePtr[2], &h, &s, &l);
 		truePtr += 4;
 
@@ -179,10 +179,10 @@ void tileMap::pickRow(unsigned amount, int type, int method) {
 	unsigned addBy;
 
 	if ((currentProject->gameSystem == NES) && (currentProject->subSystem & NES2x2)) {
-		divBy = 256.0; //8*8*2*2
+		divBy = currentProject->tileC->sizew * currentProject->tileC->sizeh * 4.0; // Four tiles.
 		addBy = 2;
 	} else {
-		divBy = 64.0; //8*8
+		divBy = currentProject->tileC->sizew * currentProject->tileC->sizeh;
 		addBy = 1;
 	}
 
@@ -224,6 +224,7 @@ void tileMap::pickRow(unsigned amount, int type, int method) {
 
 			maxh = (histp - hist);
 			maxh += 2;
+			maxh = std::max(sz, maxh);
 			printf("Histogram stretched to [%d,%d)\n", minh, maxh);
 		} else {
 			minh = 0;

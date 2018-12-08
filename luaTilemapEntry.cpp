@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #include "luaTilemapEntry.hpp"
 #include "luaHelpers.hpp"
@@ -21,17 +21,23 @@
 #include "classtilemap.h"
 
 static int lua_tilemap_setFull(lua_State*L) {
-	const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
-	size_t projectIDX = *idxPtr;
-	size_t entryIDX = idxPtr[1];
-	projects[projectIDX]->tms->maps[entryIDX].set_tile_full(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0), luaL_optinteger(L, 5, 0), luaL_optinteger(L, 6, 0), luaL_optinteger(L, 7, 0), luaL_optinteger(L, 8, 0));
+	getProjectIDX
+	const size_t tilemapIDX = idxPtr[1];
+	const size_t columnIDX = idxPtr[2];
+	const size_t entryIDX = idxPtr[3];
+	projects[projectIDX]->tms->maps[tilemapIDX].set_tile_full(entryIDX, // x
+			columnIDX, // y
+			luaL_optinteger(L, 2, 0), // tile
+			luaL_optboolean(L, 3, false), // palette_row
+			luaL_optboolean(L, 4, false), // hflip
+			luaL_optboolean(L, 5, false), // vflip
+			luaL_optboolean(L, 6, false)); // priority
 	return 0;
 }
 
 static int tilemapEntry__set_(lua_State *L) {
 	const char *key = luaL_checkstring(L, 2);
-	const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
-	const size_t projectIDX = idxPtr[0];
+	getProjectIDX
 	const size_t tilemapIDX = idxPtr[1];
 	const size_t columnIDX = idxPtr[2];
 	const size_t entryIDX = idxPtr[3];
@@ -62,12 +68,12 @@ static int lua_tilemap_getTileRow(lua_State*L) {
 }
 
 static int tilemapEntry__get_(lua_State *L) {
+	checkAlreadyExists
 	int type = lua_type(L, 2);
 
 	if (type == LUA_TSTRING) {
 		const char *key = luaL_checkstring(L, 2);
-		const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
-		const size_t projectIDX = idxPtr[0];
+		getProjectIDX
 		const size_t tilemapIDX = idxPtr[1];
 		const size_t columnIDX = idxPtr[2];
 		const size_t entryIDX = idxPtr[3];
@@ -90,14 +96,7 @@ static int tilemapEntry__get_(lua_State *L) {
 		} else if (!strcmp("row", k)) {
 			lua_pushinteger(L, tm->getPalRow(entryIDX, columnIDX));
 			return 1;
-		} else if (!strcmp("getTileRow", k)) {
-			lua_pushcfunction(L, &lua_tilemap_getTileRow);
-			return 1;
-		} else if (!strcmp("setFull", k)) {
-			lua_pushcfunction(L, &lua_tilemap_setFull);
-			return 1;
 		}
-
 	}
 
 	return 0;
@@ -111,6 +110,8 @@ static int tilemapEntry___tostring(lua_State *L) {
 static const struct luaL_Reg tilemapEntry_member_methods[] = {
 	{ "__newindex", tilemapEntry__set_       },
 	{ "__index", tilemapEntry__get_       },
+	{ "setFull", lua_tilemap_setFull       },
+	{ "getTileRow", lua_tilemap_getTileRow       },
 	{ "__tostring", tilemapEntry___tostring  },
 	{ "deleted", dub::isDeleted    },
 	{ NULL, NULL},

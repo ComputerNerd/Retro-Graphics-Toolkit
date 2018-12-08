@@ -37,7 +37,7 @@ size_t getSizeTUserData(lua_State*L) {
 	const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
 	return *idxPtr;
 }
-int luaL_optboolean (lua_State *L, int narg, int def) {
+bool luaL_optboolean (lua_State *L, int narg, bool def) {
 	return lua_isboolean(L, narg) ? lua_toboolean(L, narg) : def;
 }
 void fillucharFromTab(lua_State*L, unsigned index, unsigned len, unsigned sz, uint8_t*ptr) { //len amount in table sz expected size
@@ -62,4 +62,7 @@ void fillucharFromTab(lua_State*L, unsigned index, unsigned len, unsigned sz, ui
 }
 void outofBoundsAlert(const char*what, unsigned val) {
 	fl_alert("Error tried to access out of bound %s %u", what, val);
+}
+void noUserDataError() {
+	fl_alert("Lua code error: No user data");
 }

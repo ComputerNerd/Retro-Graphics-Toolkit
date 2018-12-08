@@ -154,7 +154,7 @@ void ChunkClass::setFlag(uint32_t id, uint32_t x, uint32_t y, uint32_t flag) {
 	bit 2,3 solidity 00 means not solid, 01 means top solid, 10 means left/right/bottom solid, and 11 means all solid.
 	*/
 }
-uint32_t ChunkClass::getFlag(uint32_t id, uint32_t x, uint32_t y) {
+uint32_t ChunkClass::getFlag(uint32_t id, uint32_t x, uint32_t y)const {
 	return chunks[getOff(id, x, y)].flags;
 }
 void ChunkClass::setSolid(uint32_t id, uint32_t x, uint32_t y, unsigned solid) {
@@ -194,6 +194,9 @@ void ChunkClass::setPrio(uint32_t id, uint32_t x, uint32_t y, bool prio) {
 		chunks[off].flags &= ~4;
 }
 void ChunkClass::drawChunk(uint32_t id, int xo, int yo, int zoom, int scrollX, int scrollY) {
+	if (!window)
+		return;
+
 	struct ChunkAttrs * cptr = chunks.data();
 
 	for (uint32_t y = scrollY; y < hi; ++y) {
@@ -226,6 +229,9 @@ void ChunkClass::drawChunk(uint32_t id, int xo, int yo, int zoom, int scrollX, i
 	}
 }
 void ChunkClass::scrollChunks(void) {
+	if (!window)
+		return;
+
 	unsigned oldS = window->chunkX->value();
 	int zoom = window->chunk_tile_size->value();
 	int off;
@@ -336,7 +342,9 @@ void ChunkClass::importSonic1(bool append) {
 	else
 		off = 0;
 
-	window->updateChunkSize(wi, hi);
+	if (window)
+		window->updateChunkSize(wi, hi);
+
 	amt = (fileSize / (wi * hi * 2)) + off;
 	chunks.resize(amt * wi * hi);
 	struct ChunkAttrs*cptr = chunks.data();
@@ -443,6 +451,7 @@ void ChunkClass::exportSonic1(void)const {
 		}
 	}
 }
+
 void ChunkClass::resize(uint32_t wnew, uint32_t hnew) {
 	if ((wnew == wi) && (hnew == hi))
 		return;

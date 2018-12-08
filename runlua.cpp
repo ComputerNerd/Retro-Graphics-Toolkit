@@ -94,157 +94,6 @@ static const luaL_Reg lua_paletteAPI[] = {
 	{"sortByHSL", lua_palette_sortByHSL},
 	{0, 0}
 };
-static unsigned inRangeTile(unsigned tile) {
-	if (tile >= currentProject->tileC->amt) {
-		outofBoundsAlert("tile", tile);
-		return 0;
-	}
-
-	return 1;
-}
-static unsigned inXYbound(unsigned x, unsigned y) {
-	if (x >= currentProject->tileC->sizew) {
-		outofBoundsAlert("X", x);
-		return 0;
-	}
-
-	if (y >= currentProject->tileC->sizeh) {
-		outofBoundsAlert("Y", y);
-		return 0;
-	}
-
-	return 1;
-}
-static int lua_tile_compareTileRGBA(lua_State*L) {
-	unsigned tile1 = luaL_optinteger(L, 1, 0);
-	unsigned tile2 = luaL_optinteger(L, 2, 0);
-
-	if (inRangeTile(tile1) && inRangeTile(tile2) && (tile1 != tile2)) {
-		unsigned diffSum = 0;
-		uint8_t*off1 = currentProject->tileC->truetDat.data() + (tile1 * currentProject->tileC->tcSize);
-		uint8_t*off2 = currentProject->tileC->truetDat.data() + (tile2 * currentProject->tileC->tcSize);
-
-		for (unsigned i = 0; i < currentProject->tileC->tcSize; i += 4) {
-			int tmp = 0;
-
-			for (unsigned j = 0; j < 3; ++j)
-				tmp += *off1++ -*off2++;
-
-			++off1;
-			++off2;
-			diffSum += tmp * tmp;
-		}
-
-		lua_pushinteger(L, diffSum);
-		return 1;
-	}
-
-	return 0;
-}
-static int lua_tile_dither(lua_State*L) {
-	unsigned tile = luaL_optinteger(L, 1, 0);
-	unsigned row = luaL_optinteger(L, 2, 0);
-	bool useAlt = luaL_optinteger(L, 3, 0);
-
-	if (inRangeTile(tile))
-		currentProject->tileC->truecolor_to_tile(row, tile, useAlt);
-
-	return 0;
-}
-static void setTableUnsignedLua(lua_State*L, const char*tab, const char*subtab, unsigned idx, unsigned val) {
-	lua_getglobal(L, tab);
-	lua_pushstring(L, subtab);
-	lua_gettable(L, -2);
-	lua_pushinteger(L, val);
-	lua_rawseti(L, -2, idx);
-	lua_pop(L, 1);
-}
-static int lua_tile_draw(lua_State*L) {
-	currentProject->tileC->draw_tile(luaL_optinteger(L, 1, 0), luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0), luaL_optinteger(L, 5, 0), lua_toboolean(L, 6), lua_toboolean(L, 7), lua_toboolean(L, 8), (const uint8_t*)luaL_optinteger(L, 9, 0), luaL_optinteger(L, 10, 0), lua_toboolean(L, 11));
-	return 0;
-}
-static int lua_tile_remove(lua_State*L) {
-	currentProject->tileC->remove_tile_at(luaL_optinteger(L, 1, 0));
-	return 0;
-}
-static const luaL_Reg lua_tileAPI[] = {
-	{"compareTileRGBA", lua_tile_compareTileRGBA},
-	{"dither", lua_tile_dither},
-	{"draw", lua_tile_draw},
-	{"remove", lua_tile_remove},
-	{0, 0}
-};
-static unsigned getPlane(lua_State*L) {
-	return unsigned(luaL_optinteger(L, 1, 0)) % currentProject->tms->maps.size();
-}
-static void fixTilemapSizes(lua_State*L, unsigned plane) {
-	setTableUnsignedLua(L, "tilemaps", "width", plane + 1, currentProject->tms->maps[plane].mapSizeW);
-	setTableUnsignedLua(L, "tilemaps", "height", plane + 1, currentProject->tms->maps[plane].mapSizeH);
-	setTableUnsignedLua(L, "tilemaps", "heightA", plane + 1, currentProject->tms->maps[plane].mapSizeHA);
-}
-static int lua_tilemap_resize(lua_State*L) {
-	unsigned plane = getPlane(L);
-	currentProject->tms->maps[plane].resize_tile_map(luaL_optinteger(L, 1, 1), luaL_optinteger(L, 2, 1));
-	fixTilemapSizes(L, plane);
-	return 0;
-}
-static int lua_tilemap_allToRow(lua_State*L) {
-	currentProject->tms->maps[getPlane(L)].allRowSet(luaL_optinteger(L, 2, 0));
-	return 0;
-}
-static int lua_tilemap_toImage(lua_State*L) {
-	int row = luaL_optinteger(L, 2, -1);
-	bool useAlpha = luaL_optinteger(L, 3, 0);
-	uint32_t w, h;
-	w = currentProject->tms->maps[getPlane(L)].mapSizeW * currentProject->tileC->sizew;
-	h = currentProject->tms->maps[getPlane(L)].mapSizeHA * currentProject->tileC->sizeh;
-	unsigned bpp = useAlpha + 3;
-	uint8_t*image = (uint8_t *)malloc(w * h * bpp);
-
-	if (!image) {
-		show_malloc_error(w * h * bpp)
-		return 0;
-	}
-
-	currentProject->tms->maps[getPlane(L)].truecolor_to_image(image, row, useAlpha);
-	uint8_t*imgptr = image;
-	lua_newtable(L);
-
-	for (unsigned i = 1; i <= w * h * bpp; ++i) {
-		lua_pushinteger(L, *imgptr++);
-		lua_rawseti(L, -2, i);
-	}
-
-	free(image);
-	return 1;
-}
-static int lua_tilemap_drawBlock(lua_State*L) {
-	currentProject->tms->maps[luaL_optinteger(L, 1, 0)].drawBlock(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0), luaL_optinteger(L, 5, 0), luaL_optinteger(L, 6, 0));
-	return 0;
-}
-static int lua_tilemap_getRaw(lua_State*L) {
-	lua_pushinteger(L, currentProject->tms->maps[getPlane(L)].getRaw(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0)));
-	return 1;
-}
-static int lua_tilemap_setRaw(lua_State*L) {
-	currentProject->tms->maps[getPlane(L)].setRaw(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0));
-	return 0;
-}
-static int lua_tilemap_removeBlock(lua_State*L) {
-	unsigned pl = getPlane(L);
-	currentProject->tms->maps[pl].removeBlock(luaL_optinteger(L, 2, 0));
-	fixTilemapSizes(L, pl);
-	setTableUnsignedLua(L, "tilemaps", "amt", pl + 1, currentProject->tms->maps[pl].amt);
-
-	if (pl == currentProject->curPlane && window)
-		window->map_amt->value(std::to_string(currentProject->tms->maps[pl].amt).c_str());
-
-	return 0;
-}
-static int lua_tilemap_subTile(lua_State*L) {
-	currentProject->tms->maps[getPlane(L)].sub_tile_map(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_toboolean(L, 4), lua_toboolean(L, 5));
-	return 0;
-}
 static int lua_tilemap_generate_optimal_paletteapply(lua_State *L) {
 	try {
 		settings *s = *((settings **)dub::checksdata(L, 1, "settings"));
@@ -258,32 +107,8 @@ static int lua_tilemap_generate_optimal_paletteapply(lua_State *L) {
 
 	return dub::error(L);
 }
-static int lua_tilemap_save(lua_State*L) {
-	//bool tileMap::saveToFile(const char*fname,fileType_t type,int clipboard,int compression,const char*nesFname){
-	currentProject->tms->maps[getPlane(L)].saveToFile(lua_tostring(L, 2), (fileType_t)lua_tointeger(L, 3), lua_toboolean(L, 4), lua_tointeger(L, 5), lua_tostring(L, 6), luaL_optstring(L, 7, nullptr), luaL_optstring(L, 8, nullptr));
-	return 0;
-}
-static int lua_tilemap_pickRowDelta(lua_State*L) {
-	currentProject->tms->maps[getPlane(L)].pickRowDelta(false, nullptr, lua_tointeger(L, 2), lua_tointeger(L, 3));
-	return 0;
-}
-static int lua_tilemap_pickRow(lua_State*L) {
-	currentProject->tms->maps[getPlane(L)].pickRow(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4));
-	return 0;
-}
 static const luaL_Reg lua_tilemapAPI[] = {
-	{"resize", lua_tilemap_resize},
-	{"allToRow", lua_tilemap_allToRow},
-	{"toImage", lua_tilemap_toImage},
-	{"drawBlock", lua_tilemap_drawBlock},
-	{"getRaw", lua_tilemap_getRaw},
-	{"setRaw", lua_tilemap_setRaw},
-	{"removeBlock", lua_tilemap_removeBlock},
-	{"subTile", lua_tilemap_subTile},
 	{"generatePalette", lua_tilemap_generate_optimal_paletteapply},
-	{"save", lua_tilemap_save},
-	{"pickRowDelta", lua_tilemap_pickRowDelta},
-	{"pickRow", lua_tilemap_pickRow},
 	{0, 0}
 };
 /** Set attributes (key, value)
@@ -612,80 +437,6 @@ int luaopen_settings(lua_State *L)
 	return 1;
 }
 
-static int lua_chunk_draw(lua_State*L) {
-	currentProject->Chunk->drawChunk(luaL_optinteger(L, 1, 0), luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0), luaL_optinteger(L, 5, 0), luaL_optinteger(L, 6, 0));
-	return 0;
-}
-static int lua_chunk_getBlocks(lua_State*L) {
-	lua_pushinteger(L, currentProject->Chunk->getBlock(luaL_optinteger(L, 1, 0), luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0)));
-	return 1;
-}
-static int lua_chunk_setBlocks(lua_State*L) {
-	currentProject->Chunk->setBlock(luaL_optinteger(L, 1, 0), luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0));
-	return 0;
-}
-static int lua_chunk_getFlags(lua_State*L) {
-	lua_pushinteger(L, currentProject->Chunk->getFlag(luaL_optinteger(L, 1, 0), luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0)));
-	return 1;
-}
-static int lua_chunk_setFlags(lua_State*L) {
-	currentProject->Chunk->setFlag(luaL_optinteger(L, 1, 0), luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0));
-	return 0;
-}
-static int lua_chunk_setUseBlocks(lua_State*L) {
-	currentProject->Chunk->useBlocks = lua_toboolean(L, 1);
-	return 0;
-}
-static int lua_chunk_getUseBlocks(lua_State*L) {
-	lua_pushinteger(L, currentProject->Chunk->useBlocks);
-	return 1;
-}
-static int lua_chunk_setBlockUse(lua_State*L) {
-	unsigned tmp = luaL_optinteger(L, 1, 0);
-	size_t sz = currentProject->tms->maps.size();
-
-	if (tmp >= sz)
-		tmp = sz - 1;
-
-	currentProject->Chunk->usePlane = tmp;
-	return 0;
-}
-static int lua_chunk_getBlockUse(lua_State*L) {
-	lua_pushinteger(L, currentProject->Chunk->usePlane);
-	return 1;
-}
-static int lua_chunk_resize(lua_State*L) {
-	currentProject->Chunk->resize(luaL_optinteger(L, 1, 1), luaL_optinteger(L, 2, 1));
-	return 0;
-}
-static int lua_chunk_setAmt(lua_State*L) {
-	currentProject->Chunk->resizeAmt(luaL_optinteger(L, 1, 1));
-	return 0;
-}
-static int lua_chunk_subBlock(lua_State*L) {
-	currentProject->Chunk->subBlock(lua_tointeger(L, 1), lua_tointeger(L, 2));
-	return 0;
-}
-static int lua_chunk_removeAt(lua_State*L) {
-	currentProject->Chunk->removeAt(lua_tointeger(L, 1));
-	return 0;
-}
-static const luaL_Reg lua_chunkAPI[] = {
-	{"getBlocks", lua_chunk_getBlocks},
-	{"getFlags", lua_chunk_getFlags},
-	{"setBlocks", lua_chunk_setBlocks},
-	{"setFlags", lua_chunk_setFlags},
-	{"setUseBlocks", lua_chunk_setUseBlocks},
-	{"getUseBlocks", lua_chunk_getUseBlocks},
-	{"setBlockUse", lua_chunk_setBlockUse},
-	{"getBlockUse", lua_chunk_getBlockUse},
-	{"resize", lua_chunk_resize},
-	{"setAmt", lua_chunk_setAmt},
-	{"draw", lua_chunk_draw},
-	{"subBlock", lua_chunk_subBlock},
-	{"removeAt", lua_chunk_removeAt},
-	{0, 0}
-};
 static int lua_sprite_ditherGroup(lua_State*L) {
 	ditherSpriteAsImage(luaL_optinteger(L, 1, 0), luaL_optinteger(L, 2, 0));
 	return 0;
@@ -849,16 +600,6 @@ void updateProjectTablesLua(lua_State*L) {
 	}
 
 	lua_pushnil(L);
-	lua_setglobal(L, "tile");
-
-	if (currentProject->containsData(pjHaveTiles)) {
-		lua_createtable(L, 0, (sizeof(lua_tileAPI) / sizeof((lua_tileAPI)[0]) - 1));
-		luaL_setfuncs(L, lua_tileAPI, 0);
-
-		lua_setglobal(L, "tile");
-	}
-
-	lua_pushnil(L);
 	lua_setglobal(L, "tilemaps");
 
 	if (currentProject->containsData(pjHaveMap)) {
@@ -868,19 +609,6 @@ void updateProjectTablesLua(lua_State*L) {
 		lua_setglobal(L, "tilemaps");
 	}
 
-	lua_pushnil(L);
-	lua_setglobal(L, "chunks");
-
-	if (currentProject->containsData(pjHaveChunks)) {
-		lua_createtable(L, 0, arLen(lua_chunkAPI) - 1 + 5);
-		luaL_setfuncs(L, lua_chunkAPI, 0);
-		mkKeyunsigned(L, "amt", currentProject->Chunk->amt);
-		mkKeyunsigned(L, "width", currentProject->Chunk->wi);
-		mkKeyunsigned(L, "height", currentProject->Chunk->hi);
-		mkKeyunsigned(L, "usePlane", currentProject->Chunk->usePlane);
-		mkKeybool(L, "useBlocks", currentProject->Chunk->useBlocks);
-		lua_setglobal(L, "chunks");
-	}
 
 	lua_pushnil(L);
 	lua_setglobal(L, "metasprites");
@@ -1043,12 +771,18 @@ static int lua_rgt_syncProject(lua_State*L) {
 	return 0;
 }
 static int lua_rgt_w(lua_State*L) {
-	lua_pushinteger(L, window->w());
-	return 1;
+	if (window) {
+		lua_pushinteger(L, window->w());
+		return 1;
+	} else
+		return 0;
 }
 static int lua_rgt_h(lua_State*L) {
-	lua_pushinteger(L, window->h());
-	return 1;
+	if (window) {
+		lua_pushinteger(L, window->h());
+		return 1;
+	} else
+		return 0;
 }
 static const luaL_Reg lua_rgtAPI[] = {
 	{"redraw", lua_rgt_redraw},

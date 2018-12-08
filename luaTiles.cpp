@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #include "luaTiles.hpp"
 #include "luaTile.hpp"
@@ -22,81 +22,68 @@
 #include "gui.h"
 
 static int lua_tiles_save(lua_State*L) {
+	getProjectIDX
 	//void save(const char*fname,fileType_t type,bool clipboard,int compression);
-	projects[getSizeTUserData(L)]->tileC->save(lua_tostring(L, 2), (fileType_t)lua_tointeger(L, 3), lua_toboolean(L, 4), lua_tointeger(L, 5), lua_tostring(L, 6));
+	projects[projectIDX]->tileC->save(lua_tostring(L, 2), (fileType_t)lua_tointeger(L, 3), lua_toboolean(L, 4), lua_tointeger(L, 5), lua_tostring(L, 6));
 	return 0;
 }
 
 static int lua_tiles_removeDuplicate(lua_State*L) {
-	projects[getSizeTUserData(L)]->tileC->remove_duplicate_tiles(lua_toboolean(L, 2));
+	getProjectIDX
+	projects[projectIDX]->tileC->remove_duplicate_tiles(lua_toboolean(L, 2));
 	return 0;
 }
 
 static int lua_tiles_append(lua_State*L) {
-	size_t idx = getSizeTUserData(L);
-	projects[idx]->tileC->appendTile(luaL_optinteger(L, 2, 1));
+	getProjectIDX
+	projects[projectIDX]->tileC->appendTile(luaL_optinteger(L, 2, 1));
 
-	if (curProjectID == idx)
+	if (curProjectID == projectIDX)
 		updateTileSelectAmt();
 
 	return 0;
 }
 
 static int lua_tiles_resize(lua_State*L) {
-	puts(lua_typename(L, lua_type(L, 0)));
-	puts(lua_typename(L, lua_type(L, 1)));
-	puts(lua_typename(L, lua_type(L, 2)));
-	puts(lua_typename(L, lua_type(L, 3)));
-	puts(lua_typename(L, lua_type(L, 4)));
-	size_t idx = getSizeTUserData(L);
-	projects[idx]->tileC->resizeAmt(luaL_optinteger(L, 2, 1));
+	getProjectIDX
+	projects[projectIDX]->tileC->resizeAmt(luaL_optinteger(L, 2, 1));
 
-	if (curProjectID == idx)
+	if (curProjectID == projectIDX)
 		updateTileSelectAmt();
 
 	return 0;
 }
 
 static int tiles__get_(lua_State *L) {
+	checkAlreadyExists
+
 	int type = lua_type(L, 2);
-	size_t idx = getSizeTUserData(L);
+	getProjectIDX
 
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2) - 1;
 
-		if (k >= 0 && k < projects[idx]->tileC->amt) {
-			luaopen_Tile(L, idx, k);
+		if (k >= 0 && k < projects[projectIDX]->tileC->amt) {
+			luaopen_Tile(L, projectIDX, k);
 			return 1;
 		}
 	} else if (type == LUA_TSTRING) {
 		const char*k = luaL_checkstring(L, 2);
 
 		if (!strcmp("current", k)) {
-			lua_pushinteger(L, projects[idx]->tileC->current_tile + 1);
+			lua_pushinteger(L, projects[projectIDX]->tileC->current_tile + 1);
 			return 1;
 		} else if (!strcmp("tileSize", k)) {
-			lua_pushinteger(L, projects[idx]->tileC->tileSize);
+			lua_pushinteger(L, projects[projectIDX]->tileC->tileSize);
 			return 1;
 		} else if (!strcmp("tcSize", k)) {
-			lua_pushinteger(L, projects[idx]->tileC->tcSize);
+			lua_pushinteger(L, projects[projectIDX]->tileC->tcSize);
 			return 1;
-		} else if (!strcmp("w", k)) {
-			lua_pushinteger(L, projects[idx]->tileC->sizew);
+		} else if (!strcmp("width", k)) {
+			lua_pushinteger(L, projects[projectIDX]->tileC->sizew);
 			return 1;
-		} else if (!strcmp("h", k)) {
-			lua_pushinteger(L, projects[idx]->tileC->sizeh);
-			return 1;
-		} else if (!strcmp("save", k)) {
-			lua_pushcfunction(L, &lua_tiles_save);
-			return 1;
-		} else if (!strcmp("removeDuplicate", k)) {
-			lua_pushcfunction(L, &lua_tiles_removeDuplicate);
-			return 1;
-		} else if (!strcmp("append", k)) {
-			lua_pushcfunction(L, &lua_tiles_append);
-			return 1;
-		} else if (!strcmp("resize", k)) {
-			lua_pushcfunction(L, &lua_tiles_resize);
+		} else if (!strcmp("height", k)) {
+			lua_pushinteger(L, projects[projectIDX]->tileC->sizeh);
 			return 1;
 		}
 	}
@@ -105,12 +92,14 @@ static int tiles__get_(lua_State *L) {
 }
 
 static int tiles__len_(lua_State *L) {
-	lua_pushinteger(L, projects[getSizeTUserData(L)]->tileC->amt);
+	getProjectIDX
+	lua_pushinteger(L, projects[projectIDX]->tileC->amt);
 	return 1;
 }
 
 static int tiles___tostring(lua_State *L) {
-	lua_pushfstring(L, "tiles table: %p", projects[getSizeTUserData(L)]->tileC);
+	getProjectIDX
+	lua_pushfstring(L, "tiles table: %p", projects[projectIDX]->tileC);
 	return 1;
 }
 
@@ -119,6 +108,10 @@ static const struct luaL_Reg tiles_member_methods[] = {
 	{ "__len", tiles__len_       },
 	{ "__tostring", tiles___tostring  },
 	{ "deleted", dub::isDeleted    },
+	{ "save", lua_tiles_save},
+	{ "removeDuplicate", lua_tiles_removeDuplicate},
+	{ "append", lua_tiles_append},
+	{ "setAmt", lua_tiles_resize},
 	{ NULL, NULL},
 };
 

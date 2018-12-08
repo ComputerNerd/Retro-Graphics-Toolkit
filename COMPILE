@@ -6,9 +6,9 @@ installation of Lua. This is because Lua is compiled with a C++ compiler in
 order to take advantage of zero cost exceptions.
 
 First of all in the Retro Graphics Toolkit directory create a folder called lua
-or luawin if you are compiling for Windows. This folder shall the latest
-version of Lua. The folder should not contain a folder called something to the
-effect of lua/lua-version-number.
+or luawin if you are compiling for Windows. This folder shall contain the
+latest version of Lua. The folder shall not contain a folder called something
+to the effect of lua/lua-version-number.
 
 Extract the latest version of Lua in the newly created folder.
 
@@ -19,6 +19,9 @@ On the line that starts with CFLAGS= remove -DLUA_COMPAT_5_2
 
 If you are using a cross compiler make sure to take into account it's prefix
 also you will need to modify the AR and RANLIB variables if such is the case.
+For example on windows ar, randlib and g++ will need to be prefixed with
+x86_64-w64-mingw32-g++. You may also need to add extra CFLAGS such as -m32 if
+you are doing a 32-bit build with a 32/64 bit multilib compiler.
 
 Also if you are building on Windows you must replace this line in the Makefile
 	"AR=$(CC) -shared -o" "RANLIB=strip --strip-unneeded" \
@@ -37,7 +40,8 @@ with
 
 In other words remove CC=cc from the end of the line.
 
-We should not override the CC variable which we specified earlier. We need to use the system's C++ compiler.
+We do this because we should not override the CC variable which we specified
+earlier. We need to use the system's C++ compiler.
 
 We build Lua using C++ in order to take advantage of of zero cost exception
 handling using throw.
@@ -59,12 +63,12 @@ DO NOT RUN MAKE INSTALL.
 This step is only for Windows users. On other operating system, the
 distribution should already have provided FLTK.
 
-You will now need to build FLTK to do this download fltk-1.3.3 and extract it
+You will now need to build FLTK to do this download fltk-1.3.4-2 and extract it
 into the Retro Graphics Toolkit project folder and build it using either
 ./configure if you are on Windows or if you are cross compiling you need to do
 something like this:
 
-RANLIB=~/mingw/bin/x86_64-w64-mingw32-gcc-ranlib NM=~/mingw/bin/x86_64-w64-mingw32-gcc-nm AR=~/mingw/bin/x86_64-w64-mingw32-gcc-ar CFLAGS="-O2 -flto=16 -fuse-linker-plugin -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=x86_64-w64-mingw32 --build=x86_64-unknown-linux-gnu
+RANLIB=~/mingw/bin/i686-w64-mingw32-gcc-ranlib NM=~/mingw/bin/i686-w64-mingw32-gcc-nm AR=~/mingw/bin/i686-w64-mingw32-gcc-ar CFLAGS="-O2 -flto=16 -fuse-linker-plugin -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=i686-w64-mingw32 --build=x86_64-unknown-linux-gnu ; make -j16
 
 Regardless of how ./configure is ran you will just need to run make and you are
 done building FLTK.
@@ -76,9 +80,9 @@ x86_64-w64-mingw32 (may be different depending on how you compiled your mingw
 toolchain)
 
 
-find -name '*.o' -o  -name '*.a' -exec x86_64-w64-mingw32-strip  -R '.rdata$zzz' {} \;
-
-find -name '*.o' -o  -name '*.a' -exec x86_64-w64-mingw32-ranlib  {} \;
+find \( -name '*.o' -o -name '*.a' \) -exec x86_64-w64-mingw32-objcopy -R '.rdata$zzz' {} \;
+or
+find \( -name '*.o' -o -name '*.a' \) -exec i686-w64-mingw32-objcopy -R '.rdata$zzz' {} \;
 
 The purpose of these two commands is to remove all the GCC version strings. If
 you don't run this command you will hundreds of duplicate GCC version strings
@@ -88,8 +92,8 @@ in the final binary.
 			  END OF WINDOWS ONLY SECTION
 ===============================================================================
 
-Now on Linux run make or on Windows run make -f make_win note that you may need
-to modify the CXX and CC variables in make_win.
+Now on Linux run make or on Windows run make -f make.win note that you may need
+to modify the CXX and CC variables in make.win.
 
 You should now have a compiled version of Retro Graphics Toolkit.
 
