@@ -301,7 +301,7 @@ static void Riemersma(uint8_t *image, int32_t width, int32_t height, unsigned rg
 	move(NONE);
 }
 
-#define COMPARE_RGB 1
+//#define COMPARE_RGB 1
 
 /* 8x8 threshold map */
 static const uint8_t mapY3[8 * 8] = {
@@ -659,7 +659,7 @@ static MixingPlan DeviseBestMixingPlanY3(uint8_t rIn, uint8_t gIn, uint8_t bIn, 
 			//unsigned r = color>>16, g = (color>>8)&0xFF, b = color&0xFF;
 			float penalty = ColorCompare(input_rgb[0], input_rgb[1], input_rgb[2], r, g, b);
 #else
-			LabItem test_lab(color);
+			LabItem test_lab(r, g, b);
 			float penalty = ColorCompare(input, test_lab);
 #endif
 
