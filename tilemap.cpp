@@ -703,7 +703,7 @@ try_again_color:
 			break;
 
 		default:
-			dl3quant(imageuse, w, h, colorz, user_pal, true, progress); /*this uses denesis lee's v3 color quant which is found at http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c*/
+			dl3quant(imageuse, w, h, colorz, user_pal, true, progress); /*this uses Dennis Lee's v3 color quant which is found at http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c*/
 		}
 
 		for (unsigned x = 0; x < colorz; x++) {
@@ -918,8 +918,8 @@ void generate_optimal_paletteapply(Fl_Widget*, void*s) {
 		if (set->sprite) {
 			unsigned off = set->off[firstRow] + (firstRow * currentProject->pal->perRow);
 
-			if (currentProject->gameSystem == NES)
-				off += 16;
+			if (currentProject->pal->haveAlt)
+				off += currentProject->pal->colorCnt;
 
 			reduceImage(image, found_colors, -1, off, progress, win, set->perRow[firstRow], set->colSpace, set->alg, true);
 		} else
@@ -949,9 +949,22 @@ void generate_optimal_paletteapply(Fl_Widget*, void*s) {
 			else if (rowAuto == 3)
 				currentProject->tms->maps[currentProject->curPlane].pickTileRowQuantChoice(maxRows - firstRow);
 
+			unsigned altOff = 0;
+
+			if (set->sprite && currentProject->pal->haveAlt)
+				altOff = currentProject->pal->rowCntPal;
+
+			unsigned perRowUse;
+
+			if (set->sprite && currentProject->pal->haveAlt)
+				perRowUse = currentProject->pal->perRowalt;
+			else
+				perRowUse = currentProject->pal->perRow;
+
 			for (unsigned i = firstRow; i < maxRows; ++i) {
 				if (set->useRow[i]) {
-					reduceImage(image, found_colors, i, (i * currentProject->pal->perRow) + set->off[i], progress, win, set->perRow[i], set->colSpace, set->alg);
+					unsigned io = i + altOff;
+					reduceImage(image, found_colors, i, (io * perRowUse) + set->off[i], progress, win, set->perRow[i], set->colSpace, set->alg, set->sprite);
 
 					if (window) {
 						window->damage(FL_DAMAGE_USER1);
@@ -1127,7 +1140,9 @@ static void setPalChoiceCB(Fl_Widget*w, void*in) {
 		memset(setG->rowAutoEx, 0, sizeof(setG->rowAutoEx));
 
 }
-void generate_optimal_palette(Fl_Widget*, void*sprite) {
+void generate_optimal_palette(Fl_Widget*, void*spriteIn) {
+	bool sprite = !!spriteIn;
+
 	if (!currentProject->containsData(pjHavePal)) {
 		currentProject->haveMessage(pjHavePal);
 		return;
@@ -1144,7 +1159,7 @@ void generate_optimal_palette(Fl_Widget*, void*sprite) {
 	struct settings set;
 	setG = &set;
 	memset(&set, 0, sizeof(struct settings));
-	set.sprite = !!sprite;
+	set.sprite = sprite;
 	set.ditherAfter = set.entireRow = true;
 	winG = new Fl_Window(450, 300, "Palette generation settings");
 	winG->begin();
@@ -1155,7 +1170,7 @@ void generate_optimal_palette(Fl_Widget*, void*sprite) {
 	int spRow = sprite ? currentProject->fixedSpirtePalRow() : -1;
 	unsigned rowCnt = 0;
 
-	for (unsigned i = 0; i < currentProject->pal->getMaxRows(!!sprite); ++i) {
+	for (unsigned i = 0; i < currentProject->pal->getMaxRows(sprite); ++i) {
 		if (spRow >= 0 && i != spRow)
 			continue;
 
