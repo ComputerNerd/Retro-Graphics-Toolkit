@@ -18,7 +18,7 @@
 #include <zlib.h>
 #include <png.h>
 #include "savepng.h"
-int savePNG(const char * fileName, uint32_t width, uint32_t height, void * ptr, uint8_t*pal, unsigned pn) {
+int savePNG(const char * fileName, uint32_t width, uint32_t height, void * ptr, uint8_t*pal, unsigned pn, bool hasAlpha) {
 	//saves a 24bit png with rgb byte order
 	png_byte * dat = (png_byte*)ptr; //convert to uint8_t
 	FILE * fp = fopen(fileName, "wb");
@@ -47,7 +47,7 @@ int savePNG(const char * fileName, uint32_t width, uint32_t height, void * ptr, 
 	}
 
 	png_init_io(png_ptr, fp);
-	png_set_IHDR(png_ptr, info_ptr, width, height, 8, pal ? PNG_COLOR_TYPE_PALETTE : PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT); //must be called before other png_set_*() functions
+	png_set_IHDR(png_ptr, info_ptr, width, height, 8, pal ? PNG_COLOR_TYPE_PALETTE : (hasAlpha ? PNG_COLOR_TYPE_RGB_ALPHA : PNG_COLOR_TYPE_RGB), PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT); //must be called before other png_set_*() functions
 	png_color_struct*palTmp = 0;
 
 	if (pal) {
@@ -67,8 +67,10 @@ int savePNG(const char * fileName, uint32_t width, uint32_t height, void * ptr, 
 	png_set_user_limits(png_ptr, width, height);
 	png_write_info(png_ptr, info_ptr);
 
+	unsigned bpp = pal ? 1 : (hasAlpha ? 4 : 3);
+
 	for (y = 0; y < height; ++y)
-		png_write_row(png_ptr, &dat[(y * width * (pal ? 1 : 3))]);
+		png_write_row(png_ptr, &dat[y * width * bpp]);
 
 	png_write_end(png_ptr, info_ptr);
 	png_destroy_write_struct(&png_ptr, &info_ptr);

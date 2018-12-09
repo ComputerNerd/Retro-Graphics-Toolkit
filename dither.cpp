@@ -15,11 +15,9 @@ static unsigned useMode;
 static unsigned rgbPixelsize;
 static bool USEofColGlob;
 static bool isSpriteG;
-static bool forcedfun;
-static unsigned theforcedfun;
+static bool shouldForceRow;
+static unsigned selectedForceRow;
 static uint8_t*img_ptr_dither;
-static uint8_t*indexPtrG;
-static bool toIndexG;
 static bool isChunkD_G;
 static uint32_t idChunk_G;
 static uint8_t nearest_color_chanColSpace(uint8_t val, uint8_t chan) {
@@ -58,25 +56,26 @@ static uint8_t nearest_color_chanColSpace(uint8_t val, uint8_t chan) {
 		return 0;
 	}
 }
-static uint8_t nearest_color_chan(uint8_t val, uint8_t chan, uint8_t row) {
+static uint8_t nearest_color_chan(int_fast32_t val, uint8_t chan, uint8_t row) {
 	//returns closest value
 	//palette_multiplier
-	unsigned i;
-	int_fast32_t distanceSquared, minDistanceSquared, bestIndex = 0;
-	minDistanceSquared = 255 * 255 + 1;
-	unsigned max_rgb = 0;
+	int_fast32_t bestIndex = 0;
+	int_fast32_t minDistanceSquared = 255 * 255 + 1;
+	unsigned max_rgb = (currentProject->pal->haveAlt ? currentProject->pal->perRowalt : currentProject->pal->perRow) * 3;
 
 	if (useMode == 255)
 		return (val & 128) ? 255 : 0;
 
 	if (currentProject->pal->haveAlt && isSpriteG)
-		row += currentProject->pal->colorCnt;
+		row += currentProject->pal->colorCnt * 3;
 
 	row *= currentProject->pal->perRow * 3;
 
-	for (i = row; i < max_rgb + row; i += 3) {
-		int_fast32_t Rdiff = (int_fast32_t) val - (int_fast32_t)currentProject->pal->rgbPal[i + chan];
-		distanceSquared = Rdiff * Rdiff;
+	max_rgb += row;
+
+	for (unsigned i = row; i < max_rgb; i += 3) {
+		int_fast32_t Rdiff = val - (int_fast32_t)currentProject->pal->rgbPal[i + chan];
+		int_fast32_t distanceSquared = Rdiff * Rdiff;
 
 		if (distanceSquared < minDistanceSquared) {
 			minDistanceSquared = distanceSquared;
@@ -147,8 +146,8 @@ static void dither_pixel(uint8_t *pixel) {
 	if (USEofColGlob)
 		pvalue = nearest_color_chanColSpace(pvalue, rgb_select);
 	else {
-		if (forcedfun)
-			pvalue = nearest_color_chan(pvalue, rgb_select, theforcedfun);
+		if (shouldForceRow)
+			pvalue = nearest_color_chan(pvalue, rgb_select, selectedForceRow);
 		else {
 			if (isChunkD_G)
 				pvalue = nearest_color_chan(pvalue, rgb_select, currentProject->Chunk->getTileRow_t(idChunk_G, cur_x / 8, cur_y / 8));
@@ -156,10 +155,9 @@ static void dither_pixel(uint8_t *pixel) {
 				pvalue = nearest_color_chan(pvalue, rgb_select, currentProject->tms->maps[currentProject->curPlane].getPalRow(cur_x / 8, cur_y / 8));
 		}
 
-		if (toIndexG)
-			indexPtrG[cur_x + (cur_y * img_width)] = pvalue;
 
-		pvalue = currentProject->pal->rgbPal[pvalue];
+		if (useMode != 255)
+			pvalue = currentProject->pal->rgbPal[pvalue];
 	}
 
 	// shift queue
@@ -857,21 +855,22 @@ static void progressUpdate(Fl_Window**win, Fl_Progress**progress, time_t&lasttim
 		Fl::check();
 	}
 }
-void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool colSpace, bool forceRow, unsigned forcedrow, bool isChunk, uint32_t idChunk, bool isSprite, bool toIndex) {
-	void*retPtr;
+void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool colSpace, bool forceRow, unsigned forcedrow, bool isChunk, uint32_t idChunk, bool isSprite, bool toIndex, int forceAlg) {
+	void*retPtr = 0;
 
-	if (colSpace && toIndex)
-		retPtr = malloc(w * h * ((currentProject->pal->esize == 0) ? 1 : currentProject->pal->esize));
-	else if (toIndex)
-		retPtr = malloc(w * h);
-	else
-		retPtr = 0;
+	unsigned ditherAlg = forceAlg >= 0 ? forceAlg : currentProject->settings & settingsDitherMask;
+
+	if (ditherAlg != 1) { // Riemersma does not support toIndex.
+		if (colSpace && toIndex)
+			retPtr = malloc(w * h * ((currentProject->pal->esize == 0) ? 1 : currentProject->pal->esize));
+		else if (toIndex)
+			retPtr = malloc(w * h);
+	}
 
 	if ((currentProject->gameSystem == TMS9918) && (currentProject->getTMS9918subSys() == MODE_3))
 		colSpace = true;
 
 	uint8_t*indexPtr = (uint8_t*)retPtr;
-	unsigned ditherAlg = currentProject->settings & settingsDitherMask;
 	int ditherSetting = ((currentProject->settings >> subsettingsDitherShift)&subsettingsDitherMask) + 1;
 	unsigned type_temp = palTypeGen;
 	unsigned temp = 0;
@@ -888,7 +887,7 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 	time_t lasttime = time(NULL);
 	bool haveExt = currentProject->szPerExtPalRow() > 0;
 
-	switch (currentProject->settings & settingsDitherMask) {
+	switch (ditherAlg) {
 	case 7:
 	case 6:
 	case 5://Yliluoma's ordered dithering algorithms
@@ -1126,12 +1125,10 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 		useMode = currentProject->gameSystem;
 		USEofColGlob = colSpace;
 		isSpriteG = isSprite;
-		forcedfun = forceRow;
-		theforcedfun = forcedrow;
+		shouldForceRow = forceRow;
+		selectedForceRow = forcedrow;
 		isChunkD_G = isChunk;
 		idChunk_G = idChunk;
-		toIndexG = toIndex;
-		indexPtrG = indexPtr;
 		Riemersma(image, w, h, 0);
 		progressUpdate(&win, &progress, lasttime, progressHave, 1, useAlpha ? 4 : 3);
 		Riemersma(image, w, h, 1);
@@ -1143,6 +1140,7 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 			useMode = 255;
 			Riemersma(image, w, h, 3);
 		}
+
 
 		break;
 
@@ -1294,5 +1292,8 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 		delete win;
 	}
 
-	return retPtr;
+	if (ditherAlg == 1 && toIndex)
+		return ditherImage(image, w, h, useAlpha, colSpace, forceRow, forcedrow, isChunk, idChunk, isSprite, toIndex, 2);
+	else
+		return retPtr;
 }
