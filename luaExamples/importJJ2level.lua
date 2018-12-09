@@ -324,6 +324,7 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 		tilemap.useBlocks = true -- Set the flag for use blocks. This only sets the flag so using this alone is bad.
 		tilemap:setBlocksEnabled(true) -- Ensure that any GUI updates take place. By first setting useBlocks we skip the GUI for asking how big the blocks should be.
 		tilemap:setBlocksAmt(TileCount)
+		p.chunks.useBlocks = true -- Make sure chunks are using blocks because block mode is now enabled.
 		-- Now that we have the tilemap setup we can place the tiles.
 		-- The tilemap is now 32 // tile.width, 32// tiles.height * TileCount in size. It is accessed per tile.
 		for i = 0, TileCount - 1 do
