@@ -1,6 +1,6 @@
 local ret=fl.ask("Press yes or no")
 if ret~=0 then
-	fl.mesasge("Yes")
+	fl.message("Yes")
 else
-	fl.mesasge("No")
+	fl.message("No")
 end
