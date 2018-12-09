@@ -948,9 +948,6 @@ static const luaL_Reg lua_kensAPI[] = {
 	{"saxmanCompress", lua_saxmanCompress},
 	{0, 0}
 };
-const char*getTraceback(lua_State*L) {
-
-}
 void runLuaFunc(lua_State*L, unsigned args, unsigned results) {
 	try {
 		if (lua_pcall(L, args, results, 0) != LUA_OK)
