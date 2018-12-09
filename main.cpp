@@ -133,7 +133,7 @@ int main(int argc, char **argv) {
 		return 0;
 	} else {
 		window = new editor(800, 600, rtVersionStr);
-		printf("Welcome to Retro graphics Toolkit\nWritten by Sega16/Nintendo8\nBuilt on %s %s\n", __DATE__, __TIME__);
+		printf("Welcome to Retro Graphics Toolkit\nWritten by Sega16/Nintendo8\nBuilt on %s %s\n", __DATE__, __TIME__);
 		window->resizable(window);
 		updateTileSelectAmt();
 		updatePlaneTilemapMenu(curProjectID, window->planeSelect);

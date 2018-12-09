@@ -7,11 +7,11 @@ if p:have(project.tilesMask+project.mapMask) then
 		local ret,r2,g2,b2=fl.color_chooser("Second color")
 		if ret~=0 then
 			-- We need the same number of tiles as the tilemap height.
-			p.tiles:resize(tilemap.h)
+			p.tiles:setAmt(tilemap.height)
 			
 			-- Fill the tilemap.
-			for j=0,tilemap.h - 1 do
-				for i=0, tilemap.w - 1 do
+			for j=0,tilemap.height - 1 do
+				for i=0, tilemap.width - 1 do
 					tilemap[j + 1][i + 1].tile = j -- CAUTION: in Lua arrays start with one.
 				end
 			end
@@ -39,16 +39,16 @@ if p:have(project.tilesMask+project.mapMask) then
 				palette.fixSliders()
 			end
 
-			local tilemapHeightPixels = tilemap.hAll * p.tiles.h
+			local tilemapHeightPixels = tilemap.hAll * p.tiles.height
 			rs = (r2 - r1) / tilemapHeightPixels
 			gs = (g2 - g1) / tilemapHeightPixels
 			bs = (b2 - b1) / tilemapHeightPixels
 
 			for t=1, #p.tiles do
 				local tile = p.tiles[t]
-				for i=1, p.tiles.h do
+				for i=1, p.tiles.height do
 					local row = tile.rgba[i]
-					for j=1, p.tiles.w do
+					for j=1, p.tiles.width do
 						local pixel = row[j] -- We can access each value like an array or like a struct.
 						pixel.r = math.floor(r1 * 255.)
 						pixel.g = math.floor(g1 * 255.)

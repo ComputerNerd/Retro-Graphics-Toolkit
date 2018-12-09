@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #include "luaTileRGBApixel.hpp"
 #include "luaTilemap.hpp"
@@ -29,8 +29,7 @@ static int clipInt255(int p) {
 		return p;
 }
 static int tileRGBApixel__set_(lua_State *L) {
-	const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
-	size_t projectIDX = idxPtr[0];
+	getProjectIDX
 	size_t tileIDX = idxPtr[1];
 	size_t yIDX = idxPtr[2];
 	size_t xIDX = idxPtr[3];
@@ -66,8 +65,7 @@ static int tileRGBApixel__set_(lua_State *L) {
 }
 static int tileRGBApixel__get_(lua_State *L) {
 	int type = lua_type(L, 2);
-	const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
-	size_t projectIDX = idxPtr[0];
+	getProjectIDX
 	size_t tileIDX = idxPtr[1];
 	size_t yIDX = idxPtr[2];
 	size_t xIDX = idxPtr[3];
@@ -100,7 +98,8 @@ static int tileRGBApixel__get_(lua_State *L) {
 }
 
 static int tileRGBApixel__len_(lua_State *L) {
-	lua_pushinteger(L, projects[getSizeTUserData(L)]->tileC->sizeh);
+	getProjectIDX
+	lua_pushinteger(L, projects[projectIDX]->tileC->sizeh);
 	return 1;
 }
 

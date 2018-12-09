@@ -8,29 +8,32 @@ if p:have(project.tilesMask) then
 	if p:have(project.palMask) then 
 		local index=1
 		for gray=0,255,255/(p.palette:maxInRow(0)-1) do
-			local paletteEntry = p.palette[index]
-			while paletteEntry.pType ~= 0 do
+			while p.palette[index].pType ~= 0 do
 				index = index + 1;
 			end
-			paletteEntry:setRGB(gray,gray,gray)
-			index=index+1;
+			local l = math.floor(gray)
+			paletteEntry = p.palette[index]
+			paletteEntry:setRGB(l, l, l)
+			index = index + 1;
 		end
-		if p.palette.haveAlt then
+		if p.palette.haveAlt == true then
 			index=p.palette.cnt
 			for gray=0,255,255/(p.palette:maxInRow(palette.rowCnt)-1) do
-				while palette.getType(index)~=0 do
-					index=index+1;
+				while p.palette[index].pType ~= 0 do
+					index = index + 1;
 				end
-				palette.setRGB(index,gray,gray,gray)
-				index=index+1;
+				local l = math.floor(gray)
+				paletteEntry = p.palette[index]
+				paletteEntry:setRGB(l, l, l)
+				index = index + 1;
 			end
 		end
 	end
 	for i=1, #p.tiles do
 		local tile = p.tiles[i]
-		for y=1, p.tiles.h do
+		for y=1, p.tiles.height do
 			local row = tile.rgba[y]
-			for x=1, p.tiles.w do
+			for x=1, p.tiles.width do
 				local pixel = row[x]
 				local gray = math.floor(0.2126 * pixel.r + 0.7152 * pixel.g + 0.0722 * pixel.b) -- BT.709
 				pixel.r = gray
@@ -42,16 +45,15 @@ if p:have(project.tilesMask) then
 	if p:have(project.mapMask) then
 		-- Set all tiles to use row zero.
 		local tilemap = p.tilemaps.current
-		print(tilemap.hAll)
 		for j = 1, tilemap.hAll do
-			for i = 1, tilemap.w do
+			for i = 1, tilemap.width do
 				tilemap[j][i].row = 0
 			end
 		end
 		tilemap:dither()
 	end
 	if p:have(project.spritesMask) then
-		sprite.ditherAll()
+		metasprites:ditherAll()
 	end
 	if p:have(project.palMask) then
 		palette.fixSliders() --calls redraw
