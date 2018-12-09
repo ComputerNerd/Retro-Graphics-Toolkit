@@ -24,6 +24,7 @@
 #ifndef _WIN32
 #ifdef __APPLE__
 #include <machine/endian.h>
+#include "apple_endian.h"
 #else
 #include <endian.h>
 #endif
