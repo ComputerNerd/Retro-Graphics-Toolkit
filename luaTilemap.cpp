@@ -171,7 +171,7 @@ static int lua_tilemap_toImage(lua_State*L) {
 	size_t tilemapIDX = idxPtr[1];
 
 	int row = luaL_optinteger(L, 2, -1);
-	bool useAlpha = luaL_optinteger(L, 3, 0);
+	bool useAlpha = luaL_optboolean(L, 3, false);
 	uint32_t w, h;
 	w = projects[projectIDX]->tms->maps[tilemapIDX].mapSizeW * projects[projectIDX]->tileC->sizew;
 	h = projects[projectIDX]->tms->maps[tilemapIDX].mapSizeHA * projects[projectIDX]->tileC->sizeh;
