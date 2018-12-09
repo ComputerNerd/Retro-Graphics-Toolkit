@@ -28,7 +28,7 @@ function allMetaDither(unused)
 	--project
 	--]]
 	-- The only reason why the level table is unaffected is because sync is called on a project switch which is enough because the table data is only modified via means of Lua scripting.
-	if project.have(project.spritesMask)==true then
+	if projects.current:have(project.spritesMask)==true then
 		metasprites.ditherAll()
 	else
 		project.haveMessage(project.spritesMask)
@@ -36,20 +36,26 @@ function allMetaDither(unused)
 end
 function removeDuplicateBlocks(unused)
 	rgt.syncProject()
-	if project.have(project.mapMask) then
-		for i=0,#tilemaps.useBlocks-1 do
-			print('width',tilemaps.width[i+1],'height',tilemaps.height[i+1])
-			if tilemaps.useBlocks[i+1] then
+	local p = projects.current
+	if p:have(project.mapMask) then
+		local tilemaps = p.tilemaps
+		for i=1, #tilemaps do
+			local tilemap = tilemaps[i]
+			if tilemap.useBlocks then
 				local a=0
-				while a<tilemaps.heightA[i+1] do
-					local b=tilemaps.heightA[i+1]-tilemaps.height[i+1]
+				while a<tilemap.hAll do
+					local b = tilemap.hAll - tilemap.height
 					while b>=0 do
 						if a~=b then
 							local equ=true
-							for j=0,tilemaps.height[i+1]-1 do
-								for k=0,tilemaps.width[i+1]-1 do
-									if tilemaps.getRaw(i,k,a+j)~=tilemaps.getRaw(i,k,b+j) then
-										equ=false
+							for j=1, tilemap.height do
+								local tr1 = tilemap[a + j]
+								local tr2 = tilemap[b + j]
+								for k=1, tilemap.width do
+									local r1 = tr1[k].raw
+									local r2 = tr2[k].raw
+									if r1 ~= r2 then
+										equ = false
 										break
 									end
 								end
@@ -58,27 +64,27 @@ function removeDuplicateBlocks(unused)
 								end
 							end
 							if equ then
-								local aa,bb=a//tilemaps.height[i+1],b//tilemaps.height[i+1]
-								print(aa,bb)
-								tilemaps.removeBlock(i,bb)
-								if project.have(project.chunksMask) and i==chunks.usePlane then
-									chunks.subBlock(bb,aa)
+								local aa,bb=a//tilemap.height, b//tilemap.height
+								print('Found match', aa, bb)
+								tilemap:removeBlock(bb)
+								if p:have(project.chunksMask) and i == p.chunks.usePlane then
+									p.chunks:subBlock(bb,aa)
 								end
-								if project.have(project.levelMask) then
+								if p:have(project.levelMask) then
 									level.subType(bb,aa,level.BLOCKS,i)
 								end
 							end
 						end
-						b=b-tilemaps.height[i+1]
+						b = b - tilemap.height
 					end
-					a=a+tilemaps.height[i+1]
+					a = a + tilemap.height
 				end
 			else
-				fl.alert(string.format('Skipping plane %d -- it does not use blocks',i))
+				print(string.format('Skipping plane %d -- it does not use blocks', i))
 			end
 		end
 	else
-		project.haveMessage(project.mapMast)
+		p:haveMessage(project.mapMast)
 	end
 end
 function generateMenu()

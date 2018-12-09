@@ -60,10 +60,11 @@ static int tilemapEntry__set_(lua_State *L) {
 }
 
 static int lua_tilemap_getTileRow(lua_State*L) {
-	const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
-	size_t projectIDX = *idxPtr;
-	size_t entryIDX = idxPtr[1];
-	lua_pushinteger(L, projects[projectIDX]->tms->maps[entryIDX].get_tileRow(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0)));
+	getProjectIDX
+	const size_t tilemapIDX = idxPtr[1];
+	const size_t columnIDX = idxPtr[2];
+	const size_t entryIDX = idxPtr[3];
+	lua_pushinteger(L, projects[projectIDX]->tms->maps[entryIDX].get_tileRow(entryIDX, columnIDX, luaL_optinteger(L, 2, 0)));
 	return 1;
 }
 
@@ -96,6 +97,9 @@ static int tilemapEntry__get_(lua_State *L) {
 		} else if (!strcmp("row", k)) {
 			lua_pushinteger(L, tm->getPalRow(entryIDX, columnIDX));
 			return 1;
+		} else if (!strcmp("raw", k)) {
+			lua_pushinteger(L, tm->getRaw(entryIDX, columnIDX));
+			return 1;
 		}
 	}
 
@@ -103,8 +107,8 @@ static int tilemapEntry__get_(lua_State *L) {
 }
 
 static int tilemapEntry___tostring(lua_State *L) {
-	const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
-	lua_pushfstring(L, "Tilemap Entry (%d, %d) from tilemap %d project %d", idxPtr[2], idxPtr[3], idxPtr[1], idxPtr[0]);
+	getIdxPtrChk
+	lua_pushfstring(L, "Tilemap Entry (%d, %d) from tilemap %d project %d", idxPtr[3], idxPtr[2], idxPtr[1], idxPtr[0]);
 	return 1;
 }
 static const struct luaL_Reg tilemapEntry_member_methods[] = {

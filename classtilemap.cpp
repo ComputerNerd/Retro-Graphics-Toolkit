@@ -244,14 +244,19 @@ bool tileMap::inRange(uint32_t x, uint32_t y)const {
 		return true;
 }
 void tileMap::setRaw(uint32_t x, uint32_t y, uint32_t val) {
-	uint32_t*tptr = (uint32_t*)tileMapDat;
-	tptr += (y * mapSizeW) + x;
-	*tptr = val;
+	if (inRange(x, y)) {
+		uint32_t*tptr = (uint32_t*)tileMapDat;
+		tptr += (y * mapSizeW) + x;
+		*tptr = val;
+	}
 }
 uint32_t tileMap::getRaw(uint32_t x, uint32_t y)const {
-	uint32_t*tptr = (uint32_t*)tileMapDat;
-	tptr += (y * mapSizeW) + x;
-	return*tptr;
+	if (inRange(x, y)) {
+		uint32_t*tptr = (uint32_t*)tileMapDat;
+		tptr += (y * mapSizeW) + x;
+		return *tptr;
+	} else
+		return 0;
 }
 void tileMap::resizeBlocks(uint32_t wn, uint32_t hn) {
 	uint32_t amtTemp = mapSizeW * mapSizeH * amt;
