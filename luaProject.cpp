@@ -25,48 +25,55 @@
 
 static int project__set_(lua_State *L) {
 	const char *key = luaL_checkstring(L, 2);
-	size_t idx = getSizeTUserData(L);
+	getProjectIDX
 
 	if (!strcmp(key, "name"))
-		projects[idx]->Name.assign(luaL_checkstring(L, 3));
+		projects[projectIDX]->Name.assign(luaL_checkstring(L, 3));
 	else if (!strcmp("settings", key))
-		projects[idx]->luaSettings = luaL_optinteger(L, 3, 0);
+		projects[projectIDX]->luaSettings = luaL_optinteger(L, 3, 0);
 
 	return 0;
 }
 static int lua_project_have(lua_State*L) {
-	lua_pushboolean(L, projects[getSizeTUserData(L)]->containsData(luaL_optinteger(L, 2, pjHavePal)));
+	getProjectIDX
+	lua_pushboolean(L, projects[projectIDX]->containsData(luaL_optinteger(L, 2, pjHavePal)));
 	return 1;
 }
 
 static int lua_project_haveOR(lua_State*L) {
-	lua_pushboolean(L, projects[getSizeTUserData(L)]->containsDataOR(luaL_optinteger(L, 2, pjHavePal)));
+	getProjectIDX
+	lua_pushboolean(L, projects[projectIDX]->containsDataOR(luaL_optinteger(L, 2, pjHavePal)));
 	return 1;
 }
 
 static int lua_project_getPalTab(lua_State*L) {
-	lua_pushinteger(L, projects[getSizeTUserData(L)]->getPalTab());
+	getProjectIDX
+	lua_pushinteger(L, projects[projectIDX]->getPalTab());
 	return 1;
 }
 
 static int lua_project_setPalTab(lua_State*L) {
-	projects[getSizeTUserData(L)]->setPalTab(luaL_optinteger(L, 2, 0));
+	getProjectIDX
+	projects[projectIDX]->setPalTab(luaL_optinteger(L, 2, 0));
 	return 0;
 }
 
 static int lua_project_load(lua_State*L) {
-	loadProject(getSizeTUserData(L), lua_tostring(L, 2));
+	getProjectIDX
+	loadProject(projectIDX, lua_tostring(L, 2));
 	return 0;
 }
 
 static int lua_project_save(lua_State*L) {
-	saveProject(getSizeTUserData(L), lua_tostring(L, 2));
+	getProjectIDX
+	saveProject(projectIDX, lua_tostring(L, 2));
 	return 0;
 }
 
 static int lua_project_haveMessage(lua_State*L) {
 	unsigned mask = luaL_optinteger(L, 2, pjHavePal);
-	projects[getSizeTUserData(L)]->haveMessage(mask);
+	getProjectIDX
+	projects[projectIDX]->haveMessage(mask);
 	return 0;
 }
 
@@ -76,35 +83,35 @@ static int project__get_(lua_State *L) {
 	int type = lua_type(L, 2);
 
 	if (type == LUA_TSTRING) {
-		size_t idx = getSizeTUserData(L);
+		getProjectIDX
 
 		const char*k = luaL_checkstring(L, 2);
 
 		if (!strcmp("name", k)) {
-			lua_pushstring(L, projects[idx]->Name.c_str());
+			lua_pushstring(L, projects[projectIDX]->Name.c_str());
 			return 1;
 		} else if (!strcmp("tiles", k)) {
-			if (projects[idx]->containsData(pjHaveTiles)) {
-				luaopen_Tiles(L, idx);
+			if (projects[projectIDX]->containsData(pjHaveTiles)) {
+				luaopen_Tiles(L, projectIDX);
 				return 1;
 			}
 		} else if (!strcmp("tilemaps", k)) {
-			if (projects[idx]->containsData(pjHaveMap)) {
-				luaopen_Tilemaps(L, idx);
+			if (projects[projectIDX]->containsData(pjHaveMap)) {
+				luaopen_Tilemaps(L, projectIDX);
 				return 1;
 			}
 		} else if (!strcmp("palette", k)) {
-			if (projects[idx]->containsData(pjHavePal)) {
-				luaopen_Palette(L, idx);
+			if (projects[projectIDX]->containsData(pjHavePal)) {
+				luaopen_Palette(L, projectIDX);
 				return 1;
 			}
 		} else if (!strcmp("chunks", k)) {
-			if (projects[idx]->containsData(pjHaveChunks)) {
-				luaopen_Chunks(L, idx);
+			if (projects[projectIDX]->containsData(pjHaveChunks)) {
+				luaopen_Chunks(L, projectIDX);
 				return 1;
 			}
 		} else if (!strcmp("settings", k)) {
-			lua_pushinteger(L, projects[idx]->luaSettings);
+			lua_pushinteger(L, projects[projectIDX]->luaSettings);
 			return 1;
 		}
 	}
@@ -113,9 +120,8 @@ static int project__get_(lua_State *L) {
 }
 
 static int project___tostring(lua_State *L) {
-	const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
-	size_t idx = *idxPtr;
-	lua_pushfstring(L, "project table: %p", projects[idx]);
+	getProjectIDX
+	lua_pushfstring(L, "project table: %p", projects[projectIDX]);
 	return 1;
 }
 
@@ -135,7 +141,7 @@ static const struct luaL_Reg project_member_methods[] = {
 	{ NULL, NULL},
 };
 
-int luaopen_Project(lua_State *L, unsigned idx) {
+int luaopen_Project(lua_State *L, unsigned projectIDX) {
 	// Create the metatable which will contain all the member methods
 	luaL_newmetatable(L, "project");
 	// <mt>
@@ -146,7 +152,7 @@ int luaopen_Project(lua_State *L, unsigned idx) {
 	// setup meta-table
 	size_t* idxUserData = (size_t*)lua_newuserdata(L, sizeof(size_t));
 	luaL_getmetatable(L, "project");
-	*idxUserData = idx;
+	*idxUserData = projectIDX;
 	lua_setmetatable(L, -2);
 	return 1;
 }

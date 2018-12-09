@@ -1,2 +1,2 @@
 -- Displays what the project does or does not have.
-project.haveMessage(project.allMask)
+projects.current:haveMessage(project.allMask)
