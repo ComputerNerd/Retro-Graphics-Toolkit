@@ -259,6 +259,7 @@ static int tilemap__set_(lua_State *L) {
 
 	if (!strcmp("useBlocks", k))
 		tm->isBlock = lua_toboolean(L, 3);
+
 	return 0;
 }
 

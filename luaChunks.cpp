@@ -24,7 +24,7 @@
 static int chunk__set_(lua_State *L) {
 	const char *key = luaL_checkstring(L, 2);
 	getProjectIDX
-	
+
 	class ChunkClass *chunk = projects[projectIDX]->Chunk;
 
 	const char*k = luaL_checkstring(L, 2);

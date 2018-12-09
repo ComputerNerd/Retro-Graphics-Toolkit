@@ -22,8 +22,7 @@
 #include "gui.h"
 
 static int palette__set_(lua_State *L) {
-	const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
-	size_t projectIDX = *idxPtr;
+	getProjectIDX
 	size_t entryIDX = idxPtr[1];
 
 	const char *key = luaL_checkstring(L, 2);
@@ -59,8 +58,7 @@ static int palette__set_(lua_State *L) {
 }
 
 static int lua_palette_convertFromRGB(lua_State*L) {
-	const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
-	size_t projectIDX = *idxPtr;
+	getProjectIDX
 	size_t entryIDX = idxPtr[1];
 	size_t ent3 = entryIDX * 3;
 
@@ -70,8 +68,7 @@ static int lua_palette_convertFromRGB(lua_State*L) {
 }
 
 static int lua_palette_setRGB(lua_State*L) {
-	const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
-	size_t projectIDX = *idxPtr;
+	getProjectIDX
 	size_t entryIDX = idxPtr[1];
 
 	projects[projectIDX]->pal->rgbToEntry(luaL_checkinteger(L, 2), luaL_checkinteger(L, 3), luaL_checkinteger(L, 4), entryIDX);
@@ -81,8 +78,7 @@ static int lua_palette_setRGB(lua_State*L) {
 
 static int paletteEntry__get_(lua_State *L) {
 	int type = lua_type(L, 2);
-	const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
-	size_t projectIDX = *idxPtr;
+	getProjectIDX
 	size_t entryIDX = idxPtr[1];
 
 	if (type == LUA_TSTRING) {

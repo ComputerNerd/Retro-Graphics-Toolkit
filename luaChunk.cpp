@@ -27,10 +27,10 @@ static int lua_chunk_draw(lua_State*L) {
 	size_t chunk = idxPtr[1];
 
 	projects[projectIDX]->Chunk->drawChunk(chunk,
-						luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), // X offset, Y offset.
-	                                        luaL_optinteger(L, 4, 1), // Zoom
-	                                        luaL_optinteger(L, 5, 0), luaL_optinteger(L, 6, 0) // Scroll X, scroll Y
-	                                        );
+	                                       luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), // X offset, Y offset.
+	                                       luaL_optinteger(L, 4, 1), // Zoom
+	                                       luaL_optinteger(L, 5, 0), luaL_optinteger(L, 6, 0) // Scroll X, scroll Y
+	                                      );
 	return 0;
 }
 
@@ -62,6 +62,7 @@ static int chunk__get_(lua_State *L) {
 
 static int chunk___tostring(lua_State * L) {
 	const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
+
 	if (idxPtr) {
 		lua_pushfstring(L, "Chunk: %d from project: %d", idxPtr[0], idxPtr[1]);
 		return 1;

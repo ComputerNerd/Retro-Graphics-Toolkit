@@ -45,17 +45,17 @@ if p:have(project.mapMask) then
 	local maxit = tonumber(fl.input("Maximum iterations","16000"))
 	if maxit ~= nil then
 		local tilemap = p.tilemaps.current
-		p.tiles:resize(tilemap.w * tilemap.h)
+		p.tiles:setAmt(tilemap.width * tilemap.height)
 
-		for j = 0, tilemap.h -1 do
+		for j = 0, tilemap.height -1 do
 			local row = tilemap[j + 1]
-			for i = 0, tilemap.w - 1 do
-				row[i + 1].tile = j * tilemap.w + i
+			for i = 0, tilemap.width - 1 do
+				row[i + 1].tile = j * tilemap.width + i
 			end
 		end
 
-		local width = tilemap.w * p.tiles.w
-		local height = tilemap.hAll * p.tiles.h
+		local width = tilemap.width * p.tiles.width
+		local height = tilemap.hAll * p.tiles.height
 
 		-- [-2,1],[-1,1]
 		local sx, sy = 3/width, 2/height

@@ -59,6 +59,12 @@ static int palette__get_(lua_State *L) {
 		} else if (!strcmp("cnt", k)) {
 			lua_pushinteger(L, projects[idx]->pal->colorCnt);
 			return 1;
+		} else if (!strcmp("cntAlt", k)) {
+			lua_pushinteger(L, projects[idx]->pal->colorCntalt);
+			return 1;
+		} else if (!strcmp("cntTotal", k)) {
+			lua_pushinteger(L, projects[idx]->pal->colorCntalt + projects[idx]->pal->colorCnt);
+			return 1;
 		} else if (!strcmp("perRow", k)) {
 			lua_pushinteger(L, projects[idx]->pal->perRow);
 			return 1;

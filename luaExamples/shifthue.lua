@@ -35,25 +35,31 @@ function hsl_to_rgb(h, s, L)
 	return _h2rgb(m1, m2, h+1./3.), _h2rgb(m1, m2, h), _h2rgb(m1, m2, h-1./3.)
 end
 function idxHelper(idx)
-	local r,g,b=palette.getRGB(idx)
+	local ent = projects.current.palette[idx]
+
+	local r = ent.r
+	local g = ent.g
+	local b = ent.b
+
 	local h,s,l=rgt.rgbToHsl(r/255.,g/255.,b/255.)
 	r,g,b=hsl_to_rgb((h+shift)%1.,s,l)
 	return r*255.//1,g*255.//1,b*255.//1
 end
 function draw()
+	local p = projects.current
 	win:baseDraw()
 	if shift~=nil then
-		for row=0,palette.rowCnt-1 do
-			for idx=0,palette.perRow-1 do
-				local r,g,b=idxHelper(row*palette.perRow+idx)
+		for row=0,p.palette.rowCnt-1 do
+			for idx=0,p.palette.perRow-1 do
+				local r,g,b=idxHelper(row*p.palette.perRow+idx + 1)
 				fl.rectf((idx+1)*16,(row+1)*16,16,16,r,g,b)
 			end
 		end
-		if palette.haveAlt~=0 then
-			for row=0,palette.rowCntAlt-1 do
-				for idx=0,palette.perRowAlt-1 do
-					local r,g,b=idxHelper(row*palette.perRowAlt+idx+palette.cnt)
-					fl.rectf((idx+1)*16+(palette.perRow+1)*16,(row+1)*16,16,16,r,g,b)
+		if p.palette.haveAlt~=0 then
+			for row=0,p.palette.rowCntAlt-1 do
+				for idx=0,p.palette.perRowAlt-1 do
+					local r,g,b=idxHelper(row*p.palette.perRowAlt+idx+p.palette.cnt + 1)
+					fl.rectf((idx+1)*16+(p.palette.perRow+1)*16,(row+1)*16,16,16,r,g,b)
 				end
 			end
 		end
@@ -71,6 +77,7 @@ function btnCB(val)
 end
 local p = projects.current
 if p:have(project.palMask) then
+	local p = projects.current
 	win=Fl_Window.new(320,200,'Shift hue by')
 	win:set_modal()
 	win:setDrawFunction("draw")
@@ -88,9 +95,9 @@ if p:have(project.palMask) then
 	end
 	if ok~=0 then
 		undo.pushPaletteAll()
-		for ent=0,palette.cnt+palette.cntAlt-1,1 do
-			local r,g,b=idxHelper(ent)
-			palette.setRGB(ent,r,g,b)
+		for ent=0,p.palette.cntTotal - 1, 1 do
+			local r,g,b=idxHelper(ent + 1)
+			p.palette[ent + 1]:setRGB(r,g,b)
 		end
 		palette.fixSliders()
 		rgt.damage()

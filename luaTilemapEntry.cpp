@@ -26,12 +26,12 @@ static int lua_tilemap_setFull(lua_State*L) {
 	const size_t columnIDX = idxPtr[2];
 	const size_t entryIDX = idxPtr[3];
 	projects[projectIDX]->tms->maps[tilemapIDX].set_tile_full(entryIDX, // x
-			columnIDX, // y
-			luaL_optinteger(L, 2, 0), // tile
-			luaL_optboolean(L, 3, false), // palette_row
-			luaL_optboolean(L, 4, false), // hflip
-			luaL_optboolean(L, 5, false), // vflip
-			luaL_optboolean(L, 6, false)); // priority
+	        columnIDX, // y
+	        luaL_optinteger(L, 2, 0), // tile
+	        luaL_optboolean(L, 3, false), // palette_row
+	        luaL_optboolean(L, 4, false), // hflip
+	        luaL_optboolean(L, 5, false), // vflip
+	        luaL_optboolean(L, 6, false)); // priority
 	return 0;
 }
 
