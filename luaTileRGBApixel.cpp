@@ -20,6 +20,14 @@
 #include "project.h"
 #include "dub/dub.h"
 #include "gui.h"
+static int clipInt255(int p) {
+	if (p < 0)
+		return 0;
+	else if (p > 255)
+		return 255;
+	else
+		return p;
+}
 static int tileRGBApixel__set_(lua_State *L) {
 	const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
 	size_t projectIDX = idxPtr[0];
@@ -41,16 +49,16 @@ static int tileRGBApixel__set_(lua_State *L) {
 		const char*k = luaL_checkstring(L, 2);
 
 		if (!strcmp("r", k))
-			rgbaPixel[0] = luaL_checkinteger(L, 3);
+			rgbaPixel[0] = clipInt255(luaL_checkinteger(L, 3));
 
 		else if (!strcmp("g", k))
-			rgbaPixel[1] = luaL_checkinteger(L, 3);
+			rgbaPixel[1] = clipInt255(luaL_checkinteger(L, 3));
 
 		else if (!strcmp("b", k))
-			rgbaPixel[2] = luaL_checkinteger(L, 3);
+			rgbaPixel[2] = clipInt255(luaL_checkinteger(L, 3));
 
 		else if (!strcmp("a", k))
-			rgbaPixel[3] = luaL_checkinteger(L, 3);
+			rgbaPixel[3] = clipInt255(luaL_checkinteger(L, 3));
 
 	}
 
