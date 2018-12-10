@@ -47,11 +47,11 @@
 #include "callback_project.h"
 #include "lua_zlib.h"
 #include "dub/dub.h"
-#include "comper.h"
-#include "enigma.h"
-#include "nemesis.h"
-#include "kosinski.h"
-#include "saxman.h"
+#include <mdcomp/comper.hh>
+#include <mdcomp/enigma.hh>
+#include <mdcomp/nemesis.hh>
+#include <mdcomp/kosinski.hh>
+#include <mdcomp/saxman.hh>
 #include "filemisc.h"
 #include "level_levDat.h"
 #include "level_levelInfo.h"
@@ -869,6 +869,25 @@ static void SStoTable(lua_State*L, std::stringstream&ss) {
 		lua_rawseti(L, -2, ++idx);
 	}
 }
+#define mkDecompress(name) static int lua_##name##Decompress(lua_State*L){ \
+	std::stringstream ss; \
+	if(lua_type(L,1)==LUA_TSTRING){ \
+		std::ifstream ifs (lua_tostring(L,1), std::ifstream::in|std::ifstream::binary); \
+		name decoder; \
+		decoder.decode(ifs,ss); \
+		SStoTable(L,ss); \
+		return 1; \
+	}else if(lua_type(L,1)==LUA_TTABLE){ \
+		std::stringstream ss_src; \
+		tableToSS(L,1,ss_src); \
+		name decoder; \
+		decoder.decode(ss_src,ss); \
+		SStoTable(L,ss); \
+		return 1; \
+	}else \
+		return 0; \
+}
+
 #define mkDecompressEx(name,ex) static int lua_##name##Decompress(lua_State*L){ \
 	std::stringstream ss; \
 	if(lua_type(L,1)==LUA_TSTRING){ \
@@ -888,11 +907,11 @@ static void SStoTable(lua_State*L, std::stringstream&ss) {
 		return 0; \
 }
 #define SINGLE_ARG(...) __VA_ARGS__
-mkDecompressEx(comper, luaL_optinteger(L, 2, 0))
-mkDecompressEx(enigma, SINGLE_ARG(luaL_optinteger(L, 2, 0), lua_toboolean(L, 3)))
-mkDecompressEx(nemesis, luaL_optinteger(L, 2, 0))
-mkDecompressEx(kosinski, SINGLE_ARG(luaL_optinteger(L, 2, 0), lua_toboolean(L, 3), luaL_optinteger(L, 4, 16)))
-mkDecompressEx(saxman, SINGLE_ARG(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0)))
+mkDecompress(comper)
+mkDecompress(enigma)
+mkDecompress(nemesis)
+mkDecompress(kosinski)
+mkDecompressEx(saxman, luaL_optboolean(L, 2, true))
 
 #define mkCompress(name) static int lua_##name##Compress(lua_State*L){ \
 	if(lua_type(L,1)==LUA_TTABLE){ \
@@ -931,8 +950,8 @@ mkDecompressEx(saxman, SINGLE_ARG(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3
 		return 0; \
 }
 mkCompress(comper)
-mkCompressEx(enigma, lua_toboolean(L, 2))
-mkCompressEx(kosinski, SINGLE_ARG(luaL_optinteger(L, 2, 8192), luaL_optinteger(L, 3, 256), lua_toboolean(L, 4), luaL_optinteger(L, 5, 0x1000), luaL_optinteger(L, 6, 16)))
+mkCompress(enigma)
+mkCompress(kosinski)
 mkCompress(nemesis)
 mkCompressEx(saxman, lua_toboolean(L, 2))
 static const luaL_Reg lua_kensAPI[] = {

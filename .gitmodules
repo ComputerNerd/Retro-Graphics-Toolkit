@@ -1,0 +1,3 @@
+[submodule "mdcomp"]
+	path = mdcomp
+	url = https://github.com/flamewing/mdcomp

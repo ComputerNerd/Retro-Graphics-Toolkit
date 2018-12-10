@@ -17,11 +17,11 @@
 #include "includes.h"
 #include "gui.h"
 #include "errorMsg.h"
-#include "nemesis.h"
-#include "kosinski.h"
-#include "enigma.h"
-#include "comper.h"
-#include "saxman.h"
+#include <mdcomp/nemesis.hh>
+#include <mdcomp/kosinski.hh>
+#include <mdcomp/enigma.hh>
+#include <mdcomp/comper.hh>
+#include <mdcomp/saxman.hh>
 static const char*const TypeTab[] = {"Uncompressed", "Nemesis", "Kosinski", "Enigma", "Saxman", "Comper"};
 const char*typeToText(int type) {
 	return TypeTab[type];
@@ -152,8 +152,9 @@ void*encodeType(void*in, size_t n, size_t&outSize, int type) {
 	break;
 
 	case 4:
-	{	saxman comp;
-		comp.encode(iss, outfun);
+	{	basic_saxman comp;
+		comp.encode(iss, outfun, true);
+		//is >> iss;
 	}
 	break;
 

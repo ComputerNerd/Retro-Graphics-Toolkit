@@ -1,3 +1,9 @@
+# IMPORTANT:
+Please run
+```
+git clone --recursive https://github.com/ComputerNerd/Retro-Graphics-Toolkit
+```
+to checkout the repository.
 # What is Retro Graphics Toolkit?
 Retro Graphics Toolkit is a free software (open source) graphics converter, tilemap, blocks, chunks, sprites and level editor.
 The goal is to make the task of taking an image and converting it to tiles on a tilemap or sprite sheet into many sprites as easy as possible.
