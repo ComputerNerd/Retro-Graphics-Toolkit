@@ -5,8 +5,8 @@ CXX=clang++
 include Makefile.common
 
 CFLAGS += -march=native -c -O3 -pipe -march=native -fomit-frame-pointer
-CXXFLAGS := $(CFLAGS) -fno-rtti -std=gnu++11
-LDFLAGS := -O3 -march=native -fno-rtti -std=gnu++11 -L/usr/lib/fltk/ -lfltk_images -lfltk -lpng -ljpeg -lXft -lXext -lXinerama -lX11 -lz -s -Llua/src -llua -ldl
+CXXFLAGS := $(CFLAGS) -fno-rtti -std=gnu++14
+LDFLAGS := -O3 -march=native -fno-rtti -std=gnu++14 -L/usr/lib/fltk/ -lfltk_images -lfltk -lpng -ljpeg -lXft -lXext -lXinerama -lX11 -lz -s -Llua/src -llua -ldl
 
 EXECUTABLE := RetroGraphicsToolkit
 
