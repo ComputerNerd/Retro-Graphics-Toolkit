@@ -1039,7 +1039,7 @@ lua_State*createLuaState(void) {
 		lua_setglobal(L, "rgt");
 
 		luaL_newlib(L, lua_kensAPI);
-		lua_setglobal(L, "kens");
+		lua_setglobal(L, "mdcomp");
 
 		luaopen_zlib(L);
 		lua_setglobal(L, "zlib");
