@@ -32,10 +32,10 @@ public:
 	unsigned width()const {
 		return sizew;
 	}
-	unsigned bytesPerRow()const {
+	unsigned bytesPerPlaneRow()const {
 		return sizewbytes;
 	}
-	unsigned actualBitsPerRow()const {
+	unsigned bitsPerPlaneRow()const {
 		return sizewbytesbits;
 	}
 	unsigned height()const {

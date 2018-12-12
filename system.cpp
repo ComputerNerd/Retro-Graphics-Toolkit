@@ -54,7 +54,7 @@ void Project::setBitdepthSys(unsigned bd) {
 	}
 
 	if (containsData(pjHaveTiles)) {
-		tileC->tileSize = tileC->actualBitsPerRow() * tileC->height() * getBitdepthSys() / 8;
+		tileC->tileSize = tileC->bitsPerPlaneRow() * tileC->height() * getBitdepthSys() / 8;
 		tileC->resizeAmt();
 	}
 }

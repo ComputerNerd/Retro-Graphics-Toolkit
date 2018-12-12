@@ -185,7 +185,7 @@ function generateMenu()
 		{"Pick tile row based on color delta",0,41--[[tileDPicker--]],0},
 		{"Auto determine if use shadow highlight",0,42--[[shadow_highligh_findout--]],0},
 		{"Dither tile map as image",0,43--[[dither_tilemap_as_imageCB--]],0},
-		{"File tile map with selection including attributes",0,44--[[fill_tile_map_with_tile--]],0},
+		{"Fill tile map with selection including attributes",0,44--[[fill_tile_map_with_tile--]],0},
 		{"Fix out of range tiles (replace with current attributes in plane editor)",0,45--[[FixOutOfRangeCB--]],0},
 		{"Pick extended attributes",0,46--[[pickExtAttrsCB--]],0},
 		{'Remove duplicate blocks',0,'removeDuplicateBlocks'},

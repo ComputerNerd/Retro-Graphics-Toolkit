@@ -683,7 +683,7 @@ void*tiles::toLinePlanar(void) {
 	return pt;
 }
 void tiles::setDim(unsigned w, unsigned h, unsigned bd) {
-	sizew = w;
+	setWidth(w);
 	sizeh = h;
 	curBD = bd;
 	tcSize = sizew * sizeh * 4;
