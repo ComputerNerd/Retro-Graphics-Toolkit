@@ -99,7 +99,7 @@ static int tileRGBApixel__get_(lua_State *L) {
 
 static int tileRGBApixel__len_(lua_State *L) {
 	getProjectIDX
-	lua_pushinteger(L, projects[projectIDX]->tileC->sizeh);
+	lua_pushinteger(L, projects[projectIDX]->tileC->height());
 	return 1;
 }
 

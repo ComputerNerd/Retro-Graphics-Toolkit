@@ -11,678 +11,738 @@
 
 
 /** ~Fl_Tree_Prefs()
- * 
+ *
  */
 static int Fl_Tree_Prefs__Fl_Tree_Prefs(lua_State *L) {
-  try {
-    DubUserdata *userdata = ((DubUserdata*)dub::checksdata_d(L, 1, "FLTK.Fl_Tree_Prefs"));
-    if (userdata->gc) {
-      Fl_Tree_Prefs *self = (Fl_Tree_Prefs *)userdata->ptr;
-      delete self;
-    }
-    userdata->gc = false;
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "__gc: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "__gc: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		DubUserdata *userdata = ((DubUserdata*)dub::checksdata_d(L, 1, "FLTK.Fl_Tree_Prefs"));
+
+		if (userdata->gc) {
+			Fl_Tree_Prefs *self = (Fl_Tree_Prefs *)userdata->ptr;
+			delete self;
+		}
+
+		userdata->gc = false;
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "__gc: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "__gc: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** Fl_Tree_Prefs::Fl_Tree_Prefs()
  * inc/Fl_Tree_Prefs.h:149
  */
 static int Fl_Tree_Prefs_Fl_Tree_Prefs(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *retval__ = new Fl_Tree_Prefs();
-    dub::pushudata(L, retval__, "FLTK.Fl_Tree_Prefs", true);
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "new: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "new: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *retval__ = new Fl_Tree_Prefs();
+		dub::pushudata(L, retval__, "FLTK.Fl_Tree_Prefs", true);
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "new: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "new: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Tree_Prefs::item_labelfont() const
  * inc/Fl_Tree_Prefs.h:155
  */
 static int Fl_Tree_Prefs_item_labelfont(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int val = dub::checkinteger(L, 2);
-      self->item_labelfont(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->item_labelfont());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "item_labelfont: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "item_labelfont: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int val = dub::checkinteger(L, 2);
+			self->item_labelfont(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->item_labelfont());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "item_labelfont: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "item_labelfont: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Tree_Prefs::item_labelsize() const
  * inc/Fl_Tree_Prefs.h:159
  */
 static int Fl_Tree_Prefs_item_labelsize(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int val = dub::checkinteger(L, 2);
-      self->item_labelsize(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->item_labelsize());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "item_labelsize: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "item_labelsize: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int val = dub::checkinteger(L, 2);
+			self->item_labelsize(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->item_labelsize());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "item_labelsize: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "item_labelsize: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Tree_Prefs::item_labelfgcolor() const
  * inc/Fl_Tree_Prefs.h:163
  */
 static int Fl_Tree_Prefs_item_labelfgcolor(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int val = dub::checkinteger(L, 2);
-      self->item_labelfgcolor(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->item_labelfgcolor());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "item_labelfgcolor: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "item_labelfgcolor: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int val = dub::checkinteger(L, 2);
+			self->item_labelfgcolor(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->item_labelfgcolor());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "item_labelfgcolor: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "item_labelfgcolor: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Tree_Prefs::item_labelbgcolor() const
  * inc/Fl_Tree_Prefs.h:182
  */
 static int Fl_Tree_Prefs_item_labelbgcolor(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int val = dub::checkinteger(L, 2);
-      self->item_labelbgcolor(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->item_labelbgcolor());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "item_labelbgcolor: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "item_labelbgcolor: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int val = dub::checkinteger(L, 2);
+			self->item_labelbgcolor(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->item_labelbgcolor());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "item_labelbgcolor: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "item_labelbgcolor: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Tree_Prefs::labelfont() const
  * inc/Fl_Tree_Prefs.h:195
  */
 static int Fl_Tree_Prefs_labelfont(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int val = dub::checkinteger(L, 2);
-      self->labelfont(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->labelfont());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "labelfont: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "labelfont: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int val = dub::checkinteger(L, 2);
+			self->labelfont(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->labelfont());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "labelfont: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "labelfont: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Tree_Prefs::labelsize() const
  * inc/Fl_Tree_Prefs.h:199
  */
 static int Fl_Tree_Prefs_labelsize(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int val = dub::checkinteger(L, 2);
-      self->labelsize(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->labelsize());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "labelsize: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "labelsize: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int val = dub::checkinteger(L, 2);
+			self->labelsize(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->labelsize());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "labelsize: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "labelsize: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Tree_Prefs::labelfgcolor() const
  * inc/Fl_Tree_Prefs.h:203
  */
 static int Fl_Tree_Prefs_labelfgcolor(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int val = dub::checkinteger(L, 2);
-      self->labelfgcolor(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->labelfgcolor());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "labelfgcolor: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "labelfgcolor: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int val = dub::checkinteger(L, 2);
+			self->labelfgcolor(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->labelfgcolor());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "labelfgcolor: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "labelfgcolor: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Tree_Prefs::labelbgcolor() const
  * inc/Fl_Tree_Prefs.h:207
  */
 static int Fl_Tree_Prefs_labelbgcolor(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int val = dub::checkinteger(L, 2);
-      self->labelbgcolor(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->labelbgcolor());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "labelbgcolor: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "labelbgcolor: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int val = dub::checkinteger(L, 2);
+			self->labelbgcolor(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->labelbgcolor());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "labelbgcolor: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "labelbgcolor: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Tree_Prefs::marginleft() const
  * inc/Fl_Tree_Prefs.h:215
  */
 static int Fl_Tree_Prefs_marginleft(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int val = dub::checkinteger(L, 2);
-      self->marginleft(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->marginleft());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "marginleft: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "marginleft: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int val = dub::checkinteger(L, 2);
+			self->marginleft(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->marginleft());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "marginleft: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "marginleft: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Tree_Prefs::margintop() const
  * inc/Fl_Tree_Prefs.h:223
  */
 static int Fl_Tree_Prefs_margintop(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int val = dub::checkinteger(L, 2);
-      self->margintop(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->margintop());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "margintop: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "margintop: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int val = dub::checkinteger(L, 2);
+			self->margintop(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->margintop());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "margintop: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "margintop: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Tree_Prefs::openchild_marginbottom() const
  * inc/Fl_Tree_Prefs.h:243
  */
 static int Fl_Tree_Prefs_openchild_marginbottom(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int val = dub::checkinteger(L, 2);
-      self->openchild_marginbottom(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->openchild_marginbottom());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "openchild_marginbottom: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "openchild_marginbottom: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int val = dub::checkinteger(L, 2);
+			self->openchild_marginbottom(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->openchild_marginbottom());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "openchild_marginbottom: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "openchild_marginbottom: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Tree_Prefs::usericonmarginleft() const
  * inc/Fl_Tree_Prefs.h:251
  */
 static int Fl_Tree_Prefs_usericonmarginleft(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int val = dub::checkinteger(L, 2);
-      self->usericonmarginleft(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->usericonmarginleft());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "usericonmarginleft: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "usericonmarginleft: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int val = dub::checkinteger(L, 2);
+			self->usericonmarginleft(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->usericonmarginleft());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "usericonmarginleft: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "usericonmarginleft: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Tree_Prefs::labelmarginleft() const
  * inc/Fl_Tree_Prefs.h:259
  */
 static int Fl_Tree_Prefs_labelmarginleft(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int val = dub::checkinteger(L, 2);
-      self->labelmarginleft(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->labelmarginleft());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "labelmarginleft: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "labelmarginleft: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int val = dub::checkinteger(L, 2);
+			self->labelmarginleft(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->labelmarginleft());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "labelmarginleft: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "labelmarginleft: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Tree_Prefs::linespacing() const
  * inc/Fl_Tree_Prefs.h:277
  */
 static int Fl_Tree_Prefs_linespacing(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int val = dub::checkinteger(L, 2);
-      self->linespacing(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->linespacing());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "linespacing: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "linespacing: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int val = dub::checkinteger(L, 2);
+			self->linespacing(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->linespacing());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "linespacing: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "linespacing: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Tree_Prefs::connectorcolor() const
  * inc/Fl_Tree_Prefs.h:289
  */
 static int Fl_Tree_Prefs_connectorcolor(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int val = dub::checkinteger(L, 2);
-      self->connectorcolor(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->connectorcolor());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "connectorcolor: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "connectorcolor: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int val = dub::checkinteger(L, 2);
+			self->connectorcolor(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->connectorcolor());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "connectorcolor: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "connectorcolor: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** Fl_Tree_Connector Fl_Tree_Prefs::connectorstyle() const
  * inc/Fl_Tree_Prefs.h:297
  */
 static int Fl_Tree_Prefs_connectorstyle(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int val = dub::checkinteger(L, 2);
-      self->connectorstyle(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->connectorstyle());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "connectorstyle: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "connectorstyle: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int val = dub::checkinteger(L, 2);
+			self->connectorstyle(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->connectorstyle());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "connectorstyle: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "connectorstyle: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Tree_Prefs::connectorwidth() const
  * inc/Fl_Tree_Prefs.h:309
  */
 static int Fl_Tree_Prefs_connectorwidth(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int val = dub::checkinteger(L, 2);
-      self->connectorwidth(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->connectorwidth());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "connectorwidth: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "connectorwidth: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int val = dub::checkinteger(L, 2);
+			self->connectorwidth(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->connectorwidth());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "connectorwidth: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "connectorwidth: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** Fl_Image* Fl_Tree_Prefs::openicon() const
  * inc/Fl_Tree_Prefs.h:323
  */
 static int Fl_Tree_Prefs_openicon(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      Fl_Image *val = *((Fl_Image **)dub::checksdata(L, 2, "FLTK.Fl_Image"));
-      self->openicon(val);
-      return 0;
-    } else {
-      Fl_Image *retval__ = self->openicon();
-      if (!retval__) return 0;
-      dub::pushudata(L, retval__, "FLTK.Fl_Image", false);
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "openicon: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "openicon: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			Fl_Image *val = *((Fl_Image **)dub::checksdata(L, 2, "FLTK.Fl_Image"));
+			self->openicon(val);
+			return 0;
+		} else {
+			Fl_Image *retval__ = self->openicon();
+
+			if (!retval__) return 0;
+
+			dub::pushudata(L, retval__, "FLTK.Fl_Image", false);
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "openicon: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "openicon: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** Fl_Image* Fl_Tree_Prefs::closeicon() const
  * inc/Fl_Tree_Prefs.h:330
  */
 static int Fl_Tree_Prefs_closeicon(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      Fl_Image *val = *((Fl_Image **)dub::checksdata(L, 2, "FLTK.Fl_Image"));
-      self->closeicon(val);
-      return 0;
-    } else {
-      Fl_Image *retval__ = self->closeicon();
-      if (!retval__) return 0;
-      dub::pushudata(L, retval__, "FLTK.Fl_Image", false);
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "closeicon: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "closeicon: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			Fl_Image *val = *((Fl_Image **)dub::checksdata(L, 2, "FLTK.Fl_Image"));
+			self->closeicon(val);
+			return 0;
+		} else {
+			Fl_Image *retval__ = self->closeicon();
+
+			if (!retval__) return 0;
+
+			dub::pushudata(L, retval__, "FLTK.Fl_Image", false);
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "closeicon: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "closeicon: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** Fl_Image* Fl_Tree_Prefs::usericon() const
  * inc/Fl_Tree_Prefs.h:335
  */
 static int Fl_Tree_Prefs_usericon(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      Fl_Image *val = *((Fl_Image **)dub::checksdata(L, 2, "FLTK.Fl_Image"));
-      self->usericon(val);
-      return 0;
-    } else {
-      Fl_Image *retval__ = self->usericon();
-      if (!retval__) return 0;
-      dub::pushudata(L, retval__, "FLTK.Fl_Image", false);
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "usericon: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "usericon: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			Fl_Image *val = *((Fl_Image **)dub::checksdata(L, 2, "FLTK.Fl_Image"));
+			self->usericon(val);
+			return 0;
+		} else {
+			Fl_Image *retval__ = self->usericon();
+
+			if (!retval__) return 0;
+
+			dub::pushudata(L, retval__, "FLTK.Fl_Image", false);
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "usericon: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "usericon: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** char Fl_Tree_Prefs::showcollapse() const
  * inc/Fl_Tree_Prefs.h:349
  */
 static int Fl_Tree_Prefs_showcollapse(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int val = dub::checkinteger(L, 2);
-      self->showcollapse(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->showcollapse());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "showcollapse: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "showcollapse: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int val = dub::checkinteger(L, 2);
+			self->showcollapse(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->showcollapse());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "showcollapse: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "showcollapse: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** Fl_Tree_Sort Fl_Tree_Prefs::sortorder() const
  * inc/Fl_Tree_Prefs.h:364
  */
 static int Fl_Tree_Prefs_sortorder(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      Fl_Tree_Sort val = (Fl_Tree_Sort)dub::checkinteger(L, 2);
-      self->sortorder(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->sortorder());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "sortorder: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "sortorder: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			Fl_Tree_Sort val = (Fl_Tree_Sort)dub::checkinteger(L, 2);
+			self->sortorder(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->sortorder());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "sortorder: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "sortorder: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Tree_Prefs::selectbox() const
  * inc/Fl_Tree_Prefs.h:375
  */
 static int Fl_Tree_Prefs_selectbox(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int val = dub::checkinteger(L, 2);
-      self->selectbox((Fl_Boxtype)val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->selectbox());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "selectbox: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "selectbox: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int val = dub::checkinteger(L, 2);
+			self->selectbox((Fl_Boxtype)val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->selectbox());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "selectbox: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "selectbox: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Tree_Prefs::showroot() const
  * inc/Fl_Tree_Prefs.h:383
  */
 static int Fl_Tree_Prefs_showroot(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int val = dub::checkinteger(L, 2);
-      self->showroot(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->showroot());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "showroot: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "showroot: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int val = dub::checkinteger(L, 2);
+			self->showroot(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->showroot());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "showroot: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "showroot: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** Fl_Tree_Select Fl_Tree_Prefs::selectmode() const
  * inc/Fl_Tree_Prefs.h:394
  */
 static int Fl_Tree_Prefs_selectmode(lua_State *L) {
-  try {
-    Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      Fl_Tree_Select val = (Fl_Tree_Select)dub::checkinteger(L, 2);
-      self->selectmode(val);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->selectmode());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "selectmode: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "selectmode: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata(L, 1, "FLTK.Fl_Tree_Prefs"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			Fl_Tree_Select val = (Fl_Tree_Select)dub::checkinteger(L, 2);
+			self->selectmode(val);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->selectmode());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "selectmode: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "selectmode: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 
 
 // --=============================================== __tostring
 static int Fl_Tree_Prefs___tostring(lua_State *L) {
-  Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata_n(L, 1, "FLTK.Fl_Tree_Prefs"));
-  lua_pushfstring(L, "FLTK.Fl_Tree_Prefs: %p", self);
-  
-  return 1;
+	Fl_Tree_Prefs *self = *((Fl_Tree_Prefs **)dub::checksdata_n(L, 1, "FLTK.Fl_Tree_Prefs"));
+	lua_pushfstring(L, "FLTK.Fl_Tree_Prefs: %p", self);
+
+	return 1;
 }
 
 // --=============================================== METHODS
 
 static const struct luaL_Reg Fl_Tree_Prefs_member_methods[] = {
-  { "__gc"         , Fl_Tree_Prefs__Fl_Tree_Prefs },
-  { "new"          , Fl_Tree_Prefs_Fl_Tree_Prefs },
-  { "item_labelfont", Fl_Tree_Prefs_item_labelfont },
-  { "item_labelsize", Fl_Tree_Prefs_item_labelsize },
-  { "item_labelfgcolor", Fl_Tree_Prefs_item_labelfgcolor },
-  { "item_labelbgcolor", Fl_Tree_Prefs_item_labelbgcolor },
-  { "labelfont"    , Fl_Tree_Prefs_labelfont },
-  { "labelsize"    , Fl_Tree_Prefs_labelsize },
-  { "labelfgcolor" , Fl_Tree_Prefs_labelfgcolor },
-  { "labelbgcolor" , Fl_Tree_Prefs_labelbgcolor },
-  { "marginleft"   , Fl_Tree_Prefs_marginleft },
-  { "margintop"    , Fl_Tree_Prefs_margintop },
-  { "openchild_marginbottom", Fl_Tree_Prefs_openchild_marginbottom },
-  { "usericonmarginleft", Fl_Tree_Prefs_usericonmarginleft },
-  { "labelmarginleft", Fl_Tree_Prefs_labelmarginleft },
-  { "linespacing"  , Fl_Tree_Prefs_linespacing },
-  { "connectorcolor", Fl_Tree_Prefs_connectorcolor },
-  { "connectorstyle", Fl_Tree_Prefs_connectorstyle },
-  { "connectorwidth", Fl_Tree_Prefs_connectorwidth },
-  { "openicon"     , Fl_Tree_Prefs_openicon },
-  { "closeicon"    , Fl_Tree_Prefs_closeicon },
-  { "usericon"     , Fl_Tree_Prefs_usericon },
-  { "showcollapse" , Fl_Tree_Prefs_showcollapse },
-  { "sortorder"    , Fl_Tree_Prefs_sortorder },
-  { "selectbox"    , Fl_Tree_Prefs_selectbox },
-  { "showroot"     , Fl_Tree_Prefs_showroot },
-  { "selectmode"   , Fl_Tree_Prefs_selectmode },
-  { "__tostring"   , Fl_Tree_Prefs___tostring },
-  { "deleted"      , dub::isDeleted       },
-  { NULL, NULL},
+	{ "__gc", Fl_Tree_Prefs__Fl_Tree_Prefs },
+	{ "new", Fl_Tree_Prefs_Fl_Tree_Prefs },
+	{ "item_labelfont", Fl_Tree_Prefs_item_labelfont },
+	{ "item_labelsize", Fl_Tree_Prefs_item_labelsize },
+	{ "item_labelfgcolor", Fl_Tree_Prefs_item_labelfgcolor },
+	{ "item_labelbgcolor", Fl_Tree_Prefs_item_labelbgcolor },
+	{ "labelfont", Fl_Tree_Prefs_labelfont },
+	{ "labelsize", Fl_Tree_Prefs_labelsize },
+	{ "labelfgcolor", Fl_Tree_Prefs_labelfgcolor },
+	{ "labelbgcolor", Fl_Tree_Prefs_labelbgcolor },
+	{ "marginleft", Fl_Tree_Prefs_marginleft },
+	{ "margintop", Fl_Tree_Prefs_margintop },
+	{ "openchild_marginbottom", Fl_Tree_Prefs_openchild_marginbottom },
+	{ "usericonmarginleft", Fl_Tree_Prefs_usericonmarginleft },
+	{ "labelmarginleft", Fl_Tree_Prefs_labelmarginleft },
+	{ "linespacing", Fl_Tree_Prefs_linespacing },
+	{ "connectorcolor", Fl_Tree_Prefs_connectorcolor },
+	{ "connectorstyle", Fl_Tree_Prefs_connectorstyle },
+	{ "connectorwidth", Fl_Tree_Prefs_connectorwidth },
+	{ "openicon", Fl_Tree_Prefs_openicon },
+	{ "closeicon", Fl_Tree_Prefs_closeicon },
+	{ "usericon", Fl_Tree_Prefs_usericon },
+	{ "showcollapse", Fl_Tree_Prefs_showcollapse },
+	{ "sortorder", Fl_Tree_Prefs_sortorder },
+	{ "selectbox", Fl_Tree_Prefs_selectbox },
+	{ "showroot", Fl_Tree_Prefs_showroot },
+	{ "selectmode", Fl_Tree_Prefs_selectmode },
+	{ "__tostring", Fl_Tree_Prefs___tostring },
+	{ "deleted", dub::isDeleted       },
+	{ NULL, NULL},
 };
 
 
- int luaopen_FLTK_Fl_Tree_Prefs(lua_State *L)
+int luaopen_FLTK_Fl_Tree_Prefs(lua_State *L)
 {
-  // Create the metatable which will contain all the member methods
-  luaL_newmetatable(L, "FLTK.Fl_Tree_Prefs");
-  // <mt>
+	// Create the metatable which will contain all the member methods
+	luaL_newmetatable(L, "FLTK.Fl_Tree_Prefs");
+	// <mt>
 
-  // register member methods
-  dub::fregister(L, Fl_Tree_Prefs_member_methods);
-  // setup meta-table
-  dub::setup(L, "FLTK.Fl_Tree_Prefs");
-  // <mt>
-  return 1;
+	// register member methods
+	dub::fregister(L, Fl_Tree_Prefs_member_methods);
+	// setup meta-table
+	dub::setup(L, "FLTK.Fl_Tree_Prefs");
+	// <mt>
+	return 1;
 }

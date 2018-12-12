@@ -15,4 +15,4 @@
 	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
 #pragma once
-int luaopen_level_levelInfo(lua_State *L,struct levelInfo*i);
+int luaopen_level_levelInfo(lua_State *L, struct levelInfo*i);

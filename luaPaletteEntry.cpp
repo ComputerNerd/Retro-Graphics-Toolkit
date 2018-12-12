@@ -37,18 +37,18 @@ static int palette__set_(lua_State *L) {
 		unsigned val = luaL_optinteger(L, 3, 0);
 
 		switch (projects[projectIDX]->pal->esize) {
-		case 1:
-			projects[projectIDX]->pal->palDat[entryIDX] = val;
-			break;
+			case 1:
+				projects[projectIDX]->pal->palDat[entryIDX] = val;
+				break;
 
-		case 2:
-			projects[projectIDX]->pal->palDat[entryIDX * 2] = val & 255;
-			projects[projectIDX]->pal->palDat[entryIDX * 2 + 1] = val >> 8;
-			break;
+			case 2:
+				projects[projectIDX]->pal->palDat[entryIDX * 2] = val & 255;
+				projects[projectIDX]->pal->palDat[entryIDX * 2 + 1] = val >> 8;
+				break;
 
-		default:
-			show_default_error
-			return 0;
+			default:
+				show_default_error
+				return 0;
 		}
 
 		projects[projectIDX]->pal->updateRGBindex(entryIDX);
@@ -98,18 +98,18 @@ static int paletteEntry__get_(lua_State *L) {
 			return 1;
 		} else if (!strcmp("raw", k)) {
 			switch (projects[projectIDX]->pal->esize) {
-			case 1:
-				lua_pushinteger(L, projects[projectIDX]->pal->palDat[entryIDX]);
-				break;
+				case 1:
+					lua_pushinteger(L, projects[projectIDX]->pal->palDat[entryIDX]);
+					break;
 
-			case 2:
-				entryIDX *= 2;
-				lua_pushinteger(L, projects[projectIDX]->pal->palDat[entryIDX] | (projects[projectIDX]->pal->palDat[entryIDX + 1] << 8));
-				break;
+				case 2:
+					entryIDX *= 2;
+					lua_pushinteger(L, projects[projectIDX]->pal->palDat[entryIDX] | (projects[projectIDX]->pal->palDat[entryIDX + 1] << 8));
+					break;
 
-			default:
-				show_default_error
-				return 0;
+				default:
+					show_default_error
+					return 0;
 			}
 
 			return 1;

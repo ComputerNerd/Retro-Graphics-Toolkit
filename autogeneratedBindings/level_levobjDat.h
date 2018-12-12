@@ -15,4 +15,4 @@
 	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
 #pragma once
-int luaopen_level_levobjDat(lua_State *L,struct levobjDat*d);
+int luaopen_level_levobjDat(lua_State *L, struct levobjDat*d);

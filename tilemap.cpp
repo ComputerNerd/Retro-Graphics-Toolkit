@@ -41,44 +41,44 @@ static void addHist(uint32_t cur_tile, int type, uint32_t*hist, unsigned sz) {
 		truePtr += 4;
 
 		switch (type) {
-		case 0:
-			++hist[unsigned(h * szz)];
-			break;
+			case 0:
+				++hist[unsigned(h * szz)];
+				break;
 
-		case 1:
-			++hist[unsigned(s * szz)];
-			break;
+			case 1:
+				++hist[unsigned(s * szz)];
+				break;
 
-		case 2:
-			++hist[unsigned(l * szz)];
-			break;
+			case 2:
+				++hist[unsigned(l * szz)];
+				break;
 
-		case 3:
-			++hist[unsigned(h * s * szz)];
-			break;
+			case 3:
+				++hist[unsigned(h * s * szz)];
+				break;
 
-		case 4:
-			++hist[unsigned(h * l * szz)];
-			break;
+			case 4:
+				++hist[unsigned(h * l * szz)];
+				break;
 
-		case 5:
-			++hist[unsigned(s * l * szz)];
-			break;
+			case 5:
+				++hist[unsigned(s * l * szz)];
+				break;
 
-		case 6:
-			szz /= 2.0;
-			++hist[unsigned((h + s)*szz)];
-			break;
+			case 6:
+				szz /= 2.0;
+				++hist[unsigned((h + s)*szz)];
+				break;
 
-		case 7:
-			szz /= 2.0;
-			++hist[unsigned((h + l)*szz)];
-			break;
+			case 7:
+				szz /= 2.0;
+				++hist[unsigned((h + l)*szz)];
+				break;
 
-		case 8:
-			szz /= 2.0;
-			++hist[unsigned((s + l)*szz)];
-			break;
+			case 8:
+				szz /= 2.0;
+				++hist[unsigned((s + l)*szz)];
+				break;
 		}
 	}
 }
@@ -92,41 +92,41 @@ static double getHH(uint32_t cur_tile, int type) {
 		truePtr += 4;
 
 		switch (type) {
-		case 0:
-			hh += h;
-			break;
+			case 0:
+				hh += h;
+				break;
 
-		case 1:
-			hh += s;
-			break;
+			case 1:
+				hh += s;
+				break;
 
-		case 2:
-			hh += l;
-			break;
+			case 2:
+				hh += l;
+				break;
 
-		case 3:
-			hh += h * s;
-			break;
+			case 3:
+				hh += h * s;
+				break;
 
-		case 4:
-			hh += h * l;
-			break;
+			case 4:
+				hh += h * l;
+				break;
 
-		case 5:
-			hh += s * l;
-			break;
+			case 5:
+				hh += s * l;
+				break;
 
-		case 6:
-			hh += h + s;
-			break;
+			case 6:
+				hh += h + s;
+				break;
 
-		case 7:
-			hh += h + l;
-			break;
+			case 7:
+				hh += h + l;
+				break;
 
-		case 8:
-			hh += s + l;
-			break;
+			case 8:
+				hh += s + l;
+				break;
 		}
 	}
 
@@ -179,10 +179,10 @@ void tileMap::pickRow(unsigned amount, int type, int method) {
 	unsigned addBy;
 
 	if ((currentProject->gameSystem == NES) && (currentProject->subSystem & NES2x2)) {
-		divBy = currentProject->tileC->sizew * currentProject->tileC->sizeh * 4.0; // Four tiles.
+		divBy = currentProject->tileC->width() * currentProject->tileC->height() * 4.0; // Four tiles.
 		addBy = 2;
 	} else {
-		divBy = currentProject->tileC->sizew * currentProject->tileC->sizeh;
+		divBy = currentProject->tileC->width() * currentProject->tileC->height();
 		addBy = 1;
 	}
 
@@ -459,33 +459,33 @@ void tileMap::pickRowDelta(bool showProgress, Fl_Progress *progress, int alg, in
 						for (unsigned e = 0; e < per * 32; e += 32) {
 							if (imagein[a + b + y + x + 3 + c + e] != 0) { //Avoid checking transparency
 								switch (alg) {
-								case 0:
-									for (x = 0; x < 32; x += 4)
-										d[t] += std::abs(ciede2000rgb(imagein[a + b + y + x + c + e], imagein[a + b + y + x + 1 + c + e], imagein[a + b + y + x + 2 + c + e], imageout[t][a + b + y + x + c + e], imageout[t][a + b + y + x + 1 + c + e], imageout[t][a + b + y + x + 2 + c + e]));
+									case 0:
+										for (x = 0; x < 32; x += 4)
+											d[t] += std::abs(ciede2000rgb(imagein[a + b + y + x + c + e], imagein[a + b + y + x + 1 + c + e], imagein[a + b + y + x + 2 + c + e], imageout[t][a + b + y + x + c + e], imageout[t][a + b + y + x + 1 + c + e], imageout[t][a + b + y + x + 2 + c + e]));
 
-									break;
+										break;
 
-								case 1:
-									for (x = 0; x < 32; x += 4)
-										di[t] += ColourDistance(imagein[a + b + y + x + c + e], imagein[a + b + y + x + 1 + c + e], imagein[a + b + y + x + 2 + c + e], imageout[t][a + b + y + x + c + e], imageout[t][a + b + y + x + 1 + c + e], imageout[t][a + b + y + x + 2 + c + e]);
+									case 1:
+										for (x = 0; x < 32; x += 4)
+											di[t] += ColourDistance(imagein[a + b + y + x + c + e], imagein[a + b + y + x + 1 + c + e], imagein[a + b + y + x + 2 + c + e], imageout[t][a + b + y + x + c + e], imageout[t][a + b + y + x + 1 + c + e], imageout[t][a + b + y + x + 2 + c + e]);
 
-									break;
+										break;
 
-								case 3:
-								case 4:
-								case 5:
-									for (x = 0; x < 32; x += 4) {
-										double h[2], l[2], s[2];
-										rgbToHsl255(imagein[a + b + y + x + c + e], imagein[a + b + y + x + 1 + c + e], imagein[a + b + y + x + 2 + c + e], h, s, l);
-										rgbToHsl255(imageout[t][a + b + y + x + c + e], imageout[t][a + b + y + x + 1 + c + e], imageout[t][a + b + y + x + 2 + c + e], h + 1, s + 1, l + 1);
-										d[t] += std::abs(pickIt(h[0], s[0], l[0], alg - 3) - pickIt(h[1], s[1], l[1], alg - 3));
-									}
+									case 3:
+									case 4:
+									case 5:
+										for (x = 0; x < 32; x += 4) {
+											double h[2], l[2], s[2];
+											rgbToHsl255(imagein[a + b + y + x + c + e], imagein[a + b + y + x + 1 + c + e], imagein[a + b + y + x + 2 + c + e], h, s, l);
+											rgbToHsl255(imageout[t][a + b + y + x + c + e], imageout[t][a + b + y + x + 1 + c + e], imageout[t][a + b + y + x + 2 + c + e], h + 1, s + 1, l + 1);
+											d[t] += std::abs(pickIt(h[0], s[0], l[0], alg - 3) - pickIt(h[1], s[1], l[1], alg - 3));
+										}
 
-									break;
+										break;
 
-								default://Usually case 2
-									for (x = 0; x < 32; x += 4)
-										di[t] += sqri(imagein[a + b + y + x + c + e] - imageout[t][a + b + y + x + c + e]) + sqri(imagein[a + b + y + x + 1 + c + e] - imageout[t][a + b + y + x + 1 + c + e]) + sqri(imagein[a + b + y + x + 2 + c + e] - imageout[t][a + b + y + x + 2 + c + e]);
+									default://Usually case 2
+										for (x = 0; x < 32; x += 4)
+											di[t] += sqri(imagein[a + b + y + x + c + e] - imageout[t][a + b + y + x + c + e]) + sqri(imagein[a + b + y + x + 1 + c + e] - imageout[t][a + b + y + x + 1 + c + e]) + sqri(imagein[a + b + y + x + 2 + c + e] - imageout[t][a + b + y + x + 2 + c + e]);
 								}
 							}
 						}
@@ -589,8 +589,8 @@ static void reduceImage(uint8_t * image, uint8_t * found_colors, int row, unsign
 	} else {
 		w = currentProject->tms->maps[currentProject->curPlane].mapSizeW;
 		h = currentProject->tms->maps[currentProject->curPlane].mapSizeHA;
-		w *= currentProject->tileC->sizew;
-		h *= currentProject->tileC->sizeh;
+		w *= currentProject->tileC->width();
+		h *= currentProject->tileC->height();
 		currentProject->tms->maps[currentProject->curPlane].truecolor_to_image(image, row, false);
 	}
 
@@ -686,24 +686,24 @@ actullyNeededReduction:
 try_again_color:
 
 		switch (alg) {
-		case 4:
-			dl1quant(imageuse, w, h, colorz, user_pal);
-			break;
+			case 4:
+				dl1quant(imageuse, w, h, colorz, user_pal);
+				break;
 
-		case 3:
-			wu_quant(imageuse, w, h, colorz, user_pal);
-			break;
+			case 3:
+				wu_quant(imageuse, w, h, colorz, user_pal);
+				break;
 
-		case 2:
-			NEU_wrapper(w, h, imageuse, colorz, user_pal);
-			break;
+			case 2:
+				NEU_wrapper(w, h, imageuse, colorz, user_pal);
+				break;
 
-		case 1:
-			scolorq_wrapper(imageuse, output, user_pal, w, h, colorz);
-			break;
+			case 1:
+				scolorq_wrapper(imageuse, output, user_pal, w, h, colorz);
+				break;
 
-		default:
-			dl3quant(imageuse, w, h, colorz, user_pal, true, progress); /*this uses Dennis Lee's v3 color quant which is found at http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c*/
+			default:
+				dl3quant(imageuse, w, h, colorz, user_pal, true, progress); /*this uses Dennis Lee's v3 color quant which is found at http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c*/
 		}
 
 		for (unsigned x = 0; x < colorz; x++) {
@@ -726,39 +726,39 @@ try_again_color:
 			}
 
 			switch (currentProject->gameSystem) {
-			case segaGenesis:
-				r = nearest_color_index(r);
-				g = nearest_color_index(g);
-				b = nearest_color_index(b);
-				rgb_pal2[(x * 3)] = palTab[r];
-				rgb_pal2[(x * 3) + 1] = palTab[g];
-				rgb_pal2[(x * 3) + 2] = palTab[b];
+				case segaGenesis:
+					r = nearest_color_index(r);
+					g = nearest_color_index(g);
+					b = nearest_color_index(b);
+					rgb_pal2[(x * 3)] = palTab[r];
+					rgb_pal2[(x * 3) + 1] = palTab[g];
+					rgb_pal2[(x * 3) + 2] = palTab[b];
+					break;
+
+				case NES:
+				{	uint8_t temp = currentProject->pal->to_nes_color_rgb(r, g, b);
+					uint32_t temp_rgb = nesPalToRgb(temp);
+					rgb_pal2[(x * 3)] = (temp_rgb >> 16) & 255;
+					rgb_pal2[(x * 3) + 1] = (temp_rgb >> 8) & 255;
+					rgb_pal2[(x * 3) + 2] = temp_rgb & 255;
+				}
 				break;
 
-			case NES:
-			{	uint8_t temp = currentProject->pal->to_nes_color_rgb(r, g, b);
-				uint32_t temp_rgb = nesPalToRgb(temp);
-				rgb_pal2[(x * 3)] = (temp_rgb >> 16) & 255;
-				rgb_pal2[(x * 3) + 1] = (temp_rgb >> 8) & 255;
-				rgb_pal2[(x * 3) + 2] = temp_rgb & 255;
-			}
-			break;
+				case masterSystem:
+				case gameGear:
+				{	const uint8_t*palUseTab = currentProject->gameSystem == gameGear ? palTabGameGear : palTabMasterSystem;
+					unsigned colsTab = currentProject->gameSystem == gameGear ? 16 : 4;
+					r = nearestOneChannel(r, palUseTab, colsTab);
+					g = nearestOneChannel(g, palUseTab, colsTab);
+					b = nearestOneChannel(b, palUseTab, colsTab);
+					rgb_pal2[(x * 3)] = palUseTab[r];
+					rgb_pal2[(x * 3) + 1] = palUseTab[g];
+					rgb_pal2[(x * 3) + 2] = palUseTab[b];
+				}
+				break;
 
-			case masterSystem:
-			case gameGear:
-			{	const uint8_t*palUseTab = currentProject->gameSystem == gameGear ? palTabGameGear : palTabMasterSystem;
-				unsigned colsTab = currentProject->gameSystem == gameGear ? 16 : 4;
-				r = nearestOneChannel(r, palUseTab, colsTab);
-				g = nearestOneChannel(g, palUseTab, colsTab);
-				b = nearestOneChannel(b, palUseTab, colsTab);
-				rgb_pal2[(x * 3)] = palUseTab[r];
-				rgb_pal2[(x * 3) + 1] = palUseTab[g];
-				rgb_pal2[(x * 3) + 2] = palUseTab[b];
-			}
-			break;
-
-			default:
-				show_default_error
+				default:
+					show_default_error
 			}
 		}
 
@@ -856,8 +856,8 @@ void generate_optimal_paletteapply(Fl_Widget*, void*s) {
 	} else {
 		w = currentProject->tms->maps[currentProject->curPlane].mapSizeW;
 		h = currentProject->tms->maps[currentProject->curPlane].mapSizeHA;
-		w *= currentProject->tileC->sizew;
-		h *= currentProject->tileC->sizeh;
+		w *= currentProject->tileC->width();
+		h *= currentProject->tileC->height();
 	}
 
 	unsigned maxRows, firstRow;
@@ -989,7 +989,7 @@ void generate_optimal_paletteapply(Fl_Widget*, void*s) {
 
 	if (set->ditherAfter) {
 		if (set->sprite)
-			ditherSpriteAsImage(window->metaspritesel->value(), curSpritegroup);
+			ditherSpriteAsImage(window->metaspritesel->value(), curSpritegroup, currentProject);
 
 		else {
 			pushTilesAll(tTypeTile);

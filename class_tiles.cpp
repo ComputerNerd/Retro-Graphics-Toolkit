@@ -33,13 +33,19 @@ tiles::tiles(struct Project*prj) {
 	setDim(8, 8, prj->getBitdepthSys());
 	this->prj = prj;
 }
+void tiles::setWidth(unsigned w) {
+	sizew = w;
+	sizewbytesbits = (w + 7) & (~7);
+	sizewbytes = sizewbytesbits / 8;
+}
 tiles::tiles(const tiles&other, Project*prj) {
 	this->prj = prj;
 	current_tile = other.current_tile;
 	amt = other.amt;
 	tileSize = other.tileSize;
-	sizew = other.sizew;
-	sizeh = other.sizeh;
+	setWidth(other.width());
+
+	sizeh = other.height();
 	tcSize = sizew * sizeh * 4;
 	tDat = other.tDat;
 	truetDat = other.truetDat;
@@ -71,15 +77,14 @@ void tiles::setPixel(uint8_t*ptr, uint32_t x, uint32_t y, uint32_t val) {
 	if (y >= sizeh)
 		y = sizeh - 1;
 
-	unsigned bdr = prj->getBitdepthSysraw(), bd;
-	bd = bdr + 1;
+	unsigned bd = prj->getBitdepthSysraw() + 1;
 	unsigned maxp = (1 << bd) - 1;
 
 	if (val > maxp)
 		val = maxp;
 
-	ptr += y * ((sizew + 7) / 8);
-	x = (sizew - 1) - x;
+	ptr += y * sizewbytes;
+	x = (sizewbytesbits - 1) - x;
 
 	for (unsigned shift = 0; shift < bd; ++shift) {
 		*ptr &= ~(1 << x);
@@ -101,12 +106,12 @@ uint32_t tiles::getPixel(const uint8_t*ptr, uint32_t x, uint32_t y) const {
 
 	unsigned bdr = prj->getBitdepthSysraw();
 	unsigned val = 0;
-	x = (sizew - 1) - x;
-	ptr += y * ((sizew + 7) / 8);
+	x = (sizewbytesbits - 1) - x;
+	ptr += y * sizewbytes;
 
 	for (unsigned shift = 0; shift <= bdr; ++shift) {
 		val |= ((*ptr >> x) & 1) << shift;
-		ptr += ((sizew + 7) / 8) * sizeh;
+		ptr += sizewbytes * sizeh;
 	}
 
 	return val;
@@ -309,9 +314,6 @@ void tiles::draw_truecolor(uint32_t tile_draw, unsigned x, unsigned y, bool useh
 	} else
 		fl_draw_image(grid, x, y, sizew * zoom, sizeh * zoom, 3);
 }
-static inline uint_fast32_t cal_offset_zoom_rgb(uint_fast16_t x, uint_fast16_t y, uint_fast16_t zoom, uint8_t channel, struct Project*p, unsigned bpp) {
-	return (y * (zoom * p->tileC->sizew * bpp)) + (x * bpp) + channel;
-}
 void tiles::draw_tile(int x_off, int y_off, uint32_t tile_draw, unsigned zoom, unsigned pal_row, bool Usehflip, bool Usevflip, bool isSprite, const uint8_t*extAttr, unsigned plane, bool alpha) {
 	static bool dontShow;
 
@@ -357,12 +359,12 @@ void tiles::draw_tile(int x_off, int y_off, uint32_t tile_draw, unsigned zoom, u
 				for (unsigned j = 0; j < zoom; ++j) {
 					if (rawP || (!alpha)) {
 						for (unsigned k = 0; k < 3; ++k)
-							temp_img_ptr[cal_offset_zoom_rgb((x * zoom) + j, (y * zoom) + i, zoom, k, prj, bpp)] = prj->pal->rgbPal[pixOff + k];
+							temp_img_ptr[cal_offset_zoom_rgb((x * zoom) + j, (y * zoom) + i, zoom, k, bpp)] = prj->pal->rgbPal[pixOff + k];
 
 						if (alpha)
-							temp_img_ptr[cal_offset_zoom_rgb((x * zoom) + j, (y * zoom) + i, zoom, 3, prj, bpp)] = 255;
+							temp_img_ptr[cal_offset_zoom_rgb((x * zoom) + j, (y * zoom) + i, zoom, 3, bpp)] = 255;
 					} else
-						memset(&temp_img_ptr[cal_offset_zoom_rgb((x * zoom) + j, (y * zoom) + i, zoom, 0, prj, bpp)], 0, bpp);
+						memset(&temp_img_ptr[cal_offset_zoom_rgb((x * zoom) + j, (y * zoom) + i, zoom, 0, bpp)], 0, bpp);
 				}
 			}
 		}
@@ -579,44 +581,44 @@ void tiles::toPlanar(enum tileType tt, unsigned mi, int mx) {
 		memcpy(tmp, tPtr, tileSize);
 
 		switch (tt) {
-		case LINEAR:
-			for (unsigned y = 0; y < sizeh; ++y) {
-				for (unsigned x = 0; x < sizew; ++x) {
-					unsigned val;
+			case LINEAR:
+				for (unsigned y = 0; y < sizeh; ++y) {
+					for (unsigned x = 0; x < sizew; ++x) {
+						unsigned val;
 
-					switch (bdr) {
-					case 3:
-						if (x & 1)
-							val = (*ptr++) & 15;
-						else
-							val = *ptr >> 4;
+						switch (bdr) {
+							case 3:
+								if (x & 1)
+									val = (*ptr++) & 15;
+								else
+									val = *ptr >> 4;
 
-						break;
+								break;
 
-					default:
-						val = 0;
-						show_default_error
+							default:
+								val = 0;
+								show_default_error
+						}
+
+						setPixel(tPtr, x, y, val);
 					}
-
-					setPixel(tPtr, x, y, val);
 				}
-			}
 
-			break;
+				break;
 
-		case PLANAR_LINE:
-			memset(tPtr, 0, tileSize);
+			case PLANAR_LINE:
+				memset(tPtr, 0, tileSize);
 
-			for (unsigned y = 0; y < sizeh; ++y) {
-				for (unsigned b = 0; b <= bdr; ++b) {
-					for (unsigned x = 0; x < sizew; ++x)
-						setPixel(tPtr, x, y, (((*ptr >> ((sizew - 1) - x)) & 1) << b) | getPixel(tPtr, x, y));
+				for (unsigned y = 0; y < sizeh; ++y) {
+					for (unsigned b = 0; b <= bdr; ++b) {
+						for (unsigned x = 0; x < sizew; ++x)
+							setPixel(tPtr, x, y, (((*ptr >> ((sizew - 1) - x)) & 1) << b) | getPixel(tPtr, x, y));
 
-					++ptr;
+						++ptr;
+					}
 				}
-			}
 
-			break;
+				break;
 		}
 
 		tPtr += tileSize;
@@ -634,13 +636,15 @@ void*tiles::toLinear(void) {
 				unsigned val = getPixel(tPtr, x, y);
 
 				switch (bdr) {
-				case 3:
-					if (x & 1)
-						*ptr++ |= val;
-					else
-						*ptr = val << 4;
+					case 3:
+						if (x & 1)
+							*ptr++ |= val;
+						else
+							*ptr = val << 4;
 
-					break;
+						break;
+					default:
+						show_default_error
 				}
 			}
 		}
@@ -683,7 +687,7 @@ void tiles::setDim(unsigned w, unsigned h, unsigned bd) {
 	sizeh = h;
 	curBD = bd;
 	tcSize = sizew * sizeh * 4;
-	tileSize = ((sizew + 7) / 8 * 8) * sizeh * bd / 8;
+	tileSize = sizewbytesbits * sizeh * bd / 8;
 	tDat.resize(tileSize * amt, 0);
 	truetDat.resize(tcSize * amt, 0);
 }
@@ -710,28 +714,18 @@ void tiles::changeDim(unsigned w, unsigned h, unsigned bd) {
 		}
 	}
 
-	if (sizew % w) {
-		show_TODO_error
-		return;
-	}
-
-	if (sizeh % h) {
-		show_TODO_error
-		return;
-	}
-
 	unsigned amto = amt;
 	tiles*old = new tiles(*this, prj);
 	amt = amt * sizew / w * sizeh / h;
 	unsigned sw = sizew, sh = sizeh;
 
-	if (sw > w && sh > h)
+	if (sw != w || sh != h)
 		std::fill(tDat.begin(), tDat.end(), 0);
 
 	setDim(w, h, bd);
 
 	//If going to a smaller dimension break up the tiles; discard tile data keep only truecolor data.
-	if (sw > w && sh > h) {
+	if (sw > w && sh > h && (sizew % w == 0) && (sizeh % h == 0)) {
 		uint8_t*src = old->truetDat.data(), *dst = truetDat.data();
 
 		for (unsigned i = 0; i < amto; ++i) {
@@ -750,17 +744,17 @@ void tiles::save(const char*fname, fileType_t type, bool clipboard, int compress
 	enum tileType tt = prj->getTileType();
 
 	switch (tt) {
-	case LINEAR:
-		savePtr = (uint8_t*)toLinear();
-		break;
+		case LINEAR:
+			savePtr = (uint8_t*)toLinear();
+			break;
 
-	case PLANAR_LINE:
-		savePtr = (uint8_t*)toLinePlanar();
-		break;
+		case PLANAR_LINE:
+			savePtr = (uint8_t*)toLinePlanar();
+			break;
 
-	case PLANAR_TILE:
-		savePtr = tDat.data();
-		break;
+		case PLANAR_TILE:
+			savePtr = tDat.data();
+			break;
 	}
 
 	FILE* myfile;

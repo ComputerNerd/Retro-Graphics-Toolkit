@@ -179,8 +179,8 @@ void fill_tile(Fl_Widget* o, void*) {
 		unsigned color;
 		color = palBar.selBox[2];
 
-		for (unsigned y = 0; y < currentProject->tileC->sizeh; ++y) {
-			for (unsigned x = 0; x < currentProject->tileC->sizew; ++x)
+		for (unsigned y = 0; y < currentProject->tileC->height(); ++y) {
+			for (unsigned x = 0; x < currentProject->tileC->width(); ++x)
 				currentProject->tileC->setPixel(currentProject->tileC->current_tile, x, y, color);
 		}
 	}

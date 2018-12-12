@@ -165,18 +165,18 @@ static struct rgbo yiqToRgb(float Y, float I, float Q) {
 
 	// Apply desired clipping method to out-of-gamut colors.
 	switch (clipMethodB) {
-	case DARKEN_S:
-		corrected = huePreserveClip(R, G, B);
-		break;
+		case DARKEN_S:
+			corrected = huePreserveClip(R, G, B);
+			break;
 
-	case DESATURATE_S:
-		corrected = huePreserveClip3(R, G, B);
-		break;
+		case DESATURATE_S:
+			corrected = huePreserveClip3(R, G, B);
+			break;
 
-	case CLAMP_S:
-	default:
-		corrected = simpleClip(R, G, B);
-		break;
+		case CLAMP_S:
+		default:
+			corrected = simpleClip(R, G, B);
+			break;
 	}
 
 	if (clipMethodB != DESATURATE_S) {
@@ -224,27 +224,27 @@ static struct rgbo yiqToRgb(float Y, float I, float Q) {
 
 	// Apply desired clipping method to out-of-gamut colors.
 	switch (clipMethod) {
-	case DARKEN_Y:
-		corrected = huePreserveClip(R, G, B);
-		break;
+		case DARKEN_Y:
+			corrected = huePreserveClip(R, G, B);
+			break;
 
-	case DESATURATE_Y:
-		corrected = huePreserveClip2(R, G, B);
-		break;
+		case DESATURATE_Y:
+			corrected = huePreserveClip2(R, G, B);
+			break;
 
-	case NONE_Y:
-		corrected = huePreserveClip3(R, G, B);
-		break;
+		case NONE_Y:
+			corrected = huePreserveClip3(R, G, B);
+			break;
 
-	/*case "4":
-		corrected = hueLumPreserveClip(R, G, B, Y);
-	break;
-	case "5":
-		corrected = absColorimetric(R, G, B);
-	break;*/
-	case CLAMP_Y:
-	default:
-		corrected = simpleClip(R, G, B);
+		/*case "4":
+			corrected = hueLumPreserveClip(R, G, B, Y);
+		break;
+		case "5":
+			corrected = absColorimetric(R, G, B);
+		break;*/
+		case CLAMP_Y:
+		default:
+			corrected = simpleClip(R, G, B);
 	}
 
 	// Convert normalized value to the two-character hexadecimal representation.
@@ -306,35 +306,35 @@ uint32_t nesPalToRgb(unsigned inputPal) {
 	enum colorimetryTypes colorimetry = FCC_D65; //TODO gui to set this
 
 	switch (colorimetry) {
-	case FCC_1953:
-	default:
-		updateMatrix(.67, .33, .21, .71, .14, .08, .31, .316);
-		break;
+		case FCC_1953:
+		default:
+			updateMatrix(.67, .33, .21, .71, .14, .08, .31, .316);
+			break;
 
-	case FCC_D65:
-		updateMatrix(.67, .33, .21, .71, .14, .08, .3127, .329);
-		break;
+		case FCC_D65:
+			updateMatrix(.67, .33, .21, .71, .14, .08, .3127, .329);
+			break;
 
-	case SMPTE_C_1987:
-		updateMatrix(.63, .34, .31, .595, .155, .07, .3127, .329);
-		break;
+		case SMPTE_C_1987:
+			updateMatrix(.63, .34, .31, .595, .155, .07, .3127, .329);
+			break;
 
-	case SRGB_PC_Monitors:
-		updateMatrix(.64, .33, .3, .6, .15, .06, .3127, .329);
-		break;
+		case SRGB_PC_Monitors:
+			updateMatrix(.64, .33, .3, .6, .15, .06, .3127, .329);
+			break;
 
-	case CUSTOM_COLORIMETRY:
-		/*updateMatrix(
-			document.paletteTweaks.custRx.value,
-			document.paletteTweaks.custRy.value,
-			document.paletteTweaks.custGx.value,
-			document.paletteTweaks.custGy.value,
-			document.paletteTweaks.custBx.value,
-			document.paletteTweaks.custBy.value,
-			document.paletteTweaks.custWx.value,
-			document.paletteTweaks.custWy.value);*/
-		fl_alert("TODO");
-		break;
+		case CUSTOM_COLORIMETRY:
+			/*updateMatrix(
+				document.paletteTweaks.custRx.value,
+				document.paletteTweaks.custRy.value,
+				document.paletteTweaks.custGx.value,
+				document.paletteTweaks.custGy.value,
+				document.paletteTweaks.custBx.value,
+				document.paletteTweaks.custBy.value,
+				document.paletteTweaks.custWx.value,
+				document.paletteTweaks.custWy.value);*/
+			fl_alert("TODO");
+			break;
 	}
 
 	float hueAdj = -0.25f;//TODO gui

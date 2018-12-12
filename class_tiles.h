@@ -20,10 +20,27 @@ class tiles {
 private:
 	unsigned curBD;
 	void setDim(unsigned w, unsigned h, unsigned bd);
+	void setWidth(unsigned w);
+	unsigned sizew, sizeh, sizewbytes, sizewbytesbits;
+	uint_fast32_t cal_offset_zoom_rgb(uint_fast16_t x, uint_fast16_t y, uint_fast16_t zoom, uint8_t channel, unsigned bpp) {
+		return (y * (zoom * width() * bpp)) + (x * bpp) + channel;
+	}
 public:
 	tiles(struct Project*prj);
 	tiles(const tiles&other, Project*prj);
 	~tiles();
+	unsigned width()const {
+		return sizew;
+	}
+	unsigned bytesPerRow()const {
+		return sizewbytes;
+	}
+	unsigned actualBitsPerRow()const {
+		return sizewbytesbits;
+	}
+	unsigned height()const {
+		return sizeh;
+	}
 	struct Project*prj;
 	unsigned tileSize;/*!< Sets the size on one tile in bytes 16 or 32 depends of if NES or Sega Genesis. */
 	unsigned tcSize; /*!< The size of one truecolor tile in bytes. */
@@ -33,7 +50,6 @@ public:
 	std::vector<uint8_t>truetDat;/*< Truecolor tile data*/
 	std::vector<uint8_t>extAttrs;
 	unsigned enforcedMultipleStep, enforcedMultiple;
-	unsigned sizew, sizeh;
 	void insertTile(uint32_t at);
 	void setPixel(uint8_t*ptr, uint32_t x, uint32_t y, uint32_t val);
 	void setPixel(uint32_t tile, uint32_t x, uint32_t y, uint32_t val);

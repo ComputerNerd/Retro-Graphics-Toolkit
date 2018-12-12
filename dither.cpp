@@ -22,38 +22,38 @@ static bool isChunkD_G;
 static uint32_t idChunk_G;
 static uint8_t nearest_color_chanColSpace(uint8_t val, uint8_t chan) {
 	switch (useMode) {
-	case segaGenesis:
-		return palTab[nearest_color_index(val)];
+		case segaGenesis:
+			return palTab[nearest_color_index(val)];
+			break;
+
+		case NES:
+		{	img_ptr_dither -= chan;
+			uint8_t returnme = currentProject->pal->toNesChan(*img_ptr_dither, img_ptr_dither[1], img_ptr_dither[2], chan);
+			img_ptr_dither += chan;
+			return returnme;
+		}
 		break;
 
-	case NES:
-	{	img_ptr_dither -= chan;
-		uint8_t returnme = currentProject->pal->toNesChan(*img_ptr_dither, img_ptr_dither[1], img_ptr_dither[2], chan);
-		img_ptr_dither += chan;
-		return returnme;
-	}
-	break;
+		case masterSystem:
+			return palTabMasterSystem[nearestOneChannel(val, palTabMasterSystem, 4)];
+			break;
 
-	case masterSystem:
-		return palTabMasterSystem[nearestOneChannel(val, palTabMasterSystem, 4)];
-		break;
+		case gameGear:
+			return palTabGameGear[nearestOneChannel(val, palTabGameGear, 16)];
+			break;
 
-	case gameGear:
-		return palTabGameGear[nearestOneChannel(val, palTabGameGear, 16)];
-		break;
+		case TMS9918:
+			//return nearestColIndex(r_old,g_old,b_old,currentProject->pal->rgbPal,currentProject->pal->colorCnt);
+			return 0;//TODO
+			break;
 
-	case TMS9918:
-		//return nearestColIndex(r_old,g_old,b_old,currentProject->pal->rgbPal,currentProject->pal->colorCnt);
-		return 0;//TODO
-		break;
+		case 255://alpha
+			return (val & 128) ? 255 : 0;
+			break;
 
-	case 255://alpha
-		return (val & 128) ? 255 : 0;
-		break;
-
-	default:
-		show_default_error
-		return 0;
+		default:
+			show_default_error
+			return 0;
 	}
 }
 static uint8_t nearest_color_chan(int_fast32_t val, uint8_t chan, uint8_t row) {
@@ -172,95 +172,95 @@ static void move(int32_t direction) {
 
 	/* move to the next pixel */
 	switch (direction) {
-	case LEFT:
-		cur_x--;
-		img_ptr_dither -= rgbPixelsize;
-		break;
+		case LEFT:
+			cur_x--;
+			img_ptr_dither -= rgbPixelsize;
+			break;
 
-	case RIGHT:
-		cur_x++;
-		img_ptr_dither += rgbPixelsize;
-		break;
+		case RIGHT:
+			cur_x++;
+			img_ptr_dither += rgbPixelsize;
+			break;
 
-	case UP:
-		cur_y--;
-		img_ptr_dither -= img_width * rgbPixelsize;
-		break;
+		case UP:
+			cur_y--;
+			img_ptr_dither -= img_width * rgbPixelsize;
+			break;
 
-	case DOWN:
-		cur_y++;
-		img_ptr_dither += img_width * rgbPixelsize;
-		break;
+		case DOWN:
+			cur_y++;
+			img_ptr_dither += img_width * rgbPixelsize;
+			break;
 	} /* switch */
 }
 static void hilbert_level(int32_t level, int32_t direction) {
 	if (level == 1) {
 		switch (direction) {
-		case LEFT:
-			move(RIGHT);
-			move(DOWN);
-			move(LEFT);
-			break;
+			case LEFT:
+				move(RIGHT);
+				move(DOWN);
+				move(LEFT);
+				break;
 
-		case RIGHT:
-			move(LEFT);
-			move(UP);
-			move(RIGHT);
-			break;
+			case RIGHT:
+				move(LEFT);
+				move(UP);
+				move(RIGHT);
+				break;
 
-		case UP:
-			move(DOWN);
-			move(RIGHT);
-			move(UP);
-			break;
+			case UP:
+				move(DOWN);
+				move(RIGHT);
+				move(UP);
+				break;
 
-		case DOWN:
-			move(UP);
-			move(LEFT);
-			move(DOWN);
-			break;
+			case DOWN:
+				move(UP);
+				move(LEFT);
+				move(DOWN);
+				break;
 		} /* switch */
 	} else {
 		switch (direction) {
-		case LEFT:
-			hilbert_level(level - 1, UP);
-			move(RIGHT);
-			hilbert_level(level - 1, LEFT);
-			move(DOWN);
-			hilbert_level(level - 1, LEFT);
-			move(LEFT);
-			hilbert_level(level - 1, DOWN);
-			break;
+			case LEFT:
+				hilbert_level(level - 1, UP);
+				move(RIGHT);
+				hilbert_level(level - 1, LEFT);
+				move(DOWN);
+				hilbert_level(level - 1, LEFT);
+				move(LEFT);
+				hilbert_level(level - 1, DOWN);
+				break;
 
-		case RIGHT:
-			hilbert_level(level - 1, DOWN);
-			move(LEFT);
-			hilbert_level(level - 1, RIGHT);
-			move(UP);
-			hilbert_level(level - 1, RIGHT);
-			move(RIGHT);
-			hilbert_level(level - 1, UP);
-			break;
+			case RIGHT:
+				hilbert_level(level - 1, DOWN);
+				move(LEFT);
+				hilbert_level(level - 1, RIGHT);
+				move(UP);
+				hilbert_level(level - 1, RIGHT);
+				move(RIGHT);
+				hilbert_level(level - 1, UP);
+				break;
 
-		case UP:
-			hilbert_level(level - 1, LEFT);
-			move(DOWN);
-			hilbert_level(level - 1, UP);
-			move(RIGHT);
-			hilbert_level(level - 1, UP);
-			move(UP);
-			hilbert_level(level - 1, RIGHT);
-			break;
+			case UP:
+				hilbert_level(level - 1, LEFT);
+				move(DOWN);
+				hilbert_level(level - 1, UP);
+				move(RIGHT);
+				hilbert_level(level - 1, UP);
+				move(UP);
+				hilbert_level(level - 1, RIGHT);
+				break;
 
-		case DOWN:
-			hilbert_level(level - 1, RIGHT);
-			move(UP);
-			hilbert_level(level - 1, DOWN);
-			move(LEFT);
-			hilbert_level(level - 1, DOWN);
-			move(DOWN);
-			hilbert_level(level - 1, LEFT);
-			break;
+			case DOWN:
+				hilbert_level(level - 1, RIGHT);
+				move(UP);
+				hilbert_level(level - 1, DOWN);
+				move(LEFT);
+				hilbert_level(level - 1, DOWN);
+				move(DOWN);
+				hilbert_level(level - 1, LEFT);
+				break;
 		} /* switch */
 	} /* if */
 }
@@ -875,7 +875,7 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 	unsigned type_temp = palTypeGen;
 	unsigned temp = 0;
 	rgbPixelsize = useAlpha ? 4 : 3;
-	unsigned rgbRowsize = currentProject->tileC->sizew * rgbPixelsize;
+	unsigned rgbRowsize = currentProject->tileC->width() * rgbPixelsize;
 	unsigned x, y;
 	uint_fast8_t r_old, g_old, b_old, a_old;
 	uint_fast8_t r_new, g_new, b_new, a_new;
@@ -888,274 +888,56 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 	bool haveExt = currentProject->szPerExtPalRow() > 0;
 
 	switch (ditherAlg) {
-	case 7:
-	case 6:
-	case 5://Yliluoma's ordered dithering algorithms
-	case 4:
-	{
-		if (colSpace && currentProject->gameSystem != TMS9918)
-			return 0;
+		case 7:
+		case 6:
+		case 5://Yliluoma's ordered dithering algorithms
+		case 4:
+		{
+			if (colSpace && currentProject->gameSystem != TMS9918)
+				return 0;
 
-		unsigned tempPalSize;
-		uint8_t * colPtr = currentProject->pal->rgbPal;
+			unsigned tempPalSize;
+			uint8_t * colPtr = currentProject->pal->rgbPal;
 
-		if (currentProject->pal->haveAlt && isSprite) {
-			tempPalSize = currentProject->pal->colorCntalt;
-			palettesize = currentProject->pal->perRowalt;
-			colPtr += palettesize * 3;
-		} else {
-			tempPalSize = currentProject->pal->colorCnt;
-			palettesize = currentProject->pal->perRow;
-		}
+			if (currentProject->pal->haveAlt && isSprite) {
+				tempPalSize = currentProject->pal->colorCntalt;
+				palettesize = currentProject->pal->perRowalt;
+				colPtr += palettesize * 3;
+			} else {
+				tempPalSize = currentProject->pal->colorCnt;
+				palettesize = currentProject->pal->perRow;
+			}
 
-		for (unsigned c = 0; c < tempPalSize; ++c) {
-			unsigned r = colPtr[c * 3], g = colPtr[(c * 3) + 1], b = colPtr[(c * 3) + 2];
-			luma[c] = r * 299 + g * 587 + b * 114;
-			pal_g[c][0] = GammaCorrect(r / 255.0);
-			pal_g[c][1] = GammaCorrect(g / 255.0);
-			pal_g[c][2] = GammaCorrect(b / 255.0);
-		}
+			for (unsigned c = 0; c < tempPalSize; ++c) {
+				unsigned r = colPtr[c * 3], g = colPtr[(c * 3) + 1], b = colPtr[(c * 3) + 2];
+				luma[c] = r * 299 + g * 587 + b * 114;
+				pal_g[c][0] = GammaCorrect(r / 255.0);
+				pal_g[c][1] = GammaCorrect(g / 255.0);
+				pal_g[c][2] = GammaCorrect(b / 255.0);
+			}
 
-		for (y = 0; y < h; ++y) {
-			for (x = 0; x < w; ++x) {
-				r_old = image[(x * rgbPixelsize) + (y * w * rgbPixelsize)];
-				g_old = image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 1];
-				b_old = image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 2];
+			for (y = 0; y < h; ++y) {
+				for (x = 0; x < w; ++x) {
+					r_old = image[(x * rgbPixelsize) + (y * w * rgbPixelsize)];
+					g_old = image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 1];
+					b_old = image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 2];
 
-				if (useAlpha)
-					a_old = image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 3];
-
-				if (currentProject->gameSystem == segaGenesis && type_temp != 0) {
-					unsigned tempSet;
-
-					if (isChunk)
-						tempSet = (currentProject->Chunk->getPrio_t(idChunk, x / 8, y / 8) ^ 1) * 8;
-					else
-						tempSet = (currentProject->tms->maps[currentProject->curPlane].get_prio(x / 8, y / 8) ^ 1) * 8;
-
-					set_palette_type_force(tempSet);//0 normal 8 shadowed 16 highlighted
-				}
-
-				unsigned tempPalOff;
-
-				if (forceRow)
-					pal_row = forcedrow;
-				else {
-					if (isChunk)
-						pal_row = currentProject->Chunk->getTileRow_t(idChunk, x / 8, y / 8);
-					else
-						pal_row = currentProject->tms->maps[currentProject->curPlane].getPalRow(x / 8, y / 8);
-				}
-
-				if (ditherAlg == 7) {
-					unsigned map_value = mapTK[(x & 7) + ((y & 7) << 3)];
-					MixingPlanTK plan;
-					plan = DeviseBestMixingPlanTK(r_old, g_old, b_old, currentProject->pal->rgbPal, pal_row * palettesize);
-					tempPalOff = (plan.colors[map_value] + (pal_row * palettesize));
-				} else if (ditherAlg == 4) {
-					float map_value = mapY1[(x & 7) + ((y & 7) << 3)];
-					MixingPlanY1 plan;
-					plan = DeviseBestMixingPlanY1(r_old, g_old, b_old, currentProject->pal->rgbPal, pal_row * palettesize);
-					tempPalOff = (plan.colors[map_value < plan.ratio ? 1 : 0] + (pal_row * palettesize));
-				} else {
-					unsigned map_value = mapY3[(x & 7) + ((y & 7) << 3)];
-					MixingPlan plan;
-
-					if (ditherAlg == 5)
-						plan = DeviseBestMixingPlanY2(r_old, g_old, b_old, currentProject->pal->rgbPal, pal_row * palettesize, 16);
-					else
-						plan = DeviseBestMixingPlanY3(r_old, g_old, b_old, currentProject->pal->rgbPal, pal_row * palettesize, 16);
-
-					map_value = map_value * plan.size() / 64;
-					tempPalOff = (plan[ map_value ] + (pal_row * palettesize));
-				}
-
-				if (toIndex) {
 					if (useAlpha)
-						indexPtr[x + (y * w)] = a_old >= 128 ? tempPalOff : 0; //TODO dither alpha with these algorithms
-					else
-						indexPtr[x + (y * w)] = tempPalOff;
-				}
+						a_old = image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 3];
 
-				tempPalOff *= 3;
-				image[(x * rgbPixelsize) + (y * w * rgbPixelsize)] = currentProject->pal->rgbPal[tempPalOff];
-				image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 1] = currentProject->pal->rgbPal[tempPalOff + 1];
-				image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 2] = currentProject->pal->rgbPal[tempPalOff + 2];
-			}
+					if (currentProject->gameSystem == segaGenesis && type_temp != 0) {
+						unsigned tempSet;
 
-			progressUpdate(&win, &progress, lasttime, progressHave, y, h);
-		}
-	}
-	break;
-
-	case 2://nearest color
-	case 3://vertical dithering
-		for (y = 0; y < h; ++y) {
-			for (x = 0; x < w * rgbPixelsize; x += rgbPixelsize) {
-				r_old = image[x + (y * w * rgbPixelsize)];
-				g_old = image[x + (y * w * rgbPixelsize) + 1];
-				b_old = image[x + (y * w * rgbPixelsize) + 2];
-
-				if (useAlpha)
-					a_old = image[x + (y * w * rgbPixelsize) + 3];
-
-				if (!colSpace && !haveExt) {
-					if (forceRow)
-						pal_row = forcedrow;
-					else {
 						if (isChunk)
-							pal_row = currentProject->Chunk->getTileRow_t(idChunk, x / rgbRowsize, y / 8);
+							tempSet = (currentProject->Chunk->getPrio_t(idChunk, x / 8, y / 8) ^ 1) * 8;
 						else
-							pal_row = currentProject->tms->maps[currentProject->curPlane].getPalRow(x / rgbRowsize, y / 8);
-					}
-				}
+							tempSet = (currentProject->tms->maps[currentProject->curPlane].get_prio(x / 8, y / 8) ^ 1) * 8;
 
-				//find nearest color
-				uint8_t half = 18;
-
-				if (currentProject->gameSystem == segaGenesis && type_temp != 0) {
-					unsigned tempSet;
-
-					if (isChunk)
-						tempSet = (currentProject->Chunk->getPrio_t(idChunk, x / rgbRowsize, y / 8) ^ 1) * 8;
-					else
-						tempSet = (currentProject->tms->maps[currentProject->curPlane].get_prio(x / rgbRowsize, y / 8) ^ 1) * 8;
-
-					set_palette_type_force(tempSet);//0 normal 8 shadowed 16 highlighted
-					half = (tempSet == 0) ? 18 : 9;
-				}
-
-				if (colSpace) {
-					switch (currentProject->gameSystem) {
-					case segaGenesis:
-						r_new = palTab[nearest_color_index(r_old)];
-						g_new = palTab[nearest_color_index(g_old)];
-						b_new = palTab[nearest_color_index(b_old)];
-						break;
-
-					case NES:
-					{	uint32_t temprgb = toNesRgb(r_old, g_old, b_old);
-						b_new = temprgb & 255;
-						g_new = (temprgb >> 8) & 255;
-						r_new = (temprgb >> 16) & 255;
-					}
-					break;
-
-					case masterSystem:
-						r_new = palTabMasterSystem[nearestOneChannel(r_old, palTabMasterSystem, 4)];
-						g_new = palTabMasterSystem[nearestOneChannel(g_old, palTabMasterSystem, 4)];
-						b_new = palTabMasterSystem[nearestOneChannel(b_old, palTabMasterSystem, 4)];
-						break;
-
-					case gameGear:
-						r_new = palTabGameGear[nearestOneChannel(r_old, palTabGameGear, 16)];
-						g_new = palTabGameGear[nearestOneChannel(g_old, palTabGameGear, 16)];
-						b_new = palTabGameGear[nearestOneChannel(b_old, palTabGameGear, 16)];
-						break;
-
-					case TMS9918:
-						temp = nearestColIndex(r_old, g_old, b_old, currentProject->pal->rgbPal, currentProject->pal->colorCnt) * 3;
-
-						if (toIndex)
-							indexPtr[(x / rgbPixelsize) + (y * w)] = temp / 3;
-
-						r_new = currentProject->pal->rgbPal[temp];
-						g_new = currentProject->pal->rgbPal[temp + 1];
-						b_new = currentProject->pal->rgbPal[temp + 2];
-						break;
-
-					default:
-						show_default_error
-					}
-				} else {
-					if (ditherAlg == 3) {
-						if ((x / rgbPixelsize) & 1) {
-							r_old = addCheck(r_old, half);
-							g_old = addCheck(g_old, half);
-							b_old = addCheck(b_old, half);
-
-							if (useAlpha)
-								a_old = addCheck(a_old, half);
-						}
+						set_palette_type_force(tempSet);//0 normal 8 shadowed 16 highlighted
 					}
 
-					if (haveExt) {
-						temp = chooseTwoColor(currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x / rgbRowsize, y, false), currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x / rgbRowsize, y, true), r_old, g_old, b_old) * 3;
-						r_new = currentProject->pal->rgbPal[temp];
-						g_new = currentProject->pal->rgbPal[temp + 1];
-						b_new = currentProject->pal->rgbPal[temp + 2];
-						temp = 3 * ((temp / 3) == currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x / rgbRowsize, y, true));
-					} else if ((currentProject->pal->haveAlt) && isSprite) {
-						temp = find_near_color_from_row_rgb(pal_row, r_old, g_old, b_old, true);
-						r_new = currentProject->pal->rgbPal[temp + (currentProject->pal->colorCnt * 3)];
-						g_new = currentProject->pal->rgbPal[temp + 1 + (currentProject->pal->colorCnt * 3)];
-						b_new = currentProject->pal->rgbPal[temp + 2 + (currentProject->pal->colorCnt * 3)];
-					} else {
-						temp = find_near_color_from_row_rgb(pal_row, r_old, g_old, b_old, false);
-						r_new = currentProject->pal->rgbPal[temp];
-						g_new = currentProject->pal->rgbPal[temp + 1];
-						b_new = currentProject->pal->rgbPal[temp + 2];
-					}
+					unsigned tempPalOff;
 
-					if (toIndex) {
-						if (useAlpha)
-							indexPtr[(x / rgbPixelsize) + (y * w)] = a_old >= 128 ? temp / 3 : 0;
-						else
-							indexPtr[(x / rgbPixelsize) + (y * w)] = temp / 3;
-					}
-				}
-
-				if (useAlpha)
-					a_old = (a_old & 128) ? 255 : 0;
-
-				image[x + (y * w * rgbPixelsize)] = r_new;
-				image[x + (y * w * rgbPixelsize) + 1] = g_new;
-				image[x + (y * w * rgbPixelsize) + 2] = b_new;
-
-				if (useAlpha)
-					image[x + (y * w * rgbPixelsize) + 3] = a_old;
-			}
-
-			progressUpdate(&win, &progress, lasttime, progressHave, y, h);
-		}
-
-		break;
-
-	case 1:
-		useMode = currentProject->gameSystem;
-		USEofColGlob = colSpace;
-		isSpriteG = isSprite;
-		shouldForceRow = forceRow;
-		selectedForceRow = forcedrow;
-		isChunkD_G = isChunk;
-		idChunk_G = idChunk;
-		Riemersma(image, w, h, 0);
-		progressUpdate(&win, &progress, lasttime, progressHave, 1, useAlpha ? 4 : 3);
-		Riemersma(image, w, h, 1);
-		progressUpdate(&win, &progress, lasttime, progressHave, 2, useAlpha ? 4 : 3);
-		Riemersma(image, w, h, 2);
-		progressUpdate(&win, &progress, lasttime, progressHave, 3, useAlpha ? 4 : 3);
-
-		if (useAlpha) {
-			useMode = 255;
-			Riemersma(image, w, h, 3);
-		}
-
-
-		break;
-
-	case 0:
-		for (y = 0; y < h; y++) {
-			for (x = 0; x < w; x++) {
-				//we need to get nearest color
-				r_old = image[(x * rgbPixelsize) + (y * w * rgbPixelsize)];
-				g_old = image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 1];
-				b_old = image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 2];
-
-				if (useAlpha)
-					a_old = image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 3];
-
-				if (!colSpace && !haveExt) {
 					if (forceRow)
 						pal_row = forcedrow;
 					else {
@@ -1164,123 +946,341 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 						else
 							pal_row = currentProject->tms->maps[currentProject->curPlane].getPalRow(x / 8, y / 8);
 					}
-				}
 
-				//find nearest color
-				if (currentProject->gameSystem == segaGenesis && type_temp != 0) {
-					unsigned tempSet;
-
-					if (isChunk)
-						tempSet = (currentProject->Chunk->getPrio_t(idChunk, x / 8, y / 8) ^ 1) * 8;
-					else
-						tempSet = (currentProject->tms->maps[currentProject->curPlane].get_prio(x / 8, y / 8) ^ 1) * 8;
-
-					set_palette_type_force(tempSet);//0 normal 8 shadowed 16 highlighted
-				}
-
-				if (colSpace) {
-					switch (currentProject->gameSystem) {
-					case segaGenesis:
-						r_new = palTab[nearest_color_index(r_old)];
-						g_new = palTab[nearest_color_index(g_old)];
-						b_new = palTab[nearest_color_index(b_old)];
-						break;
-
-					case NES:
-					{	uint32_t temprgb = toNesRgb(r_old, g_old, b_old);
-						b_new = temprgb & 255;
-						g_new = (temprgb >> 8) & 255;
-						r_new = (temprgb >> 16) & 255;
-					}
-					break;
-
-					case masterSystem:
-						r_new = palTabMasterSystem[nearestOneChannel(r_old, palTabMasterSystem, 4)];
-						g_new = palTabMasterSystem[nearestOneChannel(g_old, palTabMasterSystem, 4)];
-						b_new = palTabMasterSystem[nearestOneChannel(b_old, palTabMasterSystem, 4)];
-						break;
-
-					case gameGear:
-						r_new = palTabGameGear[nearestOneChannel(r_old, palTabGameGear, 16)];
-						g_new = palTabGameGear[nearestOneChannel(g_old, palTabGameGear, 16)];
-						b_new = palTabGameGear[nearestOneChannel(b_old, palTabGameGear, 16)];
-						break;
-
-					case TMS9918:
-						temp = nearestColIndex(r_old, g_old, b_old, currentProject->pal->rgbPal, currentProject->pal->colorCnt) * 3;
-
-						if (toIndex)
-							indexPtr[x + (y * w)] = temp / 3;
-
-						r_new = currentProject->pal->rgbPal[temp];
-						g_new = currentProject->pal->rgbPal[temp + 1];
-						b_new = currentProject->pal->rgbPal[temp + 2];
-						break;
-
-					default:
-						show_default_error
-					}
-				} else {
-					if (haveExt) {
-						temp = chooseTwoColor(currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x / 8, y, false), currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x / 8, y, true), r_old, g_old, b_old) * 3;
-						r_new = currentProject->pal->rgbPal[temp];
-						g_new = currentProject->pal->rgbPal[temp + 1];
-						b_new = currentProject->pal->rgbPal[temp + 2];
-						temp = 3 * ((temp / 3) == currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x / 8, y, true));
-					} else if ((currentProject->pal->haveAlt) && isSprite) {
-						temp = find_near_color_from_row_rgb(pal_row, r_old, g_old, b_old, true);
-						r_new = currentProject->pal->rgbPal[temp + (currentProject->pal->colorCnt * 3)];
-						g_new = currentProject->pal->rgbPal[temp + 1 + (currentProject->pal->colorCnt * 3)];
-						b_new = currentProject->pal->rgbPal[temp + 2 + (currentProject->pal->colorCnt * 3)];
+					if (ditherAlg == 7) {
+						unsigned map_value = mapTK[(x & 7) + ((y & 7) << 3)];
+						MixingPlanTK plan;
+						plan = DeviseBestMixingPlanTK(r_old, g_old, b_old, currentProject->pal->rgbPal, pal_row * palettesize);
+						tempPalOff = (plan.colors[map_value] + (pal_row * palettesize));
+					} else if (ditherAlg == 4) {
+						float map_value = mapY1[(x & 7) + ((y & 7) << 3)];
+						MixingPlanY1 plan;
+						plan = DeviseBestMixingPlanY1(r_old, g_old, b_old, currentProject->pal->rgbPal, pal_row * palettesize);
+						tempPalOff = (plan.colors[map_value < plan.ratio ? 1 : 0] + (pal_row * palettesize));
 					} else {
-						temp = find_near_color_from_row_rgb(pal_row, r_old, g_old, b_old, false);
-						r_new = currentProject->pal->rgbPal[temp];
-						g_new = currentProject->pal->rgbPal[temp + 1];
-						b_new = currentProject->pal->rgbPal[temp + 2];
+						unsigned map_value = mapY3[(x & 7) + ((y & 7) << 3)];
+						MixingPlan plan;
+
+						if (ditherAlg == 5)
+							plan = DeviseBestMixingPlanY2(r_old, g_old, b_old, currentProject->pal->rgbPal, pal_row * palettesize, 16);
+						else
+							plan = DeviseBestMixingPlanY3(r_old, g_old, b_old, currentProject->pal->rgbPal, pal_row * palettesize, 16);
+
+						map_value = map_value * plan.size() / 64;
+						tempPalOff = (plan[ map_value ] + (pal_row * palettesize));
 					}
+
+					if (toIndex) {
+						if (useAlpha)
+							indexPtr[x + (y * w)] = a_old >= 128 ? tempPalOff : 0; //TODO dither alpha with these algorithms
+						else
+							indexPtr[x + (y * w)] = tempPalOff;
+					}
+
+					tempPalOff *= 3;
+					image[(x * rgbPixelsize) + (y * w * rgbPixelsize)] = currentProject->pal->rgbPal[tempPalOff];
+					image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 1] = currentProject->pal->rgbPal[tempPalOff + 1];
+					image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 2] = currentProject->pal->rgbPal[tempPalOff + 2];
 				}
 
-				if (useAlpha) {
-					a_new = (a_old & 128) ? 255 : 0;
-					error_rgb[3] = (int_fast16_t)a_old - (int_fast16_t)a_new;
-					image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 3] = a_new;
-				}
+				progressUpdate(&win, &progress, lasttime, progressHave, y, h);
+			}
+		}
+		break;
 
-				if (toIndex) {
+		case 2://nearest color
+		case 3://vertical dithering
+			for (y = 0; y < h; ++y) {
+				for (x = 0; x < w * rgbPixelsize; x += rgbPixelsize) {
+					r_old = image[x + (y * w * rgbPixelsize)];
+					g_old = image[x + (y * w * rgbPixelsize) + 1];
+					b_old = image[x + (y * w * rgbPixelsize) + 2];
+
 					if (useAlpha)
-						indexPtr[x + (y * w)] = a_new >= 128 ? temp / 3 : 0;
-					else
-						indexPtr[x + (y * w)] = temp / 3;
+						a_old = image[x + (y * w * rgbPixelsize) + 3];
+
+					if (!colSpace && !haveExt) {
+						if (forceRow)
+							pal_row = forcedrow;
+						else {
+							if (isChunk)
+								pal_row = currentProject->Chunk->getTileRow_t(idChunk, x / rgbRowsize, y / 8);
+							else
+								pal_row = currentProject->tms->maps[currentProject->curPlane].getPalRow(x / rgbRowsize, y / 8);
+						}
+					}
+
+					//find nearest color
+					uint8_t half = 18;
+
+					if (currentProject->gameSystem == segaGenesis && type_temp != 0) {
+						unsigned tempSet;
+
+						if (isChunk)
+							tempSet = (currentProject->Chunk->getPrio_t(idChunk, x / rgbRowsize, y / 8) ^ 1) * 8;
+						else
+							tempSet = (currentProject->tms->maps[currentProject->curPlane].get_prio(x / rgbRowsize, y / 8) ^ 1) * 8;
+
+						set_palette_type_force(tempSet);//0 normal 8 shadowed 16 highlighted
+						half = (tempSet == 0) ? 18 : 9;
+					}
+
+					if (colSpace) {
+						switch (currentProject->gameSystem) {
+							case segaGenesis:
+								r_new = palTab[nearest_color_index(r_old)];
+								g_new = palTab[nearest_color_index(g_old)];
+								b_new = palTab[nearest_color_index(b_old)];
+								break;
+
+							case NES:
+							{	uint32_t temprgb = toNesRgb(r_old, g_old, b_old);
+								b_new = temprgb & 255;
+								g_new = (temprgb >> 8) & 255;
+								r_new = (temprgb >> 16) & 255;
+							}
+							break;
+
+							case masterSystem:
+								r_new = palTabMasterSystem[nearestOneChannel(r_old, palTabMasterSystem, 4)];
+								g_new = palTabMasterSystem[nearestOneChannel(g_old, palTabMasterSystem, 4)];
+								b_new = palTabMasterSystem[nearestOneChannel(b_old, palTabMasterSystem, 4)];
+								break;
+
+							case gameGear:
+								r_new = palTabGameGear[nearestOneChannel(r_old, palTabGameGear, 16)];
+								g_new = palTabGameGear[nearestOneChannel(g_old, palTabGameGear, 16)];
+								b_new = palTabGameGear[nearestOneChannel(b_old, palTabGameGear, 16)];
+								break;
+
+							case TMS9918:
+								temp = nearestColIndex(r_old, g_old, b_old, currentProject->pal->rgbPal, currentProject->pal->colorCnt) * 3;
+
+								if (toIndex)
+									indexPtr[(x / rgbPixelsize) + (y * w)] = temp / 3;
+
+								r_new = currentProject->pal->rgbPal[temp];
+								g_new = currentProject->pal->rgbPal[temp + 1];
+								b_new = currentProject->pal->rgbPal[temp + 2];
+								break;
+
+							default:
+								show_default_error
+						}
+					} else {
+						if (ditherAlg == 3) {
+							if ((x / rgbPixelsize) & 1) {
+								r_old = addCheck(r_old, half);
+								g_old = addCheck(g_old, half);
+								b_old = addCheck(b_old, half);
+
+								if (useAlpha)
+									a_old = addCheck(a_old, half);
+							}
+						}
+
+						if (haveExt) {
+							temp = chooseTwoColor(currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x / rgbRowsize, y, false), currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x / rgbRowsize, y, true), r_old, g_old, b_old) * 3;
+							r_new = currentProject->pal->rgbPal[temp];
+							g_new = currentProject->pal->rgbPal[temp + 1];
+							b_new = currentProject->pal->rgbPal[temp + 2];
+							temp = 3 * ((temp / 3) == currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x / rgbRowsize, y, true));
+						} else if ((currentProject->pal->haveAlt) && isSprite) {
+							temp = find_near_color_from_row_rgb(pal_row, r_old, g_old, b_old, true);
+							r_new = currentProject->pal->rgbPal[temp + (currentProject->pal->colorCnt * 3)];
+							g_new = currentProject->pal->rgbPal[temp + 1 + (currentProject->pal->colorCnt * 3)];
+							b_new = currentProject->pal->rgbPal[temp + 2 + (currentProject->pal->colorCnt * 3)];
+						} else {
+							temp = find_near_color_from_row_rgb(pal_row, r_old, g_old, b_old, false);
+							r_new = currentProject->pal->rgbPal[temp];
+							g_new = currentProject->pal->rgbPal[temp + 1];
+							b_new = currentProject->pal->rgbPal[temp + 2];
+						}
+
+						if (toIndex) {
+							if (useAlpha)
+								indexPtr[(x / rgbPixelsize) + (y * w)] = a_old >= 128 ? temp / 3 : 0;
+							else
+								indexPtr[(x / rgbPixelsize) + (y * w)] = temp / 3;
+						}
+					}
+
+					if (useAlpha)
+						a_old = (a_old & 128) ? 255 : 0;
+
+					image[x + (y * w * rgbPixelsize)] = r_new;
+					image[x + (y * w * rgbPixelsize) + 1] = g_new;
+					image[x + (y * w * rgbPixelsize) + 2] = b_new;
+
+					if (useAlpha)
+						image[x + (y * w * rgbPixelsize) + 3] = a_old;
 				}
 
-				error_rgb[0] = (int_fast16_t)r_old - (int_fast16_t)r_new;
-				error_rgb[1] = (int_fast16_t)g_old - (int_fast16_t)g_new;
-				error_rgb[2] = (int_fast16_t)b_old - (int_fast16_t)b_new;
-
-				for (unsigned channel = 0; channel < rgbPixelsize; ++channel) {
-					//add the offset
-					if (x + 1 < w)
-						plus_truncate_uchar(image[((x + 1)*rgbPixelsize) + (y * w * rgbPixelsize) + channel], (error_rgb[channel] * 7) / ditherSetting);
-
-					if (x - 1 > 0 && y + 1 < h)
-						plus_truncate_uchar(image[((x - 1)*rgbPixelsize) + ((y + 1)*w * rgbPixelsize) + channel], (error_rgb[channel] * 3) / ditherSetting);
-
-					if (y + 1 < h)
-						plus_truncate_uchar(image[(x * rgbPixelsize) + ((y + 1)*w * rgbPixelsize) + channel], (error_rgb[channel] * 5) / ditherSetting);
-
-					if (x + 1 < w && y + 1 < h)
-						plus_truncate_uchar(image[((x + 1)*rgbPixelsize) + ((y + 1)*w * rgbPixelsize) + channel], (error_rgb[channel]) / ditherSetting);
-				}
-
-				image[(x * rgbPixelsize) + (y * w * rgbPixelsize)] = r_new;
-				image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 1] = g_new;
-				image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 2] = b_new;
+				progressUpdate(&win, &progress, lasttime, progressHave, y, h);
 			}
 
-			progressUpdate(&win, &progress, lasttime, progressHave, y, h);
-		}
+			break;
 
-		break;
+		case 1:
+			useMode = currentProject->gameSystem;
+			USEofColGlob = colSpace;
+			isSpriteG = isSprite;
+			shouldForceRow = forceRow;
+			selectedForceRow = forcedrow;
+			isChunkD_G = isChunk;
+			idChunk_G = idChunk;
+			Riemersma(image, w, h, 0);
+			progressUpdate(&win, &progress, lasttime, progressHave, 1, useAlpha ? 4 : 3);
+			Riemersma(image, w, h, 1);
+			progressUpdate(&win, &progress, lasttime, progressHave, 2, useAlpha ? 4 : 3);
+			Riemersma(image, w, h, 2);
+			progressUpdate(&win, &progress, lasttime, progressHave, 3, useAlpha ? 4 : 3);
+
+			if (useAlpha) {
+				useMode = 255;
+				Riemersma(image, w, h, 3);
+			}
+
+
+			break;
+
+		case 0:
+			for (y = 0; y < h; y++) {
+				for (x = 0; x < w; x++) {
+					//we need to get nearest color
+					r_old = image[(x * rgbPixelsize) + (y * w * rgbPixelsize)];
+					g_old = image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 1];
+					b_old = image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 2];
+
+					if (useAlpha)
+						a_old = image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 3];
+
+					if (!colSpace && !haveExt) {
+						if (forceRow)
+							pal_row = forcedrow;
+						else {
+							if (isChunk)
+								pal_row = currentProject->Chunk->getTileRow_t(idChunk, x / 8, y / 8);
+							else
+								pal_row = currentProject->tms->maps[currentProject->curPlane].getPalRow(x / 8, y / 8);
+						}
+					}
+
+					//find nearest color
+					if (currentProject->gameSystem == segaGenesis && type_temp != 0) {
+						unsigned tempSet;
+
+						if (isChunk)
+							tempSet = (currentProject->Chunk->getPrio_t(idChunk, x / 8, y / 8) ^ 1) * 8;
+						else
+							tempSet = (currentProject->tms->maps[currentProject->curPlane].get_prio(x / 8, y / 8) ^ 1) * 8;
+
+						set_palette_type_force(tempSet);//0 normal 8 shadowed 16 highlighted
+					}
+
+					if (colSpace) {
+						switch (currentProject->gameSystem) {
+							case segaGenesis:
+								r_new = palTab[nearest_color_index(r_old)];
+								g_new = palTab[nearest_color_index(g_old)];
+								b_new = palTab[nearest_color_index(b_old)];
+								break;
+
+							case NES:
+							{	uint32_t temprgb = toNesRgb(r_old, g_old, b_old);
+								b_new = temprgb & 255;
+								g_new = (temprgb >> 8) & 255;
+								r_new = (temprgb >> 16) & 255;
+							}
+							break;
+
+							case masterSystem:
+								r_new = palTabMasterSystem[nearestOneChannel(r_old, palTabMasterSystem, 4)];
+								g_new = palTabMasterSystem[nearestOneChannel(g_old, palTabMasterSystem, 4)];
+								b_new = palTabMasterSystem[nearestOneChannel(b_old, palTabMasterSystem, 4)];
+								break;
+
+							case gameGear:
+								r_new = palTabGameGear[nearestOneChannel(r_old, palTabGameGear, 16)];
+								g_new = palTabGameGear[nearestOneChannel(g_old, palTabGameGear, 16)];
+								b_new = palTabGameGear[nearestOneChannel(b_old, palTabGameGear, 16)];
+								break;
+
+							case TMS9918:
+								temp = nearestColIndex(r_old, g_old, b_old, currentProject->pal->rgbPal, currentProject->pal->colorCnt) * 3;
+
+								if (toIndex)
+									indexPtr[x + (y * w)] = temp / 3;
+
+								r_new = currentProject->pal->rgbPal[temp];
+								g_new = currentProject->pal->rgbPal[temp + 1];
+								b_new = currentProject->pal->rgbPal[temp + 2];
+								break;
+
+							default:
+								show_default_error
+						}
+					} else {
+						if (haveExt) {
+							temp = chooseTwoColor(currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x / 8, y, false), currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x / 8, y, true), r_old, g_old, b_old) * 3;
+							r_new = currentProject->pal->rgbPal[temp];
+							g_new = currentProject->pal->rgbPal[temp + 1];
+							b_new = currentProject->pal->rgbPal[temp + 2];
+							temp = 3 * ((temp / 3) == currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x / 8, y, true));
+						} else if ((currentProject->pal->haveAlt) && isSprite) {
+							temp = find_near_color_from_row_rgb(pal_row, r_old, g_old, b_old, true);
+							r_new = currentProject->pal->rgbPal[temp + (currentProject->pal->colorCnt * 3)];
+							g_new = currentProject->pal->rgbPal[temp + 1 + (currentProject->pal->colorCnt * 3)];
+							b_new = currentProject->pal->rgbPal[temp + 2 + (currentProject->pal->colorCnt * 3)];
+						} else {
+							temp = find_near_color_from_row_rgb(pal_row, r_old, g_old, b_old, false);
+							r_new = currentProject->pal->rgbPal[temp];
+							g_new = currentProject->pal->rgbPal[temp + 1];
+							b_new = currentProject->pal->rgbPal[temp + 2];
+						}
+					}
+
+					if (useAlpha) {
+						a_new = (a_old & 128) ? 255 : 0;
+						error_rgb[3] = (int_fast16_t)a_old - (int_fast16_t)a_new;
+						image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 3] = a_new;
+					}
+
+					if (toIndex) {
+						if (useAlpha)
+							indexPtr[x + (y * w)] = a_new >= 128 ? temp / 3 : 0;
+						else
+							indexPtr[x + (y * w)] = temp / 3;
+					}
+
+					error_rgb[0] = (int_fast16_t)r_old - (int_fast16_t)r_new;
+					error_rgb[1] = (int_fast16_t)g_old - (int_fast16_t)g_new;
+					error_rgb[2] = (int_fast16_t)b_old - (int_fast16_t)b_new;
+
+					for (unsigned channel = 0; channel < rgbPixelsize; ++channel) {
+						//add the offset
+						if (x + 1 < w)
+							plus_truncate_uchar(image[((x + 1)*rgbPixelsize) + (y * w * rgbPixelsize) + channel], (error_rgb[channel] * 7) / ditherSetting);
+
+						if (x - 1 > 0 && y + 1 < h)
+							plus_truncate_uchar(image[((x - 1)*rgbPixelsize) + ((y + 1)*w * rgbPixelsize) + channel], (error_rgb[channel] * 3) / ditherSetting);
+
+						if (y + 1 < h)
+							plus_truncate_uchar(image[(x * rgbPixelsize) + ((y + 1)*w * rgbPixelsize) + channel], (error_rgb[channel] * 5) / ditherSetting);
+
+						if (x + 1 < w && y + 1 < h)
+							plus_truncate_uchar(image[((x + 1)*rgbPixelsize) + ((y + 1)*w * rgbPixelsize) + channel], (error_rgb[channel]) / ditherSetting);
+					}
+
+					image[(x * rgbPixelsize) + (y * w * rgbPixelsize)] = r_new;
+					image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 1] = g_new;
+					image[(x * rgbPixelsize) + (y * w * rgbPixelsize) + 2] = b_new;
+				}
+
+				progressUpdate(&win, &progress, lasttime, progressHave, y, h);
+			}
+
+			break;
 	}
 
 	if (currentProject->gameSystem == segaGenesis)

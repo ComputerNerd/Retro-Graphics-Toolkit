@@ -206,11 +206,11 @@ void ChunkClass::drawChunk(uint32_t id, int xo, int yo, int zoom, int scrollX, i
 		for (uint32_t x = scrollX; x < wi; ++x) {
 			if (useBlocks) {
 				prj->tms->maps[usePlane].drawBlock(cptr->block, xoo, yo, cptr->flags & 3, zoom);
-				xoo += prj->tms->maps[usePlane].mapSizeW * prj->tileC->sizew * zoom;
+				xoo += prj->tms->maps[usePlane].mapSizeW * prj->tileC->width() * zoom;
 
 			} else {
 				prj->tileC->draw_tile(xoo, yo, cptr->block, zoom, (cptr->flags >> 3) & 3, cptr->flags & 1, (cptr->flags >> 1) & 1);
-				xoo += prj->tileC->sizew * zoom;
+				xoo += prj->tileC->width() * zoom;
 			}
 
 			cptr++;
@@ -220,9 +220,9 @@ void ChunkClass::drawChunk(uint32_t id, int xo, int yo, int zoom, int scrollX, i
 		}
 
 		if (useBlocks)
-			yo += prj->tileC->sizeh * zoom * prj->tms->maps[usePlane].mapSizeH;
+			yo += prj->tileC->height() * zoom * prj->tms->maps[usePlane].mapSizeH;
 		else
-			yo += prj->tileC->sizeh * zoom;
+			yo += prj->tileC->height() * zoom;
 
 		if (yo > (window->h()))
 			break;
@@ -237,9 +237,9 @@ void ChunkClass::scrollChunks(void) {
 	int off;
 
 	if (useBlocks)
-		off = (wi * prj->tms->maps[usePlane].mapSizeW) - ((window->w() - ChunkOff[0]) / (zoom * prj->tileC->sizew));
+		off = (wi * prj->tms->maps[usePlane].mapSizeW) - ((window->w() - ChunkOff[0]) / (zoom * prj->tileC->width()));
 	else
-		off = wi - ((window->w() - ChunkOff[0]) / (zoom * prj->tileC->sizew));
+		off = wi - ((window->w() - ChunkOff[0]) / (zoom * prj->tileC->width()));
 
 	if (oldS > off)
 		scrollChunks_G[0] = oldS = off;
@@ -253,9 +253,9 @@ void ChunkClass::scrollChunks(void) {
 	oldS = window->chunkY->value();
 
 	if (useBlocks)
-		off = (hi * prj->tms->maps[usePlane].mapSizeH) - ((window->h() - ChunkOff[1]) / (zoom * prj->tileC->sizeh));
+		off = (hi * prj->tms->maps[usePlane].mapSizeH) - ((window->h() - ChunkOff[1]) / (zoom * prj->tileC->height()));
 	else
-		off = hi - ((window->h() - ChunkOff[1]) / (zoom * prj->tileC->sizeh));
+		off = hi - ((window->h() - ChunkOff[1]) / (zoom * prj->tileC->height()));
 
 	if (oldS > off)
 		scrollChunks_G[1] = oldS = off;

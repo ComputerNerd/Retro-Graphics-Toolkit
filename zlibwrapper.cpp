@@ -80,28 +80,28 @@ bool compressToFile(void * ptr, int size, FILE * fo) {
 	ret = deflate(&strm, Z_FINISH);
 
 	switch (ret) {
-	case Z_STREAM_END:
-		printf("Compressed to %d from %d could have maxed out at %d\n", strm.total_out, size, maxS);
-		{	uint32_t outS = strm.total_out;
-			fwrite(&outS, 1, sizeof(uint32_t), fo);
-			fwrite(outb, 1, strm.total_out, fo);
+		case Z_STREAM_END:
+			printf("Compressed to %d from %d could have maxed out at %d\n", strm.total_out, size, maxS);
+			{	uint32_t outS = strm.total_out;
+				fwrite(&outS, 1, sizeof(uint32_t), fo);
+				fwrite(outb, 1, strm.total_out, fo);
+				free(outb);
+				deflateEnd(&strm);
+			}
+			break;
+
+		case Z_OK:
+			puts("Should not happen");
 			free(outb);
 			deflateEnd(&strm);
-		}
-		break;
+			return false;
+			break;
 
-	case Z_OK:
-		puts("Should not happen");
-		free(outb);
-		deflateEnd(&strm);
-		return false;
-		break;
-
-	default:
-		puts("Zlib error");
-		free(outb);
-		deflateEnd(&strm);
-		return false;
+		default:
+			puts("Zlib error");
+			free(outb);
+			deflateEnd(&strm);
+			return false;
 	}
 
 	return true;

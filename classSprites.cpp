@@ -246,57 +246,57 @@ static bool isMask(int x, int y, Fl_Shared_Image*loaded_image, bool grayscale, b
 	unsigned depth = loaded_image->d();
 
 	switch (depth) {
-	case 1:
-		if (grayscale) {
-			imgptr = (uint8_t*)loaded_image->data()[0];
-			imgptr += (y * w) + x;
-			return ((*imgptr) == (*mask));
-		} else {
-			imgptr = (uint8_t*)loaded_image->data()[y + 2];
-			imgptr += x;
-
-			if (useAlpha)
-				return ((*imgptr) == ' ');
-			else
+		case 1:
+			if (grayscale) {
+				imgptr = (uint8_t*)loaded_image->data()[0];
+				imgptr += (y * w) + x;
 				return ((*imgptr) == (*mask));
-		}
+			} else {
+				imgptr = (uint8_t*)loaded_image->data()[y + 2];
+				imgptr += x;
 
-		break;
-
-	case 3:
-		imgptr = (uint8_t*)loaded_image->data()[0];
-		imgptr += ((y * w) + x) * 3;
-
-		if (imgptr[0] == mask[0]) {
-			if (imgptr[1] == mask[1]) {
-				if (imgptr[2] == mask[2])
-					return true;
+				if (useAlpha)
+					return ((*imgptr) == ' ');
+				else
+					return ((*imgptr) == (*mask));
 			}
-		}
 
-		return false;
-		break;
+			break;
 
-	case 4:
-		imgptr = (uint8_t*)loaded_image->data()[0];
-		imgptr += ((y * w) + x) * 4;
+		case 3:
+			imgptr = (uint8_t*)loaded_image->data()[0];
+			imgptr += ((y * w) + x) * 3;
 
-		if (useAlpha)
-			return (imgptr[3]) ? false : true;
-		else {
-			if (imgptr[3]) {
-				if (imgptr[0] == mask[0]) {
-					if (imgptr[1] == mask[1]) {
-						if (imgptr[2] == mask[2])
-							return true;
-					}
+			if (imgptr[0] == mask[0]) {
+				if (imgptr[1] == mask[1]) {
+					if (imgptr[2] == mask[2])
+						return true;
 				}
 			}
 
 			return false;
-		}
+			break;
 
-		break;
+		case 4:
+			imgptr = (uint8_t*)loaded_image->data()[0];
+			imgptr += ((y * w) + x) * 4;
+
+			if (useAlpha)
+				return (imgptr[3]) ? false : true;
+			else {
+				if (imgptr[3]) {
+					if (imgptr[0] == mask[0]) {
+						if (imgptr[1] == mask[1]) {
+							if (imgptr[2] == mask[2])
+								return true;
+						}
+					}
+				}
+
+				return false;
+			}
+
+			break;
 	}
 }
 static bool inRange(int num, int x, int y) {
@@ -347,19 +347,19 @@ bool sprites::recttoSprite(int x0, int x1, int y0, int y1, int where, Fl_Shared_
 	unsigned wmax, hmax;
 
 	switch (prj->gameSystem) {
-	case segaGenesis:
-		wmax = hmax = 32;
-		break;
+		case segaGenesis:
+			wmax = hmax = 32;
+			break;
 
-	case NES:
-	case masterSystem:
-	case gameGear:
-		wmax = 8;
-		hmax = 16;
-		break;
+		case NES:
+		case masterSystem:
+		case gameGear:
+			wmax = 8;
+			hmax = 16;
+			break;
 
-	default:
-		show_default_error
+		default:
+			show_default_error
 	}
 
 	unsigned wf, hf, w, h, wt, ht;
@@ -434,80 +434,80 @@ bool sprites::recttoSprite(int x0, int x1, int y0, int y1, int where, Fl_Shared_
 								//Can actually convert pixel to tile
 								if (useMask && (!useAlpha)) {
 									switch (depth) {
-									case 1:
-										if (grayscale) {
-											if ((*imgptr) != mask[0]) {
-												memset(out, *imgptr, 3);
-												out[3] = 255;
-											} else
-												memset(out, 0, 4);
-										} else {
-											if ((*imgptr) == ' ')
+										case 1:
+											if (grayscale) {
+												if ((*imgptr) != mask[0]) {
+													memset(out, *imgptr, 3);
+													out[3] = 255;
+												} else
+													memset(out, 0, 4);
+											} else {
+												if ((*imgptr) == ' ')
+													memset(out, 0, 4);
+
+												else {
+													if ((*imgptr) != mask[0]) {
+														unsigned p = (*imgptr++);
+														out[0] = palMap[remap[p] + 1];
+														out[1] = palMap[remap[p] + 2];
+														out[2] = palMap[remap[p] + 3];
+														out[3] = 255;
+													} else
+														memset(out, 0, 4);
+												}
+											}
+
+											break;
+
+										case 3:
+											if ((imgptr[0] == mask[0]) && (imgptr[1] == mask[1]) && (imgptr[2] == mask[2]))
 												memset(out, 0, 4);
 
 											else {
-												if ((*imgptr) != mask[0]) {
+												memcpy(out, imgptr, 3);
+												out[3] = 255;
+											}
+
+											break;
+
+										case 4:
+											if ((imgptr[0] == mask[0]) && (imgptr[1] == mask[1]) && (imgptr[2] == mask[2]) && (imgptr[3]))
+												memset(out, 0, 4);
+
+											else
+												memcpy(out, imgptr, 4);
+
+											break;
+									}
+								} else {
+									switch (depth) {
+										case 1:
+											if (grayscale) {
+												memset(out, *imgptr, 3);
+												out[3] = 255;
+											} else {
+												if ((*imgptr) == ' ')
+													memset(out, 0, 4);
+
+												else {
 													unsigned p = (*imgptr++);
 													out[0] = palMap[remap[p] + 1];
 													out[1] = palMap[remap[p] + 2];
 													out[2] = palMap[remap[p] + 3];
 													out[3] = 255;
-												} else
-													memset(out, 0, 4);
+												}
 											}
-										}
 
-										break;
+											break;
 
-									case 3:
-										if ((imgptr[0] == mask[0]) && (imgptr[1] == mask[1]) && (imgptr[2] == mask[2]))
-											memset(out, 0, 4);
-
-										else {
+										case 3:
 											memcpy(out, imgptr, 3);
 											out[3] = 255;
-										}
+											break;
 
-										break;
-
-									case 4:
-										if ((imgptr[0] == mask[0]) && (imgptr[1] == mask[1]) && (imgptr[2] == mask[2]) && (imgptr[3]))
-											memset(out, 0, 4);
-
-										else
+										case 4:
 											memcpy(out, imgptr, 4);
-
-										break;
-									}
-								} else {
-									switch (depth) {
-									case 1:
-										if (grayscale) {
-											memset(out, *imgptr, 3);
-											out[3] = 255;
-										} else {
-											if ((*imgptr) == ' ')
-												memset(out, 0, 4);
-
-											else {
-												unsigned p = (*imgptr++);
-												out[0] = palMap[remap[p] + 1];
-												out[1] = palMap[remap[p] + 2];
-												out[2] = palMap[remap[p] + 3];
-												out[3] = 255;
-											}
-										}
-
-										break;
-
-									case 3:
-										memcpy(out, imgptr, 3);
-										out[3] = 255;
-										break;
-
-									case 4:
-										memcpy(out, imgptr, 4);
-										break;
+											break;
 									}
 								}
 							}
@@ -1607,10 +1607,10 @@ void sprites::spriteGroupToImage(uint8_t*img, uint32_t id, int row, bool alpha) 
 		if ((row != groups[id].list[i].palrow) && (row >= 0))
 			continue;//Skip if we only want a specific row
 
-		for (uint32_t x = 0; x < groups[id].list[i].w * prj->tileC->sizew; x += prj->tileC->sizew) {
-			for (uint32_t y = 0; y < groups[id].list[i].h * prj->tileC->sizeh; y += prj->tileC->sizeh, ++ttile) {
+		for (uint32_t x = 0; x < groups[id].list[i].w * prj->tileC->width(); x += prj->tileC->width()) {
+			for (uint32_t y = 0; y < groups[id].list[i].h * prj->tileC->height(); y += prj->tileC->height(), ++ttile) {
 				uint8_t*outptr = prj->tileC->truetDat.data() + (ttile * prj->tileC->tcSize);
-				rect2rect(img, outptr, xoff + x, yoff + y, w, prj->tileC->sizew, prj->tileC->sizeh, alpha ? 4 : 3, true);
+				rect2rect(img, outptr, xoff + x, yoff + y, w, prj->tileC->width(), prj->tileC->height(), alpha ? 4 : 3, true);
 			}
 		}
 	}
@@ -1633,9 +1633,9 @@ void sprites::spriteImageToTiles(uint8_t*img, uint32_t id, int rowUsage, bool al
 		if ((rowUsage != groups[id].list[i].palrow) && (rowUsage >= 0))
 			continue;//Skip if we only want a specific row
 
-		for (uint32_t x = 0; x < groups[id].list[i].w * prj->tileC->sizew; x += prj->tileC->sizew) {
-			for (uint32_t y = 0; y < groups[id].list[i].h * prj->tileC->sizeh; y += prj->tileC->sizeh, ++ttile) {
-				rect2rect(img, tcTemp, xoff + x, yoff + y, w, prj->tileC->sizew, prj->tileC->sizeh, isIndexArray ? 1 : (alpha ? 4 : 3), false);
+		for (uint32_t x = 0; x < groups[id].list[i].w * prj->tileC->width(); x += prj->tileC->width()) {
+			for (uint32_t y = 0; y < groups[id].list[i].h * prj->tileC->height(); y += prj->tileC->height(), ++ttile) {
+				rect2rect(img, tcTemp, xoff + x, yoff + y, w, prj->tileC->width(), prj->tileC->height(), isIndexArray ? 1 : (alpha ? 4 : 3), false);
 				prj->tileC->truecolor_to_tile_ptr(groups[id].list[i].palrow, ttile, tcTemp, false, true, isIndexArray);
 			}
 		}
@@ -1648,7 +1648,7 @@ void sprites::minmaxoffy(uint32_t id, int32_t&miny, int32_t&maxy)const {
 		if (groups[id].list[i].offy < miny)
 			miny = groups[id].list[i].offy;
 
-		int32_t tmpy = groups[id].list[i].offy + (groups[id].list[i].h * prj->tileC->sizeh);
+		int32_t tmpy = groups[id].list[i].offy + (groups[id].list[i].h * prj->tileC->height());
 
 		if (tmpy > maxy)
 			maxy = tmpy;
@@ -1661,7 +1661,7 @@ void sprites::minmaxoffx(uint32_t id, int32_t&minx, int32_t&maxx)const {
 		if (groups[id].list[i].offx < minx)
 			minx = groups[id].list[i].offx;
 
-		int32_t tmpx = groups[id].list[i].offx + (groups[id].list[i].w * prj->tileC->sizew);
+		int32_t tmpx = groups[id].list[i].offx + (groups[id].list[i].w * prj->tileC->width());
 
 		if (tmpx > maxx)
 			maxx = tmpx;

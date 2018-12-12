@@ -65,30 +65,30 @@ void setGameSysTMS9918(Project*prj) {
 	enum TMS9918SubSys subSysnew = prj->getTMS9918subSys();
 
 	switch (subSysnew) {
-	case MODE_0:
-	case MODE_1:
-	case MODE_2:
-		prj->setBitdepthSys(1);
-		break;
+		case MODE_0:
+		case MODE_1:
+		case MODE_2:
+			prj->setBitdepthSys(1);
+			break;
 
-	case MODE_3:
-		prj->setBitdepthSys(4);
-		break;
+		case MODE_3:
+			prj->setBitdepthSys(4);
+			break;
 	}
 
 	switch (subSysnew) {
-	case MODE_0:
-		changeTileDim(6, 8, prj);
-		break;
+		case MODE_0:
+			changeTileDim(6, 8, prj);
+			break;
 
-	case MODE_1:
-	case MODE_2:
-		changeTileDim(8, 8, prj);
-		break;
+		case MODE_1:
+		case MODE_2:
+			changeTileDim(8, 8, prj);
+			break;
 
-	case MODE_3:
-		changeTileDim(2, 2, prj);
-		break;
+		case MODE_3:
+			changeTileDim(2, 2, prj);
+			break;
 	}
 
 	if (currentProject->containsData(pjHaveMap)) {
@@ -166,141 +166,141 @@ void set_game_system(Fl_Widget*, void* selection) {
 		palBar.sysCache = -1;
 
 		switch (sel) {
-		case segaGenesis:
-			if (currentProject->gameSystem == NES || currentProject->gameSystem == masterSystem || currentProject->gameSystem == gameGear) {
-				uint8_t rgbTmp[32 * 3];
-				uint8_t palTypeTmp[32];
-				memcpy(rgbTmp, currentProject->pal->rgbPal, 32 * 3);
-				memcpy(palTypeTmp, currentProject->pal->palType, 32);
-				currentProject->gameSystem = sel;
-				palBar.setSys(false);
+			case segaGenesis:
+				if (currentProject->gameSystem == NES || currentProject->gameSystem == masterSystem || currentProject->gameSystem == gameGear) {
+					uint8_t rgbTmp[32 * 3];
+					uint8_t palTypeTmp[32];
+					memcpy(rgbTmp, currentProject->pal->rgbPal, 32 * 3);
+					memcpy(palTypeTmp, currentProject->pal->palType, 32);
+					currentProject->gameSystem = sel;
+					palBar.setSys(false);
 
-				if (gold == NES) {
-					for (unsigned i = 0; i < 4; ++i) {
-						memcpy(currentProject->pal->rgbPal + (i * 16 * 3), rgbTmp + (i * 4 * 3), 4 * 3);
-						memcpy(currentProject->pal->rgbPal + (i * 16 * 3) + (4 * 3), rgbTmp + (i * 4 * 3) + (4 * 3 * 4), 4 * 3);
-						memset(currentProject->pal->rgbPal + (i * 16 * 3) + (8 * 3), 0, (16 - 8) * 3);
-						memcpy(currentProject->pal->palType + (i * 16), palTypeTmp + (i * 4), 4);
-						memcpy(currentProject->pal->palType + (i * 16) + 4, palTypeTmp + (i * 4) + (4 * 4), 4);
-						memset(currentProject->pal->palType + (i * 16) + 8, 0, (16 - 8));
+					if (gold == NES) {
+						for (unsigned i = 0; i < 4; ++i) {
+							memcpy(currentProject->pal->rgbPal + (i * 16 * 3), rgbTmp + (i * 4 * 3), 4 * 3);
+							memcpy(currentProject->pal->rgbPal + (i * 16 * 3) + (4 * 3), rgbTmp + (i * 4 * 3) + (4 * 3 * 4), 4 * 3);
+							memset(currentProject->pal->rgbPal + (i * 16 * 3) + (8 * 3), 0, (16 - 8) * 3);
+							memcpy(currentProject->pal->palType + (i * 16), palTypeTmp + (i * 4), 4);
+							memcpy(currentProject->pal->palType + (i * 16) + 4, palTypeTmp + (i * 4) + (4 * 4), 4);
+							memset(currentProject->pal->palType + (i * 16) + 8, 0, (16 - 8));
+						}
+					} else {
+						memcpy(currentProject->pal->palType, palTypeTmp, 32);
+						memset(currentProject->pal->rgbPal + (32 * 3), 0, 32 * 3);
+						memset(currentProject->pal->palType + 32, 0, 32);
 					}
-				} else {
-					memcpy(currentProject->pal->palType, palTypeTmp, 32);
-					memset(currentProject->pal->rgbPal + (32 * 3), 0, 32 * 3);
-					memset(currentProject->pal->palType + 32, 0, 32);
-				}
 
-				uint8_t*nPtr = currentProject->pal->rgbPal;
+					uint8_t*nPtr = currentProject->pal->rgbPal;
 
-				for (unsigned i = 0; i < currentProject->pal->colorCnt; ++i, nPtr += 3)
-					currentProject->pal->rgbToEntry(nPtr[0], nPtr[1], nPtr[2], i);
-			} else if (currentProject->gameSystem == TMS9918) {
-				currentProject->gameSystem = sel;
-				palCopyConvert(16);
-			} else
-				show_TODO_error
-				break;
+					for (unsigned i = 0; i < currentProject->pal->colorCnt; ++i, nPtr += 3)
+						currentProject->pal->rgbToEntry(nPtr[0], nPtr[1], nPtr[2], i);
+				} else if (currentProject->gameSystem == TMS9918) {
+					currentProject->gameSystem = sel;
+					palCopyConvert(16);
+				} else
+					show_TODO_error
+					break;
 
-		case NES:
-			if (currentProject->gameSystem == segaGenesis) {
-				sortBy(2, true);
-				uint8_t rgbTmp[64 * 3];
-				memcpy(rgbTmp, currentProject->pal->rgbPal, 64 * 3);
-				currentProject->gameSystem = sel;
-				palBar.setSys(false);
-				updateEmphesis();
-				uint8_t*nPtr = currentProject->pal->rgbPal;
-				uint8_t*rgbPtr = rgbTmp;
+			case NES:
+				if (currentProject->gameSystem == segaGenesis) {
+					sortBy(2, true);
+					uint8_t rgbTmp[64 * 3];
+					memcpy(rgbTmp, currentProject->pal->rgbPal, 64 * 3);
+					currentProject->gameSystem = sel;
+					palBar.setSys(false);
+					updateEmphesis();
+					uint8_t*nPtr = currentProject->pal->rgbPal;
+					uint8_t*rgbPtr = rgbTmp;
 
-				for (unsigned k = 0; k < 4; ++k) {
-					//Preserve background color
-					*nPtr++ = rgbPtr[0];
-					*nPtr++ = rgbPtr[1];
-					*nPtr++ = rgbPtr[2];
-					rgbPtr += 4 * 3;
+					for (unsigned k = 0; k < 4; ++k) {
+						//Preserve background color
+						*nPtr++ = rgbPtr[0];
+						*nPtr++ = rgbPtr[1];
+						*nPtr++ = rgbPtr[2];
+						rgbPtr += 4 * 3;
 
-					for (unsigned j = 4 * 3; j < 16 * 3; j += 4 * 3) {
-						double Lv, Cv, Hv;
-						Rgb2Lch255(&Lv, &Cv, &Hv, rgbPtr[0], rgbPtr[1], rgbPtr[2]);
-						rgbPtr += 3;
+						for (unsigned j = 4 * 3; j < 16 * 3; j += 4 * 3) {
+							double Lv, Cv, Hv;
+							Rgb2Lch255(&Lv, &Cv, &Hv, rgbPtr[0], rgbPtr[1], rgbPtr[2]);
+							rgbPtr += 3;
 
-						for (unsigned i = 1; i < 4; ++i) {
-							double L, C, H;
-							Rgb2Lch255(&L, &C, &H, rgbPtr[0], rgbPtr[1], rgbPtr[2]);
+							for (unsigned i = 1; i < 4; ++i) {
+								double L, C, H;
+								Rgb2Lch255(&L, &C, &H, rgbPtr[0], rgbPtr[1], rgbPtr[2]);
 
-							if (C > Cv) {
-								Lv = L;
-								Cv = C;
-								Hv = H;
+								if (C > Cv) {
+									Lv = L;
+									Cv = C;
+									Hv = H;
+								}
+
+								rgbPtr += 3;
 							}
 
-							rgbPtr += 3;
+							Lch2Rgb255(nPtr, nPtr + 1, nPtr + 2, Lv, Cv, Hv);
+							nPtr += 3;
 						}
+					}
 
-						Lch2Rgb255(nPtr, nPtr + 1, nPtr + 2, Lv, Cv, Hv);
+					memset(currentProject->pal->palType, 0, currentProject->pal->colorCnt + currentProject->pal->colorCntalt);
+					nPtr = currentProject->pal->rgbPal;
+
+					for (unsigned i = 0; i < 16; ++i, nPtr += 3)
+						currentProject->pal->rgbToEntry(nPtr[0], nPtr[1], nPtr[2], i);
+
+					memcpy(currentProject->pal->rgbPal + (currentProject->pal->colorCnt * 3), currentProject->pal->rgbPal, std::min(currentProject->pal->colorCnt, currentProject->pal->colorCntalt) * 3);
+					memcpy(currentProject->pal->palDat + (currentProject->pal->colorCnt * currentProject->pal->esize), currentProject->pal->palDat, std::min(currentProject->pal->colorCnt, currentProject->pal->colorCntalt)*currentProject->pal->esize);
+				} else if (currentProject->gameSystem == masterSystem || currentProject->gameSystem == gameGear) {
+					currentProject->gameSystem = sel;
+					palCopyConvert(32);
+				} else if (currentProject->gameSystem == TMS9918) {
+					currentProject->gameSystem = sel;
+					palCopyConvert(16);
+				} else
+					show_TODO_error
+					break;
+
+			case masterSystem:
+			case gameGear:
+				if (currentProject->gameSystem == segaGenesis) {
+					sortBy(2, true);
+					sortBy(0, true);
+					//Average each color
+					uint8_t rgbTmp[64 * 3];
+					memcpy(rgbTmp, currentProject->pal->rgbPal, 64 * 3);
+					currentProject->gameSystem = sel;
+					palBar.setSys(false);
+					uint8_t*rgbPtr = rgbTmp;
+					uint8_t*nPtr = currentProject->pal->rgbPal;
+
+					for (unsigned i = 0; i < 32; ++i) {
+						double L[2], c[2], h[2];
+						Rgb2Lch255(L, c, h, *rgbPtr, rgbPtr[1], rgbPtr[2]);
+						rgbPtr += 3;
+						Rgb2Lch255(L + 1, c + 1, h + 1, *rgbPtr, rgbPtr[1], rgbPtr[2]);
+						Lch2Rgb255(nPtr, nPtr + 1, nPtr + 2, (L[0] + L[1]) / 2., (c[0] + c[1]) / 2., (h[0] + h[1]) / 2.);
 						nPtr += 3;
 					}
-				}
 
-				memset(currentProject->pal->palType, 0, currentProject->pal->colorCnt + currentProject->pal->colorCntalt);
-				nPtr = currentProject->pal->rgbPal;
+					memset(currentProject->pal->palType, 0, currentProject->pal->colorCnt + currentProject->pal->colorCntalt);
+					nPtr = currentProject->pal->rgbPal;
 
-				for (unsigned i = 0; i < 16; ++i, nPtr += 3)
-					currentProject->pal->rgbToEntry(nPtr[0], nPtr[1], nPtr[2], i);
+					for (unsigned i = 0; i < 32; ++i, nPtr += 3)
+						currentProject->pal->rgbToEntry(nPtr[0], nPtr[1], nPtr[2], i);
+				} else if (currentProject->gameSystem == NES || currentProject->gameSystem == masterSystem || currentProject->gameSystem == gameGear) {
+					currentProject->gameSystem = sel;
+					palCopyConvert(32);
+				} else if (currentProject->gameSystem == TMS9918) {
+					currentProject->gameSystem = sel;
+					palCopyConvert(16);
+				} else
+					show_TODO_error
+					break;
 
-				memcpy(currentProject->pal->rgbPal + (currentProject->pal->colorCnt * 3), currentProject->pal->rgbPal, std::min(currentProject->pal->colorCnt, currentProject->pal->colorCntalt) * 3);
-				memcpy(currentProject->pal->palDat + (currentProject->pal->colorCnt * currentProject->pal->esize), currentProject->pal->palDat, std::min(currentProject->pal->colorCnt, currentProject->pal->colorCntalt)*currentProject->pal->esize);
-			} else if (currentProject->gameSystem == masterSystem || currentProject->gameSystem == gameGear) {
-				currentProject->gameSystem = sel;
-				palCopyConvert(32);
-			} else if (currentProject->gameSystem == TMS9918) {
-				currentProject->gameSystem = sel;
-				palCopyConvert(16);
-			} else
-				show_TODO_error
-				break;
-
-		case masterSystem:
-		case gameGear:
-			if (currentProject->gameSystem == segaGenesis) {
-				sortBy(2, true);
-				sortBy(0, true);
-				//Average each color
-				uint8_t rgbTmp[64 * 3];
-				memcpy(rgbTmp, currentProject->pal->rgbPal, 64 * 3);
+			case TMS9918:
 				currentProject->gameSystem = sel;
 				palBar.setSys(false);
-				uint8_t*rgbPtr = rgbTmp;
-				uint8_t*nPtr = currentProject->pal->rgbPal;
-
-				for (unsigned i = 0; i < 32; ++i) {
-					double L[2], c[2], h[2];
-					Rgb2Lch255(L, c, h, *rgbPtr, rgbPtr[1], rgbPtr[2]);
-					rgbPtr += 3;
-					Rgb2Lch255(L + 1, c + 1, h + 1, *rgbPtr, rgbPtr[1], rgbPtr[2]);
-					Lch2Rgb255(nPtr, nPtr + 1, nPtr + 2, (L[0] + L[1]) / 2., (c[0] + c[1]) / 2., (h[0] + h[1]) / 2.);
-					nPtr += 3;
-				}
-
-				memset(currentProject->pal->palType, 0, currentProject->pal->colorCnt + currentProject->pal->colorCntalt);
-				nPtr = currentProject->pal->rgbPal;
-
-				for (unsigned i = 0; i < 32; ++i, nPtr += 3)
-					currentProject->pal->rgbToEntry(nPtr[0], nPtr[1], nPtr[2], i);
-			} else if (currentProject->gameSystem == NES || currentProject->gameSystem == masterSystem || currentProject->gameSystem == gameGear) {
-				currentProject->gameSystem = sel;
-				palCopyConvert(32);
-			} else if (currentProject->gameSystem == TMS9918) {
-				currentProject->gameSystem = sel;
-				palCopyConvert(16);
-			} else
-				show_TODO_error
 				break;
-
-		case TMS9918:
-			currentProject->gameSystem = sel;
-			palBar.setSys(false);
-			break;
 		}
 
 		currentProject->pal->paletteToRgb();
@@ -308,116 +308,116 @@ void set_game_system(Fl_Widget*, void* selection) {
 	}
 
 	switch (sel) {
-	case segaGenesis:
-		bd = 4;
-		currentProject->gameSystem = segaGenesis;
-		currentProject->subSystem = 0;
-		currentProject->setBitdepthSys(bd);
+		case segaGenesis:
+			bd = 4;
+			currentProject->gameSystem = segaGenesis;
+			currentProject->subSystem = 0;
+			currentProject->setBitdepthSys(bd);
 
-		if (currentProject->containsData(pjHaveSprites)) {
-			if (window) {
-				window->spritesize[0]->maximum(4);
-				window->spritesize[1]->maximum(4);
+			if (currentProject->containsData(pjHaveSprites)) {
+				if (window) {
+					window->spritesize[0]->maximum(4);
+					window->spritesize[1]->maximum(4);
+				}
+
+				currentProject->ms->sps[msprt].enforceMax(4, 4);
 			}
 
-			currentProject->ms->sps[msprt].enforceMax(4, 4);
-		}
-
-		if (window) {
-			window->subSysC->copy(subSysGenesis);
-			window->subSysC->value((currentProject->subSystem & sgSHmask) >> sgSHshift);
-		}
-
-		break;
-
-	case NES:
-		bd = 2;
-		currentProject->gameSystem = NES;
-		currentProject->subSystem = 0;
-		currentProject->setBitdepthSys(bd);
-		currentProject->subSystem |= NES2x2;
-
-		if (currentProject->containsData(pjHaveMap)) {
-			//on the NES tilemaps need to be a multiple of 2
-			if (((currentProject->tms->maps[currentProject->curPlane].mapSizeW) & 1) && ((currentProject->tms->maps[currentProject->curPlane].mapSizeHA) & 1))
-				currentProject->tms->maps[currentProject->curPlane].resize_tile_map(currentProject->tms->maps[currentProject->curPlane].mapSizeW + 1, currentProject->tms->maps[currentProject->curPlane].mapSizeHA + 1);
-			else if ((currentProject->tms->maps[currentProject->curPlane].mapSizeW) & 1)
-				currentProject->tms->maps[currentProject->curPlane].resize_tile_map(currentProject->tms->maps[currentProject->curPlane].mapSizeW + 1, currentProject->tms->maps[currentProject->curPlane].mapSizeHA);
-			else if ((currentProject->tms->maps[currentProject->curPlane].mapSizeHA) & 1)
-				currentProject->tms->maps[currentProject->curPlane].resize_tile_map(currentProject->tms->maps[currentProject->curPlane].mapSizeW, currentProject->tms->maps[currentProject->curPlane].mapSizeHA + 1);
-		}
-
-		if (currentProject->containsData(pjHaveSprites)) {
 			if (window) {
-				window->spritesize[0]->maximum(1);
-				window->spritesize[1]->maximum(2);
+				window->subSysC->copy(subSysGenesis);
+				window->subSysC->value((currentProject->subSystem & sgSHmask) >> sgSHshift);
 			}
 
-			currentProject->ms->sps[msprt].enforceMax(1, 2);
-		}
+			break;
 
-		if (window) {
-			window->subSysC->copy(subSysNES);
-			window->subSysC->value(currentProject->subSystem & NES2x2);
-		}
+		case NES:
+			bd = 2;
+			currentProject->gameSystem = NES;
+			currentProject->subSystem = 0;
+			currentProject->setBitdepthSys(bd);
+			currentProject->subSystem |= NES2x2;
 
-		break;
-
-	case masterSystem:
-	case gameGear:
-		currentProject->gameSystem = sel;
-		currentProject->subSystem = 0;
-		bd = 4;
-		currentProject->setBitdepthSys(bd);
-
-		if (currentProject->containsData(pjHaveSprites)) {
-			if (window) {
-				window->spritesize[0]->maximum(1);
-				window->spritesize[1]->maximum(2);
+			if (currentProject->containsData(pjHaveMap)) {
+				//on the NES tilemaps need to be a multiple of 2
+				if (((currentProject->tms->maps[currentProject->curPlane].mapSizeW) & 1) && ((currentProject->tms->maps[currentProject->curPlane].mapSizeHA) & 1))
+					currentProject->tms->maps[currentProject->curPlane].resize_tile_map(currentProject->tms->maps[currentProject->curPlane].mapSizeW + 1, currentProject->tms->maps[currentProject->curPlane].mapSizeHA + 1);
+				else if ((currentProject->tms->maps[currentProject->curPlane].mapSizeW) & 1)
+					currentProject->tms->maps[currentProject->curPlane].resize_tile_map(currentProject->tms->maps[currentProject->curPlane].mapSizeW + 1, currentProject->tms->maps[currentProject->curPlane].mapSizeHA);
+				else if ((currentProject->tms->maps[currentProject->curPlane].mapSizeHA) & 1)
+					currentProject->tms->maps[currentProject->curPlane].resize_tile_map(currentProject->tms->maps[currentProject->curPlane].mapSizeW, currentProject->tms->maps[currentProject->curPlane].mapSizeHA + 1);
 			}
 
-			currentProject->ms->sps[msprt].enforceMax(1, 2);
-		}
+			if (currentProject->containsData(pjHaveSprites)) {
+				if (window) {
+					window->spritesize[0]->maximum(1);
+					window->spritesize[1]->maximum(2);
+				}
 
-		break;
-
-	case TMS9918:
-		currentProject->gameSystem = sel;
-		currentProject->subSystem = 0;
-		currentProject->setTMS9918subSys(MODE_2);
-		bd = 1;
-		currentProject->setBitdepthSys(bd);
-
-		if (currentProject->containsData(pjHaveSprites)) {
-			if (window) {
-				window->spritesize[0]->maximum(1);
-				window->spritesize[1]->maximum(2);
+				currentProject->ms->sps[msprt].enforceMax(1, 2);
 			}
 
-			currentProject->ms->sps[msprt].enforceMax(1, 2);
-		}
+			if (window) {
+				window->subSysC->copy(subSysNES);
+				window->subSysC->value(currentProject->subSystem & NES2x2);
+			}
 
-		if (window) {
-			window->subSysC->copy(subSysTMS9918);
-			window->subSysC->value(currentProject->getTMS9918subSys());
-		}
+			break;
 
+		case masterSystem:
+		case gameGear:
+			currentProject->gameSystem = sel;
+			currentProject->subSystem = 0;
+			bd = 4;
+			currentProject->setBitdepthSys(bd);
+
+			if (currentProject->containsData(pjHaveSprites)) {
+				if (window) {
+					window->spritesize[0]->maximum(1);
+					window->spritesize[1]->maximum(2);
+				}
+
+				currentProject->ms->sps[msprt].enforceMax(1, 2);
+			}
+
+			break;
+
+		case TMS9918:
+			currentProject->gameSystem = sel;
+			currentProject->subSystem = 0;
+			currentProject->setTMS9918subSys(MODE_2);
+			bd = 1;
+			currentProject->setBitdepthSys(bd);
+
+			if (currentProject->containsData(pjHaveSprites)) {
+				if (window) {
+					window->spritesize[0]->maximum(1);
+					window->spritesize[1]->maximum(2);
+				}
+
+				currentProject->ms->sps[msprt].enforceMax(1, 2);
+			}
+
+			if (window) {
+				window->subSysC->copy(subSysTMS9918);
+				window->subSysC->value(currentProject->getTMS9918subSys());
+			}
+
+			break;
+
+		case frameBufferPal:
+		{	currentProject->gameSystem = frameBufferPal;
+			currentProject->subSystem = 0;
+
+			if (bd > 8)
+				bd = 8;
+
+			currentProject->setBitdepthSys(bd);
+		}
 		break;
 
-	case frameBufferPal:
-	{	currentProject->gameSystem = frameBufferPal;
-		currentProject->subSystem = 0;
-
-		if (bd > 8)
-			bd = 8;
-
-		currentProject->setBitdepthSys(bd);
-	}
-	break;
-
-	default:
-		show_default_error
-		break;
+		default:
+			show_default_error
+			break;
 	}
 
 	currentProject->tileC->changeDim(8, 8, bd);
@@ -457,8 +457,8 @@ void set_game_system(Fl_Widget*, void* selection) {
 					}
 				}
 
-				for (unsigned y = 0; y < std::min(currentProject->tileC->sizeh, tilesOld->sizeh); ++y) {
-					for (unsigned x = 0; x < std::min(currentProject->tileC->sizew, tilesOld->sizew); ++x) {
+				for (unsigned y = 0; y < std::min(currentProject->tileC->height(), tilesOld->height()); ++y) {
+					for (unsigned x = 0; x < std::min(currentProject->tileC->width(), tilesOld->width()); ++x) {
 						currentProject->gameSystem = gold;
 						currentProject->subSystem = sold;
 						uint32_t px = tilesOld->getPixel(i, x, y);

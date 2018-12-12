@@ -72,32 +72,32 @@ bool saveBinAsText(void * ptr, size_t sizeBin, FILE * fp, fileType_t type, const
 	}
 
 	switch (bits) {
-	case 8:
-		mask = 31;
-		break;
+		case 8:
+			mask = 31;
+			break;
 
-	case 16:
-		mask = 15;
-		break;
+		case 16:
+			mask = 15;
+			break;
 
-	case 32:
-		mask = 7;
-		break;
+		case 32:
+			mask = 7;
+			break;
 	}
 
 	if (comment) {
 		switch (type) {
-		case tCheader:
-			temp.assign("// ");
-			break;
+			case tCheader:
+				temp.assign("// ");
+				break;
 
-		case tASM:
-			temp.assign("; ");
-			break;
+			case tASM:
+				temp.assign("; ");
+				break;
 
-		case tBEX:
-			temp.assign("' ");
-			break;
+			case tBEX:
+				temp.assign("' ");
+				break;
 		}
 
 		temp.append(comment);
@@ -105,21 +105,21 @@ bool saveBinAsText(void * ptr, size_t sizeBin, FILE * fp, fileType_t type, const
 	}
 
 	switch (type) {
-	case tCheader:
-		temp.append("#include <stdint.h>\n");
-		temp.append("const uint");
-		snprintf(tmp, 16, "%d", bits);
-		temp.append(tmp);
-		temp.append("_t ");
-		temp.append(label);
-		temp.append("[]={");
-		break;
+		case tCheader:
+			temp.append("#include <stdint.h>\n");
+			temp.append("const uint");
+			snprintf(tmp, 16, "%d", bits);
+			temp.append(tmp);
+			temp.append("_t ");
+			temp.append(label);
+			temp.append("[]={");
+			break;
 
-	case tASM:
-	case tBEX:
-		temp.append(label);
-		temp.push_back(':');
-		break;
+		case tASM:
+		case tBEX:
+			temp.append(label);
+			temp.push_back(':');
+			break;
 	}
 
 	for (size_t x = 0; x < sizeBin; ++x) {
@@ -127,39 +127,39 @@ bool saveBinAsText(void * ptr, size_t sizeBin, FILE * fp, fileType_t type, const
 			temp.push_back('\n');
 
 			switch (type) {
-			case 2:
-				switch (bits) {
-				case 8:
-					temp.append("\tdc.b ");
+				case 2:
+					switch (bits) {
+						case 8:
+							temp.append("\tdc.b ");
+							break;
+
+						case 16:
+							temp.append("\tdc.w ");
+							break;
+
+						case 32:
+							temp.append("\tdc.l ");
+							break;
+					}
+
 					break;
 
-				case 16:
-					temp.append("\tdc.w ");
+				case 3:
+					switch (bits) {
+						case 8:
+							temp.append("\tdata ");
+							break;
+
+						case 16:
+							temp.append("\tdataint ");
+							break;
+
+						case 32:
+							temp.append("\tdatalong ");
+							break;
+					}
+
 					break;
-
-				case 32:
-					temp.append("\tdc.l ");
-					break;
-				}
-
-				break;
-
-			case 3:
-				switch (bits) {
-				case 8:
-					temp.append("\tdata ");
-					break;
-
-				case 16:
-					temp.append("\tdataint ");
-					break;
-
-				case 32:
-					temp.append("\tdatalong ");
-					break;
-				}
-
-				break;
 			}
 		}
 
@@ -172,17 +172,17 @@ bool saveBinAsText(void * ptr, size_t sizeBin, FILE * fp, fileType_t type, const
 			endc = '\n';
 
 		switch (bits) {
-		case 8:
-			snprintf(tmp, 16, "%u", *dat8++);
-			break;
+			case 8:
+				snprintf(tmp, 16, "%u", *dat8++);
+				break;
 
-		case 16:
-			snprintf(tmp, 16, "%u", *dat16++);
-			break;
+			case 16:
+				snprintf(tmp, 16, "%u", *dat16++);
+				break;
 
-		case 32:
-			snprintf(tmp, 16, "%u", *dat32++);
-			break;
+			case 32:
+				snprintf(tmp, 16, "%u", *dat32++);
+				break;
 		}
 
 		temp.append(tmp);

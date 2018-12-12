@@ -75,61 +75,61 @@ void paletteBar::setSys(bool upSlide) {
 						slide[j][i]->show();
 
 						switch (currentProject->gameSystem) {
-						case segaGenesis:
-							slide[j][i]->label(namesGen[i]);
-							slide[j][i]->maximum(7);
-							break;
+							case segaGenesis:
+								slide[j][i]->label(namesGen[i]);
+								slide[j][i]->maximum(7);
+								break;
 
-						case masterSystem:
-							slide[j][i]->label(namesGen[i]);
-							slide[j][i]->maximum(3);
-							break;
+							case masterSystem:
+								slide[j][i]->label(namesGen[i]);
+								slide[j][i]->maximum(3);
+								break;
 
-						case gameGear:
-							slide[j][i]->label(namesGen[i]);
-							slide[j][i]->maximum(15);
-							break;
+							case gameGear:
+								slide[j][i]->label(namesGen[i]);
+								slide[j][i]->maximum(15);
+								break;
 
-						case NES:
-							slide[j][i]->label(namesNES[i]);
-							break;
+							case NES:
+								slide[j][i]->label(namesNES[i]);
+								break;
 
-						default:
-							show_default_error
+							default:
+								show_default_error
 						}
 					}
 				}
 
 				switch (currentProject->gameSystem) {
-				case segaGenesis:
-				case masterSystem:
-				case gameGear:
-					if (sysCache == NES) {
-						slide[j][1]->labelsize(13);
-						slide[j][2]->labelsize(14);
-						slide[j][2]->resize(slide[j][2]->x() - 16, slide[j][2]->y(), slide[j][2]->w() + 16, slide[j][2]->h());
-						slide[j][2]->callback(update_palette, (void*)2);
-					}
+					case segaGenesis:
+					case masterSystem:
+					case gameGear:
+						if (sysCache == NES) {
+							slide[j][1]->labelsize(13);
+							slide[j][2]->labelsize(14);
+							slide[j][2]->resize(slide[j][2]->x() - 16, slide[j][2]->y(), slide[j][2]->w() + 16, slide[j][2]->h());
+							slide[j][2]->callback(update_palette, (void*)2);
+						}
 
-					break;
+						break;
 
-				case NES:
-					slide[j][0]->maximum(15);
-					slide[j][1]->maximum(3);
-					slide[j][1]->labelsize(14);
-					slide[j][2]->labelsize(12);
-					slide[j][2]->value(0);
-					slide[j][2]->maximum(7);
-					slide[j][2]->resize(slide[j][2]->x() + 16, slide[j][2]->y(), slide[j][2]->w() - 16, slide[j][2]->h());
-					slide[j][2]->callback(updateEmphesisCB);
-					break;
+					case NES:
+						slide[j][0]->maximum(15);
+						slide[j][1]->maximum(3);
+						slide[j][1]->labelsize(14);
+						slide[j][2]->labelsize(12);
+						slide[j][2]->value(0);
+						slide[j][2]->maximum(7);
+						slide[j][2]->resize(slide[j][2]->x() + 16, slide[j][2]->y(), slide[j][2]->w() - 16, slide[j][2]->h());
+						slide[j][2]->callback(updateEmphesisCB);
+						break;
 
-				case TMS9918:
-					//Do nothing
-					break;
+					case TMS9918:
+						//Do nothing
+						break;
 
-				default:
-					show_default_error
+					default:
+						show_default_error
 				}
 
 				selBox[j] %= currentProject->pal->perRow;
@@ -171,33 +171,33 @@ void paletteBar::updateSlider(unsigned tab) {
 			slide[tab][i]->show();
 
 		switch (currentProject->gameSystem) {
-		case segaGenesis:
-			slide[tab][2]->value(currentProject->pal->palDat[idx * 2] >> 1);
-			slide[tab][1]->value(currentProject->pal->palDat[1 + idx * 2] >> 5);
-			slide[tab][0]->value((currentProject->pal->palDat[1 + idx * 2] & 14) >> 1);
+			case segaGenesis:
+				slide[tab][2]->value(currentProject->pal->palDat[idx * 2] >> 1);
+				slide[tab][1]->value(currentProject->pal->palDat[1 + idx * 2] >> 5);
+				slide[tab][0]->value((currentProject->pal->palDat[1 + idx * 2] & 14) >> 1);
+				break;
+
+			case NES:
+				slide[tab][0]->value(currentProject->pal->palDat[idx] & 15);
+				slide[tab][1]->value((currentProject->pal->palDat[idx] >> 4) & 3);
+				break;
+
+			case masterSystem:
+				slide[tab][0]->value(currentProject->pal->palDat[idx] & 3);
+				slide[tab][1]->value((currentProject->pal->palDat[idx] >> 2) & 3);
+				slide[tab][2]->value((currentProject->pal->palDat[idx] >> 4) & 3);
+				break;
+
+			case gameGear:
+			{	uint16_t*palDat = (uint16_t*)currentProject->pal->palDat + idx;
+				slide[tab][0]->value(*palDat & 15);
+				slide[tab][1]->value((*palDat >> 4) & 15);
+				slide[tab][2]->value((*palDat >> 8) & 15);
+			}
 			break;
 
-		case NES:
-			slide[tab][0]->value(currentProject->pal->palDat[idx] & 15);
-			slide[tab][1]->value((currentProject->pal->palDat[idx] >> 4) & 3);
-			break;
-
-		case masterSystem:
-			slide[tab][0]->value(currentProject->pal->palDat[idx] & 3);
-			slide[tab][1]->value((currentProject->pal->palDat[idx] >> 2) & 3);
-			slide[tab][2]->value((currentProject->pal->palDat[idx] >> 4) & 3);
-			break;
-
-		case gameGear:
-		{	uint16_t*palDat = (uint16_t*)currentProject->pal->palDat + idx;
-			slide[tab][0]->value(*palDat & 15);
-			slide[tab][1]->value((*palDat >> 4) & 15);
-			slide[tab][2]->value((*palDat >> 8) & 15);
-		}
-		break;
-
-		default:
-			show_default_error
+			default:
+				show_default_error
 		}
 	}
 

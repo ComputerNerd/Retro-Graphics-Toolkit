@@ -12,7 +12,7 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #include <ctime>
 #include "includes.h"
@@ -63,37 +63,37 @@ void optimizeSpritesCB(Fl_Widget*, void*) {
 	window->updateSpriteSliders();
 	window->redraw();
 }
-void ditherSpriteAsImage(unsigned msprt, unsigned which) {
+void ditherSpriteAsImage(unsigned msprt, unsigned which, Project*prj) {
 	unsigned w, h;
-	w = currentProject->ms->sps[msprt].width(which);
-	h = currentProject->ms->sps[msprt].height(which);
-	uint8_t*image = (uint8_t*)malloc(w * h * 4);
+	w = prj->ms->sps[msprt].width(which);
+	h = prj->ms->sps[msprt].height(which);
+	uint8_t* image = (uint8_t*)malloc(w * h * 4);
 
 	if (!image)
 		show_malloc_error(w * h * 4)
 		pushTilesAll(tTypeTile);
 
-	for (unsigned row = 0; row < (currentProject->pal->haveAlt ? currentProject->pal->rowCntPalalt : currentProject->pal->rowCntPal); ++row) {
-		currentProject->ms->sps[msprt].spriteGroupToImage(image, which, row);
+	for (unsigned row = 0; row < (prj->pal->haveAlt ? prj->pal->rowCntPalalt : prj->pal->rowCntPal); ++row) {
+		prj->ms->sps[msprt].spriteGroupToImage(image, which, row);
 		ditherImage(image, w, h, true, true, false, 0, false, 0, true);
 		void*indexPtr = ditherImage(image, w, h, true, false, true, row, false, 0, true, true);
-		currentProject->ms->sps[msprt].spriteImageToTiles((uint8_t*)indexPtr, which, row, true, true);
+		prj->ms->sps[msprt].spriteImageToTiles((uint8_t*)indexPtr, which, row, true, true);
 		free(indexPtr);
 	}
 
 	Fl::check();
 	free(image);
 }
-void ditherGroupAsImage(unsigned msprt) {
+void ditherGroupAsImage(unsigned msprt, Project*prj) {
 	Fl_Window *winP;
 	Fl_Progress *progress;
 	mkProgress(&winP, &progress);
-	progress->maximum(currentProject->ms->sps[msprt].amt - 1);
+	progress->maximum(prj->ms->sps[msprt].amt - 1);
 	time_t lasttime = time(nullptr);
 	Fl::check();
 
-	for (unsigned i = 0; i < currentProject->ms->sps[msprt].amt; ++i) {
-		ditherSpriteAsImage(msprt, i);
+	for (unsigned i = 0; i < prj->ms->sps[msprt].amt; ++i) {
+		ditherSpriteAsImage(msprt, i, prj);
 
 		if ((time(nullptr) - lasttime) >= 1) {
 			lasttime = time(nullptr);
@@ -114,7 +114,7 @@ void ditherSpriteAsImageAllCB(Fl_Widget*, void*) {
 		return;
 	}
 
-	ditherGroupAsImage(window->metaspritesel->value());
+	ditherGroupAsImage(window->metaspritesel->value(), currentProject);
 }
 void ditherSpriteAsImageCB(Fl_Widget*, void*) {
 	if (!currentProject->containsData(pjHaveSprites)) {
@@ -123,7 +123,7 @@ void ditherSpriteAsImageCB(Fl_Widget*, void*) {
 	}
 
 	unsigned msprt = window->metaspritesel->value();
-	ditherSpriteAsImage(msprt, curSpritegroup);
+	ditherSpriteAsImage(msprt, curSpritegroup, currentProject);
 	window->redraw();
 }
 void setDrawSpriteCB(Fl_Widget*, void*m) {
@@ -179,25 +179,25 @@ void alignSpriteCB(Fl_Widget*, void*t) {
 		with = curSprite + 1;
 
 	switch ((uintptr_t)t) {
-	case 0://Left
-		currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offx = currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offx - (currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].w * 8);
-		currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offy = currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offy;
-		break;
+		case 0://Left
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offx = currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offx - (currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].w * 8);
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offy = currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offy;
+			break;
 
-	case 1://Right
-		currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offx = currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offx + (currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].w * 8);
-		currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offy = currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offy;
-		break;
+		case 1://Right
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offx = currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offx + (currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].w * 8);
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offy = currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offy;
+			break;
 
-	case 2://Top
-		currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offx = currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offx;
-		currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offy = currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offy - (currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].h * 8);
-		break;
+		case 2://Top
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offx = currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offx;
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offy = currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offy - (currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].h * 8);
+			break;
 
-	case 3://Bottom
-		currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offx = currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offx;
-		currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offy = currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offy + (currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].h * 8);
-		break;
+		case 3://Bottom
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offx = currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offx;
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].offy = currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].offy + (currentProject->ms->sps[msprt].groups[curSpritegroup].list[with].h * 8);
+			break;
 	}
 
 	window->updateSpriteSliders();
@@ -343,31 +343,31 @@ void setvalueSpriteCB(Fl_Widget*o, void*which) {
 	unsigned msprt = window->metaspritesel->value();
 
 	switch ((uintptr_t)which) {
-	case 0:
-		pushSpriteItem(Starttile)
-		currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].starttile = val;
-		break;
+		case 0:
+			pushSpriteItem(Starttile)
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].starttile = val;
+			break;
 
-	case 1:
-		pushSpriteItem(Width)
-		currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].w = val;
-		break;
+		case 1:
+			pushSpriteItem(Width)
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].w = val;
+			break;
 
-	case 2:
-		pushSpriteItem(Height)
-		currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].h = val;
-		break;
+		case 2:
+			pushSpriteItem(Height)
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].h = val;
+			break;
 
-	case 3:
-		pushSpriteItem(Palrow)
-		palBar.changeRow(val, 3);
-		currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].palrow = val;
-		break;
+		case 3:
+			pushSpriteItem(Palrow)
+			palBar.changeRow(val, 3);
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].palrow = val;
+			break;
 
-	case 4:
-		pushSpriteItem(Loadat)
-		currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].loadat = val;
-		break;
+		case 4:
+			pushSpriteItem(Loadat)
+			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].loadat = val;
+			break;
 	}
 
 	window->redraw();

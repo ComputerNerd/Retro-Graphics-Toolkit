@@ -80,10 +80,10 @@ static int tiles__get_(lua_State *L) {
 			lua_pushinteger(L, projects[projectIDX]->tileC->tcSize);
 			return 1;
 		} else if (!strcmp("width", k)) {
-			lua_pushinteger(L, projects[projectIDX]->tileC->sizew);
+			lua_pushinteger(L, projects[projectIDX]->tileC->width());
 			return 1;
 		} else if (!strcmp("height", k)) {
-			lua_pushinteger(L, projects[projectIDX]->tileC->sizeh);
+			lua_pushinteger(L, projects[projectIDX]->tileC->height());
 			return 1;
 		}
 	}

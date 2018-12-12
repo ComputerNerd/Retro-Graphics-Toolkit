@@ -105,8 +105,8 @@ void tileMap::ditherAsImage(bool entire) {
 	uint32_t w, h;
 	w = mapSizeW;
 	h = mapSizeHA;
-	w *= prj->tileC->sizew;
-	h *= prj->tileC->sizeh;
+	w *= prj->tileC->width();
+	h *= prj->tileC->height();
 	image = (uint8_t *)malloc(w * h * 4);
 
 	if (!image)
@@ -541,86 +541,86 @@ bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, int c
 
 	if (likely(myfile || clipboard)) {
 		switch (prj->gameSystem) {
-		case segaGenesis:
-		{	uint16_t * TheMap;
-			fileSize = (mapSizeW * mapSizeH * amt) * 2;
-			TheMap = (uint16_t*)malloc(fileSize);
+			case segaGenesis:
+			{	uint16_t * TheMap;
+				fileSize = (mapSizeW * mapSizeH * amt) * 2;
+				TheMap = (uint16_t*)malloc(fileSize);
 
-			for (y = 0; y < mapSizeH * amt; ++y) {
-				for (x = 0; x < mapSizeW; ++x) {
-					int tile = get_tile(x, y);
-					tile += offset;
-					tile = bondsCheckTile(tile, 2047, x, y);
+				for (y = 0; y < mapSizeH * amt; ++y) {
+					for (x = 0; x < mapSizeW; ++x) {
+						int tile = get_tile(x, y);
+						tile += offset;
+						tile = bondsCheckTile(tile, 2047, x, y);
 #if _WIN32
-					tile = swap_word(tile); //mingw appears not to provide htobe16 function
+						tile = swap_word(tile); //mingw appears not to provide htobe16 function
 #else
-					tile = htobe16(tile); //needs to be big endian
+						tile = htobe16(tile); //needs to be big endian
 #endif
-					*TheMap = (uint16_t)tileMapDat[((y * mapSizeW) + x) * 4]; //get attributes
-					*TheMap++ |= (uint16_t)tile; //add tile
+						*TheMap = (uint16_t)tileMapDat[((y * mapSizeW) + x) * 4]; //get attributes
+						*TheMap++ |= (uint16_t)tile; //add tile
+					}
 				}
+
+				TheMap -= mapSizeW * mapSizeH * amt; //return to beginning so it can be freeded and the file saved
+				mapptr = (uint8_t*)TheMap;
 			}
+			break;
 
-			TheMap -= mapSizeW * mapSizeH * amt; //return to beginning so it can be freeded and the file saved
-			mapptr = (uint8_t*)TheMap;
-		}
-		break;
+			case masterSystem:
+			case gameGear:
+			{	uint8_t * TheMap;
+				fileSize = (mapSizeW * mapSizeH * amt) * 2;
+				TheMap = (uint8_t*)malloc(fileSize);
 
-		case masterSystem:
-		case gameGear:
-		{	uint8_t * TheMap;
-			fileSize = (mapSizeW * mapSizeH * amt) * 2;
-			TheMap = (uint8_t*)malloc(fileSize);
+				for (y = 0; y < mapSizeH * amt; ++y) {
+					for (x = 0; x < mapSizeW; ++x) {
+						/*
+						 MSB          LSB
+						 ---pcvhn nnnnnnnn
 
-			for (y = 0; y < mapSizeH * amt; ++y) {
-				for (x = 0; x < mapSizeW; ++x) {
-					/*
-					 MSB          LSB
-					 ---pcvhn nnnnnnnn
-
-					 - = Unused. Some games use these bits as flags for collision and damage
-					     zones. (such as Wonderboy in Monster Land, Zillion 2)
-					 p = Priority flag. When set, sprites will be displayed underneath the
-					     background pattern in question.
-					 c = Palette select.
-					 v = Vertical flip flag.
-					 h = Horizontal flip flag.
-					 n = Pattern index, any one of 512 patterns in VRAM can be selected.
-					 */
-					int tile = get_tile(x, y);
-					tile += offset;
-					tile = bondsCheckTile(tile, 511, x, y);
-					*TheMap++ = tile & 255;
-					*TheMap++ = ((tile >> 8) & 1) | (get_hflip(x, y) << 1) | (get_vflip(x, y) << 2) | (getPalRow(x, y) << 3) | (get_prio(x, y) << 4);
+						 - = Unused. Some games use these bits as flags for collision and damage
+						     zones. (such as Wonderboy in Monster Land, Zillion 2)
+						 p = Priority flag. When set, sprites will be displayed underneath the
+						     background pattern in question.
+						 c = Palette select.
+						 v = Vertical flip flag.
+						 h = Horizontal flip flag.
+						 n = Pattern index, any one of 512 patterns in VRAM can be selected.
+						 */
+						int tile = get_tile(x, y);
+						tile += offset;
+						tile = bondsCheckTile(tile, 511, x, y);
+						*TheMap++ = tile & 255;
+						*TheMap++ = ((tile >> 8) & 1) | (get_hflip(x, y) << 1) | (get_vflip(x, y) << 2) | (getPalRow(x, y) << 3) | (get_prio(x, y) << 4);
+					}
 				}
+
+				TheMap -= mapSizeW * mapSizeH * amt * 2; //return to beginning so it can be freeded and the file saved
+				mapptr = TheMap;
 			}
+			break;
 
-			TheMap -= mapSizeW * mapSizeH * amt * 2; //return to beginning so it can be freeded and the file saved
-			mapptr = TheMap;
-		}
-		break;
+			case NES:
+			{	uint8_t * TheMap;
+				fileSize = mapSizeW * mapSizeH * amt;
+				TheMap = (uint8_t *)malloc(fileSize);
 
-		case NES:
-		{	uint8_t * TheMap;
-			fileSize = mapSizeW * mapSizeH * amt;
-			TheMap = (uint8_t *)malloc(fileSize);
-
-			for (y = 0; y < mapSizeH * amt; ++y) {
-				for (x = 0; x < mapSizeW; ++x) {
-					int tile = get_tile(x, y);
-					tile += offset;
-					tile = bondsCheckTile(tile, 255, x, y);
-					*TheMap++ = tile;
+				for (y = 0; y < mapSizeH * amt; ++y) {
+					for (x = 0; x < mapSizeW; ++x) {
+						int tile = get_tile(x, y);
+						tile += offset;
+						tile = bondsCheckTile(tile, 255, x, y);
+						*TheMap++ = tile;
+					}
 				}
+
+				TheMap -= mapSizeW * mapSizeH * amt; //return to beginning so it can be freeded and the file sized
+				mapptr = TheMap;
 			}
+			break;
 
-			TheMap -= mapSizeW * mapSizeH * amt; //return to beginning so it can be freeded and the file sized
-			mapptr = TheMap;
-		}
-		break;
-
-		default:
-			show_default_error
+			default:
+				show_default_error
 		}
 
 		if (compression) {
@@ -846,27 +846,27 @@ bool tileMap::loadFromFile() {
 	uint32_t blocksLoaded = file_size / w / h;
 
 	switch (prj->gameSystem) {
-	case segaGenesis:
-	case masterSystem:
-	case gameGear:
-		if (blocksLoad)
-			size_temp = blocksLoaded * w * h;
-		else
-			size_temp = w * h * 2; //Size of data that is to be loaded
+		case segaGenesis:
+		case masterSystem:
+		case gameGear:
+			if (blocksLoad)
+				size_temp = blocksLoaded * w * h;
+			else
+				size_temp = w * h * 2; //Size of data that is to be loaded
 
-		blocksLoaded /= 2;
-		break;
+			blocksLoaded /= 2;
+			break;
 
-	case NES:
-		if (blocksLoad)
-			size_temp = blocksLoaded * w * h;
-		else
-			size_temp = w * h;
+		case NES:
+			if (blocksLoad)
+				size_temp = blocksLoaded * w * h;
+			else
+				size_temp = w * h;
 
-		break;
+			break;
 
-	default:
-		show_default_error
+		default:
+			show_default_error
 	}
 
 	printf("W %d H %d blocks loaded %d\n", w, h, blocksLoaded);
@@ -905,51 +905,51 @@ bool tileMap::loadFromFile() {
 	for (y = 0; y < mapSizeH * amt; ++y) {
 		for (x = 0; x < mapSizeW; ++x) {
 			switch (prj->gameSystem) {
-			case segaGenesis:
-				if (((x + (y * w) + 1) * 2) <= file_size) {
-					int temp = *tempMap++;
-					//set attributes
-					tileMapDat[((y * mapSizeW) + x) * 4] = (uint8_t)temp & 0xF8;
-					temp &= 7;
-					temp <<= 8;
-					temp |= *tempMap++;
+				case segaGenesis:
+					if (((x + (y * w) + 1) * 2) <= file_size) {
+						int temp = *tempMap++;
+						//set attributes
+						tileMapDat[((y * mapSizeW) + x) * 4] = (uint8_t)temp & 0xF8;
+						temp &= 7;
+						temp <<= 8;
+						temp |= *tempMap++;
 
-					if (temp - offset > 0)
-						set_tile(x, y, (int32_t)temp - offset);
-					else
+						if (temp - offset > 0)
+							set_tile(x, y, (int32_t)temp - offset);
+						else
+							set_tile(x, y, 0);
+					} else
 						set_tile(x, y, 0);
-				} else
-					set_tile(x, y, 0);
 
-				break;
+					break;
 
-			case masterSystem:
-			case gameGear:
-				if (((x + (y * w) + 1) * 2) <= file_size) {
-					uint8_t attrs = *tempMap++;
-					uint16_t tile = *tempMap++;
-					tile |= (attrs & 1) << 8;
-					set_tile_full(x, y, tile, (attrs >> 3) & 1, (attrs >> 1) & 1, (attrs >> 2) & 1, (attrs >> 4) & 1);
-				} else
-					set_tile(x, y, 0);
-
-				break;
-
-			case NES:
-				if ((x + (y * w) + 1) <= file_size) {
-					int temp = *tempMap++;
-
-					if (temp - offset > 0)
-						set_tile(x, y, (int32_t)temp - offset);
-					else
+				case masterSystem:
+				case gameGear:
+					if (((x + (y * w) + 1) * 2) <= file_size) {
+						uint8_t attrs = *tempMap++;
+						uint16_t tile = *tempMap++;
+						tile |= (attrs & 1) << 8;
+						set_tile_full(x, y, tile, (attrs >> 3) & 1, (attrs >> 1) & 1, (attrs >> 2) & 1, (attrs >> 4) & 1);
+					} else
 						set_tile(x, y, 0);
-				} else
-					set_tile(x, y, 0);
 
-				break;
+					break;
 
-			default:
-				show_default_error
+				case NES:
+					if ((x + (y * w) + 1) <= file_size) {
+						int temp = *tempMap++;
+
+						if (temp - offset > 0)
+							set_tile(x, y, (int32_t)temp - offset);
+						else
+							set_tile(x, y, 0);
+					} else
+						set_tile(x, y, 0);
+
+					break;
+
+				default:
+					show_default_error
 			}
 		}
 	}
@@ -1206,12 +1206,12 @@ bool tileMap::truecolor_to_image(uint8_t * the_image, int useRow, bool useAlpha)
 	}
 
 	uint32_t w, h;
-	w = mapSizeW * prj->tileC->sizew;
-	h = mapSizeHA * prj->tileC->sizeh;
+	w = mapSizeW * prj->tileC->width();
+	h = mapSizeHA * prj->tileC->height();
 	unsigned x_tile = 0, y_tile = 0;
 	int_fast32_t truecolor_tile_ptr = 0;
 	unsigned pixelSize = useAlpha ? 4 : 3;
-	unsigned pSize2 = prj->tileC->sizew * pixelSize;
+	unsigned pSize2 = prj->tileC->width() * pixelSize;
 
 	for (uint64_t a = 0; a < (h * w * pixelSize) - w * pixelSize; a += w * pSize2) { //a tiles y
 		for (uint_fast32_t b = 0; b < w * pixelSize; b += pSize2) { //b tiles x
@@ -1223,11 +1223,11 @@ bool tileMap::truecolor_to_image(uint8_t * the_image, int useRow, bool useAlpha)
 			if ((truecolor_tile_ptr != -prj->tileC->tcSize) && (truecolor_tile_ptr < (prj->tileC->amt * prj->tileC->tcSize))) {
 				for (uint_fast32_t y = 0; y < w * pSize2; y += w * pixelSize) { //pixels y
 					if (useAlpha)
-						memcpy(&the_image[a + b + y], &prj->tileC->truetDat[truecolor_tile_ptr], prj->tileC->sizew * 4);
+						memcpy(&the_image[a + b + y], &prj->tileC->truetDat[truecolor_tile_ptr], prj->tileC->width() * 4);
 					else {
 						unsigned xx = 0;
 
-						for (unsigned x = 0; x < prj->tileC->sizew * 4; x += 4) { //pixels x
+						for (unsigned x = 0; x < prj->tileC->width() * 4; x += 4) { //pixels x
 							the_image[a + b + y + xx] = prj->tileC->truetDat[truecolor_tile_ptr + x];
 							the_image[a + b + y + xx + 1] = prj->tileC->truetDat[truecolor_tile_ptr + x + 1];
 							the_image[a + b + y + xx + 2] = prj->tileC->truetDat[truecolor_tile_ptr + x + 2];
@@ -1235,7 +1235,7 @@ bool tileMap::truecolor_to_image(uint8_t * the_image, int useRow, bool useAlpha)
 						}
 					}
 
-					truecolor_tile_ptr += prj->tileC->sizew * 4;
+					truecolor_tile_ptr += prj->tileC->width() * 4;
 				}
 			} else {
 				for (uint32_t y = 0; y < w * pSize2; y += w * pixelSize) //pixels y
@@ -1259,12 +1259,12 @@ void tileMap::truecolorimageToTiles(uint8_t * image, int rowusage, bool useAlpha
 
 	unsigned type_temp = palTypeGen;
 	unsigned tempSet = 0;
-	uint8_t*truecolor_tile = (uint8_t*)alloca(isIndexArray ? (prj->tileC->sizew * prj->tileC->sizeh) : prj->tileC->tcSize);
+	uint8_t*truecolor_tile = (uint8_t*)alloca(isIndexArray ? (prj->tileC->width() * prj->tileC->height()) : prj->tileC->tcSize);
 	uint_fast32_t x_tile = 0, y_tile = 0;
 	uint_fast32_t pSize = isIndexArray ? 1 : (useAlpha ? 4 : 3);
-	uint_fast32_t pTile = prj->tileC->sizew * pSize;
-	uint_fast32_t w = mapSizeW * prj->tileC->sizew;
-	uint_fast32_t h = mapSizeHA * prj->tileC->sizeh;
+	uint_fast32_t pTile = prj->tileC->width() * pSize;
+	uint_fast32_t w = mapSizeW * prj->tileC->width();
+	uint_fast32_t h = mapSizeHA * prj->tileC->height();
 
 	for (uint_fast32_t a = 0; a < h * w * pSize; a += w * pTile) { //a tiles y
 		for (uint_fast32_t b = 0; b < w * pSize; b += pTile) { //b tiles x
@@ -1289,10 +1289,10 @@ void tileMap::truecolorimageToTiles(uint8_t * image, int rowusage, bool useAlpha
 
 				for (uint32_t y = 0; y < w * pTile; y += w * pSize) { //pixels y
 					if (useAlpha || isIndexArray) {
-						memcpy(truecolor_tile_ptr, &image[a + b + y], prj->tileC->sizew * pSize);
-						truecolor_tile_ptr += prj->tileC->sizew * pSize;
+						memcpy(truecolor_tile_ptr, &image[a + b + y], prj->tileC->width() * pSize);
+						truecolor_tile_ptr += prj->tileC->width() * pSize;
 					} else {
-						for (uint8_t xx = 0; xx < prj->tileC->sizew * 3; xx += 3) {
+						for (uint8_t xx = 0; xx < prj->tileC->width() * 3; xx += 3) {
 							memcpy(truecolor_tile_ptr, &image[a + b + y + xx], 3);
 							truecolor_tile_ptr += 3;
 							*truecolor_tile_ptr++ = 255;
@@ -1361,10 +1361,10 @@ void tileMap::drawPart(unsigned offx, unsigned offy, unsigned x, unsigned y, uns
 				}
 			}
 
-			ox += prj->tileC->sizew * zoom;
+			ox += prj->tileC->width() * zoom;
 		}
 
-		offy += prj->tileC->sizeh * zoom;
+		offy += prj->tileC->height() * zoom;
 	}
 
 	if (shadowHighlight)
@@ -1374,7 +1374,7 @@ void tileMap::drawBlock(unsigned block, unsigned xo, unsigned yo, unsigned flags
 	uint32_t Ty = block * mapSizeH;
 
 	if (flags & 2)
-		yo += (mapSizeH - 1) * prj->tileC->sizeh * zoom;
+		yo += (mapSizeH - 1) * prj->tileC->height() * zoom;
 
 	int xoo;
 
@@ -1382,7 +1382,7 @@ void tileMap::drawBlock(unsigned block, unsigned xo, unsigned yo, unsigned flags
 		xoo = xo;
 
 		if (flags & 1)
-			xoo += (mapSizeW - 1) * prj->tileC->sizew * zoom;
+			xoo += (mapSizeW - 1) * prj->tileC->width() * zoom;
 
 		for (uint32_t xb = 0; xb < mapSizeW; ++xb) {
 			bool hflip = get_hflip(xb, Ty), vflip = get_vflip(xb, Ty);
@@ -1414,15 +1414,15 @@ void tileMap::drawBlock(unsigned block, unsigned xo, unsigned yo, unsigned flags
 			}
 
 			if (flags & 1)
-				xoo -= prj->tileC->sizew * zoom;
+				xoo -= prj->tileC->width() * zoom;
 			else
-				xoo += prj->tileC->sizew * zoom;
+				xoo += prj->tileC->width() * zoom;
 		}
 
 		if (flags & 2)
-			yo -= prj->tileC->sizeh * zoom;
+			yo -= prj->tileC->height() * zoom;
 		else
-			yo += prj->tileC->sizeh * zoom;
+			yo += prj->tileC->height() * zoom;
 
 		++Ty;
 	}
@@ -1479,12 +1479,10 @@ void tileMap::pickExtAttrs(void) {
 	}
 
 	switch (prj->gameSystem) {
-	case TMS9918:
-		switch (prj->getTMS9918subSys()) {
-		case MODE_1: {
-			tilePair*attrs = new tilePair[prj->tileC->amt];
-			unsigned w = mapSizeW * prj->tileC->sizew;
-			unsigned h = mapSizeHA * prj->tileC->sizeh;
+		case TMS9918:
+		{
+			unsigned w = mapSizeW * prj->tileC->width();
+			unsigned h = mapSizeHA * prj->tileC->height();
 			uint8_t*imgTmp = (uint8_t*)malloc(w * h * 4);
 			truecolor_to_image(imgTmp);
 			uint8_t*indexList = (uint8_t*)ditherImage(imgTmp, w, h, true, true, false, 0, false, 0, false, true);
@@ -1492,122 +1490,120 @@ void tileMap::pickExtAttrs(void) {
 			if (!indexList)
 				return;
 
-			for (unsigned j = 0; j < mapSizeHA; ++j) {
-				for (unsigned i = 0; i < mapSizeW; ++i) {
-					unsigned hist[16];
-					int32_t tile = get_tile(i, j);
-					attrs[tile].second = tile;
+			switch (prj->getTMS9918subSys()) {
+				case MODE_1: {
+					tilePair*attrs = new tilePair[prj->tileC->amt];
 
-					if (tile < prj->tileC->amt) {
-						memset(hist, 0, sizeof(hist));
+					for (unsigned j = 0; j < mapSizeHA; ++j) {
+						for (unsigned i = 0; i < mapSizeW; ++i) {
+							unsigned hist[16];
+							int32_t tile = get_tile(i, j);
+							attrs[tile].second = tile;
 
-						for (unsigned y = 0; y < prj->tileC->sizeh; ++y) {
-							unsigned offset = (j * prj->tileC->sizeh * prj->tileC->sizew * mapSizeW) + (i * prj->tileC->sizew) + (y * mapSizeW * prj->tileC->sizew);
-							uint8_t*iPtr = indexList + offset;
-							uint8_t*tPtr = imgTmp + (offset * 4) + 3;
+							if (tile < prj->tileC->amt) {
+								memset(hist, 0, sizeof(hist));
 
-							for (unsigned x = 0; x < prj->tileC->sizew; ++x) {
-								if (*tPtr)
-									++hist[(*iPtr++) & 15];
-								else
-									++hist[0];
+								for (unsigned y = 0; y < prj->tileC->height(); ++y) {
+									unsigned offset = (j * prj->tileC->height() * prj->tileC->width() * mapSizeW) + (i * prj->tileC->width()) + (y * mapSizeW * prj->tileC->width());
+									uint8_t*iPtr = indexList + offset;
+									uint8_t*tPtr = imgTmp + (offset * 4) + 3;
 
-								tPtr += 4;
+									for (unsigned x = 0; x < prj->tileC->width(); ++x) {
+										if (*tPtr)
+											++hist[(*iPtr++) & 15];
+										else
+											++hist[0];
+
+										tPtr += 4;
+									}
+								}
+
+								unsigned cmp = hist[0];
+								bool allEqual = true;
+
+								for (unsigned x = 1; x < 16; ++x) {
+									allEqual &= cmp == hist[x];
+
+									if (!allEqual)
+										break;
+								}
+
+								if (allEqual)
+									attrs[tile].first = 0x10;
+								else {
+									unsigned largest[2];
+									pickFromHist2(hist, largest, 16);
+									attrs[tile].first = (largest[1] << 4) | largest[0];
+								}
 							}
 						}
+					}
 
-						unsigned cmp = hist[0];
-						bool allEqual = true;
+					std::sort(attrs, attrs + prj->tileC->amt, comparatorTile);
 
-						for (unsigned x = 1; x < 16; ++x) {
-							allEqual &= cmp == hist[x];
+					delete[] attrs;
+				}
+				break;
 
-							if (!allEqual)
-								break;
-						}
+				case MODE_2: {
 
-						if (allEqual)
-							attrs[tile].first = 0x10;
-						else {
-							unsigned largest[2];
-							pickFromHist2(hist, largest, 16);
-							attrs[tile].first = (largest[1] << 4) | largest[0];
+					for (unsigned j = 0; j < mapSizeHA; ++j) {
+						for (unsigned i = 0; i < mapSizeW; ++i) {
+							for (unsigned y = 0; y < prj->tileC->height(); ++y) {
+								unsigned offset = (j * prj->tileC->height() * prj->tileC->width() * mapSizeW) + (i * prj->tileC->width()) + (y * mapSizeW * prj->tileC->width());
+								uint8_t*iPtr = indexList + offset;
+								uint8_t*tPtr = imgTmp + (offset * 4) + 3;
+								unsigned hist[16];
+								memset(hist, 0, sizeof(hist));
+
+								for (unsigned x = 0; x < prj->tileC->width(); ++x) {
+									if (*tPtr)
+										++hist[(*iPtr++) & 15];
+									else
+										++hist[0];
+
+									tPtr += 4;
+								}
+
+								unsigned cmp = hist[0];
+								bool allEqual = true;
+
+								for (unsigned x = 1; x < 16; ++x) {
+									allEqual &= cmp == hist[x];
+
+									if (!allEqual)
+										break;
+								}
+
+								if (allEqual) {
+									// Use the found color plus black.
+									setPalRowExt(i, j * 8 + y, hist[0], false);
+									setPalRowExt(i, j * 8 + y, 1, true);
+								} else {
+									unsigned largest[2];
+									pickFromHist2(hist, largest, 16);
+									setPalRowExt(i, j * 8 + y, largest[0], false);
+									setPalRowExt(i, j * 8 + y, largest[1], true);
+								}
+							}
 						}
 					}
+
 				}
-			}
+				break;
 
-			std::sort(attrs, attrs + prj->tileC->amt, comparatorTile);
-
-			delete[] attrs;
-		}
-		break;
-
-		case MODE_2: {
-			unsigned w = mapSizeW * prj->tileC->sizew;
-			unsigned h = mapSizeHA * prj->tileC->sizeh;
-			uint8_t*imgTmp = (uint8_t*)malloc(w * h * 4);
-			truecolor_to_image(imgTmp);
-			uint8_t*indexList = (uint8_t*)ditherImage(imgTmp, w, h, true, true, false, 0, false, 0, false, true);
-
-			if (!indexList)
-				return;
-
-			for (unsigned j = 0; j < mapSizeHA; ++j) {
-				for (unsigned i = 0; i < mapSizeW; ++i) {
-					for (unsigned y = 0; y < prj->tileC->sizeh; ++y) {
-						unsigned offset = (j * prj->tileC->sizeh * prj->tileC->sizew * mapSizeW) + (i * prj->tileC->sizew) + (y * mapSizeW * prj->tileC->sizew);
-						uint8_t*iPtr = indexList + offset;
-						uint8_t*tPtr = imgTmp + (offset * 4) + 3;
-						unsigned hist[16];
-						memset(hist, 0, sizeof(hist));
-
-						for (unsigned x = 0; x < prj->tileC->sizew; ++x) {
-							if (*tPtr)
-								++hist[(*iPtr++) & 15];
-							else
-								++hist[0];
-
-							tPtr += 4;
-						}
-
-						unsigned cmp = hist[0];
-						bool allEqual = true;
-
-						for (unsigned x = 1; x < 16; ++x) {
-							allEqual &= cmp == hist[x];
-
-							if (!allEqual)
-								break;
-						}
-
-						if (allEqual) {
-							//Find closest color to that one
-							setPalRowExt(i, j * 8 + y, 0, false);
-							setPalRowExt(i, j * 8 + y, 1, true);
-						} else {
-							unsigned largest[2];
-							pickFromHist2(hist, largest, 16);
-							setPalRowExt(i, j * 8 + y, largest[0], false);
-							setPalRowExt(i, j * 8 + y, largest[1], true);
-						}
-					}
-				}
+				default:
+					show_default_error
 			}
 
 			free(imgTmp);
 			free(indexList);
+
 		}
 		break;
 
 		default:
 			show_default_error
-		}
-
-		break;
-
-	default:
-		show_default_error
 	}
 }
 size_t tileMap::getExtAttrsSize(void)const {

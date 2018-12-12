@@ -110,20 +110,20 @@ void save_tilemap_as_image(Fl_Widget*, void*) {
 
 	if (currentProject->containsData(pjHaveTiles | pjHaveMap)) {
 		if (load_file_generic("Save PNG as", true)) {
-			uint32_t w = currentProject->tms->maps[currentProject->curPlane].mapSizeW * currentProject->tileC->sizew;
-			uint32_t h = currentProject->tms->maps[currentProject->curPlane].mapSizeHA * currentProject->tileC->sizeh;
+			uint32_t w = currentProject->tms->maps[currentProject->curPlane].mapSizeW * currentProject->tileC->width();
+			uint32_t h = currentProject->tms->maps[currentProject->curPlane].mapSizeHA * currentProject->tileC->height();
 			uint8_t * image = (uint8_t*)malloc(w * h);
 			uint8_t * imageold = image;
 
 			if (!image)
 				show_malloc_error(w * h)
-				for (unsigned y = 0; y < h; y += currentProject->tileC->sizeh) {
-					for (unsigned x = 0; x < w; x += currentProject->tileC->sizew) {
-						unsigned tCur = currentProject->tms->maps[currentProject->curPlane].get_tile(x / currentProject->tileC->sizew, y / currentProject->tileC->sizeh);
-						unsigned off = currentProject->tms->maps[currentProject->curPlane].getPalRow(x / currentProject->tileC->sizew, y / currentProject->tileC->sizeh) * currentProject->pal->perRow;
+				for (unsigned y = 0; y < h; y += currentProject->tileC->height()) {
+					for (unsigned x = 0; x < w; x += currentProject->tileC->width()) {
+						unsigned tCur = currentProject->tms->maps[currentProject->curPlane].get_tile(x / currentProject->tileC->width(), y / currentProject->tileC->height());
+						unsigned off = currentProject->tms->maps[currentProject->curPlane].getPalRow(x / currentProject->tileC->width(), y / currentProject->tileC->height()) * currentProject->pal->perRow;
 
-						for (unsigned yy = 0; yy < currentProject->tileC->sizeh; ++yy) {
-							for (unsigned xx = 0; xx < currentProject->tileC->sizew; ++xx)
+						for (unsigned yy = 0; yy < currentProject->tileC->height(); ++yy) {
+							for (unsigned xx = 0; xx < currentProject->tileC->width(); ++xx)
 								image[x + xx + ((y + yy)*w)] = currentProject->tileC->getPixel(tCur, xx, yy) + off;
 						}
 					}
@@ -212,8 +212,8 @@ void load_image_to_tilemap_project_ptr(struct Project* cProject, const char*fnam
 	}
 
 	unsigned tilebitw, tilebith;
-	tilebitw = cProject->tileC->sizew;
-	tilebith = cProject->tileC->sizeh;
+	tilebitw = cProject->tileC->width();
+	tilebith = cProject->tileC->height();
 
 	if ((cProject->subSystem & NES2x2) && (cProject->gameSystem == NES)) {
 		tilebitw *= 2;
@@ -228,8 +228,8 @@ void load_image_to_tilemap_project_ptr(struct Project* cProject, const char*fnam
 	int wr, hr;
 	wr = w % tilebitw;
 	hr = h % tilebith;
-	w8 = w / cProject->tileC->sizew;
-	h8 = h / cProject->tileC->sizeh;
+	w8 = w / cProject->tileC->width();
+	h8 = h / cProject->tileC->height();
 
 	if (wr)
 		++w8;
@@ -253,8 +253,8 @@ void load_image_to_tilemap_project_ptr(struct Project* cProject, const char*fnam
 		}
 	}
 
-	wt = w8 * cProject->tileC->sizew;
-	ht = h8 * cProject->tileC->sizeh;
+	wt = w8 * cProject->tileC->width();
+	ht = h8 * cProject->tileC->height();
 
 	if (wr || hr)
 		messageWrap("When width and/or height is not a multiple of %d,%d the image will be centered.\nThe width of this image is %d and the height is %d", tilebitw, tilebith, w, h);
@@ -315,31 +315,31 @@ void load_image_to_tilemap_project_ptr(struct Project* cProject, const char*fnam
 	}
 
 	for (uint32_t y = 0, tcnt = 0; y < ht; ++y) {
-		if (y % cProject->tileC->sizeh)
-			tcnt -= wt / cProject->tileC->sizew;
+		if (y % cProject->tileC->height())
+			tcnt -= wt / cProject->tileC->width();
 
 		if ((!((y < center[1]) || (y >= (h + center[1])))) && (depth == 1) && (!grayscale))
 			imgptr = (uint8_t*)loaded_image->data()[y + 2 - center[1]];
 
-		for (uint32_t x = 0; x < wt; x += cProject->tileC->sizew, ++tcnt) {
+		for (uint32_t x = 0; x < wt; x += cProject->tileC->width(), ++tcnt) {
 			uint32_t ctile;
 
 			if (over) {
-				ctile = cProject->tms->maps[curPlane].get_tile(x / cProject->tileC->sizew, y / cProject->tileC->sizeh);
+				ctile = cProject->tms->maps[curPlane].get_tile(x / cProject->tileC->width(), y / cProject->tileC->height());
 
 				//See if ctile is allocated
 				if (ctile >= cProject->tileC->amt) {
 					//tile on map but not a tile associated with it
-					imgptr += cProject->tileC->sizew * depth;
+					imgptr += cProject->tileC->width() * depth;
 					continue;
 				}
 			} else
 				ctile = tcnt;
 
 			ctile += appendoff;
-			uint8_t*ttile = cProject->tileC->truetDat.data() + ((ctile * cProject->tileC->tcSize) + ((y % cProject->tileC->sizeh) * cProject->tileC->sizew * 4));
+			uint8_t*ttile = cProject->tileC->truetDat.data() + ((ctile * cProject->tileC->tcSize) + ((y % cProject->tileC->height()) * cProject->tileC->width() * 4));
 			//First take care of border
-			unsigned line = cProject->tileC->sizew;
+			unsigned line = cProject->tileC->width();
 
 			if ((y < center[1]) || (y >= (h + center[1])))
 				memset(ttile, 0, line * 4);
@@ -348,52 +348,52 @@ void load_image_to_tilemap_project_ptr(struct Project* cProject, const char*fnam
 					memset(ttile, 0, center[0] * 4);
 					line -= center[0];
 					ttile += center[0] * 4;
-				} else if (x >= (wt - cProject->tileC->sizew))
+				} else if (x >= (wt - cProject->tileC->width()))
 					line -= center[2];
 
 				switch (depth) {
-				case 1:
-					for (unsigned xx = 0; xx < line; ++xx) {
-						if (grayscale) {
-							*ttile++ = *imgptr;
-							*ttile++ = *imgptr;
-							*ttile++ = *imgptr++;
-							*ttile++ = 255;
-						} else {
-							if (*imgptr == ' ') {
-								memset(ttile, 0, 4);
-								ttile += 4;
-								++imgptr;
-							} else {
-								unsigned p = (*imgptr++);
-								*ttile++ = palMap[remap[p] + 1];
-								*ttile++ = palMap[remap[p] + 2];
-								*ttile++ = palMap[remap[p] + 3];
+					case 1:
+						for (unsigned xx = 0; xx < line; ++xx) {
+							if (grayscale) {
+								*ttile++ = *imgptr;
+								*ttile++ = *imgptr;
+								*ttile++ = *imgptr++;
 								*ttile++ = 255;
+							} else {
+								if (*imgptr == ' ') {
+									memset(ttile, 0, 4);
+									ttile += 4;
+									++imgptr;
+								} else {
+									unsigned p = (*imgptr++);
+									*ttile++ = palMap[remap[p] + 1];
+									*ttile++ = palMap[remap[p] + 2];
+									*ttile++ = palMap[remap[p] + 3];
+									*ttile++ = 255;
+								}
 							}
 						}
-					}
 
-					break;
+						break;
 
-				case 3:
-					for (unsigned xx = 0; xx < line; ++xx) {
-						*ttile++ = *imgptr++;
-						*ttile++ = *imgptr++;
-						*ttile++ = *imgptr++;
-						*ttile++ = 255;
-					}
+					case 3:
+						for (unsigned xx = 0; xx < line; ++xx) {
+							*ttile++ = *imgptr++;
+							*ttile++ = *imgptr++;
+							*ttile++ = *imgptr++;
+							*ttile++ = 255;
+						}
 
-					break;
+						break;
 
-				case 4:
-					memcpy(ttile, imgptr, line * 4);
-					imgptr += line * 4;
-					ttile += line * 4;
-					break;
+					case 4:
+						memcpy(ttile, imgptr, line * 4);
+						imgptr += line * 4;
+						ttile += line * 4;
+						break;
 				}
 
-				if (x >= (wt - cProject->tileC->sizew))
+				if (x >= (wt - cProject->tileC->width()))
 					memset(ttile, 0, center[2] * 4);
 			}
 		}

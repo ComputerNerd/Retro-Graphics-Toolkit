@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 --]]
 function setPalTypeCB(unused)
 	local p = projects.current
@@ -22,7 +22,7 @@ function setPalTypeCB(unused)
 end
 function tabConfig(tab)
 	if tab==rgt.paletteTab then
-		palTabSel=Fl_Choice.new(336, 464, 128, 24,"Palette table selection")
+		palTabSel=Fl_Choice.new(336, 464, 128, 24, "Palette table selection")
 		palTabSel:align(FL.ALIGN_TOP)
 		palTabSel:callback('setPalTypeCB')
 		palTabSel:add("HardwareMan's measured values")

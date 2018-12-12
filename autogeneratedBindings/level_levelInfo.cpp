@@ -11,153 +11,198 @@
 
 
 /** Set attributes (key, value)
- * 
+ *
  */
 static int levelInfo__set_(lua_State *L) {
 
-  levelInfo *self = *((levelInfo **)dub::checksdata_n(L, 1, "level.levelInfo"));
-  const char *key = luaL_checkstring(L, 2);
-  int key_h = dub::hash(key, 27);
-  switch(key_h) {
-    case 11: {
-      if (DUB_ASSERT_KEY(key, "w")) break;
-      self->w = luaL_checkinteger(L, 3);
-      return 0;
-    }
-    case 23: {
-      if (DUB_ASSERT_KEY(key, "h")) break;
-      self->h = luaL_checkinteger(L, 3);
-      return 0;
-    }
-    case 17: {
-      if (DUB_ASSERT_KEY(key, "nx")) break;
-      self->nx = luaL_checkinteger(L, 3);
-      return 0;
-    }
-    case 19: {
-      if (DUB_ASSERT_KEY(key, "dx")) break;
-      self->dx = luaL_checkinteger(L, 3);
-      return 0;
-    }
-    case 18: {
-      if (DUB_ASSERT_KEY(key, "ny")) break;
-      self->ny = luaL_checkinteger(L, 3);
-      return 0;
-    }
-    case 20: {
-      if (DUB_ASSERT_KEY(key, "dy")) break;
-      self->dy = luaL_checkinteger(L, 3);
-      return 0;
-    }
-    case 2: {
-      if (DUB_ASSERT_KEY(key, "repeatx")) break;
-      self->repeatx = luaL_checkinteger(L, 3);
-      return 0;
-    }
-    case 3: {
-      if (DUB_ASSERT_KEY(key, "repeaty")) break;
-      self->repeaty = luaL_checkinteger(L, 3);
-      return 0;
-    }
-    case 24: {
-      if (DUB_ASSERT_KEY(key, "src")) break;
-      self->src = luaL_checkinteger(L, 3);
-      return 0;
-    }
-    case 25: {
-      if (DUB_ASSERT_KEY(key, "extra")) break;
-      self->extra = luaL_checkinteger(L, 3);
-      return 0;
-    }
-  }
-  if (lua_istable(L, 1)) {
-    lua_rawset(L, 1);
-  } else {
-    luaL_error(L, KEY_EXCEPTION_MSG, key);
-  }
-  return 0;
+	levelInfo *self = *((levelInfo **)dub::checksdata_n(L, 1, "level.levelInfo"));
+	const char *key = luaL_checkstring(L, 2);
+	int key_h = dub::hash(key, 27);
+
+	switch (key_h) {
+		case 11: {
+			if (DUB_ASSERT_KEY(key, "w")) break;
+
+			self->w = luaL_checkinteger(L, 3);
+			return 0;
+		}
+
+		case 23: {
+			if (DUB_ASSERT_KEY(key, "h")) break;
+
+			self->h = luaL_checkinteger(L, 3);
+			return 0;
+		}
+
+		case 17: {
+			if (DUB_ASSERT_KEY(key, "nx")) break;
+
+			self->nx = luaL_checkinteger(L, 3);
+			return 0;
+		}
+
+		case 19: {
+			if (DUB_ASSERT_KEY(key, "dx")) break;
+
+			self->dx = luaL_checkinteger(L, 3);
+			return 0;
+		}
+
+		case 18: {
+			if (DUB_ASSERT_KEY(key, "ny")) break;
+
+			self->ny = luaL_checkinteger(L, 3);
+			return 0;
+		}
+
+		case 20: {
+			if (DUB_ASSERT_KEY(key, "dy")) break;
+
+			self->dy = luaL_checkinteger(L, 3);
+			return 0;
+		}
+
+		case 2: {
+			if (DUB_ASSERT_KEY(key, "repeatx")) break;
+
+			self->repeatx = luaL_checkinteger(L, 3);
+			return 0;
+		}
+
+		case 3: {
+			if (DUB_ASSERT_KEY(key, "repeaty")) break;
+
+			self->repeaty = luaL_checkinteger(L, 3);
+			return 0;
+		}
+
+		case 24: {
+			if (DUB_ASSERT_KEY(key, "src")) break;
+
+			self->src = luaL_checkinteger(L, 3);
+			return 0;
+		}
+
+		case 25: {
+			if (DUB_ASSERT_KEY(key, "extra")) break;
+
+			self->extra = luaL_checkinteger(L, 3);
+			return 0;
+		}
+	}
+
+	if (lua_istable(L, 1))
+		lua_rawset(L, 1);
+
+	else
+		luaL_error(L, KEY_EXCEPTION_MSG, key);
+
+	return 0;
 }
 
 /** Get attributes (key)
- * 
+ *
  */
 static int levelInfo__get_(lua_State *L) {
 
-  levelInfo *self = *((levelInfo **)dub::checksdata_n(L, 1, "level.levelInfo", true));
-  const char *key = luaL_checkstring(L, 2);
-  // <self> "key" <mt>
-  // rawget(mt, key)
-  lua_pushvalue(L, 2);
-  // <self> "key" <mt> "key"
-  lua_rawget(L, -2);
-  if (!lua_isnil(L, -1)) {
-    // Found method.
-    return 1;
-  } else {
-    // Not in mt = attribute access.
-    lua_pop(L, 2);
-  }
-  int key_h = dub::hash(key, 27);
-  switch(key_h) {
-    case 11: {
-      if (DUB_ASSERT_KEY(key, "w")) break;
-      lua_pushinteger(L, self->w);
-      return 1;
-    }
-    case 23: {
-      if (DUB_ASSERT_KEY(key, "h")) break;
-      lua_pushinteger(L, self->h);
-      return 1;
-    }
-    case 17: {
-      if (DUB_ASSERT_KEY(key, "nx")) break;
-      lua_pushinteger(L, self->nx);
-      return 1;
-    }
-    case 19: {
-      if (DUB_ASSERT_KEY(key, "dx")) break;
-      lua_pushinteger(L, self->dx);
-      return 1;
-    }
-    case 18: {
-      if (DUB_ASSERT_KEY(key, "ny")) break;
-      lua_pushinteger(L, self->ny);
-      return 1;
-    }
-    case 20: {
-      if (DUB_ASSERT_KEY(key, "dy")) break;
-      lua_pushinteger(L, self->dy);
-      return 1;
-    }
-    case 2: {
-      if (DUB_ASSERT_KEY(key, "repeatx")) break;
-      lua_pushinteger(L, self->repeatx);
-      return 1;
-    }
-    case 3: {
-      if (DUB_ASSERT_KEY(key, "repeaty")) break;
-      lua_pushinteger(L, self->repeaty);
-      return 1;
-    }
-    case 24: {
-      if (DUB_ASSERT_KEY(key, "src")) break;
-      lua_pushinteger(L, self->src);
-      return 1;
-    }
-    case 25: {
-      if (DUB_ASSERT_KEY(key, "extra")) break;
-      lua_pushinteger(L, self->extra);
-      return 1;
-    }
-  }
-  return 0;
+	levelInfo *self = *((levelInfo **)dub::checksdata_n(L, 1, "level.levelInfo", true));
+	const char *key = luaL_checkstring(L, 2);
+	// <self> "key" <mt>
+	// rawget(mt, key)
+	lua_pushvalue(L, 2);
+	// <self> "key" <mt> "key"
+	lua_rawget(L, -2);
+
+	if (!lua_isnil(L, -1)) {
+		// Found method.
+		return 1;
+	} else {
+		// Not in mt = attribute access.
+		lua_pop(L, 2);
+	}
+
+	int key_h = dub::hash(key, 27);
+
+	switch (key_h) {
+		case 11: {
+			if (DUB_ASSERT_KEY(key, "w")) break;
+
+			lua_pushinteger(L, self->w);
+			return 1;
+		}
+
+		case 23: {
+			if (DUB_ASSERT_KEY(key, "h")) break;
+
+			lua_pushinteger(L, self->h);
+			return 1;
+		}
+
+		case 17: {
+			if (DUB_ASSERT_KEY(key, "nx")) break;
+
+			lua_pushinteger(L, self->nx);
+			return 1;
+		}
+
+		case 19: {
+			if (DUB_ASSERT_KEY(key, "dx")) break;
+
+			lua_pushinteger(L, self->dx);
+			return 1;
+		}
+
+		case 18: {
+			if (DUB_ASSERT_KEY(key, "ny")) break;
+
+			lua_pushinteger(L, self->ny);
+			return 1;
+		}
+
+		case 20: {
+			if (DUB_ASSERT_KEY(key, "dy")) break;
+
+			lua_pushinteger(L, self->dy);
+			return 1;
+		}
+
+		case 2: {
+			if (DUB_ASSERT_KEY(key, "repeatx")) break;
+
+			lua_pushinteger(L, self->repeatx);
+			return 1;
+		}
+
+		case 3: {
+			if (DUB_ASSERT_KEY(key, "repeaty")) break;
+
+			lua_pushinteger(L, self->repeaty);
+			return 1;
+		}
+
+		case 24: {
+			if (DUB_ASSERT_KEY(key, "src")) break;
+
+			lua_pushinteger(L, self->src);
+			return 1;
+		}
+
+		case 25: {
+			if (DUB_ASSERT_KEY(key, "extra")) break;
+
+			lua_pushinteger(L, self->extra);
+			return 1;
+		}
+	}
+
+	return 0;
 }
 
 /** levelInfo()
- * 
+ *
  */
-static int levelInfo_levelInfo(lua_State *L,struct levelInfo*i) {
-	dub::pushudata(L,i, "level.levelInfo", false);
+static int levelInfo_levelInfo(lua_State *L, struct levelInfo*i) {
+	dub::pushudata(L, i, "level.levelInfo", false);
 	return 1;
 }
 
@@ -165,32 +210,32 @@ static int levelInfo_levelInfo(lua_State *L,struct levelInfo*i) {
 
 // --=============================================== __tostring
 static int levelInfo___tostring(lua_State *L) {
-  levelInfo *self = *((levelInfo **)dub::checksdata_n(L, 1, "level.levelInfo"));
-  lua_pushfstring(L, "level.levelInfo: %p", self);
-  
-  return 1;
+	levelInfo *self = *((levelInfo **)dub::checksdata_n(L, 1, "level.levelInfo"));
+	lua_pushfstring(L, "level.levelInfo: %p", self);
+
+	return 1;
 }
 
 // --=============================================== METHODS
 
 static const struct luaL_Reg levelInfo_member_methods[] = {
-  { "__newindex"   , levelInfo__set_      },
-  { "__index"      , levelInfo__get_      },
-  { "__tostring"   , levelInfo___tostring },
-  { NULL, NULL},
+	{ "__newindex", levelInfo__set_      },
+	{ "__index", levelInfo__get_      },
+	{ "__tostring", levelInfo___tostring },
+	{ NULL, NULL},
 };
 
 
- int luaopen_level_levelInfo(lua_State *L,struct levelInfo*i)
+int luaopen_level_levelInfo(lua_State *L, struct levelInfo*i)
 {
-  // Create the metatable which will contain all the member methods
-  luaL_newmetatable(L, "level.levelInfo");
-  // <mt>
+	// Create the metatable which will contain all the member methods
+	luaL_newmetatable(L, "level.levelInfo");
+	// <mt>
 
-  // register member methods
-  dub::fregister(L, levelInfo_member_methods);
-  // setup meta-table
-  dub::setup(L, "level.levelInfo");
-  // <mt>
-  return levelInfo_levelInfo(L,i);
+	// register member methods
+	dub::fregister(L, levelInfo_member_methods);
+	// setup meta-table
+	dub::setup(L, "level.levelInfo");
+	// <mt>
+	return levelInfo_levelInfo(L, i);
 }

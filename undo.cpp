@@ -235,279 +235,279 @@ static void cleanupEvent(uint32_t id) {
 	struct undoEvent*uptr = undoBuf + id;
 
 	switch (uptr->type) {
-	case uTile:
-	{	struct undoTile*ut = (struct undoTile*)uptr->ptr;
-		unsigned sz = getSzTile(ut->type);
-		free(ut->ptr);
-		memUsed -= sz;
-
-		if (ut->ptrnew) {
-			free(ut->ptrnew);
+		case uTile:
+		{	struct undoTile*ut = (struct undoTile*)uptr->ptr;
+			unsigned sz = getSzTile(ut->type);
+			free(ut->ptr);
 			memUsed -= sz;
+
+			if (ut->ptrnew) {
+				free(ut->ptrnew);
+				memUsed -= sz;
+			}
+
+			free(uptr->ptr);
+			memUsed -= sizeof(struct undoTile);
 		}
-
-		free(uptr->ptr);
-		memUsed -= sizeof(struct undoTile);
-	}
-	break;
-
-	case uTilePixel:
-		free(uptr->ptr);
-		memUsed -= sizeof(struct undoTilePixel);
 		break;
 
-	case uTileAll:
-	{	struct undoTileAll*ut = (struct undoTileAll*)uptr->ptr;
-		unsigned sz = getSzTile(ut->type) * currentProject->tileC->amt;
-		free(ut->ptr);
-		memUsed -= sz;
+		case uTilePixel:
+			free(uptr->ptr);
+			memUsed -= sizeof(struct undoTilePixel);
+			break;
 
-		if (ut->ptrnew) {
-			free(ut->ptrnew);
+		case uTileAll:
+		{	struct undoTileAll*ut = (struct undoTileAll*)uptr->ptr;
+			unsigned sz = getSzTile(ut->type) * currentProject->tileC->amt;
+			free(ut->ptr);
 			memUsed -= sz;
+
+			if (ut->ptrnew) {
+				free(ut->ptrnew);
+				memUsed -= sz;
+			}
+
+			free(uptr->ptr);
+			memUsed -= sizeof(struct undoTileAll);
 		}
-
-		free(uptr->ptr);
-		memUsed -= sizeof(struct undoTileAll);
-	}
-	break;
-
-	case uTileNew:
-	case uTileAppend:
-	case uChunkAppend:
-	case uChunkNew:
-	case uSpriteNewgroup:
-	case uSpriteAppendgroup:
-	case uSpriteAppendmeta:
-	case uProjectAppend:
-		//Nothing to do here
 		break;
 
-	case uSpriteAppend:
-		memUsed -= sizeof(struct undoSpriteAppend);
-		free(uptr->ptr);
-		break;
+		case uTileNew:
+		case uTileAppend:
+		case uChunkAppend:
+		case uChunkNew:
+		case uSpriteNewgroup:
+		case uSpriteAppendgroup:
+		case uSpriteAppendmeta:
+		case uProjectAppend:
+			//Nothing to do here
+			break;
 
-	case uTileGroup:
-	{	struct undoTileGroup*ut = (struct undoTileGroup*)uptr->ptr;
-		unsigned sz = getSzTile(ut->type) * ut->lst.size();
-		ut->data.clear();
-		memUsed -= sz;
+		case uSpriteAppend:
+			memUsed -= sizeof(struct undoSpriteAppend);
+			free(uptr->ptr);
+			break;
 
-		if (ut->datanew.size()) {
-			ut->datanew.clear();
+		case uTileGroup:
+		{	struct undoTileGroup*ut = (struct undoTileGroup*)uptr->ptr;
+			unsigned sz = getSzTile(ut->type) * ut->lst.size();
+			ut->data.clear();
 			memUsed -= sz;
+
+			if (ut->datanew.size()) {
+				ut->datanew.clear();
+				memUsed -= sz;
+			}
+
+			delete uptr->ptr;
+			memUsed -= sizeof(struct undoTileGroup);
 		}
-
-		delete uptr->ptr;
-		memUsed -= sizeof(struct undoTileGroup);
-	}
-	break;
-
-	case uTileAppendgroupdat:
-	{	struct undoAppendgroupdat*ut = (struct undoAppendgroupdat*)uptr->ptr;
-		unsigned sz = getSzTile(tTypeBoth) * ut->amt;
-		ut->dat.clear();
-		ut->truedat.clear();
-		delete uptr->ptr;
-		memUsed -= sizeof(struct undoAppendgroupdat);
-	}
-	break;
-
-	case uTilemapEdit:
-		free(uptr->ptr);
-		memUsed -= sizeof(struct undoTilemapEdit);
 		break;
 
-	case uTilemap:
-	case uTilemapattr:
-	{	struct undoTilemap*um = (struct undoTilemap*)uptr->ptr;
-		uint_fast32_t sz = um->w * um->h;
+		case uTileAppendgroupdat:
+		{	struct undoAppendgroupdat*ut = (struct undoAppendgroupdat*)uptr->ptr;
+			unsigned sz = getSzTile(tTypeBoth) * ut->amt;
+			ut->dat.clear();
+			ut->truedat.clear();
+			delete uptr->ptr;
+			memUsed -= sizeof(struct undoAppendgroupdat);
+		}
+		break;
 
-		if (uptr->type == uTilemap)
-			sz *= 4;
+		case uTilemapEdit:
+			free(uptr->ptr);
+			memUsed -= sizeof(struct undoTilemapEdit);
+			break;
 
-		free(um->ptr);
-		memUsed -= sz;
-
-		if (um->ptrnew) {
-			sz = um->wnew * um->hnew;
+		case uTilemap:
+		case uTilemapattr:
+		{	struct undoTilemap*um = (struct undoTilemap*)uptr->ptr;
+			uint_fast32_t sz = um->w * um->h;
 
 			if (uptr->type == uTilemap)
 				sz *= 4;
 
-			free(um->ptrnew);
-			memUsed -= sz;
-		}
-
-		free(uptr->ptr);
-		memUsed -= sizeof(undoTilemap);
-	}
-	break;
-
-	case uTilemapResize:
-	case uTilemapBlocksAmt:
-	{	struct undoResize*um = (struct undoResize*)uptr->ptr;
-
-		if (um->ptr) {
 			free(um->ptr);
-			memUsed -= getSzResizeGeneric(um->w, um->h, um->wnew, um->hnew, 4, 1);
-		}
-
-		free(uptr->ptr);
-		memUsed -= sizeof(struct undoResize);
-	}
-	break;
-
-	case uTilemapPlaneDelete:
-	case uTilemapPlaneAdd:
-	{	struct undoTilemapPlane*um = (struct undoTilemapPlane*)uptr->ptr;
-
-		if (um->old) {
-			memUsed -= um->old->mapSizeW * um->old->mapSizeHA * TileMapSizePerEntry;
-			delete um->old;
-		}
-
-		if (um->oldStr) {
-			memUsed -= um->oldStr->length();
-			delete um->oldStr;
-		}
-
-		free(uptr->ptr);
-		memUsed -= sizeof(struct undoTilemapPlane);
-	}
-	break;
-
-	case uExtAttrs:
-	{	struct undoExtAttrs*um = (struct undoExtAttrs*)uptr->ptr;
-		free(um->old);
-		free(um->pnew);
-		free(uptr->ptr);
-		memUsed -= sizeof(struct undoExtAttrs);
-	}
-	break;
-
-	case uPalette:
-	{	struct undoPalette*up = (struct undoPalette*)uptr->ptr;
-		unsigned sz = currentProject->pal->colorCnt + currentProject->pal->colorCntalt;
-		sz *= currentProject->pal->esize;
-		free(up->ptr);
-		memUsed -= sz;
-
-		if (up->ptrnew) {
-			free(up->ptrnew);
 			memUsed -= sz;
+
+			if (um->ptrnew) {
+				sz = um->wnew * um->hnew;
+
+				if (uptr->type == uTilemap)
+					sz *= 4;
+
+				free(um->ptrnew);
+				memUsed -= sz;
+			}
+
+			free(uptr->ptr);
+			memUsed -= sizeof(undoTilemap);
 		}
-
-		free(uptr->ptr);
-		memUsed -= sizeof(struct undoPalette);
-	}
-	break;
-
-	case uPaletteEntry:
-		free(uptr->ptr);
-		memUsed -= sizeof(struct undoPaletteEntry);
 		break;
 
-	case uChunkResize:
-	{	struct undoResize*um = (struct undoResize*)uptr->ptr;
+		case uTilemapResize:
+		case uTilemapBlocksAmt:
+		{	struct undoResize*um = (struct undoResize*)uptr->ptr;
 
-		if (um->ptr) {
-			free(um->ptr);
-			memUsed -= getSzResizeGeneric(um->w, um->h, um->wnew, um->hnew, sizeof(struct ChunkAttrs), currentProject->Chunk->amt);
+			if (um->ptr) {
+				free(um->ptr);
+				memUsed -= getSzResizeGeneric(um->w, um->h, um->wnew, um->hnew, 4, 1);
+			}
+
+			free(uptr->ptr);
+			memUsed -= sizeof(struct undoResize);
 		}
-
-		free(uptr->ptr);
-		memUsed -= sizeof(struct undoResize);
-	}
-	break;
-
-	case uChunkEdit:
-		free(uptr->ptr);
-		memUsed -= sizeof(struct undoChunkEdit);
 		break;
 
-	case uChunkAll:
-	{	struct undoChunkAll*uc = (struct undoChunkAll*)uptr->ptr;
-		free(uc->ptr);
-		memUsed -= uc->w * uc->h * uc->amt * sizeof(struct ChunkAttrs);
+		case uTilemapPlaneDelete:
+		case uTilemapPlaneAdd:
+		{	struct undoTilemapPlane*um = (struct undoTilemapPlane*)uptr->ptr;
 
-		if (uc->ptrnew) {
-			free(uc->ptrnew);
-			memUsed -= uc->wnew * uc->hnew * uc->amtnew * sizeof(struct ChunkAttrs);
+			if (um->old) {
+				memUsed -= um->old->mapSizeW * um->old->mapSizeHA * TileMapSizePerEntry;
+				delete um->old;
+			}
+
+			if (um->oldStr) {
+				memUsed -= um->oldStr->length();
+				delete um->oldStr;
+			}
+
+			free(uptr->ptr);
+			memUsed -= sizeof(struct undoTilemapPlane);
 		}
+		break;
 
-		free(uptr->ptr);
-		memUsed -= sizeof(struct undoChunkAll);
-	}
-	break;
+		case uExtAttrs:
+		{	struct undoExtAttrs*um = (struct undoExtAttrs*)uptr->ptr;
+			free(um->old);
+			free(um->pnew);
+			free(uptr->ptr);
+			memUsed -= sizeof(struct undoExtAttrs);
+		}
+		break;
 
-	case uChunk:
-	case uChunkDelete:
-	{	struct undoChunk*uc = (struct undoChunk*)uptr->ptr;
-		free(uc->ptr);
-		memUsed -= currentProject->Chunk->wi * currentProject->Chunk->hi * sizeof(struct ChunkAttrs);
+		case uPalette:
+		{	struct undoPalette*up = (struct undoPalette*)uptr->ptr;
+			unsigned sz = currentProject->pal->colorCnt + currentProject->pal->colorCntalt;
+			sz *= currentProject->pal->esize;
+			free(up->ptr);
+			memUsed -= sz;
 
-		if (uc->ptrnew) {
-			free(uc->ptrnew);
+			if (up->ptrnew) {
+				free(up->ptrnew);
+				memUsed -= sz;
+			}
+
+			free(uptr->ptr);
+			memUsed -= sizeof(struct undoPalette);
+		}
+		break;
+
+		case uPaletteEntry:
+			free(uptr->ptr);
+			memUsed -= sizeof(struct undoPaletteEntry);
+			break;
+
+		case uChunkResize:
+		{	struct undoResize*um = (struct undoResize*)uptr->ptr;
+
+			if (um->ptr) {
+				free(um->ptr);
+				memUsed -= getSzResizeGeneric(um->w, um->h, um->wnew, um->hnew, sizeof(struct ChunkAttrs), currentProject->Chunk->amt);
+			}
+
+			free(uptr->ptr);
+			memUsed -= sizeof(struct undoResize);
+		}
+		break;
+
+		case uChunkEdit:
+			free(uptr->ptr);
+			memUsed -= sizeof(struct undoChunkEdit);
+			break;
+
+		case uChunkAll:
+		{	struct undoChunkAll*uc = (struct undoChunkAll*)uptr->ptr;
+			free(uc->ptr);
+			memUsed -= uc->w * uc->h * uc->amt * sizeof(struct ChunkAttrs);
+
+			if (uc->ptrnew) {
+				free(uc->ptrnew);
+				memUsed -= uc->wnew * uc->hnew * uc->amtnew * sizeof(struct ChunkAttrs);
+			}
+
+			free(uptr->ptr);
+			memUsed -= sizeof(struct undoChunkAll);
+		}
+		break;
+
+		case uChunk:
+		case uChunkDelete:
+		{	struct undoChunk*uc = (struct undoChunk*)uptr->ptr;
+			free(uc->ptr);
 			memUsed -= currentProject->Chunk->wi * currentProject->Chunk->hi * sizeof(struct ChunkAttrs);
+
+			if (uc->ptrnew) {
+				free(uc->ptrnew);
+				memUsed -= currentProject->Chunk->wi * currentProject->Chunk->hi * sizeof(struct ChunkAttrs);
+			}
+
+			free(uptr->ptr);
+			memUsed -= sizeof(struct undoChunk);
 		}
+		break;
 
-		free(uptr->ptr);
-		memUsed -= sizeof(struct undoChunk);
-	}
-	break;
-
-	case uSpriteWidth:
-	case uSpriteHeight:
-	case uSpritePalrow:
-	case uSpritestarttile:
-	case uSpriteloadat:
-	case uSpriteoffx:
-	case uSpriteoffy:
-	{	struct undoSpriteVal*uc = (struct undoSpriteVal*)uptr->ptr;
-		free(uptr->ptr);
-		memUsed -= sizeof(struct undoSpriteVal);
-	}
-	break;
-
-	case uSpriteprio:
-	case uSpritehflip:
-	case uSpritevflip:
-	{	struct undoSpriteValbool*uc = (struct undoSpriteValbool*)uptr->ptr;
-		free(uptr->ptr);
-		memUsed -= sizeof(struct undoSpriteValbool);
-	}
-	break;
-
-	case uCurProject:
-	{	struct undoProject*up = (struct undoProject*)uptr->ptr;
-
-		if (up->ptr)
-			delete up->ptr;
-
-		memUsed -= sizeof(struct undoProject);
-	}
-	break;
-
-	case uProjectAll:
-	{	struct undoProjectAll*up = (struct undoProjectAll*)uptr->ptr;
-
-		if (up->old) {
-			for (unsigned i = 0; i < up->ao; ++i)
-				delete up->old[i];
-
-			free(up->old);
+		case uSpriteWidth:
+		case uSpriteHeight:
+		case uSpritePalrow:
+		case uSpritestarttile:
+		case uSpriteloadat:
+		case uSpriteoffx:
+		case uSpriteoffy:
+		{	struct undoSpriteVal*uc = (struct undoSpriteVal*)uptr->ptr;
+			free(uptr->ptr);
+			memUsed -= sizeof(struct undoSpriteVal);
 		}
+		break;
 
-		/*if(up->pnew){
-			for(unsigned i=0;i<up->an;++i)
-				delete up->pnew[i];
-			free(up->pnew);
-		}*/
-		memUsed -= sizeof(struct undoProjectAll);
-	}
-	break;
+		case uSpriteprio:
+		case uSpritehflip:
+		case uSpritevflip:
+		{	struct undoSpriteValbool*uc = (struct undoSpriteValbool*)uptr->ptr;
+			free(uptr->ptr);
+			memUsed -= sizeof(struct undoSpriteValbool);
+		}
+		break;
+
+		case uCurProject:
+		{	struct undoProject*up = (struct undoProject*)uptr->ptr;
+
+			if (up->ptr)
+				delete up->ptr;
+
+			memUsed -= sizeof(struct undoProject);
+		}
+		break;
+
+		case uProjectAll:
+		{	struct undoProjectAll*up = (struct undoProjectAll*)uptr->ptr;
+
+			if (up->old) {
+				for (unsigned i = 0; i < up->ao; ++i)
+					delete up->old[i];
+
+				free(up->old);
+			}
+
+			/*if(up->pnew){
+				for(unsigned i=0;i<up->an;++i)
+					delete up->pnew[i];
+				free(up->pnew);
+			}*/
+			memUsed -= sizeof(struct undoProjectAll);
+		}
+		break;
 	}
 }
 void clearUndoCB(Fl_Widget*, void*) {
@@ -674,14 +674,14 @@ static void copyProject(Project*from, Project**to) {
 }
 static bool shouldChangePrj(undoTypes_t t) {
 	switch (t) {
-	case uCurProject:
-	case uProjectAppend:
-	case uProjectAll:
-		return false;
-		break;
+		case uCurProject:
+		case uProjectAppend:
+		case uProjectAll:
+			return false;
+			break;
 
-	default:
-		return true;
+		default:
+			return true;
 	}
 }
 static void UndoRedo(bool redo) {
@@ -703,615 +703,615 @@ static void UndoRedo(bool redo) {
 		switchProjectSlider(uptr->prjId);
 
 	switch (uptr->type) {
-	case uTile:
-	{	struct undoTile*ut = (struct undoTile*)uptr->ptr;
+		case uTile:
+		{	struct undoTile*ut = (struct undoTile*)uptr->ptr;
 
-		if (redo) {
-			if (ut->type & tTypeDeleteFlag) {
-				currentProject->tileC->remove_tile_at(ut->id);
-				updateTileSelectAmt();
-			} else
-				tilesToU((uint8_t*)ut->ptrnew, ut->id, ut->type);
-		} else {
-			if ((!ut->ptrnew) && (!(ut->type & tTypeDeleteFlag))) {
-				unsigned sz = getSzTile(ut->type);
-				ut->ptrnew = malloc(sz);
-				memUsed += sz;
-			}
-
-			if (ut->type & tTypeDeleteFlag) {
-				currentProject->tileC->insertTile(ut->id);
-				updateTileSelectAmt();
-			} else
-				tilesTo((uint8_t*)ut->ptrnew, ut->id, ut->type);
-
-			tilesToU((uint8_t*)ut->ptr, ut->id, ut->type);
-		}
-	}
-	break;
-
-	case uTilePixel:
-	{	struct undoTilePixel*ut = (struct undoTilePixel*)uptr->ptr;
-
-		if (ut->type == tTypeTruecolor) {
-			if (redo)
-				currentProject->tileC->setPixelTc(ut->id, ut->x, ut->y, ut->valnew);
-			else {
-				ut->valnew = currentProject->tileC->getPixelTc(ut->id, ut->x, ut->y);
-				currentProject->tileC->setPixelTc(ut->id, ut->x, ut->y, ut->val);
-			}
-		} else {
-			if (redo)
-				currentProject->tileC->setPixel(ut->id, ut->x, ut->y, ut->valnew);
-			else {
-				ut->valnew = currentProject->tileC->getPixel(ut->id, ut->x, ut->y);
-				currentProject->tileC->setPixel(ut->id, ut->x, ut->y, ut->val);
-			}
-		}
-	}
-	break;
-
-	case uTileAll:
-	{	struct undoTileAll*ut = (struct undoTileAll*)uptr->ptr;
-
-		if (redo)
-			cpyAllTilesU((uint8_t*)ut->ptrnew, ut->amtnew, ut->type);
-		else {
-			if (!ut->ptrnew) {
-				ut->amtnew = currentProject->tileC->amt;
-				unsigned sz = getSzTile(ut->type) * ut->amtnew;
-				ut->ptrnew = malloc(sz);
-				memUsed += sz;
-			}
-
-			cpyAllTiles((uint8_t*)ut->ptrnew, ut->amtnew, ut->type);
-			cpyAllTilesU((uint8_t*)ut->ptr, ut->amt, ut->type);
-		}
-	}
-	break;
-
-	case uTileGroup:
-	{	struct undoTileGroup*ut = (struct undoTileGroup*)uptr->ptr;
-		unsigned sz = getSzTile(ut->type);
-
-		if (redo) {
-			if (ut->type & tTypeDeleteFlag) {
-				std::vector<uint32_t> tmp = ut->lst;
-				std::sort(tmp.begin(), tmp.end());
-
-				for (int_fast32_t i = tmp.size(); i--;)
-					currentProject->tileC->remove_tile_at(tmp[i]);
-
-				updateTileSelectAmt();
+			if (redo) {
+				if (ut->type & tTypeDeleteFlag) {
+					currentProject->tileC->remove_tile_at(ut->id);
+					updateTileSelectAmt();
+				} else
+					tilesToU((uint8_t*)ut->ptrnew, ut->id, ut->type);
 			} else {
-				for (int_fast32_t i = ut->lst.size() - 1; i >= 0; --i)
-					tilesToU(ut->datanew.data() + (i * sz), ut->lst[i], ut->type);
-			}
-		} else {
-			if ((!(ut->datanew.size())) && (!(ut->type & tTypeDeleteFlag))) {
-				ut->datanew.resize(sz * ut->lst.size());
-				memUsed += sz * ut->lst.size();
-
-				for (int_fast32_t i = ut->lst.size() - 1; i >= 0; --i)
-					tilesTo(ut->datanew.data() + (i * sz), ut->lst[i], ut->type);
-			}
-
-			if (ut->type & tTypeDeleteFlag) {
-				uint32_t fullSize = currentProject->tileC->amt + ut->lst.size();
-				std::vector<uint32_t> tmp = ut->lst;
-				std::sort(tmp.begin(), tmp.end());
-
-				for (int_fast32_t i = 0; i < tmp.size(); ++i) {
-					if (tmp[i] < currentProject->tileC->amt)
-						currentProject->tileC->insertTile(tmp[i]);
+				if ((!ut->ptrnew) && (!(ut->type & tTypeDeleteFlag))) {
+					unsigned sz = getSzTile(ut->type);
+					ut->ptrnew = malloc(sz);
+					memUsed += sz;
 				}
 
-				currentProject->tileC->resizeAmt(fullSize);
-				updateTileSelectAmt();
+				if (ut->type & tTypeDeleteFlag) {
+					currentProject->tileC->insertTile(ut->id);
+					updateTileSelectAmt();
+				} else
+					tilesTo((uint8_t*)ut->ptrnew, ut->id, ut->type);
+
+				tilesToU((uint8_t*)ut->ptr, ut->id, ut->type);
 			}
-
-			for (int_fast32_t i = ut->lst.size() - 1; i >= 0; --i)
-				tilesToU(ut->data.data() + (i * sz), ut->lst[i], ut->type);
 		}
-	}
-	break;
-
-	case uTileAppendgroupdat:
-	{	struct undoAppendgroupdat*ut = (struct undoAppendgroupdat*)uptr->ptr;
-
-		if (redo) {
-			unsigned amtold = currentProject->tileC->amt;
-			currentProject->tileC->resizeAmt(amtold + ut->amt);
-			memcpy(currentProject->tileC->tDat.data() + ((amtold * currentProject->tileC->tileSize)), ut->dat.data(), currentProject->tileC->tileSize * ut->amt);
-			memcpy(currentProject->tileC->truetDat.data() + ((amtold * currentProject->tileC->tcSize)), ut->truedat.data(), currentProject->tileC->tcSize * ut->amt);
-		} else
-			currentProject->tileC->resizeAmt(currentProject->tileC->amt - ut->amt);
-
-		updateTileSelectAmt();
-	}
-	break;
-
-	case uTileAppend:
-		if (redo)
-			currentProject->tileC->appendTile();
-		else
-			currentProject->tileC->resizeAmt(currentProject->tileC->amt - 1);
-
-		updateTileSelectAmt();
 		break;
 
-	case uTileNew:
-		if (redo)
-			currentProject->tileC->insertTile(uptr->vu);
-		else
-			currentProject->tileC->remove_tile_at(uptr->vu);
+		case uTilePixel:
+		{	struct undoTilePixel*ut = (struct undoTilePixel*)uptr->ptr;
 
-		updateTileSelectAmt();
+			if (ut->type == tTypeTruecolor) {
+				if (redo)
+					currentProject->tileC->setPixelTc(ut->id, ut->x, ut->y, ut->valnew);
+				else {
+					ut->valnew = currentProject->tileC->getPixelTc(ut->id, ut->x, ut->y);
+					currentProject->tileC->setPixelTc(ut->id, ut->x, ut->y, ut->val);
+				}
+			} else {
+				if (redo)
+					currentProject->tileC->setPixel(ut->id, ut->x, ut->y, ut->valnew);
+				else {
+					ut->valnew = currentProject->tileC->getPixel(ut->id, ut->x, ut->y);
+					currentProject->tileC->setPixel(ut->id, ut->x, ut->y, ut->val);
+				}
+			}
+		}
 		break;
 
-	case uTilemapEdit:
-	{	struct undoTilemapEdit*um = (struct undoTilemapEdit*)uptr->ptr;
-		isCorrectPlane(um->plane);
+		case uTileAll:
+		{	struct undoTileAll*ut = (struct undoTileAll*)uptr->ptr;
 
-		if (redo)
-			currentProject->tms->maps[um->plane].setRaw(um->x, um->y, um->valnew);
-		else {
-			um->valnew = currentProject->tms->maps[um->plane].getRaw(um->x, um->y);
-			currentProject->tms->maps[um->plane].setRaw(um->x, um->y, um->val);
-		}
-
-		if (tileEditModePlace_G)
-			window->updateTileMapGUI(um->x, um->y);
-	}
-	break;
-
-	case uTilemap:
-	case uTilemapattr:
-	{	struct undoTilemap*um = (struct undoTilemap*)uptr->ptr;
-		isCorrectPlane(um->plane);
-
-		if (redo) {
-			if (uptr->type == uTilemapattr)
-				attrCpyU(currentProject->tms->maps[um->plane].tileMapDat, (uint8_t*)um->ptrnew, um->wnew * um->hnew);
+			if (redo)
+				cpyAllTilesU((uint8_t*)ut->ptrnew, ut->amtnew, ut->type);
 			else {
-				currentProject->tms->maps[um->plane].resize_tile_map(um->wnew, um->hnew);
-				memcpy(currentProject->tms->maps[um->plane].tileMapDat, um->ptrnew, um->wnew * um->hnew * 4);
-			}
-		} else {
-			if (!um->ptrnew) {
-				um->wnew = currentProject->tms->maps[um->plane].mapSizeW;
-				um->hnew = currentProject->tms->maps[um->plane].mapSizeHA;
+				if (!ut->ptrnew) {
+					ut->amtnew = currentProject->tileC->amt;
+					unsigned sz = getSzTile(ut->type) * ut->amtnew;
+					ut->ptrnew = malloc(sz);
+					memUsed += sz;
+				}
 
-				if (uptr->type == uTilemapattr) {
-					um->ptrnew = malloc(um->wnew * um->hnew);
-					attrCpy((uint8_t*)um->ptrnew, currentProject->tms->maps[um->plane].tileMapDat, um->wnew * um->hnew);
+				cpyAllTiles((uint8_t*)ut->ptrnew, ut->amtnew, ut->type);
+				cpyAllTilesU((uint8_t*)ut->ptr, ut->amt, ut->type);
+			}
+		}
+		break;
+
+		case uTileGroup:
+		{	struct undoTileGroup*ut = (struct undoTileGroup*)uptr->ptr;
+			unsigned sz = getSzTile(ut->type);
+
+			if (redo) {
+				if (ut->type & tTypeDeleteFlag) {
+					std::vector<uint32_t> tmp = ut->lst;
+					std::sort(tmp.begin(), tmp.end());
+
+					for (int_fast32_t i = tmp.size(); i--;)
+						currentProject->tileC->remove_tile_at(tmp[i]);
+
+					updateTileSelectAmt();
 				} else {
-					um->ptrnew = malloc(um->wnew * um->hnew * 4);
-					memcpy(um->ptrnew, currentProject->tms->maps[um->plane].tileMapDat, um->wnew * um->hnew * 4);
+					for (int_fast32_t i = ut->lst.size() - 1; i >= 0; --i)
+						tilesToU(ut->datanew.data() + (i * sz), ut->lst[i], ut->type);
+				}
+			} else {
+				if ((!(ut->datanew.size())) && (!(ut->type & tTypeDeleteFlag))) {
+					ut->datanew.resize(sz * ut->lst.size());
+					memUsed += sz * ut->lst.size();
+
+					for (int_fast32_t i = ut->lst.size() - 1; i >= 0; --i)
+						tilesTo(ut->datanew.data() + (i * sz), ut->lst[i], ut->type);
+				}
+
+				if (ut->type & tTypeDeleteFlag) {
+					uint32_t fullSize = currentProject->tileC->amt + ut->lst.size();
+					std::vector<uint32_t> tmp = ut->lst;
+					std::sort(tmp.begin(), tmp.end());
+
+					for (int_fast32_t i = 0; i < tmp.size(); ++i) {
+						if (tmp[i] < currentProject->tileC->amt)
+							currentProject->tileC->insertTile(tmp[i]);
+					}
+
+					currentProject->tileC->resizeAmt(fullSize);
+					updateTileSelectAmt();
+				}
+
+				for (int_fast32_t i = ut->lst.size() - 1; i >= 0; --i)
+					tilesToU(ut->data.data() + (i * sz), ut->lst[i], ut->type);
+			}
+		}
+		break;
+
+		case uTileAppendgroupdat:
+		{	struct undoAppendgroupdat*ut = (struct undoAppendgroupdat*)uptr->ptr;
+
+			if (redo) {
+				unsigned amtold = currentProject->tileC->amt;
+				currentProject->tileC->resizeAmt(amtold + ut->amt);
+				memcpy(currentProject->tileC->tDat.data() + ((amtold * currentProject->tileC->tileSize)), ut->dat.data(), currentProject->tileC->tileSize * ut->amt);
+				memcpy(currentProject->tileC->truetDat.data() + ((amtold * currentProject->tileC->tcSize)), ut->truedat.data(), currentProject->tileC->tcSize * ut->amt);
+			} else
+				currentProject->tileC->resizeAmt(currentProject->tileC->amt - ut->amt);
+
+			updateTileSelectAmt();
+		}
+		break;
+
+		case uTileAppend:
+			if (redo)
+				currentProject->tileC->appendTile();
+			else
+				currentProject->tileC->resizeAmt(currentProject->tileC->amt - 1);
+
+			updateTileSelectAmt();
+			break;
+
+		case uTileNew:
+			if (redo)
+				currentProject->tileC->insertTile(uptr->vu);
+			else
+				currentProject->tileC->remove_tile_at(uptr->vu);
+
+			updateTileSelectAmt();
+			break;
+
+		case uTilemapEdit:
+		{	struct undoTilemapEdit*um = (struct undoTilemapEdit*)uptr->ptr;
+			isCorrectPlane(um->plane);
+
+			if (redo)
+				currentProject->tms->maps[um->plane].setRaw(um->x, um->y, um->valnew);
+			else {
+				um->valnew = currentProject->tms->maps[um->plane].getRaw(um->x, um->y);
+				currentProject->tms->maps[um->plane].setRaw(um->x, um->y, um->val);
+			}
+
+			if (tileEditModePlace_G)
+				window->updateTileMapGUI(um->x, um->y);
+		}
+		break;
+
+		case uTilemap:
+		case uTilemapattr:
+		{	struct undoTilemap*um = (struct undoTilemap*)uptr->ptr;
+			isCorrectPlane(um->plane);
+
+			if (redo) {
+				if (uptr->type == uTilemapattr)
+					attrCpyU(currentProject->tms->maps[um->plane].tileMapDat, (uint8_t*)um->ptrnew, um->wnew * um->hnew);
+				else {
+					currentProject->tms->maps[um->plane].resize_tile_map(um->wnew, um->hnew);
+					memcpy(currentProject->tms->maps[um->plane].tileMapDat, um->ptrnew, um->wnew * um->hnew * 4);
+				}
+			} else {
+				if (!um->ptrnew) {
+					um->wnew = currentProject->tms->maps[um->plane].mapSizeW;
+					um->hnew = currentProject->tms->maps[um->plane].mapSizeHA;
+
+					if (uptr->type == uTilemapattr) {
+						um->ptrnew = malloc(um->wnew * um->hnew);
+						attrCpy((uint8_t*)um->ptrnew, currentProject->tms->maps[um->plane].tileMapDat, um->wnew * um->hnew);
+					} else {
+						um->ptrnew = malloc(um->wnew * um->hnew * 4);
+						memcpy(um->ptrnew, currentProject->tms->maps[um->plane].tileMapDat, um->wnew * um->hnew * 4);
+					}
+				}
+
+				if (uptr->type == uTilemapattr)
+					attrCpyU(currentProject->tms->maps[um->plane].tileMapDat, (uint8_t*)um->ptr, um->w * um->h);
+
+				else {
+					currentProject->tms->maps[um->plane].resize_tile_map(um->w, um->h);
+					memcpy(currentProject->tms->maps[um->plane].tileMapDat, um->ptr, um->w * um->h * 4);
 				}
 			}
+		}
+		break;
 
-			if (uptr->type == uTilemapattr)
-				attrCpyU(currentProject->tms->maps[um->plane].tileMapDat, (uint8_t*)um->ptr, um->w * um->h);
+		case uTilemapResize:
+		{	struct undoResize*um = (struct undoResize*)uptr->ptr;
+			isCorrectPlane(um->plane);
 
+			if (redo)
+				currentProject->tms->maps[um->plane].resize_tile_map(um->wnew, um->hnew);
 			else {
 				currentProject->tms->maps[um->plane].resize_tile_map(um->w, um->h);
-				memcpy(currentProject->tms->maps[um->plane].tileMapDat, um->ptr, um->w * um->h * 4);
+
+				if (um->ptr)
+					cpyResizeGeneric((uint8_t*)um->ptr, currentProject->tms->maps[um->plane].tileMapDat, um->w, um->h, um->wnew, um->hnew, 4, 1, true);
 			}
 		}
-	}
-	break;
+		break;
 
-	case uTilemapResize:
-	{	struct undoResize*um = (struct undoResize*)uptr->ptr;
-		isCorrectPlane(um->plane);
+		case uTilemapBlocksAmt:
+		{	struct undoResize*um = (struct undoResize*)uptr->ptr;
+			isCorrectPlane(um->plane);
 
-		if (redo)
-			currentProject->tms->maps[um->plane].resize_tile_map(um->wnew, um->hnew);
-		else {
-			currentProject->tms->maps[um->plane].resize_tile_map(um->w, um->h);
+			if (redo) {
+				currentProject->tms->maps[um->plane].blockAmt(um->hnew / currentProject->tms->maps[um->plane].mapSizeH);
+				char tmp[16];
+				snprintf(tmp, 16, "%u", um->hnew / currentProject->tms->maps[um->plane].mapSizeH);
+			} else {
+				currentProject->tms->maps[um->plane].blockAmt(um->h / currentProject->tms->maps[um->plane].mapSizeH);
 
-			if (um->ptr)
-				cpyResizeGeneric((uint8_t*)um->ptr, currentProject->tms->maps[um->plane].tileMapDat, um->w, um->h, um->wnew, um->hnew, 4, 1, true);
-		}
-	}
-	break;
+				if (um->ptr)
+					cpyResizeGeneric((uint8_t*)um->ptr, currentProject->tms->maps[um->plane].tileMapDat, um->w, um->h, um->wnew, um->hnew, 4, 1, true);
 
-	case uTilemapBlocksAmt:
-	{	struct undoResize*um = (struct undoResize*)uptr->ptr;
-		isCorrectPlane(um->plane);
-
-		if (redo) {
-			currentProject->tms->maps[um->plane].blockAmt(um->hnew / currentProject->tms->maps[um->plane].mapSizeH);
-			char tmp[16];
-			snprintf(tmp, 16, "%u", um->hnew / currentProject->tms->maps[um->plane].mapSizeH);
-		} else {
-			currentProject->tms->maps[um->plane].blockAmt(um->h / currentProject->tms->maps[um->plane].mapSizeH);
-
-			if (um->ptr)
-				cpyResizeGeneric((uint8_t*)um->ptr, currentProject->tms->maps[um->plane].tileMapDat, um->w, um->h, um->wnew, um->hnew, 4, 1, true);
-
-			char tmp[16];
-			snprintf(tmp, 16, "%u", um->h / currentProject->tms->maps[um->plane].mapSizeH);
-		}
-	}
-	break;
-
-	case uTilemapPlaneDelete:
-	{	struct undoTilemapPlane*um = (struct undoTilemapPlane*)uptr->ptr;
-
-		if (redo)
-			removePlane(um->plane);
-
-		else {
-			currentProject->tms->maps.insert(currentProject->tms->maps.begin() + um->plane, tileMap(*um->old));
-			currentProject->tms->planeName.insert(currentProject->tms->planeName.begin() + um->plane, *um->oldStr);
-			updatePlaneTilemapMenu();
-
-			if (um->plane == currentProject->curPlane)
-				setCurPlaneTilemaps(0, (void*)(uintptr_t)um->plane);
-		}
-	}
-	break;
-
-	case uTilemapPlaneAdd:
-	{	struct undoTilemapPlane*um = (struct undoTilemapPlane*)uptr->ptr;
-
-		if (redo) {
-			currentProject->tms->maps.insert(currentProject->tms->maps.begin() + um->plane, tileMap(currentProject));
-			char tmp[16];
-			snprintf(tmp, 16, "%u", um->plane);
-			currentProject->tms->planeName.insert(currentProject->tms->planeName.begin() + um->plane, 1, tmp);
-			updatePlaneTilemapMenu();
-
-			if (um->plane == currentProject->curPlane)
-				setCurPlaneTilemaps(0, (void*)(uintptr_t)um->plane);
-		} else
-			removePlane(um->plane);
-
-	}
-	break;
-
-	case uExtAttrs:
-	{	struct undoExtAttrs*um = (struct undoExtAttrs*)uptr->ptr;
-		isCorrectPlane(um->plane);
-		size_t sz = currentProject->tms->maps[um->plane].getExtAttrsSize();
-
-		if (redo) {
-			um->old = (uint8_t*)malloc(sz);
-			memcpy(um->old, currentProject->tms->maps[um->plane].extPalRows, sz);
-			memcpy(currentProject->tms->maps[um->plane].extPalRows, um->pnew, sz);
-			free(um->pnew);
-			um->pnew = 0;
-		} else {
-			um->pnew = (uint8_t*)malloc(sz);
-			memcpy(um->pnew, currentProject->tms->maps[um->plane].extPalRows, sz);
-			memcpy(currentProject->tms->maps[um->plane].extPalRows, um->old, sz);
-			free(um->old);
-			um->old = 0;
-		}
-	}
-	break;
-
-	case uPalette:
-	{	struct undoPalette*up = (struct undoPalette*)uptr->ptr;
-		unsigned sz, el = currentProject->pal->colorCnt + currentProject->pal->colorCntalt;
-		sz = el * currentProject->pal->esize;
-
-		if (redo)
-			memcpy(currentProject->pal->palDat, up->ptrnew, sz);
-		else {
-			if (!up->ptrnew) {
-				up->ptrnew = malloc(sz);
-				memUsed += sz;
+				char tmp[16];
+				snprintf(tmp, 16, "%u", um->h / currentProject->tms->maps[um->plane].mapSizeH);
 			}
-
-			memcpy(up->ptrnew, currentProject->pal->palDat, sz);
-			memcpy(currentProject->pal->palDat, up->ptr, sz);
 		}
+		break;
 
-		for (unsigned i = 0; i < el; ++i)
-			currentProject->pal->updateRGBindex(i);
-	}
-
-	palBar.updateSliders();
-	break;
-
-	case uPaletteEntry:
-	{	struct undoPaletteEntry*up = (struct undoPaletteEntry*)uptr->ptr;
-
-		switch (currentProject->pal->esize) {
-		case 1:
-			if (redo)
-				currentProject->pal->palDat[up->id] = up->valnew;
-			else {
-				up->valnew = currentProject->pal->palDat[up->id];
-				currentProject->pal->palDat[up->id] = up->val;
-			}
-
-			break;
-
-		case 2:
-		{	uint16_t*ptr = (uint16_t*)currentProject->pal->palDat + up->id;
+		case uTilemapPlaneDelete:
+		{	struct undoTilemapPlane*um = (struct undoTilemapPlane*)uptr->ptr;
 
 			if (redo)
-				*ptr = up->valnew;
+				removePlane(um->plane);
+
 			else {
-				up->valnew = *ptr;
-				*ptr = up->val;
+				currentProject->tms->maps.insert(currentProject->tms->maps.begin() + um->plane, tileMap(*um->old));
+				currentProject->tms->planeName.insert(currentProject->tms->planeName.begin() + um->plane, *um->oldStr);
+				updatePlaneTilemapMenu();
+
+				if (um->plane == currentProject->curPlane)
+					setCurPlaneTilemaps(0, (void*)(uintptr_t)um->plane);
 			}
 		}
 		break;
+
+		case uTilemapPlaneAdd:
+		{	struct undoTilemapPlane*um = (struct undoTilemapPlane*)uptr->ptr;
+
+			if (redo) {
+				currentProject->tms->maps.insert(currentProject->tms->maps.begin() + um->plane, tileMap(currentProject));
+				char tmp[16];
+				snprintf(tmp, 16, "%u", um->plane);
+				currentProject->tms->planeName.insert(currentProject->tms->planeName.begin() + um->plane, 1, tmp);
+				updatePlaneTilemapMenu();
+
+				if (um->plane == currentProject->curPlane)
+					setCurPlaneTilemaps(0, (void*)(uintptr_t)um->plane);
+			} else
+				removePlane(um->plane);
+
 		}
+		break;
 
-		currentProject->pal->updateRGBindex(up->id);
+		case uExtAttrs:
+		{	struct undoExtAttrs*um = (struct undoExtAttrs*)uptr->ptr;
+			isCorrectPlane(um->plane);
+			size_t sz = currentProject->tms->maps[um->plane].getExtAttrsSize();
 
-		switch (mode_editor) {
-		case pal_edit:
-			palBar.selBox[0] = up->id % currentProject->pal->perRow;
-			palBar.changeRow(up->id / currentProject->pal->perRow, 0);
-			break;
+			if (redo) {
+				um->old = (uint8_t*)malloc(sz);
+				memcpy(um->old, currentProject->tms->maps[um->plane].extPalRows, sz);
+				memcpy(currentProject->tms->maps[um->plane].extPalRows, um->pnew, sz);
+				free(um->pnew);
+				um->pnew = 0;
+			} else {
+				um->pnew = (uint8_t*)malloc(sz);
+				memcpy(um->pnew, currentProject->tms->maps[um->plane].extPalRows, sz);
+				memcpy(currentProject->tms->maps[um->plane].extPalRows, um->old, sz);
+				free(um->old);
+				um->old = 0;
+			}
+		}
+		break;
 
-		case tile_edit:
-			palBar.selBox[1] = up->id % currentProject->pal->perRow;
-			palBar.changeRow(up->id / currentProject->pal->perRow, 1);
-			{	unsigned focus = 0;
+		case uPalette:
+		{	struct undoPalette*up = (struct undoPalette*)uptr->ptr;
+			unsigned sz, el = currentProject->pal->colorCnt + currentProject->pal->colorCntalt;
+			sz = el * currentProject->pal->esize;
 
-				for (unsigned i = 0; i < currentProject->pal->rowCntPal; ++i)
-					focus |= Fl::focus() == window->palRTE[i];
-
-				for (unsigned i = 0; i < currentProject->pal->rowCntPal; ++i) {
-					if (focus && (i == palBar.selRow[1]))
-						Fl::focus(window->palRTE[i]);
-
-					window->palRTE[i]->value(i == palBar.selRow[1]);
+			if (redo)
+				memcpy(currentProject->pal->palDat, up->ptrnew, sz);
+			else {
+				if (!up->ptrnew) {
+					up->ptrnew = malloc(sz);
+					memUsed += sz;
 				}
+
+				memcpy(up->ptrnew, currentProject->pal->palDat, sz);
+				memcpy(currentProject->pal->palDat, up->ptr, sz);
 			}
-			break;
 
-		case tile_place:
-			palBar.selBox[2] = up->id % currentProject->pal->perRow;
-			palBar.changeRow(up->id / currentProject->pal->perRow, 2);
-			{	unsigned focus = 0;
+			for (unsigned i = 0; i < el; ++i)
+				currentProject->pal->updateRGBindex(i);
+		}
 
-				for (unsigned i = 0; i < currentProject->pal->rowCntPal; ++i)
-					focus |= Fl::focus() == window->palRTE[i + 4];
+		palBar.updateSliders();
+		break;
 
-				for (unsigned i = 0; i < currentProject->pal->rowCntPal; ++i) {
-					if (focus && (i == palBar.selRow[2]))
-						Fl::focus(window->palRTE[i + 4]);
+		case uPaletteEntry:
+		{	struct undoPaletteEntry*up = (struct undoPaletteEntry*)uptr->ptr;
 
-					window->palRTE[i + 4]->value(i == palBar.selRow[2]);
+			switch (currentProject->pal->esize) {
+				case 1:
+					if (redo)
+						currentProject->pal->palDat[up->id] = up->valnew;
+					else {
+						up->valnew = currentProject->pal->palDat[up->id];
+						currentProject->pal->palDat[up->id] = up->val;
+					}
+
+					break;
+
+				case 2:
+				{	uint16_t*ptr = (uint16_t*)currentProject->pal->palDat + up->id;
+
+					if (redo)
+						*ptr = up->valnew;
+					else {
+						up->valnew = *ptr;
+						*ptr = up->val;
+					}
 				}
-			}
-			break;
-
-		case spriteEditor:
-			palBar.selBox[3] = up->id % currentProject->pal->perRow;
-			palBar.changeRow(up->id / currentProject->pal->perRow, 3);
-			window->spritepalrow->value(palBar.selRow[3]);
-			break;
-		}
-	}
-	break;
-
-	case uChunkResize:
-	{	struct undoResize*um = (struct undoResize*)uptr->ptr;
-
-		if (redo)
-			currentProject->Chunk->resize(um->wnew, um->hnew);
-		else {
-			currentProject->Chunk->resize(um->w, um->h);
-
-			if (um->ptr)
-				cpyResizeGeneric((uint8_t*)um->ptr, (uint8_t*)currentProject->Chunk->chunks.data(), um->w, um->h, um->wnew, um->hnew, sizeof(struct ChunkAttrs), currentProject->Chunk->amt, true);
-		}
-
-		window->updateChunkSize();
-	}
-	break;
-
-	case uChunkEdit:
-	{	struct undoChunkEdit*uc = (struct undoChunkEdit*)uptr->ptr;
-
-		if (redo)
-			currentProject->Chunk->setElm(uc->id, uc->x, uc->y, uc->valnew);
-
-		else {
-			uc->valnew = currentProject->Chunk->getElm(uc->id, uc->x, uc->y);
-			currentProject->Chunk->setElm(uc->id, uc->x, uc->y, uc->val);
-		}
-
-		if (tileEditModeChunk_G)
-			window->updateChunkGUI(uc->x, uc->y);
-	}
-	break;
-
-	case uChunkAppend:
-		if (redo)
-			currentProject->Chunk->resizeAmt(currentProject->Chunk->amt + 1);
-		else
-			currentProject->Chunk->resizeAmt(currentProject->Chunk->amt - 1);
-
-		window->updateChunkSel();
-		break;
-
-	case uChunkNew:
-		if (redo)
-			currentProject->Chunk->insert(uptr->vu);
-		else
-			currentProject->Chunk->removeAt(uptr->vu);
-
-		window->updateChunkSel();
-		break;
-
-	case uChunkAll:
-	{	struct undoChunkAll*uc = (struct undoChunkAll*)uptr->ptr;
-
-		if (redo) {
-			currentProject->Chunk->resize(uc->wnew, uc->hnew);
-			currentProject->Chunk->resizeAmt(uc->amtnew);
-			memcpy(currentProject->Chunk->chunks.data(), uc->ptrnew, uc->wnew * uc->hnew * uc->amtnew * sizeof(struct ChunkAttrs));
-		} else {
-			if (!uc->ptrnew) {
-				uc->wnew = currentProject->Chunk->wi;
-				uc->hnew = currentProject->Chunk->hi;
-				uc->amtnew = currentProject->Chunk->amt;
-				uc->ptrnew = (struct ChunkAttrs*)malloc(uc->wnew * uc->hnew * uc->amtnew * sizeof(struct ChunkAttrs));
-				memcpy(uc->ptrnew, currentProject->Chunk->chunks.data(), uc->wnew * uc->hnew * uc->amtnew * sizeof(struct ChunkAttrs));
+				break;
 			}
 
-			currentProject->Chunk->resize(uc->w, uc->h);
-			currentProject->Chunk->resizeAmt(uc->amt);
-			memcpy(currentProject->Chunk->chunks.data(), uc->ptr, uc->w * uc->h * uc->amt * sizeof(struct ChunkAttrs));
+			currentProject->pal->updateRGBindex(up->id);
+
+			switch (mode_editor) {
+				case pal_edit:
+					palBar.selBox[0] = up->id % currentProject->pal->perRow;
+					palBar.changeRow(up->id / currentProject->pal->perRow, 0);
+					break;
+
+				case tile_edit:
+					palBar.selBox[1] = up->id % currentProject->pal->perRow;
+					palBar.changeRow(up->id / currentProject->pal->perRow, 1);
+					{	unsigned focus = 0;
+
+						for (unsigned i = 0; i < currentProject->pal->rowCntPal; ++i)
+							focus |= Fl::focus() == window->palRTE[i];
+
+						for (unsigned i = 0; i < currentProject->pal->rowCntPal; ++i) {
+							if (focus && (i == palBar.selRow[1]))
+								Fl::focus(window->palRTE[i]);
+
+							window->palRTE[i]->value(i == palBar.selRow[1]);
+						}
+					}
+					break;
+
+				case tile_place:
+					palBar.selBox[2] = up->id % currentProject->pal->perRow;
+					palBar.changeRow(up->id / currentProject->pal->perRow, 2);
+					{	unsigned focus = 0;
+
+						for (unsigned i = 0; i < currentProject->pal->rowCntPal; ++i)
+							focus |= Fl::focus() == window->palRTE[i + 4];
+
+						for (unsigned i = 0; i < currentProject->pal->rowCntPal; ++i) {
+							if (focus && (i == palBar.selRow[2]))
+								Fl::focus(window->palRTE[i + 4]);
+
+							window->palRTE[i + 4]->value(i == palBar.selRow[2]);
+						}
+					}
+					break;
+
+				case spriteEditor:
+					palBar.selBox[3] = up->id % currentProject->pal->perRow;
+					palBar.changeRow(up->id / currentProject->pal->perRow, 3);
+					window->spritepalrow->value(palBar.selRow[3]);
+					break;
+			}
 		}
-
-		window->updateChunkSize();
-	}
-	break;
-
-	case uChunk:
-		fl_alert("TODO");
 		break;
 
-	case uChunkDelete:
-	{	struct undoChunk*uc = (struct undoChunk*)uptr->ptr;
+		case uChunkResize:
+		{	struct undoResize*um = (struct undoResize*)uptr->ptr;
 
-		if (redo)
-			currentProject->Chunk->removeAt(uc->id);
-		else {
-			currentProject->Chunk->insert(uc->id);
-			memcpy(currentProject->Chunk->chunks.data() + (currentProject->Chunk->wi * currentProject->Chunk->hi * uc->id), uc->ptr, currentProject->Chunk->wi * currentProject->Chunk->hi * sizeof(struct ChunkAttrs));
+			if (redo)
+				currentProject->Chunk->resize(um->wnew, um->hnew);
+			else {
+				currentProject->Chunk->resize(um->w, um->h);
+
+				if (um->ptr)
+					cpyResizeGeneric((uint8_t*)um->ptr, (uint8_t*)currentProject->Chunk->chunks.data(), um->w, um->h, um->wnew, um->hnew, sizeof(struct ChunkAttrs), currentProject->Chunk->amt, true);
+			}
+
+			window->updateChunkSize();
 		}
-
-		window->updateChunkSel();
-	}
-	break;
-
-	case uSpriteAppend:
-	{	struct undoSpriteAppend*us = (struct undoSpriteAppend*)uptr->ptr;
-
-		if (redo)
-			currentProject->ms->sps[us->id[0]].setAmtingroup(us->id[1], currentProject->ms->sps[us->id[0]].groups[us->id[1]].list.size() + 1);
-		else
-			currentProject->ms->sps[us->id[0]].delingroup(us->id[1], currentProject->ms->sps[us->id[0]].groups[us->id[1]].list.size() - 1);
-
-		window->updateSpriteSliders();
-	}
-	break;
-
-	case uSpriteAppendgroup:
-		if (redo)
-			currentProject->ms->sps[uptr->vu].setAmt(currentProject->ms->sps[uptr->vu].amt + 1);
-		else
-			currentProject->ms->sps[uptr->vu].del(currentProject->ms->sps[uptr->vu].amt - 1);
-
-		window->updateSpriteSliders();
 		break;
 
-	case uSpriteAppendmeta:
-		if (redo)
-			currentProject->ms->sps.emplace_back(sprites(currentProject));
-		else
-			currentProject->ms->sps.pop_back();
+		case uChunkEdit:
+		{	struct undoChunkEdit*uc = (struct undoChunkEdit*)uptr->ptr;
 
-		window->updateSpriteSliders();
-		break;
+			if (redo)
+				currentProject->Chunk->setElm(uc->id, uc->x, uc->y, uc->valnew);
 
-	case uSpriteWidth:
-		mkSpritePop(w)
-		break;
+			else {
+				uc->valnew = currentProject->Chunk->getElm(uc->id, uc->x, uc->y);
+				currentProject->Chunk->setElm(uc->id, uc->x, uc->y, uc->val);
+			}
 
-	case uSpriteHeight:
-		mkSpritePop(h)
-		break;
-
-	case uSpritePalrow:
-		mkSpritePop(palrow)
-		break;
-
-	case uSpritestarttile:
-		mkSpritePop(starttile)
-		break;
-
-	case uSpriteloadat:
-		mkSpritePop(loadat)
-		break;
-
-	case uSpriteoffx:
-		mkSpritePop(offx)
-		break;
-
-	case uSpriteoffy:
-		mkSpritePop(offy)
-		break;
-
-	case uSpriteprio:
-		mkSpritePopbool(prio)
-		break;
-
-	case uSpritehflip:
-		mkSpritePopbool(hflip)
-		break;
-
-	case uSpritevflip:
-		mkSpritePopbool(vflip)
-		break;
-
-	case uCurProject:
-	{	struct undoProject*up = (struct undoProject*)uptr->ptr;
-		Project*tmp;
-		copyProject(projects[up->id], &tmp);
-		moveProject(&up->ptr, &projects[up->id]);
-		up->ptr = tmp;
-		prjChangePtr(up->id);
-		switchProjectSlider(up->id);
-	}
-	break;
-
-	case uProjectAll:
-	{	struct undoProjectAll*up = (struct undoProjectAll*)uptr->ptr;
-		unsigned i;
-		reallocProject(std::max(up->ao, projects_count));
-		Project**tmp = (Project**)malloc(projects_count * sizeof(void*));
-
-		for (i = 0; i < std::min(up->ao, projects_count); ++i) {
-			copyProject(projects[i], &tmp[i]);
-			moveProject(&up->old[i], &projects[i]);
+			if (tileEditModeChunk_G)
+				window->updateChunkGUI(uc->x, uc->y);
 		}
+		break;
 
-		if (projects_count > up->ao) {
-			for (; i < projects_count; ++i) {
+		case uChunkAppend:
+			if (redo)
+				currentProject->Chunk->resizeAmt(currentProject->Chunk->amt + 1);
+			else
+				currentProject->Chunk->resizeAmt(currentProject->Chunk->amt - 1);
+
+			window->updateChunkSel();
+			break;
+
+		case uChunkNew:
+			if (redo)
+				currentProject->Chunk->insert(uptr->vu);
+			else
+				currentProject->Chunk->removeAt(uptr->vu);
+
+			window->updateChunkSel();
+			break;
+
+		case uChunkAll:
+		{	struct undoChunkAll*uc = (struct undoChunkAll*)uptr->ptr;
+
+			if (redo) {
+				currentProject->Chunk->resize(uc->wnew, uc->hnew);
+				currentProject->Chunk->resizeAmt(uc->amtnew);
+				memcpy(currentProject->Chunk->chunks.data(), uc->ptrnew, uc->wnew * uc->hnew * uc->amtnew * sizeof(struct ChunkAttrs));
+			} else {
+				if (!uc->ptrnew) {
+					uc->wnew = currentProject->Chunk->wi;
+					uc->hnew = currentProject->Chunk->hi;
+					uc->amtnew = currentProject->Chunk->amt;
+					uc->ptrnew = (struct ChunkAttrs*)malloc(uc->wnew * uc->hnew * uc->amtnew * sizeof(struct ChunkAttrs));
+					memcpy(uc->ptrnew, currentProject->Chunk->chunks.data(), uc->wnew * uc->hnew * uc->amtnew * sizeof(struct ChunkAttrs));
+				}
+
+				currentProject->Chunk->resize(uc->w, uc->h);
+				currentProject->Chunk->resizeAmt(uc->amt);
+				memcpy(currentProject->Chunk->chunks.data(), uc->ptr, uc->w * uc->h * uc->amt * sizeof(struct ChunkAttrs));
+			}
+
+			window->updateChunkSize();
+		}
+		break;
+
+		case uChunk:
+			fl_alert("TODO");
+			break;
+
+		case uChunkDelete:
+		{	struct undoChunk*uc = (struct undoChunk*)uptr->ptr;
+
+			if (redo)
+				currentProject->Chunk->removeAt(uc->id);
+			else {
+				currentProject->Chunk->insert(uc->id);
+				memcpy(currentProject->Chunk->chunks.data() + (currentProject->Chunk->wi * currentProject->Chunk->hi * uc->id), uc->ptr, currentProject->Chunk->wi * currentProject->Chunk->hi * sizeof(struct ChunkAttrs));
+			}
+
+			window->updateChunkSel();
+		}
+		break;
+
+		case uSpriteAppend:
+		{	struct undoSpriteAppend*us = (struct undoSpriteAppend*)uptr->ptr;
+
+			if (redo)
+				currentProject->ms->sps[us->id[0]].setAmtingroup(us->id[1], currentProject->ms->sps[us->id[0]].groups[us->id[1]].list.size() + 1);
+			else
+				currentProject->ms->sps[us->id[0]].delingroup(us->id[1], currentProject->ms->sps[us->id[0]].groups[us->id[1]].list.size() - 1);
+
+			window->updateSpriteSliders();
+		}
+		break;
+
+		case uSpriteAppendgroup:
+			if (redo)
+				currentProject->ms->sps[uptr->vu].setAmt(currentProject->ms->sps[uptr->vu].amt + 1);
+			else
+				currentProject->ms->sps[uptr->vu].del(currentProject->ms->sps[uptr->vu].amt - 1);
+
+			window->updateSpriteSliders();
+			break;
+
+		case uSpriteAppendmeta:
+			if (redo)
+				currentProject->ms->sps.emplace_back(sprites(currentProject));
+			else
+				currentProject->ms->sps.pop_back();
+
+			window->updateSpriteSliders();
+			break;
+
+		case uSpriteWidth:
+			mkSpritePop(w)
+			break;
+
+		case uSpriteHeight:
+			mkSpritePop(h)
+			break;
+
+		case uSpritePalrow:
+			mkSpritePop(palrow)
+			break;
+
+		case uSpritestarttile:
+			mkSpritePop(starttile)
+			break;
+
+		case uSpriteloadat:
+			mkSpritePop(loadat)
+			break;
+
+		case uSpriteoffx:
+			mkSpritePop(offx)
+			break;
+
+		case uSpriteoffy:
+			mkSpritePop(offy)
+			break;
+
+		case uSpriteprio:
+			mkSpritePopbool(prio)
+			break;
+
+		case uSpritehflip:
+			mkSpritePopbool(hflip)
+			break;
+
+		case uSpritevflip:
+			mkSpritePopbool(vflip)
+			break;
+
+		case uCurProject:
+		{	struct undoProject*up = (struct undoProject*)uptr->ptr;
+			Project*tmp;
+			copyProject(projects[up->id], &tmp);
+			moveProject(&up->ptr, &projects[up->id]);
+			up->ptr = tmp;
+			prjChangePtr(up->id);
+			switchProjectSlider(up->id);
+		}
+		break;
+
+		case uProjectAll:
+		{	struct undoProjectAll*up = (struct undoProjectAll*)uptr->ptr;
+			unsigned i;
+			reallocProject(std::max(up->ao, projects_count));
+			Project**tmp = (Project**)malloc(projects_count * sizeof(void*));
+
+			for (i = 0; i < std::min(up->ao, projects_count); ++i) {
 				copyProject(projects[i], &tmp[i]);
-				delete projects[i];
+				moveProject(&up->old[i], &projects[i]);
 			}
-		} else if (projects_count < up->ao) {
-			for (; i < up->ao; ++i)
-				copyProject(up->old[i], &projects[i]);
+
+			if (projects_count > up->ao) {
+				for (; i < projects_count; ++i) {
+					copyProject(projects[i], &tmp[i]);
+					delete projects[i];
+				}
+			} else if (projects_count < up->ao) {
+				for (; i < up->ao; ++i)
+					copyProject(up->old[i], &projects[i]);
+			}
+
+			free(up->old);
+			up->old = tmp;
+			uint32_t old = projects_count;
+			projects_count = up->ao;
+			up->ao = old;
+			reallocProject(up->ao);
+
+			for (i = 0; i < projects_count; ++i)
+				prjChangePtr(i);
+
+			changeProjectAmt();
+			switchProjectSlider(curProjectID);
 		}
-
-		free(up->old);
-		up->old = tmp;
-		uint32_t old = projects_count;
-		projects_count = up->ao;
-		up->ao = old;
-		reallocProject(up->ao);
-
-		for (i = 0; i < projects_count; ++i)
-			prjChangePtr(i);
-
-		changeProjectAmt();
-		switchProjectSlider(curProjectID);
-	}
-	break;
-
-	case uProjectAppend:
-		if (redo)
-			appendProject();
-		else
-			removeProject(projects_count - 1);
-
 		break;
+
+		case uProjectAppend:
+			if (redo)
+				appendProject();
+			else
+				removeProject(projects_count - 1);
+
+			break;
 	}
 
 	if (!redo)
@@ -1552,18 +1552,18 @@ void pushPaletteEntry(uint32_t id) {
 	up->id = id;
 
 	switch (currentProject->pal->esize) {
-	case 1:
-		up->val = (int32_t)currentProject->pal->palDat[id];
+		case 1:
+			up->val = (int32_t)currentProject->pal->palDat[id];
+			break;
+
+		case 2:
+		{	uint16_t*ptr = (uint16_t*)currentProject->pal->palDat + id;
+			up->val = *ptr;
+		}
 		break;
 
-	case 2:
-	{	uint16_t*ptr = (uint16_t*)currentProject->pal->palDat + id;
-		up->val = *ptr;
-	}
-	break;
-
-	default:
-		show_default_error
+		default:
+			show_default_error
 	}
 }
 void pushChunkResize(uint32_t wnew, uint32_t hnew) {
@@ -1743,204 +1743,204 @@ void historyWindow(Fl_Widget*, void*) {
 		struct undoEvent*uptr = undoBuf + n;
 
 		switch (uptr->type) {
-		case uTile:
-		{	struct undoTile*ut = (struct undoTile*)uptr->ptr;
+			case uTile:
+			{	struct undoTile*ut = (struct undoTile*)uptr->ptr;
 
-			if (ut->type & tTypeDeleteFlag)
-				snprintf(tmp, 2048, "Delete tile %d", ut->id);
-			else
-				snprintf(tmp, 2048, "Change tile %d", ut->id);
-		}
-		break;
-
-		case uTilePixel:
-		{	struct undoTilePixel*ut = (struct undoTilePixel*)uptr->ptr;
-
-			if (ut->type & tTypeTruecolor)
-				snprintf(tmp, 2048, "Edit truecolor tile pixel X: %d Y: %d", ut->x, ut->y);
-			else
-				snprintf(tmp, 2048, "Edit tile pixel X: %d Y: %d", ut->x, ut->y);
-		}
-		break;
-
-		case uTileAll:
-		{	struct undoTileAll*ut = (struct undoTileAll*)uptr->ptr;
-			snprintf(tmp, 2048, "Change all tiles amount: %u", ut->amt);
-		}
-		break;
-
-		case uTileAppend:
-			strcpy(tmp, "Append tile");
+				if (ut->type & tTypeDeleteFlag)
+					snprintf(tmp, 2048, "Delete tile %d", ut->id);
+				else
+					snprintf(tmp, 2048, "Change tile %d", ut->id);
+			}
 			break;
 
-		case uTileNew:
-			snprintf(tmp, 2048, "Insert tile at %u", uptr->vu);
+			case uTilePixel:
+			{	struct undoTilePixel*ut = (struct undoTilePixel*)uptr->ptr;
 
-		case uTileGroup:
-		{	struct undoTileGroup*ut = (struct undoTileGroup*)uptr->ptr;
-			snprintf(tmp, 2048, "Tile group tiles affected: %u", (unsigned)ut->lst.size());
-		}
-		break;
-
-		case uTileAppendgroupdat:
-		{	struct undoAppendgroupdat*ut = (struct undoAppendgroupdat*)uptr->ptr;
-			snprintf(tmp, 2048, "Append %u tiles with data", ut->amt);
-		}
-		break;
-
-		case uTilemap:
-			strcpy(tmp, "Change tilemap");
+				if (ut->type & tTypeTruecolor)
+					snprintf(tmp, 2048, "Edit truecolor tile pixel X: %d Y: %d", ut->x, ut->y);
+				else
+					snprintf(tmp, 2048, "Edit tile pixel X: %d Y: %d", ut->x, ut->y);
+			}
 			break;
 
-		case uTilemapattr:
-			strcpy(tmp, "Change tilemap attributes");
+			case uTileAll:
+			{	struct undoTileAll*ut = (struct undoTileAll*)uptr->ptr;
+				snprintf(tmp, 2048, "Change all tiles amount: %u", ut->amt);
+			}
 			break;
 
-		case uChunkResize:
-		case uTilemapResize:
-		{	struct undoResize*um = (struct undoResize*)uptr->ptr;
-			snprintf(tmp, 2048, "Resize from w: %d h: %d to w: %d h: %d", um->w, um->h, um->wnew, um->hnew);
-		}
-		break;
+			case uTileAppend:
+				strcpy(tmp, "Append tile");
+				break;
 
-		case uTilemapBlocksAmt:
-		{	struct undoResize*um = (struct undoResize*)uptr->ptr;
-			snprintf(tmp, 2048, "Change blocks amount from %u on plane %u", um->h / currentProject->tms->maps[um->plane].mapSizeH, um->plane);
-		}
-		break;
+			case uTileNew:
+				snprintf(tmp, 2048, "Insert tile at %u", uptr->vu);
 
-		case uTilemapEdit:
-		{	struct undoTilemapEdit*um = (struct undoTilemapEdit*)uptr->ptr;
-			snprintf(tmp, 2048, "Edit tilemap X: %d Y: %d on plane: %u", um->x, um->y, um->plane);
-		}
-		break;
-
-		case uTilemapPlaneDelete:
-		{	struct undoTilemapPlane*um = (struct undoTilemapPlane*)uptr->ptr;
-			snprintf(tmp, 2048, "Delete plane %u", um->plane);
-		}
-		break;
-
-		case uExtAttrs:
-		{	struct undoExtAttrs*um = (struct undoExtAttrs*)uptr->ptr;
-			snprintf(tmp, 2048, "Change extended attributes on plane: %u", um->plane);
-		}
-		break;
-
-		case uTilemapPlaneAdd:
-		{	struct undoTilemapPlane*um = (struct undoTilemapPlane*)uptr->ptr;
-			snprintf(tmp, 2048, "Add plane %u", um->plane);
-		}
-		break;
-
-		case uPalette:
-			strcpy(tmp, "Change entire palette");
+			case uTileGroup:
+			{	struct undoTileGroup*ut = (struct undoTileGroup*)uptr->ptr;
+				snprintf(tmp, 2048, "Tile group tiles affected: %u", (unsigned)ut->lst.size());
+			}
 			break;
 
-		case uPaletteEntry:
-		{	struct undoPaletteEntry*up = (struct undoPaletteEntry*)uptr->ptr;
-			snprintf(tmp, 2048, "Change palette entry: %d", up->id);
-		}
-		break;
-
-		case uChunkEdit:
-		{	struct undoChunkEdit*uc = (struct undoChunkEdit*)uptr->ptr;
-			snprintf(tmp, 2048, "Edit Chunk ID: %d X: %d Y: %d", uc->id, uc->x, uc->y);
-		}
-		break;
-
-		case uChunk:
-		{	struct undoChunk*uc = (struct undoChunk*)uptr->ptr;
-			snprintf(tmp, 2048, "Change chunk: %d", uc->id);
-		}
-		break;
-
-		case uChunkDelete:
-		{	struct undoChunk*uc = (struct undoChunk*)uptr->ptr;
-			snprintf(tmp, 2048, "Delete chunk: %d", uc->id);
-		}
-		break;
-
-		case uChunkAppend:
-			strcpy(tmp, "Append chunk");
+			case uTileAppendgroupdat:
+			{	struct undoAppendgroupdat*ut = (struct undoAppendgroupdat*)uptr->ptr;
+				snprintf(tmp, 2048, "Append %u tiles with data", ut->amt);
+			}
 			break;
 
-		case uChunkNew:
-			snprintf(tmp, 2048, "Insert chunk at %u", uptr->vu);
+			case uTilemap:
+				strcpy(tmp, "Change tilemap");
+				break;
+
+			case uTilemapattr:
+				strcpy(tmp, "Change tilemap attributes");
+				break;
+
+			case uChunkResize:
+			case uTilemapResize:
+			{	struct undoResize*um = (struct undoResize*)uptr->ptr;
+				snprintf(tmp, 2048, "Resize from w: %d h: %d to w: %d h: %d", um->w, um->h, um->wnew, um->hnew);
+			}
 			break;
 
-		case uChunkAll:
-			strcpy(tmp, "Change all chunks");
+			case uTilemapBlocksAmt:
+			{	struct undoResize*um = (struct undoResize*)uptr->ptr;
+				snprintf(tmp, 2048, "Change blocks amount from %u on plane %u", um->h / currentProject->tms->maps[um->plane].mapSizeH, um->plane);
+			}
 			break;
 
-		case uSpriteAppend:
-		{	struct undoSpriteAppend*us = (struct undoSpriteAppend*)uptr->ptr;
-			snprintf(tmp, 2048, "Append sprite to group: %u meta: %u", us->id[1], us->id[0]);
-		}
-		break;
-
-		case uSpriteAppendgroup:
-			snprintf(tmp, 2048, "Append sprite group meta: %u", uptr->vu);
+			case uTilemapEdit:
+			{	struct undoTilemapEdit*um = (struct undoTilemapEdit*)uptr->ptr;
+				snprintf(tmp, 2048, "Edit tilemap X: %d Y: %d on plane: %u", um->x, um->y, um->plane);
+			}
 			break;
 
-		case uSpriteAppendmeta:
-			strcpy(tmp, "Append sprite meta sprite");
+			case uTilemapPlaneDelete:
+			{	struct undoTilemapPlane*um = (struct undoTilemapPlane*)uptr->ptr;
+				snprintf(tmp, 2048, "Delete plane %u", um->plane);
+			}
 			break;
 
-		case uSpriteWidth:
-			strcpy(tmp, "Change sprite width");
+			case uExtAttrs:
+			{	struct undoExtAttrs*um = (struct undoExtAttrs*)uptr->ptr;
+				snprintf(tmp, 2048, "Change extended attributes on plane: %u", um->plane);
+			}
 			break;
 
-		case uSpriteHeight:
-			strcpy(tmp, "Change sprite height");
+			case uTilemapPlaneAdd:
+			{	struct undoTilemapPlane*um = (struct undoTilemapPlane*)uptr->ptr;
+				snprintf(tmp, 2048, "Add plane %u", um->plane);
+			}
 			break;
 
-		case uSpritePalrow:
-			strcpy(tmp, "Change sprite palette row");
+			case uPalette:
+				strcpy(tmp, "Change entire palette");
+				break;
+
+			case uPaletteEntry:
+			{	struct undoPaletteEntry*up = (struct undoPaletteEntry*)uptr->ptr;
+				snprintf(tmp, 2048, "Change palette entry: %d", up->id);
+			}
 			break;
 
-		case uSpritestarttile:
-			strcpy(tmp, "Change sprite start tile");
+			case uChunkEdit:
+			{	struct undoChunkEdit*uc = (struct undoChunkEdit*)uptr->ptr;
+				snprintf(tmp, 2048, "Edit Chunk ID: %d X: %d Y: %d", uc->id, uc->x, uc->y);
+			}
 			break;
 
-		case uSpriteloadat:
-			strcpy(tmp, "Change sprite load at");
+			case uChunk:
+			{	struct undoChunk*uc = (struct undoChunk*)uptr->ptr;
+				snprintf(tmp, 2048, "Change chunk: %d", uc->id);
+			}
 			break;
 
-		case uSpriteoffx:
-			strcpy(tmp, "Change sprite offset x");
+			case uChunkDelete:
+			{	struct undoChunk*uc = (struct undoChunk*)uptr->ptr;
+				snprintf(tmp, 2048, "Delete chunk: %d", uc->id);
+			}
 			break;
 
-		case uSpriteoffy:
-			strcpy(tmp, "Change sprite offset y");
+			case uChunkAppend:
+				strcpy(tmp, "Append chunk");
+				break;
+
+			case uChunkNew:
+				snprintf(tmp, 2048, "Insert chunk at %u", uptr->vu);
+				break;
+
+			case uChunkAll:
+				strcpy(tmp, "Change all chunks");
+				break;
+
+			case uSpriteAppend:
+			{	struct undoSpriteAppend*us = (struct undoSpriteAppend*)uptr->ptr;
+				snprintf(tmp, 2048, "Append sprite to group: %u meta: %u", us->id[1], us->id[0]);
+			}
 			break;
 
-		case uSpriteprio:
-			strcpy(tmp, "Change sprite priority");
-			break;
+			case uSpriteAppendgroup:
+				snprintf(tmp, 2048, "Append sprite group meta: %u", uptr->vu);
+				break;
 
-		case uSpritehflip:
-			strcpy(tmp, "Change sprite hflip");
-			break;
+			case uSpriteAppendmeta:
+				strcpy(tmp, "Append sprite meta sprite");
+				break;
 
-		case uSpritevflip:
-			strcpy(tmp, "Change sprite vflip");
-			break;
+			case uSpriteWidth:
+				strcpy(tmp, "Change sprite width");
+				break;
 
-		case uCurProject:
-			strcpy(tmp, "Change current project");
-			break;
+			case uSpriteHeight:
+				strcpy(tmp, "Change sprite height");
+				break;
 
-		case uProjectAll:
-			strcpy(tmp, "Change all projects");
-			break;
+			case uSpritePalrow:
+				strcpy(tmp, "Change sprite palette row");
+				break;
 
-		case uProjectAppend:
-			strcpy(tmp, "Append blank project");
-			break;
+			case uSpritestarttile:
+				strcpy(tmp, "Change sprite start tile");
+				break;
 
-		default:
-			snprintf(tmp, 2048, "TODO unhandled %d", uptr->type);
+			case uSpriteloadat:
+				strcpy(tmp, "Change sprite load at");
+				break;
+
+			case uSpriteoffx:
+				strcpy(tmp, "Change sprite offset x");
+				break;
+
+			case uSpriteoffy:
+				strcpy(tmp, "Change sprite offset y");
+				break;
+
+			case uSpriteprio:
+				strcpy(tmp, "Change sprite priority");
+				break;
+
+			case uSpritehflip:
+				strcpy(tmp, "Change sprite hflip");
+				break;
+
+			case uSpritevflip:
+				strcpy(tmp, "Change sprite vflip");
+				break;
+
+			case uCurProject:
+				strcpy(tmp, "Change current project");
+				break;
+
+			case uProjectAll:
+				strcpy(tmp, "Change all projects");
+				break;
+
+			case uProjectAppend:
+				strcpy(tmp, "Append blank project");
+				break;
+
+			default:
+				snprintf(tmp, 2048, "TODO unhandled %d", uptr->type);
 		}
 
 		hist->add(tmp);

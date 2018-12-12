@@ -41,7 +41,7 @@ function setSizePer()
 	elseif src==level.CHUNKS then
 		szX = chunks.width * tileW
 		szY = chunks.height * tileH
-		if chunks.useBlocks~=false then
+		if chunks.useBlocks ~= false then
 			szX = szX * tilemap.width
 			szY = szY * tilemap.height
 		end
@@ -215,8 +215,11 @@ function drawLevel()
 	if showSprites then
 		if level.objamt[lvlCurLayer+1]>0 then
 			for i=0,level.objamt[lvlCurLayer+1]-1 do
-				local info=level.getObj(lvlCurLayer,i)
-				metasprites.draw(info.prjid,info.metaid,info.groupid,(info.x*lvlZoom)+xOff-(szX*lvlZoom),(info.y*lvlZoom)+yOff-(szY*lvlZoom),lvlZoom,true)
+				local info = level.getObj(lvlCurLayer, i)
+
+				local ms = projects[info.prjid + 1].metasprites[info.metaid + 1]
+				local sg = ms[info.groupid + 1]
+				sg:draw((info.x*lvlZoom)+xOff-(szX*lvlZoom),(info.y*lvlZoom)+yOff-(szY*lvlZoom),lvlZoom,true)
 			end
 		end
 	end
@@ -255,12 +258,13 @@ function updateSpriteSliders(info)
 		spriteMeta:show()
 		spriteGroup:show()
 		local oldID=project.curProjectID
-		spritePrj:maximum(project.count-1)
+		spritePrj:maximum(#projects - 1)
 		if info.prjid~=oldID then
 			project.set(info.prjid)
 		end
-		spriteMeta:maximum(#metasprites.amt-1)
-		spriteGroup:maximum(metasprites.amt[spriteMeta:value()+1]-1)
+		local metasprites = projects.current.metasprites
+		spriteMeta:maximum(#metasprites - 1)
+		spriteGroup:maximum(#metasprites[spriteMeta:value() + 1] - 1)
 		if project.curProjectID~=oldID then
 			project.set(oldID)
 		end

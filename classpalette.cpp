@@ -60,50 +60,50 @@ palette::palette(const palette&other, Project*prj) {
 }
 void palette::setVars(enum gameSystemEnum gameSystem) {
 	switch (gameSystem) {
-	case segaGenesis:
-		rowCntPal = 4;
-		colorCnt = 64;
-		colorCntalt = 0;
-		rowCntPalalt = 0;
-		perRow = 16;
-		perRowalt = 0;
-		haveAlt = false;
-		esize = 2;
-		break;
+		case segaGenesis:
+			rowCntPal = 4;
+			colorCnt = 64;
+			colorCntalt = 0;
+			rowCntPalalt = 0;
+			perRow = 16;
+			perRowalt = 0;
+			haveAlt = false;
+			esize = 2;
+			break;
 
-	case NES:
-		colorCnt = colorCntalt = 16;
-		rowCntPal = rowCntPalalt = 4;
-		perRowalt = perRow = 4;
-		haveAlt = true;
-		esize = 1;
-		break;
+		case NES:
+			colorCnt = colorCntalt = 16;
+			rowCntPal = rowCntPalalt = 4;
+			perRowalt = perRow = 4;
+			haveAlt = true;
+			esize = 1;
+			break;
 
-	case masterSystem:
-	case gameGear:
-		rowCntPal = 2;
-		colorCnt = 32;
-		colorCntalt = 0;
-		rowCntPalalt = 0;
-		perRow = 16;
-		perRowalt = 0;
-		haveAlt = false;
-		esize = gameSystem == gameGear ? 2 : 1;
-		break;
+		case masterSystem:
+		case gameGear:
+			rowCntPal = 2;
+			colorCnt = 32;
+			colorCntalt = 0;
+			rowCntPalalt = 0;
+			perRow = 16;
+			perRowalt = 0;
+			haveAlt = false;
+			esize = gameSystem == gameGear ? 2 : 1;
+			break;
 
-	case TMS9918:
-		rowCntPal = 1;
-		colorCnt = 16;
-		colorCntalt = 0;
-		rowCntPalalt = 0;
-		perRow = 16;
-		perRowalt = 0;
-		haveAlt = false;
-		esize = 0;
-		break;
+		case TMS9918:
+			rowCntPal = 1;
+			colorCnt = 16;
+			colorCntalt = 0;
+			rowCntPalalt = 0;
+			perRow = 16;
+			perRowalt = 0;
+			haveAlt = false;
+			esize = 0;
+			break;
 
-	default:
-		showGameSysError(gameSystem)
+		default:
+			showGameSysError(gameSystem)
 	}
 
 	rgbPal = (uint8_t*)realloc(rgbPal, (colorCnt + colorCntalt) * (4 + esize)); // Yes this is correct when rgbPal is NULL realloc will behave the same as malloc.
@@ -140,42 +140,42 @@ void palette::write(FILE*fp) {
 }
 void palette::updateRGBindex(unsigned index) {
 	switch (prj->gameSystem) {
-	case segaGenesis:
-	{	uint16_t*ptr = (uint16_t*)palDat + index;
-		rgbPal[index * 3 + 2] = palTab[((*ptr >> 1) & 7) + palTypeGen]; //Blue note that bit shifting is different due to little endian
-		rgbPal[index * 3 + 1] = palTab[((*ptr >> 13) & 7) + palTypeGen]; //Green
-		rgbPal[index * 3] = palTab[((*ptr >> 9) & 7) + palTypeGen]; //Red
-	}
-	break;
-
-	case NES:
-	{	uint32_t rgb_out = nesPalToRgb(palDat[index]);
-		rgbPal[index * 3 + 2] = rgb_out & 255; //blue
-		rgbPal[index * 3 + 1] = (rgb_out >> 8) & 255; //green
-		rgbPal[index * 3] = (rgb_out >> 16) & 255; //red
-	}
-	break;
-
-	case masterSystem:
-		rgbPal[index * 3] = palTabMasterSystem[palDat[index] & 3];
-		rgbPal[index * 3 + 1] = palTabMasterSystem[(palDat[index] >> 2) & 3];
-		rgbPal[index * 3 + 2] = palTabMasterSystem[(palDat[index] >> 4) & 3];
+		case segaGenesis:
+		{	uint16_t*ptr = (uint16_t*)palDat + index;
+			rgbPal[index * 3 + 2] = palTab[((*ptr >> 1) & 7) + palTypeGen]; //Blue note that bit shifting is different due to little endian
+			rgbPal[index * 3 + 1] = palTab[((*ptr >> 13) & 7) + palTypeGen]; //Green
+			rgbPal[index * 3] = palTab[((*ptr >> 9) & 7) + palTypeGen]; //Red
+		}
 		break;
 
-	case gameGear:
-	{	uint16_t*ptr = (uint16_t*)palDat + index;
-		rgbPal[index * 3] = palTabGameGear[*ptr & 15];
-		rgbPal[index * 3 + 1] = palTabGameGear[(*ptr >> 4) & 15];
-		rgbPal[index * 3 + 2] = palTabGameGear[(*ptr >> 8) & 15];
-	}
-	break;
-
-	case TMS9918:
-		// Do nothing
+		case NES:
+		{	uint32_t rgb_out = nesPalToRgb(palDat[index]);
+			rgbPal[index * 3 + 2] = rgb_out & 255; //blue
+			rgbPal[index * 3 + 1] = (rgb_out >> 8) & 255; //green
+			rgbPal[index * 3] = (rgb_out >> 16) & 255; //red
+		}
 		break;
 
-	default:
-		show_default_error
+		case masterSystem:
+			rgbPal[index * 3] = palTabMasterSystem[palDat[index] & 3];
+			rgbPal[index * 3 + 1] = palTabMasterSystem[(palDat[index] >> 2) & 3];
+			rgbPal[index * 3 + 2] = palTabMasterSystem[(palDat[index] >> 4) & 3];
+			break;
+
+		case gameGear:
+		{	uint16_t*ptr = (uint16_t*)palDat + index;
+			rgbPal[index * 3] = palTabGameGear[*ptr & 15];
+			rgbPal[index * 3 + 1] = palTabGameGear[(*ptr >> 4) & 15];
+			rgbPal[index * 3 + 2] = palTabGameGear[(*ptr >> 8) & 15];
+		}
+		break;
+
+		case TMS9918:
+			// Do nothing
+			break;
+
+		default:
+			show_default_error
 	}
 }
 void palette::clear(void) {
@@ -190,41 +190,41 @@ void palette::rgbToEntry(unsigned r, unsigned g, unsigned b, unsigned ent) {
 	}
 
 	switch (prj->gameSystem) {
-	case segaGenesis:
-	{	uint16_t temp = to_sega_genesis_colorRGB(r, g, b, ent);
-		ent *= 2;
-		palDat[ent] = temp >> 8;
-		palDat[ent + 1] = temp & 255;
-	}
-	break;
-
-	case NES:
-		palDat[ent] = to_nes_color_rgb(r, g, b);
-		updateRGBindex(ent);
+		case segaGenesis:
+		{	uint16_t temp = to_sega_genesis_colorRGB(r, g, b, ent);
+			ent *= 2;
+			palDat[ent] = temp >> 8;
+			palDat[ent + 1] = temp & 255;
+		}
 		break;
 
-	case masterSystem:
-		palDat[ent] = nearestOneChannel(r, palTabMasterSystem, 4);
-		palDat[ent] |= nearestOneChannel(g, palTabMasterSystem, 4) << 2;
-		palDat[ent] |= nearestOneChannel(b, palTabMasterSystem, 4) << 4;
-		updateRGBindex(ent);
+		case NES:
+			palDat[ent] = to_nes_color_rgb(r, g, b);
+			updateRGBindex(ent);
+			break;
+
+		case masterSystem:
+			palDat[ent] = nearestOneChannel(r, palTabMasterSystem, 4);
+			palDat[ent] |= nearestOneChannel(g, palTabMasterSystem, 4) << 2;
+			palDat[ent] |= nearestOneChannel(b, palTabMasterSystem, 4) << 4;
+			updateRGBindex(ent);
+			break;
+
+		case gameGear:
+		{	uint16_t*palPtr = (uint16_t*)palDat + ent;
+			*palPtr = nearestOneChannel(r, palTabGameGear, 16);
+			*palPtr |= nearestOneChannel(g, palTabGameGear, 16) << 4;
+			*palPtr |= nearestOneChannel(b, palTabGameGear, 16) << 8;
+			updateRGBindex(ent);
+		}
 		break;
 
-	case gameGear:
-	{	uint16_t*palPtr = (uint16_t*)palDat + ent;
-		*palPtr = nearestOneChannel(r, palTabGameGear, 16);
-		*palPtr |= nearestOneChannel(g, palTabGameGear, 16) << 4;
-		*palPtr |= nearestOneChannel(b, palTabGameGear, 16) << 8;
-		updateRGBindex(ent);
-	}
-	break;
+		case TMS9918:
+			//Do nothing
+			break;
 
-	case TMS9918:
-		//Do nothing
-		break;
-
-	default:
-		show_default_error
+		default:
+			show_default_error
 	}
 }
 uint8_t palette::to_nes_color_rgb(uint8_t red, uint8_t green, uint8_t blue) {
@@ -243,17 +243,17 @@ uint8_t palette::toNesChan(uint8_t ri, uint8_t gi, uint8_t bi, uint8_t chan) {
 	uint8_t r = (rgb_out >> 16) & 255;
 
 	switch (chan) {
-	case 0:
-		return r;
-		break;
+		case 0:
+			return r;
+			break;
 
-	case 1:
-		return g;
-		break;
+		case 1:
+			return g;
+			break;
 
-	case 2:
-		return b;
-		break;
+		case 2:
+			return b;
+			break;
 	}
 
 	return 0;
@@ -299,23 +299,23 @@ void palette::swapEntry(unsigned one, unsigned two) {
 		return;
 
 	switch (esize) {
-	case 1:
-	{	uint8_t palOld = palDat[two];
-		palDat[two] = palDat[one];
-		palDat[one] = palOld;
-	}
-	break;
+		case 1:
+		{	uint8_t palOld = palDat[two];
+			palDat[two] = palDat[one];
+			palDat[one] = palOld;
+		}
+		break;
 
-	case 2:
-	{	uint8_t palOld[2];
-		memcpy(palOld, palDat + two + two, 2);
-		memcpy(palDat + two + two, palDat + one + one, 2);
-		memcpy(palDat + one + one, palOld, 2);
-	}
-	break;
+		case 2:
+		{	uint8_t palOld[2];
+			memcpy(palOld, palDat + two + two, 2);
+			memcpy(palDat + two + two, palDat + one + one, 2);
+			memcpy(palDat + one + one, palOld, 2);
+		}
+		break;
 
-	default:
-		show_default_error
+		default:
+			show_default_error
 	}
 
 	uint8_t rgb[3];

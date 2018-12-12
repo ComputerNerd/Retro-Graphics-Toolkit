@@ -43,47 +43,47 @@ public:
 				uint8_t*imgptr;
 
 				switch (depth) {
-				case 1:
-					if (grayscale) {
-						imgptr = (uint8_t*)loaded_image->data()[0];
-						imgptr += (y * w) + x;
-						r = *imgptr;
-						g = *imgptr;
-						b = *imgptr;
+					case 1:
+						if (grayscale) {
+							imgptr = (uint8_t*)loaded_image->data()[0];
+							imgptr += (y * w) + x;
+							r = *imgptr;
+							g = *imgptr;
+							b = *imgptr;
 
-					} else {
-						imgptr = (uint8_t*)loaded_image->data()[y + 2];
-						imgptr += x;
+						} else {
+							imgptr = (uint8_t*)loaded_image->data()[y + 2];
+							imgptr += x;
 
-						if (*imgptr != ' ') {
-							ent = *imgptr;
-							r = palMap[remap[ent] + 1];
-							g = palMap[remap[ent] + 2];
-							b = palMap[remap[ent] + 3];
+							if (*imgptr != ' ') {
+								ent = *imgptr;
+								r = palMap[remap[ent] + 1];
+								g = palMap[remap[ent] + 2];
+								b = palMap[remap[ent] + 3];
+							}
 						}
-					}
 
-					break;
+						break;
 
-				case 3:
-					imgptr = (uint8_t*)loaded_image->data()[0];
-					imgptr += ((y * w) + x) * 3;
-					r = *imgptr++;
-					g = *imgptr++;
-					b = *imgptr;
-					break;
-
-				case 4:
-					imgptr = (uint8_t*)loaded_image->data()[0];
-					imgptr += ((y * w) + x) * 4;
-
-					if (imgptr[3]) {
+					case 3:
+						imgptr = (uint8_t*)loaded_image->data()[0];
+						imgptr += ((y * w) + x) * 3;
 						r = *imgptr++;
 						g = *imgptr++;
 						b = *imgptr;
-					}
+						break;
 
-					break;
+					case 4:
+						imgptr = (uint8_t*)loaded_image->data()[0];
+						imgptr += ((y * w) + x) * 4;
+
+						if (imgptr[3]) {
+							r = *imgptr++;
+							g = *imgptr++;
+							b = *imgptr;
+						}
+
+						break;
 				}
 
 				double rc, gc, bc;
@@ -136,118 +136,33 @@ bool getMaskColorImg(Fl_Shared_Image*loaded_image, bool grayscale, unsigned*rema
 	useAlpha = false;
 
 	switch (depth) {
-	case 4:
-		imgptr = (uint8_t*)loaded_image->data()[0];
-
-		for (unsigned i = 0; i < imgb; ++i) {
-			++histr[*imgptr++];
-			++histg[*imgptr++];
-			++histb[*imgptr++];
-			++hista[*imgptr++];
-		}
-
-		{	uint64_t maxr = *histr, maxg = *histg, maxb = *histb, maxa = *hista, *ptrr = histr, *ptrg = histg, *ptrb = histb, *ptra = hista;
-			unsigned alpha = 0;
-
-			for (unsigned i = 0; i < 256; ++i, ++ptrr, ++ptrg, ++ptrb, ++ptra) {
-				if (maxr < *ptrr) {
-					maxr = *ptrr;
-					r = i;
-				}
-
-				if (maxg < *ptrg) {
-					maxg = *ptrg;
-					g = i;
-				}
-
-				if (maxb < *ptrb) {
-					maxb = *ptrb;
-					b = i;
-				}
-
-				if (maxa < *ptra) {
-					maxa = *ptra;
-					alpha = i;
-				}
-			}
-
-			useAlpha = (alpha) ? false : true;
-		}
-
-		break;
-
-	case 3:
-		imgptr = (uint8_t*)loaded_image->data()[0];
-
-		for (unsigned i = 0; i < imgb; ++i) {
-			++histr[*imgptr++];
-			++histg[*imgptr++];
-			++histb[*imgptr++];
-		}
-
-		{	uint64_t maxr = *histr, maxg = *histg, maxb = *histb, *ptrr = histr, *ptrg = histg, *ptrb = histb;
-
-			for (unsigned i = 0; i < 256; ++i, ++ptrr, ++ptrg, ++ptrb) {
-				if (maxr < *ptrr) {
-					maxr = *ptrr;
-					r = i;
-				}
-
-				if (maxg < *ptrg) {
-					maxg = *ptrg;
-					g = i;
-				}
-
-				if (maxb < *ptrb) {
-					maxb = *ptrb;
-					b = i;
-				}
-			}
-		}
-
-		break;
-
-	case 1:
-		if (grayscale) {
+		case 4:
 			imgptr = (uint8_t*)loaded_image->data()[0];
 
-			for (unsigned i = 0; i < imgb; ++i)
+			for (unsigned i = 0; i < imgb; ++i) {
 				++histr[*imgptr++];
-		} else {
-			for (unsigned y = 0; y < h; ++y) {
-				imgptr = (uint8_t*)loaded_image->data()[y + 2];
-
-				for (unsigned x = 0; x < w; ++x) {
-					if (*imgptr == ' ')
-						++hista[0];
-
-					else {
-						++histr[*imgptr++];
-						++hista[255];
-					}
-				}
+				++histg[*imgptr++];
+				++histb[*imgptr++];
+				++hista[*imgptr++];
 			}
-		}
 
-		{	uint64_t maxv = *histr, *ptrv = histr;
-
-			if (grayscale) {
-				for (unsigned i = 0; i < 256; ++i, ++ptrv) {
-					if (maxv < *ptrv) {
-						maxv = *ptrv;
-						ent = i;
-					}
-				}
-
-				r = g = b = ent;
-			} else {
-				uint64_t maxa = *hista, *ptra = hista;
+			{	uint64_t maxr = *histr, maxg = *histg, maxb = *histb, maxa = *hista, *ptrr = histr, *ptrg = histg, *ptrb = histb, *ptra = hista;
 				unsigned alpha = 0;
 
-				for (unsigned i = 0; i < 256; ++i, ++ptrv, ++ptra) {
-					if (maxv < *ptrv) {
-						maxv = *ptrv;
-						ent = i;
+				for (unsigned i = 0; i < 256; ++i, ++ptrr, ++ptrg, ++ptrb, ++ptra) {
+					if (maxr < *ptrr) {
+						maxr = *ptrr;
+						r = i;
+					}
+
+					if (maxg < *ptrg) {
+						maxg = *ptrg;
+						g = i;
+					}
+
+					if (maxb < *ptrb) {
+						maxb = *ptrb;
+						b = i;
 					}
 
 					if (maxa < *ptra) {
@@ -257,13 +172,98 @@ bool getMaskColorImg(Fl_Shared_Image*loaded_image, bool grayscale, unsigned*rema
 				}
 
 				useAlpha = (alpha) ? false : true;
-				r = palMap[remap[ent] + 1];
-				g = palMap[remap[ent] + 2];
-				b = palMap[remap[ent] + 3];
 			}
-		}
 
-		break;
+			break;
+
+		case 3:
+			imgptr = (uint8_t*)loaded_image->data()[0];
+
+			for (unsigned i = 0; i < imgb; ++i) {
+				++histr[*imgptr++];
+				++histg[*imgptr++];
+				++histb[*imgptr++];
+			}
+
+			{	uint64_t maxr = *histr, maxg = *histg, maxb = *histb, *ptrr = histr, *ptrg = histg, *ptrb = histb;
+
+				for (unsigned i = 0; i < 256; ++i, ++ptrr, ++ptrg, ++ptrb) {
+					if (maxr < *ptrr) {
+						maxr = *ptrr;
+						r = i;
+					}
+
+					if (maxg < *ptrg) {
+						maxg = *ptrg;
+						g = i;
+					}
+
+					if (maxb < *ptrb) {
+						maxb = *ptrb;
+						b = i;
+					}
+				}
+			}
+
+			break;
+
+		case 1:
+			if (grayscale) {
+				imgptr = (uint8_t*)loaded_image->data()[0];
+
+				for (unsigned i = 0; i < imgb; ++i)
+					++histr[*imgptr++];
+			} else {
+				for (unsigned y = 0; y < h; ++y) {
+					imgptr = (uint8_t*)loaded_image->data()[y + 2];
+
+					for (unsigned x = 0; x < w; ++x) {
+						if (*imgptr == ' ')
+							++hista[0];
+
+						else {
+							++histr[*imgptr++];
+							++hista[255];
+						}
+					}
+				}
+			}
+
+			{	uint64_t maxv = *histr, *ptrv = histr;
+
+				if (grayscale) {
+					for (unsigned i = 0; i < 256; ++i, ++ptrv) {
+						if (maxv < *ptrv) {
+							maxv = *ptrv;
+							ent = i;
+						}
+					}
+
+					r = g = b = ent;
+				} else {
+					uint64_t maxa = *hista, *ptra = hista;
+					unsigned alpha = 0;
+
+					for (unsigned i = 0; i < 256; ++i, ++ptrv, ++ptra) {
+						if (maxv < *ptrv) {
+							maxv = *ptrv;
+							ent = i;
+						}
+
+						if (maxa < *ptra) {
+							maxa = *ptra;
+							alpha = i;
+						}
+					}
+
+					useAlpha = (alpha) ? false : true;
+					r = palMap[remap[ent] + 1];
+					g = palMap[remap[ent] + 2];
+					b = palMap[remap[ent] + 3];
+				}
+			}
+
+			break;
 	}
 
 	if (histr)

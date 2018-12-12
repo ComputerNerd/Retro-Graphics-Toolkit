@@ -34,19 +34,19 @@ static inline uint32_t toNesRgb(uint8_t ri, uint8_t gi, uint8_t bi) {
 void updateNesTab(unsigned emps, bool alt);
 static inline double pickIt(double h, double s, double l, unsigned type) {
 	switch (type) {
-	case 0:
-		return h;
-		break;
+		case 0:
+			return h;
+			break;
 
-	case 1:
-		return s;
-		break;
+		case 1:
+			return s;
+			break;
 
-	case 2:
-		return l;
-		break;
+		case 2:
+			return l;
+			break;
 
-	default:
-		return 0.;
+		default:
+			return 0.;
 	}
 }

@@ -103,95 +103,95 @@ void update_palette(Fl_Widget* o, void* v) {
 	}
 
 	switch (currentProject->gameSystem) {
-	case segaGenesis:
-	{	unsigned temp_var = 0;
-		unsigned temp2 = (unsigned)s->value();
+		case segaGenesis:
+		{	unsigned temp_var = 0;
+			unsigned temp2 = (unsigned)s->value();
 
-		switch ((uintptr_t)v) {
-		case 0://red
-			temp_var = currentProject->pal->palDat[(temp_entry * 2) + 1]; //get the green value we need to save it for later
-			temp_var &= 0xF0;
-			temp_var |= temp2 << 1;
-			currentProject->pal->palDat[(temp_entry * 2) + 1] = temp_var;
-			//now convert the new red value
-			currentProject->pal->rgbPal[temp_entry * 3] = palTab[temp2 + palTypeGen];
-			break;
+			switch ((uintptr_t)v) {
+				case 0://red
+					temp_var = currentProject->pal->palDat[(temp_entry * 2) + 1]; //get the green value we need to save it for later
+					temp_var &= 0xF0;
+					temp_var |= temp2 << 1;
+					currentProject->pal->palDat[(temp_entry * 2) + 1] = temp_var;
+					//now convert the new red value
+					currentProject->pal->rgbPal[temp_entry * 3] = palTab[temp2 + palTypeGen];
+					break;
 
-		case 1://green
-			//this is very similar to what I just did above
-			temp_var = currentProject->pal->palDat[(temp_entry * 2) + 1];
-			temp_var &= 15; //get only the red value
-			//now OR the new green value to it
-			temp_var |= temp2 << 5;
-			currentProject->pal->palDat[(temp_entry * 2) + 1] = temp_var;
-			//now convert the new green value
-			currentProject->pal->rgbPal[(temp_entry * 3) + 1] = palTab[temp2 + palTypeGen];
-			break;
+				case 1://green
+					//this is very similar to what I just did above
+					temp_var = currentProject->pal->palDat[(temp_entry * 2) + 1];
+					temp_var &= 15; //get only the red value
+					//now OR the new green value to it
+					temp_var |= temp2 << 5;
+					currentProject->pal->palDat[(temp_entry * 2) + 1] = temp_var;
+					//now convert the new green value
+					currentProject->pal->rgbPal[(temp_entry * 3) + 1] = palTab[temp2 + palTypeGen];
+					break;
 
-		case 2:
-			//blue is the most trivial conversion to do
-			currentProject->pal->palDat[temp_entry * 2] = temp2 << 1;
-			currentProject->pal->rgbPal[(temp_entry * 3) + 2] = palTab[temp2 + palTypeGen];
-			break;
+				case 2:
+					//blue is the most trivial conversion to do
+					currentProject->pal->palDat[temp_entry * 2] = temp2 << 1;
+					currentProject->pal->rgbPal[(temp_entry * 3) + 2] = palTab[temp2 + palTypeGen];
+					break;
+			}
 		}
-	}
-	break;
+		break;
 
-	case NES:
-	{	unsigned pal;
-		uint32_t rgb_out;
+		case NES:
+		{	unsigned pal;
+			uint32_t rgb_out;
 
-		switch ((uintptr_t)v) {
-		/*
-		   76543210
-		   ||||||||
-		   ||||++++- Hue (phase)
-		   ||++----- Value (voltage)
-		   ++------- Unimplemented, reads back as 0
-		   */
-		case 0://Hue
-			//first read out value
-			pal = currentProject->pal->palDat[temp_entry];
-			pal &= 48;
-			pal |= (unsigned)s->value();
-			break;
+			switch ((uintptr_t)v) {
+				/*
+				   76543210
+				   ||||||||
+				   ||||++++- Hue (phase)
+				   ||++----- Value (voltage)
+				   ++------- Unimplemented, reads back as 0
+				   */
+				case 0://Hue
+					//first read out value
+					pal = currentProject->pal->palDat[temp_entry];
+					pal &= 48;
+					pal |= (unsigned)s->value();
+					break;
 
-		case 1://Value
-			pal = currentProject->pal->palDat[temp_entry];
-			pal &= 15;
-			pal |= ((unsigned)s->value()) << 4;
-			break;
+				case 1://Value
+					pal = currentProject->pal->palDat[temp_entry];
+					pal &= 15;
+					pal |= ((unsigned)s->value()) << 4;
+					break;
+			}
+
+			currentProject->pal->palDat[temp_entry] = pal;
+			rgb_out = nesPalToRgb(pal);
+			currentProject->pal->rgbPal[temp_entry * 3 + 2] = rgb_out & 255; //blue
+			currentProject->pal->rgbPal[temp_entry * 3 + 1] = (rgb_out >> 8) & 255; //green
+			currentProject->pal->rgbPal[temp_entry * 3] = (rgb_out >> 16) & 255; //red
 		}
+		break;
 
-		currentProject->pal->palDat[temp_entry] = pal;
-		rgb_out = nesPalToRgb(pal);
-		currentProject->pal->rgbPal[temp_entry * 3 + 2] = rgb_out & 255; //blue
-		currentProject->pal->rgbPal[temp_entry * 3 + 1] = (rgb_out >> 8) & 255; //green
-		currentProject->pal->rgbPal[temp_entry * 3] = (rgb_out >> 16) & 255; //red
-	}
-	break;
+		case masterSystem:
+		{	unsigned chan = (uintptr_t)v;
+			unsigned shift = chan * 2;
+			currentProject->pal->palDat[temp_entry] &= ~(3 << shift);
+			currentProject->pal->palDat[temp_entry] |= (unsigned)s->value() << shift;
+			currentProject->pal->rgbPal[temp_entry * 3 + chan] = palTabMasterSystem[(currentProject->pal->palDat[temp_entry] >> shift) & 3];
+		}
+		break;
 
-	case masterSystem:
-	{	unsigned chan = (uintptr_t)v;
-		unsigned shift = chan * 2;
-		currentProject->pal->palDat[temp_entry] &= ~(3 << shift);
-		currentProject->pal->palDat[temp_entry] |= (unsigned)s->value() << shift;
-		currentProject->pal->rgbPal[temp_entry * 3 + chan] = palTabMasterSystem[(currentProject->pal->palDat[temp_entry] >> shift) & 3];
-	}
-	break;
+		case gameGear:
+		{	unsigned chan = (uintptr_t)v;
+			unsigned shift = chan * 4;
+			uint16_t*pal = (uint16_t*)currentProject->pal->palDat + temp_entry;
+			*pal &= ~15 << shift;
+			*pal |= (unsigned)s->value() << shift;
+			currentProject->pal->rgbPal[temp_entry * 3 + chan] = palTabGameGear[(*pal >> shift) & 15];
+		}
+		break;
 
-	case gameGear:
-	{	unsigned chan = (uintptr_t)v;
-		unsigned shift = chan * 4;
-		uint16_t*pal = (uint16_t*)currentProject->pal->palDat + temp_entry;
-		*pal &= ~15 << shift;
-		*pal |= (unsigned)s->value() << shift;
-		currentProject->pal->rgbPal[temp_entry * 3 + chan] = palTabGameGear[(*pal >> shift) & 15];
-	}
-	break;
-
-	default:
-		show_default_error
+		default:
+			show_default_error
 	}
 
 	if (mode_editor == tile_edit)
@@ -239,20 +239,20 @@ void set_tile_row(Fl_Widget*, void* row) {
 	unsigned selrow = (uintptr_t)row;
 
 	switch (mode_editor) {
-	case tile_edit:
-		palBar.changeRow(selrow, 1);
-		currentProject->tileC->truecolor_to_tile(selrow, currentProject->tileC->current_tile, false);
-		break;
+		case tile_edit:
+			palBar.changeRow(selrow, 1);
+			currentProject->tileC->truecolor_to_tile(selrow, currentProject->tileC->current_tile, false);
+			break;
 
-	case tile_place:
-		palBar.changeRow(selrow, 2);
+		case tile_place:
+			palBar.changeRow(selrow, 2);
 
-		if (tileEditModePlace_G) {
-			pushTilemapEdit(selTileE_G[0], selTileE_G[1]);
-			currentProject->tms->maps[currentProject->curPlane].set_pal_row(selTileE_G[0], selTileE_G[1], selrow);
-		}
+			if (tileEditModePlace_G) {
+				pushTilemapEdit(selTileE_G[0], selTileE_G[1]);
+				currentProject->tms->maps[currentProject->curPlane].set_pal_row(selTileE_G[0], selTileE_G[1], selrow);
+			}
 
-		break;
+			break;
 	}
 
 	window->redraw();//trigger a redraw so that the new row is displayed

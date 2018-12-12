@@ -15,4 +15,4 @@
 	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 */
 #pragma once
-int luaopen_level_levDat(lua_State *L,struct levDat*d);
+int luaopen_level_levDat(lua_State *L, struct levDat*d);

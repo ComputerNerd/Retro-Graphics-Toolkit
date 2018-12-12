@@ -73,39 +73,39 @@ static int lz_assert(lua_State *L, int result, const z_stream* stream, const cha
 	if ( result == Z_OK || result == Z_STREAM_END ) return result;
 
 	switch ( result ) {
-	case Z_NEED_DICT:
-		lua_pushfstring(L, "RequiresDictionary: input stream requires a dictionary to be deflated (%s) at %s line %d",
-		                stream->msg, file, line);
-		break;
+		case Z_NEED_DICT:
+			lua_pushfstring(L, "RequiresDictionary: input stream requires a dictionary to be deflated (%s) at %s line %d",
+			                stream->msg, file, line);
+			break;
 
-	case Z_STREAM_ERROR:
-		lua_pushfstring(L, "InternalError: inconsistent internal zlib stream (%s) at %s line %d",
-		                stream->msg, file, line);
-		break;
+		case Z_STREAM_ERROR:
+			lua_pushfstring(L, "InternalError: inconsistent internal zlib stream (%s) at %s line %d",
+			                stream->msg, file, line);
+			break;
 
-	case Z_DATA_ERROR:
-		lua_pushfstring(L, "InvalidInput: input string does not conform to zlib format or checksum failed at %s line %d",
-		                file, line);
-		break;
+		case Z_DATA_ERROR:
+			lua_pushfstring(L, "InvalidInput: input string does not conform to zlib format or checksum failed at %s line %d",
+			                file, line);
+			break;
 
-	case Z_MEM_ERROR:
-		lua_pushfstring(L, "OutOfMemory: not enough memory (%s) at %s line %d",
-		                stream->msg, file, line);
-		break;
+		case Z_MEM_ERROR:
+			lua_pushfstring(L, "OutOfMemory: not enough memory (%s) at %s line %d",
+			                stream->msg, file, line);
+			break;
 
-	case Z_BUF_ERROR:
-		lua_pushfstring(L, "InternalError: no progress possible (%s) at %s line %d",
-		                stream->msg, file, line);
-		break;
+		case Z_BUF_ERROR:
+			lua_pushfstring(L, "InternalError: no progress possible (%s) at %s line %d",
+			                stream->msg, file, line);
+			break;
 
-	case Z_VERSION_ERROR:
-		lua_pushfstring(L, "IncompatibleLibrary: built with version %s, but dynamically linked with version %s (%s) at %s line %d",
-		                ZLIB_VERSION,  zlibVersion(), stream->msg, file, line);
-		break;
+		case Z_VERSION_ERROR:
+			lua_pushfstring(L, "IncompatibleLibrary: built with version %s, but dynamically linked with version %s (%s) at %s line %d",
+			                ZLIB_VERSION,  zlibVersion(), stream->msg, file, line);
+			break;
 
-	default:
-		lua_pushfstring(L, "ZLibError: unknown code %d (%s) at %s line %d",
-		                result, stream->msg, file, line);
+		default:
+			lua_pushfstring(L, "ZLibError: unknown code %d (%s) at %s line %d",
+			                result, stream->msg, file, line);
 	}
 
 	lua_error(L);

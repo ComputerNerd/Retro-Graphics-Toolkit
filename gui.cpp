@@ -263,22 +263,22 @@ bool load_file_generic(const char * the_tile, bool save_file) { //Warning this f
 
 	// Show native chooser
 	switch (native.show()) {
-	case -1:
-		fl_alert("Error %s", native.errmsg());
-		break;	// ERROR
+		case -1:
+			fl_alert("Error %s", native.errmsg());
+			break;	// ERROR
 
-	case  1:
-		fprintf(stderr, "*** CANCEL\n");
-		//fl_beep();
-		break;		// CANCEL
+		case  1:
+			fprintf(stderr, "*** CANCEL\n");
+			//fl_beep();
+			break;		// CANCEL
 
-	default:// Picked File
-		if (native.filename()) {
-			the_file = native.filename();
-			return true;//the only way this this function will return true is the user picked a file
-		}
+		default:// Picked File
+			if (native.filename()) {
+				the_file = native.filename();
+				return true;//the only way this this function will return true is the user picked a file
+			}
 
-		break;
+			break;
 	}
 
 	return false;//if an error happened or the user did not pick a file the function returns false
@@ -295,20 +295,20 @@ char*loadsavefile(const char * the_tile, bool save_file) {
 
 	// Show native chooser
 	switch (native.show()) {
-	case -1:
-		fl_alert("Error %s", native.errmsg());
-		break;	// ERROR
+		case -1:
+			fl_alert("Error %s", native.errmsg());
+			break;	// ERROR
 
-	case  1:
-		fprintf(stderr, "*** CANCEL\n");
-		//fl_beep();
-		break;		// CANCEL
+		case  1:
+			fprintf(stderr, "*** CANCEL\n");
+			//fl_beep();
+			break;		// CANCEL
 
-	default:// Picked File
-		if (native.filename())
-			return strdup(native.filename());
+		default:// Picked File
+			if (native.filename())
+				return strdup(native.filename());
 
-		break;
+			break;
 	}
 
 	return nullptr;

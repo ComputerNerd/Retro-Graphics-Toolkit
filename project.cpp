@@ -38,7 +38,7 @@ uint32_t curProjectID;
 static const char*const maskNames[] = {"palette", "tiles", "tilemap", "chunks", "sprites", "level", "{Undefined}"};
 void changeTileDim(unsigned w, unsigned h, struct Project*p) {
 	if (p->containsData(pjHaveTiles)) {
-		unsigned sw = p->tileC->sizew, sh = p->tileC->sizeh;
+		unsigned sw = p->tileC->width(), sh = p->tileC->height();
 		p->tileC->changeDim(w, h, p->getBitdepthSys());
 
 		if (sw > w && sh > h && p->containsData(pjHaveMap)) {
@@ -559,7 +559,7 @@ void switchProject(uint32_t id, bool load) {
 		updateLuaScriptWindow(id, load);
 		window->TxtBufProject->text(projects[id]->Name.c_str());//Make editor displays new text
 		window->gameSysSel->value(projects[id]->gameSystem);
-		window->ditherPower->value((projects[id]->settings >> subsettingsDitherShift)&subsettingsDitherMask);
+		window->ditherPower->value(1 + ((projects[id]->settings >> subsettingsDitherShift)&subsettingsDitherMask));
 		window->ditherAlgSel->value(projects[id]->settings & subsettingsDitherMask);
 
 		if ((projects[id]->settings & subsettingsDitherMask))
@@ -574,68 +574,68 @@ void switchProject(uint32_t id, bool load) {
 	}
 
 	switch (projects[id]->gameSystem) {
-	case segaGenesis:
-		if (window) {
-			window->subSysC->copy(subSysGenesis);
-			window->subSysC->value((projects[id]->subSystem & sgSHmask) >> sgSHshift);
-		}
+		case segaGenesis:
+			if (window) {
+				window->subSysC->copy(subSysGenesis);
+				window->subSysC->value((projects[id]->subSystem & sgSHmask) >> sgSHshift);
+			}
 
-		if (projects[id]->containsData(pjHaveTiles))
-			projects[id]->tileC->tileSize = 32;
+			if (projects[id]->containsData(pjHaveTiles))
+				projects[id]->tileC->tileSize = 32;
 
-		if (projects[id]->containsData(pjHavePal)) {
-			palBar.setSys();
-			set_palette_type();
-		}
+			if (projects[id]->containsData(pjHavePal)) {
+				palBar.setSys();
+				set_palette_type();
+			}
 
-		break;
+			break;
 
-	case NES:
-		if (window) {
-			window->subSysC->copy(subSysNES);
-			window->subSysC->value(projects[id]->subSystem & 1);
-		}
+		case NES:
+			if (window) {
+				window->subSysC->copy(subSysNES);
+				window->subSysC->value(projects[id]->subSystem & 1);
+			}
 
-		if (projects[id]->containsData(pjHaveTiles))
-			projects[id]->tileC->tileSize = 16;
+			if (projects[id]->containsData(pjHaveTiles))
+				projects[id]->tileC->tileSize = 16;
 
-		if (projects[id]->containsData(pjHavePal)) {
-			palBar.setSys();
-			updateEmphesis();
-		}
+			if (projects[id]->containsData(pjHavePal)) {
+				palBar.setSys();
+				updateEmphesis();
+			}
 
-		break;
+			break;
 
-	case masterSystem:
-	case gameGear:
-		if (projects[id]->containsData(pjHaveTiles))
-			projects[id]->tileC->tileSize = 32;
+		case masterSystem:
+		case gameGear:
+			if (projects[id]->containsData(pjHaveTiles))
+				projects[id]->tileC->tileSize = 32;
 
-		if (projects[id]->containsData(pjHavePal)) {
-			palBar.setSys();
-			projects[id]->pal->paletteToRgb();
-		}
+			if (projects[id]->containsData(pjHavePal)) {
+				palBar.setSys();
+				projects[id]->pal->paletteToRgb();
+			}
 
-		break;
+			break;
 
-	case TMS9918:
-		setGameSysTMS9918(projects[id]);
+		case TMS9918:
+			setGameSysTMS9918(projects[id]);
 
-		if (window) {
-			window->subSysC->copy(subSysTMS9918);
-			window->subSysC->value(projects[id]->getTMS9918subSys());
-		}
+			if (window) {
+				window->subSysC->copy(subSysTMS9918);
+				window->subSysC->value(projects[id]->getTMS9918subSys());
+			}
 
-		if (projects[id]->containsData(pjHavePal))
-			palBar.setSys();
+			if (projects[id]->containsData(pjHavePal))
+				palBar.setSys();
 
-		if (projects[id]->containsData(pjHaveTiles))
-			projects[id]->tileC->tileSize = 8;
+			if (projects[id]->containsData(pjHaveTiles))
+				projects[id]->tileC->tileSize = 8;
 
-		break;
+			break;
 
-	default:
-		show_default_error
+		default:
+			show_default_error
 	}
 
 	//Make sure sliders have correct values
@@ -965,25 +965,30 @@ static bool saveProjectFile(uint32_t id, FILE * fo, bool saveShared, bool saveVe
 		uint32_t height per chunk
 		uint32_t amount of chunks
 		uint32_t compressed Chunk map size
+		if (version >= 8) uint32_t usePlane
 		Chunk data (zlib compressed)
 	}
 	if(version>=5) sprite data (see documentation in classSprites.cpp)
 	if(version>=8) level data
-	if(version>=8) Lua user data:
-		Format:
-		uint32_t count
-		for each with count
-			const char*name null terminated
-			uint32_t length
-			void*data
-	if(version>=8) Lua control data:
-		Format:
-		uint32_t count
-		for each with count
-			const char*controlName null terminated
-			uint32_t type
-			uint32_t length
-			void*data
+	if (version >= 8) {
+		uint32_t luaScriptCount
+		uint32_t luaTabsCount
+		uint32_t luaControlCount
+		uint32_t luaUserDataCount
+
+		Lua user data Format:
+			for each with count
+				const char*name null terminated
+				uint32_t length
+				void*data
+
+		Lua control data Format:
+			for each with count
+				const char*controlName null terminated
+				uint32_t type
+				uint32_t length
+				void*data
+	}
 	*/
 	fputc('R', fo);
 	fputc('P', fo);

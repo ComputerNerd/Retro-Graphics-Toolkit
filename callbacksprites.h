@@ -14,6 +14,7 @@
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
+#include "project.h"
 extern uint32_t curSprite;
 extern uint32_t curSpritegroup;
 extern uint32_t curSpritemeta;
@@ -21,8 +22,8 @@ extern int32_t spriteEndDraw[2];
 extern bool centerSpriteDraw_G;
 void palRowstCB(Fl_Widget*, void*);
 void optimizeSpritesCB(Fl_Widget*, void*);
-void ditherSpriteAsImage(unsigned msprt, unsigned which);
-void ditherGroupAsImage(unsigned msprt);
+void ditherSpriteAsImage(unsigned msprt, unsigned which, Project*prj);
+void ditherGroupAsImage(unsigned msprt, Project*prj);
 void ditherSpriteAsImageAllCB(Fl_Widget*, void*);
 void ditherSpriteAsImageCB(Fl_Widget*, void*);
 void setDrawSpriteCB(Fl_Widget*, void*m);

@@ -56,8 +56,8 @@ static int lua_tilemap_imageToTiles(lua_State*L) {
 	bool convert = luaL_optboolean(L, 6, false);
 	unsigned bpp = useAlpha + 3;
 	uint32_t w, h;
-	w = projects[projectIDX]->tms->maps[tilemapIDX].mapSizeW * projects[projectIDX]->tileC->sizew;
-	h = projects[projectIDX]->tms->maps[tilemapIDX].mapSizeHA * projects[projectIDX]->tileC->sizeh;
+	w = projects[projectIDX]->tms->maps[tilemapIDX].mapSizeW * projects[projectIDX]->tileC->width();
+	h = projects[projectIDX]->tms->maps[tilemapIDX].mapSizeHA * projects[projectIDX]->tileC->height();
 	unsigned sz = w * h * bpp;
 	uint8_t*image = (uint8_t*)malloc(sz);
 	fillucharFromTab(L, 2, len, sz, image);
@@ -173,8 +173,8 @@ static int lua_tilemap_toImage(lua_State*L) {
 	int row = luaL_optinteger(L, 2, -1);
 	bool useAlpha = luaL_optboolean(L, 3, false);
 	uint32_t w, h;
-	w = projects[projectIDX]->tms->maps[tilemapIDX].mapSizeW * projects[projectIDX]->tileC->sizew;
-	h = projects[projectIDX]->tms->maps[tilemapIDX].mapSizeHA * projects[projectIDX]->tileC->sizeh;
+	w = projects[projectIDX]->tms->maps[tilemapIDX].mapSizeW * projects[projectIDX]->tileC->width();
+	h = projects[projectIDX]->tms->maps[tilemapIDX].mapSizeHA * projects[projectIDX]->tileC->height();
 	unsigned bpp = useAlpha + 3;
 	uint8_t*image = (uint8_t *)malloc(w * h * bpp);
 

@@ -53,7 +53,7 @@ void sprite::draw(unsigned x, unsigned y, unsigned zoom) {
 
 		for (unsigned j = 0; j < h; ++j) {
 			currentProject->tileC->draw_tile(x, yy, t, zoom, palrow, hflip, vflip, true);
-			yy += currentProject->tileC->sizeh * zoom;
+			yy += currentProject->tileC->height() * zoom;
 
 			if (vflip)
 				--t;
@@ -67,7 +67,7 @@ void sprite::draw(unsigned x, unsigned y, unsigned zoom) {
 		if (hflip)
 			t -= h * 2;
 
-		x += currentProject->tileC->sizew * zoom;
+		x += currentProject->tileC->width() * zoom;
 		yy = y;
 	}
 }

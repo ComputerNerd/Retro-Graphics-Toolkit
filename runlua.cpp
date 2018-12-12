@@ -34,12 +34,12 @@
 #include "runlua.h"
 #include "lualib.h"
 #include "lauxlib.h"
+#include "savepng.h"
 #include "includes.h"
 #include "gui.h"
 #include "project.h"
 #include "color_convert.h"
 #include "callback_gui.h"
-#include "callbacksprites.h"
 #include "dither.h"
 #include "CIE.h"
 #include "class_global.h"
@@ -121,47 +121,47 @@ static int settings__set_(lua_State *L) {
 	int key_h = dub::hash(key, 10);
 
 	switch (key_h) {
-	case 9: {
-		if (DUB_ASSERT_KEY(key, "sprite")) break;
+		case 9: {
+			if (DUB_ASSERT_KEY(key, "sprite")) break;
 
-		self->sprite = luaL_checkboolean(L, 3);
-		return 0;
-	}
+			self->sprite = luaL_checkboolean(L, 3);
+			return 0;
+		}
 
-	case 0: {
-		if (DUB_ASSERT_KEY(key, "alg")) break;
+		case 0: {
+			if (DUB_ASSERT_KEY(key, "alg")) break;
 
-		self->alg = luaL_checkinteger(L, 3);
-		return 0;
-	}
+			self->alg = luaL_checkinteger(L, 3);
+			return 0;
+		}
 
-	case 2: {
-		if (DUB_ASSERT_KEY(key, "ditherAfter")) break;
+		case 2: {
+			if (DUB_ASSERT_KEY(key, "ditherAfter")) break;
 
-		self->ditherAfter = luaL_checkboolean(L, 3);
-		return 0;
-	}
+			self->ditherAfter = luaL_checkboolean(L, 3);
+			return 0;
+		}
 
-	case 5: {
-		if (DUB_ASSERT_KEY(key, "entireRow")) break;
+		case 5: {
+			if (DUB_ASSERT_KEY(key, "entireRow")) break;
 
-		self->entireRow = luaL_checkboolean(L, 3);
-		return 0;
-	}
+			self->entireRow = luaL_checkboolean(L, 3);
+			return 0;
+		}
 
-	case 8: {
-		if (DUB_ASSERT_KEY(key, "colSpace")) break;
+		case 8: {
+			if (DUB_ASSERT_KEY(key, "colSpace")) break;
 
-		self->colSpace = luaL_checkinteger(L, 3);
-		return 0;
-	}
+			self->colSpace = luaL_checkinteger(L, 3);
+			return 0;
+		}
 
-	case 1: {
-		if (DUB_ASSERT_KEY(key, "rowAuto")) break;
+		case 1: {
+			if (DUB_ASSERT_KEY(key, "rowAuto")) break;
 
-		self->rowAuto = luaL_checkinteger(L, 3);
-		return 0;
-	}
+			self->rowAuto = luaL_checkinteger(L, 3);
+			return 0;
+		}
 	}
 
 	if (lua_istable(L, 1))
@@ -203,47 +203,47 @@ static int settings__get_(lua_State *L) {
 	int key_h = dub::hash(key, 10);
 
 	switch (key_h) {
-	case 9: {
-		if (DUB_ASSERT_KEY(key, "sprite")) break;
+		case 9: {
+			if (DUB_ASSERT_KEY(key, "sprite")) break;
 
-		lua_pushboolean(L, self->sprite);
-		return 1;
-	}
+			lua_pushboolean(L, self->sprite);
+			return 1;
+		}
 
-	case 0: {
-		if (DUB_ASSERT_KEY(key, "alg")) break;
+		case 0: {
+			if (DUB_ASSERT_KEY(key, "alg")) break;
 
-		lua_pushinteger(L, self->alg);
-		return 1;
-	}
+			lua_pushinteger(L, self->alg);
+			return 1;
+		}
 
-	case 2: {
-		if (DUB_ASSERT_KEY(key, "ditherAfter")) break;
+		case 2: {
+			if (DUB_ASSERT_KEY(key, "ditherAfter")) break;
 
-		lua_pushboolean(L, self->ditherAfter);
-		return 1;
-	}
+			lua_pushboolean(L, self->ditherAfter);
+			return 1;
+		}
 
-	case 5: {
-		if (DUB_ASSERT_KEY(key, "entireRow")) break;
+		case 5: {
+			if (DUB_ASSERT_KEY(key, "entireRow")) break;
 
-		lua_pushboolean(L, self->entireRow);
-		return 1;
-	}
+			lua_pushboolean(L, self->entireRow);
+			return 1;
+		}
 
-	case 8: {
-		if (DUB_ASSERT_KEY(key, "colSpace")) break;
+		case 8: {
+			if (DUB_ASSERT_KEY(key, "colSpace")) break;
 
-		lua_pushinteger(L, self->colSpace);
-		return 1;
-	}
+			lua_pushinteger(L, self->colSpace);
+			return 1;
+		}
 
-	case 1: {
-		if (DUB_ASSERT_KEY(key, "rowAuto")) break;
+		case 1: {
+			if (DUB_ASSERT_KEY(key, "rowAuto")) break;
 
-		lua_pushinteger(L, self->rowAuto);
-		return 1;
-	}
+			lua_pushinteger(L, self->rowAuto);
+			return 1;
+		}
 	}
 
 	return 0;
@@ -437,34 +437,6 @@ int luaopen_settings(lua_State *L)
 	return 1;
 }
 
-static int lua_sprite_ditherGroup(lua_State*L) {
-	ditherSpriteAsImage(luaL_optinteger(L, 1, 0), luaL_optinteger(L, 2, 0));
-	return 0;
-}
-static int lua_sprite_ditherGroupAll(lua_State*L) {
-	ditherGroupAsImage(luaL_optinteger(L, 1, 0));
-	return 0;
-}
-static int lua_sprite_ditherAll(lua_State*L) {
-	for (unsigned i = 0; i < currentProject->ms->sps.size(); ++i)
-		ditherGroupAsImage(i);
-
-	return 0;
-}
-static int lua_sprite_draw(lua_State*L) {
-	int32_t outx, outy;
-	projects[luaL_optinteger(L, 1, 0)]->ms->sps[luaL_optinteger(L, 2, 0)].draw(luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0), luaL_optinteger(L, 5, 0), luaL_optinteger(L, 6, 0), lua_toboolean(L, 7), &outx, &outy);
-	lua_pushinteger(L, outx);
-	lua_pushinteger(L, outy);
-	return 2;
-}
-static const luaL_Reg lua_spriteAPI[] = {
-	{"ditherGroup", lua_sprite_ditherGroup},
-	{"ditherGroupAll", lua_sprite_ditherGroupAll},
-	{"ditherAll", lua_sprite_ditherAll},
-	{"draw", lua_sprite_draw},
-	{0, 0}
-};
 static void updateLevelTable(lua_State*L);
 static int lua_level_setLayerAmt(lua_State*L) {
 	currentProject->lvl->setlayeramt(luaL_optinteger(L, 1, 0), lua_toboolean(L, 2));
@@ -609,30 +581,6 @@ void updateProjectTablesLua(lua_State*L) {
 		lua_setglobal(L, "tilemaps");
 	}
 
-
-	lua_pushnil(L);
-	lua_setglobal(L, "metasprites");
-	lua_pushnil(L);
-	lua_setglobal(L, "sprites");
-
-	if (currentProject->containsData(pjHaveSprites)) {
-		lua_createtable(L, 0, (arLen(lua_spriteAPI) - 1) + 1);
-		luaL_setfuncs(L, lua_spriteAPI, 0);
-
-		lua_pushstring(L, "amt");
-		lua_createtable(L, currentProject->ms->sps.size(), 0);
-
-		for (unsigned i = 0; i < currentProject->ms->sps.size(); ++i) {
-			lua_pushinteger(L, currentProject->ms->sps[i].amt);
-			lua_rawseti(L, -2, i + 1);
-		}
-
-		lua_rawset(L, -3);
-		lua_setglobal(L, "metasprites");
-		luaopen_sprites(L);
-		lua_setglobal(L, "sprites");
-	}
-
 	updateLevelTable(L);
 
 	lua_pushnil(L);
@@ -651,7 +599,6 @@ void updateProjectTablesLua(lua_State*L) {
 	mkKeyunsigned(L, "NES", NES);
 	mkKeyunsigned(L, "gameGear", gameGear);
 	mkKeyunsigned(L, "masterSystem", masterSystem);
-	mkKeyunsigned(L, "count", projects_count);
 	lua_setglobal(L, "project");
 }
 static int lua_project_set(lua_State*L) {
@@ -784,6 +731,62 @@ static int lua_rgt_h(lua_State*L) {
 	} else
 		return 0;
 }
+
+static void tableToVector(lua_State*L, unsigned idx, std::vector<uint8_t>&vu8) {
+	int len = lua_rawlen(L, idx);
+	vu8.clear();
+	vu8.reserve(len);
+
+	for (int i = 1; i <= len; ++i) {
+		lua_rawgeti(L, idx, i);
+		int tmp = lua_tointeger(L, -1);
+
+		if (tmp < 0)
+			tmp = 0;
+
+		if (tmp > 255)
+			tmp = 255;
+
+		lua_pop(L, 1);
+		vu8.emplace_back(tmp);
+	}
+}
+
+static int lua_rgt_savePNG(lua_State*L) {
+	// int savePNG(const char * fileName, uint32_t width, uint32_t height, void * ptr, uint8_t*pal = nullptr, unsigned pn = 0, bool hasAlpha = false);
+	unsigned width = luaL_checkinteger(L, 2);
+	unsigned height = luaL_checkinteger(L, 3);
+	bool hasAlpha = luaL_checkboolean(L, 6);
+	// First check if we have a palette.
+	int palType = lua_type(L, 5);
+	std::vector<uint8_t> pal;
+
+	if (palType == LUA_TTABLE)
+		tableToVector(L, 5, pal);
+
+	else if (palType != LUA_TNIL) {
+		fl_alert("Unknown palette table type.");
+		return 0;
+	}
+
+	if (!lua_istable(L, 4)) {
+		fl_alert("Image must be a table.");
+		return 0;
+	}
+
+	std::vector<uint8_t> img;
+	tableToVector(L, 4, img);
+
+	lua_pushinteger(L, savePNG(luaL_checkstring(L, 1), // Filename
+	                           width,
+	                           height,
+	                           img.data(),
+	                           pal.size() == 0 ? nullptr : pal.data(),
+	                           pal.size() / 3,
+	                           hasAlpha
+	                          ));
+	return 1;
+}
 static const luaL_Reg lua_rgtAPI[] = {
 	{"redraw", lua_rgt_redraw},
 	{"damage", lua_rgt_damage},
@@ -797,6 +800,7 @@ static const luaL_Reg lua_rgtAPI[] = {
 	{"syncProject", lua_rgt_syncProject},
 	{"w", lua_rgt_w},
 	{"h", lua_rgt_h},
+	{"savePNG", lua_rgt_savePNG},
 	{0, 0}
 };
 static const struct keyPairi rgtConsts[] = {
@@ -857,6 +861,8 @@ static void tableToSS(lua_State*L, unsigned idx, std::stringstream&ss) {
 
 	ss.seekp(0, ss.beg);
 }
+
+
 static void SStoTable(lua_State*L, std::stringstream&ss) {
 	lua_newtable(L);
 	int idx = 0;
@@ -1102,8 +1108,10 @@ lua_State*createLuaState(void) {
 #endif
 		luaopen_posix_libgen(L);
 		lua_setglobal(L, "libgen");
+
 		luaopen_posix_unistd(L);
 		lua_setglobal(L, "unistd");
+
 		luaopen_settings(L);
 		lua_setglobal(L, "settings");
 	} else

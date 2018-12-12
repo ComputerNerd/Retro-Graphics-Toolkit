@@ -34,38 +34,38 @@ std::string decodeTypeStr(const char * filename, size_t &filesize, int type) {
 	std::ifstream ifs (filename, std::ifstream::in | std::ifstream::binary);
 
 	switch (type) {
-	case 1:
-	{	nemesis decomp;
-		decomp.decode(ifs, outDecomp);
-	}
-	break;
+		case 1:
+		{	nemesis decomp;
+			decomp.decode(ifs, outDecomp);
+		}
+		break;
 
-	case 2:
-	{	kosinski decomp;
-		decomp.decode(ifs, outDecomp);
-	}
-	break;
+		case 2:
+		{	kosinski decomp;
+			decomp.decode(ifs, outDecomp);
+		}
+		break;
 
-	case 3:
-	{	enigma decomp;
-		decomp.decode(ifs, outDecomp);
-	}
-	break;
+		case 3:
+		{	enigma decomp;
+			decomp.decode(ifs, outDecomp);
+		}
+		break;
 
-	case 4:
-	{	saxman decomp;
-		decomp.decode(ifs, outDecomp);
-	}
-	break;
+		case 4:
+		{	saxman decomp;
+			decomp.decode(ifs, outDecomp);
+		}
+		break;
 
-	case 5:
-	{	comper decomp;
-		decomp.decode(ifs, outDecomp);
-	}
-	break;
+		case 5:
+		{	comper decomp;
+			decomp.decode(ifs, outDecomp);
+		}
+		break;
 
-	default:
-		show_default_error
+		default:
+			show_default_error
 	}
 
 	filesize = outDecomp.str().length();
@@ -85,38 +85,38 @@ void*decodeTypeRam(uint8_t*dat, size_t inputSize, size_t &filesize, int type) {
 		ss << dat[i];
 
 	switch (type) {
-	case 1:
-	{	nemesis decomp;
-		decomp.decode(ss, outDecomp);
-	}
-	break;
+		case 1:
+		{	nemesis decomp;
+			decomp.decode(ss, outDecomp);
+		}
+		break;
 
-	case 2:
-	{	kosinski decomp;
-		decomp.decode(ss, outDecomp);
-	}
-	break;
+		case 2:
+		{	kosinski decomp;
+			decomp.decode(ss, outDecomp);
+		}
+		break;
 
-	case 3:
-	{	enigma decomp;
-		decomp.decode(ss, outDecomp);
-	}
-	break;
+		case 3:
+		{	enigma decomp;
+			decomp.decode(ss, outDecomp);
+		}
+		break;
 
-	case 4:
-	{	saxman decomp;
-		decomp.decode(ss, outDecomp);
-	}
-	break;
+		case 4:
+		{	saxman decomp;
+			decomp.decode(ss, outDecomp);
+		}
+		break;
 
-	case 5:
-	{	comper decomp;
-		decomp.decode(ss, outDecomp);
-	}
-	break;
+		case 5:
+		{	comper decomp;
+			decomp.decode(ss, outDecomp);
+		}
+		break;
 
-	default:
-		show_default_error
+		default:
+			show_default_error
 	}
 
 	filesize = outDecomp.str().length();
@@ -133,36 +133,36 @@ void*encodeType(void*in, size_t n, size_t&outSize, int type) {
 	std::ostringstream outfun;
 
 	switch (type) {
-	case 1:
-	{	nemesis comp;
-		comp.encode(iss, outfun);
-	}
-	break;
+		case 1:
+		{	nemesis comp;
+			comp.encode(iss, outfun);
+		}
+		break;
 
-	case 2:
-	{	kosinski comp;
-		comp.encode(iss, outfun);
-	}
-	break;
+		case 2:
+		{	kosinski comp;
+			comp.encode(iss, outfun);
+		}
+		break;
 
-	case 3:
-	{	enigma comp;
-		comp.encode(iss, outfun);
-	}
-	break;
+		case 3:
+		{	enigma comp;
+			comp.encode(iss, outfun);
+		}
+		break;
 
-	case 4:
-	{	basic_saxman comp;
-		comp.encode(iss, outfun, true);
-		//is >> iss;
-	}
-	break;
+		case 4:
+		{	basic_saxman comp;
+			comp.encode(iss, outfun, true);
+			//is >> iss;
+		}
+		break;
 
-	case 5:
-	{	comper comp;
-		comp.encode(iss, outfun);
-	}
-	break;
+		case 5:
+		{	comper comp;
+			comp.encode(iss, outfun);
+		}
+		break;
 	}
 
 	outSize = outfun.str().length();

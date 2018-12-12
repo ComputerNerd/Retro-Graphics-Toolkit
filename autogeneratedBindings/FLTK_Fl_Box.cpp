@@ -10,117 +10,127 @@
 #include "dub/dub.h"
 #include <FL/Fl_Box.H>
 #include "cbHelper.h"
-class Fl_Lua_Box:public Fl_Box{
-using Fl_Box::Fl_Box;
+class Fl_Lua_Box: public Fl_Box {
+	using Fl_Box::Fl_Box;
 public:
 	struct cbInfo ci;
 };
 
 
 /** ~Fl_Lua_Box()
- * 
+ *
  */
 static int Fl_Lua_Box__Fl_Lua_Box(lua_State *L) {
-  try {
-    DubUserdata *userdata = ((DubUserdata*)dub::checksdata_d(L, 1, "FLTK.Fl_Lua_Box"));
-    if (userdata->gc) {
-      Fl_Lua_Box *self = (Fl_Lua_Box *)userdata->ptr;
-	if(self->ci.cb) free(self->ci.cb);
+	try {
+		DubUserdata *userdata = ((DubUserdata*)dub::checksdata_d(L, 1, "FLTK.Fl_Lua_Box"));
 
-      delete self;
-    }
-    userdata->gc = false;
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "__gc: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "__gc: Unknown exception");
-  }
-  return dub::error(L);
+		if (userdata->gc) {
+			Fl_Lua_Box *self = (Fl_Lua_Box *)userdata->ptr;
+
+			if (self->ci.cb) free(self->ci.cb);
+
+			delete self;
+		}
+
+		userdata->gc = false;
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "__gc: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "__gc: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** Cast (class_name)
- * 
+ *
  */
 static int Fl_Lua_Box__cast_(lua_State *L) {
 
-  Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata_n(L, 1, "FLTK.Fl_Lua_Box"));
-  const char *key = luaL_checkstring(L, 2);
-  void **retval__ = (void**)lua_newuserdata(L, sizeof(void*));
-  int key_h = dub::hash(key, 2);
-  switch(key_h) {
-    case 0: {
-      if (DUB_ASSERT_KEY(key, "FLTK.Fl_Widget")) break;
-      *retval__ = static_cast<Fl_Widget *>(self);
-      return 1;
-    }
-  }
-  return 0;
+	Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata_n(L, 1, "FLTK.Fl_Lua_Box"));
+	const char *key = luaL_checkstring(L, 2);
+	void **retval__ = (void**)lua_newuserdata(L, sizeof(void*));
+	int key_h = dub::hash(key, 2);
+
+	switch (key_h) {
+		case 0: {
+			if (DUB_ASSERT_KEY(key, "FLTK.Fl_Widget")) break;
+
+			*retval__ = static_cast<Fl_Widget *>(self);
+			return 1;
+		}
+	}
+
+	return 0;
 }
 
 /** Fl_Lua_Box::Fl_Lua_Box(int X, int Y, int W, int H, const char *l=0)
  * inc/Fl_Lua_Box.h:47
  */
 static int Fl_Lua_Box_Fl_Lua_Box(lua_State *L) {
-  try {
-    int top__ = lua_gettop(L);
-    if (top__ >= 6) {
-      int b = dub::checkinteger(L, 1);
-      int X = dub::checkinteger(L, 2);
-      int Y = dub::checkinteger(L, 3);
-      int W = dub::checkinteger(L, 4);
-      int H = dub::checkinteger(L, 5);
-      const char *l = dub::checkstring(L, 6);
-      Fl_Lua_Box *retval__ = new Fl_Lua_Box((Fl_Boxtype)b, X, Y, W, H, l);
-	retval__->ci.L=L;
-	retval__->ci.cb=0;
-      dub::pushudata(L, retval__, "FLTK.Fl_Lua_Box", true);
-      return 1;
-    } else if (top__ >= 5) {
-      int X = dub::checkinteger(L, 1);
-      int Y = dub::checkinteger(L, 2);
-      int W = dub::checkinteger(L, 3);
-      int H = dub::checkinteger(L, 4);
-      const char *l = dub::checkstring(L, 5);
-      Fl_Lua_Box *retval__ = new Fl_Lua_Box(X, Y, W, H, l);
-	retval__->ci.L=L;
-	retval__->ci.cb=0;
-      dub::pushudata(L, retval__, "FLTK.Fl_Lua_Box", true);
-      return 1;
-    } else {
-      int X = dub::checkinteger(L, 1);
-      int Y = dub::checkinteger(L, 2);
-      int W = dub::checkinteger(L, 3);
-      int H = dub::checkinteger(L, 4);
-      Fl_Lua_Box *retval__ = new Fl_Lua_Box(X, Y, W, H);
-	retval__->ci.L=L;
-	retval__->ci.cb=0;
-      dub::pushudata(L, retval__, "FLTK.Fl_Lua_Box", true);
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "new: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "new: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 6) {
+			int b = dub::checkinteger(L, 1);
+			int X = dub::checkinteger(L, 2);
+			int Y = dub::checkinteger(L, 3);
+			int W = dub::checkinteger(L, 4);
+			int H = dub::checkinteger(L, 5);
+			const char *l = dub::checkstring(L, 6);
+			Fl_Lua_Box *retval__ = new Fl_Lua_Box((Fl_Boxtype)b, X, Y, W, H, l);
+			retval__->ci.L = L;
+			retval__->ci.cb = 0;
+			dub::pushudata(L, retval__, "FLTK.Fl_Lua_Box", true);
+			return 1;
+		} else if (top__ >= 5) {
+			int X = dub::checkinteger(L, 1);
+			int Y = dub::checkinteger(L, 2);
+			int W = dub::checkinteger(L, 3);
+			int H = dub::checkinteger(L, 4);
+			const char *l = dub::checkstring(L, 5);
+			Fl_Lua_Box *retval__ = new Fl_Lua_Box(X, Y, W, H, l);
+			retval__->ci.L = L;
+			retval__->ci.cb = 0;
+			dub::pushudata(L, retval__, "FLTK.Fl_Lua_Box", true);
+			return 1;
+		} else {
+			int X = dub::checkinteger(L, 1);
+			int Y = dub::checkinteger(L, 2);
+			int W = dub::checkinteger(L, 3);
+			int H = dub::checkinteger(L, 4);
+			Fl_Lua_Box *retval__ = new Fl_Lua_Box(X, Y, W, H);
+			retval__->ci.L = L;
+			retval__->ci.cb = 0;
+			dub::pushudata(L, retval__, "FLTK.Fl_Lua_Box", true);
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "new: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "new: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** virtual int Fl_Lua_Box::handle(int)
  * inc/Fl_Lua_Box.h:52
  */
 static int Fl_Lua_Box_handle(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int event = dub::checkinteger(L, 2);
-    lua_pushnumber(L, self->handle(event));
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "handle: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "handle: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int event = dub::checkinteger(L, 2);
+		lua_pushnumber(L, self->handle(event));
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "handle: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "handle: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 
@@ -128,512 +138,556 @@ static int Fl_Lua_Box_handle(lua_State *L) {
  * inc/Fl_Widget.h:243
  */
 static int Fl_Lua_Box_parent(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      Fl_Group *p = *((Fl_Group **)dub::checksdata(L, 2, "FLTK.Fl_Group"));
-      self->parent(p);
-      return 0;
-    } else {
-      Fl_Group *retval__ = self->parent();
-      if (!retval__) return 0;
-      dub::pushudata(L, retval__, "FLTK.Fl_Group", false);
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "parent: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "parent: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			Fl_Group *p = *((Fl_Group **)dub::checksdata(L, 2, "FLTK.Fl_Group"));
+			self->parent(p);
+			return 0;
+		} else {
+			Fl_Group *retval__ = self->parent();
+
+			if (!retval__) return 0;
+
+			dub::pushudata(L, retval__, "FLTK.Fl_Group", false);
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "parent: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "parent: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** unsigned char Fl_Widget::type() const
  * inc/Fl_Widget.h:263
  */
 static int Fl_Lua_Box_type(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      unsigned char t = dub::checkinteger(L, 2);
-      self->type(t);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->type());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "type: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "type: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			unsigned char t = dub::checkinteger(L, 2);
+			self->type(t);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->type());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "type: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "type: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Widget::x() const
  * inc/Fl_Widget.h:273
  */
 static int Fl_Lua_Box_x(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    lua_pushnumber(L, self->x());
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "x: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "x: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		lua_pushnumber(L, self->x());
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "x: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "x: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Widget::y() const
  * inc/Fl_Widget.h:278
  */
 static int Fl_Lua_Box_y(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    lua_pushnumber(L, self->y());
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "y: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "y: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		lua_pushnumber(L, self->y());
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "y: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "y: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Widget::w() const
  * inc/Fl_Widget.h:283
  */
 static int Fl_Lua_Box_w(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    lua_pushnumber(L, self->w());
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "w: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "w: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		lua_pushnumber(L, self->w());
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "w: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "w: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Widget::h() const
  * inc/Fl_Widget.h:288
  */
 static int Fl_Lua_Box_h(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    lua_pushnumber(L, self->h());
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "h: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "h: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		lua_pushnumber(L, self->h());
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "h: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "h: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** virtual void Fl_Widget::resize(int x, int y, int w, int h)
  * inc/Fl_Widget.h:309
  */
 static int Fl_Lua_Box_resize(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int x = dub::checkinteger(L, 2);
-    int y = dub::checkinteger(L, 3);
-    int w = dub::checkinteger(L, 4);
-    int h = dub::checkinteger(L, 5);
-    self->resize(x, y, w, h);
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "resize: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "resize: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int x = dub::checkinteger(L, 2);
+		int y = dub::checkinteger(L, 3);
+		int w = dub::checkinteger(L, 4);
+		int h = dub::checkinteger(L, 5);
+		self->resize(x, y, w, h);
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "resize: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "resize: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Widget::damage_resize(int, int, int, int)
  * inc/Fl_Widget.h:312
  */
 static int Fl_Lua_Box_damage_resize(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int p1 = dub::checkinteger(L, 2);
-    int p2 = dub::checkinteger(L, 3);
-    int p3 = dub::checkinteger(L, 4);
-    int p4 = dub::checkinteger(L, 5);
-    lua_pushnumber(L, self->damage_resize(p1, p2, p3, p4));
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "damage_resize: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "damage_resize: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int p1 = dub::checkinteger(L, 2);
+		int p2 = dub::checkinteger(L, 3);
+		int p3 = dub::checkinteger(L, 4);
+		int p4 = dub::checkinteger(L, 5);
+		lua_pushnumber(L, self->damage_resize(p1, p2, p3, p4));
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "damage_resize: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "damage_resize: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::position(int X, int Y)
  * inc/Fl_Widget.h:321
  */
 static int Fl_Lua_Box_position(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int X = dub::checkinteger(L, 2);
-    int Y = dub::checkinteger(L, 3);
-    self->position(X, Y);
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "position: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "position: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int X = dub::checkinteger(L, 2);
+		int Y = dub::checkinteger(L, 3);
+		self->position(X, Y);
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "position: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "position: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::size(int W, int H)
  * inc/Fl_Widget.h:330
  */
 static int Fl_Lua_Box_size(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int W = dub::checkinteger(L, 2);
-    int H = dub::checkinteger(L, 3);
-    self->size(W, H);
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "size: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "size: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int W = dub::checkinteger(L, 2);
+		int H = dub::checkinteger(L, 3);
+		self->size(W, H);
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "size: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "size: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Widget::align() const
  * inc/Fl_Widget.h:337
  */
 static int Fl_Lua_Box_align(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int alignment = dub::checkinteger(L, 2);
-      self->align(alignment);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->align());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "align: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "align: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int alignment = dub::checkinteger(L, 2);
+			self->align(alignment);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->align());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "align: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "align: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Widget::box() const
  * inc/Fl_Widget.h:352
  */
 static int Fl_Lua_Box_box(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int new_box = dub::checkinteger(L, 2);
-      self->box((Fl_Boxtype)new_box);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->box());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "box: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "box: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int new_box = dub::checkinteger(L, 2);
+			self->box((Fl_Boxtype)new_box);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->box());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "box: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "box: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Widget::color() const
  * inc/Fl_Widget.h:367
  */
 static int Fl_Lua_Box_color(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 3) {
-      int bg = dub::checkinteger(L, 2);
-      int sel = dub::checkinteger(L, 3);
-      self->color(bg, sel);
-      return 0;
-    } else if (top__ >= 2) {
-      int bg = dub::checkinteger(L, 2);
-      self->color(bg);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->color());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "color: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "color: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 3) {
+			int bg = dub::checkinteger(L, 2);
+			int sel = dub::checkinteger(L, 3);
+			self->color(bg, sel);
+			return 0;
+		} else if (top__ >= 2) {
+			int bg = dub::checkinteger(L, 2);
+			self->color(bg);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->color());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "color: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "color: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Widget::selection_color() const
  * inc/Fl_Widget.h:385
  */
 static int Fl_Lua_Box_selection_color(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int a = dub::checkinteger(L, 2);
-      self->selection_color(a);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->selection_color());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "selection_color: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "selection_color: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int a = dub::checkinteger(L, 2);
+			self->selection_color(a);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->selection_color());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "selection_color: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "selection_color: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** const char* Fl_Widget::label() const
  * inc/Fl_Widget.h:410
  */
 static int Fl_Lua_Box_label(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 3) {
-      Fl_Labeltype a = (Fl_Labeltype)dub::checkinteger(L, 2);
-      const char *b = dub::checkstring(L, 3);
-      self->label(a, b);
-      return 0;
-    } else if (top__ >= 2) {
-      const char *text = dub::checkstring(L, 2);
-      self->label(text);
-      return 0;
-    } else {
-      lua_pushstring(L, self->label());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "label: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "label: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 3) {
+			Fl_Labeltype a = (Fl_Labeltype)dub::checkinteger(L, 2);
+			const char *b = dub::checkstring(L, 3);
+			self->label(a, b);
+			return 0;
+		} else if (top__ >= 2) {
+			const char *text = dub::checkstring(L, 2);
+			self->label(text);
+			return 0;
+		} else {
+			lua_pushstring(L, self->label());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "label: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "label: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::copy_label(const char *new_label)
  * inc/Fl_Widget.h:434
  */
 static int Fl_Lua_Box_copy_label(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    const char *new_label = dub::checkstring(L, 2);
-    self->copy_label(new_label);
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "copy_label: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "copy_label: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		const char *new_label = dub::checkstring(L, 2);
+		self->copy_label(new_label);
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "copy_label: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "copy_label: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** Fl_Labeltype Fl_Widget::labeltype() const
  * inc/Fl_Widget.h:445
  */
 static int Fl_Lua_Box_labeltype(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      Fl_Labeltype a = (Fl_Labeltype)dub::checkinteger(L, 2);
-      self->labeltype(a);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->labeltype());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "labeltype: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "labeltype: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			Fl_Labeltype a = (Fl_Labeltype)dub::checkinteger(L, 2);
+			self->labeltype(a);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->labeltype());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "labeltype: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "labeltype: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Widget::labelcolor() const
  * inc/Fl_Widget.h:461
  */
 static int Fl_Lua_Box_labelcolor(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int c = dub::checkinteger(L, 2);
-      self->labelcolor(c);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->labelcolor());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "labelcolor: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "labelcolor: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int c = dub::checkinteger(L, 2);
+			self->labelcolor(c);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->labelcolor());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "labelcolor: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "labelcolor: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Widget::labelfont() const
  * inc/Fl_Widget.h:476
  */
 static int Fl_Lua_Box_labelfont(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int f = dub::checkinteger(L, 2);
-      self->labelfont(f);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->labelfont());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "labelfont: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "labelfont: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int f = dub::checkinteger(L, 2);
+			self->labelfont(f);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->labelfont());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "labelfont: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "labelfont: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Widget::labelsize() const
  * inc/Fl_Widget.h:491
  */
 static int Fl_Lua_Box_labelsize(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int pix = dub::checkinteger(L, 2);
-      self->labelsize(pix);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->labelsize());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "labelsize: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "labelsize: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int pix = dub::checkinteger(L, 2);
+			self->labelsize(pix);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->labelsize());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "labelsize: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "labelsize: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** Fl_Image* Fl_Widget::image()
  * inc/Fl_Widget.h:503
  */
 static int Fl_Lua_Box_image(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      Fl_Image *img = *((Fl_Image **)dub::checksdata(L, 2, "FLTK.Fl_Image"));
-      self->image(img);
-      return 0;
-    } else {
-      Fl_Image *retval__ = self->image();
-      if (!retval__) return 0;
-      dub::pushudata(L, retval__, "FLTK.Fl_Image", false);
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "image: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "image: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			Fl_Image *img = *((Fl_Image **)dub::checksdata(L, 2, "FLTK.Fl_Image"));
+			self->image(img);
+			return 0;
+		} else {
+			Fl_Image *retval__ = self->image();
+
+			if (!retval__) return 0;
+
+			dub::pushudata(L, retval__, "FLTK.Fl_Image", false);
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "image: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "image: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** Fl_Image* Fl_Widget::deimage()
  * inc/Fl_Widget.h:522
  */
 static int Fl_Lua_Box_deimage(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      Fl_Image *img = *((Fl_Image **)dub::checksdata(L, 2, "FLTK.Fl_Image"));
-      self->deimage(img);
-      return 0;
-    } else {
-      Fl_Image *retval__ = self->deimage();
-      if (!retval__) return 0;
-      dub::pushudata(L, retval__, "FLTK.Fl_Image", false);
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "deimage: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "deimage: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			Fl_Image *img = *((Fl_Image **)dub::checksdata(L, 2, "FLTK.Fl_Image"));
+			self->deimage(img);
+			return 0;
+		} else {
+			Fl_Image *retval__ = self->deimage();
+
+			if (!retval__) return 0;
+
+			dub::pushudata(L, retval__, "FLTK.Fl_Image", false);
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "deimage: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "deimage: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** const char* Fl_Widget::tooltip() const
  * inc/Fl_Widget.h:541
  */
 static int Fl_Lua_Box_tooltip(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      const char *text = dub::checkstring(L, 2);
-      self->tooltip(text);
-      return 0;
-    } else {
-      lua_pushstring(L, self->tooltip());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "tooltip: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "tooltip: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			const char *text = dub::checkstring(L, 2);
+			self->tooltip(text);
+			return 0;
+		} else {
+			lua_pushstring(L, self->tooltip());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "tooltip: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "tooltip: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::copy_tooltip(const char *text)
  * inc/Fl_Widget.h:544
  */
 static int Fl_Lua_Box_copy_tooltip(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    const char *text = dub::checkstring(L, 2);
-    self->copy_tooltip(text);
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "copy_tooltip: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "copy_tooltip: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		const char *text = dub::checkstring(L, 2);
+		self->copy_tooltip(text);
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "copy_tooltip: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "copy_tooltip: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** Fl_Callback_p Fl_Widget::callback() const
@@ -643,18 +697,19 @@ static int Fl_Lua_Box_callback(lua_State *L) {
 	try {
 		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
 		int top__ = lua_gettop(L);
+
 		if (top__ >= 3) {
-			self->ci.cb=strdup(luaL_checkstring(L,2));
-			self->ci.udat=luaL_checkinteger(L,3);
-			self->callback(luaWidgetCallbackHelper,&self->ci);
+			self->ci.cb = strdup(luaL_checkstring(L, 2));
+			self->ci.udat = luaL_checkinteger(L, 3);
+			self->callback(luaWidgetCallbackHelper, &self->ci);
 			return 0;
 		} else if (top__ >= 2) {
-			self->ci.cb=strdup(luaL_checkstring(L,2));
-			self->ci.udat=0;
-			self->callback(luaWidgetCallbackHelper,&self->ci);
+			self->ci.cb = strdup(luaL_checkstring(L, 2));
+			self->ci.udat = 0;
+			self->callback(luaWidgetCallbackHelper, &self->ci);
 			return 0;
 		} else {
-			lua_pushstring(L,self->ci.cb);
+			lua_pushstring(L, self->ci.cb);
 			return 1;
 		}
 	} catch (std::exception &e) {
@@ -662,6 +717,7 @@ static int Fl_Lua_Box_callback(lua_State *L) {
 	} catch (...) {
 		lua_pushfstring(L, "callback: Unknown exception");
 	}
+
 	return dub::error(L);
 }
 
@@ -669,341 +725,364 @@ static int Fl_Lua_Box_callback(lua_State *L) {
  * inc/Fl_Widget.h:582
  */
 static int Fl_Lua_Box_user_data(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      void *v = *((void **)dub::checksdata(L, 2, "void"));
-      self->user_data(v);
-      return 0;
-    } else {
-      self->user_data();
-      return 0;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "user_data: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "user_data: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			void *v = *((void **)dub::checksdata(L, 2, "void"));
+			self->user_data(v);
+			return 0;
+		} else {
+			self->user_data();
+			return 0;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "user_data: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "user_data: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** long Fl_Widget::argument() const
  * inc/Fl_Widget.h:592
  */
 static int Fl_Lua_Box_argument(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      long *v = *((long **)dub::checksdata(L, 2, "long"));
-      self->argument(*v);
-      return 0;
-    } else {
-      dub::pushudata(L, new long(self->argument()), "long", true);
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "argument: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "argument: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			long *v = *((long **)dub::checksdata(L, 2, "long"));
+			self->argument(*v);
+			return 0;
+		} else {
+			dub::pushudata(L, new long(self->argument()), "long", true);
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "argument: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "argument: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** Fl_When Fl_Widget::when() const
  * inc/Fl_Widget.h:608
  */
 static int Fl_Lua_Box_when(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      unsigned char i = dub::checkinteger(L, 2);
-      self->when(i);
-      return 0;
-    } else {
-      dub::pushudata(L, new Fl_When(self->when()), "Fl_When", true);
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "when: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "when: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			unsigned char i = dub::checkinteger(L, 2);
+			self->when(i);
+			return 0;
+		} else {
+			dub::pushudata(L, new Fl_When(self->when()), "Fl_When", true);
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "when: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "when: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** unsigned int Fl_Widget::visible() const
  * inc/Fl_Widget.h:647
  */
 static int Fl_Lua_Box_visible(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    lua_pushnumber(L, self->visible());
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "visible: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "visible: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		lua_pushnumber(L, self->visible());
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "visible: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "visible: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Widget::visible_r() const
  * inc/Fl_Widget.h:653
  */
 static int Fl_Lua_Box_visible_r(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    lua_pushnumber(L, self->visible_r());
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "visible_r: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "visible_r: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		lua_pushnumber(L, self->visible_r());
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "visible_r: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "visible_r: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** virtual void Fl_Widget::show()
  * inc/Fl_Widget.h:672
  */
 static int Fl_Lua_Box_show(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    self->show();
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "show: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "show: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		self->show();
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "show: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "show: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** virtual void Fl_Widget::hide()
  * inc/Fl_Widget.h:677
  */
 static int Fl_Lua_Box_hide(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    self->hide();
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "hide: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "hide: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		self->hide();
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "hide: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "hide: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::set_visible()
  * inc/Fl_Widget.h:683
  */
 static int Fl_Lua_Box_set_visible(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    self->set_visible();
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "set_visible: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "set_visible: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		self->set_visible();
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "set_visible: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "set_visible: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::clear_visible()
  * inc/Fl_Widget.h:689
  */
 static int Fl_Lua_Box_clear_visible(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    self->clear_visible();
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "clear_visible: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "clear_visible: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		self->clear_visible();
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "clear_visible: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "clear_visible: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** unsigned int Fl_Widget::active() const
  * inc/Fl_Widget.h:695
  */
 static int Fl_Lua_Box_active(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    lua_pushnumber(L, self->active());
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "active: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "active: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		lua_pushnumber(L, self->active());
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "active: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "active: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Widget::active_r() const
  * inc/Fl_Widget.h:701
  */
 static int Fl_Lua_Box_active_r(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    lua_pushnumber(L, self->active_r());
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "active_r: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "active_r: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		lua_pushnumber(L, self->active_r());
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "active_r: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "active_r: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::activate()
  * inc/Fl_Widget.h:708
  */
 static int Fl_Lua_Box_activate(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    self->activate();
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "activate: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "activate: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		self->activate();
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "activate: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "activate: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::deactivate()
  * inc/Fl_Widget.h:724
  */
 static int Fl_Lua_Box_deactivate(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    self->deactivate();
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "deactivate: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "deactivate: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		self->deactivate();
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "deactivate: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "deactivate: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** unsigned int Fl_Widget::output() const
  * inc/Fl_Widget.h:734
  */
 static int Fl_Lua_Box_output(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    lua_pushnumber(L, self->output());
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "output: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "output: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		lua_pushnumber(L, self->output());
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "output: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "output: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::set_output()
  * inc/Fl_Widget.h:739
  */
 static int Fl_Lua_Box_set_output(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    self->set_output();
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "set_output: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "set_output: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		self->set_output();
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "set_output: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "set_output: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::clear_output()
  * inc/Fl_Widget.h:744
  */
 static int Fl_Lua_Box_clear_output(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    self->clear_output();
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "clear_output: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "clear_output: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		self->clear_output();
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "clear_output: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "clear_output: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** unsigned int Fl_Widget::takesevents() const
  * inc/Fl_Widget.h:751
  */
 static int Fl_Lua_Box_takesevents(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    lua_pushnumber(L, self->takesevents());
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "takesevents: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "takesevents: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		lua_pushnumber(L, self->takesevents());
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "takesevents: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "takesevents: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** unsigned int Fl_Widget::changed() const
  * inc/Fl_Widget.h:768
  */
 static int Fl_Lua_Box_changed(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    lua_pushnumber(L, self->changed());
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "changed: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "changed: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		lua_pushnumber(L, self->changed());
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "changed: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "changed: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::set_changed()
  * inc/Fl_Widget.h:773
  */
 static int Fl_Lua_Box_set_changed(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    self->set_changed();
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "set_changed: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "set_changed: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		self->set_changed();
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "set_changed: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "set_changed: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::clear_changed()
  * inc/Fl_Widget.h:778
  */
 static int Fl_Lua_Box_clear_changed(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    self->clear_changed();
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "clear_changed: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "clear_changed: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		self->clear_changed();
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "clear_changed: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "clear_changed: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::clear_active()
@@ -1011,16 +1090,17 @@ static int Fl_Lua_Box_clear_changed(lua_State *L) {
  */
 #if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Box_clear_active(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    self->clear_active();
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "clear_active: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "clear_active: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		self->clear_active();
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "clear_active: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "clear_active: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 #endif
 
@@ -1029,16 +1109,17 @@ static int Fl_Lua_Box_clear_active(lua_State *L) {
  */
 #if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Box_set_active(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    self->set_active();
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "set_active: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "set_active: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		self->set_active();
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "set_active: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "set_active: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 #endif
 
@@ -1046,345 +1127,370 @@ static int Fl_Lua_Box_set_active(lua_State *L) {
  * inc/Fl_Widget.h:799
  */
 static int Fl_Lua_Box_take_focus(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    lua_pushnumber(L, self->take_focus());
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "take_focus: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "take_focus: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		lua_pushnumber(L, self->take_focus());
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "take_focus: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "take_focus: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::set_visible_focus()
  * inc/Fl_Widget.h:807
  */
 static int Fl_Lua_Box_set_visible_focus(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    self->set_visible_focus();
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "set_visible_focus: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "set_visible_focus: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		self->set_visible_focus();
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "set_visible_focus: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "set_visible_focus: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::clear_visible_focus()
  * inc/Fl_Widget.h:813
  */
 static int Fl_Lua_Box_clear_visible_focus(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    self->clear_visible_focus();
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "clear_visible_focus: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "clear_visible_focus: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		self->clear_visible_focus();
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "clear_visible_focus: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "clear_visible_focus: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::visible_focus(int v)
  * inc/Fl_Widget.h:819
  */
 static int Fl_Lua_Box_visible_focus(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      int v = dub::checkinteger(L, 2);
-      self->visible_focus(v);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->visible_focus());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "visible_focus: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "visible_focus: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			int v = dub::checkinteger(L, 2);
+			self->visible_focus(v);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->visible_focus());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "visible_focus: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "visible_focus: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::do_callback()
  * inc/Fl_Widget.h:840
  */
 static int Fl_Lua_Box_do_callback(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 3) {
-      int type__ = lua_type(L, 3);
-      void **ptr3__;
-      if ( (ptr3__ = dub::issdata(L, 3, "long", type__)) ) {
-        Fl_Widget *o = *((Fl_Widget **)dub::checksdata(L, 2, "FLTK.Fl_Widget"));
-        long *arg = *((long **)ptr3__);
-        self->do_callback(o, *arg);
-        return 0;
-      } else {
-        Fl_Widget *o = *((Fl_Widget **)dub::checksdata(L, 2, "FLTK.Fl_Widget"));
-        void *arg = *((void **)dub::checksdata(L, 3, "void"));
-        self->do_callback(o, arg);
-        return 0;
-      }
-    } else if (top__ >= 2) {
-      Fl_Widget *o = *((Fl_Widget **)dub::checksdata(L, 2, "FLTK.Fl_Widget"));
-      self->do_callback(o);
-      return 0;
-    } else {
-      self->do_callback();
-      return 0;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "do_callback: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "do_callback: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 3) {
+			int type__ = lua_type(L, 3);
+			void **ptr3__;
+
+			if ( (ptr3__ = dub::issdata(L, 3, "long", type__)) ) {
+				Fl_Widget *o = *((Fl_Widget **)dub::checksdata(L, 2, "FLTK.Fl_Widget"));
+				long *arg = *((long **)ptr3__);
+				self->do_callback(o, *arg);
+				return 0;
+			} else {
+				Fl_Widget *o = *((Fl_Widget **)dub::checksdata(L, 2, "FLTK.Fl_Widget"));
+				void *arg = *((void **)dub::checksdata(L, 3, "void"));
+				self->do_callback(o, arg);
+				return 0;
+			}
+		} else if (top__ >= 2) {
+			Fl_Widget *o = *((Fl_Widget **)dub::checksdata(L, 2, "FLTK.Fl_Widget"));
+			self->do_callback(o);
+			return 0;
+		} else {
+			self->do_callback();
+			return 0;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "do_callback: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "do_callback: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Widget::test_shortcut()
  * inc/Fl_Widget.h:855
  */
 static int Fl_Lua_Box_test_shortcut(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 3) {
-      const char *p1 = dub::checkstring(L, 2);
-      const bool require_alt = dub::checkboolean(L, 3);
-      lua_pushnumber(L, Fl_Lua_Box::test_shortcut(p1, require_alt));
-      return 1;
-    } else if (top__ >= 2) {
-      const char *p1 = dub::checkstring(L, 2);
-      lua_pushnumber(L, Fl_Lua_Box::test_shortcut(p1));
-      return 1;
-    } else {
-      lua_pushnumber(L, self->test_shortcut());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "test_shortcut: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "test_shortcut: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 3) {
+			const char *p1 = dub::checkstring(L, 2);
+			const bool require_alt = dub::checkboolean(L, 3);
+			lua_pushnumber(L, Fl_Lua_Box::test_shortcut(p1, require_alt));
+			return 1;
+		} else if (top__ >= 2) {
+			const char *p1 = dub::checkstring(L, 2);
+			lua_pushnumber(L, Fl_Lua_Box::test_shortcut(p1));
+			return 1;
+		} else {
+			lua_pushnumber(L, self->test_shortcut());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "test_shortcut: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "test_shortcut: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::_set_fullscreen()
  * inc/Fl_Widget.h:861
  */
 static int Fl_Lua_Box__set_fullscreen(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    self->_set_fullscreen();
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "_set_fullscreen: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "_set_fullscreen: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		self->_set_fullscreen();
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "_set_fullscreen: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "_set_fullscreen: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::_clear_fullscreen()
  * inc/Fl_Widget.h:862
  */
 static int Fl_Lua_Box__clear_fullscreen(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    self->_clear_fullscreen();
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "_clear_fullscreen: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "_clear_fullscreen: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		self->_clear_fullscreen();
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "_clear_fullscreen: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "_clear_fullscreen: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Widget::contains(const Fl_Widget *w) const
  * inc/Fl_Widget.h:869
  */
 static int Fl_Lua_Box_contains(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    Fl_Widget *w = *((Fl_Widget **)dub::checksdata(L, 2, "FLTK.Fl_Widget"));
-    lua_pushnumber(L, self->contains(w));
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "contains: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "contains: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		Fl_Widget *w = *((Fl_Widget **)dub::checksdata(L, 2, "FLTK.Fl_Widget"));
+		lua_pushnumber(L, self->contains(w));
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "contains: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "contains: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Widget::inside(const Fl_Widget *wgt) const
  * inc/Fl_Widget.h:877
  */
 static int Fl_Lua_Box_inside(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    Fl_Widget *wgt = *((Fl_Widget **)dub::checksdata(L, 2, "FLTK.Fl_Widget"));
-    lua_pushnumber(L, self->inside(wgt));
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "inside: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "inside: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		Fl_Widget *wgt = *((Fl_Widget **)dub::checksdata(L, 2, "FLTK.Fl_Widget"));
+		lua_pushnumber(L, self->inside(wgt));
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "inside: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "inside: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::redraw()
  * inc/Fl_Widget.h:882
  */
 static int Fl_Lua_Box_redraw(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    self->redraw();
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "redraw: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "redraw: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		self->redraw();
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "redraw: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "redraw: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::redraw_label()
  * inc/Fl_Widget.h:888
  */
 static int Fl_Lua_Box_redraw_label(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    self->redraw_label();
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "redraw_label: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "redraw_label: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		self->redraw_label();
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "redraw_label: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "redraw_label: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** unsigned char Fl_Widget::damage() const
  * inc/Fl_Widget.h:896
  */
 static int Fl_Lua_Box_damage(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 6) {
-      unsigned char c = dub::checkinteger(L, 2);
-      int x = dub::checkinteger(L, 3);
-      int y = dub::checkinteger(L, 4);
-      int w = dub::checkinteger(L, 5);
-      int h = dub::checkinteger(L, 6);
-      self->damage(c, x, y, w, h);
-      return 0;
-    } else if (top__ >= 2) {
-      unsigned char c = dub::checkinteger(L, 2);
-      self->damage(c);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->damage());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "damage: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "damage: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 6) {
+			unsigned char c = dub::checkinteger(L, 2);
+			int x = dub::checkinteger(L, 3);
+			int y = dub::checkinteger(L, 4);
+			int w = dub::checkinteger(L, 5);
+			int h = dub::checkinteger(L, 6);
+			self->damage(c, x, y, w, h);
+			return 0;
+		} else if (top__ >= 2) {
+			unsigned char c = dub::checkinteger(L, 2);
+			self->damage(c);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->damage());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "damage: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "damage: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::clear_damage(unsigned char c=0)
  * inc/Fl_Widget.h:910
  */
 static int Fl_Lua_Box_clear_damage(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      unsigned char c = dub::checkinteger(L, 2);
-      self->clear_damage(c);
-      return 0;
-    } else {
-      self->clear_damage();
-      return 0;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "clear_damage: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "clear_damage: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			unsigned char c = dub::checkinteger(L, 2);
+			self->clear_damage(c);
+			return 0;
+		} else {
+			self->clear_damage();
+			return 0;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "clear_damage: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "clear_damage: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::draw_label(int, int, int, int, int) const
  * inc/Fl_Widget.h:927
  */
 static int Fl_Lua_Box_draw_label(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int p1 = dub::checkinteger(L, 2);
-    int p2 = dub::checkinteger(L, 3);
-    int p3 = dub::checkinteger(L, 4);
-    int p4 = dub::checkinteger(L, 5);
-    int p5 = dub::checkinteger(L, 6);
-    self->draw_label(p1, p2, p3, p4, p5);
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "draw_label: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "draw_label: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int p1 = dub::checkinteger(L, 2);
+		int p2 = dub::checkinteger(L, 3);
+		int p3 = dub::checkinteger(L, 4);
+		int p4 = dub::checkinteger(L, 5);
+		int p5 = dub::checkinteger(L, 6);
+		self->draw_label(p1, p2, p3, p4, p5);
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "draw_label: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "draw_label: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** void Fl_Widget::measure_label(int &ww, int &hh) const
  * inc/Fl_Widget.h:936
  */
 static int Fl_Lua_Box_measure_label(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int ww = dub::checkinteger(L, 2);
-    int hh = dub::checkinteger(L, 3);
-    self->measure_label(ww, hh);
-    return 0;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "measure_label: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "measure_label: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int ww = dub::checkinteger(L, 2);
+		int hh = dub::checkinteger(L, 3);
+		self->measure_label(ww, hh);
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "measure_label: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "measure_label: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** Fl_Window* Fl_Widget::window() const
  * inc/Fl_Widget.h:938
  */
 static int Fl_Lua_Box_window(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    Fl_Window *retval__ = self->window();
-    if (!retval__) return 0;
-    dub::pushudata(L, retval__, "FLTK.Fl_Window", false);
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "window: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "window: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		Fl_Window *retval__ = self->window();
+
+		if (!retval__) return 0;
+
+		dub::pushudata(L, retval__, "FLTK.Fl_Window", false);
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "window: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "window: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** Fl_Window* Fl_Widget::top_window() const
@@ -1392,18 +1498,21 @@ static int Fl_Lua_Box_window(lua_State *L) {
  */
 #if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Box_top_window(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    Fl_Window *retval__ = self->top_window();
-    if (!retval__) return 0;
-    dub::pushudata(L, retval__, "FLTK.Fl_Window", false);
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "top_window: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "top_window: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		Fl_Window *retval__ = self->top_window();
+
+		if (!retval__) return 0;
+
+		dub::pushudata(L, retval__, "FLTK.Fl_Window", false);
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "top_window: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "top_window: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 #endif
 
@@ -1412,20 +1521,23 @@ static int Fl_Lua_Box_top_window(lua_State *L) {
  */
 #if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Box_top_window_offset(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int xoff = dub::checkinteger(L, 2);
-    int yoff = dub::checkinteger(L, 3);
-    Fl_Window *retval__ = self->top_window_offset(xoff, yoff);
-    if (!retval__) return 0;
-    dub::pushudata(L, retval__, "FLTK.Fl_Window", false);
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "top_window_offset: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "top_window_offset: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int xoff = dub::checkinteger(L, 2);
+		int yoff = dub::checkinteger(L, 3);
+		Fl_Window *retval__ = self->top_window_offset(xoff, yoff);
+
+		if (!retval__) return 0;
+
+		dub::pushudata(L, retval__, "FLTK.Fl_Window", false);
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "top_window_offset: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "top_window_offset: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 #endif
 
@@ -1433,54 +1545,63 @@ static int Fl_Lua_Box_top_window_offset(lua_State *L) {
  * inc/Fl_Widget.h:965
  */
 static int Fl_Lua_Box_as_group(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    Fl_Group *retval__ = self->as_group();
-    if (!retval__) return 0;
-    dub::pushudata(L, retval__, "FLTK.Fl_Group", false);
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "as_group: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "as_group: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		Fl_Group *retval__ = self->as_group();
+
+		if (!retval__) return 0;
+
+		dub::pushudata(L, retval__, "FLTK.Fl_Group", false);
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "as_group: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "as_group: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** virtual Fl_Window* Fl_Widget::as_window()
  * inc/Fl_Widget.h:979
  */
 static int Fl_Lua_Box_as_window(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    Fl_Window *retval__ = self->as_window();
-    if (!retval__) return 0;
-    dub::pushudata(L, retval__, "FLTK.Fl_Window", false);
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "as_window: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "as_window: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		Fl_Window *retval__ = self->as_window();
+
+		if (!retval__) return 0;
+
+		dub::pushudata(L, retval__, "FLTK.Fl_Window", false);
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "as_window: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "as_window: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** virtual class Fl_Gl_Window* Fl_Widget::as_gl_window()
  * inc/Fl_Widget.h:991
  */
 static int Fl_Lua_Box_as_gl_window(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    class Fl_Gl_Window *retval__ = self->as_gl_window();
-    if (!retval__) return 0;
-    dub::pushudata(L, retval__, "class Fl_Gl_Window", false);
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "as_gl_window: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "as_gl_window: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		class Fl_Gl_Window *retval__ = self->as_gl_window();
+
+		if (!retval__) return 0;
+
+		dub::pushudata(L, retval__, "class Fl_Gl_Window", false);
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "as_gl_window: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "as_gl_window: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 /** int Fl_Widget::use_accents_menu()
@@ -1488,16 +1609,17 @@ static int Fl_Lua_Box_as_gl_window(lua_State *L) {
  */
 #if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 static int Fl_Lua_Box_use_accents_menu(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    lua_pushnumber(L, self->use_accents_menu());
-    return 1;
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "use_accents_menu: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "use_accents_menu: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		lua_pushnumber(L, self->use_accents_menu());
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "use_accents_menu: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "use_accents_menu: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 #endif
 
@@ -1505,139 +1627,141 @@ static int Fl_Lua_Box_use_accents_menu(lua_State *L) {
  * inc/Fl_Widget.h:1000
  */
 static int Fl_Lua_Box_color2(lua_State *L) {
-  try {
-    Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
-    int top__ = lua_gettop(L);
-    if (top__ >= 2) {
-      unsigned a = dub::checkinteger(L, 2);
-      self->color2(a);
-      return 0;
-    } else {
-      lua_pushnumber(L, self->color2());
-      return 1;
-    }
-  } catch (std::exception &e) {
-    lua_pushfstring(L, "color2: %s", e.what());
-  } catch (...) {
-    lua_pushfstring(L, "color2: Unknown exception");
-  }
-  return dub::error(L);
+	try {
+		Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata(L, 1, "FLTK.Fl_Lua_Box"));
+		int top__ = lua_gettop(L);
+
+		if (top__ >= 2) {
+			unsigned a = dub::checkinteger(L, 2);
+			self->color2(a);
+			return 0;
+		} else {
+			lua_pushnumber(L, self->color2());
+			return 1;
+		}
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "color2: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "color2: Unknown exception");
+	}
+
+	return dub::error(L);
 }
 
 
 
 // --=============================================== __tostring
 static int Fl_Lua_Box___tostring(lua_State *L) {
-  Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata_n(L, 1, "FLTK.Fl_Lua_Box"));
-  lua_pushfstring(L, "FLTK.Fl_Lua_Box: %p", self);
-  
-  return 1;
+	Fl_Lua_Box *self = *((Fl_Lua_Box **)dub::checksdata_n(L, 1, "FLTK.Fl_Lua_Box"));
+	lua_pushfstring(L, "FLTK.Fl_Lua_Box: %p", self);
+
+	return 1;
 }
 
 // --=============================================== METHODS
 
 static const struct luaL_Reg Fl_Lua_Box_member_methods[] = {
-  { "__gc"         , Fl_Lua_Box__Fl_Lua_Box       },
-  { "_cast_"       , Fl_Lua_Box__cast_        },
-  { "new"          , Fl_Lua_Box_Fl_Lua_Box        },
-  { "handle"       , Fl_Lua_Box_handle        },
-  { "parent"       , Fl_Lua_Box_parent        },
-  { "Type"         , Fl_Lua_Box_type          },
-  { "x"            , Fl_Lua_Box_x             },
-  { "y"            , Fl_Lua_Box_y             },
-  { "w"            , Fl_Lua_Box_w             },
-  { "h"            , Fl_Lua_Box_h             },
-  { "resize"       , Fl_Lua_Box_resize        },
-  { "damage_resize", Fl_Lua_Box_damage_resize },
-  { "position"     , Fl_Lua_Box_position      },
-  { "size"         , Fl_Lua_Box_size          },
-  { "align"        , Fl_Lua_Box_align         },
-  { "box"          , Fl_Lua_Box_box           },
-  { "color"        , Fl_Lua_Box_color         },
-  { "selection_color", Fl_Lua_Box_selection_color },
-  { "label"        , Fl_Lua_Box_label         },
-  { "copy_label"   , Fl_Lua_Box_copy_label    },
-  { "labeltype"    , Fl_Lua_Box_labeltype     },
-  { "labelcolor"   , Fl_Lua_Box_labelcolor    },
-  { "labelfont"    , Fl_Lua_Box_labelfont     },
-  { "labelsize"    , Fl_Lua_Box_labelsize     },
-  { "image"        , Fl_Lua_Box_image         },
-  { "deimage"      , Fl_Lua_Box_deimage       },
-  { "tooltip"      , Fl_Lua_Box_tooltip       },
-  { "copy_tooltip" , Fl_Lua_Box_copy_tooltip  },
-  { "callback"     , Fl_Lua_Box_callback      },
-  { "user_data"    , Fl_Lua_Box_user_data     },
-  { "argument"     , Fl_Lua_Box_argument      },
-  { "when"         , Fl_Lua_Box_when          },
-  { "visible"      , Fl_Lua_Box_visible       },
-  { "visible_r"    , Fl_Lua_Box_visible_r     },
-  { "show"         , Fl_Lua_Box_show          },
-  { "hide"         , Fl_Lua_Box_hide          },
-  { "set_visible"  , Fl_Lua_Box_set_visible   },
-  { "clear_visible", Fl_Lua_Box_clear_visible },
-  { "active"       , Fl_Lua_Box_active        },
-  { "active_r"     , Fl_Lua_Box_active_r      },
-  { "activate"     , Fl_Lua_Box_activate      },
-  { "deactivate"   , Fl_Lua_Box_deactivate    },
-  { "output"       , Fl_Lua_Box_output        },
-  { "set_output"   , Fl_Lua_Box_set_output    },
-  { "clear_output" , Fl_Lua_Box_clear_output  },
-  { "takesevents"  , Fl_Lua_Box_takesevents   },
-  { "changed"      , Fl_Lua_Box_changed       },
-  { "set_changed"  , Fl_Lua_Box_set_changed   },
-  { "clear_changed", Fl_Lua_Box_clear_changed },
+	{ "__gc", Fl_Lua_Box__Fl_Lua_Box       },
+	{ "_cast_", Fl_Lua_Box__cast_        },
+	{ "new", Fl_Lua_Box_Fl_Lua_Box        },
+	{ "handle", Fl_Lua_Box_handle        },
+	{ "parent", Fl_Lua_Box_parent        },
+	{ "Type", Fl_Lua_Box_type          },
+	{ "x", Fl_Lua_Box_x             },
+	{ "y", Fl_Lua_Box_y             },
+	{ "w", Fl_Lua_Box_w             },
+	{ "h", Fl_Lua_Box_h             },
+	{ "resize", Fl_Lua_Box_resize        },
+	{ "damage_resize", Fl_Lua_Box_damage_resize },
+	{ "position", Fl_Lua_Box_position      },
+	{ "size", Fl_Lua_Box_size          },
+	{ "align", Fl_Lua_Box_align         },
+	{ "box", Fl_Lua_Box_box           },
+	{ "color", Fl_Lua_Box_color         },
+	{ "selection_color", Fl_Lua_Box_selection_color },
+	{ "label", Fl_Lua_Box_label         },
+	{ "copy_label", Fl_Lua_Box_copy_label    },
+	{ "labeltype", Fl_Lua_Box_labeltype     },
+	{ "labelcolor", Fl_Lua_Box_labelcolor    },
+	{ "labelfont", Fl_Lua_Box_labelfont     },
+	{ "labelsize", Fl_Lua_Box_labelsize     },
+	{ "image", Fl_Lua_Box_image         },
+	{ "deimage", Fl_Lua_Box_deimage       },
+	{ "tooltip", Fl_Lua_Box_tooltip       },
+	{ "copy_tooltip", Fl_Lua_Box_copy_tooltip  },
+	{ "callback", Fl_Lua_Box_callback      },
+	{ "user_data", Fl_Lua_Box_user_data     },
+	{ "argument", Fl_Lua_Box_argument      },
+	{ "when", Fl_Lua_Box_when          },
+	{ "visible", Fl_Lua_Box_visible       },
+	{ "visible_r", Fl_Lua_Box_visible_r     },
+	{ "show", Fl_Lua_Box_show          },
+	{ "hide", Fl_Lua_Box_hide          },
+	{ "set_visible", Fl_Lua_Box_set_visible   },
+	{ "clear_visible", Fl_Lua_Box_clear_visible },
+	{ "active", Fl_Lua_Box_active        },
+	{ "active_r", Fl_Lua_Box_active_r      },
+	{ "activate", Fl_Lua_Box_activate      },
+	{ "deactivate", Fl_Lua_Box_deactivate    },
+	{ "output", Fl_Lua_Box_output        },
+	{ "set_output", Fl_Lua_Box_set_output    },
+	{ "clear_output", Fl_Lua_Box_clear_output  },
+	{ "takesevents", Fl_Lua_Box_takesevents   },
+	{ "changed", Fl_Lua_Box_changed       },
+	{ "set_changed", Fl_Lua_Box_set_changed   },
+	{ "clear_changed", Fl_Lua_Box_clear_changed },
 #if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
-  { "clear_active" , Fl_Lua_Box_clear_active  },
+	{ "clear_active", Fl_Lua_Box_clear_active  },
 #endif
 #if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
-  { "set_active"   , Fl_Lua_Box_set_active    },
+	{ "set_active", Fl_Lua_Box_set_active    },
 #endif
-  { "take_focus"   , Fl_Lua_Box_take_focus    },
-  { "set_visible_focus", Fl_Lua_Box_set_visible_focus },
-  { "clear_visible_focus", Fl_Lua_Box_clear_visible_focus },
-  { "visible_focus", Fl_Lua_Box_visible_focus },
-  { "do_callback"  , Fl_Lua_Box_do_callback   },
-  { "test_shortcut", Fl_Lua_Box_test_shortcut },
-  { "_set_fullscreen", Fl_Lua_Box__set_fullscreen },
-  { "_clear_fullscreen", Fl_Lua_Box__clear_fullscreen },
-  { "contains"     , Fl_Lua_Box_contains      },
-  { "inside"       , Fl_Lua_Box_inside        },
-  { "redraw"       , Fl_Lua_Box_redraw        },
-  { "redraw_label" , Fl_Lua_Box_redraw_label  },
-  { "damage"       , Fl_Lua_Box_damage        },
-  { "clear_damage" , Fl_Lua_Box_clear_damage  },
-  { "draw_label"   , Fl_Lua_Box_draw_label    },
-  { "measure_label", Fl_Lua_Box_measure_label },
-  { "window"       , Fl_Lua_Box_window        },
+	{ "take_focus", Fl_Lua_Box_take_focus    },
+	{ "set_visible_focus", Fl_Lua_Box_set_visible_focus },
+	{ "clear_visible_focus", Fl_Lua_Box_clear_visible_focus },
+	{ "visible_focus", Fl_Lua_Box_visible_focus },
+	{ "do_callback", Fl_Lua_Box_do_callback   },
+	{ "test_shortcut", Fl_Lua_Box_test_shortcut },
+	{ "_set_fullscreen", Fl_Lua_Box__set_fullscreen },
+	{ "_clear_fullscreen", Fl_Lua_Box__clear_fullscreen },
+	{ "contains", Fl_Lua_Box_contains      },
+	{ "inside", Fl_Lua_Box_inside        },
+	{ "redraw", Fl_Lua_Box_redraw        },
+	{ "redraw_label", Fl_Lua_Box_redraw_label  },
+	{ "damage", Fl_Lua_Box_damage        },
+	{ "clear_damage", Fl_Lua_Box_clear_damage  },
+	{ "draw_label", Fl_Lua_Box_draw_label    },
+	{ "measure_label", Fl_Lua_Box_measure_label },
+	{ "window", Fl_Lua_Box_window        },
 #if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
-  { "top_window"   , Fl_Lua_Box_top_window    },
+	{ "top_window", Fl_Lua_Box_top_window    },
 #endif
 #if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
-  { "top_window_offset", Fl_Lua_Box_top_window_offset },
+	{ "top_window_offset", Fl_Lua_Box_top_window_offset },
 #endif
-  { "as_group"     , Fl_Lua_Box_as_group      },
-  { "as_window"    , Fl_Lua_Box_as_window     },
-  { "as_gl_window" , Fl_Lua_Box_as_gl_window  },
+	{ "as_group", Fl_Lua_Box_as_group      },
+	{ "as_window", Fl_Lua_Box_as_window     },
+	{ "as_gl_window", Fl_Lua_Box_as_gl_window  },
 #if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
-  { "use_accents_menu", Fl_Lua_Box_use_accents_menu },
+	{ "use_accents_menu", Fl_Lua_Box_use_accents_menu },
 #endif
-  { "color2"       , Fl_Lua_Box_color2        },
-  { "__tostring"   , Fl_Lua_Box___tostring    },
-  { "deleted"      , dub::isDeleted       },
-  { NULL, NULL},
+	{ "color2", Fl_Lua_Box_color2        },
+	{ "__tostring", Fl_Lua_Box___tostring    },
+	{ "deleted", dub::isDeleted       },
+	{ NULL, NULL},
 };
 
 
- int luaopen_FLTK_Fl_Box(lua_State *L)
+int luaopen_FLTK_Fl_Box(lua_State *L)
 {
-  // Create the metatable which will contain all the member methods
-  luaL_newmetatable(L, "FLTK.Fl_Lua_Box");
-  // <mt>
+	// Create the metatable which will contain all the member methods
+	luaL_newmetatable(L, "FLTK.Fl_Lua_Box");
+	// <mt>
 
-  // register member methods
-  dub::fregister(L, Fl_Lua_Box_member_methods);
-  // setup meta-table
-  dub::setup(L, "FLTK.Fl_Lua_Box");
-  // <mt>
-  return 1;
+	// register member methods
+	dub::fregister(L, Fl_Lua_Box_member_methods);
+	// setup meta-table
+	dub::setup(L, "FLTK.Fl_Lua_Box");
+	// <mt>
+	return 1;
 }

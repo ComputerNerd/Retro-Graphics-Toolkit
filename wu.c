@@ -190,26 +190,26 @@ static long int Bottom(struct box *cube, unsigned char dir, int mmt[33][33][33])
 // (depending on dir)
 	switch (dir)
 	{
-	case RED:
-		return ( -mmt[cube->r0][cube->g1][cube->b1]
-		         + mmt[cube->r0][cube->g1][cube->b0]
-		         + mmt[cube->r0][cube->g0][cube->b1]
-		         - mmt[cube->r0][cube->g0][cube->b0] );
-		break;
+		case RED:
+			return ( -mmt[cube->r0][cube->g1][cube->b1]
+			         + mmt[cube->r0][cube->g1][cube->b0]
+			         + mmt[cube->r0][cube->g0][cube->b1]
+			         - mmt[cube->r0][cube->g0][cube->b0] );
+			break;
 
-	case GREEN:
-		return ( -mmt[cube->r1][cube->g0][cube->b1]
-		         + mmt[cube->r1][cube->g0][cube->b0]
-		         + mmt[cube->r0][cube->g0][cube->b1]
-		         - mmt[cube->r0][cube->g0][cube->b0] );
-		break;
+		case GREEN:
+			return ( -mmt[cube->r1][cube->g0][cube->b1]
+			         + mmt[cube->r1][cube->g0][cube->b0]
+			         + mmt[cube->r0][cube->g0][cube->b1]
+			         - mmt[cube->r0][cube->g0][cube->b0] );
+			break;
 
-	case BLUE:
-		return ( -mmt[cube->r1][cube->g1][cube->b0]
-		         + mmt[cube->r1][cube->g0][cube->b0]
-		         + mmt[cube->r0][cube->g1][cube->b0]
-		         - mmt[cube->r0][cube->g0][cube->b0] );
-		break;
+		case BLUE:
+			return ( -mmt[cube->r1][cube->g1][cube->b0]
+			         + mmt[cube->r1][cube->g0][cube->b0]
+			         + mmt[cube->r0][cube->g1][cube->b0]
+			         - mmt[cube->r0][cube->g0][cube->b0] );
+			break;
 	}
 
 	return 0;
@@ -221,26 +221,26 @@ static long int Top(struct box* cube, unsigned char  dir, int pos, int mmt[33][3
 // r1, g1, or b1 (depending on dir)
 	switch (dir)
 	{
-	case RED:
-		return ( mmt[pos][cube->g1][cube->b1]
-		         - mmt[pos][cube->g1][cube->b0]
-		         - mmt[pos][cube->g0][cube->b1]
-		         + mmt[pos][cube->g0][cube->b0] );
-		break;
+		case RED:
+			return ( mmt[pos][cube->g1][cube->b1]
+			         - mmt[pos][cube->g1][cube->b0]
+			         - mmt[pos][cube->g0][cube->b1]
+			         + mmt[pos][cube->g0][cube->b0] );
+			break;
 
-	case GREEN:
-		return ( mmt[cube->r1][pos][cube->b1]
-		         - mmt[cube->r1][pos][cube->b0]
-		         - mmt[cube->r0][pos][cube->b1]
-		         + mmt[cube->r0][pos][cube->b0] );
-		break;
+		case GREEN:
+			return ( mmt[cube->r1][pos][cube->b1]
+			         - mmt[cube->r1][pos][cube->b0]
+			         - mmt[cube->r0][pos][cube->b1]
+			         + mmt[cube->r0][pos][cube->b0] );
+			break;
 
-	case BLUE:
-		return ( mmt[cube->r1][cube->g1][pos]
-		         - mmt[cube->r1][cube->g0][pos]
-		         - mmt[cube->r0][cube->g1][pos]
-		         + mmt[cube->r0][cube->g0][pos] );
-		break;
+		case BLUE:
+			return ( mmt[cube->r1][cube->g1][pos]
+			         - mmt[cube->r1][cube->g0][pos]
+			         - mmt[cube->r0][cube->g1][pos]
+			         + mmt[cube->r0][cube->g0][pos] );
+			break;
 	}
 
 	return 0;
@@ -355,23 +355,23 @@ static int Cut(struct box *set1, struct box *set2)
 
 	switch (dir)
 	{
-	case RED:
-		set2->r0 = set1->r1 = cutr;
-		set2->g0 = set1->g0;
-		set2->b0 = set1->b0;
-		break;
+		case RED:
+			set2->r0 = set1->r1 = cutr;
+			set2->g0 = set1->g0;
+			set2->b0 = set1->b0;
+			break;
 
-	case GREEN:
-		set2->g0 = set1->g1 = cutg;
-		set2->r0 = set1->r0;
-		set2->b0 = set1->b0;
-		break;
+		case GREEN:
+			set2->g0 = set1->g1 = cutg;
+			set2->r0 = set1->r0;
+			set2->b0 = set1->b0;
+			break;
 
-	case BLUE:
-		set2->b0 = set1->b1 = cutb;
-		set2->r0 = set1->r0;
-		set2->g0 = set1->g0;
-		break;
+		case BLUE:
+			set2->b0 = set1->b1 = cutb;
+			set2->r0 = set1->r0;
+			set2->g0 = set1->g0;
+			break;
 	}
 
 	set1->vol = (set1->r1 - set1->r0) * (set1->g1 - set1->g0) * (set1->b1 - set1->b0);
