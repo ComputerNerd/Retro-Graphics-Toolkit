@@ -12,13 +12,19 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
+#include "luaHelpers.hpp"
 #include "luaSprites.hpp"
+#include "callbacksprites.h"
 #include "project.h"
 #include "dub/dub.h"
 static int sprite__set_(lua_State *L) {
-	sprite *self = *((sprite **)dub::checksdata(L, 1, "sprite"));
+	getProjectIDX
+	const size_t metaSpriteIDX = idxPtr[1];
+	const size_t spriteGroupIDX = idxPtr[2];
+	const size_t spriteIDX = idxPtr[2];
+	sprite *self = &projects[projectIDX]->ms->sps[metaSpriteIDX].groups[spriteGroupIDX].list[spriteIDX];
 	const char *key = luaL_checkstring(L, 2);
 
 	if (!strcmp(key, "w")) {
@@ -74,21 +80,21 @@ static int sprite__set_(lua_State *L) {
 	return 0;
 }
 static int sprite__get_(lua_State *L) {
-	sprite *self = *((sprite **)dub::checksdata_n(L, 1, "sprite", true));
+	checkAlreadyExists
+
+	getProjectIDX
+	const size_t metaSpriteIDX = idxPtr[1];
+	const size_t spriteGroupIDX = idxPtr[2];
+	const size_t spriteIDX = idxPtr[2];
+	const sprite *self = &projects[projectIDX]->ms->sps[metaSpriteIDX].groups[spriteGroupIDX].list[spriteIDX];
+
 	int type = lua_type(L, 2);
 
-	if (type == LUA_TNUMBER) {
+	if (type == LUA_TNUMBER)
 		int k = luaL_checkinteger(L, 2);
-		printf("k=%d\n", k);
-	} else if (type == LUA_TSTRING) {
-		const char*k = luaL_checkstring(L, 2);
-		lua_pushvalue(L, 2);
-		lua_rawget(L, -2);
 
-		if (!lua_isnil(L, -1))
-			return 1;
-		else
-			lua_pop(L, 2);
+	else if (type == LUA_TSTRING) {
+		const char*k = luaL_checkstring(L, 2);
 
 		if (!strcmp("w", k)) {
 			lua_pushinteger(L, self->w);
@@ -144,7 +150,11 @@ static int sprite__get_(lua_State *L) {
 	return 0;
 }
 static int sprite___tostring(lua_State *L) {
-	sprite *self = *((sprite **)dub::checksdata(L, 1, "sprite"));
+	getProjectIDX
+	const size_t metaSpriteIDX = idxPtr[1];
+	const size_t spriteGroupIDX = idxPtr[2];
+	const size_t spriteIDX = idxPtr[2];
+	const sprite *self = &projects[projectIDX]->ms->sps[metaSpriteIDX].groups[spriteGroupIDX].list[spriteIDX];
 	lua_pushfstring(L, "sprite table: %p\n\tWidth: %d\n\tHeight: %d\n\tPalette row: %d\n\tHorizontal flip: %s\n\tVertical flip: %s\n\tHigh priority: %s", self, self->w, self->h, self->palrow, (self->hflip ? "true" : "false"), (self->vflip ? "true" : "false"), (self->prio ? "true" : "false"));
 	return 1;
 }
@@ -156,7 +166,7 @@ static const struct luaL_Reg sprite_member_methods[] = {
 	{ "deleted", dub::isDeleted },
 	{ NULL, NULL},
 };
-int luaopen_sprite(lua_State *L, class spriteGroup*self, unsigned idx)
+int luaopen_sprite(lua_State *L, unsigned projectIDX, unsigned metaSpriteIDX, unsigned groupIDX, unsigned spriteIDX)
 {
 	// Create the metatable which will contain all the member methods
 	luaL_newmetatable(L, "sprite");
@@ -166,13 +176,24 @@ int luaopen_sprite(lua_State *L, class spriteGroup*self, unsigned idx)
 	dub::fregister(L, sprite_member_methods);
 	// setup meta-table
 	dub::setup(L, "sprite");
-	// <mt>
-	dub::pushudata(L, &self->list[idx], "sprite", true);
+
+	size_t* idxUserData = (size_t*)lua_newuserdata(L, sizeof(size_t) * 4);
+	idxUserData[0] = projectIDX;
+	idxUserData[1] = metaSpriteIDX;
+	idxUserData[2] = groupIDX;
+	idxUserData[3] = spriteIDX;
+
+	luaL_getmetatable(L, "sprite");
+	lua_setmetatable(L, -2);
 	return 1;
 }
 
 static int spriteGroup__set_(lua_State *L) {
-	spriteGroup *self = *((spriteGroup **)dub::checksdata(L, 1, "spriteGroup"));
+	getProjectIDX
+	const size_t msIDX = idxPtr[1];
+	const size_t sgIDX = idxPtr[2];
+	spriteGroup *self = &projects[projectIDX]->ms->sps[msIDX].groups[sgIDX];
+
 	const char *key = luaL_checkstring(L, 2);
 
 	if (!strcmp(key, "name"))
@@ -182,29 +203,23 @@ static int spriteGroup__set_(lua_State *L) {
 }
 
 static int spriteGroup__get_(lua_State *L) {
-	spriteGroup *self = *((spriteGroup **)dub::checksdata_n(L, 1, "spriteGroup", true));
+	checkAlreadyExists
+
+	getProjectIDX
+	const size_t msIDX = idxPtr[1];
+	const size_t sgIDX = idxPtr[2];
+	const spriteGroup *self = &projects[projectIDX]->ms->sps[msIDX].groups[sgIDX];
 	int type = lua_type(L, 2);
 
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2);
-		printf("k=%d\n", k);
 
 		if (k >= 1 && k <= self->list.size()) {
-			luaopen_sprite(L, self, k - 1);
+			luaopen_sprite(L, projectIDX, msIDX, sgIDX, k - 1);
 			return 1;
 		}
 	} else if (type == LUA_TSTRING) {
 		const char*k = luaL_checkstring(L, 2);
-		lua_pushvalue(L, 2);
-		lua_rawget(L, -2);
-
-		if (!lua_isnil(L, -1))
-			return 1;
-
-		else
-			lua_pop(L, 2);
-
-		printf("k=%s\n", k);
 
 		if (!strcmp("name", k)) {
 			lua_pushstring(L, self->name.c_str());
@@ -216,15 +231,41 @@ static int spriteGroup__get_(lua_State *L) {
 }
 
 static int spriteGroup__len_(lua_State *L) {
-	spriteGroup *self = *((spriteGroup **)dub::checksdata(L, 1, "spriteGroup"));
+	getProjectIDX
+	const size_t msIDX = idxPtr[1];
+	const size_t sgIDX = idxPtr[2];
+	const spriteGroup *self = &projects[projectIDX]->ms->sps[msIDX].groups[sgIDX];
 	lua_pushinteger(L, self->list.size());
 	return 1;
 }
 
 static int spriteGroup___tostring(lua_State *L) {
-	spriteGroup *self = *((spriteGroup **)dub::checksdata(L, 1, "spriteGroup"));
+	getProjectIDX
+	const size_t msIDX = idxPtr[1];
+	const size_t sgIDX = idxPtr[2];
+	const spriteGroup *self = &projects[projectIDX]->ms->sps[msIDX].groups[sgIDX];
 	lua_pushfstring(L, "sprite group table: %p\nNamed: %s", self, self->name.c_str());
 	return 1;
+}
+
+static int spriteGroup_dither(lua_State *L) {
+	getProjectIDX
+	const size_t msIDX = idxPtr[1];
+	const size_t sgIDX = idxPtr[2];
+	ditherSpriteAsImage(msIDX, sgIDX, projects[projectIDX]);
+	return 0;
+}
+
+static int spriteGroup_draw(lua_State *L) {
+	getProjectIDX
+	const size_t msIDX = idxPtr[1];
+	const size_t sgIDX = idxPtr[2];
+
+	int32_t outx, outy;
+	projects[projectIDX]->ms->sps[msIDX].draw(sgIDX, luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0), lua_toboolean(L, 5), &outx, &outy);
+	lua_pushinteger(L, outx);
+	lua_pushinteger(L, outy);
+	return 2;
 }
 
 static const struct luaL_Reg spriteGroup_member_methods[] = {
@@ -233,12 +274,13 @@ static const struct luaL_Reg spriteGroup_member_methods[] = {
 	{ "__index", spriteGroup__get_ },
 	{ "__len", spriteGroup__len_ },
 	{ "__tostring", spriteGroup___tostring },
+	{ "dither", spriteGroup_dither },
+	{ "draw", spriteGroup_draw },
 	{ "deleted", dub::isDeleted },
 	{ NULL, NULL},
 };
 
-int luaopen_spriteGroup(lua_State *L, class sprites*self, unsigned idx)
-{
+static int luaopen_spriteGroup(lua_State *L, unsigned projectIDX, unsigned metaSpriteIDX, unsigned groupIDX) {
 	// Create the metatable which will contain all the member methods
 	luaL_newmetatable(L, "spriteGroup");
 	// <mt>
@@ -247,14 +289,22 @@ int luaopen_spriteGroup(lua_State *L, class sprites*self, unsigned idx)
 	dub::fregister(L, spriteGroup_member_methods);
 	// setup meta-table
 	dub::setup(L, "spriteGroup");
-	// <mt>
-	dub::pushudata(L, &self->groups[idx], "spriteGroup", true);
+
+	size_t* idxUserData = (size_t*)lua_newuserdata(L, sizeof(size_t) * 3);
+	idxUserData[0] = projectIDX;
+	idxUserData[1] = metaSpriteIDX;
+	idxUserData[2] = groupIDX;
+
+	luaL_getmetatable(L, "spriteGroup");
+	lua_setmetatable(L, -2);
 	return 1;
 }
 
 
 static int spriteGroups__set_(lua_State *L) {
-	sprites *self = *((sprites **)dub::checksdata(L, 1, "spriteGroups"));
+	getProjectIDX
+	const size_t msIDX = idxPtr[1];
+	class sprites *self = &projects[projectIDX]->ms->sps[msIDX];
 	const char *key = luaL_checkstring(L, 2);
 
 	if (!strcmp(key, "name"))
@@ -263,35 +313,23 @@ static int spriteGroups__set_(lua_State *L) {
 	return 0;
 }
 static int spriteGroups__get_(lua_State *L) {
-	sprites *self = *((sprites **)dub::checksdata_n(L, 1, "spriteGroups", true));
+	checkAlreadyExists
+
+	getProjectIDX
+	const size_t msIDX = idxPtr[1];
+	const class sprites *self = &projects[projectIDX]->ms->sps[msIDX];
+
 	int type = lua_type(L, 2);
 
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2);
-		printf("k=%d\n", k);
 
 		if (k >= 1 && k <= self->groups.size()) {
-			luaopen_spriteGroup(L, self, k - 1);
+			luaopen_spriteGroup(L, projectIDX, msIDX, k - 1);
 			return 1;
 		}
 	} else if (type == LUA_TSTRING) {
 		const char*k = luaL_checkstring(L, 2);
-		puts(lua_typename(L, lua_type(L, 0)));
-		puts(lua_typename(L, lua_type(L, 1)));
-		puts(lua_typename(L, lua_type(L, 2)));
-		puts(lua_typename(L, lua_type(L, 3)));
-		puts(lua_typename(L, lua_type(L, 4)));
-		puts("__END__");
-		lua_pushvalue(L, 2);
-		lua_rawget(L, -2);
-
-		if (!lua_isnil(L, -1))
-			return 1;
-
-		else
-			lua_pop(L, 2);
-
-		printf("k=%s\n", k);
 
 		if (!strcmp("name", k)) {
 			lua_pushstring(L, self->name.c_str());
@@ -301,21 +339,34 @@ static int spriteGroups__get_(lua_State *L) {
 
 	return 0;
 }
+
 static int spriteGroups__len_(lua_State *L) {
-	class sprites *self = *((class sprites **)dub::checksdata(L, 1, "spriteGroups"));
+	getProjectIDX
+	size_t msIDX = idxPtr[1];
+	const class sprites *self = &projects[projectIDX]->ms->sps[msIDX];
 	lua_pushinteger(L, self->groups.size());
 	return 1;
 }
 
 static int spriteGroups___tostring(lua_State *L) {
-	class sprites *self = *((class sprites **)dub::checksdata(L, 1, "spriteGroups"));
+	getProjectIDX
+	const size_t msIDX = idxPtr[1];
+	const class sprites *self = &projects[projectIDX]->ms->sps[msIDX];
 	lua_pushfstring(L, "sprite groups table: %p\nNamed: %s", self, self->name.c_str());
 	return 1;
 }
 
 static int spriteGroups_importSpriteSheet(lua_State *L) {
-	class sprites *self = *((class sprites **)dub::checksdata(L, 1, "spriteGroups"));
-	self->importSpriteSheet(luaL_checkstring(L, 2));
+	getProjectIDX
+	size_t msIDX = idxPtr[1];
+	projects[projectIDX]->ms->sps[msIDX].importSpriteSheet(luaL_checkstring(L, 2));
+	return 0;
+}
+
+static int spriteGroups_dither(lua_State *L) {
+	getProjectIDX
+	size_t msIDX = idxPtr[1];
+	ditherGroupAsImage(msIDX, projects[projectIDX]);
 	return 0;
 }
 
@@ -325,11 +376,12 @@ static const struct luaL_Reg spriteGroups_member_methods[] = {
 	{ "__len", spriteGroups__len_ },
 	{ "__tostring", spriteGroups___tostring },
 	{ "importSpriteSheet", spriteGroups_importSpriteSheet },
+	{ "dither", spriteGroups_dither },
 	{ "deleted", dub::isDeleted },
 	{ NULL, NULL},
 };
 
-int luaopen_spriteGroups(lua_State *L, unsigned idx) {
+static int luaopen_spriteGroups(lua_State *L, unsigned projectIDX, unsigned metaSpriteIDX) {
 	// Create the metatable which will contain all the member methods
 	luaL_newmetatable(L, "spriteGroups");
 	// <mt>
@@ -339,45 +391,44 @@ int luaopen_spriteGroups(lua_State *L, unsigned idx) {
 	// setup meta-table
 	dub::setup(L, "spriteGroups");
 	// <mt>
-	dub::pushudata(L, &currentProject->ms->sps[idx], "spriteGroups", true);
+
+	size_t* idxUserData = (size_t*)lua_newuserdata(L, sizeof(size_t) * 2);
+	idxUserData[0] = projectIDX;
+	idxUserData[1] = metaSpriteIDX;
+
+	luaL_getmetatable(L, "spriteGroups");
+	lua_setmetatable(L, -2);
 	return 1;
 }
 
 static int sprites__set_(lua_State *L) {
+	getProjectIDX
 	const char *key = luaL_checkstring(L, 2);
 
 	if (!strcmp(key, "name"))
-		currentProject->ms->name.assign(luaL_checkstring(L, 3));
+		projects[projectIDX]->ms->name.assign(luaL_checkstring(L, 3));
 
 	return 0;
 }
 
 static int sprites__get_(lua_State *L) {
+	checkAlreadyExists
 	int type = lua_type(L, 2);
+
+	getProjectIDX
 
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2);
-		printf("k=%d\n", k);
 
-		if (k >= 1 && k <= currentProject->ms->sps.size()) {
-			luaopen_spriteGroups(L, k - 1);
+		if (k >= 1 && k <= projects[projectIDX]->ms->sps.size()) {
+			luaopen_spriteGroups(L, projectIDX, k - 1);
 			return 1;
 		}
 	} else if (type == LUA_TSTRING) {
 		const char*k = luaL_checkstring(L, 2);
-		lua_pushvalue(L, 2);
-		lua_rawget(L, -2);
-
-		if (!lua_isnil(L, -1))
-			return 1;
-
-		else
-			lua_pop(L, 2);
-
-		printf("k=%s\n", k);
 
 		if (!strcmp("name", k)) {
-			lua_pushstring(L, currentProject->ms->name.c_str());
+			lua_pushstring(L, projects[projectIDX]->ms->name.c_str());
 			return 1;
 		}
 	}
@@ -386,13 +437,25 @@ static int sprites__get_(lua_State *L) {
 }
 
 static int sprites__len_(lua_State *L) {
-	lua_pushinteger(L, currentProject->ms->sps.size());
+	getProjectIDX
+	lua_pushinteger(L, projects[projectIDX]->ms->sps.size());
 	return 1;
 }
 
 static int sprites___tostring(lua_State *L) {
-	lua_pushfstring(L, "metasprite table: %p\nNamed: %s", currentProject->ms, currentProject->ms->name.c_str());
+	getProjectIDX
+	const struct metasprites* ms = projects[projectIDX]->ms;
+	lua_pushfstring(L, "metasprite table: %p\nNamed: %s", ms, ms->name.c_str());
 	return 1;
+}
+
+static int metaSprites_dither(lua_State *L) {
+	getProjectIDX
+
+	for (unsigned i = 0; i < projects[projectIDX]->ms->sps.size(); ++i)
+		ditherGroupAsImage(i, projects[projectIDX]);
+
+	return 0;
 }
 
 static const struct luaL_Reg sprites_member_methods[] = {
@@ -400,20 +463,24 @@ static const struct luaL_Reg sprites_member_methods[] = {
 	{ "__index", sprites__get_},
 	{ "__len", sprites__len_},
 	{ "__tostring", sprites___tostring},
+	{ "dither", metaSprites_dither},
 	{ "deleted", dub::isDeleted},
 	{ NULL, NULL},
 };
 
-int luaopen_sprites(lua_State *L) {
+int luaopen_MetaSprites(lua_State *L, size_t projectIDX) {
 	// Create the metatable which will contain all the member methods
-	luaL_newmetatable(L, "sprites");
+	luaL_newmetatable(L, "metasprites");
 	// <mt>
 
 	// register member methods
 	dub::fregister(L, sprites_member_methods);
 	// setup meta-table
-	dub::setup(L, "sprites");
+	dub::setup(L, "metasprites");
 	// <mt>
-	dub::pushudata(L, currentProject->ms, "sprites", true);
+	size_t* idxUserData = (size_t*)lua_newuserdata(L, sizeof(size_t));
+	luaL_getmetatable(L, "metasprites");
+	*idxUserData = projectIDX;
+	lua_setmetatable(L, -2);
 	return 1;
 }

@@ -12,11 +12,11 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #ifndef LUA_SPRITES_HPP
 #define LUA_SPRITES_HPP
 #include "lualib.h"
 #include "lauxlib.h"
-int luaopen_sprites(lua_State *L);
+int luaopen_MetaSprites(lua_State *L, size_t projectIDX);
 #endif

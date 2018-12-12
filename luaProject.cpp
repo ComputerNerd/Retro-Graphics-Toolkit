@@ -21,6 +21,7 @@
 #include "luaTilemaps.hpp"
 #include "luaTiles.hpp"
 #include "luaChunks.hpp"
+#include "luaSprites.hpp"
 #include "project.h"
 
 static int project__set_(lua_State *L) {
@@ -29,7 +30,7 @@ static int project__set_(lua_State *L) {
 
 	if (!strcmp(key, "name"))
 		projects[projectIDX]->Name.assign(luaL_checkstring(L, 3));
-	else if (!strcmp("settings", key))
+	else if (!strcmp("luaSettings", key))
 		projects[projectIDX]->luaSettings = luaL_optinteger(L, 3, 0);
 
 	return 0;
@@ -111,8 +112,16 @@ static int project__get_(lua_State *L) {
 				return 1;
 			}
 		} else if (!strcmp("settings", k)) {
+			lua_pushinteger(L, projects[projectIDX]->settings);
+			return 1;
+		} else if (!strcmp("luaSettings", k)) {
 			lua_pushinteger(L, projects[projectIDX]->luaSettings);
 			return 1;
+		} else if (!strcmp("metasprites", k)) {
+			if (projects[projectIDX]->containsData(pjHaveSprites)) {
+				luaopen_MetaSprites(L, projectIDX);
+				return 1;
+			}
 		}
 	}
 
