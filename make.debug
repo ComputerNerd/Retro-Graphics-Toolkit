@@ -4,7 +4,7 @@ CXX=g++
 
 include Makefile.common
 
-CFLAGS += -Wall -Wextra -Wdouble-promotion -O0 -ggdb3
+CFLAGS += -Wall -Wextra -Wdouble-promotion -O0 -ggdb3 -Werror=implicit-function-declaration
 CXXFLAGS := $(CFLAGS) -std=gnu++14
 LDFLAGS := -L/usr/lib/fltk/ -lfltk_images -lfltk -lpng -ljpeg -lXft -lXext -lXinerama -lX11 -lz -Llua/src -llua -ldl
 
