@@ -90,23 +90,6 @@ void setGameSysTMS9918(Project*prj) {
 			changeTileDim(2, 2, prj);
 			break;
 	}
-
-	if (currentProject->containsData(pjHaveMap)) {
-		if (subSysnew == MODE_1) {
-
-		} else {
-
-		}
-
-		for (unsigned i = 0; i < currentProject->tms->maps.size(); ++i) {
-			if (subSysnew == MODE_2)
-				prj->tms->maps[i].extPalRows = (uint8_t*)realloc(prj->tms->maps[i].extPalRows, prj->tms->maps[i].getExtAttrsSize());
-			else {
-				free(prj->tms->maps[i].extPalRows);
-				prj->tms->maps[i].extPalRows = 0;
-			}
-		}
-	}
 }
 static void TMS9918SetSubSysCB(Fl_Widget*, void*sys) {
 	enum TMS9918SubSys subSysnew = (enum TMS9918SubSys)(uintptr_t)sys;
@@ -423,7 +406,7 @@ void set_game_system(Fl_Widget*, void* selection) {
 	currentProject->tileC->changeDim(8, 8, bd);
 
 	if (currentProject->containsData(pjHaveSprites)) {
-		int spRow = fixedSpirtePalRowSys(sel);
+		int spRow = currentProject->fixedSpirtePalRow();
 
 		if (spRow >= 0) {
 			currentProject->ms->sps[msprt].allToPalRow(spRow);
@@ -483,21 +466,6 @@ freeIt:
 	}
 
 	if (currentProject->containsData(pjHaveMap)) {
-		unsigned extNew = currentProject->szPerExtPalRow();
-
-		if (extNew) {
-			for (unsigned i = 0; i < currentProject->tms->maps.size(); ++i) {
-				size_t sz = currentProject->tms->maps[i].getNumElms() * extNew;
-				currentProject->tms->maps[i].extPalRows = (uint8_t*)realloc(currentProject->tms->maps[i].extPalRows, sz);
-				memset(currentProject->tms->maps[i].extPalRows, 0, sz);
-			}
-		} else {
-			for (unsigned i = 0; i < currentProject->tms->maps.size(); ++i) {
-				free(currentProject->tms->maps[i].extPalRows);
-				currentProject->tms->maps[i].extPalRows = 0;
-			}
-		}
-
 		if ((sel == masterSystem || sel == gameGear) && (gold == NES)) {
 			for (unsigned i = 0; i < currentProject->tms->maps.size(); ++i) {
 				for (unsigned y = 0; y < currentProject->tms->maps[i].mapSizeHA; ++y) {

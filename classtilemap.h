@@ -31,7 +31,6 @@ public:
 	~tileMap();
 	struct Project*prj;
 	uint8_t*tileMapDat;/*!< Holds tilemap data*/
-	uint8_t*extPalRows;
 	int32_t offset;
 	uint32_t mapSizeW, mapSizeH, mapSizeHA;
 	uint32_t getNumElms(void)const {
@@ -53,13 +52,9 @@ public:
 	int32_t get_tile(uint32_t x, uint32_t y)const;
 	int32_t get_tileRow(uint32_t x, uint32_t y, unsigned useRow)const;
 	unsigned getPalRow(uint32_t x, uint32_t y)const;
-	static unsigned getPalRowExt(const uint8_t*ptr, uint32_t y, bool fg);
-	unsigned getPalRowExt(uint32_t x, uint32_t y, bool fg)const;
-	const uint8_t*getExtPtr(uint32_t x, uint32_t y)const;
 	void set_hflip(uint32_t x, uint32_t y, bool hflip_set);
 	void set_vflip(uint32_t x, uint32_t y, bool vflip_set);
 	void set_pal_row(uint32_t x, uint32_t y, unsigned row);
-	void setPalRowExt(uint32_t x, uint32_t y, unsigned row, bool fg);
 	void set_tile_full(uint32_t x, uint32_t y, uint32_t tile, unsigned palette_row, bool use_hflip, bool use_vflip, bool highorlow_prio);
 	void set_tile(uint32_t x, uint32_t y, uint32_t tile);
 	void set_prio(uint32_t x, uint32_t y, bool prio_set);
@@ -78,6 +73,5 @@ public:
 	void drawPart(unsigned offx, unsigned offy, unsigned x, unsigned y, unsigned w, unsigned h, int rowSolo, unsigned zoom, bool trueCol);
 	void findFirst(int&x, int&y, unsigned tile)const;
 	void pickExtAttrs(void);
-	size_t getExtAttrsSize(void)const;
 	void removeBlock(unsigned id);
 };

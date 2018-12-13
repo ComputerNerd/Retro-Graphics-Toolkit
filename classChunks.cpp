@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #include <exception>
 #include "macros.h"
@@ -90,25 +90,34 @@ void ChunkClass::resizeAmt(uint32_t amtnew) {
 void ChunkClass::resizeAmt(void) {
 	resizeAmt(amt);
 }
+
+void ChunkClass::getXYblock(unsigned id, unsigned x, unsigned y, unsigned& xo, unsigned& yo)const {
+	xo = x % prj->tms->maps[usePlane].mapSizeW;
+	yo = (chunks[(id * wi * hi) + (y * wi / prj->tms->maps[usePlane].mapSizeH) + (x / prj->tms->maps[usePlane].mapSizeW)].block
+	      * prj->tms->maps[usePlane].mapSizeH)
+	     + (y % prj->tms->maps[usePlane].mapSizeH);
+}
 bool ChunkClass::getPrio_t(uint32_t id, uint32_t x, uint32_t y)const { //The _t means based on tiles not blocks
 	if (useBlocks) {
-		return prj->tms->maps[usePlane].get_prio(
-		           x % prj->tms->maps[usePlane].mapSizeW,
-		           (chunks[(id * wi * hi) + (y * wi / prj->tms->maps[usePlane].mapSizeH) + (x / prj->tms->maps[usePlane].mapSizeW)].block
-		            * prj->tms->maps[usePlane].mapSizeH)
-		           + (y % prj->tms->maps[usePlane].mapSizeH));
+		getXYblock(id, x, y, x, y);
+		return prj->tms->maps[usePlane].get_prio(x, y);
 	} else
-		return ((chunks[(id * wi * hi) + (y * wi) + x].flags >> 2) & 1) ? true : false;
+		return ((getFlag(id, x, y) >> 2) & 1) ? true : false;
 }
 uint8_t ChunkClass::getTileRow_t(uint32_t id, uint32_t x, uint32_t y)const {
 	if (useBlocks) {
-		return prj->tms->maps[usePlane].getPalRow(
-		           x % prj->tms->maps[usePlane].mapSizeW,
-		           (chunks[(id * wi * hi) + (y * wi / prj->tms->maps[usePlane].mapSizeH) + (x / prj->tms->maps[usePlane].mapSizeW)].block
-		            * prj->tms->maps[usePlane].mapSizeH)
-		           + (y % prj->tms->maps[usePlane].mapSizeH));
+		getXYblock(id, x, y, x, y);
+		return prj->tms->maps[usePlane].getPalRow(x, y);
 	} else
-		return (chunks[(id * wi * hi) + (y * wi) + x].flags >> 3) & 3;
+		return (getFlag(id, x, y) >> 3) & 3;
+}
+
+unsigned ChunkClass::getTile_t(uint32_t id, uint32_t x, uint32_t y)const {
+	if (useBlocks) {
+		getXYblock(id, x, y, x, y);
+		return prj->tms->maps[usePlane].get_tile(x, y);
+	} else
+		return (getFlag(id, x, y) >> 3) & 3;
 }
 unsigned ChunkClass::getSolid(uint32_t id, uint32_t x, uint32_t y)const {
 	unsigned shift;
@@ -129,7 +138,7 @@ bool ChunkClass::getHflip(uint32_t id, uint32_t x, uint32_t y)const {
 bool ChunkClass::getVflip(uint32_t id, uint32_t x, uint32_t y)const {
 	return (chunks[getOff(id, x, y)].flags & 2) >> 1;
 }
-unsigned ChunkClass::getOff(uint32_t id, uint32_t x, uint32_t y)const {
+unsigned ChunkClass::getOff(const uint32_t id, const uint32_t x, const uint32_t y)const {
 	return (id * wi * hi) + (y * wi) + x;
 }
 bool ChunkClass::getPrio(uint32_t id, uint32_t x, uint32_t y)const {

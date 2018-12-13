@@ -95,12 +95,16 @@ static int lua_tile_draw(lua_State*L) {
 	size_t projectIDX = *idxPtr;
 	size_t tile = idxPtr[1];
 
-	projects[projectIDX]->tileC->draw_tile(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0),
-	                                       tile, luaL_optinteger(L, 4, 0),
-	                                       luaL_optinteger(L, 5, 0), lua_toboolean(L, 6),
-	                                       lua_toboolean(L, 7), lua_toboolean(L, 8),
-	                                       (const uint8_t*)luaL_optinteger(L, 9, 0),
-	                                       luaL_optinteger(L, 10, 0), lua_toboolean(L, 11));
+	projects[projectIDX]->tileC->draw_tile(luaL_optinteger(L, 2, 0), // X
+	                                       luaL_optinteger(L, 3, 0), // Y
+	                                       tile,
+	                                       luaL_optinteger(L, 4, 0), // Zoom
+	                                       luaL_optinteger(L, 5, 0), // Palette row
+	                                       lua_toboolean(L, 6), // Hflip
+	                                       lua_toboolean(L, 7), // Vflip
+	                                       lua_toboolean(L, 8), // Is sprite?
+	                                       luaL_optinteger(L, 9, 0), // Plane
+	                                       lua_toboolean(L, 10)); // Draw with alpha?
 	return 0;
 }
 

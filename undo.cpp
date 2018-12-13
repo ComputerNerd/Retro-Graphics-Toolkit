@@ -42,7 +42,6 @@ enum undoTypes_t {
 	uTilemapBlocksAmt,
 	uTilemapPlaneDelete,
 	uTilemapPlaneAdd,
-	uExtAttrs,
 	uPalette,
 	uPaletteEntry,
 	uChunk,
@@ -126,10 +125,6 @@ struct undoTilemapPlane {
 	std::string*oldStr;
 	std::string*TnewStr;
 	uint32_t plane;
-};
-struct undoExtAttrs {
-	uint32_t plane;
-	uint8_t*old, *pnew;
 };
 struct undoResize {
 	uint32_t plane;
@@ -375,15 +370,6 @@ static void cleanupEvent(uint32_t id) {
 
 			free(uptr->ptr);
 			memUsed -= sizeof(struct undoTilemapPlane);
-		}
-		break;
-
-		case uExtAttrs:
-		{	struct undoExtAttrs*um = (struct undoExtAttrs*)uptr->ptr;
-			free(um->old);
-			free(um->pnew);
-			free(uptr->ptr);
-			memUsed -= sizeof(struct undoExtAttrs);
 		}
 		break;
 
@@ -972,27 +958,6 @@ static void UndoRedo(bool redo) {
 		}
 		break;
 
-		case uExtAttrs:
-		{	struct undoExtAttrs*um = (struct undoExtAttrs*)uptr->ptr;
-			isCorrectPlane(um->plane);
-			size_t sz = currentProject->tms->maps[um->plane].getExtAttrsSize();
-
-			if (redo) {
-				um->old = (uint8_t*)malloc(sz);
-				memcpy(um->old, currentProject->tms->maps[um->plane].extPalRows, sz);
-				memcpy(currentProject->tms->maps[um->plane].extPalRows, um->pnew, sz);
-				free(um->pnew);
-				um->pnew = 0;
-			} else {
-				um->pnew = (uint8_t*)malloc(sz);
-				memcpy(um->pnew, currentProject->tms->maps[um->plane].extPalRows, sz);
-				memcpy(currentProject->tms->maps[um->plane].extPalRows, um->old, sz);
-				free(um->old);
-				um->old = 0;
-			}
-		}
-		break;
-
 		case uPalette:
 		{	struct undoPalette*up = (struct undoPalette*)uptr->ptr;
 			unsigned sz, el = currentProject->pal->colorCnt + currentProject->pal->colorCntalt;
@@ -1473,19 +1438,6 @@ void pushTilemapPlaneAdd(uint32_t plane) {
 	struct undoEvent*uptr = undoBuf + pos;
 	uptr->type = uTilemapPlaneAdd;
 }
-void pushExtAttrs(uint32_t plane) {
-	pushEventPrepare();
-	struct undoEvent*uptr = undoBuf + pos;
-	uptr->type = uExtAttrs;
-	uptr->ptr = malloc(sizeof(struct undoExtAttrs));
-	memUsed += sizeof(struct undoExtAttrs);
-	struct undoExtAttrs*um = (struct undoExtAttrs*)uptr->ptr;
-	um->plane = plane;
-	size_t sz = currentProject->tms->maps[plane].getExtAttrsSize();
-	um->old = (uint8_t*)malloc(sz);
-	memcpy(um->old, currentProject->tms->maps[um->plane].extPalRows, sz);
-	um->pnew = nullptr;
-}
 void pushTilemapEdit(uint32_t x, uint32_t y) {
 	pushEventPrepare();
 	struct undoEvent*uptr = undoBuf + pos;
@@ -1818,12 +1770,6 @@ void historyWindow(Fl_Widget*, void*) {
 			case uTilemapPlaneDelete:
 			{	struct undoTilemapPlane*um = (struct undoTilemapPlane*)uptr->ptr;
 				snprintf(tmp, 2048, "Delete plane %u", um->plane);
-			}
-			break;
-
-			case uExtAttrs:
-			{	struct undoExtAttrs*um = (struct undoExtAttrs*)uptr->ptr;
-				snprintf(tmp, 2048, "Change extended attributes on plane: %u", um->plane);
 			}
 			break;
 

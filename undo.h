@@ -47,7 +47,6 @@ void pushTilemapBlocksAmt(uint32_t amtnew);
 void pushTilemapAll(bool attrOnly);
 void pushTilemapPlaneDelete(uint32_t plane);
 void pushTilemapPlaneAdd(uint32_t plane);
-void pushExtAttrs(uint32_t plane);
 void pushPaletteEntry(uint32_t id);
 void pushPaletteAll(void);
 void pushChunk(uint32_t id, bool rm);

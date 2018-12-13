@@ -868,14 +868,16 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 	}
 
 	if ((currentProject->gameSystem == TMS9918) && (currentProject->getTMS9918subSys() == MODE_3))
-		colSpace = true;
+		colSpace = true; // The entire palette is available for all pixels.
 
 	uint8_t*indexPtr = (uint8_t*)retPtr;
 	int ditherSetting = ((currentProject->settings >> subsettingsDitherShift)&subsettingsDitherMask) + 1;
 	unsigned type_temp = palTypeGen;
 	unsigned temp = 0;
 	rgbPixelsize = useAlpha ? 4 : 3;
-	unsigned rgbRowsize = currentProject->tileC->width() * rgbPixelsize;
+	unsigned tileWidth = currentProject->tileC->width();
+	unsigned tileHeight = currentProject->tileC->height();
+	unsigned rgbRowsize = tileWidth * rgbPixelsize;
 	unsigned x, y;
 	uint_fast8_t r_old, g_old, b_old, a_old;
 	uint_fast8_t r_new, g_new, b_new, a_new;
@@ -885,7 +887,7 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 	Fl_Progress *progress;
 	bool progressHave = false;
 	time_t lasttime = time(NULL);
-	bool haveExt = currentProject->szPerExtPalRow() > 0;
+	bool haveExt = currentProject->hasExtAttrs();
 
 	switch (ditherAlg) {
 		case 7:
@@ -929,9 +931,9 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 						unsigned tempSet;
 
 						if (isChunk)
-							tempSet = (currentProject->Chunk->getPrio_t(idChunk, x / 8, y / 8) ^ 1) * 8;
+							tempSet = (currentProject->Chunk->getPrio_t(idChunk, x / tileWidth, y / 8) ^ 1) * 8;
 						else
-							tempSet = (currentProject->tms->maps[currentProject->curPlane].get_prio(x / 8, y / 8) ^ 1) * 8;
+							tempSet = (currentProject->tms->maps[currentProject->curPlane].get_prio(x / tileWidth, y / 8) ^ 1) * 8;
 
 						set_palette_type_force(tempSet);//0 normal 8 shadowed 16 highlighted
 					}
@@ -942,9 +944,9 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 						pal_row = forcedrow;
 					else {
 						if (isChunk)
-							pal_row = currentProject->Chunk->getTileRow_t(idChunk, x / 8, y / 8);
+							pal_row = currentProject->Chunk->getTileRow_t(idChunk, x / tileWidth, y / 8);
 						else
-							pal_row = currentProject->tms->maps[currentProject->curPlane].getPalRow(x / 8, y / 8);
+							pal_row = currentProject->tms->maps[currentProject->curPlane].getPalRow(x / tileWidth, y / 8);
 					}
 
 					if (ditherAlg == 7) {
@@ -1080,11 +1082,19 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 						}
 
 						if (haveExt) {
-							temp = chooseTwoColor(currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x / rgbRowsize, y, false), currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x / rgbRowsize, y, true), r_old, g_old, b_old) * 3;
+							unsigned curTile;
+
+							if (isChunk)
+								curTile = currentProject->Chunk->getTile_t(idChunk, x / rgbRowsize, y / 8);
+							else
+								curTile = currentProject->tms->maps[currentProject->curPlane].get_tile(x / rgbRowsize, y / 8);
+
+							unsigned extAttr = currentProject->tileC->getExtAttr(curTile, y % 8);
+							temp = chooseTwoColor(extAttr & 15, extAttr >> 4, r_old, g_old, b_old) * 3;
 							r_new = currentProject->pal->rgbPal[temp];
 							g_new = currentProject->pal->rgbPal[temp + 1];
 							b_new = currentProject->pal->rgbPal[temp + 2];
-							temp = 3 * ((temp / 3) == currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x / rgbRowsize, y, true));
+							temp = 3 * ((temp / 3) == (extAttr >> 4));
 						} else if ((currentProject->pal->haveAlt) && isSprite) {
 							temp = find_near_color_from_row_rgb(pal_row, r_old, g_old, b_old, true);
 							r_new = currentProject->pal->rgbPal[temp + (currentProject->pal->colorCnt * 3)];
@@ -1160,9 +1170,9 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 							pal_row = forcedrow;
 						else {
 							if (isChunk)
-								pal_row = currentProject->Chunk->getTileRow_t(idChunk, x / 8, y / 8);
+								pal_row = currentProject->Chunk->getTileRow_t(idChunk, x / tileWidth, y / 8);
 							else
-								pal_row = currentProject->tms->maps[currentProject->curPlane].getPalRow(x / 8, y / 8);
+								pal_row = currentProject->tms->maps[currentProject->curPlane].getPalRow(x / tileWidth, y / 8);
 						}
 					}
 
@@ -1171,9 +1181,9 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 						unsigned tempSet;
 
 						if (isChunk)
-							tempSet = (currentProject->Chunk->getPrio_t(idChunk, x / 8, y / 8) ^ 1) * 8;
+							tempSet = (currentProject->Chunk->getPrio_t(idChunk, x / tileWidth, y / 8) ^ 1) * 8;
 						else
-							tempSet = (currentProject->tms->maps[currentProject->curPlane].get_prio(x / 8, y / 8) ^ 1) * 8;
+							tempSet = (currentProject->tms->maps[currentProject->curPlane].get_prio(x / tileWidth, y / 8) ^ 1) * 8;
 
 						set_palette_type_force(tempSet);//0 normal 8 shadowed 16 highlighted
 					}
@@ -1222,11 +1232,19 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 						}
 					} else {
 						if (haveExt) {
-							temp = chooseTwoColor(currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x / 8, y, false), currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x / 8, y, true), r_old, g_old, b_old) * 3;
+							unsigned curTile;
+
+							if (isChunk)
+								curTile = currentProject->Chunk->getTile_t(idChunk, x / tileWidth, y / 8);
+							else
+								curTile = currentProject->tms->maps[currentProject->curPlane].get_tile(x / tileWidth, y / 8);
+
+							unsigned extAttr = currentProject->tileC->getExtAttr(curTile, y % 8);
+							temp = chooseTwoColor(extAttr & 15, extAttr >> 4, r_old, g_old, b_old) * 3;
 							r_new = currentProject->pal->rgbPal[temp];
 							g_new = currentProject->pal->rgbPal[temp + 1];
 							b_new = currentProject->pal->rgbPal[temp + 2];
-							temp = 3 * ((temp / 3) == currentProject->tms->maps[currentProject->curPlane].getPalRowExt(x / 8, y, true));
+							temp = 3 * ((temp / 3) == (extAttr >> 4));
 						} else if ((currentProject->pal->haveAlt) && isSprite) {
 							temp = find_near_color_from_row_rgb(pal_row, r_old, g_old, b_old, true);
 							r_new = currentProject->pal->rgbPal[temp + (currentProject->pal->colorCnt * 3)];

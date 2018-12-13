@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #pragma once
 #include <stdint.h>
@@ -23,6 +23,9 @@ struct __attribute__ ((__packed__)) ChunkAttrs {
 	uint32_t flags;
 };
 class ChunkClass {
+private:
+	unsigned getOff(const uint32_t id, const uint32_t x, const uint32_t y)const;
+	void getXYblock(unsigned id, unsigned x, unsigned y, unsigned& xo, unsigned& yo)const;
 public:
 	uint32_t amt;//Amount of chunks
 	uint32_t wi, hi; //How many blocks/Tiles the chunk contains
@@ -45,7 +48,7 @@ public:
 	bool getPrio_t(uint32_t id, uint32_t x, uint32_t y)const;
 	bool getPrio(uint32_t id, uint32_t x, uint32_t y)const;
 	uint8_t getTileRow_t(uint32_t id, uint32_t x, uint32_t y)const; //x and y refer to tiles not blocks
-	unsigned getOff(uint32_t id, uint32_t x, uint32_t y)const;
+	unsigned getTile_t(uint32_t id, uint32_t x, uint32_t y)const; //x and y refer to tiles not blocks
 	void setBlock(uint32_t id, uint32_t x, uint32_t y, uint32_t block); //Which chunk,offset x,offset y (offsets relative to chunk)
 	void setFlag(uint32_t id, uint32_t x, uint32_t y, uint32_t flag);
 	uint32_t getFlag(uint32_t id, uint32_t x, uint32_t y)const;

@@ -26,7 +26,6 @@
 #include "gui.h"
 #include "palette.h"
 void pickExtAttrsCB(Fl_Widget*, void*) {
-	pushExtAttrs(currentProject->curPlane);
 	currentProject->tms->maps[currentProject->curPlane].pickExtAttrs();
 	window->damage(FL_DAMAGE_USER1);
 }

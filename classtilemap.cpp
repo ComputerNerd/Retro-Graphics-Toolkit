@@ -35,11 +35,6 @@ tileMap::tileMap(uint32_t w, uint32_t h, Project*prj)noexcept {
 	isBlock = false;
 	tileMapDat = (uint8_t*)calloc(w * h, TileMapSizePerEntry);
 	offset = 0;
-
-	if (prj->szPerExtPalRow())
-		extPalRows = (uint8_t*)calloc(w * h, prj->szPerExtPalRow());
-	else
-		extPalRows = 0;
 }
 tileMap::tileMap(const tileMap&other, Project*prj)noexcept {
 	if (this != &other) {
@@ -60,12 +55,6 @@ tileMap::tileMap(const tileMap&other, Project*prj)noexcept {
 
 		tileMapDat = (uint8_t*)malloc(mapSizeW * mapSizeHA * TileMapSizePerEntry);
 		memcpy(tileMapDat, other.tileMapDat, mapSizeW * mapSizeHA * TileMapSizePerEntry);
-
-		if (other.extPalRows) {
-			extPalRows = (uint8_t*)malloc(mapSizeW * mapSizeHA * prj->szPerExtPalRow());
-			memcpy(extPalRows, other.extPalRows, mapSizeW * mapSizeHA * prj->szPerExtPalRow());
-		} else
-			extPalRows = 0;
 	}
 }
 tileMap::tileMap(const tileMap&other)noexcept {
@@ -81,8 +70,6 @@ tileMap::tileMap(tileMap&& other)noexcept {
 		offset = other.offset;
 		amt = other.amt;
 		tileMapDat = other.tileMapDat;
-		extPalRows = other.extPalRows;
-		other.extPalRows = 0;
 		other.tileMapDat = 0;
 	}
 }
@@ -95,8 +82,6 @@ tileMap& tileMap::operator=(const tileMap& other)noexcept {
 	return *this;
 }
 tileMap::~tileMap()noexcept {
-	free(extPalRows);
-	extPalRows = 0;
 	free(tileMapDat);
 	tileMapDat = 0;
 }
@@ -419,29 +404,6 @@ unsigned tileMap::getPalRow(uint32_t x, uint32_t y)const {
 		return (tileMapDat[((y * mapSizeW) + x) * 4] >> 5) & 3;
 	} else
 		return 0;
-}
-const uint8_t*tileMap::getExtPtr(uint32_t x, uint32_t y)const {
-	return extPalRows + ((x + (y * mapSizeW)) * prj->szPerExtPalRow());
-}
-unsigned tileMap::getPalRowExt(uint32_t x, uint32_t y, bool fg)const {
-	if (extPalRows && inRange(x, y / 8))
-		return getPalRowExt(getExtPtr(x, y / 8), y & 7, fg);
-	else
-		return 0;
-}
-unsigned tileMap::getPalRowExt(const uint8_t*ptr, uint32_t y, bool fg) {
-	if (fg)
-		return ptr[y] >> 4;
-	else
-		return ptr[y] & 15;
-}
-void tileMap::setPalRowExt(uint32_t x, uint32_t y, unsigned row, bool fg) {
-	if (extPalRows && inRange(x, y / 8)) {
-		unsigned shift = fg * 4;
-		uint8_t*ptr = (uint8_t*)getExtPtr(x, y / 8) + (y & 7);
-		*ptr &= ~(15 << shift);
-		*ptr |= row << shift;
-	}
 }
 void tileMap::set_pal_row(uint32_t x, uint32_t y, unsigned row) {
 	if ((prj->gameSystem == NES) && (prj->subSystem & NES2x2)) {
@@ -1133,32 +1095,17 @@ void tileMap::resize_tile_map(uint32_t new_x, uint32_t new_y) {
 
 	uint8_t*extTmp;
 
-	if (extPalRows)
-		extTmp = (uint8_t*)malloc(new_x * new_y * prj->szPerExtPalRow());
-
 	//now copy old data to temp
-	unsigned szPer = prj->szPerExtPalRow();
-
 	for (unsigned y = 0; y < new_y; ++y) {
 		for (unsigned x = 0; x < new_x; ++x) {
 			uint32_t posCal = ((y * new_x) + x);
 			uint32_t sel_map = posCal * TileMapSizePerEntry;
-			uint32_t posAttr = posCal * prj->szPerExtPalRow();
 
 			if (x < mapSizeW && y < mapSizeH) {
 				uint32_t sel_map_old = ((y * mapSizeW) + x) * TileMapSizePerEntry;
 				memcpy(temp + sel_map, tileMapDat + sel_map_old, TileMapSizePerEntry);
-
-				if (extPalRows) {
-					uint32_t AttrOldPos = ((y * mapSizeW) + x) * szPer;
-					memcpy(extTmp + sel_map, extPalRows + AttrOldPos, szPer);
-				}
-			} else {
+			} else
 				memset(temp + sel_map, 0, TileMapSizePerEntry);
-
-				if (extPalRows)
-					memset(extTmp + posAttr, 0, prj->szPerExtPalRow());
-			}
 		}
 	}
 
@@ -1167,11 +1114,6 @@ void tileMap::resize_tile_map(uint32_t new_x, uint32_t new_y) {
 	if (!tileMapDat) {
 		show_realloc_error((new_x * new_y)*TileMapSizePerEntry)
 		return;
-	}
-
-	if (extPalRows) {
-		extPalRows = (uint8_t*)realloc(extPalRows, new_x * new_y * szPer);
-		memcpy(extPalRows, extTmp, new_x * new_y * szPer);
 	}
 
 	memcpy(tileMapDat, temp, (new_x * new_y)*TileMapSizePerEntry);
@@ -1205,15 +1147,18 @@ bool tileMap::truecolor_to_image(uint8_t * the_image, int useRow, bool useAlpha)
 		return false;
 	}
 
-	uint32_t w, h;
-	w = mapSizeW * prj->tileC->width();
-	h = mapSizeHA * prj->tileC->height();
+	unsigned pixelSize = useAlpha ? 4 : 3;
+
+	unsigned w = mapSizeW * prj->tileC->width();
+	unsigned wBytes = w * pixelSize;
+	unsigned h = mapSizeHA * prj->tileC->height();
+
 	unsigned x_tile = 0, y_tile = 0;
 	int_fast32_t truecolor_tile_ptr = 0;
-	unsigned pixelSize = useAlpha ? 4 : 3;
 	unsigned pSize2 = prj->tileC->width() * pixelSize;
+	unsigned stepTileRowBytes = wBytes * prj->tileC->height();
 
-	for (uint64_t a = 0; a < (h * w * pixelSize) - w * pixelSize; a += w * pSize2) { //a tiles y
+	for (uint64_t a = 0; a < (h * w * pixelSize); a += stepTileRowBytes) { //a tiles y
 		for (uint_fast32_t b = 0; b < w * pixelSize; b += pSize2) { //b tiles x
 			if (useRow >= 0)
 				truecolor_tile_ptr = get_tileRow(x_tile, y_tile, useRow) * prj->tileC->tcSize;
@@ -1221,7 +1166,7 @@ bool tileMap::truecolor_to_image(uint8_t * the_image, int useRow, bool useAlpha)
 				truecolor_tile_ptr = get_tile(x_tile, y_tile) * prj->tileC->tcSize;
 
 			if ((truecolor_tile_ptr != -prj->tileC->tcSize) && (truecolor_tile_ptr < (prj->tileC->amt * prj->tileC->tcSize))) {
-				for (uint_fast32_t y = 0; y < w * pSize2; y += w * pixelSize) { //pixels y
+				for (uint_fast32_t y = 0; y < stepTileRowBytes; y += wBytes) { //pixels y
 					if (useAlpha)
 						memcpy(&the_image[a + b + y], &prj->tileC->truetDat[truecolor_tile_ptr], prj->tileC->width() * 4);
 					else {
@@ -1238,7 +1183,7 @@ bool tileMap::truecolor_to_image(uint8_t * the_image, int useRow, bool useAlpha)
 					truecolor_tile_ptr += prj->tileC->width() * 4;
 				}
 			} else {
-				for (uint32_t y = 0; y < w * pSize2; y += w * pixelSize) //pixels y
+				for (uint32_t y = 0; y < stepTileRowBytes; y += wBytes) //pixels y
 					memset(&the_image[a + b + y], 0, pSize2);
 			}
 
@@ -1357,7 +1302,7 @@ void tileMap::drawPart(unsigned offx, unsigned offy, unsigned x, unsigned y, uns
 					if (trueCol)
 						prj->tileC->draw_truecolor(tile, ox, offy, hflip, vflip, zoom);
 					else
-						prj->tileC->draw_tile(ox, offy, tile, zoom, palRow, hflip, vflip, false, extPalRows ? getExtPtr(i, j) : 0, prj->curPlane);
+						prj->tileC->draw_tile(ox, offy, tile, zoom, palRow, hflip, vflip, false, prj->curPlane);
 				}
 			}
 
@@ -1473,11 +1418,6 @@ static bool comparatorTile(const tilePair& l, const tilePair& r) {
 	return l.first < r.first;
 }
 void tileMap::pickExtAttrs(void) {
-	if (!extPalRows) {
-		fl_alert("Extended attributes are not supported with this configuration of game system and subsystem");
-		return;
-	}
-
 	switch (prj->gameSystem) {
 		case TMS9918:
 		{
@@ -1491,6 +1431,42 @@ void tileMap::pickExtAttrs(void) {
 				return;
 
 			switch (prj->getTMS9918subSys()) {
+				case MODE_0: { // Pick the two most used colors.
+					uint32_t hist[16];
+					uint8_t* tPtr = imgTmp;
+					uint8_t* idxPtr = indexList;
+
+					for (unsigned i = 0; i < w * h; ++i) {
+						if (tPtr[3])
+							++hist[0];
+						else
+							++hist[*idxPtr];
+
+						tPtr += 4;
+						++idxPtr;
+					}
+
+
+					unsigned cmp = hist[0];
+					bool allEqual = true;
+
+					for (unsigned x = 1; x < 16; ++x) {
+						allEqual &= cmp == hist[x];
+
+						if (!allEqual)
+							break;
+					}
+
+					if (allEqual)
+						prj->tileC->extAttrs[0] = 0xF0;
+					else {
+						unsigned largest[2];
+						pickFromHist2(hist, largest, 16);
+						prj->tileC->extAttrs[0] = (largest[1] << 4) | largest[0]; // Upper foreground, Lower background.
+					}
+				}
+				break;
+
 				case MODE_1: {
 					tilePair*attrs = new tilePair[prj->tileC->amt];
 
@@ -1529,7 +1505,7 @@ void tileMap::pickExtAttrs(void) {
 								}
 
 								if (allEqual)
-									attrs[tile].first = 0x10;
+									attrs[tile].first = 0xF0;
 								else {
 									unsigned largest[2];
 									pickFromHist2(hist, largest, 16);
@@ -1575,15 +1551,14 @@ void tileMap::pickExtAttrs(void) {
 										break;
 								}
 
+								unsigned tile = get_tile(i, j);
+
 								if (allEqual) {
-									// Use the found color plus black.
-									setPalRowExt(i, j * 8 + y, hist[0], false);
-									setPalRowExt(i, j * 8 + y, 1, true);
+									prj->tileC->setExtAttr(tile, y, 0xF0); // White foreground, black background.
 								} else {
 									unsigned largest[2];
 									pickFromHist2(hist, largest, 16);
-									setPalRowExt(i, j * 8 + y, largest[0], false);
-									setPalRowExt(i, j * 8 + y, largest[1], true);
+									prj->tileC->setExtAttr(tile, y, largest[1] << 4 | largest[0]); // White foreground, black background.
 								}
 							}
 						}
@@ -1606,25 +1581,11 @@ void tileMap::pickExtAttrs(void) {
 			show_default_error
 	}
 }
-size_t tileMap::getExtAttrsSize(void)const {
-	//First see if based on tiles or tilemap
-	unsigned sz = prj->szPerExtPalRow(), szT = prj->extAttrTilesPerByte();
-
-	if (szT)
-		return (prj->tileC->amt + szT - 1) / szT * szT; //Round up
-	else
-		return mapSizeW * mapSizeHA * sz;
-}
 void tileMap::removeBlock(unsigned id) {
 	if (isBlock) {
 		if (id < (amt - 1)) {
 			size_t perElmB = mapSizeW * mapSizeH * TileMapSizePerEntry;
 			memmove(tileMapDat + id * perElmB, tileMapDat + (id + 1)*perElmB, (amt - id - 1)*perElmB);
-
-			if (extPalRows) {
-				size_t perElmE = getExtAttrsSize();
-				memmove(extPalRows + id * perElmE, extPalRows + (id + 1)*perElmE, (amt - id - 1)*perElmE);
-			}
 		}
 
 		if (id < amt)

@@ -280,23 +280,6 @@ static int undo_pushTilemapPlaneAdd(lua_State *L) {
 	return lua_error(L);
 }
 
-/** void pushExtAttrs(unsigned int plane)
- * inc/undo.h:23
- */
-static int undo_pushExtAttrs(lua_State *L) {
-	try {
-		unsigned int plane = dub::checkinteger(L, 1);
-		pushExtAttrs(plane);
-		return 0;
-	} catch (std::exception &e) {
-		lua_pushfstring(L, "undo.pushExtAttrs: %s", e.what());
-	} catch (...) {
-		lua_pushfstring(L, "undo.pushExtAttrs: Unknown exception");
-	}
-
-	return lua_error(L);
-}
-
 /** void pushPaletteEntry(unsigned int id)
  * inc/undo.h:24
  */
@@ -691,7 +674,6 @@ static const struct luaL_Reg undo_functions[] = {
 	{ "pushTilemapAll", undo_pushTilemapAll  },
 	{ "pushTilemapPlaneDelete", undo_pushTilemapPlaneDelete },
 	{ "pushTilemapPlaneAdd", undo_pushTilemapPlaneAdd },
-	{ "pushExtAttrs", undo_pushExtAttrs    },
 	{ "pushPaletteEntry", undo_pushPaletteEntry },
 	{ "pushPaletteAll", undo_pushPaletteAll  },
 	{ "pushChunk", undo_pushChunk       },

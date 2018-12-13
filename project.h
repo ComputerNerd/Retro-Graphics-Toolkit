@@ -90,9 +90,12 @@ struct Project { /*!<Holds all data needed for a project based system for exampl
 		subSystem |= val << 3;
 		palTab = palTabPtr[val];
 	}
-	unsigned szPerExtPalRow(void);
 	unsigned extAttrTilesPerByte(void);
+	unsigned extAttrBytesPerTile(void);
+	unsigned extAttrFixedSize(void);
 	bool isFixedPalette(void);
+	bool hasExtAttrs(void);
+	bool supportsFlippedTiles(void);
 	enum tileType getTileType(void);
 	int fixedSpirtePalRow(void);
 	std::string Name;

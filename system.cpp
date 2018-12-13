@@ -83,7 +83,7 @@ int Project::getBitdepthSysraw(void)const {
 			return 0;
 	}
 }
-int fixedSpirtePalRowSys(enum gameSystemEnum gameSystem) {
+int Project::fixedSpirtePalRow(void) {
 	switch (gameSystem) {
 		case masterSystem:
 		case gameGear:
@@ -93,13 +93,10 @@ int fixedSpirtePalRowSys(enum gameSystemEnum gameSystem) {
 			return -1;
 	}
 }
-int Project::fixedSpirtePalRow(void) {
-	return fixedSpirtePalRowSys(gameSystem);
-}
 enum tileType Project::getTileType(void) {
 	switch (gameSystem) {
 		case NES:
-			return PLANAR_TILE;
+					return PLANAR_TILE;
 			break;
 
 		case masterSystem:
@@ -120,6 +117,30 @@ bool Project::isFixedPalette(void) {
 			return false;
 	}
 }
+
+bool Project::hasExtAttrs(void) {
+	switch (gameSystem) {
+		case TMS9918:
+			return getTMS9918subSys() != MODE_3;
+			break;
+
+		default:
+			return false;
+	}
+}
+
+bool Project::supportsFlippedTiles(void) {
+	switch (gameSystem) {
+		case TMS9918:
+		case NES:
+			return false;
+			break;
+
+		default:
+			return true;
+	}
+}
+
 unsigned Project::extAttrTilesPerByte(void) {
 	switch (gameSystem) {
 		case TMS9918:
@@ -128,13 +149,17 @@ unsigned Project::extAttrTilesPerByte(void) {
 			switch (subSys) {
 				case MODE_0:
 				case MODE_3:
-				case MODE_2:
 					return 0;
 					break;
 
 				case MODE_1:
 					return 8;
 					break;
+
+				case MODE_2:
+					return 1;
+					break;
+
 				default:
 					show_default_error
 			}
@@ -145,7 +170,8 @@ unsigned Project::extAttrTilesPerByte(void) {
 			return 0;
 	}
 }
-unsigned Project::szPerExtPalRow(void) {
+
+unsigned Project::extAttrBytesPerTile(void) {
 	switch (gameSystem) {
 		case TMS9918:
 		{	enum TMS9918SubSys subSys = getTMS9918subSys();
@@ -157,12 +183,40 @@ unsigned Project::szPerExtPalRow(void) {
 					break;
 
 				case MODE_1:
-					return 1;
+					return 1; // This is the numberator. It will later be divided by eight.
 					break;
 
 				case MODE_2:
-					return tileC->height();
+					return 8; // Eight bytes per tile.
 					break;
+
+				default:
+					show_default_error
+			}
+		}
+		break;
+
+		default:
+			return 0;
+	}
+}
+
+unsigned Project::extAttrFixedSize(void) {
+	switch (gameSystem) {
+		case TMS9918:
+		{	enum TMS9918SubSys subSys = getTMS9918subSys();
+
+			switch (subSys) {
+				case MODE_0:
+					return 1; // Fixed byte to set the background and foreground color.
+					break;
+
+				case MODE_3:
+				case MODE_2:
+				case MODE_1:
+					return 0;
+					break;
+
 				default:
 					show_default_error
 			}

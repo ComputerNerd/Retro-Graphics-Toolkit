@@ -15,26 +15,27 @@
    Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
-#define tabsWithPalette 4
+#define TABS_WITH_PALETTE 4
 class paletteBar {
 private:
-	unsigned ox[tabsWithPalette], oy[tabsWithPalette];
-	unsigned baseOffx[tabsWithPalette], baseOffy[tabsWithPalette];
-	bool tiny[tabsWithPalette];
-	bool all[tabsWithPalette];
-	bool alt[tabsWithPalette];
+	unsigned ox[TABS_WITH_PALETTE], oy[TABS_WITH_PALETTE];
+	unsigned baseOffx[TABS_WITH_PALETTE], baseOffy[TABS_WITH_PALETTE];
+	bool tiny[TABS_WITH_PALETTE];
+	bool all[TABS_WITH_PALETTE];
+	bool alt[TABS_WITH_PALETTE];
 public:
 	int32_t sysCache;
-	Fl_Slider*slide[tabsWithPalette][3];
-	unsigned selRow[tabsWithPalette];
-	unsigned selBox[tabsWithPalette];
+	Fl_Slider*slide[TABS_WITH_PALETTE][3];
+	unsigned selRow[TABS_WITH_PALETTE];
+	unsigned selBox[TABS_WITH_PALETTE];
+	unsigned selBoxAlt[TABS_WITH_PALETTE];
 	unsigned getEntry(unsigned tab)const;
 	void addTab(unsigned tab, bool all = false, bool tiny = false, bool alt = false);
 	void setSys(bool upSlide = true);
 	void updateSize(unsigned tab);
 	void updateSlider(unsigned tab);
 	void updateSliders(void) {
-		for (unsigned i = 0; i < tabsWithPalette; ++i)
+		for (unsigned i = 0; i < TABS_WITH_PALETTE; ++i)
 			updateSlider(i);
 	}
 	unsigned toTab(unsigned realtab);

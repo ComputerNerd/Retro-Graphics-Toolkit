@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #pragma once
 #include "filemisc.h"
@@ -49,6 +49,8 @@ public:
 	std::vector<uint8_t>tDat;/*!< Tile data*/
 	std::vector<uint8_t>truetDat;/*< Truecolor tile data*/
 	std::vector<uint8_t>extAttrs;
+	uint8_t getExtAttr(unsigned tile, unsigned y);
+	void setExtAttr(unsigned tile, unsigned y, uint8_t fgbg);
 	unsigned enforcedMultipleStep, enforcedMultiple;
 	void insertTile(uint32_t at);
 	void setPixel(uint8_t*ptr, uint32_t x, uint32_t y, uint32_t val);
@@ -65,7 +67,7 @@ public:
 	void truecolor_to_tile_ptr(unsigned palette_row, uint32_t cur_tile, uint8_t * tileinput, bool Usedither, bool isSprite, bool isIndexArray = false);
 	void truecolor_to_tile(unsigned, uint32_t, bool isSprite); /*!< truecolor_to_tile will update/dither the selected tile*/
 	void draw_truecolor(uint32_t, unsigned x, unsigned y, bool usehflip, bool usevflip, unsigned zoom);
-	void draw_tile(int x_off, int y_off, uint32_t tile_draw, unsigned zoom, unsigned pal_row, bool Usehflip, bool Usevflip, bool isSprite = false, const uint8_t*extAttr = 0, unsigned plane = 0, bool alpha = false);
+	void draw_tile(int x_off, int y_off, uint32_t tile_draw, unsigned zoom, unsigned pal_row, bool Usehflip, bool Usevflip, bool isSprite = false, unsigned plane = 0, bool alpha = false);
 	void hflip_truecolor(uint32_t, uint32_t *);
 	void vflip_truecolor(uint32_t, uint8_t *);
 	void vflip_truecolor_ptr(uint8_t *, uint8_t *);

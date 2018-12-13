@@ -67,7 +67,7 @@ void paletteBar::setSys(bool upSlide) {
 					window->palRTE[i + j]->hide();
 			}
 
-			for (unsigned j = 0; j < tabsWithPalette; ++j) {
+			for (unsigned j = 0; j < TABS_WITH_PALETTE; ++j) {
 				for (unsigned i = 0; i < 3; ++i) {
 					if (currentProject->isFixedPalette())
 						slide[j][i]->hide();
@@ -287,7 +287,10 @@ void paletteBar::checkBox(int x, int y, unsigned tab) {
 	if (y >= (all[tab] ? currentProject->pal->rowCntPal : 1))
 		return;
 
-	selBox[tab] = x;
+	if (currentProject->gameSystem == TMS9918 && currentProject->getTMS9918subSys() != MODE_3 && Fl::event_button() == FL_RIGHT_MOUSE)
+		selBoxAlt[tab] = x; // Background color
+	else
+		selBox[tab] = x;
 
 	if (all[tab])
 		changeRow(y, tab);

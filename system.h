@@ -54,4 +54,3 @@ enum TMS9918SubSys {MODE_0, MODE_1, MODE_2, MODE_3};
 #define NESempShift 2
 #define NESempMask 3 //This mask should be used after bit shifting
 #define NESempShiftAlt 4
-int fixedSpirtePalRowSys(enum gameSystemEnum gameSystem);

@@ -716,7 +716,7 @@ static bool loadProjectFile(uint32_t id, FILE * fi, bool loadVersion = true, uin
 
 	if ((sc = fgetc(fi)) != 'P') {
 		if (sc == 'G')
-			fl_alert("This appears to be a project group; not a project file. If that is the case use the correct menu item");
+			fl_alert("This appears to be a project group; not a project file. If that is the case use the load project group option.");
 		else
 			invaildProject();
 
@@ -846,15 +846,6 @@ static bool loadProjectFile(uint32_t id, FILE * fi, bool loadVersion = true, uin
 
 				projects[id]->tms->maps[i].tileMapDat = (uint8_t*)realloc(projects[id]->tms->maps[i].tileMapDat, 4 * projects[id]->tms->maps[i].mapSizeW * projects[id]->tms->maps[i].mapSizeHA);
 				decompressFromFile(projects[id]->tms->maps[i].tileMapDat, 4 * projects[id]->tms->maps[i].mapSizeW * projects[id]->tms->maps[i].mapSizeHA, fi);
-
-				if (version >= 8 && projects[id]->szPerExtPalRow()) {
-					size_t sz = projects[id]->tms->maps[i].mapSizeW * projects[id]->tms->maps[i].mapSizeHA * projects[id]->szPerExtPalRow();
-					projects[id]->tms->maps[i].extPalRows = (uint8_t*)realloc(projects[id]->tms->maps[i].extPalRows, sz);
-					decompressFromFile(projects[id]->tms->maps[i].extPalRows, sz, fi);
-				} else {
-					free(projects[id]->tms->maps[i].extPalRows);
-					projects[id]->tms->maps[i].extPalRows = 0;
-				}
 			}
 		}
 	}
@@ -912,7 +903,7 @@ static bool loadProjectFile(uint32_t id, FILE * fi, bool loadVersion = true, uin
 		updateLuaScriptWindow(id, true);
 
 		if (tabsAmt || userDat || controlDat)
-			fl_alert("This version of Retro Graphics Toolkit does not fully support Lua user data please upgrade");
+			fl_alert("This version of Retro Graphics Toolkit does not fully support Lua user data please upgrade.");
 	}
 
 	return true;
@@ -1058,9 +1049,6 @@ static bool saveProjectFile(uint32_t id, FILE * fo, bool saveShared, bool saveVe
 
 				fwrite(&projects[id]->tms->maps[i].offset, 1, sizeof(int32_t), fo);
 				compressToFile(projects[id]->tms->maps[i].tileMapDat, 4 * projects[id]->tms->maps[i].mapSizeW * projects[id]->tms->maps[i].mapSizeHA, fo);
-
-				if (projects[id]->szPerExtPalRow())
-					compressToFile(projects[id]->tms->maps[i].extPalRows, projects[id]->tms->maps[i].mapSizeW * projects[id]->tms->maps[i].mapSizeHA * projects[id]->szPerExtPalRow(), fo);
 			}
 		}
 	}

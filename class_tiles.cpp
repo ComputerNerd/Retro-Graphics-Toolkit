@@ -43,9 +43,10 @@ tiles::tiles(const tiles&other, Project*prj) {
 	current_tile = other.current_tile;
 	amt = other.amt;
 	tileSize = other.tileSize;
-	setWidth(other.width());
 
+	setWidth(other.width());
 	sizeh = other.height();
+
 	tcSize = sizew * sizeh * 4;
 	tDat = other.tDat;
 	truetDat = other.truetDat;
@@ -56,6 +57,46 @@ tiles::~tiles() {
 	truetDat.clear();
 	extAttrs.clear();
 }
+
+uint8_t tiles::getExtAttr(unsigned tile, unsigned y) {
+	switch (prj->getTMS9918subSys()) {
+		case MODE_0:
+			return extAttrs[0];
+			break;
+
+		case MODE_1:
+			return extAttrs[tile / prj->extAttrTilesPerByte()];
+			break;
+
+		case MODE_2:
+			return extAttrs[tile * prj->extAttrBytesPerTile() + y];
+			break;
+
+		default:
+			show_default_error
+			return 0xF0;
+	}
+}
+
+void tiles::setExtAttr(unsigned tile, unsigned y, uint8_t fgbg) {
+	switch (prj->getTMS9918subSys()) {
+		case MODE_0:
+			extAttrs[0] = fgbg;
+			break;
+
+		case MODE_1:
+			extAttrs[tile / prj->extAttrTilesPerByte()] = fgbg;
+			break;
+
+		case MODE_2:
+			extAttrs[tile * prj->extAttrBytesPerTile() + y] = fgbg;
+			break;
+
+		default:
+			show_default_error
+	}
+}
+
 void tiles::insertTile(uint32_t at) {
 	try {
 		if (at > amt)
@@ -149,9 +190,14 @@ void tiles::resizeAmt(void) {
 		tDat.resize(amt * tileSize);
 		truetDat.resize(amt * tcSize);
 		unsigned tp = prj->extAttrTilesPerByte();
+		unsigned tpMult = prj->extAttrBytesPerTile();
 
 		if (tp)
-			extAttrs.resize(amt * prj->szPerExtPalRow() / tp);
+			tp = ((amt * tpMult) + tp - 1) / tp;
+
+		tp += prj->extAttrFixedSize();
+
+		extAttrs.resize(tp);
 	} catch (std::exception&e) {
 		fl_alert("Error: cannot resize tiles to %u\nAdditional details %s", amt, e.what());
 		exit(1);
@@ -244,22 +290,15 @@ void tiles::draw_truecolor(uint32_t tile_draw, unsigned x, unsigned y, bool useh
 	uint8_t * grid_ptr = grid;
 	uint8_t * truePtr;
 
-	for (xxx = 0; xxx < sizew / 2; ++xxx) {
-		for (xx = 0; xx < sizeh / 2; xx++) {
-			for (yy = 0; yy < 3; yy++)
-				*grid_ptr++ = 255;
-
-			for (yy = 0; yy < 3; yy++)
-				*grid_ptr++ = 160;
+	bool is255 = false;
+	for (unsigned i = 0; i < height(); ++i) {
+		for (unsigned j = 0; j < width(); ++j) {
+			*grid_ptr++ = is255 ? 255 : 160;
+			*grid_ptr++ = is255 ? 255 : 160;
+			*grid_ptr++ = is255 ? 255 : 160;
+			is255 ^= true;
 		}
-
-		for (xx = 0; xx < sizew / 2; xx++) {
-			for (yy = 0; yy < 3; yy++)
-				*grid_ptr++ = 160;
-
-			for (yy = 0; yy < 3; yy++)
-				*grid_ptr++ = 255;
-		}
+		is255 ^= true;
 	}
 
 	if (usehflip == false && usevflip == false)
@@ -314,7 +353,7 @@ void tiles::draw_truecolor(uint32_t tile_draw, unsigned x, unsigned y, bool useh
 	} else
 		fl_draw_image(grid, x, y, sizew * zoom, sizeh * zoom, 3);
 }
-void tiles::draw_tile(int x_off, int y_off, uint32_t tile_draw, unsigned zoom, unsigned pal_row, bool Usehflip, bool Usevflip, bool isSprite, const uint8_t*extAttr, unsigned plane, bool alpha) {
+void tiles::draw_tile(int x_off, int y_off, uint32_t tile_draw, unsigned zoom, unsigned pal_row, bool Usehflip, bool Usevflip, bool isSprite, unsigned plane, bool alpha) {
 	static bool dontShow;
 
 	if (tile_draw >= amt) {
@@ -346,9 +385,32 @@ void tiles::draw_tile(int x_off, int y_off, uint32_t tile_draw, unsigned zoom, u
 			unsigned rawP = getPixel(tile_draw, Usehflip ? (sizew - 1) - x : x, Usevflip ? (sizeh - 1) - y : y);
 			unsigned pixOff = rawP * 3;
 
-			if (extAttr) {
-				rawP = prj->tms->maps[plane].getPalRowExt(extAttr, Usevflip ? (sizeh - 1) - y : y, pixOff ? true : false);
-				pixOff = rawP * 3;
+			if (prj->gameSystem == TMS9918 && prj->getTMS9918subSys() != MODE_3) {
+				unsigned palEnt;
+
+				switch (prj->getTMS9918subSys()) {
+					case MODE_0:
+						palEnt = extAttrs[0]; // Only two colors supported for all tiles.
+						break;
+
+					case MODE_1:
+						// Only one entry for every eight tiles.
+						palEnt = extAttrs[tile_draw / prj->extAttrTilesPerByte()];
+
+					case MODE_2:
+						palEnt = extAttrs[tile_draw * prj->extAttrBytesPerTile() + y];
+						break;
+
+					default:
+						show_default_error
+				}
+
+				if (pixOff)
+					palEnt >>= 4;
+				else
+					palEnt &= 15;
+
+				pixOff = palEnt * 3;
 			} else if (prj->pal->haveAlt && isSprite) {
 				pixOff += prj->pal->colorCnt * 3;
 				pixOff += pal_row * prj->pal->perRowalt * 3;
@@ -472,55 +534,57 @@ void tiles::remove_duplicate_tiles(bool tColor) {
 				continue;
 			}
 
-			if (tColor) {
-				hflip_truecolor(curT, (uint32_t*)tileTemp);
-				rm = !memcmp(&truetDat[cur_tile * tcSize], tileTemp, tcSize);
-			} else {
-				hflip_tile(curT, tileTemp);
-				rm = !memcmp(&tDat[cur_tile * tileSize], tileTemp, tileSize);
-			}
+			if (prj->supportsFlippedTiles()) {
+				if (tColor) {
+					hflip_truecolor(curT, (uint32_t*)tileTemp);
+					rm = !memcmp(&truetDat[cur_tile * tcSize], tileTemp, tcSize);
+				} else {
+					hflip_tile(curT, tileTemp);
+					rm = !memcmp(&tDat[cur_tile * tileSize], tileTemp, tileSize);
+				}
 
-			if (rm) {
-				prj->tms->maps[prj->curPlane].sub_tile_map(curT, cur_tile, true, false);
-				addTileGroup(curT, remap[curT]);
-				remap.erase(remap.begin() + curT);
-				remove_tile_at(curT);
-				tile_remove_c++;
-				continue;
-			}
+				if (rm) {
+					prj->tms->maps[prj->curPlane].sub_tile_map(curT, cur_tile, true, false);
+					addTileGroup(curT, remap[curT]);
+					remap.erase(remap.begin() + curT);
+					remove_tile_at(curT);
+					tile_remove_c++;
+					continue;
+				}
 
-			if (tColor) {
-				vflip_truecolor_ptr(tileTemp, tileTemp);
-				rm = !memcmp(&truetDat[cur_tile * tcSize], tileTemp, tcSize);
-			} else {
-				vflip_tile_ptr(tileTemp, tileTemp);
-				rm = !memcmp(&tDat[cur_tile * tileSize], tileTemp, tileSize);
-			}
+				if (tColor) {
+					vflip_truecolor_ptr(tileTemp, tileTemp);
+					rm = !memcmp(&truetDat[cur_tile * tcSize], tileTemp, tcSize);
+				} else {
+					vflip_tile_ptr(tileTemp, tileTemp);
+					rm = !memcmp(&tDat[cur_tile * tileSize], tileTemp, tileSize);
+				}
 
-			if (rm) {
-				prj->tms->maps[prj->curPlane].sub_tile_map(curT, cur_tile, true, true);
-				addTileGroup(curT, remap[curT]);
-				remap.erase(remap.begin() + curT);
-				remove_tile_at(curT);
-				tile_remove_c++;
-				continue;
-			}
+				if (rm) {
+					prj->tms->maps[prj->curPlane].sub_tile_map(curT, cur_tile, true, true);
+					addTileGroup(curT, remap[curT]);
+					remap.erase(remap.begin() + curT);
+					remove_tile_at(curT);
+					tile_remove_c++;
+					continue;
+				}
 
-			if (tColor) {
-				vflip_truecolor(curT, tileTemp);
-				rm = !memcmp(&truetDat[cur_tile * tcSize], tileTemp, tcSize);
-			} else {
-				vflip_tile(curT, tileTemp);
-				rm = !memcmp(&tDat[cur_tile * tileSize], tileTemp, tileSize);
-			}
+				if (tColor) {
+					vflip_truecolor(curT, tileTemp);
+					rm = !memcmp(&truetDat[cur_tile * tcSize], tileTemp, tcSize);
+				} else {
+					vflip_tile(curT, tileTemp);
+					rm = !memcmp(&tDat[cur_tile * tileSize], tileTemp, tileSize);
+				}
 
-			if (rm) {
-				prj->tms->maps[prj->curPlane].sub_tile_map(curT, cur_tile, false, true);
-				addTileGroup(curT, remap[curT]);
-				remap.erase(remap.begin() + curT);
-				remove_tile_at(curT);
-				tile_remove_c++;
-				continue;
+				if (rm) {
+					prj->tms->maps[prj->curPlane].sub_tile_map(curT, cur_tile, false, true);
+					addTileGroup(curT, remap[curT]);
+					remap.erase(remap.begin() + curT);
+					remove_tile_at(curT);
+					tile_remove_c++;
+					continue;
+				}
 			}
 
 			if ((time(NULL) - lastt) >= 1) {
@@ -542,7 +606,6 @@ void tiles::remove_duplicate_tiles(bool tColor) {
 	printf("Removed %d tiles\n", tile_remove_c);
 	win->remove(progress);// remove progress bar from window
 	delete (progress); // deallocate it
-	//w->draw();
 	delete win;
 	Fl::check();
 }
@@ -643,6 +706,7 @@ void*tiles::toLinear(void) {
 							*ptr = val << 4;
 
 						break;
+
 					default:
 						show_default_error
 				}
@@ -688,8 +752,7 @@ void tiles::setDim(unsigned w, unsigned h, unsigned bd) {
 	curBD = bd;
 	tcSize = sizew * sizeh * 4;
 	tileSize = sizewbytesbits * sizeh * bd / 8;
-	tDat.resize(tileSize * amt, 0);
-	truetDat.resize(tcSize * amt, 0);
+	resizeAmt();
 }
 void tiles::swap(unsigned first, unsigned second) {
 	if (first == second)

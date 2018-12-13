@@ -232,8 +232,7 @@ void editor::draw_non_gui(void) {
 
 			if (currentProject->tileC->tDat.size()) {
 				currentProject->tileC->draw_truecolor(currentProject->tileC->current_tile, tile_edit_truecolor_off_x, tile_edit_truecolor_off_y, false, false, tiles_size);
-				static const uint8_t previewAttr[] = {0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0};
-				currentProject->tileC->draw_tile(tile_edit_offset_x, tile_edit_offset_y, currentProject->tileC->current_tile, tiles_size, palBar.selRow[1], false, false, false, currentProject->szPerExtPalRow() > 0 ? previewAttr : 0, 0);
+				currentProject->tileC->draw_tile(tile_edit_offset_x, tile_edit_offset_y, currentProject->tileC->current_tile, tiles_size, palBar.selRow[1], false, false, false, 0);
 
 				if (show_grid) {
 					if (tiles_size > 4) {
@@ -652,10 +651,9 @@ int editor::handle(int event) {
 				case tile_place:
 					if (tileEditModePlace_G) {
 						const char*t = Fl::event_text();
-						puts(t);
 						bool nr = false;
 
-						switch (t[0]) {
+						switch (tolower(t[0])) {
 							case 'h':
 								if (selTileE_G[0])
 									--selTileE_G[0];
