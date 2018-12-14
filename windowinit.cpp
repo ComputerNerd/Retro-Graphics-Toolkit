@@ -14,7 +14,9 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
+#include <FL/fl_ask.H>
 #include <cmath>//Mingw workaround
+
 #include "callbacks_palette.h"
 #include "callback_tiles.h"
 #include "tiles_io.h"

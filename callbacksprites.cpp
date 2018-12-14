@@ -14,8 +14,10 @@
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
+#include <FL/fl_ask.H>
+
 #include <ctime>
-#include "includes.h"
+
 #include "classSprites.h"
 #include "gui.h"
 #include "project.h"
@@ -24,6 +26,8 @@
 #include "dither.h"
 #include "classpalettebar.h"
 #include "class_global.h"
+#include "errorMsg.h"
+
 uint32_t curSprite;
 uint32_t curSpritegroup;
 uint32_t curSpritemeta;

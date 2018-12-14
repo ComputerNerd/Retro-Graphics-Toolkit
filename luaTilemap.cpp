@@ -14,6 +14,8 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
+#include <FL/fl_ask.H>
+
 #include "luaTilemap.hpp"
 #include "luaTilemapRow.hpp"
 #include "luaHelpers.hpp"
@@ -21,6 +23,8 @@
 #include "dub/dub.h"
 #include "callback_tilemap.h"
 #include "class_global.h" // For window.
+#include "errorMsg.h"
+
 static int lua_tilemap_dither(lua_State*L) {
 	getProjectIDX
 	size_t tilemapIDX = idxPtr[1];

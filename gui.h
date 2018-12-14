@@ -16,7 +16,8 @@
 */
 #pragma once
 #include <FL/Fl_Int_Input.H>
-#include "includes.h"
+#include <FL/fl_ask.H>
+
 #include "guidefs.h"
 #include "class_global.h"
 extern unsigned map_scroll_pos_x, map_scroll_pos_y;

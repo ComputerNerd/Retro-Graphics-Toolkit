@@ -14,6 +14,8 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
+#include <FL/fl_ask.H>
+
 #include "quant.h"
 #include "color_compare.h"
 #include "color_convert.h"
@@ -31,6 +33,8 @@
 #include "nearestColor.h"
 #include "gui.h"
 #include "class_global.h"
+#include "errorMsg.h"
+
 static void addHist(uint32_t cur_tile, int type, uint32_t*hist, unsigned sz) {
 	double szz = (double)sz;
 	uint8_t * truePtr = &currentProject->tileC->truetDat[cur_tile * currentProject->tileC->tcSize];

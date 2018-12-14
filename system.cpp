@@ -16,6 +16,7 @@
 */
 #include "project.h"
 #include "system.h"
+#include "errorMsg.h"
 static void setbdmask(unsigned bd, unsigned mask, struct Project*p) {
 	if (bd > mask)
 		bd = mask;

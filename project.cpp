@@ -14,7 +14,8 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
-#include "includes.h"
+#include <FL/fl_ask.H>
+
 #include "project.h"
 #include "color_convert.h"
 #include "zlibwrapper.h"
@@ -28,6 +29,9 @@
 #include "luaconfig.h"
 #include "runlua.h"
 #include "filemisc.h"
+#include "errorMsg.h"
+
+
 extern editor *window;
 struct Project ** projects;
 uint32_t projects_count;

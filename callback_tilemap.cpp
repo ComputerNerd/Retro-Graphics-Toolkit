@@ -14,6 +14,8 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
+#include <FL/fl_ask.H>
+
 #include "macros.h"
 #include "savepng.h"
 #include "dither.h"
@@ -25,6 +27,7 @@
 #include "class_global.h"
 #include "gui.h"
 #include "palette.h"
+#include "errorMsg.h"
 void pickExtAttrsCB(Fl_Widget*, void*) {
 	currentProject->tms->maps[currentProject->curPlane].pickExtAttrs();
 	window->damage(FL_DAMAGE_USER1);

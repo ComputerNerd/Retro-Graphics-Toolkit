@@ -14,9 +14,11 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
+#include <FL/Fl_Native_File_Chooser.H>
 #include <stdint.h>
 #include <cstdarg>
-#include <stdio.h>
+#include <cstdio>
+
 #include "gui.h"
 #include "project.h"
 #include "class_global.h"

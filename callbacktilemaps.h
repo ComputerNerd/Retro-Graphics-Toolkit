@@ -15,6 +15,7 @@
    Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
+#include <FL/Fl_Choice.H>
 void setCurPlaneTilemaps(Fl_Widget*, void*val);
 void removeTilemapsPlane(Fl_Widget*, void*val);
 void updateNameTilemaps(Fl_Widget*w, void*);

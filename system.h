@@ -15,7 +15,6 @@
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
-#include <stdint.h>
 #define MAX_ROWS_PALETTE 4//TODO refractor to allow "unlimited" rows
 //System declarations
 enum tileType {LINEAR, PLANAR_TILE, PLANAR_LINE};

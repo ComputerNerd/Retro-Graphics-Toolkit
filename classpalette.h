@@ -15,6 +15,8 @@
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
+#include <cstdio>
+#include "project.h"
 #include "filemisc.h"
 struct palette {
 	Project*prj;

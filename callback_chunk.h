@@ -14,7 +14,8 @@
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
-#include "includes.h"
+#include <FL/Fl_Widget.H>
+#include <inttypes.h>
 extern uint32_t currentChunk;
 extern unsigned solidBits_G;
 extern bool tileEditModeChunk_G;

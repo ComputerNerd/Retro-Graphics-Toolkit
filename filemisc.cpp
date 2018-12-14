@@ -14,11 +14,13 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
-#include <stdio.h>
+#include <FL/fl_ask.H>
+
+#include <cstdio>
 #include <stdint.h>
 #include "gui.h"
 #include "filemisc.h"
-#include "includes.h"
+
 void saveStrifNot(FILE*fp, const char*str, const char*cmp) {
 	if (strcmp(cmp, str) != 0)
 		fputs(str, fp);

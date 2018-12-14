@@ -25,6 +25,7 @@
 #include "color_convert.h"
 #include "nearestColor.h"
 #include "gui.h"
+#include "errorMsg.h"
 static const uint8_t TMS9918Palette[] = {
 	0,   0,   0,
 	0,   0,   0,

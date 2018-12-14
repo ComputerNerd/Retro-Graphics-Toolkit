@@ -14,6 +14,8 @@
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
+#include <cstring>
+
 #include "project.h"
 #include "CIE.h"
 #include "nearestColor.h"

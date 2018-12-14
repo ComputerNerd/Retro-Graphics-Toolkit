@@ -14,18 +14,22 @@
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
-#include <stdlib.h>
-#include <string.h>
 #include <FL/Fl_Scroll.H>
+#include <FL/fl_ask.H>
+#include <FL/filename.H>
+
+#include <cstdlib>
+#include <cstring>
 #include <ctime>
+
 #include "macros.h"
 #include "classSprite.h"
 #include "classSprites.h"
-#include "includes.h"
 #include "callback_tiles.h"
 #include "image.h"
 #include "class_global.h"
 #include "gui.h"
+#include "errorMsg.h"
 const char*spriteDefName = "DefaultGroupLabel";
 const char*spritesName = "AllGroupsLabel";
 #if _WIN32

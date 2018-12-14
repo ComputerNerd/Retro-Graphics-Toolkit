@@ -4,7 +4,8 @@
 	From http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c
 */
 #pragma once
-#include "includes.h"
+
+#include <FL/Fl_Progress.H>
 
 int dl1quant(unsigned char *inbuf, int width, int height,
              int quant_to, unsigned char userpal[3][256]);

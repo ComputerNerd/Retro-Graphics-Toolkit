@@ -14,7 +14,9 @@
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
-#include "includes.h"
+#include <FL/fl_ask.H>
+#include "system.h"
+
 /*Some users may not be programmers and will not run a debugger these error messages should make it easier for them to convey a bug to me.
 All they have to do is copy and paste the error message*/
 void TODO_error(int line, const char * file, const char * function) {

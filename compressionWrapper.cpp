@@ -14,14 +14,17 @@
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
-#include "includes.h"
-#include "gui.h"
-#include "errorMsg.h"
+
+#include <fstream>
+
 #include <mdcomp/nemesis.hh>
 #include <mdcomp/kosinski.hh>
 #include <mdcomp/enigma.hh>
 #include <mdcomp/comper.hh>
 #include <mdcomp/saxman.hh>
+
+#include "gui.h"
+#include "errorMsg.h"
 static const char*const TypeTab[] = {"Uncompressed", "Nemesis", "Kosinski", "Enigma", "Saxman", "Comper"};
 const char*typeToText(int type) {
 	return TypeTab[type];

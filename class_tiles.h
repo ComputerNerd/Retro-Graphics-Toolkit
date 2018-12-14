@@ -15,7 +15,10 @@
 	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #pragma once
+#include <vector>
+#include <inttypes.h>
 #include "filemisc.h"
+#include "project.h"
 class tiles {
 private:
 	unsigned curBD;

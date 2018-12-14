@@ -14,6 +14,8 @@
 	Dmitry Groshev, March 2007
 */
 
+#include <FL/Fl.H>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>

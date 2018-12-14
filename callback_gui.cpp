@@ -14,6 +14,8 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
+#include <FL/fl_ask.H>
+
 #include "macros.h"
 #include "gui.h"
 #include "color_compare.h"
@@ -29,6 +31,7 @@
 #include "runlua.h"
 #include "luaconfig.h"
 #include "callbacksprites.h"
+#include "errorMsg.h"
 static const char* GPLv3 = "This program is free software: you can redistribute it and/or modify\n"
                            "it under the terms of the GNU General Public License as published by\n"
                            "the Free Software Foundation, either version 3 of the License, or\n"

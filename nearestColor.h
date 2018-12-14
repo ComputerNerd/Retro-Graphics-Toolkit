@@ -15,6 +15,7 @@
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
+#include <inttypes.h>
 unsigned find_near_color_from_row_rgb(unsigned row, int r, int g, int b, bool alt);
 unsigned find_near_color_from_row(unsigned row, int r, int g, int b, bool alt);
 unsigned chooseTwoColor(unsigned index0, unsigned index1, int rgoal, int ggoal, int bgoal);

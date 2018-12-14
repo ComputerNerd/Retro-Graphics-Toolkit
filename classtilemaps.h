@@ -15,7 +15,6 @@
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
-#include "includes.h"
 #include "classtilemap.h"
 class tilemaps {
 public:

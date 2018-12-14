@@ -14,9 +14,12 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
+#include <FL/Fl_Browser.H>
+#include <FL/fl_ask.H>
+
+#include <algorithm>
 #include <cmath>//For some reason this is needed when compiling with mingw otherwise hypot error is encountered
 #include <stdlib.h>
-#include <FL/Fl_Browser.H>
 #include "system.h"
 #include "project.h"
 #include "undo.h"
@@ -27,6 +30,8 @@
 #include "callbacktilemaps.h"
 #include "class_global.h"
 #include "gui.h"
+#include "errorMsg.h"
+
 enum undoTypes_t {
 	uTile = 0,
 	uTileAll,

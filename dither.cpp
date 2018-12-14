@@ -1,10 +1,15 @@
+#include <algorithm>
+#include <cmath>
 #include <ctime>
-#include "includes.h"
+#include <map>
+#include <utility>
+
 #include "dither.h"
 #include "color_convert.h"
 #include "nearestColor.h"
 #include "gui.h"
 #include "palette.h"
+#include "errorMsg.h"
 #define NONE 0
 #define UP 1
 #define LEFT 2

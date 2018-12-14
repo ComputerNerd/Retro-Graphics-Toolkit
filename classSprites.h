@@ -15,10 +15,10 @@
    Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
+#include <cstdio>
 #include <stdint.h>
-#include <stdio.h>
-#include <vector>
 #include <string>
+#include <vector>
 #include <FL/Fl_Shared_Image.H>
 #include "classSprite.h"
 #include "gamedef.h"

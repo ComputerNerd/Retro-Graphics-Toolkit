@@ -14,6 +14,10 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
+#include <FL/fl_ask.H>
+
+#include <map>
+
 #include "class_global.h"
 #include "macros.h"
 #include "project.h"
@@ -26,6 +30,7 @@
 #include "palette.h"
 #include "gui.h"
 #include "filereader.h"
+#include "errorMsg.h"
 tileMap::tileMap(Project*prj)noexcept: tileMap(2, 2, prj) {}
 tileMap::tileMap(uint32_t w, uint32_t h, Project*prj)noexcept {
 	this->prj = prj;
@@ -1518,7 +1523,9 @@ void tileMap::pickExtAttrs(void) {
 						}
 					}
 
-					std::sort(attrs, attrs + prj->tileC->amt, comparatorTile);
+					// Create two maps.
+					// 1. Tiles with a certain attribute.
+					// 2. [After the first map] A mapping between new and old entries on the tilemap.
 
 					delete[] attrs;
 				}

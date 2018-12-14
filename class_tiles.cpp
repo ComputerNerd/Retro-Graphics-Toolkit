@@ -14,9 +14,11 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
+#include <FL/fl_ask.H>
+
 #include <exception>
 #include <ctime>
-#include "includes.h"
+
 #include "macros.h"
 #include "nearestColor.h"
 #include "class_tiles.h"
@@ -291,6 +293,7 @@ void tiles::draw_truecolor(uint32_t tile_draw, unsigned x, unsigned y, bool useh
 	uint8_t * truePtr;
 
 	bool is255 = false;
+
 	for (unsigned i = 0; i < height(); ++i) {
 		for (unsigned j = 0; j < width(); ++j) {
 			*grid_ptr++ = is255 ? 255 : 160;
@@ -298,6 +301,7 @@ void tiles::draw_truecolor(uint32_t tile_draw, unsigned x, unsigned y, bool useh
 			*grid_ptr++ = is255 ? 255 : 160;
 			is255 ^= true;
 		}
+
 		is255 ^= true;
 	}
 

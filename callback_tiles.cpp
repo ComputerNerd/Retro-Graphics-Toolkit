@@ -14,6 +14,8 @@
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
+#include <FL/fl_ask.H>
+
 #include "class_global.h"
 #include "tilemap.h"
 #include "undo.h"

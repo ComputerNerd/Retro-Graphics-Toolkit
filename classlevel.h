@@ -16,7 +16,8 @@
 */
 #pragma once
 #include <stdint.h>
-#include <stdio.h>
+#include <cstdio>
+
 #include <vector>
 #include "project.h"
 struct __attribute__ ((__packed__)) levDat {

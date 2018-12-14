@@ -16,6 +16,8 @@
 */
 #pragma once
 #define TABS_WITH_PALETTE 4
+#include <FL/Fl_Hor_Value_Slider.H>
+
 class paletteBar {
 private:
 	unsigned ox[TABS_WITH_PALETTE], oy[TABS_WITH_PALETTE];

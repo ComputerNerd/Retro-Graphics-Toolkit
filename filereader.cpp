@@ -14,9 +14,11 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
+#include <FL/fl_ask.H>
+#include <FL/filename.H>
+
 #include <stdio.h>
 #include <sys/stat.h>
-#include <FL/fl_ask.H>
 #include "filereader.h"
 #include "filemisc.h"
 #include "gui.h"

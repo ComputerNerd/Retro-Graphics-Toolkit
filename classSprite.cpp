@@ -14,8 +14,10 @@
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
    Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstring>
 #include <stdint.h>
+
 #include "classSprite.h"
 #include "project.h"
 #include "class_tiles.h"

@@ -14,8 +14,11 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
+#include <FL/Fl_Value_Slider.H>
+#include <FL/fl_ask.H>
+
 #include "project.h"
-#include "includes.h"
+
 #include "undo.h"
 #include "class_global.h"
 #include "gui.h"

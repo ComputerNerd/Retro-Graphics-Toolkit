@@ -26,16 +26,18 @@
 #ifdef __MINGW32__
 #include <direct.h>
 #endif
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
 #include <errno.h>
-#include <unistd.h>
+#include <fstream>
 #include <sstream>
+#include <stdlib.h>
+#include <unistd.h>
+
 #include "runlua.h"
 #include "lualib.h"
 #include "lauxlib.h"
 #include "savepng.h"
-#include "includes.h"
+
 #include "gui.h"
 #include "project.h"
 #include "color_convert.h"

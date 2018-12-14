@@ -12,13 +12,31 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #pragma once
-#include "includes.h"
-#include "system.h"
-#include "project.h"
+#include <FL/Fl.H>
+#include <FL/Fl_Box.H>
+#include <FL/Fl_Check_Button.H>
+#include <FL/Fl_Choice.H>
+#include <FL/Fl_Double_Window.H>
+#include <FL/Fl_Group.H>
+#include <FL/Fl_Int_Input.H>
+#include <FL/Fl_Menu_Bar.H>
+#include <FL/Fl_Radio_Round_Button.H>
+#include <FL/Fl_Slider.H>
+#include <FL/Fl_Tabs.H>
+#include <FL/Fl_Text_Buffer.H>
+#include <FL/Fl_Text_Editor.H>
+#include <FL/Fl_Window.H>
+
 #include <inttypes.h>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "project.h"
+#include "system.h"
 extern int pushed_g;
 #define TABS_WITH_ROW_BUTTONS 2
 class editor : public Fl_Double_Window {

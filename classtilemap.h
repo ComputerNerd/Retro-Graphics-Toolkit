@@ -16,12 +16,15 @@
 */
 #pragma once
 #define TileMapSizePerEntry 4
+
+#include <FL/Fl_Progress.H>
+
 #include "project.h"
 #include "filemisc.h"
 class tileMap {
 private:
 public:
-	tileMap(Project*prj)noexcept;
+	tileMap(struct Project*prj)noexcept;
 	tileMap(uint32_t w, uint32_t h, Project*prj)noexcept;
 	tileMap(tileMap&& other)noexcept;
 	tileMap& operator=(tileMap&& other)noexcept;

@@ -20,6 +20,7 @@
 #include "project.h"
 #include "dub/dub.h"
 #include "gui.h"
+#include "errorMsg.h"
 
 static int palette__set_(lua_State *L) {
 	getProjectIDX

@@ -15,6 +15,9 @@
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
+#include <cstdio>
+#include <string>
+
 enum fileType_t {
 	tCancle = -1,
 	tBinary,

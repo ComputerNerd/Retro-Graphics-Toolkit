@@ -14,10 +14,14 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
-#define shareAmtPj 6
 #ifndef _PROJECT_H
 #define _PROJECT_H 1
-#include "includes.h"
+
+#define shareAmtPj 6
+#include <FL/Fl_Slider.H>
+#include <string>
+#include <vector>
+
 #include "system.h"
 #include "tilemap.h"
 #include "class_tiles.h"
@@ -155,4 +159,5 @@ bool loadAllProjects(const char*fname);
 #define subsettingsDitherShift 8
 #define nearestColorSettingsMask 255
 #define nearestColorShift 16
+
 #endif
