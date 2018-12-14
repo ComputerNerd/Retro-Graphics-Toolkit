@@ -1433,14 +1433,15 @@ void tileMap::pickExtAttrs(void) {
 			switch (prj->getTMS9918subSys()) {
 				case MODE_0: { // Pick the two most used colors.
 					uint32_t hist[16];
+					memset(hist, 0, sizeof(hist));
 					uint8_t* tPtr = imgTmp;
 					uint8_t* idxPtr = indexList;
 
 					for (unsigned i = 0; i < w * h; ++i) {
 						if (tPtr[3])
-							++hist[0];
-						else
 							++hist[*idxPtr];
+						else
+							++hist[0];
 
 						tPtr += 4;
 						++idxPtr;
