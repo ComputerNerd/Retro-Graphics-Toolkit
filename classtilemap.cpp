@@ -1208,11 +1208,13 @@ void tileMap::truecolorimageToTiles(uint8_t * image, int rowusage, bool useAlpha
 	uint_fast32_t x_tile = 0, y_tile = 0;
 	uint_fast32_t pSize = isIndexArray ? 1 : (useAlpha ? 4 : 3);
 	uint_fast32_t pTile = prj->tileC->width() * pSize;
+	uint_fast32_t pTileHeight = prj->tileC->height() * pSize;
 	uint_fast32_t w = mapSizeW * prj->tileC->width();
+	uint_fast32_t wBytes = w * pSize;
 	uint_fast32_t h = mapSizeHA * prj->tileC->height();
 
-	for (uint_fast32_t a = 0; a < h * w * pSize; a += w * pTile) { //a tiles y
-		for (uint_fast32_t b = 0; b < w * pSize; b += pTile) { //b tiles x
+	for (uint_fast32_t a = 0; a < h * wBytes; a += w * pTileHeight) { //a tiles y
+		for (uint_fast32_t b = 0; b < wBytes; b += pTile) { //b tiles x
 			int32_t current_tile;
 
 			if (rowusage < 0) {
@@ -1232,7 +1234,7 @@ void tileMap::truecolorimageToTiles(uint8_t * image, int rowusage, bool useAlpha
 
 			{	uint8_t*truecolor_tile_ptr = truecolor_tile;
 
-				for (uint32_t y = 0; y < w * pTile; y += w * pSize) { //pixels y
+				for (uint32_t y = 0; y < w * pTileHeight; y += wBytes) { //pixels y
 					if (useAlpha || isIndexArray) {
 						memcpy(truecolor_tile_ptr, &image[a + b + y], prj->tileC->width() * pSize);
 						truecolor_tile_ptr += prj->tileC->width() * pSize;
