@@ -794,6 +794,13 @@ static bool loadProjectFile(uint32_t id, FILE * fi, bool loadVersion = true, uin
 			decompressFromFile(projects[id]->tileC->tDat.data(), projects[id]->tileC->tileSize * (projects[id]->tileC->amt), fi);
 			decompressFromFile(projects[id]->tileC->truetDat.data(), projects[id]->tileC->tcSize * (projects[id]->tileC->amt), fi);
 
+			if (version >= 8) {
+				size_t extSize = projects[id]->tileC->extAttrs.size();
+
+				if (extSize > 0)
+					decompressFromFile(projects[id]->tileC->extAttrs.data(), extSize, fi);
+			}
+
 			if (version <= 7 && (projects[id]->getTileType() != PLANAR_TILE))
 				projects[id]->tileC->toPlanar(projects[id]->getTileType());
 		}
@@ -1021,6 +1028,12 @@ static bool saveProjectFile(uint32_t id, FILE * fo, bool saveShared, bool saveVe
 			fwrite(&projects[id]->tileC->amt, 1, sizeof(uint32_t), fo);
 			compressToFile(projects[id]->tileC->tDat.data(), projects[id]->tileC->tileSize * (projects[id]->tileC->amt), fo);
 			compressToFile(projects[id]->tileC->truetDat.data(), projects[id]->tileC->tcSize * (projects[id]->tileC->amt), fo);
+			{
+				size_t extSize = projects[id]->tileC->extAttrs.size();
+
+				if (extSize)
+					compressToFile(projects[id]->tileC->extAttrs.data(), extSize, fo);
+			}
 		}
 	}
 
