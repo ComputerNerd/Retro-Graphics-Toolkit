@@ -50,8 +50,11 @@ tiles::tiles(const tiles&other, Project*prj) {
 	sizeh = other.height();
 
 	tcSize = sizew * sizeh * 4;
+
 	tDat = other.tDat;
 	truetDat = other.truetDat;
+	extAttrs = other.extAttrs;
+
 	curBD = other.curBD;
 }
 tiles::~tiles() {
@@ -200,6 +203,9 @@ void tiles::resizeAmt(void) {
 		tp += prj->extAttrFixedSize();
 
 		extAttrs.resize(tp);
+
+		if (prj == currentProject)
+			updateTileSelectAmt(amt);
 	} catch (std::exception&e) {
 		fl_alert("Error: cannot resize tiles to %u\nAdditional details %s", amt, e.what());
 		exit(1);
@@ -228,7 +234,7 @@ void tiles::remove_tile_at(uint32_t tileDel) {
 	}
 
 	--amt;
-	updateTileSelectAmt(amt);
+	resizeAmt(); // Ensure extended attributes have the correct size.
 }
 void tiles::truecolor_to_tile(unsigned palette_row, uint32_t cur_tile, bool isSprite) {
 	truecolor_to_tile_ptr(palette_row, cur_tile, &truetDat[(cur_tile * tcSize)], true, isSprite);
@@ -400,6 +406,7 @@ void tiles::draw_tile(int x_off, int y_off, uint32_t tile_draw, unsigned zoom, u
 					case MODE_1:
 						// Only one entry for every eight tiles.
 						palEnt = extAttrs[tile_draw / prj->extAttrTilesPerByte()];
+						break;
 
 					case MODE_2:
 						palEnt = extAttrs[tile_draw * prj->extAttrBytesPerTile() + y];

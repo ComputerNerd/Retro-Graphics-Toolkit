@@ -17,6 +17,8 @@
 #include <FL/fl_ask.H>
 
 #include <map>
+#include <memory>
+#include <unordered_set>
 
 #include "class_global.h"
 #include "macros.h"
@@ -957,6 +959,21 @@ bool tileMap::loadFromFile() {
 
 	return true;
 }
+
+void tileMap::swapTile(uint32_t oldTile, uint32_t newTile) {
+	uint_fast32_t x, y;
+	int_fast32_t temp;
+
+	for (y = 0; y < mapSizeHA; y++) {
+		for (x = 0; x < mapSizeW; x++) {
+			temp = get_tile(x, y);
+
+			if (temp == oldTile)
+				set_tile(x, y, newTile);
+		}
+	}
+}
+
 void tileMap::sub_tile_map(uint32_t oldTile, uint32_t newTile, bool hflip, bool vflip) {
 	uint_fast32_t x, y;
 	int_fast32_t temp;
@@ -1420,10 +1437,6 @@ static void pickFromHist2(unsigned*hist, unsigned*largest, unsigned cnt) {
 		largest[0] = tmp;
 	}
 }
-typedef std::pair<uint8_t, uint32_t> tilePair;
-static bool comparatorTile(const tilePair& l, const tilePair& r) {
-	return l.first < r.first;
-}
 void tileMap::pickExtAttrs(void) {
 	switch (prj->gameSystem) {
 		case TMS9918:
@@ -1476,13 +1489,12 @@ void tileMap::pickExtAttrs(void) {
 				break;
 
 				case MODE_1: {
-					tilePair*attrs = new tilePair[prj->tileC->amt];
+					std::multimap<uint8_t, uint32_t> attrs;
 
 					for (unsigned j = 0; j < mapSizeHA; ++j) {
 						for (unsigned i = 0; i < mapSizeW; ++i) {
 							unsigned hist[16];
 							int32_t tile = get_tile(i, j);
-							attrs[tile].second = tile;
 
 							if (tile < prj->tileC->amt) {
 								memset(hist, 0, sizeof(hist));
@@ -1513,21 +1525,74 @@ void tileMap::pickExtAttrs(void) {
 								}
 
 								if (allEqual)
-									attrs[tile].first = 0xF0;
+									attrs.emplace(0xF0, tile);
 								else {
 									unsigned largest[2];
 									pickFromHist2(hist, largest, 16);
-									attrs[tile].first = (largest[1] << 4) | largest[0];
+									attrs.emplace((largest[1] << 4) | largest[0], tile);
 								}
 							}
 						}
 					}
 
-					// Create two maps.
-					// 1. Tiles with a certain attribute.
-					// 2. [After the first map] A mapping between new and old entries on the tilemap.
+					// multimap always sorts by key. This is very good for us.
+					uint8_t keyHold = attrs.cbegin()->first;
+					unsigned tileCount = 0;
+					unsigned curTile = 0;
+					class tiles* newTiles = new tiles(*prj->tileC, prj); // Copy the current tiles.
+					memset(newTiles->truetDat.data(), 0, newTiles->truetDat.size());
+					std::map<uint32_t, uint32_t> tileMapping;
+					std::unordered_set<uint32_t> processedTiles;
 
-					delete[] attrs;
+					for (auto it = attrs.cbegin(); it != attrs.cend(); ++it) {
+						const bool alreadyProcessed = processedTiles.find(it->second) != processedTiles.end();
+
+						if (alreadyProcessed)
+							continue;
+
+						uint8_t key = it->first;
+
+						if (keyHold != key) {
+							unsigned extraTiles = (tileCount & 7);
+
+							if (extraTiles) {
+								extraTiles = 8 - extraTiles; // This gives us how many tiles we need to add.
+								printf("Padding tiles with %d tiles at index: %d\n", extraTiles, curTile);
+								newTiles->resizeAmt(newTiles->amt + extraTiles);
+								curTile += extraTiles; // Skip past these blank tiles.
+							}
+
+							tileCount = 0;
+						}
+
+						newTiles->extAttrs[curTile / 8] = key; // Set the attribute.
+						// Copy the tiles.
+						uint8_t * tileDst = newTiles->tDat.data();
+						tileDst += curTile * newTiles->tileSize;
+						const uint8_t * tileSrc = prj->tileC->tDat.data();
+						tileSrc += it->second * prj->tileC->tileSize;
+						memcpy(tileDst, tileSrc, newTiles->tileSize);
+						// Do the same for truecolor tiles.
+						tileDst = newTiles->truetDat.data();
+						tileDst += curTile * newTiles->tcSize;
+						tileSrc = prj->tileC->truetDat.data();
+						tileSrc += it->second * prj->tileC->tcSize;
+						memcpy(tileDst, tileSrc, newTiles->tcSize);
+						tileMapping[it->second] = curTile;
+
+						keyHold = key;
+						++tileCount;
+						++curTile;
+						processedTiles.emplace(it->second);
+					}
+
+					delete prj->tileC;
+					prj->tileC = newTiles;
+
+					for (unsigned y = 0; y < mapSizeHA; ++y) {
+						for (unsigned x = 0; x < mapSizeW; ++x)
+							set_tile(x, y, tileMapping[get_tile(x, y)]);
+					}
 				}
 				break;
 

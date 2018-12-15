@@ -65,6 +65,7 @@ public:
 	bool saveToFile(const char*fname, fileType_t type, int clipboard, int compression, const char*label = "mapDat", const char*nesFname = nullptr, const char*labelNES = "attrMapDat");
 	bool saveToFile(void);
 	bool loadFromFile();
+	void swapTile(uint32_t oldTile, uint32_t newTile);
 	void sub_tile_map(uint32_t oldTile, uint32_t newTile, bool hflip, bool vflip);
 	void pickRow(unsigned amount, int type = -1, int method = -1);
 	void pickRowDelta(bool showProgress = false, Fl_Progress *progress = nullptr, int alg = -1, int order = -1);
