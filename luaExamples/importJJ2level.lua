@@ -67,8 +67,8 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 		long LayerWidth[8]; (8452,8483)
 		long LayerRealWidth[8]; // for when "Tile Width" is checked. The lowest common multiple of LayerWidth and 4. (8484,8515)
 		long LayerHeight[8]; (8516,8547)
-		long LayerZAxis[8] = {-300, -200, -100, 0, 100, 200, 300, 400}; // nothing happens when you change these
-		char "DetailLevel"[8]; // is set to 02 for layer 5 in Battle1 and Battle3, but is 00 the rest of the time, at least for JJ2 levels. No clear effect of altering. Name from Michiel.
+		long LayerZAxis[8] = {-300, -200, -100, 0, 100, 200, 300, 400}; // nothing happens when you change these (8548, 8579)
+		char "DetailLevel"[8]; // is set to 02 for layer 5 in Battle1 and Battle3, but is 00 the rest of the time, at least for JJ2 levels. No clear effect of altering. Name from Michiel. (8580, 8587)
 		int "WaveX"[8]; // name from Michiel; function unknown
 		int "WaveY"[8]; // name from Michiel; function unknown
 		long LayerXSpeed[8]; // Divide by 65536 to get value seen in JCS
@@ -86,6 +86,7 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 		Animated_Tile Anim[128]; // or [256] in TSF.
 		// only the first [AnimCount] are needed; JCS will save all 128/256, but JJ2 will run your level either way.
 		char Padding[512]; //all zeroes; only in levels saved with JCS--]]
+		local AnimCount = strts(cd1:sub(12,13))
 		print('Level name',cd1:sub(20,51))
 		print('Tile set',cd1:sub(52,83))
 		local valid,width,height,idx,validcnt,w4,inf,rw,i={},{},{},8404,0,{},{},{}
@@ -153,6 +154,7 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 		else
 			flipBit = 1024
 		end
+		print('Maximum number of tiles', flipBit)
 		tileMask = flipBit - 1
 		for i=1,Udat3/8 do
 			for j=1,4 do
@@ -321,6 +323,18 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 		tilemap:setBlocksEnabled(false) -- Start with them disabled.
 		local tw = 32 // tiles.width
 		local th = 32 // tiles.height
+		local downscale = math.floor(tonumber(fl.input(string.format('Downscale 1 to %d', tw))))
+		if tw % downscale ~= 0 then
+			fl.alert('Invalid downscale.')
+			return
+		end
+		local ds2 = downscale * downscale
+		if 32 % downscale ~= 0 then
+			fl.alert('Invalid downscale. 32 % downscale must == 0.')
+			return
+		end
+		tw = tw // downscale
+		th = th // downscale
 		tilemap:resize(tw, th)
 		tilemap.useBlocks = true -- Set the flag for use blocks. This only sets the flag so using this alone is bad.
 		tilemap:setBlocksEnabled(true) -- Ensure that any GUI updates take place. By first setting useBlocks we skip the GUI for asking how big the blocks should be.
@@ -345,23 +359,62 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 			fl.alert('Not a multiple of 1024')
 			return
 		end
-		local tm = (32 // tiles.width) * (32 // tiles.height)
+		local tm = (32 // tiles.width // downscale) * (32 // tiles.height // downscale)
 		tiles:setAmt(TileCount * tm)
 		for j = 0, TileCount -1 do
 			i = tileLUT[j + 1]
 			local iof = i * 1024 + 1
-			for y = 0, 31 do
-				for x = 0, 31 do
-					local tileIdx = (j * tm) + (x // tiles.width) + (y // tiles.height * tw) + 1
-					local palEnt = strtb(d:sub(iof, iof)) + 1
-					local tileRGBA = tiles[tileIdx].rgba
-					local tileRow = tileRGBA[y % tiles.height + 1]
-					local tilePixel = tileRow[x % tiles.width + 1]
-					tilePixel.r = PaletteColor[palEnt][1]
-					tilePixel.g = PaletteColor[palEnt][2]
-					tilePixel.b = PaletteColor[palEnt][3]
-					tilePixel.a = 255 -- The alpha values in the palette seem to be invalid.
-					iof = iof + 1
+			if downscale == 1 then
+				for y = 0, 31 do
+					for x = 0, 31 do
+						local tileIdx = (j * tm) + (x // tiles.width) + (y // tiles.height * tw) + 1
+						local palEnt = strtb(d:sub(iof, iof)) + 1
+						local tileRGBA = tiles[tileIdx].rgba
+						local tileRow = tileRGBA[y % tiles.height + 1]
+						local tilePixel = tileRow[x % tiles.width + 1]
+						tilePixel.r = PaletteColor[palEnt][1]
+						tilePixel.g = PaletteColor[palEnt][2]
+						tilePixel.b = PaletteColor[palEnt][3]
+						tilePixel.a = 255 -- The alpha values in the palette seem to be invalid.
+						iof = iof + 1
+					end
+				end
+			else
+				local fullresTile = {}
+				for y = 1, 32 do
+					fullresTile[y] = {}
+					for x = 1, 32 do
+						local palEnt = strtb(d:sub(iof, iof)) + 1
+						fullresTile[y][x] = {}
+						fullresTile[y][x][1] = PaletteColor[palEnt][1]
+						fullresTile[y][x][2] = PaletteColor[palEnt][2]
+						fullresTile[y][x][3] = PaletteColor[palEnt][3]
+						iof = iof + 1
+					end
+				end
+				for y = 0, 31, downscale do
+					for x = 0, 31, downscale do
+						-- Average the pixel values.
+						local r = 0
+						local g = 0
+						local b = 0
+						for yy = 1, downscale do
+							for xx = 1, downscale do
+								-- Average the pixels.
+								r = r + fullresTile[y + yy][x + xx][1]
+								g = g + fullresTile[y + yy][x + xx][2]
+								b = b + fullresTile[y + yy][x + xx][3]
+							end
+						end
+						local tileIdx = (j * tm) + (x // tiles.width // downscale) + (y // tiles.height // downscale * tw) + 1
+						local tileRGBA = tiles[tileIdx].rgba
+						local tileRow = tileRGBA[y // downscale % tiles.height + 1]
+						local tilePixel = tileRow[x // downscale % tiles.width + 1]
+						tilePixel.r = r // ds2
+						tilePixel.g = g // ds2
+						tilePixel.b = b // ds2
+						tilePixel.a = 255
+					end
 				end
 			end
 		end
@@ -374,26 +427,67 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 
 		for j = 0, TileCount - 1 do
 			local iof = trLut[j + 1]
-			for y = 0, 31 do
-				for x = 0, 31 do
-					if (x % 8 == 0) then
-						iof = iof + 1
-					end
-					local tileIdx = (j * tm) + (x // tiles.width) + (y // tiles.height * tw) + 1
-					local tileRGBA = tiles[tileIdx].rgba
-					local tileRow = tileRGBA[y % tiles.height + 1]
-					local tilePixel = tileRow[x % tiles.width + 1]
+			if downscale == 1 then
+				for y = 0, 31 do
+					for x = 0, 31 do
+						if (x % 8 == 0) then
+							iof = iof + 1
+						end
+						local tileIdx = (j * tm) + (x // tiles.width) + (y // tiles.height * tw) + 1
+						local tileRGBA = tiles[tileIdx].rgba
+						local tileRow = tileRGBA[y % tiles.height + 1]
+						local tilePixel = tileRow[x % tiles.width + 1]
 
-					local tVal = strtb(d:sub(iof, iof))
-					local tMask = 1 << (x % 8)
-					local aVal
-					if tVal & tMask ~= 0 then
-						aVal = 255
-					else
-						aVal = 0
-					end
+						local tVal = strtb(d:sub(iof, iof))
+						local tMask = 1 << (x % 8)
+						local aVal
+						if tVal & tMask ~= 0 then
+							aVal = 255
+						else
+							aVal = 0
+						end
 
-					tilePixel.a = aVal
+						tilePixel.a = aVal
+					end
+				end
+			else
+				local fullresAlpha = {}
+				for y = 1, 32 do
+					fullresAlpha[y] = {}
+					for x = 0, 31 do
+						if (x % 8 == 0) then
+							iof = iof + 1
+						end
+
+						local tVal = strtb(d:sub(iof, iof))
+						local tMask = 1 << (x % 8)
+						local aVal
+						if tVal & tMask ~= 0 then
+							aVal = 255
+						else
+							aVal = 0
+						end
+
+						fullresAlpha[y][x + 1] = aVal
+					end
+				end
+				for y = 0, 31, downscale do
+					for x = 0, 31, downscale do
+						-- Average the pixel values.
+						local a = 0
+						for yy = 1, downscale do
+							for xx = 1, downscale do
+								-- Average the alpha values.
+								a = a + fullresAlpha[y + yy][x + xx]
+							end
+						end
+						local tileIdx = (j * tm) + (x // tiles.width // downscale) + (y // tiles.height // downscale * tw) + 1
+						local tileRGBA = tiles[tileIdx].rgba
+						local tileRow = tileRGBA[y // downscale % tiles.height + 1]
+						local tilePixel = tileRow[x // downscale % tiles.width + 1]
+
+						tilePixel.a = a // ds2
+					end
 				end
 			end
 		end
