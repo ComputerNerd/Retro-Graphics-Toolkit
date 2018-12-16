@@ -72,13 +72,19 @@ struct Project { /*!<Holds all data needed for a project based system for exampl
 	bool isUniqueData(uint32_t mask);
 	bool containsData(uint32_t mask);
 	bool containsDataOR(uint32_t mask);
+
 	enum TMS9918SubSys getTMS9918subSys()const {
-		return (enum TMS9918SubSys)(subSystem & 3);
+		return (enum TMS9918SubSys)(subSystem & 7);
 	}
-	void setTMS9918subSys(enum TMS9918SubSys sys) {
-		subSystem &= ~3;
-		subSystem |= sys;
+	void setTMS9918subSys(enum TMS9918SubSys sys);
+	uint8_t getPalColTMS9918() {
+		return (subSystem >> 3) & 255;
 	}
+	void setPalColTMS9918(uint8_t val) {
+		subSystem &= (~(255 << 3));
+		subSystem |= (val << 3);
+	}
+
 	void setBitdepthSys(unsigned bd);
 	int getBitdepthSysraw(void)const;
 	int getBitdepthSys(void)const {
@@ -96,7 +102,6 @@ struct Project { /*!<Holds all data needed for a project based system for exampl
 	}
 	unsigned extAttrTilesPerByte(void);
 	unsigned extAttrBytesPerTile(void);
-	unsigned extAttrFixedSize(void);
 	bool isFixedPalette(void);
 	bool hasExtAttrs(void);
 	bool supportsFlippedTiles(void);

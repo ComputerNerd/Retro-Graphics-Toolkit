@@ -1409,33 +1409,57 @@ void tileMap::findFirst(int&x, int&y, unsigned tile)const {
 
 	x = y = -1;
 }
-static void pickFromHist2(unsigned*hist, unsigned*largest, unsigned cnt) {
-	hist[1] += hist[0];
-	hist[0] = 0;
+static void pickFromHist2(unsigned*hist, unsigned*largest, unsigned cnt, Project*prj) {
 	memset(largest, 0, 2 * sizeof(unsigned));
-	unsigned cmp = hist[0];
+	unsigned bgColor = prj->getPalColTMS9918() & 15;
+	if (bgColor) {
+		hist[0] += hist[bgColor];
+		hist[bgColor] = 0;
+	}
 
-	for (unsigned x = 1; x < cnt; ++x) {
-		if (hist[x] > cmp) {
-			cmp = hist[x];
-			largest[0] = x;
+	unsigned start = bgColor == 1 ? 2: 1;
+	unsigned cmp = hist[start];
+	largest[0] = start;
+
+	for (unsigned x = start + 1; x < cnt; ++x) { // Foreground color.
+		if (x != bgColor) {
+			if (hist[x] >= cmp) {
+				cmp = hist[x];
+				largest[0] = x;
+			}
 		}
 	}
 
-	cmp = hist[0];
+	if (hist[0] > 1)
+		largest[1] = 0;
+	else {
+		for (unsigned x = 0; x < cnt; ++ x) {
+			if (x != largest[0]) {
+				cmp = hist[x];
+				largest[1] = x;
+				start = x;
+			}
+		}
 
-	for (unsigned x = 1; x < cnt; ++x) {
-		if ((hist[x] > cmp) && (x != largest[0])) {
-			cmp = hist[x];
-			largest[1] = x;
+		for (unsigned x = start + 1; x < cnt; ++x) {
+			if (x != largest[0]) {
+				if (hist[x] >= cmp) {
+					cmp = hist[x];
+					largest[1] = x;
+				}
+			}
+		}
+
+		// largest[1] is the background color.
+		if (largest[0] < largest[1]) {
+			unsigned tmp = largest[1];
+			largest[1] = largest[0];
+			largest[0] = tmp;
 		}
 	}
+	if (largest[0] == largest[1])
+		puts("largest[0] should never equal largest[1]");
 
-	if (largest[0] > largest[1]) {
-		unsigned tmp = largest[1];
-		largest[1] = largest[0];
-		largest[0] = tmp;
-	}
 }
 void tileMap::pickExtAttrs(void) {
 	switch (prj->gameSystem) {
@@ -1479,11 +1503,11 @@ void tileMap::pickExtAttrs(void) {
 					}
 
 					if (allEqual)
-						prj->tileC->extAttrs[0] = 0xF0;
+						prj->setPalColTMS9918(0xF0);
 					else {
 						unsigned largest[2];
-						pickFromHist2(hist, largest, 16);
-						prj->tileC->extAttrs[0] = (largest[1] << 4) | largest[0]; // Upper foreground, Lower background.
+						pickFromHist2(hist, largest, 16, prj);
+						prj->setPalColTMS9918((largest[0] << 4) | largest[1]); // Upper foreground, Lower background.
 					}
 				}
 				break;
@@ -1528,8 +1552,8 @@ void tileMap::pickExtAttrs(void) {
 									attrs.emplace(0xF0, tile);
 								else {
 									unsigned largest[2];
-									pickFromHist2(hist, largest, 16);
-									attrs.emplace((largest[1] << 4) | largest[0], tile);
+									pickFromHist2(hist, largest, 16, prj);
+									attrs.emplace((largest[0] << 4) | largest[1], tile);
 								}
 							}
 						}
@@ -1632,8 +1656,8 @@ void tileMap::pickExtAttrs(void) {
 									prj->tileC->setExtAttr(tile, y, 0xF0); // White foreground, black background.
 								} else {
 									unsigned largest[2];
-									pickFromHist2(hist, largest, 16);
-									prj->tileC->setExtAttr(tile, y, largest[1] << 4 | largest[0]); // White foreground, black background.
+									pickFromHist2(hist, largest, 16, prj);
+									prj->tileC->setExtAttr(tile, y, (largest[0] << 4) | largest[1]);
 								}
 							}
 						}

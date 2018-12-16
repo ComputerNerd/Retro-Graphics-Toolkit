@@ -26,7 +26,7 @@ private:
 	bool all[TABS_WITH_PALETTE];
 	bool alt[TABS_WITH_PALETTE];
 public:
-	int32_t sysCache;
+	gameSystemEnum sysCache;
 	Fl_Slider*slide[TABS_WITH_PALETTE][3];
 	unsigned selRow[TABS_WITH_PALETTE];
 	unsigned selBox[TABS_WITH_PALETTE];

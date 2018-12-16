@@ -17,6 +17,7 @@
 #include "project.h"
 #include "system.h"
 #include "errorMsg.h"
+#include "classpalettebar.h"
 static void setbdmask(unsigned bd, unsigned mask, struct Project*p) {
 	if (bd > mask)
 		bd = mask;
@@ -207,29 +208,13 @@ unsigned Project::extAttrBytesPerTile(void) {
 	}
 }
 
-unsigned Project::extAttrFixedSize(void) {
-	switch (gameSystem) {
-		case TMS9918:
-		{	enum TMS9918SubSys subSys = getTMS9918subSys();
+void Project::setTMS9918subSys(enum TMS9918SubSys sys) {
+	TMS9918SubSys oldVal = getTMS9918subSys();
+	subSystem &= ~7;
+	subSystem |= sys;
 
-			switch (subSys) {
-				case MODE_0:
-					return 1; // Fixed byte to set the background and foreground color.
-					break;
-
-				case MODE_3:
-				case MODE_2:
-				case MODE_1:
-					return 0;
-					break;
-
-				default:
-					show_default_error
-			}
-		}
-		break;
-
-		default:
-			return 0;
+	if (oldVal != sys) {
+		palBar.sysCache = UNKNOWN_SYSTEM;
+		palBar.setSys(false);
 	}
 }

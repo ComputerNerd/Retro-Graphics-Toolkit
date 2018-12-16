@@ -23,6 +23,7 @@
 #include "undo.h"
 #include "errorMsg.h"
 #include "classpalettebar.h"
+#include "classpalette.h"
 #include "gui.h"
 #include "palette.h"
 #include "filereader.h"
@@ -327,4 +328,19 @@ void clearPalette(Fl_Widget*, void*) {
 		window->damage(FL_DAMAGE_USER1);
 		palBar.updateSliders();
 	}
+}
+void updateYselection(Fl_Widget*, void* tab) {
+	palBar.updateColorSelectionTile(currentProject->tileC->current_tile, (uintptr_t)tab);
+}
+void setBGcolorTMS9918(Fl_Widget*sliderWidget, void*) {
+	Fl_Slider * slider = (Fl_Slider*) sliderWidget;
+	uint8_t bgColVal = slider->value();
+	bgColVal &= 15; // Ensure that the value ranges from 0 to 15.
+	uint8_t oldBGFGval = currentProject->getPalColTMS9918();
+	oldBGFGval &= ~15; // Clear the old background color and preserve the foreground color.
+	currentProject->setPalColTMS9918(oldBGFGval | bgColVal);
+	memcpy(currentProject->pal->rgbPal, TMS9918Palette + (bgColVal * 3), 3); // Copy the selected color to the first entry.
+
+	if (window)
+		window->damage(FL_DAMAGE_USER1);
 }

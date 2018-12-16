@@ -573,7 +573,7 @@ void switchProject(uint32_t id, bool load) {
 	}
 
 	if (projects[id]->containsData(pjHavePal)) {
-		palBar.sysCache = -1;
+		palBar.sysCache = UNKNOWN_SYSTEM;
 		projects[id]->pal->setVars(projects[id]->gameSystem);
 	}
 

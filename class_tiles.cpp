@@ -66,7 +66,7 @@ tiles::~tiles() {
 uint8_t tiles::getExtAttr(unsigned tile, unsigned y) {
 	switch (prj->getTMS9918subSys()) {
 		case MODE_0:
-			return extAttrs[0];
+			return prj->getPalColTMS9918();
 			break;
 
 		case MODE_1:
@@ -86,7 +86,7 @@ uint8_t tiles::getExtAttr(unsigned tile, unsigned y) {
 void tiles::setExtAttr(unsigned tile, unsigned y, uint8_t fgbg) {
 	switch (prj->getTMS9918subSys()) {
 		case MODE_0:
-			extAttrs[0] = fgbg;
+			prj->setPalColTMS9918(fgbg);
 			break;
 
 		case MODE_1:
@@ -199,8 +199,6 @@ void tiles::resizeAmt(void) {
 
 		if (tp)
 			tp = ((amt * tpMult) + tp - 1) / tp;
-
-		tp += prj->extAttrFixedSize();
 
 		extAttrs.resize(tp);
 
@@ -394,7 +392,7 @@ void tiles::draw_tile(int x_off, int y_off, uint32_t tile_draw, unsigned zoom, u
 
 				switch (prj->getTMS9918subSys()) {
 					case MODE_0:
-						palEnt = extAttrs[0]; // Only two colors supported for all tiles.
+						palEnt = prj->getPalColTMS9918(); // Only two colors supported for all tiles.
 						break;
 
 					case MODE_1:

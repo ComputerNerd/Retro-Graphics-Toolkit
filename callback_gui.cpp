@@ -149,7 +149,7 @@ void set_game_system(Fl_Widget*, void* selection) {
 		tilesOld = new tiles(*currentProject->tileC, currentProject);
 
 	if (currentProject->containsData(pjHavePal)) {
-		palBar.sysCache = -1;
+		palBar.sysCache = UNKNOWN_SYSTEM;
 
 		switch (sel) {
 			case segaGenesis:
@@ -285,7 +285,8 @@ void set_game_system(Fl_Widget*, void* selection) {
 
 			case TMS9918:
 				currentProject->gameSystem = sel;
-				palBar.setSys(false);
+				currentProject->subSystem = 0;
+				currentProject->setTMS9918subSys(MODE_2);
 				break;
 		}
 
@@ -369,8 +370,6 @@ void set_game_system(Fl_Widget*, void* selection) {
 
 		case TMS9918:
 			currentProject->gameSystem = sel;
-			currentProject->subSystem = 0;
-			currentProject->setTMS9918subSys(MODE_2);
 			bd = 1;
 			currentProject->setBitdepthSys(bd);
 

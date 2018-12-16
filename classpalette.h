@@ -63,3 +63,4 @@ struct palette {
 			updateRGBindex(i);
 	}
 };
+extern const uint8_t TMS9918Palette[];

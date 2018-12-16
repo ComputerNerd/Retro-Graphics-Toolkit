@@ -26,7 +26,7 @@
 #include "nearestColor.h"
 #include "gui.h"
 #include "errorMsg.h"
-static const uint8_t TMS9918Palette[] = {
+const uint8_t TMS9918Palette[] = {
 	0,   0,   0,
 	0,   0,   0,
 	33, 200,  66,

@@ -30,3 +30,5 @@ void pickNearAlg(Fl_Widget*, void*);
 void rgb_pal_to_entry(Fl_Widget*, void*);
 void entryToRgb(Fl_Widget*, void*);
 void clearPalette(Fl_Widget*, void*);
+void updateYselection(Fl_Widget*, void*);
+void setBGcolorTMS9918(Fl_Widget*, void*);

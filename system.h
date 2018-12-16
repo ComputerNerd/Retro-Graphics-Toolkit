@@ -18,7 +18,7 @@
 #define MAX_ROWS_PALETTE 4//TODO refractor to allow "unlimited" rows
 //System declarations
 enum tileType {LINEAR, PLANAR_TILE, PLANAR_LINE};
-enum gameSystemEnum {segaGenesis, NES, masterSystem, gameGear, TMS9918, SNES, frameBufferPal, frameBuffer};
+enum gameSystemEnum {segaGenesis, NES, masterSystem, gameGear, TMS9918, SNES, frameBufferPal, frameBuffer, UNKNOWN_SYSTEM};
 enum TMS9918SubSys {MODE_0, MODE_1, MODE_2, MODE_3};
 /* Subsystem declarations
  * Subsystem as the name implies depends on which system is selected

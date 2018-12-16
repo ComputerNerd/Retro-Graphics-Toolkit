@@ -72,34 +72,36 @@ void paletteBar::setSys(bool upSlide) {
 
 			for (unsigned j = 0; j < TABS_WITH_PALETTE; ++j) {
 				for (unsigned i = 0; i < 3; ++i) {
-					if (currentProject->isFixedPalette())
-						slide[j][i]->hide();
-					else {
+					if (!currentProject->isFixedPalette())
 						slide[j][i]->show();
 
-						switch (currentProject->gameSystem) {
-							case segaGenesis:
-								slide[j][i]->label(namesGen[i]);
-								slide[j][i]->maximum(7);
-								break;
+					slide[j][i]->callback(update_palette, (void*)i);
 
-							case masterSystem:
-								slide[j][i]->label(namesGen[i]);
-								slide[j][i]->maximum(3);
-								break;
+					switch (currentProject->gameSystem) {
+						case segaGenesis:
+							slide[j][i]->label(namesGen[i]);
+							slide[j][i]->maximum(7);
+							break;
 
-							case gameGear:
-								slide[j][i]->label(namesGen[i]);
-								slide[j][i]->maximum(15);
-								break;
+						case masterSystem:
+							slide[j][i]->label(namesGen[i]);
+							slide[j][i]->maximum(3);
+							break;
 
-							case NES:
-								slide[j][i]->label(namesNES[i]);
-								break;
+						case gameGear:
+							slide[j][i]->label(namesGen[i]);
+							slide[j][i]->maximum(15);
+							break;
 
-							default:
-								show_default_error
-						}
+						case NES:
+							slide[j][i]->label(namesNES[i]);
+							break;
+
+						case TMS9918: // No action needed.
+							break;
+
+						default:
+							show_default_error
 					}
 				}
 
@@ -111,7 +113,6 @@ void paletteBar::setSys(bool upSlide) {
 							slide[j][1]->labelsize(13);
 							slide[j][2]->labelsize(14);
 							slide[j][2]->resize(slide[j][2]->x() - 16, slide[j][2]->y(), slide[j][2]->w() + 16, slide[j][2]->h());
-							slide[j][2]->callback(update_palette, (void*)2);
 						}
 
 						break;
@@ -128,8 +129,26 @@ void paletteBar::setSys(bool upSlide) {
 						break;
 
 					case TMS9918:
-						//Do nothing
-						break;
+					{
+						TMS9918SubSys subSys = currentProject->getTMS9918subSys();
+
+						slide[j][0]->label("BG col");
+						slide[j][0]->maximum(15);
+						slide[j][0]->show();
+						slide[j][0]->callback(setBGcolorTMS9918);
+
+						if (subSys == MODE_2) {
+							slide[j][1]->label("Y");
+							slide[j][1]->maximum(7);
+							slide[j][1]->show();
+							slide[j][1]->callback(updateYselection, (void*)j);
+						} else
+							slide[j][1]->hide();
+
+						slide[j][1]->value(0);
+						slide[j][2]->hide();
+					}
+					break;
 
 					default:
 						show_default_error
@@ -302,8 +321,10 @@ void paletteBar::checkBox(int x, int y, unsigned tab) {
 		unsigned extAttrTmp = selBox[tab] << 4;
 		extAttrTmp |= selBoxAlt[tab];
 
-		if (currentProject->tileC)
-			currentProject->tileC->setExtAttr(currentProject->tileC->current_tile, 0, extAttrTmp);
+		if (currentProject->tileC) {
+			currentProject->tileC->setExtAttr(currentProject->tileC->current_tile, slide[tab][1]->value(), extAttrTmp);
+			window->damage(FL_DAMAGE_USER1);
+		}
 	}
 
 	if (all[tab])
@@ -321,9 +342,12 @@ bool paletteBar::hasAltSelection() {
 void paletteBar::updateColorSelectionTile(unsigned tile, unsigned tab) {
 	if (hasAltSelection()) {
 		if (currentProject->tileC) {
-			uint8_t ent = currentProject->tileC->getExtAttr(tile, 0);
+			uint8_t ent = currentProject->tileC->getExtAttr(tile, slide[tab][1]->value());
 			selBox[tab] = ent >> 4;
 			selBoxAlt[tab] = ent & 15;
+
+			if (window)
+				window->damage(FL_DAMAGE_USER1);
 		}
 	}
 }
