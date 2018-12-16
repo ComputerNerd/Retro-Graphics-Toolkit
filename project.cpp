@@ -823,10 +823,10 @@ static bool loadProjectFile(uint32_t id, FILE * fi, bool loadVersion = true, uin
 					char firstC = fgetc(fi);
 
 					if (firstC) {
-						projects[id]->tms->planeName[i].clear();
+						projects[id]->tms->maps[i].planeName.clear();
 
 						do {
-							projects[id]->tms->planeName[i].push_back(firstC);
+							projects[id]->tms->maps[i].planeName.push_back(firstC);
 						} while ((firstC = fgetc(fi)));
 					} else
 						projects[id]->tms->assignNum(i);
@@ -1047,8 +1047,8 @@ static bool saveProjectFile(uint32_t id, FILE * fo, bool saveShared, bool saveVe
 				char tmp[16];
 				snprintf(tmp, 16, "%u", i);
 
-				if (strcmp(projects[id]->tms->planeName[i].c_str(), tmp)) {
-					const char*st = projects[id]->tms->planeName[i].c_str();
+				if (strcmp(projects[id]->tms->maps[i].planeName.c_str(), tmp)) {
+					const char*st = projects[id]->tms->maps[i].planeName.c_str();
 
 					do {
 						fputc(*st, fo);

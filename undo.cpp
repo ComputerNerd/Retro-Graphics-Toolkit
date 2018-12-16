@@ -127,8 +127,6 @@ struct undoTilemapEdit {
 struct undoTilemapPlane {
 	tileMap*old;
 	tileMap*Tnew;
-	std::string*oldStr;
-	std::string*TnewStr;
 	uint32_t plane;
 };
 struct undoResize {
@@ -366,11 +364,6 @@ static void cleanupEvent(uint32_t id) {
 			if (um->old) {
 				memUsed -= um->old->mapSizeW * um->old->mapSizeHA * TileMapSizePerEntry;
 				delete um->old;
-			}
-
-			if (um->oldStr) {
-				memUsed -= um->oldStr->length();
-				delete um->oldStr;
 			}
 
 			free(uptr->ptr);
@@ -936,7 +929,6 @@ static void UndoRedo(bool redo) {
 
 			else {
 				currentProject->tms->maps.insert(currentProject->tms->maps.begin() + um->plane, tileMap(*um->old));
-				currentProject->tms->planeName.insert(currentProject->tms->planeName.begin() + um->plane, *um->oldStr);
 				updatePlaneTilemapMenu();
 
 				if (um->plane == currentProject->curPlane)
@@ -952,7 +944,7 @@ static void UndoRedo(bool redo) {
 				currentProject->tms->maps.insert(currentProject->tms->maps.begin() + um->plane, tileMap(currentProject));
 				char tmp[16];
 				snprintf(tmp, 16, "%u", um->plane);
-				currentProject->tms->planeName.insert(currentProject->tms->planeName.begin() + um->plane, 1, tmp);
+				currentProject->tms->maps[um->plane].planeName.assign(tmp);
 				updatePlaneTilemapMenu();
 
 				if (um->plane == currentProject->curPlane)
@@ -1426,7 +1418,6 @@ struct undoTilemapPlane*pushTilemapPlaneComm(uint32_t plane) {
 	struct undoTilemapPlane*um = (struct undoTilemapPlane*)uptr->ptr;
 	um->plane = plane;
 	um->old = 0;
-	um->oldStr = 0;
 	return um;
 }
 void pushTilemapPlaneDelete(uint32_t plane) {
@@ -1434,8 +1425,6 @@ void pushTilemapPlaneDelete(uint32_t plane) {
 	struct undoEvent*uptr = undoBuf + pos;
 	uptr->type = uTilemapPlaneDelete;
 	um->old = new tileMap(currentProject->tms->maps[plane], currentProject);
-	um->oldStr = new std::string(currentProject->tms->planeName[um->plane].c_str());
-	memUsed += um->oldStr->length();
 	memUsed += um->old->mapSizeW * um->old->mapSizeHA * TileMapSizePerEntry;
 }
 void pushTilemapPlaneAdd(uint32_t plane) {

@@ -17,6 +17,8 @@
 #pragma once
 #define TileMapSizePerEntry 4
 
+#include <string>
+
 #include <FL/Fl_Progress.H>
 
 #include "project.h"
@@ -32,6 +34,7 @@ public:
 	tileMap(const tileMap&other, Project*prj)noexcept;
 	tileMap(const tileMap&other)noexcept;
 	~tileMap();
+	std::string planeName;
 	struct Project*prj;
 	uint8_t*tileMapDat;/*!< Holds tilemap data*/
 	int32_t offset;

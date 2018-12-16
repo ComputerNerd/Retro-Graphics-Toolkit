@@ -316,6 +316,7 @@ void entryToRgb(Fl_Widget*, void*) {
 	window->rgb_blue->value(truecolor_temp[2]);
 	window->redraw();
 }
+
 void clearPalette(Fl_Widget*, void*) {
 	if (!currentProject->containsData(pjHavePal)) {
 		currentProject->haveMessage(pjHavePal);
@@ -329,9 +330,11 @@ void clearPalette(Fl_Widget*, void*) {
 		palBar.updateSliders();
 	}
 }
+
 void updateYselection(Fl_Widget*, void* tab) {
 	palBar.updateColorSelectionTile(currentProject->tileC->current_tile, (uintptr_t)tab);
 }
+
 void setBGcolorTMS9918(Fl_Widget*sliderWidget, void*) {
 	Fl_Slider * slider = (Fl_Slider*) sliderWidget;
 	uint8_t bgColVal = slider->value();

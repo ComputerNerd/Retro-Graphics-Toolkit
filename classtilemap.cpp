@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #include <FL/fl_ask.H>
 
@@ -45,6 +45,7 @@ tileMap::tileMap(uint32_t w, uint32_t h, Project*prj)noexcept {
 }
 tileMap::tileMap(const tileMap&other, Project*prj)noexcept {
 	if (this != &other) {
+		planeName = other.planeName;
 		this->prj = prj;
 		mapSizeW = other.mapSizeW;
 		mapSizeH = other.mapSizeH;
@@ -69,6 +70,7 @@ tileMap::tileMap(const tileMap&other)noexcept {
 }
 tileMap::tileMap(tileMap&& other)noexcept {
 	if (this != &other) {
+		planeName = other.planeName;
 		prj = other.prj;
 		mapSizeW = other.mapSizeW;
 		mapSizeH = other.mapSizeH;
@@ -412,25 +414,29 @@ unsigned tileMap::getPalRow(uint32_t x, uint32_t y)const {
 	} else
 		return 0;
 }
+
 void tileMap::set_pal_row(uint32_t x, uint32_t y, unsigned row) {
 	if ((prj->gameSystem == NES) && (prj->subSystem & NES2x2)) {
-		tileMapDat[((y * mapSizeW) + (x & (~1))) * 4] &= ~(3 << 5);
-		tileMapDat[((y * mapSizeW) + (x & (~1))) * 4] |= row << 5;
+		x &= ~1;
+		y &= ~1;
+
+		tileMapDat[((y * mapSizeW) + x) * 4] &= ~(3 << 5);
+		tileMapDat[((y * mapSizeW) + x) * 4] |= row << 5;
+
 		tileMapDat[((y * mapSizeW) + (x | 1)) * 4] &= ~(3 << 5);
 		tileMapDat[((y * mapSizeW) + (x | 1)) * 4] |= row << 5;
-		tileMapDat[(((y & (~1))*mapSizeW) + (x & (~1))) * 4] &= ~(3 << 5);
-		tileMapDat[(((y & (~1))*mapSizeW) + (x & (~1))) * 4] |= row << 5;
-		tileMapDat[(((y & (~1))*mapSizeW) + (x | 1)) * 4] &= ~(3 << 5);
-		tileMapDat[(((y & (~1))*mapSizeW) + (x | 1)) * 4] |= row << 5;;
-		tileMapDat[(((y | 1)*mapSizeW) + (x & (~1))) * 4] &= ~(3 << 5);
-		tileMapDat[(((y | 1)*mapSizeW) + (x & (~1))) * 4] |= row << 5;;
+
+		tileMapDat[(((y | 1)*mapSizeW) + x) * 4] &= ~(3 << 5);
+		tileMapDat[(((y | 1)*mapSizeW) + x) * 4] |= row << 5;
+
 		tileMapDat[(((y | 1)*mapSizeW) + (x | 1)) * 4] &= ~(3 << 5);
-		tileMapDat[(((y | 1)*mapSizeW) + (x | 1)) * 4] |= row << 5;;
+		tileMapDat[(((y | 1)*mapSizeW) + (x | 1)) * 4] |= row << 5;
 	} else {
 		tileMapDat[((y * mapSizeW) + x) * 4] &= ~(3 << 5);
 		tileMapDat[((y * mapSizeW) + x) * 4] |= row << 5;
 	}
 }
+
 int32_t tileMap::get_tile(uint32_t x, uint32_t y)const {
 	//first calculate which tile we want
 	if ((mapSizeW <= x) || (mapSizeHA) <= y) {
@@ -446,6 +452,7 @@ int32_t tileMap::get_tile(uint32_t x, uint32_t y)const {
 	temp_3 = tileMapDat[selected_tile + 3]; //most significant
 	return (temp_1 << 16) + (temp_2 << 8) + temp_3;
 }
+
 int32_t tileMap::get_tileRow(uint32_t x, uint32_t y, unsigned useRow)const {
 	//first calculate which tile we want
 	uint32_t selected_tile = ((y * mapSizeW) + x) * 4;
@@ -513,7 +520,8 @@ bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, int c
 			case segaGenesis:
 			{	uint16_t * TheMap;
 				fileSize = (mapSizeW * mapSizeH * amt) * 2;
-				TheMap = (uint16_t*)malloc(fileSize);
+				mapptr = (uint8_t*)malloc(fileSize);
+				TheMap = (uint16_t*)mapptr;
 
 				for (y = 0; y < mapSizeH * amt; ++y) {
 					for (x = 0; x < mapSizeW; ++x) {
@@ -529,9 +537,6 @@ bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, int c
 						*TheMap++ |= (uint16_t)tile; //add tile
 					}
 				}
-
-				TheMap -= mapSizeW * mapSizeH * amt; //return to beginning so it can be freeded and the file saved
-				mapptr = (uint8_t*)TheMap;
 			}
 			break;
 
@@ -539,7 +544,8 @@ bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, int c
 			case gameGear:
 			{	uint8_t * TheMap;
 				fileSize = (mapSizeW * mapSizeH * amt) * 2;
-				TheMap = (uint8_t*)malloc(fileSize);
+				mapptr = (uint8_t*)malloc(fileSize);
+				TheMap = mapptr;
 
 				for (y = 0; y < mapSizeH * amt; ++y) {
 					for (x = 0; x < mapSizeW; ++x) {
@@ -563,18 +569,17 @@ bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, int c
 						*TheMap++ = ((tile >> 8) & 1) | (get_hflip(x, y) << 1) | (get_vflip(x, y) << 2) | (getPalRow(x, y) << 3) | (get_prio(x, y) << 4);
 					}
 				}
-
-				TheMap -= mapSizeW * mapSizeH * amt * 2; //return to beginning so it can be freeded and the file saved
-				mapptr = TheMap;
 			}
 			break;
 
 			case NES:
+			case TMS9918: // Both systems have eigth bit tile entries.
 			{	uint8_t * TheMap;
-				fileSize = mapSizeW * mapSizeH * amt;
-				TheMap = (uint8_t *)malloc(fileSize);
+				fileSize = mapSizeW * mapSizeHA;
+				mapptr = (uint8_t *)malloc(fileSize);
+				TheMap = mapptr;
 
-				for (y = 0; y < mapSizeH * amt; ++y) {
+				for (y = 0; y < mapSizeHA; ++y) {
 					for (x = 0; x < mapSizeW; ++x) {
 						int tile = get_tile(x, y);
 						tile += offset;
@@ -582,9 +587,6 @@ bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, int c
 						*TheMap++ = tile;
 					}
 				}
-
-				TheMap -= mapSizeW * mapSizeH * amt; //return to beginning so it can be freeded and the file sized
-				mapptr = TheMap;
 			}
 			break;
 
@@ -600,7 +602,7 @@ bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, int c
 
 		if (type) {
 			char temp[2048];
-			snprintf(temp, 2048, "Width %d Height %d %s", mapSizeW, mapSizeH * amt, typeToText(compression));
+			snprintf(temp, 2048, "Width %d Height %d %s", mapSizeW, mapSizeHA, typeToText(compression));
 			int bits;
 
 			if ((prj->gameSystem == segaGenesis) && (!compression))
@@ -710,7 +712,7 @@ bool tileMap::saveToFile(void) {
 			return true;
 		}
 
-		saveToFile(fname, type, clipboard, compression, nesFname);
+		saveToFile(fname, type, clipboard, compression, planeName.c_str(), nesFname);
 	}
 
 	free(fname);
@@ -1409,15 +1411,51 @@ void tileMap::findFirst(int&x, int&y, unsigned tile)const {
 
 	x = y = -1;
 }
+#define TRANSPARENT 0
+#define SOLID_BLACK 1
+#define MEDIUM_GREEN 2
+#define LIGHT_GREEN 3
+#define DARK_BLUE 4
+#define LIGHT_BLUE 5
+#define DARK_RED 6
+#define CYAN 7
+#define MEDIUM_RED 8
+#define LIGHT_RED 9
+#define DARK_YELLOW 10
+#define LIGHT_YELLOW 11
+#define DARK_GREEN 12
+#define MAGENTA 13
+#define GRAY 14
+#define WHITE 15
+static const uint8_t complementryColor[] = {
+	SOLID_BLACK,  // TRANSPARENT
+	TRANSPARENT,  // SOLID_BLACK
+	DARK_GREEN,   // MEDIUM_GREEN
+	MEDIUM_GREEN, // LIGHT_GREEN
+	LIGHT_BLUE,   // DARK_BLUE
+	DARK_BLUE,    // LIGHT_BLUE
+	MEDIUM_RED,   // DARK_RED
+	LIGHT_BLUE,   // CYAN
+	DARK_RED,     // MEDIUM_RED
+	MEDIUM_RED,   // LIGHT_RED
+	LIGHT_YELLOW, // DARK_YELLOW
+	DARK_YELLOW,  // LIGHT_YELLOW
+	MEDIUM_GREEN, // DARK_GREEN
+	LIGHT_RED,    // MAGENTA
+	WHITE,        // GRAY
+	GRAY,         // WHITE
+
+};
 static void pickFromHist2(unsigned*hist, unsigned*largest, unsigned cnt, Project*prj) {
 	memset(largest, 0, 2 * sizeof(unsigned));
 	unsigned bgColor = prj->getPalColTMS9918() & 15;
+
 	if (bgColor) {
 		hist[0] += hist[bgColor];
 		hist[bgColor] = 0;
 	}
 
-	unsigned start = bgColor == 1 ? 2: 1;
+	unsigned start = bgColor == 1 ? 2 : 1;
 	unsigned cmp = hist[start];
 	largest[0] = start;
 
@@ -1430,22 +1468,36 @@ static void pickFromHist2(unsigned*hist, unsigned*largest, unsigned cnt, Project
 		}
 	}
 
-	if (hist[0] > 1)
+	if (hist[0])
 		largest[1] = 0;
 	else {
+		bool allZeros = true;
 		for (unsigned x = 0; x < cnt; ++ x) {
 			if (x != largest[0]) {
-				cmp = hist[x];
-				largest[1] = x;
-				start = x;
+				if (hist[x] != 0) {
+					allZeros = false;
+					break;
+				}
 			}
 		}
-
-		for (unsigned x = start + 1; x < cnt; ++x) {
-			if (x != largest[0]) {
-				if (hist[x] >= cmp) {
+		if (allZeros)
+			largest[1] = complementryColor[largest[0]];
+		else {
+			for (unsigned x = 0; x < cnt; ++ x) {
+				if (x != largest[0]) {
 					cmp = hist[x];
 					largest[1] = x;
+					start = x;
+					break;
+				}
+			}
+
+			for (unsigned x = start + 1; x < cnt; ++x) {
+				if (x != largest[0]) {
+					if (hist[x] >= cmp) {
+						cmp = hist[x];
+						largest[1] = x;
+					}
 				}
 			}
 		}
@@ -1457,6 +1509,7 @@ static void pickFromHist2(unsigned*hist, unsigned*largest, unsigned cnt, Project
 			largest[0] = tmp;
 		}
 	}
+
 	if (largest[0] == largest[1])
 		puts("largest[0] should never equal largest[1]");
 

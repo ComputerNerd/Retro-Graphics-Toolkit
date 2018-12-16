@@ -132,11 +132,16 @@ void paletteBar::setSys(bool upSlide) {
 					{
 						TMS9918SubSys subSys = currentProject->getTMS9918subSys();
 
-						slide[j][0]->label("BG col");
-						slide[j][0]->maximum(15);
-						slide[j][0]->value(currentProject->getPalColTMS9918() & 15);
-						slide[j][0]->show();
-						slide[j][0]->callback(setBGcolorTMS9918);
+						if (subSys == MODE_0) {
+							memset(currentProject->pal->rgbPal, 0, 3);
+							slide[j][0]->hide();
+						} else {
+							slide[j][0]->label("BG col");
+							slide[j][0]->maximum(15);
+							slide[j][0]->value(currentProject->getPalColTMS9918() & 15);
+							slide[j][0]->show();
+							slide[j][0]->callback(setBGcolorTMS9918);
+						}
 
 						if (subSys == MODE_2) {
 							slide[j][1]->label("Y");
@@ -337,7 +342,8 @@ void paletteBar::checkBox(int x, int y, unsigned tab) {
 }
 
 bool paletteBar::hasAltSelection() {
-	return currentProject->gameSystem == TMS9918 && (currentProject->getTMS9918subSys() != MODE_3);
+	TMS9918SubSys subSys = currentProject->getTMS9918subSys();
+	return currentProject->gameSystem == TMS9918 && (subSys != MODE_3);
 }
 
 void paletteBar::updateColorSelectionTile(unsigned tile, unsigned tab) {

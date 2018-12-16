@@ -12,7 +12,7 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #include "project.h"
 #include "classtilemaps.h"
@@ -25,7 +25,7 @@ void setCurPlaneTilemaps(Fl_Widget*, void*val) {
 	window->BlocksCBtn->value(currentProject->tms->maps[currentProject->curPlane].isBlock);
 	currentProject->tms->maps[currentProject->curPlane].toggleBlocks(currentProject->tms->maps[currentProject->curPlane].isBlock);
 	window->updateTileMapGUI(selTileE_G[0], selTileE_G[1]);
-	window->curPlaneName->value(currentProject->tms->planeName[currentProject->curPlane].c_str());
+	window->curPlaneName->value(currentProject->tms->maps[currentProject->curPlane].planeName.c_str());
 	window->redraw();
 }
 void removeTilemapsPlane(Fl_Widget*, void*) {
@@ -44,8 +44,8 @@ void removeTilemapsPlane(Fl_Widget*, void*) {
 }
 void updateNameTilemaps(Fl_Widget*w, void*) {
 	Fl_Input*wi = (Fl_Input*)w;
-	currentProject->tms->planeName[currentProject->curPlane].assign(wi->value());
-	window->planeSelect->replace(currentProject->curPlane, currentProject->tms->planeName[currentProject->curPlane].c_str());
+	currentProject->tms->maps[currentProject->curPlane].planeName.assign(wi->value());
+	window->planeSelect->replace(currentProject->curPlane, currentProject->tms->maps[currentProject->curPlane].planeName.c_str());
 	window->redraw();
 }
 void updatePlaneTilemapMenu(uint32_t id, Fl_Choice*plM) {
@@ -55,7 +55,7 @@ void updatePlaneTilemapMenu(uint32_t id, Fl_Choice*plM) {
 	size_t sz = projects[id]->tms->maps.size();
 
 	for (uintptr_t i = 0; i < sz; ++i)
-		plM->add(projects[id]->tms->planeName[i].c_str(), 0, setCurPlaneTilemaps, (void*)i, 0);
+		plM->add(projects[id]->tms->maps[i].planeName.c_str(), 0, setCurPlaneTilemaps, (void*)i, 0);
 
 	plM->value(projects[id]->curPlane);
 
@@ -75,7 +75,7 @@ void addPlaneTilemap(Fl_Widget*, void*val) {
 	pushTilemapPlaneAdd(currentProject->tms->maps.size());
 	currentProject->tms->setPlaneCnt(currentProject->tms->maps.size() + 1);
 	uintptr_t i = currentProject->tms->maps.size() - 1;
-	window->planeSelect->add(currentProject->tms->planeName[i].c_str(), 0, setCurPlaneTilemaps, (void*)i, 0);
+	window->planeSelect->add(currentProject->tms->maps[i].planeName.c_str(), 0, setCurPlaneTilemaps, (void*)i, 0);
 	window->planeSelectChunk->maximum(i);
 	window->redraw();
 }

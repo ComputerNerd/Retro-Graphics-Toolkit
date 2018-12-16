@@ -231,7 +231,7 @@ static int tilemap__get_(lua_State *L) {
 			lua_pushboolean(L, projects[idx]->tms->maps[idx2].isBlock);
 			return 1;
 		} else if (!strcmp("name", k)) {
-			lua_pushstring(L, projects[idx]->tms->planeName[idx2].c_str());
+			lua_pushstring(L, projects[idx]->tms->maps[idx2].planeName.c_str());
 			return 1;
 		}
 	}
