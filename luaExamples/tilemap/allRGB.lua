@@ -50,7 +50,6 @@ if p:have(project.mapMask) then
 		img[i + 2] = (rgb >> 16) & 255
 		rgb = rgb + 1
 	end
-	rgt.savePNG("allrgb.png", 4096, 4096, img, nil, false)
 	tilemap:imageToTiles(img, -1, false, true)
 else
 	p:haveMessage(project.mapMask)

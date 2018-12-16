@@ -133,6 +133,7 @@ void update_offset_tile_edit(Fl_Widget*, void*) {
 void set_tile_current(Fl_Widget* o, void*) {
 	Fl_Slider* s = (Fl_Slider*)o;
 	currentProject->tileC->current_tile = s->value();
+	palBar.updateColorSelectionTile(s->value(), 1);
 	window->redraw();
 }
 void set_tile_currentTP(Fl_Widget* o, void*) {
@@ -143,6 +144,8 @@ void set_tile_currentTP(Fl_Widget* o, void*) {
 		pushTilemapEdit(selTileE_G[0], selTileE_G[1]);
 		currentProject->tms->maps[currentProject->curPlane].set_tile(selTileE_G[0], selTileE_G[1], currentProject->tileC->current_tile);
 	}
+
+	palBar.updateColorSelectionTile(s->value(), 2);
 
 	window->redraw();
 }

@@ -47,5 +47,7 @@ public:
 	}
 	void checkBox(int x, int y, unsigned tab);
 	void drawBoxes(unsigned tab);
+	bool hasAltSelection();
+	void updateColorSelectionTile(unsigned tile, unsigned tab);
 };
 extern paletteBar palBar;

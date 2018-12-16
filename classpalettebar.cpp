@@ -253,6 +253,9 @@ void paletteBar::drawBoxes(unsigned tab) {
 		}
 
 		fl_draw_box(FL_EMBOSSED_FRAME, selBox[tab]*box_size + ox[tab], oy[tab], box_size, box_size, 0);
+
+		if (hasAltSelection())
+			fl_draw_box(FL_DOWN_FRAME, selBoxAlt[tab]*box_size + ox[tab], oy[tab], box_size, box_size, 0);
 	}
 }
 unsigned paletteBar::toTab(unsigned realtab) {
@@ -290,10 +293,18 @@ void paletteBar::checkBox(int x, int y, unsigned tab) {
 	if (y >= (all[tab] ? currentProject->pal->rowCntPal : 1))
 		return;
 
-	if (currentProject->gameSystem == TMS9918 && currentProject->getTMS9918subSys() != MODE_3 && Fl::event_button() == FL_RIGHT_MOUSE)
+	if (tab != 0 && hasAltSelection() && Fl::event_button() == FL_RIGHT_MOUSE)
 		selBoxAlt[tab] = x; // Background color
 	else
 		selBox[tab] = x;
+
+	if (hasAltSelection() && tab != 0) {
+		unsigned extAttrTmp = selBox[tab] << 4;
+		extAttrTmp |= selBoxAlt[tab];
+
+		if (currentProject->tileC)
+			currentProject->tileC->setExtAttr(currentProject->tileC->current_tile, 0, extAttrTmp);
+	}
 
 	if (all[tab])
 		changeRow(y, tab);
@@ -301,4 +312,18 @@ void paletteBar::checkBox(int x, int y, unsigned tab) {
 		updateSlider(tab);
 
 	window->redraw();
+}
+
+bool paletteBar::hasAltSelection() {
+	return currentProject->gameSystem == TMS9918 && (currentProject->getTMS9918subSys() != MODE_3);
+}
+
+void paletteBar::updateColorSelectionTile(unsigned tile, unsigned tab) {
+	if (hasAltSelection()) {
+		if (currentProject->tileC) {
+			uint8_t ent = currentProject->tileC->getExtAttr(tile, 0);
+			selBox[tab] = ent >> 4;
+			selBoxAlt[tab] = ent & 15;
+		}
+	}
 }

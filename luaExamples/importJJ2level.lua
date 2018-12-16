@@ -87,6 +87,7 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 		// only the first [AnimCount] are needed; JCS will save all 128/256, but JJ2 will run your level either way.
 		char Padding[512]; //all zeroes; only in levels saved with JCS--]]
 		print('Level name',cd1:sub(20,51))
+		print('Tile set',cd1:sub(52,83))
 		local valid,width,height,idx,validcnt,w4,inf,rw,i={},{},{},8404,0,{},{},{}
 		for i=1,8 do
 			inf[i]=strti(cd1:sub(idx,idx+3))

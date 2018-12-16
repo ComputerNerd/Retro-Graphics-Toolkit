@@ -239,9 +239,9 @@ void tiles::remove_tile_at(uint32_t tileDel) {
 void tiles::truecolor_to_tile(unsigned palette_row, uint32_t cur_tile, bool isSprite) {
 	truecolor_to_tile_ptr(palette_row, cur_tile, &truetDat[(cur_tile * tcSize)], true, isSprite);
 }
-void tiles::truecolor_to_tile_ptr(unsigned palette_row, uint32_t cur_tile, uint8_t * tileinput, bool Usedither, bool isSprite, bool isIndexArray) {
+void tiles::truecolor_to_tile_ptr(unsigned palette_row, uint32_t cur_tile, uint8_t * tileinput, bool useDither, bool isSprite, bool isIndexArray) {
 	//dithers a truecolor tile to tile
-	if (Usedither && isIndexArray) {
+	if (useDither && isIndexArray) {
 		fl_alert("Invalid parameters");
 		return;
 	}
@@ -253,31 +253,25 @@ void tiles::truecolor_to_tile_ptr(unsigned palette_row, uint32_t cur_tile, uint8
 	else
 		memcpy(truePtr, tileinput, tcSize);
 
-	if (Usedither) {
-		ditherImage(truePtr, sizew, sizeh, true, true, true, palette_row);
-		ditherImage(truePtr, sizew, sizeh, true, false, true, palette_row);
+	void*outIdx = nullptr;
+
+	if (useDither) {
+		ditherImage(truePtr, width(), height(), true, true, true, palette_row, false, 0, isSprite, false, -1, cur_tile);
+		outIdx = ditherImage(truePtr, width(), height(), true, false, true, palette_row, false, 0, isSprite, true, -1, cur_tile);
 	}
 
 	//now image needs to be checked for alpha
-	uint8_t * tPtr = truePtr;
+	uint8_t * tPtr = useDither ? (uint8_t*)outIdx : truePtr;
 
 	for (unsigned y = 0; y < sizeh; ++y) {
 		for (unsigned x = 0; x < sizew; ++x) {
 			unsigned temp;
 
-			if (isIndexArray)
-				setPixel(cur_tile, x, y, (*tPtr++) % prj->pal->perRow);
-			else {
-				temp = find_near_color_from_row(palette_row, tPtr[0], tPtr[1], tPtr[2], (prj->pal->haveAlt) && isSprite);
-				tPtr += 3;
-
-				if (*tPtr++)
-					setPixel(cur_tile, x, y, temp);
-				else
-					setPixel(cur_tile, x, y, 0);
-			}
+			setPixel(cur_tile, x, y, (*tPtr++) % prj->pal->perRow);
 		}
 	}
+
+	free(outIdx);
 }
 void tiles::draw_truecolor(uint32_t tile_draw, unsigned x, unsigned y, bool usehflip, bool usevflip, unsigned zoom) {
 	static bool dontShow;
@@ -829,6 +823,9 @@ void tiles::save(const char*fname, fileType_t type, bool clipboard, int compress
 		case PLANAR_TILE:
 			savePtr = tDat.data();
 			break;
+
+		default:
+			show_default_error
 	}
 
 	FILE* myfile;

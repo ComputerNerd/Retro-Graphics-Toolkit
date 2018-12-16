@@ -103,6 +103,11 @@ enum tileType Project::getTileType(void) {
 		case masterSystem:
 		case gameGear:
 			return PLANAR_LINE;
+			break;
+
+		case TMS9918:
+			return (getTMS9918subSys() == MODE_3) ? LINEAR : PLANAR_TILE;
+			break;
 
 		default:
 			return LINEAR;

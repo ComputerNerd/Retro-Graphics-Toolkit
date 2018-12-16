@@ -16,4 +16,4 @@
 */
 #pragma once
 #include <inttypes.h>
-void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha = false, bool colSpace = false, bool forceRow = false, unsigned forcedrow = 0, bool isChunk = false, uint32_t idChunk = 0, bool isSprite = false, bool toIndex = false, int forceAlg = -1);
+void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha = false, bool colSpace = false, bool forceRow = false, unsigned forcedrow = 0, bool isChunk = false, uint32_t idChunk = 0, bool isSprite = false, bool toIndex = false, int forceAlg = -1, int forceTileIdx = -1);

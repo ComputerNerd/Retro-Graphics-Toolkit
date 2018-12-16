@@ -860,7 +860,7 @@ static void progressUpdate(Fl_Window**win, Fl_Progress**progress, time_t&lasttim
 		Fl::check();
 	}
 }
-void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool colSpace, bool forceRow, unsigned forcedrow, bool isChunk, uint32_t idChunk, bool isSprite, bool toIndex, int forceAlg) {
+void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool colSpace, bool forceRow, unsigned forcedrow, bool isChunk, uint32_t idChunk, bool isSprite, bool toIndex, int forceAlg, int forceTileIdx) {
 	void*retPtr = 0;
 
 	unsigned ditherAlg = forceAlg >= 0 ? forceAlg : currentProject->settings & settingsDitherMask;
@@ -1089,10 +1089,13 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 						if (haveExt) {
 							unsigned curTile;
 
-							if (isChunk)
-								curTile = currentProject->Chunk->getTile_t(idChunk, x / rgbRowsize, y / 8);
-							else
-								curTile = currentProject->tms->maps[currentProject->curPlane].get_tile(x / rgbRowsize, y / 8);
+							if (forceTileIdx < 0) {
+								if (isChunk)
+									curTile = currentProject->Chunk->getTile_t(idChunk, x / rgbRowsize, y / 8);
+								else
+									curTile = currentProject->tms->maps[currentProject->curPlane].get_tile(x / rgbRowsize, y / 8);
+							} else
+								curTile = forceTileIdx;
 
 							unsigned extAttr = currentProject->tileC->getExtAttr(curTile, y % 8);
 							temp = chooseTwoColor(extAttr & 15, extAttr >> 4, r_old, g_old, b_old) * 3;
@@ -1239,10 +1242,13 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 						if (haveExt) {
 							unsigned curTile;
 
-							if (isChunk)
-								curTile = currentProject->Chunk->getTile_t(idChunk, x / tileWidth, y / 8);
-							else
-								curTile = currentProject->tms->maps[currentProject->curPlane].get_tile(x / tileWidth, y / 8);
+							if (forceTileIdx < 0) {
+								if (isChunk)
+									curTile = currentProject->Chunk->getTile_t(idChunk, x / tileWidth, y / 8);
+								else
+									curTile = currentProject->tms->maps[currentProject->curPlane].get_tile(x / tileWidth, y / 8);
+							} else
+								curTile = forceTileIdx;
 
 							unsigned extAttr = currentProject->tileC->getExtAttr(curTile, y % 8);
 							temp = chooseTwoColor(extAttr & 15, extAttr >> 4, r_old, g_old, b_old) * 3;
