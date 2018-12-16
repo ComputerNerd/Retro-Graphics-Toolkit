@@ -134,6 +134,7 @@ void paletteBar::setSys(bool upSlide) {
 
 						slide[j][0]->label("BG col");
 						slide[j][0]->maximum(15);
+						slide[j][0]->value(currentProject->getPalColTMS9918() & 15);
 						slide[j][0]->show();
 						slide[j][0]->callback(setBGcolorTMS9918);
 

@@ -341,6 +341,9 @@ void setBGcolorTMS9918(Fl_Widget*sliderWidget, void*) {
 	currentProject->setPalColTMS9918(oldBGFGval | bgColVal);
 	memcpy(currentProject->pal->rgbPal, TMS9918Palette + (bgColVal * 3), 3); // Copy the selected color to the first entry.
 
+	for (unsigned i = 0; i < TABS_WITH_PALETTE; ++i)
+		palBar.slide[i][0]->value(bgColVal);
+
 	if (window)
 		window->damage(FL_DAMAGE_USER1);
 }
