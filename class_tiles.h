@@ -15,10 +15,17 @@
 	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #pragma once
+
+#include <map>
 #include <vector>
+
 #include <inttypes.h>
+
 #include "filemisc.h"
 #include "project.h"
+
+typedef std::multimap<uint8_t, uint32_t> tileAttrMap_t;
+
 class tiles {
 private:
 	unsigned curBD;
@@ -86,4 +93,5 @@ public:
 	void changeDim(unsigned w, unsigned h, unsigned bd);
 	void swap(unsigned first, unsigned second);
 	void save(const char*fname, fileType_t type, bool clipboard, int compression, const char*label = "tileDat");
+	void tms9918Mode1RearrangeTiles(tileAttrMap_t& attrs, bool forceKeepAllTiles = true);
 };

@@ -12,12 +12,13 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #include <FL/fl_ask.H>
 
-#include <exception>
 #include <ctime>
+#include <exception>
+#include <unordered_set>
 
 #include "macros.h"
 #include "nearestColor.h"
@@ -212,23 +213,33 @@ void tiles::resizeAmt(void) {
 void tiles::appendTile(unsigned many) {
 	resizeAmt(amt + many);
 }
+
 void tiles::remove_tile_at(uint32_t tileDel) {
 	if (tileDel >= amt) {
 		fl_alert("Cannot delete tile %d as there are only %d tiles", tileDel, amt);
 		return;
 	}
 
-	if (!amt) {
-		fl_alert("You already have no tiles");
+	if (amt <= 1) {
+		fl_alert("You cannot delete the last time. Instead disable tiles in the project settings to do this.");
 		return;
 	}
 
-	if (amt == 1) {
-		tDat.clear();
-		truetDat.clear();
-	} else {
-		tDat.erase(tDat.begin() + (tileDel * tileSize), tDat.begin() + ((tileDel + 1)*tileSize));
-		truetDat.erase(truetDat.begin() + (tileDel * tcSize), truetDat.begin() + ((tileDel + 1)*tcSize));
+	tDat.erase(tDat.begin() + (tileDel * tileSize), tDat.begin() + ((tileDel + 1)*tileSize));
+	truetDat.erase(truetDat.begin() + (tileDel * tcSize), truetDat.begin() + ((tileDel + 1)*tcSize));
+
+	if (extAttrs.size()) {
+		switch (prj->gameSystem) {
+			case TMS9918:
+				switch (prj->getTMS9918subSys()) {
+
+				}
+
+				break;
+
+			default:
+				show_default_error
+		}
 	}
 
 	--amt;
@@ -809,17 +820,22 @@ void tiles::save(const char*fname, fileType_t type, bool clipboard, int compress
 	uint8_t*savePtr;
 	enum tileType tt = prj->getTileType();
 
+	unsigned outputTileSize;
+
 	switch (tt) {
 		case LINEAR:
 			savePtr = (uint8_t*)toLinear();
+			outputTileSize = (width() * height() * curBD + 8 - 1) / 8;
 			break;
 
 		case PLANAR_LINE:
 			savePtr = (uint8_t*)toLinePlanar();
+			outputTileSize = tileSize;
 			break;
 
 		case PLANAR_TILE:
 			savePtr = tDat.data();
+			outputTileSize = tileSize;
 			break;
 
 		default:
@@ -839,7 +855,7 @@ void tiles::save(const char*fname, fileType_t type, bool clipboard, int compress
 
 	if (likely(myfile || clipboard)) {
 		if (compression)
-			compdat = (uint8_t*)encodeType(savePtr, tileSize * amt, compsize, compression);
+			compdat = (uint8_t*)encodeType(savePtr, outputTileSize * amt, compsize, compression);
 
 		if (type) {
 			char comment[2048];
@@ -856,7 +872,7 @@ void tiles::save(const char*fname, fileType_t type, bool clipboard, int compress
 					return;
 				}
 			} else {
-				if (!saveBinAsText(savePtr, (amt)*tileSize, myfile, type, comment, label, 32)) {
+				if (!saveBinAsText(savePtr, (amt)*outputTileSize, myfile, type, comment, label, 32)) {
 					fl_alert("Error: can not save file %s", the_file.c_str());
 
 					if (tt != PLANAR_TILE)
@@ -869,7 +885,7 @@ void tiles::save(const char*fname, fileType_t type, bool clipboard, int compress
 			if (compression)
 				fwrite(compdat, 1, compsize, myfile);
 			else
-				fwrite(savePtr, tileSize, (amt), myfile);
+				fwrite(savePtr, outputTileSize, (amt), myfile);
 		}
 
 		if (compression)
@@ -882,4 +898,105 @@ void tiles::save(const char*fname, fileType_t type, bool clipboard, int compress
 
 	if (myfile)
 		fclose(myfile);
+}
+void tiles::tms9918Mode1RearrangeTiles(tileAttrMap_t& attrs, bool forceKeepAllTiles) {
+	// multimap always sorts by key. This is very good for us.
+	uint8_t keyHold = attrs.cbegin()->first;
+	unsigned tileCount = 0;
+	unsigned curTile = 0;
+	std::map<uint32_t, uint32_t> tileMapping;
+	std::unordered_set<uint32_t> processedTiles;
+
+	if (forceKeepAllTiles) {
+		for (auto it = attrs.cbegin(); it != attrs.cend(); ++it)
+			processedTiles.emplace(it->second);
+
+		for (unsigned i = 0; i < amt; ++i) {
+			const bool tileExists = processedTiles.find(i) != processedTiles.end();
+
+			if (!tileExists)
+				attrs.emplace(getExtAttr(i, 0), i);
+		}
+
+		processedTiles.clear();
+	}
+
+	std::vector<uint8_t> newTileData(tDat.size());
+	std::vector<uint8_t> newTruecolorData(truetDat.size());
+
+	for (auto it = attrs.cbegin(); it != attrs.cend(); ++it) {
+		if (it->second >= amt) {
+			tileMapping[it->second] = it->second; // Leave invalid entries alone.
+			continue;
+		}
+
+		const bool alreadyProcessed = processedTiles.find(it->second) != processedTiles.end();
+
+		if (alreadyProcessed)
+			continue;
+
+		uint8_t key = it->first;
+
+		if (keyHold != key) {
+			unsigned extraTiles = (tileCount & 7);
+
+			if (extraTiles) {
+				extraTiles = 8 - extraTiles; // This gives us how many tiles we need to add.
+				printf("Padding tiles with %d tiles at index: %d\n", extraTiles, curTile);
+				resizeAmt(amt + extraTiles);
+				newTileData.resize(amt * tileSize);
+				newTruecolorData.resize(amt * tcSize);
+				curTile += extraTiles; // Skip past these blank tiles.
+			}
+
+			tileCount = 0;
+		}
+
+		extAttrs.at(curTile / 8) = key; // Set the attribute.
+
+		// Copy the tiles.
+		uint8_t * tileDst = newTileData.data();
+		tileDst += curTile * tileSize;
+		const uint8_t * tileSrc = tDat.data();
+		tileSrc += it->second * tileSize;
+		memcpy(tileDst, tileSrc, tileSize);
+		// Do the same for truecolor tiles.
+		tileDst = newTruecolorData.data();
+		tileDst += curTile * tcSize;
+		tileSrc = truetDat.data();
+		tileSrc += it->second * tcSize;
+		memcpy(tileDst, tileSrc, tcSize);
+		tileMapping[it->second] = curTile;
+
+		keyHold = key;
+		++tileCount;
+		++curTile;
+
+		// Don't accidentally do the same tile again if it is in the list more than once.
+		// This happens when the tile is on a tilemap more than once.
+		processedTiles.emplace(it->second);
+	}
+
+	tDat = newTileData;
+	truetDat = newTruecolorData;
+
+
+	if (prj->tms) {
+		for (unsigned i = 0; i < prj->tms->maps.size(); ++i) {
+			class tileMap* mapClass = &prj->tms->maps[i];
+
+			if (mapClass) {
+				for (unsigned y = 0; y < mapClass->mapSizeHA; ++y) {
+					for (unsigned x = 0; x < mapClass->mapSizeW; ++x) {
+						try {
+							unsigned inputTile = mapClass->get_tile(x, y);
+							mapClass->set_tile(x, y, tileMapping.at(inputTile));
+						} catch (...) {
+							fl_alert("Cannot map tile %d at (%d, %d) in %d", inputTile, x, y, i);
+						}
+					}
+				}
+			}
+		}
+	}
 }

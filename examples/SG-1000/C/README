@@ -1,0 +1,8 @@
+These examples use https://github.com/sverx/devkitSMS
+
+As of writing devkitSMS is setup to initialize the TMS9918 in mode 2. For the
+other modes a patched version is included to initialize the TMS9918 in the
+correct mode for each example.
+
+You will still need to copy peep-rules.txt and crt0_sg.rel to the project
+directory because these files are used unmodified.

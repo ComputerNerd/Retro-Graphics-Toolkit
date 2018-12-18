@@ -16,9 +16,7 @@
 */
 #include <FL/fl_ask.H>
 
-#include <map>
 #include <memory>
-#include <unordered_set>
 
 #include "class_global.h"
 #include "macros.h"
@@ -1472,6 +1470,7 @@ static void pickFromHist2(unsigned*hist, unsigned*largest, unsigned cnt, Project
 		largest[1] = 0;
 	else {
 		bool allZeros = true;
+
 		for (unsigned x = 0; x < cnt; ++ x) {
 			if (x != largest[0]) {
 				if (hist[x] != 0) {
@@ -1480,6 +1479,7 @@ static void pickFromHist2(unsigned*hist, unsigned*largest, unsigned cnt, Project
 				}
 			}
 		}
+
 		if (allZeros)
 			largest[1] = complementryColor[largest[0]];
 		else {
@@ -1566,7 +1566,7 @@ void tileMap::pickExtAttrs(void) {
 				break;
 
 				case MODE_1: {
-					std::multimap<uint8_t, uint32_t> attrs;
+					tileAttrMap_t attrs;
 
 					for (unsigned j = 0; j < mapSizeHA; ++j) {
 						for (unsigned i = 0; i < mapSizeW; ++i) {
@@ -1612,64 +1612,7 @@ void tileMap::pickExtAttrs(void) {
 						}
 					}
 
-					// multimap always sorts by key. This is very good for us.
-					uint8_t keyHold = attrs.cbegin()->first;
-					unsigned tileCount = 0;
-					unsigned curTile = 0;
-					class tiles* newTiles = new tiles(*prj->tileC, prj); // Copy the current tiles.
-					memset(newTiles->truetDat.data(), 0, newTiles->truetDat.size());
-					std::map<uint32_t, uint32_t> tileMapping;
-					std::unordered_set<uint32_t> processedTiles;
-
-					for (auto it = attrs.cbegin(); it != attrs.cend(); ++it) {
-						const bool alreadyProcessed = processedTiles.find(it->second) != processedTiles.end();
-
-						if (alreadyProcessed)
-							continue;
-
-						uint8_t key = it->first;
-
-						if (keyHold != key) {
-							unsigned extraTiles = (tileCount & 7);
-
-							if (extraTiles) {
-								extraTiles = 8 - extraTiles; // This gives us how many tiles we need to add.
-								printf("Padding tiles with %d tiles at index: %d\n", extraTiles, curTile);
-								newTiles->resizeAmt(newTiles->amt + extraTiles);
-								curTile += extraTiles; // Skip past these blank tiles.
-							}
-
-							tileCount = 0;
-						}
-
-						newTiles->extAttrs[curTile / 8] = key; // Set the attribute.
-						// Copy the tiles.
-						uint8_t * tileDst = newTiles->tDat.data();
-						tileDst += curTile * newTiles->tileSize;
-						const uint8_t * tileSrc = prj->tileC->tDat.data();
-						tileSrc += it->second * prj->tileC->tileSize;
-						memcpy(tileDst, tileSrc, newTiles->tileSize);
-						// Do the same for truecolor tiles.
-						tileDst = newTiles->truetDat.data();
-						tileDst += curTile * newTiles->tcSize;
-						tileSrc = prj->tileC->truetDat.data();
-						tileSrc += it->second * prj->tileC->tcSize;
-						memcpy(tileDst, tileSrc, newTiles->tcSize);
-						tileMapping[it->second] = curTile;
-
-						keyHold = key;
-						++tileCount;
-						++curTile;
-						processedTiles.emplace(it->second);
-					}
-
-					delete prj->tileC;
-					prj->tileC = newTiles;
-
-					for (unsigned y = 0; y < mapSizeHA; ++y) {
-						for (unsigned x = 0; x < mapSizeW; ++x)
-							set_tile(x, y, tileMapping[get_tile(x, y)]);
-					}
+					prj->tileC->tms9918Mode1RearrangeTiles(attrs);
 				}
 				break;
 
