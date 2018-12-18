@@ -32,4 +32,5 @@ public:
 		maps.erase(maps.begin() + which);
 	}
 	void changePrjPtr(Project*prj);
+	void swapTile(unsigned oldTile, unsigned newTile); // Used to make an update apply to all maps.
 };

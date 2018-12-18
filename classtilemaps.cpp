@@ -45,9 +45,15 @@ void tilemaps::setPlaneCnt(unsigned cnt) {
 			maps.pop_back();
 	}
 }
+
 void tilemaps::changePrjPtr(Project*prj) {
 	this->prj = prj;
 
 	for (unsigned i = 0; i < maps.size(); ++i)
 		maps[i].prj = prj;
+}
+
+void tilemaps::swapTile(unsigned oldTile, unsigned newTile) {
+	for (unsigned i = 0; i < maps.size(); ++i)
+		maps[i].swapTile(oldTile, newTile);
 }

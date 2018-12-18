@@ -962,7 +962,7 @@ bool tileMap::loadFromFile() {
 
 void tileMap::swapTile(uint32_t oldTile, uint32_t newTile) {
 	uint_fast32_t x, y;
-	int_fast32_t temp;
+	int32_t temp;
 
 	for (y = 0; y < mapSizeHA; y++) {
 		for (x = 0; x < mapSizeW; x++) {

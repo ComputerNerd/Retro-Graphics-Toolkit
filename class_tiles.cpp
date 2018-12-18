@@ -225,14 +225,39 @@ void tiles::remove_tile_at(uint32_t tileDel) {
 		return;
 	}
 
-	tDat.erase(tDat.begin() + (tileDel * tileSize), tDat.begin() + ((tileDel + 1)*tileSize));
-	truetDat.erase(truetDat.begin() + (tileDel * tcSize), truetDat.begin() + ((tileDel + 1)*tcSize));
-
 	if (extAttrs.size()) {
 		switch (prj->gameSystem) {
 			case TMS9918:
 				switch (prj->getTMS9918subSys()) {
+					case MODE_1:
+					{
+						// This requires special action.
+						// The way this is handled is by first building an attribute list of all tiles except the one we would like to remove and not including padding tiles.
+						// Afterwards the list is sorted and the new tiles won't contain the one we tried to remove.
+						tileAttrMap_t attrs;
+						bool hasBlankTile = false; // We will remove duplicate blank tiles (defined as all pixels == 0 for their rgba values).
+						unsigned blankTileIdx = 0;
 
+						for (unsigned i = 0; i < amt; ++i) {
+							// See if this is a padding tile or a duplicate blank tile.
+							if (isAllZeroTruecolor(i)) {
+								if (hasBlankTile) {
+									// We already have a blank tile. Replace all uses of this tile with blankTileIdx.
+									if (prj->tms)
+										prj->tms->swapTile(i, blankTileIdx);
+								} else {
+									// If we find another blank tile we will use this.
+									hasBlankTile = true;
+									blankTileIdx = i;
+									attrs.emplace(getExtAttr(i, 0), i);
+								}
+							} else if (i != tileDel)
+								attrs.emplace(getExtAttr(i, 0), i);
+						}
+						tms9918Mode1RearrangeTiles(attrs, false); // False means we won't include the removed tiles.
+					}
+
+					return; // All the code below does not need to run. We have already taken care of all this.
 				}
 
 				break;
@@ -241,6 +266,10 @@ void tiles::remove_tile_at(uint32_t tileDel) {
 				show_default_error
 		}
 	}
+
+	tDat.erase(tDat.begin() + (tileDel * tileSize), tDat.begin() + ((tileDel + 1)*tileSize));
+	truetDat.erase(truetDat.begin() + (tileDel * tcSize), truetDat.begin() + ((tileDel + 1)*tcSize));
+
 
 	--amt;
 	resizeAmt(); // Ensure extended attributes have the correct size.
@@ -980,6 +1009,7 @@ void tiles::tms9918Mode1RearrangeTiles(tileAttrMap_t& attrs, bool forceKeepAllTi
 	tDat = newTileData;
 	truetDat = newTruecolorData;
 
+	resizeAmt(curTile); // curTile contains the final amount of tiles.
 
 	if (prj->tms) {
 		for (unsigned i = 0; i < prj->tms->maps.size(); ++i) {
@@ -988,8 +1018,9 @@ void tiles::tms9918Mode1RearrangeTiles(tileAttrMap_t& attrs, bool forceKeepAllTi
 			if (mapClass) {
 				for (unsigned y = 0; y < mapClass->mapSizeHA; ++y) {
 					for (unsigned x = 0; x < mapClass->mapSizeW; ++x) {
+						unsigned inputTile = mapClass->get_tile(x, y);
+
 						try {
-							unsigned inputTile = mapClass->get_tile(x, y);
 							mapClass->set_tile(x, y, tileMapping.at(inputTile));
 						} catch (...) {
 							fl_alert("Cannot map tile %d at (%d, %d) in %d", inputTile, x, y, i);
@@ -999,4 +1030,19 @@ void tiles::tms9918Mode1RearrangeTiles(tileAttrMap_t& attrs, bool forceKeepAllTi
 			}
 		}
 	}
+}
+bool tiles::isAllZeroTruecolor(unsigned idx) {
+	uint32_t*ptr = (uint32_t*)getPixelPtrTC(idx, 0, 0);
+
+	if (tcSize & 3) {
+		fl_alert("tcSize & 4. Please fix isAllZeroTruecolor.");
+		return false; // Don't know if it is or not. Assuming that it is not.
+	}
+
+	for (unsigned i = 0; i < tcSize / 4; ++i)
+		if (*ptr++)
+			return false;
+
+	return true;
+
 }
