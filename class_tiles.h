@@ -95,4 +95,5 @@ public:
 	void save(const char*fname, fileType_t type, bool clipboard, int compression, const char*label = "tileDat");
 	void tms9918Mode1RearrangeTiles(tileAttrMap_t& attrs, bool forceKeepAllTiles = true);
 	bool isAllZeroTruecolor(unsigned idx);
+	void tms9918Mode1RearrangeActions(bool forceTileToAttribute, uint32_t tile, uint8_t attr);
 };

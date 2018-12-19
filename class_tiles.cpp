@@ -91,7 +91,7 @@ void tiles::setExtAttr(unsigned tile, unsigned y, uint8_t fgbg) {
 			break;
 
 		case MODE_1:
-			extAttrs[tile / prj->extAttrTilesPerByte()] = fgbg;
+			tms9918Mode1RearrangeActions(true, tile, fgbg);
 			break;
 
 		case MODE_2:
@@ -214,6 +214,35 @@ void tiles::appendTile(unsigned many) {
 	resizeAmt(amt + many);
 }
 
+void tiles::tms9918Mode1RearrangeActions(bool forceTileToAttribute, uint32_t tile, uint8_t attr) {
+
+	tileAttrMap_t attrs;
+	bool hasBlankTile = false; // We will remove duplicate blank tiles (defined as all pixels == 0 for their rgba values).
+	unsigned blankTileIdx = 0;
+
+	for (unsigned i = 0; i < amt; ++i) {
+		// See if this is a padding tile or a duplicate blank tile.
+		if (isAllZeroTruecolor(i)) {
+			if (hasBlankTile) {
+				// We already have a blank tile. Replace all uses of this tile with blankTileIdx.
+				if (prj->tms)
+					prj->tms->swapTile(i, blankTileIdx);
+			} else {
+				// If we find another blank tile we will use this.
+				hasBlankTile = true;
+				blankTileIdx = i;
+				attrs.emplace(getExtAttr(i, 0), i);
+			}
+		} else if (i != tile)
+			attrs.emplace(getExtAttr(i, 0), i);
+		else { // i == tile.
+			if (forceTileToAttribute)
+				attrs.emplace(attr, i);
+		}
+	}
+	tms9918Mode1RearrangeTiles(attrs, forceTileToAttribute); // False means we won't include the removed tiles.
+}
+
 void tiles::remove_tile_at(uint32_t tileDel) {
 	if (tileDel >= amt) {
 		fl_alert("Cannot delete tile %d as there are only %d tiles", tileDel, amt);
@@ -233,28 +262,8 @@ void tiles::remove_tile_at(uint32_t tileDel) {
 					{
 						// This requires special action.
 						// The way this is handled is by first building an attribute list of all tiles except the one we would like to remove and not including padding tiles.
+						tms9918Mode1RearrangeActions(false, tileDel, 0);
 						// Afterwards the list is sorted and the new tiles won't contain the one we tried to remove.
-						tileAttrMap_t attrs;
-						bool hasBlankTile = false; // We will remove duplicate blank tiles (defined as all pixels == 0 for their rgba values).
-						unsigned blankTileIdx = 0;
-
-						for (unsigned i = 0; i < amt; ++i) {
-							// See if this is a padding tile or a duplicate blank tile.
-							if (isAllZeroTruecolor(i)) {
-								if (hasBlankTile) {
-									// We already have a blank tile. Replace all uses of this tile with blankTileIdx.
-									if (prj->tms)
-										prj->tms->swapTile(i, blankTileIdx);
-								} else {
-									// If we find another blank tile we will use this.
-									hasBlankTile = true;
-									blankTileIdx = i;
-									attrs.emplace(getExtAttr(i, 0), i);
-								}
-							} else if (i != tileDel)
-								attrs.emplace(getExtAttr(i, 0), i);
-						}
-						tms9918Mode1RearrangeTiles(attrs, false); // False means we won't include the removed tiles.
 					}
 
 					return; // All the code below does not need to run. We have already taken care of all this.
@@ -1029,6 +1038,19 @@ void tiles::tms9918Mode1RearrangeTiles(tileAttrMap_t& attrs, bool forceKeepAllTi
 				}
 			}
 		}
+	}
+	if (window && prj == currentProject) {
+		// Update the currently shown tile.
+		try {
+			current_tile = tileMapping.at(current_tile);
+		} catch(...) {}
+		try {
+			window->tile_select->value(tileMapping.at(window->tile_select->value()));
+		} catch(...) {}
+		try {
+			window->tile_select_2->value(tileMapping.at(window->tile_select_2->value()));
+		} catch(...) {}
+		window->redraw();
 	}
 }
 bool tiles::isAllZeroTruecolor(unsigned idx) {
