@@ -240,6 +240,7 @@ void tiles::tms9918Mode1RearrangeActions(bool forceTileToAttribute, uint32_t til
 				attrs.emplace(attr, i);
 		}
 	}
+
 	tms9918Mode1RearrangeTiles(attrs, forceTileToAttribute); // False means we won't include the removed tiles.
 }
 
@@ -1039,17 +1040,21 @@ void tiles::tms9918Mode1RearrangeTiles(tileAttrMap_t& attrs, bool forceKeepAllTi
 			}
 		}
 	}
+
 	if (window && prj == currentProject) {
 		// Update the currently shown tile.
 		try {
 			current_tile = tileMapping.at(current_tile);
-		} catch(...) {}
+		} catch (...) {}
+
 		try {
 			window->tile_select->value(tileMapping.at(window->tile_select->value()));
-		} catch(...) {}
+		} catch (...) {}
+
 		try {
 			window->tile_select_2->value(tileMapping.at(window->tile_select_2->value()));
-		} catch(...) {}
+		} catch (...) {}
+
 		window->redraw();
 	}
 }

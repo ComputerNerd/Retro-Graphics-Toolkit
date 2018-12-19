@@ -814,7 +814,7 @@ static const struct keyPairi rgtConsts[] = {
 	{"levelTab", levelEditor},
 	{"settingsTab", settingsTab},
 	{"luaTab", luaTab},
-	{"tCancle", tCancle},
+	{"tCancel", tCancel},
 	{"tBinary", tBinary},
 	{"tCheader", tCheader},
 	{"tASM", tASM},

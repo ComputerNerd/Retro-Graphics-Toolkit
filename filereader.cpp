@@ -51,7 +51,7 @@ filereader::filereader(const char*title, bool relptr, unsigned offbits, bool be)
 		free(ext);
 		fileType_t tp = askSaveType(false, def);
 
-		if (tp == tCancle) {
+		if (tp == tCancel) {
 			amt = 0;
 			free(fname);
 			return;
@@ -118,6 +118,7 @@ filereader::filereader(const char*title, bool relptr, unsigned offbits, bool be)
 	} else
 		amt = 0;
 }
+
 filereader::~filereader() {
 	for (void*elm : dat)
 		free(elm);

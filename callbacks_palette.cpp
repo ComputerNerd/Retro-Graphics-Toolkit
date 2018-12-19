@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #include <FL/fl_ask.H>
 
@@ -210,7 +210,7 @@ void loadPalette(Fl_Widget*, void*) {
 
 	uint32_t file_size;
 	unsigned offset;
-	char * inputTemp = (char *)fl_input("Counting from zero enter the first entry that you want the palette to start at\nFor NES to load a sprite palette enter 16 or greater", "0");
+	char * inputTemp = (char *)fl_input("Counting from zero enter the first entry that you want the palette to start at.\nFor NES to load a sprite palette enter 16 or greater.", "0");
 
 	if (!inputTemp)
 		return;
@@ -220,11 +220,12 @@ void loadPalette(Fl_Widget*, void*) {
 
 	offset = atoi(inputTemp);
 	size_t palSize = currentProject->pal->colorCnt + currentProject->pal->colorCntalt;
+	palSize -= offset;
 	palSize *= currentProject->pal->esize;
 	offset *= currentProject->pal->esize;
 	filereader f = filereader("Load palette");
 	unsigned i = f.selDat();
-	memcpy(currentProject->pal->palDat + offset, f.dat[i], std::min(f.lens[i] - offset, palSize));
+	memcpy(currentProject->pal->palDat + offset, f.dat[i], std::min(f.lens[i], palSize));
 	//now convert each value to rgb
 	currentProject->pal->paletteToRgb();
 	window->redraw();

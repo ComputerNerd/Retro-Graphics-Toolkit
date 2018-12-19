@@ -19,7 +19,7 @@
 #include <string>
 
 enum fileType_t {
-	tCancle = -1,
+	tCancel = -1,
 	tBinary,
 	tCheader,
 	tASM,
