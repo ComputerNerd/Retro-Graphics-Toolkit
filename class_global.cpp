@@ -428,6 +428,7 @@ void editor::updateTileMapGUI(uint32_t x, uint32_t y) {
 
 	uint32_t cT = currentProject->tms->maps[currentProject->curPlane].get_tile(x, y);
 	tile_select_2->value(cT);
+	palBar.updateColorSelectionTile(cT, 2);
 	currentProject->tileC->current_tile = cT;
 	uint8_t Rm = currentProject->tms->maps[currentProject->curPlane].getPalRow(x, y);
 	palBar.changeRow(Rm, 2);
