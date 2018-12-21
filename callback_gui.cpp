@@ -143,7 +143,7 @@ void set_game_system(Fl_Widget*, void* selection) {
 	uint32_t sold = currentProject->subSystem;
 	unsigned bd = currentProject->getBitdepthSys();
 	unsigned bdold = bd;
-	tiles*tilesOld = 0;
+	tiles*tilesOld = nullptr;
 
 	if (currentProject->containsData(pjHaveTiles))
 		tilesOld = new tiles(*currentProject->tileC, currentProject);

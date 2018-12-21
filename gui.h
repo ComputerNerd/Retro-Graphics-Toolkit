@@ -62,4 +62,4 @@ int MenuPopup(const char * title, const char * text, unsigned num, unsigned def,
 int menuPopupArray(const char * title, const char * text, unsigned def, const Fl_Menu_Item*arr);
 bool load_file_generic(const char * the_tile = "Pick a file", bool save_file = false);
 char*loadsavefile(const char * the_tile = "Pick a file", bool save_file = false);
-bool verify_str_number_only(char * str);
+bool verify_str_number_only(const char * str);

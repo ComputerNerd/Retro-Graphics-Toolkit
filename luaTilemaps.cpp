@@ -27,7 +27,7 @@ static int tilemaps__get_(lua_State *L) {
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2) - 1;
 
-		if (k >= 0 && k < projects[idx]->tms->maps.size()) {
+		if (k >= 0 && k < projects[idx].tms->maps.size()) {
 			luaopen_Tilemap(L, idx, k);
 			return 1;
 		}
@@ -35,10 +35,10 @@ static int tilemaps__get_(lua_State *L) {
 		const char*k = luaL_checkstring(L, 2);
 
 		if (!strcmp("current", k)) {
-			luaopen_Tilemap(L, idx, projects[idx]->curPlane);
+			luaopen_Tilemap(L, idx, projects[idx].curPlane);
 			return 1;
 		} else if (!strcmp("currentIdx", k)) {
-			lua_pushinteger(L, projects[idx]->curPlane + 1);
+			lua_pushinteger(L, projects[idx].curPlane + 1);
 			return 1;
 		}
 	}
@@ -47,12 +47,14 @@ static int tilemaps__get_(lua_State *L) {
 }
 
 static int tilemaps__len_(lua_State *L) {
-	lua_pushinteger(L, projects[getSizeTUserData(L)]->tms->maps.size());
+	getProjectIDX
+	lua_pushinteger(L, projects[projectIDX].tms->maps.size());
 	return 1;
 }
 
 static int tilemaps___tostring(lua_State *L) {
-	lua_pushfstring(L, "tilemaps table: %p", projects[getSizeTUserData(L)]->tms);
+	getProjectIDX
+	lua_pushfstring(L, "tilemaps table: %p", projects[projectIDX].tms);
 	return 1;
 }
 

@@ -62,6 +62,7 @@ static void createargtable (lua_State *L, char **argv, int argc, int script) {
 #define _chdir chdir
 #endif
 int main(int argc, char **argv) {
+	initProject();
 #ifdef _WIN32
 	char olddirname[MAX_PATH];
 	getcwd(olddirname, sizeof(olddirname));
@@ -112,7 +113,7 @@ int main(int argc, char **argv) {
 			examplePath = realpath(pathbld.c_str(), nullptr);
 
 			if (!examplePath) {
-				fl_alert(strerror(errno));
+				fl_alert("%s", strerror(errno));
 				return 1;
 			}
 

@@ -25,7 +25,7 @@ static int lua_tilemap_setFull(lua_State*L) {
 	const size_t tilemapIDX = idxPtr[1];
 	const size_t columnIDX = idxPtr[2];
 	const size_t entryIDX = idxPtr[3];
-	projects[projectIDX]->tms->maps[tilemapIDX].set_tile_full(entryIDX, // x
+	projects[projectIDX].tms->maps[tilemapIDX].set_tile_full(entryIDX, // x
 	        columnIDX, // y
 	        luaL_optinteger(L, 2, 0), // tile
 	        luaL_optboolean(L, 3, false), // palette_row
@@ -41,7 +41,7 @@ static int tilemapEntry__set_(lua_State *L) {
 	const size_t tilemapIDX = idxPtr[1];
 	const size_t columnIDX = idxPtr[2];
 	const size_t entryIDX = idxPtr[3];
-	class tileMap *tm = &projects[projectIDX]->tms->maps[tilemapIDX];
+	class tileMap *tm = &projects[projectIDX].tms->maps[tilemapIDX];
 
 	const char*k = luaL_checkstring(L, 2);
 
@@ -64,7 +64,7 @@ static int lua_tilemap_getTileRow(lua_State*L) {
 	const size_t tilemapIDX = idxPtr[1];
 	const size_t columnIDX = idxPtr[2];
 	const size_t entryIDX = idxPtr[3];
-	lua_pushinteger(L, projects[projectIDX]->tms->maps[entryIDX].get_tileRow(entryIDX, columnIDX, luaL_optinteger(L, 2, 0)));
+	lua_pushinteger(L, projects[projectIDX].tms->maps[entryIDX].get_tileRow(entryIDX, columnIDX, luaL_optinteger(L, 2, 0)));
 	return 1;
 }
 
@@ -78,7 +78,7 @@ static int tilemapEntry__get_(lua_State *L) {
 		const size_t tilemapIDX = idxPtr[1];
 		const size_t columnIDX = idxPtr[2];
 		const size_t entryIDX = idxPtr[3];
-		const class tileMap *tm = &projects[projectIDX]->tms->maps[tilemapIDX];
+		const class tileMap *tm = &projects[projectIDX].tms->maps[tilemapIDX];
 
 		const char*k = luaL_checkstring(L, 2);
 

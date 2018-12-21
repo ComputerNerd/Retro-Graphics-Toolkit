@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #include <FL/Fl_Browser.H>
 #include <FL/fl_ask.H>
@@ -176,12 +176,11 @@ struct undoSpriteAppend {
 	uint32_t id[2];
 };
 struct undoProject {
-	uint32_t id;
-	Project*ptr;
+	size_t id;
+	Project* ptr;
 };
 struct undoProjectAll {
-	uint32_t ao;
-	struct Project**old;
+	std::vector<struct Project> old;
 };
 static struct undoEvent*undoBuf;
 static uint_fast32_t amount;
@@ -470,6 +469,7 @@ static void cleanupEvent(uint32_t id) {
 			if (up->ptr)
 				delete up->ptr;
 
+			delete uptr->ptr;
 			memUsed -= sizeof(struct undoProject);
 		}
 		break;
@@ -477,18 +477,8 @@ static void cleanupEvent(uint32_t id) {
 		case uProjectAll:
 		{	struct undoProjectAll*up = (struct undoProjectAll*)uptr->ptr;
 
-			if (up->old) {
-				for (unsigned i = 0; i < up->ao; ++i)
-					delete up->old[i];
-
-				free(up->old);
-			}
-
-			/*if(up->pnew){
-				for(unsigned i=0;i<up->an;++i)
-					delete up->pnew[i];
-				free(up->pnew);
-			}*/
+			up->old.clear();
+			delete uptr->ptr;
 			memUsed -= sizeof(struct undoProjectAll);
 		}
 		break;
@@ -645,16 +635,6 @@ static void removePlane(uint32_t plane) {
 		setCurPlaneTilemaps(0, (void*)(uintptr_t)currentProject->curPlane);
 	} else
 		updatePlaneTilemapMenu();
-}
-static void moveProject(Project**from, Project**to) {
-	*to = new Project(**from);
-	(*to)->copyClasses(**from);
-	delete *from;
-	*from = 0;
-}
-static void copyProject(Project*from, Project**to) {
-	*to = new Project(*from);
-	(*to)->copyClasses(*from);
 }
 static bool shouldChangePrj(undoTypes_t t) {
 	switch (t) {
@@ -1222,44 +1202,31 @@ static void UndoRedo(bool redo) {
 
 		case uCurProject:
 		{	struct undoProject*up = (struct undoProject*)uptr->ptr;
-			Project*tmp;
-			copyProject(projects[up->id], &tmp);
-			moveProject(&up->ptr, &projects[up->id]);
+			Project*tmp = new Project(*currentProject);
+			tmp->copyClasses(*currentProject);
+
+			projects[up->id] = *up->ptr;
+			projects[up->id].copyClasses(*up->ptr);
+			delete up->ptr;
 			up->ptr = tmp;
+
 			prjChangePtr(up->id);
 			switchProjectSlider(up->id);
 		}
 		break;
 
 		case uProjectAll:
-		{	struct undoProjectAll*up = (struct undoProjectAll*)uptr->ptr;
-			unsigned i;
-			reallocProject(std::max(up->ao, projects_count));
-			Project**tmp = (Project**)malloc(projects_count * sizeof(void*));
+		{
+			struct undoProjectAll*up = (struct undoProjectAll*)uptr->ptr;
+			std::vector<struct Project> oldBackup = projects;
 
-			for (i = 0; i < std::min(up->ao, projects_count); ++i) {
-				copyProject(projects[i], &tmp[i]);
-				moveProject(&up->old[i], &projects[i]);
-			}
+			for (size_t i = 0; i < oldBackup.size(); ++i)
+				oldBackup[i].copyClasses(projects[i]);
 
-			if (projects_count > up->ao) {
-				for (; i < projects_count; ++i) {
-					copyProject(projects[i], &tmp[i]);
-					delete projects[i];
-				}
-			} else if (projects_count < up->ao) {
-				for (; i < up->ao; ++i)
-					copyProject(up->old[i], &projects[i]);
-			}
+			projects = up->old; // up->old already contains a copy of the classes.
+			up->old = oldBackup;
 
-			free(up->old);
-			up->old = tmp;
-			uint32_t old = projects_count;
-			projects_count = up->ao;
-			up->ao = old;
-			reallocProject(up->ao);
-
-			for (i = 0; i < projects_count; ++i)
+			for (size_t i = 0; i < projects.size(); ++i)
 				prjChangePtr(i);
 
 			changeProjectAmt();
@@ -1271,7 +1238,7 @@ static void UndoRedo(bool redo) {
 			if (redo)
 				appendProject();
 			else
-				removeProject(projects_count - 1);
+				removeProject(projects.size() - 1);
 
 			break;
 	}
@@ -1644,10 +1611,11 @@ void pushProject(void) {
 	pushEventPrepare();
 	struct undoEvent*uptr = undoBuf + pos;
 	uptr->type = uCurProject;
-	uptr->ptr = malloc(sizeof(struct undoProject));
+	uptr->ptr = new struct undoProject;
 	memUsed += sizeof(struct undoProject);
 	struct undoProject*up = (struct undoProject*)uptr->ptr;
-	copyProject(currentProject, &up->ptr);
+	up->ptr = new Project(*currentProject);
+	up->ptr->copyClasses(*currentProject);
 	up->id = curProjectID;
 }
 void pushProjectAppend(void) {
@@ -1659,16 +1627,13 @@ void pushProjectAll(void) {
 	pushEventPrepare();
 	struct undoEvent*uptr = undoBuf + pos;
 	uptr->type = uProjectAll;
-	uptr->ptr = malloc(sizeof(struct undoProjectAll));
+	uptr->ptr = new struct undoProjectAll;
 	memUsed += sizeof(struct undoProjectAll);
 	struct undoProjectAll*up = (struct undoProjectAll*)uptr->ptr;
-	up->ao = projects_count;
-	up->old = (Project**)malloc(projects_count * sizeof(void*));
+	up->old = projects;
 
-	for (unsigned i = 0; i < projects_count; ++i)
-		copyProject(projects[i], &up->old[i]);
-
-	//up->pnew=0;
+	for (size_t i = 0; i < projects.size(); ++i)
+		up->old[i].copyClasses(projects[i]);
 }
 static Fl_Window*win;
 static void closeHistory(Fl_Widget*, void*) {

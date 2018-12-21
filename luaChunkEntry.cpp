@@ -28,7 +28,7 @@ static int chunkEntry__set_(lua_State *L) {
 	const size_t chunkIDX = idxPtr[1];
 	const size_t columnIDX = idxPtr[2];
 	const size_t entryIDX = idxPtr[3];
-	class ChunkClass *chunk = projects[projectIDX]->Chunk;
+	class ChunkClass *chunk = projects[projectIDX].Chunk;
 
 	const char*k = luaL_checkstring(L, 2);
 
@@ -50,7 +50,7 @@ static int lua_chunk_getTileRow(lua_State*L) {
 	const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
 	size_t projectIDX = *idxPtr;
 	size_t entryIDX = idxPtr[1];
-	lua_pushinteger(L, projects[projectIDX]->tms->maps[entryIDX].get_tileRow(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0)));
+	lua_pushinteger(L, projects[projectIDX].tms->maps[entryIDX].get_tileRow(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0)));
 	return 1;
 }
 
@@ -64,7 +64,7 @@ static int chunkEntry__get_(lua_State *L) {
 		const size_t chunkIDX = idxPtr[1];
 		const size_t columnIDX = idxPtr[2];
 		const size_t entryIDX = idxPtr[3];
-		const class ChunkClass *chunk = projects[projectIDX]->Chunk;
+		const class ChunkClass *chunk = projects[projectIDX].Chunk;
 
 		const char*k = luaL_checkstring(L, 2);
 

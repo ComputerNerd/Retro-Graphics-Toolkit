@@ -27,7 +27,7 @@ static int tilemapRow__get_(lua_State *L) {
 
 		int k = luaL_checkinteger(L, 2) - 1;
 
-		if (k >= 0 && k < projects[idxPtr[0]]->tms->maps[idxPtr[1]].mapSizeW) {
+		if (k >= 0 && k < projects[idxPtr[0]].tms->maps[idxPtr[1]].mapSizeW) {
 			luaopen_TilemapEntry(L, idxPtr[0], idxPtr[1], idxPtr[2], k);
 			return 1;
 		}
@@ -41,7 +41,7 @@ static int tilemapRow__len_(lua_State *L) {
 	size_t projectIDX = *idxPtr;
 	size_t tilemapIDX = idxPtr[1];
 
-	lua_pushinteger(L, projects[projectIDX]->tms->maps[tilemapIDX].mapSizeW);
+	lua_pushinteger(L, projects[projectIDX].tms->maps[tilemapIDX].mapSizeW);
 	return 1;
 }
 

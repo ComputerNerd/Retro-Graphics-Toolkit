@@ -86,8 +86,8 @@ if p:have(project.palMask) then
 	sld:callback('setShift')
 	okbtn=Fl_Button.new((320-64)/2-64-10,134,64,24,"OK")
 	okbtn:callback('btnCB',1)
-	canclebtn=Fl_Button.new((320-64)/2+64+10,134,64,24,"Cancel")
-	canclebtn:callback('btnCB')
+	cancelbtn=Fl_Button.new((320-64)/2+64+10,134,64,24,"Cancel")
+	cancelbtn:callback('btnCB')
 	win:End()
 	win:show()
 	while win:shown()~=0 do

@@ -24,19 +24,19 @@
 static int lua_tiles_save(lua_State*L) {
 	getProjectIDX
 	//void save(const char*fname,fileType_t type,bool clipboard,int compression);
-	projects[projectIDX]->tileC->save(lua_tostring(L, 2), (fileType_t)lua_tointeger(L, 3), lua_toboolean(L, 4), lua_tointeger(L, 5), lua_tostring(L, 6));
+	projects[projectIDX].tileC->save(lua_tostring(L, 2), (fileType_t)lua_tointeger(L, 3), lua_toboolean(L, 4), lua_tointeger(L, 5), lua_tostring(L, 6));
 	return 0;
 }
 
 static int lua_tiles_removeDuplicate(lua_State*L) {
 	getProjectIDX
-	projects[projectIDX]->tileC->remove_duplicate_tiles(lua_toboolean(L, 2));
+	projects[projectIDX].tileC->remove_duplicate_tiles(lua_toboolean(L, 2));
 	return 0;
 }
 
 static int lua_tiles_append(lua_State*L) {
 	getProjectIDX
-	projects[projectIDX]->tileC->appendTile(luaL_optinteger(L, 2, 1));
+	projects[projectIDX].tileC->appendTile(luaL_optinteger(L, 2, 1));
 
 	if (curProjectID == projectIDX)
 		updateTileSelectAmt();
@@ -46,7 +46,7 @@ static int lua_tiles_append(lua_State*L) {
 
 static int lua_tiles_resize(lua_State*L) {
 	getProjectIDX
-	projects[projectIDX]->tileC->resizeAmt(luaL_optinteger(L, 2, 1));
+	projects[projectIDX].tileC->resizeAmt(luaL_optinteger(L, 2, 1));
 
 	if (curProjectID == projectIDX)
 		updateTileSelectAmt();
@@ -63,7 +63,7 @@ static int tiles__get_(lua_State *L) {
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2) - 1;
 
-		if (k >= 0 && k < projects[projectIDX]->tileC->amt) {
+		if (k >= 0 && k < projects[projectIDX].tileC->amt) {
 			luaopen_Tile(L, projectIDX, k);
 			return 1;
 		}
@@ -71,19 +71,19 @@ static int tiles__get_(lua_State *L) {
 		const char*k = luaL_checkstring(L, 2);
 
 		if (!strcmp("current", k)) {
-			lua_pushinteger(L, projects[projectIDX]->tileC->current_tile + 1);
+			lua_pushinteger(L, projects[projectIDX].tileC->current_tile + 1);
 			return 1;
 		} else if (!strcmp("tileSize", k)) {
-			lua_pushinteger(L, projects[projectIDX]->tileC->tileSize);
+			lua_pushinteger(L, projects[projectIDX].tileC->tileSize);
 			return 1;
 		} else if (!strcmp("tcSize", k)) {
-			lua_pushinteger(L, projects[projectIDX]->tileC->tcSize);
+			lua_pushinteger(L, projects[projectIDX].tileC->tcSize);
 			return 1;
 		} else if (!strcmp("width", k)) {
-			lua_pushinteger(L, projects[projectIDX]->tileC->width());
+			lua_pushinteger(L, projects[projectIDX].tileC->width());
 			return 1;
 		} else if (!strcmp("height", k)) {
-			lua_pushinteger(L, projects[projectIDX]->tileC->height());
+			lua_pushinteger(L, projects[projectIDX].tileC->height());
 			return 1;
 		}
 	}
@@ -93,13 +93,13 @@ static int tiles__get_(lua_State *L) {
 
 static int tiles__len_(lua_State *L) {
 	getProjectIDX
-	lua_pushinteger(L, projects[projectIDX]->tileC->amt);
+	lua_pushinteger(L, projects[projectIDX].tileC->amt);
 	return 1;
 }
 
 static int tiles___tostring(lua_State *L) {
 	getProjectIDX
-	lua_pushfstring(L, "tiles table: %p", projects[projectIDX]->tileC);
+	lua_pushfstring(L, "tiles table: %p", projects[projectIDX].tileC);
 	return 1;
 }
 

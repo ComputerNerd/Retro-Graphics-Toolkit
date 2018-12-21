@@ -23,20 +23,20 @@
 
 static int lua_palette_paletteToRgb(lua_State*L) {
 	getProjectIDX
-	projects[projectIDX]->pal->paletteToRgb();
+	projects[projectIDX].pal->paletteToRgb();
 	return 0;
 }
 
 static int lua_palette_save(lua_State*L) {
 	getProjectIDX
 	//void savePalette(const char*fname,unsigned start,unsigned end,bool skipzero,fileType_t type,int clipboard,const char*label="palDat");
-	projects[projectIDX]->pal->savePalette(lua_tostring(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4), lua_toboolean(L, 5), (fileType_t)lua_tointeger(L, 6), lua_toboolean(L, 7), lua_tostring(L, 8));
+	projects[projectIDX].pal->savePalette(lua_tostring(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4), lua_toboolean(L, 5), (fileType_t)lua_tointeger(L, 6), lua_toboolean(L, 7), lua_tostring(L, 8));
 	return 0;
 }
 
 static int lua_palette_maxInRow(lua_State*L) {
 	getProjectIDX
-	lua_pushinteger(L, projects[projectIDX]->pal->calMaxPerRow(luaL_optinteger(L, 2, 0)));
+	lua_pushinteger(L, projects[projectIDX].pal->calMaxPerRow(luaL_optinteger(L, 2, 0)));
 	return 1;
 }
 
@@ -49,7 +49,7 @@ static int palette__get_(lua_State *L) {
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2) - 1;
 
-		if (k >= 0 && k < projects[projectIDX]->pal->colorCnt + projects[projectIDX]->pal->colorCntalt) {
+		if (k >= 0 && k < projects[projectIDX].pal->colorCnt + projects[projectIDX].pal->colorCntalt) {
 			luaopen_PaletteEntry(L, projectIDX, k);
 			return 1;
 		}
@@ -57,34 +57,34 @@ static int palette__get_(lua_State *L) {
 		const char* k = luaL_checkstring(L, 2);
 
 		if (!strcmp("current", k)) {
-			lua_pushinteger(L, projects[projectIDX]->curPlane + 1);
+			lua_pushinteger(L, projects[projectIDX].curPlane + 1);
 			return 1;
 		} else if (!strcmp("cnt", k)) {
-			lua_pushinteger(L, projects[projectIDX]->pal->colorCnt);
+			lua_pushinteger(L, projects[projectIDX].pal->colorCnt);
 			return 1;
 		} else if (!strcmp("cntAlt", k)) {
-			lua_pushinteger(L, projects[projectIDX]->pal->colorCntalt);
+			lua_pushinteger(L, projects[projectIDX].pal->colorCntalt);
 			return 1;
 		} else if (!strcmp("cntTotal", k)) {
-			lua_pushinteger(L, projects[projectIDX]->pal->colorCntalt + projects[projectIDX]->pal->colorCnt);
+			lua_pushinteger(L, projects[projectIDX].pal->colorCntalt + projects[projectIDX].pal->colorCnt);
 			return 1;
 		} else if (!strcmp("perRow", k)) {
-			lua_pushinteger(L, projects[projectIDX]->pal->perRow);
+			lua_pushinteger(L, projects[projectIDX].pal->perRow);
 			return 1;
 		} else if (!strcmp("perRowAlt", k)) {
-			lua_pushinteger(L, projects[projectIDX]->pal->perRowalt);
+			lua_pushinteger(L, projects[projectIDX].pal->perRowalt);
 			return 1;
 		} else if (!strcmp("rowCnt", k)) {
-			lua_pushinteger(L, projects[projectIDX]->pal->rowCntPal);
+			lua_pushinteger(L, projects[projectIDX].pal->rowCntPal);
 			return 1;
 		} else if (!strcmp("rowCntAlt", k)) {
-			lua_pushinteger(L, projects[projectIDX]->pal->rowCntPalalt);
+			lua_pushinteger(L, projects[projectIDX].pal->rowCntPalalt);
 			return 1;
 		} else if (!strcmp("haveAlt", k)) {
-			lua_pushboolean(L, projects[projectIDX]->pal->haveAlt);
+			lua_pushboolean(L, projects[projectIDX].pal->haveAlt);
 			return 1;
 		} else if (!strcmp("esize", k)) {
-			lua_pushinteger(L, projects[projectIDX]->pal->esize);
+			lua_pushinteger(L, projects[projectIDX].pal->esize);
 			return 1;
 		}
 	}
@@ -94,13 +94,13 @@ static int palette__get_(lua_State *L) {
 
 static int palette__len_(lua_State *L) {
 	getProjectIDX
-	lua_pushinteger(L, projects[projectIDX]->pal->colorCnt + projects[projectIDX]->pal->colorCntalt);
+	lua_pushinteger(L, projects[projectIDX].pal->colorCnt + projects[projectIDX].pal->colorCntalt);
 	return 1;
 }
 
 static int palette___tostring(lua_State *L) {
 	getProjectIDX
-	lua_pushfstring(L, "palette table: %p", projects[projectIDX]->pal);
+	lua_pushfstring(L, "palette table: %p", projects[projectIDX].pal);
 	return 1;
 }
 

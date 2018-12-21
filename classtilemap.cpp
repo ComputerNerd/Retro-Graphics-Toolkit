@@ -31,7 +31,7 @@
 #include "gui.h"
 #include "filereader.h"
 #include "errorMsg.h"
-tileMap::tileMap(Project*prj)noexcept: tileMap(2, 2, prj) {}
+tileMap::tileMap(Project*prj)noexcept: tileMap(1, 1, prj) {}
 tileMap::tileMap(uint32_t w, uint32_t h, Project*prj)noexcept {
 	this->prj = prj;
 	amt = 1;
@@ -90,7 +90,7 @@ tileMap& tileMap::operator=(const tileMap& other)noexcept {
 }
 tileMap::~tileMap()noexcept {
 	free(tileMapDat);
-	tileMapDat = 0;
+	tileMapDat = nullptr;
 }
 void tileMap::ditherAsImage(bool entire) {
 	uint8_t*image;

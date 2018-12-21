@@ -123,15 +123,17 @@ void updateTileSelectAmt(uint32_t newMax) {
 
 		--newMax;
 
-		if (currentProject->tileC->current_tile > newMax)
-			currentProject->tileC->current_tile = newMax;
+		if (currentProject->tileC) { // This check is needed because this functions gets called in the constructor for the tiles class.
+			if (currentProject->tileC->current_tile > newMax)
+				currentProject->tileC->current_tile = newMax;
+		}
 
 		window->tile_select->maximum(newMax);
 		checkMaxSlider(newMax, window->tile_select);
 		window->tile_select_2->maximum(newMax);
 		checkMaxSlider(newMax, window->tile_select_2);
 
-		if (currentProject->containsData(pjHaveChunks) && currentProject->Chunk->useBlocks) {
+		if (currentProject->Chunk && currentProject->tms && currentProject->containsData(pjHaveChunks) && currentProject->Chunk->useBlocks) {
 			window->tile_select_3->maximum(currentProject->tms->maps[currentProject->curPlane].amt - 1);
 			checkMaxSlider(currentProject->tms->maps[currentProject->curPlane].amt - 1, window->tile_select_3);
 		} else {
@@ -315,7 +317,7 @@ char*loadsavefile(const char * the_tile, bool save_file) {
 
 	return nullptr;
 }
-bool verify_str_number_only(char * str) {
+bool verify_str_number_only(const char * str) {
 	/*!
 	FLTK provides an input text box that makes it easy for the user to type text however as a side effect they may accidentally enter non-numeric characters.
 	This function address that issue by error checking the string and it also gives the user feedback so they are aware that the input box takes only numbers.

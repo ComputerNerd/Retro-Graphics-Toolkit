@@ -210,7 +210,7 @@ unsigned Project::extAttrBytesPerTile(void) {
 
 void Project::setTMS9918subSys(enum TMS9918SubSys sys) {
 	TMS9918SubSys oldVal = getTMS9918subSys();
-	subSystem &= ~7;
+	subSystem &= ~3;
 	subSystem |= sys;
 
 	if (oldVal != sys) {

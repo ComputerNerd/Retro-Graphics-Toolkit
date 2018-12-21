@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #include <FL/fl_ask.H>
 #include <cmath>//Mingw workaround
@@ -494,12 +494,12 @@ void editor::_editor() {
 
 			map_w = new Fl_Int_Input(608, default_palette_bar_offset_y + 72, 184, 24, MapWidthTxt);
 			map_w->when(FL_WHEN_ENTER_KEY);
-			map_w->value("2");
+			map_w->value("1");
 			map_w->align(FL_ALIGN_LEFT);
 			map_w->callback(callback_resize_map);
 			map_h = new Fl_Int_Input(608, default_palette_bar_offset_y + 104, 184, 24, MapHeightTxt);
 			map_h->when(FL_WHEN_ENTER_KEY);
-			map_h->value("2");
+			map_h->value("1");
 			map_h->align(FL_ALIGN_LEFT);
 			map_h->callback(callback_resize_map);
 			map_amt = new Fl_Int_Input(480, default_palette_bar_offset_y + 136, 312, 24, "Blocks");
@@ -523,7 +523,7 @@ void editor::_editor() {
 			map_y_scroll->linesize(1);
 			//now for the tile select slider
 			tile_select_2 = new Fl_Hor_Value_Slider(528, default_palette_bar_offset_y + 40, 264, 24, "Tile select");
-			tile_select_2->tooltip("This slider allows you to choice which tile you would like to place on the map remember you can both horizontally and vertically flip the tile once placed on the map and select which row the tile uses");
+			tile_select_2->tooltip("This slider allows you to choice which tile you would like to place on the map remember you can both horizontally and vertically flip the tile once placed on the map and select which row the tile uses.");
 			tile_select_2->minimum(0);
 			tile_select_2->maximum(0);
 			tile_select_2->step(1);
@@ -554,23 +554,23 @@ void editor::_editor() {
 
 			hflipCB[0] = new Fl_Check_Button(tile_place_buttons_x_off, 304, 64, 32, "Hflip");
 			hflipCB[0]->callback(set_hflipCB, (void*)0);
-			hflipCB[0]->tooltip("This sets whether or not the tile is flipped horizontally");
+			hflipCB[0]->tooltip("This sets whether or not the tile is flipped horizontally.");
 			vflipCB[0] = new Fl_Check_Button(tile_place_buttons_x_off, 336, 64, 32, "Vflip");
 			vflipCB[0]->callback(set_vflipCB, (void*)0);
-			vflipCB[0]->tooltip("This sets whether or not the tile is flipped vertically");
+			vflipCB[0]->tooltip("This sets whether or not the tile is flipped vertically.");
 			prioCB[0] = new Fl_Check_Button(tile_place_buttons_x_off, 368, 72, 32, "Priority");
 			prioCB[0]->callback(set_prioCB, (void*)0);
 			prioCB[0]->tooltip("If checked tile is high priority");
 			{	Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off, 400, 96, 32, "Show grid?");
 				o->callback(set_grid_placer);
-				o->tooltip("This button toggles whether or not a grid is visible over the tile map this will allow you to easily see were each tile is");
+				o->tooltip("This button toggles whether or not a grid is visible over the tile map this will allow you to easily see were each tile is.");
 			}
 			BlocksCBtn = new Fl_Check_Button(tile_place_buttons_x_off, 432, 96, 32, "Blocks?");
 			BlocksCBtn->callback(toggleBlocksCB);
 			BlocksCBtn->tooltip("Toggles if tile map is treated as blocks");
 			{	Fl_Check_Button* o = new Fl_Check_Button(tile_place_buttons_x_off, 464, 192, 32, "Show only selected row");
 				o->callback(toggleRowSolo);
-				o->tooltip("When checked tiles that do not use the selected row will not be drawn");
+				o->tooltip("When checked tiles that do not use the selected row will not be drawn.");
 			}
 			place_tile_size = new Fl_Hor_Value_Slider(tile_place_buttons_x_off, 512, 168, 24, "Tile zoom factor:");
 			place_tile_size->minimum(1);

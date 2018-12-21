@@ -98,50 +98,51 @@ void update_palette(Fl_Widget* o, void* v) {
 	//first get the color and draw the box
 	Fl_Slider* s = (Fl_Slider*)o;
 	//now we need to update the entry we are editing
-	unsigned temp_entry = palBar.getEntry(palBar.toTab(mode_editor));
+	unsigned selectedEntry = palBar.getEntry(palBar.toTab(mode_editor));
 
 	if (pushed_g || (Fl::event() == FL_KEYDOWN)) {
 		pushed_g = 0;
-		pushPaletteEntry(temp_entry);
+		pushPaletteEntry(selectedEntry);
 	}
 
 	switch (currentProject->gameSystem) {
 		case segaGenesis:
 		{	unsigned temp_var = 0;
-			unsigned temp2 = (unsigned)s->value();
+			unsigned sliderValue = (unsigned)s->value();
 
 			switch ((uintptr_t)v) {
 				case 0://red
-					temp_var = currentProject->pal->palDat[(temp_entry * 2) + 1]; //get the green value we need to save it for later
+					temp_var = currentProject->pal->palDat[(selectedEntry * 2) + 1]; //get the green value we need to save it for later
 					temp_var &= 0xF0;
-					temp_var |= temp2 << 1;
-					currentProject->pal->palDat[(temp_entry * 2) + 1] = temp_var;
+					temp_var |= sliderValue << 1;
+					currentProject->pal->palDat[(selectedEntry * 2) + 1] = temp_var;
 					//now convert the new red value
-					currentProject->pal->rgbPal[temp_entry * 3] = palTab[temp2 + palTypeGen];
+					currentProject->pal->rgbPal[selectedEntry * 3] = palTab[sliderValue + palTypeGen];
 					break;
 
 				case 1://green
 					//this is very similar to what I just did above
-					temp_var = currentProject->pal->palDat[(temp_entry * 2) + 1];
+					temp_var = currentProject->pal->palDat[(selectedEntry * 2) + 1];
 					temp_var &= 15; //get only the red value
 					//now OR the new green value to it
-					temp_var |= temp2 << 5;
-					currentProject->pal->palDat[(temp_entry * 2) + 1] = temp_var;
+					temp_var |= sliderValue << 5;
+					currentProject->pal->palDat[(selectedEntry * 2) + 1] = temp_var;
 					//now convert the new green value
-					currentProject->pal->rgbPal[(temp_entry * 3) + 1] = palTab[temp2 + palTypeGen];
+					currentProject->pal->rgbPal[(selectedEntry * 3) + 1] = palTab[sliderValue + palTypeGen];
 					break;
 
 				case 2:
 					//blue is the most trivial conversion to do
-					currentProject->pal->palDat[temp_entry * 2] = temp2 << 1;
-					currentProject->pal->rgbPal[(temp_entry * 3) + 2] = palTab[temp2 + palTypeGen];
+					currentProject->pal->palDat[selectedEntry * 2] = sliderValue << 1;
+					currentProject->pal->rgbPal[(selectedEntry * 3) + 2] = palTab[sliderValue + palTypeGen];
 					break;
 			}
 		}
 		break;
 
 		case NES:
-		{	unsigned pal;
+		{
+			unsigned pal;
 			uint32_t rgb_out;
 
 			switch ((uintptr_t)v) {
@@ -154,42 +155,44 @@ void update_palette(Fl_Widget* o, void* v) {
 				   */
 				case 0://Hue
 					//first read out value
-					pal = currentProject->pal->palDat[temp_entry];
+					pal = currentProject->pal->palDat[selectedEntry];
 					pal &= 48;
 					pal |= (unsigned)s->value();
 					break;
 
 				case 1://Value
-					pal = currentProject->pal->palDat[temp_entry];
+					pal = currentProject->pal->palDat[selectedEntry];
 					pal &= 15;
 					pal |= ((unsigned)s->value()) << 4;
 					break;
 			}
 
-			currentProject->pal->palDat[temp_entry] = pal;
+			currentProject->pal->palDat[selectedEntry] = pal;
 			rgb_out = nesPalToRgb(pal);
-			currentProject->pal->rgbPal[temp_entry * 3 + 2] = rgb_out & 255; //blue
-			currentProject->pal->rgbPal[temp_entry * 3 + 1] = (rgb_out >> 8) & 255; //green
-			currentProject->pal->rgbPal[temp_entry * 3] = (rgb_out >> 16) & 255; //red
+			currentProject->pal->rgbPal[selectedEntry * 3 + 2] = rgb_out & 255; //blue
+			currentProject->pal->rgbPal[selectedEntry * 3 + 1] = (rgb_out >> 8) & 255; //green
+			currentProject->pal->rgbPal[selectedEntry * 3] = (rgb_out >> 16) & 255; //red
 		}
 		break;
 
 		case masterSystem:
-		{	unsigned chan = (uintptr_t)v;
+		{
+			unsigned chan = (uintptr_t)v;
 			unsigned shift = chan * 2;
-			currentProject->pal->palDat[temp_entry] &= ~(3 << shift);
-			currentProject->pal->palDat[temp_entry] |= (unsigned)s->value() << shift;
-			currentProject->pal->rgbPal[temp_entry * 3 + chan] = palTabMasterSystem[(currentProject->pal->palDat[temp_entry] >> shift) & 3];
+			currentProject->pal->palDat[selectedEntry] &= ~(3 << shift);
+			currentProject->pal->palDat[selectedEntry] |= (unsigned)s->value() << shift;
+			currentProject->pal->rgbPal[selectedEntry * 3 + chan] = palTabMasterSystem[(currentProject->pal->palDat[selectedEntry] >> shift) & 3];
 		}
 		break;
 
 		case gameGear:
-		{	unsigned chan = (uintptr_t)v;
+		{
+			unsigned chan = (uintptr_t)v;
 			unsigned shift = chan * 4;
-			uint16_t*pal = (uint16_t*)currentProject->pal->palDat + temp_entry;
+			uint16_t*pal = (uint16_t*)currentProject->pal->palDat + selectedEntry;
 			*pal &= ~15 << shift;
 			*pal |= (unsigned)s->value() << shift;
-			currentProject->pal->rgbPal[temp_entry * 3 + chan] = palTabGameGear[(*pal >> shift) & 15];
+			currentProject->pal->rgbPal[selectedEntry * 3 + chan] = palTabGameGear[(*pal >> shift) & 15];
 		}
 		break;
 
@@ -274,7 +277,7 @@ void pickNearAlg(Fl_Widget*, void*) {
 }
 static bool isModeEditor(void) {
 	if (mode_editor != tile_edit) {
-		fl_alert("Be in Tile editor to use this");
+		fl_alert("Be in Tile editor to use this.");
 		return false;
 	} else
 		return true;

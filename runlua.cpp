@@ -606,7 +606,7 @@ void updateProjectTablesLua(lua_State*L) {
 static int lua_project_set(lua_State*L) {
 	unsigned off = luaL_optinteger(L, 1, 1) - 1;
 
-	if ((off >= projects_count) || (off == curProjectID))
+	if ((off >= projects.size()) || (off == curProjectID))
 		lua_pushboolean(L, false); //Failure
 	else {
 		switchProjectSlider(off);

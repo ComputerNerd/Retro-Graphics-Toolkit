@@ -29,33 +29,33 @@ static int project__set_(lua_State *L) {
 	getProjectIDX
 
 	if (!strcmp(key, "name"))
-		projects[projectIDX]->Name.assign(luaL_checkstring(L, 3));
+		projects[projectIDX].Name.assign(luaL_checkstring(L, 3));
 	else if (!strcmp("luaSettings", key))
-		projects[projectIDX]->luaSettings = luaL_optinteger(L, 3, 0);
+		projects[projectIDX].luaSettings = luaL_optinteger(L, 3, 0);
 
 	return 0;
 }
 static int lua_project_have(lua_State*L) {
 	getProjectIDX
-	lua_pushboolean(L, projects[projectIDX]->containsData(luaL_optinteger(L, 2, pjHavePal)));
+	lua_pushboolean(L, projects[projectIDX].containsData(luaL_optinteger(L, 2, pjHavePal)));
 	return 1;
 }
 
 static int lua_project_haveOR(lua_State*L) {
 	getProjectIDX
-	lua_pushboolean(L, projects[projectIDX]->containsDataOR(luaL_optinteger(L, 2, pjHavePal)));
+	lua_pushboolean(L, projects[projectIDX].containsDataOR(luaL_optinteger(L, 2, pjHavePal)));
 	return 1;
 }
 
 static int lua_project_getPalTab(lua_State*L) {
 	getProjectIDX
-	lua_pushinteger(L, projects[projectIDX]->getPalTab());
+	lua_pushinteger(L, projects[projectIDX].getPalTab());
 	return 1;
 }
 
 static int lua_project_setPalTab(lua_State*L) {
 	getProjectIDX
-	projects[projectIDX]->setPalTab(luaL_optinteger(L, 2, 0));
+	projects[projectIDX].setPalTab(luaL_optinteger(L, 2, 0));
 	return 0;
 }
 
@@ -74,7 +74,7 @@ static int lua_project_save(lua_State*L) {
 static int lua_project_haveMessage(lua_State*L) {
 	unsigned mask = luaL_optinteger(L, 2, pjHavePal);
 	getProjectIDX
-	projects[projectIDX]->haveMessage(mask);
+	projects[projectIDX].haveMessage(mask);
 	return 0;
 }
 
@@ -89,36 +89,36 @@ static int project__get_(lua_State *L) {
 		const char*k = luaL_checkstring(L, 2);
 
 		if (!strcmp("name", k)) {
-			lua_pushstring(L, projects[projectIDX]->Name.c_str());
+			lua_pushstring(L, projects[projectIDX].Name.c_str());
 			return 1;
 		} else if (!strcmp("tiles", k)) {
-			if (projects[projectIDX]->containsData(pjHaveTiles)) {
+			if (projects[projectIDX].containsData(pjHaveTiles)) {
 				luaopen_Tiles(L, projectIDX);
 				return 1;
 			}
 		} else if (!strcmp("tilemaps", k)) {
-			if (projects[projectIDX]->containsData(pjHaveMap)) {
+			if (projects[projectIDX].containsData(pjHaveMap)) {
 				luaopen_Tilemaps(L, projectIDX);
 				return 1;
 			}
 		} else if (!strcmp("palette", k)) {
-			if (projects[projectIDX]->containsData(pjHavePal)) {
+			if (projects[projectIDX].containsData(pjHavePal)) {
 				luaopen_Palette(L, projectIDX);
 				return 1;
 			}
 		} else if (!strcmp("chunks", k)) {
-			if (projects[projectIDX]->containsData(pjHaveChunks)) {
+			if (projects[projectIDX].containsData(pjHaveChunks)) {
 				luaopen_Chunks(L, projectIDX);
 				return 1;
 			}
 		} else if (!strcmp("settings", k)) {
-			lua_pushinteger(L, projects[projectIDX]->settings);
+			lua_pushinteger(L, projects[projectIDX].settings);
 			return 1;
 		} else if (!strcmp("luaSettings", k)) {
-			lua_pushinteger(L, projects[projectIDX]->luaSettings);
+			lua_pushinteger(L, projects[projectIDX].luaSettings);
 			return 1;
 		} else if (!strcmp("metasprites", k)) {
-			if (projects[projectIDX]->containsData(pjHaveSprites)) {
+			if (projects[projectIDX].containsData(pjHaveSprites)) {
 				luaopen_MetaSprites(L, projectIDX);
 				return 1;
 			}

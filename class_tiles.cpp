@@ -18,6 +18,7 @@
 
 #include <ctime>
 #include <exception>
+#include <memory>
 #include <unordered_set>
 
 #include "macros.h"
@@ -31,16 +32,19 @@
 #include "gui.h"
 #include "compressionWrapper.h"
 tiles::tiles(struct Project*prj) {
+	this->prj = prj;
+
 	current_tile = 0;
 	amt = 1;
 	setDim(8, 8, prj->getBitdepthSys());
-	this->prj = prj;
 }
+
 void tiles::setWidth(unsigned w) {
 	sizew = w;
 	sizewbytesbits = (w + 7) & (~7);
 	sizewbytes = sizewbytesbits / 8;
 }
+
 tiles::tiles(const tiles&other, Project*prj) {
 	this->prj = prj;
 	current_tile = other.current_tile;
@@ -58,6 +62,7 @@ tiles::tiles(const tiles&other, Project*prj) {
 
 	curBD = other.curBD;
 }
+
 tiles::~tiles() {
 	tDat.clear();
 	truetDat.clear();
@@ -241,7 +246,7 @@ void tiles::tms9918Mode1RearrangeActions(bool forceTileToAttribute, uint32_t til
 		}
 	}
 
-	tms9918Mode1RearrangeTiles(attrs, forceTileToAttribute); // False means we won't include the removed tiles.
+	tms9918Mode1RearrangeTiles(attrs, false);
 }
 
 void tiles::remove_tile_at(uint32_t tileDel) {
@@ -831,7 +836,6 @@ void tiles::changeDim(unsigned w, unsigned h, unsigned bd) {
 	}
 
 	unsigned amto = amt;
-	tiles*old = new tiles(*this, prj);
 	amt = amt * sizew / w * sizeh / h;
 	unsigned sw = sizew, sh = sizeh;
 
@@ -842,6 +846,7 @@ void tiles::changeDim(unsigned w, unsigned h, unsigned bd) {
 
 	//If going to a smaller dimension break up the tiles; discard tile data keep only truecolor data.
 	if (sw > w && sh > h && (sizew % w == 0) && (sizeh % h == 0)) {
+		std::unique_ptr<tiles> old(new tiles(*this, prj));
 		uint8_t*src = old->truetDat.data(), *dst = truetDat.data();
 
 		for (unsigned i = 0; i < amto; ++i) {
@@ -853,7 +858,6 @@ void tiles::changeDim(unsigned w, unsigned h, unsigned bd) {
 	}
 
 	updateTileSelectAmt();
-	delete old;
 }
 void tiles::save(const char*fname, fileType_t type, bool clipboard, int compression, const char*label) {
 	uint8_t*savePtr;

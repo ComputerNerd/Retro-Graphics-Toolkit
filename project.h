@@ -64,9 +64,15 @@ struct luaScript {
 };
 struct Project { /*!<Holds all data needed for a project based system for example tile screen and level 1 are 2 separate projects*/
 	Project();
-	Project(const Project&other);
+	Project(const Project& other); // Copy constructor
+	Project& operator=(const Project& other);
+	Project(Project&& other) noexcept;
+	Project& operator=(Project&& other) noexcept;
+	void copyConstructorCommon(const Project&other);
+	void moveConstructorCommon(Project&& other);
 	void copyClasses(const Project&other);
 	~Project();
+	void deleteClasses();
 	void haveMessage(uint32_t mask);
 	bool isShared(uint32_t mask);
 	bool isUniqueData(uint32_t mask);
@@ -74,7 +80,7 @@ struct Project { /*!<Holds all data needed for a project based system for exampl
 	bool containsDataOR(uint32_t mask);
 
 	enum TMS9918SubSys getTMS9918subSys()const {
-		return (enum TMS9918SubSys)(subSystem & 7);
+		return (enum TMS9918SubSys)(subSystem & 3);
 	}
 	void setTMS9918subSys(enum TMS9918SubSys sys);
 	uint8_t getPalColTMS9918() {
@@ -126,18 +132,17 @@ struct Project { /*!<Holds all data needed for a project based system for exampl
 	std::vector<struct luaScript>lScrpt;
 	std::vector<std::string>luaTabs;
 };
-extern struct Project ** projects;
-extern uint32_t projects_count;//holds how many projects there are this is needed for realloc when adding or removing function
+extern std::vector<struct Project> projects;
 extern struct Project * currentProject;
 extern Fl_Slider* curPrj;
 void changeTileDim(unsigned w, unsigned h, struct Project*p);
 const char*maskToName(unsigned mask);
 void compactPrjMem(void);
-void initProject(void) __attribute__((constructor(101)));/*!< this needs to be ran before class constructors*/
+void initProject(void);
 void setHaveProject(uint32_t id, uint32_t mask, bool set);
 void shareProject(uint32_t share, uint32_t with, uint32_t what, bool enable);
 void prjChangePtr(unsigned id);
-int reallocProject(size_t amt);
+int resizeProjects(size_t amt);
 void changeProjectAmt(void);
 bool appendProject();
 bool removeProject(uint32_t id);
