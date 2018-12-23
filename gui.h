@@ -42,15 +42,15 @@ extern bool tileEditModePlace_G;
 extern uint32_t selTileE_G[2];
 #define messageWrap(format,...) \
 	if(window) \
-		fl_message(format,##__VA_ARGS__); \
+		fl_message(format, ##__VA_ARGS__); \
 	else \
-		printf(format,##__VA_ARGS__);
+		printf(format, ##__VA_ARGS__);
 
 #define alertWrap(format,...) \
 	if(window) \
-		fl_alert(format,## __VA_ARGS__); \
+		fl_alert(format, ## __VA_ARGS__); \
 	else \
-		fprintf(stderr,format,##__VA_ARGS__);
+		fprintf(stderr, format, ##__VA_ARGS__);
 
 void mkProgress(Fl_Window**winP, Fl_Progress**progress);
 int SafeTxtInput(Fl_Int_Input*in, bool redraw = true);

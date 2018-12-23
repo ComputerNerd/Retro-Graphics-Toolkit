@@ -1,3 +1,15 @@
+===============================================================================
+				  Dependencies
+===============================================================================
+
+FLTK
+Boost
+Lua (compiled locally)
+
+===============================================================================
+				  Instructions
+===============================================================================
+
 If you are a Windows user and want to compile Retro Graphics Toolkit you will
 need Mingw or Mingw-w64.
 
@@ -68,11 +80,14 @@ into the Retro Graphics Toolkit project folder and build it using either
 ./configure if you are on Windows or if you are cross compiling you need to do
 something like this:
 
-RANLIB=~/mingw/bin/i686-w64-mingw32-gcc-ranlib NM=~/mingw/bin/i686-w64-mingw32-gcc-nm AR=~/mingw/bin/i686-w64-mingw32-gcc-ar CFLAGS="-O2 -flto=16 -fuse-linker-plugin -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=i686-w64-mingw32 --build=x86_64-unknown-linux-gnu ; make -j16
+RANLIB=~/mingw/bin/i686-w64-mingw32-gcc-ranlib NM=~/mingw/bin/i686-w64-mingw32-gcc-nm AR=~/mingw/bin/i686-w64-mingw32-gcc-ar CFLAGS="-Os -s -flto=16 -fuse-linker-plugin -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=i686-w64-mingw32 --build=x86_64-unknown-linux-gnu ; make -j16
 
 Regardless of how ./configure is ran you will just need to run make and you are
 done building FLTK.
 
+You will also need to put Boost in directory you cloned this repository in.
+After extracting the archive rename boost_version_number to boost. Boost is
+needed for mdcomp.
 
 Optional step to reduce binary size: Run these two commands in the lib
 directory where GCC was compiled. Do likewise in the folder called

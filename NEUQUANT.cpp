@@ -88,8 +88,8 @@ static void initnet(uint8_t * thepic, int len, int sample, uint16_t maxcol) {
 	maxnetpos = netsize - 1;
 	initrad = netsize >> 3;
 	initradius = initrad * radiusbias;
-	register int i;
-	register int *p;
+	int i;
+	int *p;
 
 	thepicture = thepic;
 	lengthcount = len;
@@ -142,8 +142,8 @@ static void writecolourmap(uint8_t user_pal[3][256]) {
    ------------------------------------------------------------------------------- */
 
 static void inxbuild(void) {
-	register int i, j, smallpos, smallval;
-	register int *p, *q;
+	int i, j, smallpos, smallval;
+	int *p, *q;
 	int previouscol, startpos;
 
 	previouscol = 0;
@@ -203,8 +203,8 @@ static void inxbuild(void) {
    ---------------------------------------------------------------------------- */
 
 static int inxsearch(int b, int g, int r) {
-	register int i, j, dist, a, bestd;
-	register int *p;
+	int i, j, dist, a, bestd;
+	int *p;
 	int best;
 
 	bestd = 1000;		/* biggest possible dist is 256*3 */
@@ -289,9 +289,9 @@ static int contest(int b, int g, int r) {
 	/* for frequently chosen neurons, freq[i] is high and bias[i] is negative */
 	/* bias[i] = gamma*((1/netsize)-freq[i]) */
 
-	register int i, dist, a, biasdist, betafreq;
+	int i, dist, a, biasdist, betafreq;
 	int bestpos, bestbiaspos, bestd, bestbiasd;
-	register int *p, *f, *n;
+	int *p, *f, *n;
 
 	bestd = ~(((int) 1) << 31);
 	bestbiasd = bestd;
@@ -345,7 +345,7 @@ static int contest(int b, int g, int r) {
 
 static void altersingle(int alpha, int i, int b, int g, int r)
 {
-	register int *n;
+	int *n;
 
 	n = network[i];				/* alter hit neuron */
 	*n -= (alpha * (*n - b)) / initalpha;
@@ -361,8 +361,8 @@ static void altersingle(int alpha, int i, int b, int g, int r)
 
 static void alterneigh(int rad, int i, int b, int g, int r)
 {
-	register int j, k, lo, hi, a;
-	register int *p, *q;
+	int j, k, lo, hi, a;
+	int *p, *q;
 
 	lo = i - rad;
 
@@ -406,9 +406,9 @@ static void alterneigh(int rad, int i, int b, int g, int r)
    ------------------ */
 
 static void learn(void) {
-	register int i, j, b, g, r;
+	int i, j, b, g, r;
 	int radius, rad, alpha, step, delta, samplepixels;
-	register unsigned char *p;
+	unsigned char *p;
 	unsigned char *lim;
 
 	alphadec = 30 + ((samplefac - 1) / 3);

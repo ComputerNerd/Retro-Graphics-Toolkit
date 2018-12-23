@@ -213,8 +213,6 @@ void Project::setTMS9918subSys(enum TMS9918SubSys sys) {
 	subSystem &= ~3;
 	subSystem |= sys;
 
-	if (oldVal != sys) {
-		palBar.sysCache = UNKNOWN_SYSTEM;
-		palBar.setSys(false);
-	}
+	if (oldVal != sys)
+		palBar.setSys(false, true);
 }

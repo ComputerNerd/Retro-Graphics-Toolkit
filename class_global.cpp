@@ -156,9 +156,10 @@ void editor::updateSpriteSliders(uint32_t prj) {
 		spritesize[0]->value(projects[prj].ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].w);
 		spritesize[1]->value(projects[prj].ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].h);
 
-		if (fixedRow < 0)
+		if (fixedRow < 0) {
+			spritepalrow->show();
 			spritepalrow->value(projects[prj].ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].palrow);
-		else
+		} else
 			spritepalrow->hide();
 
 		char tmp[16];

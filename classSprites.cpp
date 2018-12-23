@@ -32,16 +32,6 @@
 #include "errorMsg.h"
 const char*spriteDefName = "DefaultGroupLabel";
 const char*spritesName = "AllGroupsLabel";
-#if _WIN32
-static inline uint16_t swap_word(uint16_t w) {
-	uint8_t a, b;
-	a = w & 255;
-	b = w >> 8;
-	return (a << 8) | b;
-}
-#define be16toh swap_word
-#define htobe16 swap_word
-#endif
 sprites::sprites(Project*prj) {
 	this->prj = prj;
 	amt = 1;
@@ -947,7 +937,7 @@ void sprites::mappingItem(void*in, uint32_t id, gameType_t game) {
 		} else
 			return;
 	} else {
-		/* From the sonic Retro Wiki
+		/* From the Sonic Retro Wiki
 		 * First word:
 		 * High byte is the relative signed top edge position of the sprite from the center of the object.
 		 * Low byte is the size of the sprite, in tiles minus one.
@@ -963,7 +953,9 @@ void sprites::mappingItem(void*in, uint32_t id, gameType_t game) {
 		 * AAA AAAA AAAA is the actual tile index, i.e. the VRAM offset of the pattern divided by $20 (or bit-shifted right by 5).
 		 * Fourth word: This is the relative signed left edge position of the sprite from the center of the object. */
 		uint16_t*buf = (uint16_t*)in;
-		unsigned amtgroup = be16toh(*buf++);
+		uint16_t tmp = *buf++;
+		boost::endian::conditional_reverse_inplace<boost::endian::order::big, boost::endian::order::native>(tmp);
+		unsigned amtgroup = tmp;
 		setAmtingroup(id, amtgroup);
 
 		for (unsigned i = 0; i < amtgroup; ++i) {
@@ -973,7 +965,8 @@ void sprites::mappingItem(void*in, uint32_t id, gameType_t game) {
 			groups[id].list[i].w = ((*bufu >> 2) & 3) + 1;
 			groups[id].list[i].h = ((*bufu++) & 3) + 1;
 			buf = (uint16_t*)bufu;
-			uint16_t tmp = be16toh(*buf++);
+			tmp = *buf++;
+			boost::endian::conditional_reverse_inplace<boost::endian::order::big, boost::endian::order::native>(tmp);
 
 			if (game == tSonic2)
 				++buf;//Skip two player data
@@ -1054,7 +1047,9 @@ void sprites::DplcItem(void*in, uint32_t which, gameType_t game) {
 	} else {
 		//The format is pretty much the same as sonic 1 except amount is now a word instead of a byte
 		uint16_t*buf = (uint16_t*)in;
-		unsigned amtd = be16toh(*buf++);
+		uint16_t tmp = *buf++;
+		boost::endian::conditional_reverse_inplace<boost::endian::order::big, boost::endian::order::native>(tmp);
+		unsigned amtd = tmp;
 		handleDPLC(which, buf, amtd);
 	}
 }
@@ -1411,10 +1406,10 @@ void sprites::importDPLC(gameType_t game) {
 			uint16_t*ptr = (uint16_t*)buf;
 			unsigned amtd;
 
-			for (uint16_t*pt = ptr; !(amtd = be16toh(*pt++) / 2););
+			for (uint16_t*pt = ptr; !(amtd = boost::endian::big_to_native(*pt++) / 2););
 
 			for (unsigned i = 0; i < amtd; ++i) {
-				unsigned off = be16toh(ptr[i]) / 2;
+				unsigned off = boost::endian::big_to_native(ptr[i]) / 2;
 				DplcItem(ptr + off, i, game);
 			}
 		}
@@ -1525,12 +1520,12 @@ void sprites::importMapping(gameType_t game) {
 			uint16_t*ptr = (uint16_t*)buf;
 			unsigned off;
 
-			for (uint16_t*pt = ptr; !(off = be16toh(*pt++) / 2););
+			for (uint16_t*pt = ptr; !(off = boost::endian::big_to_native(*pt++) / 2););
 
 			setAmt(off);//First nonzero pointer can be used to find amount just divide by two
 
 			for (unsigned i = 0; i < amt; ++i) {
-				off = be16toh(ptr[i]) / 2;
+				off = boost::endian::big_to_native(ptr[i]) / 2;
 				mappingItem(ptr + off, i, game);
 				groups[i].name.assign(fl_filename_name(the_file.c_str()));
 				char tmp[16];
@@ -1968,44 +1963,55 @@ void sprites::delingroup(uint32_t id, uint32_t subid) {
 void sprites::enforceMax(unsigned wmax, unsigned hmax) {
 	for (unsigned j = 0; j < amt; ++j) {
 		unsigned told = groups[j].list.size();
+		struct spriteGroup& group = groups[j];
 
 		for (unsigned i = 0; i < told; ++i) {
-			if ((groups[j].list[i].w > wmax) || (groups[j].list[i].h > hmax)) {
+			struct sprite& gli = group.list[i]; // gli = Group List[I].
+
+			if ((gli.w > wmax) || (gli.h > hmax)) {
 				//Divide it up into more sprites
-				unsigned w = groups[j].list[i].w, h = groups[j].list[i].h;
-				unsigned snew = ((w + (wmax / 2)) / wmax) * ((h + (hmax / 2)) / hmax) - 1, start = groups[j].list.size(), st = groups[j].list[i].starttile, la = groups[j].list[i].loadat;
+				unsigned w = gli.w;
+				unsigned h = gli.h;
+				unsigned nSpritesW = ((w + (wmax - 1)) / wmax);
+				unsigned nSpritesH = ((h + (hmax - 1)) / hmax);
+				unsigned snew = nSpritesW * nSpritesH - 1;
+				unsigned start = group.list.size();
+				unsigned st = gli.starttile;
+				unsigned la = gli.loadat;
 
-				if (groups[j].list[i].w > wmax)
-					groups[j].list[i].w = wmax;
+				if (gli.w > wmax)
+					gli.w = wmax;
 
-				if (groups[j].list[i].h > hmax)
-					groups[j].list[i].h = hmax;
+				if (gli.h > hmax)
+					gli.h = hmax;
 
-				st += groups[j].list[i].h * groups[j].list[i].w;
-				la += groups[j].list[i].h * groups[j].list[i].w;
+				st += gli.h * gli.w;
+				la += gli.h * gli.w;
 				setAmtingroup(j, start + snew);
 
-				for (unsigned x = 0, a = start; x < (w + (wmax / 2)) / wmax; ++x) {
-					for (unsigned y = 0; y < (h + (hmax / 2)) / hmax; ++y) {
-						if ((!x) && (!y))
+				for (unsigned x = 0, a = start; x < nSpritesW; ++x) {
+					struct sprite& gla = group.list[a];
+
+					for (unsigned y = 0; y < nSpritesH; ++y) {
+						if ((!x) && (!y)) // The original sprite is already corrected.
 							continue;
 
 						if (x == (w / wmax))
-							groups[j].list[a].w = w % wmax;
+							gla.w = w % wmax;
 						else
-							groups[j].list[a].w = wmax;
+							gla.w = wmax;
 
 						if (y == (h / hmax))
-							groups[j].list[a].h = h % hmax;
+							gla.h = h % hmax;
 						else
-							groups[j].list[a].h = hmax;
+							gla.h = hmax;
 
-						groups[j].list[a].offx = groups[j].list[i].offx + (x * wmax * 8);
-						groups[j].list[a].offy = groups[j].list[i].offy + (y * hmax * 8);
-						groups[j].list[a].starttile = st;
-						groups[j].list[a].loadat = la;
-						st += groups[j].list[a].w * groups[j].list[a].h;
-						la += groups[j].list[a].w * groups[j].list[a].h;
+						gla.offx = gli.offx + (x * wmax * 8);
+						gla.offy = gli.offy + (y * hmax * 8);
+						gla.starttile = st;
+						gla.loadat = la;
+						st += gla.w * gla.h;
+						la += gla.w * gla.h;
 						++a;
 					}
 				}

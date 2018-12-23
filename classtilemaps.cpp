@@ -57,3 +57,8 @@ void tilemaps::swapTile(unsigned oldTile, unsigned newTile) {
 	for (unsigned i = 0; i < maps.size(); ++i)
 		maps[i].swapTile(oldTile, newTile);
 }
+
+void tilemaps::fixPaletteRows(unsigned num, unsigned dom) {
+	for (unsigned i = 0; i < maps.size(); ++i)
+		maps[i].fixPaletteRows(num, dom);
+}

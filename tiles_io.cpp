@@ -32,7 +32,7 @@ void save_tiles(Fl_Widget*, void*) {
 	fileType_t type = askSaveType();
 	int clipboard;
 
-	if (type) {
+	if (type != fileType_t::tBinary) {
 		clipboard = clipboardAsk();
 
 		if (clipboard == 2)
@@ -81,10 +81,8 @@ void load_tiles(Fl_Widget*, void*o) {
 	}
 
 	uint8_t defaultRow = row >= 0 ? row : abs(row) - 1;
-	int compression = compressionAsk();
 	bool alphaZero = fl_ask("Set color #0 to alpha 0 instead of 255") ? true : false;
-	void*output;
-	filereader f = filereader("Load tiles");
+	filereader f = filereader(boost::endian::order::native, 1, "Load tiles");
 
 	if (f.amt == 0)
 		return;
@@ -94,13 +92,9 @@ void load_tiles(Fl_Widget*, void*o) {
 	unsigned truecolor_multiplier;
 	truecolor_multiplier = 256 / currentProject->tileC->tileSize;
 
-	if (compression)
-		output = decodeTypeRam((uint8_t*)f.dat[idx], f.lens[idx], file_size, compression);
-	else {
-		if (file_size % currentProject->tileC->tileSize) {
-			fl_alert("Error: This is not a valid tile file each tile is %d bytes and this file is not a multiple of %d so it is not a valid tile file", currentProject->tileC->tileSize, currentProject->tileC->tileSize);
-			return;
-		}
+	if (file_size % currentProject->tileC->tileSize) {
+		fl_alert("Error: This is not a valid tile file each tile is %d bytes and this file is not a multiple of %d so it is not a valid tile file", currentProject->tileC->tileSize, currentProject->tileC->tileSize);
+		return;
 	}
 
 	uint32_t offset_tiles;
@@ -138,11 +132,7 @@ void load_tiles(Fl_Widget*, void*o) {
 	} else
 		currentProject->tileC->tDat.resize(offset_tiles_bytes + file_size);
 
-	if (compression) {
-		memcpy(currentProject->tileC->tDat.data() + offset_tiles_bytes, output, file_size);
-		free(output);
-	} else
-		memcpy(currentProject->tileC->tDat.data() + offset_tiles_bytes, f.dat[idx], file_size);
+	memcpy(currentProject->tileC->tDat.data() + offset_tiles_bytes, f.dat[idx], file_size);
 
 	if (currentProject->getTileType() != PLANAR_TILE)
 		currentProject->tileC->toPlanar(currentProject->getTileType(), offset_tiles, offset_tiles + (file_size / currentProject->tileC->tileSize));
@@ -195,7 +185,7 @@ void load_truecolor_tiles(Fl_Widget*, void*) {
 	}
 
 	//start by loading the file
-	filereader f = filereader("Load truecolor tiles");
+	filereader f = filereader(boost::endian::order::native, 4, "Load truecolor tiles");
 
 	if (!f.amt)
 		return;

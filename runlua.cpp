@@ -814,11 +814,11 @@ static const struct keyPairi rgtConsts[] = {
 	{"levelTab", levelEditor},
 	{"settingsTab", settingsTab},
 	{"luaTab", luaTab},
-	{"tCancel", tCancel},
-	{"tBinary", tBinary},
-	{"tCheader", tCheader},
-	{"tASM", tASM},
-	{"tBEX", tBEX}
+	{"tCancel", (int)fileType_t::tCancel},
+	{"tBinary", (int)fileType_t::tBinary},
+	{"tCheader", (int)fileType_t::tCheader},
+	{"tASM", (int)fileType_t::tASM},
+	{"tBEX", (int)fileType_t::tBEX}
 };
 static int lua_tabs_append(lua_State*L) {
 	int rx, ry, rw, rh;
@@ -1040,10 +1040,6 @@ lua_State*createLuaState(void) {
 		for (unsigned x = 0; x < arLen(rgtConsts); ++x)
 			mkKeyint(L, rgtConsts[x].key, rgtConsts[x].pair);
 
-		mkKeyunsigned(L, "Binary", tBinary);
-		mkKeyunsigned(L, "Cheader", tCheader);
-		mkKeyunsigned(L, "ASM", tASM);
-		mkKeyunsigned(L, "BEX", tBEX);
 		lua_setglobal(L, "rgt");
 
 		luaL_newlib(L, lua_kensAPI);

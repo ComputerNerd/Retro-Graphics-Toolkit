@@ -12,7 +12,7 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 
 #include <fstream>
@@ -81,7 +81,7 @@ void*decodeType(const char * filename, size_t &filesize, int type) {
 	output.copy(Dat, filesize);
 	return Dat;
 }
-void*decodeTypeRam(uint8_t*dat, size_t inputSize, size_t &filesize, int type) {
+void*decodeTypeRam(const uint8_t*dat, size_t inputSize, size_t &filesize, int type) {
 	std::stringstream ss, outDecomp;
 
 	for (size_t i = 0; i < inputSize; ++i)
@@ -125,9 +125,9 @@ void*decodeTypeRam(uint8_t*dat, size_t inputSize, size_t &filesize, int type) {
 	filesize = outDecomp.str().length();
 	printf("Decompressed to %d bytes\n", filesize);
 	std::string out = outDecomp.str();
-	dat = (uint8_t*)malloc(filesize);
-	out.copy((char*)dat, filesize);
-	return (void*)dat;
+	void* dst = malloc(filesize);
+	out.copy((char*)dst, filesize);
+	return dst;
 }
 void*encodeType(void*in, size_t n, size_t&outSize, int type) {
 	std::string input;

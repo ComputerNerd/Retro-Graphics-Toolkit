@@ -12,8 +12,10 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
+#include <boost/endian/conversion.hpp>
+
 #include <vector>
 #include <string>
 #include <stdint.h>
@@ -22,7 +24,7 @@ struct filereader {
 	std::vector<size_t>lens;
 	std::vector<void*>dat;
 	std::vector<std::string>names;
-	filereader(const char*title = nullptr, bool relptr = false, unsigned offbits = 16, bool be = true);
+	filereader(boost::endian::order endian, unsigned bytesPerElement, const char*title = nullptr, bool relptr = false, unsigned offbits = 16, bool be = true);
 	unsigned selDat(void);
 	~filereader();
 };

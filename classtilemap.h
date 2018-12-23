@@ -17,6 +17,7 @@
 #pragma once
 #define TileMapSizePerEntry 4
 
+#include <boost/endian/conversion.hpp>
 #include <string>
 
 #include <FL/Fl_Progress.H>
@@ -25,6 +26,7 @@
 #include "filemisc.h"
 class tileMap {
 private:
+	boost::endian::order getEndianBySystem();
 public:
 	tileMap(struct Project*prj)noexcept;
 	tileMap(uint32_t w, uint32_t h, Project*prj)noexcept;
@@ -81,4 +83,5 @@ public:
 	void findFirst(int&x, int&y, unsigned tile)const;
 	void pickExtAttrs(void);
 	void removeBlock(unsigned id);
+	void fixPaletteRows(unsigned num, unsigned dom);
 };

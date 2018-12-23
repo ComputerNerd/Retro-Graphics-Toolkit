@@ -51,14 +51,11 @@ void paletteBar::addTab(unsigned tab, bool all, bool tiny, bool alt) {
 	}
 }
 unsigned paletteBar::getEntry(unsigned tab)const {
-	if (alt[tab] && currentProject->pal->haveAlt)
-		return currentProject->pal->perRowalt * selRow[tab] + selBox[tab] + currentProject->pal->colorCnt;
-	else
-		return currentProject->pal->perRow * selRow[tab] + selBox[tab];
+	return currentProject->pal->getIndexByRow(selRow[tab], selBox[tab], alt[tab] && currentProject->pal->haveAlt);
 }
 
-void paletteBar::setSys(bool upSlide) {
-	if (sysCache != currentProject->gameSystem) {
+void paletteBar::setSys(bool upSlide, bool force) {
+	if (force || sysCache != currentProject->gameSystem) {
 		currentProject->pal->setVars(currentProject->gameSystem);
 
 		if (window) {
@@ -200,10 +197,14 @@ void paletteBar::updateSlider(unsigned tab) {
 
 		switch (currentProject->gameSystem) {
 			case segaGenesis:
-				slide[tab][2]->value(currentProject->pal->palDat[idx * 2] >> 1);
-				slide[tab][1]->value(currentProject->pal->palDat[1 + idx * 2] >> 5);
-				slide[tab][0]->value((currentProject->pal->palDat[1 + idx * 2] & 14) >> 1);
-				break;
+			{
+				const uint16_t*palDatPtr = (uint16_t*)currentProject->pal->palDat + idx;
+				const uint16_t palDat = *palDatPtr;
+				slide[tab][2]->value((palDat >> 9) & 7);
+				slide[tab][1]->value((palDat >> 5) & 7);
+				slide[tab][0]->value((palDat >> 1) & 7);
+			}
+			break;
 
 			case NES:
 				slide[tab][0]->value(currentProject->pal->palDat[idx] & 15);
@@ -217,10 +218,12 @@ void paletteBar::updateSlider(unsigned tab) {
 				break;
 
 			case gameGear:
-			{	uint16_t*palDat = (uint16_t*)currentProject->pal->palDat + idx;
-				slide[tab][0]->value(*palDat & 15);
-				slide[tab][1]->value((*palDat >> 4) & 15);
-				slide[tab][2]->value((*palDat >> 8) & 15);
+			{
+				const uint16_t*palDatPtr = (uint16_t*)currentProject->pal->palDat + idx;
+				const uint16_t palDat = *palDatPtr;
+				slide[tab][0]->value(palDat & 15);
+				slide[tab][1]->value((palDat >> 4) & 15);
+				slide[tab][2]->value((palDat >> 8) & 15);
 			}
 			break;
 
@@ -237,6 +240,8 @@ void paletteBar::updateSlider(unsigned tab) {
 void paletteBar::drawBoxes(unsigned tab) {
 	unsigned box_size = window->pal_size->value();
 	unsigned x, y, a;
+	const uint8_t*rgbPtr = currentProject->pal->rgbPal;
+
 	a = currentProject->pal->perRow * 3;
 
 	if (all[tab]) {
@@ -244,7 +249,6 @@ void paletteBar::drawBoxes(unsigned tab) {
 		loc_x = (float)((float)window->w() / 800.f) * (float)palette_preview_box_x;
 		loc_y = (float)((float)window->h() / 600.f) * (float)palette_preview_box_y;
 		fl_rectf(loc_x, loc_y, box_size * 4, box_size * 4, currentProject->pal->rgbPal[(selBox[tab] * 3) + (selRow[tab]*a)], currentProject->pal->rgbPal[(selBox[tab] * 3) + (selRow[tab]*a) + 1], currentProject->pal->rgbPal[(selBox[tab] * 3) + (selRow[tab]*a) + 2]); //this will show larger preview of current color
-		uint8_t*rgbPtr = currentProject->pal->rgbPal;
 
 		if (alt[tab] && (currentProject->gameSystem == NES))
 			rgbPtr += currentProject->pal->colorCnt * 3;
@@ -267,7 +271,7 @@ void paletteBar::drawBoxes(unsigned tab) {
 
 		fl_draw_box(FL_EMBOSSED_FRAME, selBox[tab]*box_size + ox[tab], selRow[tab]*box_size + oy[tab], box_size, box_size, 0);
 	} else {
-		uint8_t*rgbPtr = currentProject->pal->rgbPal + (a * selRow[tab]);
+		rgbPtr += a * selRow[tab];
 
 		if (alt[tab] && (currentProject->gameSystem == NES))
 			rgbPtr += currentProject->pal->colorCnt * 3;

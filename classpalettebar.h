@@ -20,20 +20,20 @@
 
 class paletteBar {
 private:
+	gameSystemEnum sysCache;
 	unsigned ox[TABS_WITH_PALETTE], oy[TABS_WITH_PALETTE];
 	unsigned baseOffx[TABS_WITH_PALETTE], baseOffy[TABS_WITH_PALETTE];
 	bool tiny[TABS_WITH_PALETTE];
 	bool all[TABS_WITH_PALETTE];
 	bool alt[TABS_WITH_PALETTE];
 public:
-	gameSystemEnum sysCache;
 	Fl_Slider*slide[TABS_WITH_PALETTE][3];
 	unsigned selRow[TABS_WITH_PALETTE];
 	unsigned selBox[TABS_WITH_PALETTE];
 	unsigned selBoxAlt[TABS_WITH_PALETTE];
 	unsigned getEntry(unsigned tab)const;
 	void addTab(unsigned tab, bool all = false, bool tiny = false, bool alt = false);
-	void setSys(bool upSlide = true);
+	void setSys(bool upSlide = true, bool force = false);
 	void updateSize(unsigned tab);
 	void updateSlider(unsigned tab);
 	void updateSliders(void) {

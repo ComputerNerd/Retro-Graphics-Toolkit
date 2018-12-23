@@ -14,10 +14,14 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
-#include <FL/fl_ask.H>
+
 
 #include <cstdio>
 #include <stdint.h>
+#include <stdexcept>
+
+#include <FL/fl_ask.H>
+#include "errorMsg.h"
 #include "gui.h"
 #include "filemisc.h"
 
@@ -45,17 +49,17 @@ int clipboardAsk(void) {
 fileType_t askSaveType(bool save, fileType_t def) {
 	return (fileType_t)MenuPopup(save ? "How would you like the file saved?" : "What type of file is this?", "Set if the file is saved as binary, C header, bex, or asm", 4, (unsigned)def, "Binary", "C header", "ASM", "BEX");
 }
-bool saveBinAsText(void * ptr, size_t sizeBin, FILE * fp, fileType_t type, const char*comment, const char*label, int bits) {
+bool saveBinAsText(const void * ptr, size_t sizeBin, FILE * fp, fileType_t type, const char*comment, const char*label, int bits, boost::endian::order endian) {
 	/*!
-	This function saves binary data as plain text useful for c headers each byte is separated by a comma
+	This function saves binary data as plain text useful for C headers each byte is separated by a comma
 	To use the clipboard specify file as NULL
 	Returns True on success false on error
 	Type can be:
-	1 - c header
-	2 - asm
-	3 - bex
 	*/
-	bits = 8;
+
+	if (type == fileType_t::tBinary && !fp)
+		throw std::invalid_argument("type cannot be tBinary when clipboard mode is enabled.");
+
 	uint8_t * dat8 = (uint8_t *)ptr;
 	uint16_t * dat16 = (uint16_t *)ptr;
 	uint32_t * dat32 = (uint32_t *)ptr;
@@ -87,27 +91,32 @@ bool saveBinAsText(void * ptr, size_t sizeBin, FILE * fp, fileType_t type, const
 			break;
 	}
 
-	if (comment) {
+	if (comment && type != fileType_t::tBinary) {
 		switch (type) {
-			case tCheader:
+			case fileType_t::tCheader:
 				temp.assign("// ");
 				break;
 
-			case tASM:
+			case fileType_t::tASM:
 				temp.assign("; ");
 				break;
 
-			case tBEX:
+			case fileType_t::tBEX:
 				temp.assign("' ");
 				break;
+
+			default:
+				show_default_error
 		}
 
 		temp.append(comment);
 		temp.push_back('\n');
 	}
 
+	char hexStr[4];
+
 	switch (type) {
-		case tCheader:
+		case fileType_t::tCheader:
 			temp.append("#include <stdint.h>\n");
 			temp.append("const uint");
 			snprintf(tmp, 16, "%d", bits);
@@ -115,12 +124,14 @@ bool saveBinAsText(void * ptr, size_t sizeBin, FILE * fp, fileType_t type, const
 			temp.append("_t ");
 			temp.append(label);
 			temp.append("[]={");
+			strncpy(hexStr, "0x", sizeof(hexStr));
 			break;
 
-		case tASM:
-		case tBEX:
+		case fileType_t::tASM:
+		case fileType_t::tBEX:
 			temp.append(label);
 			temp.push_back(':');
+			strncpy(hexStr, "$", sizeof(hexStr));
 			break;
 	}
 
@@ -129,7 +140,7 @@ bool saveBinAsText(void * ptr, size_t sizeBin, FILE * fp, fileType_t type, const
 			temp.push_back('\n');
 
 			switch (type) {
-				case 2:
+				case fileType_t::tASM:
 					switch (bits) {
 						case 8:
 							temp.append("\tdc.b ");
@@ -146,7 +157,7 @@ bool saveBinAsText(void * ptr, size_t sizeBin, FILE * fp, fileType_t type, const
 
 					break;
 
-				case 3:
+				case fileType_t::tBEX:
 					switch (bits) {
 						case 8:
 							temp.append("\tdata ");
@@ -165,7 +176,7 @@ bool saveBinAsText(void * ptr, size_t sizeBin, FILE * fp, fileType_t type, const
 			}
 		}
 
-		if (((x & mask) == mask) && (type != 1))
+		if (((x & mask) == mask) && (type != fileType_t::tCheader))
 			endc = 0;
 		else
 			endc = ',';
@@ -175,16 +186,50 @@ bool saveBinAsText(void * ptr, size_t sizeBin, FILE * fp, fileType_t type, const
 
 		switch (bits) {
 			case 8:
-				snprintf(tmp, 16, "%u", *dat8++);
-				break;
+			{
+				uint8_t datTmp = *dat8++;
+
+				if (type == fileType_t::tBinary)
+					fwrite(&datTmp, sizeof(uint8_t), 1, fp);
+				else
+					snprintf(tmp, sizeof(tmp), "%s%X", hexStr, datTmp);
+			}
+			break;
 
 			case 16:
-				snprintf(tmp, 16, "%u", *dat16++);
-				break;
+			{
+				uint16_t datTmp = *dat16++;
+
+				if (endian == boost::endian::order::little)
+					boost::endian::conditional_reverse_inplace<boost::endian::order::native, boost::endian::order::little>(datTmp);
+				else if (endian == boost::endian::order::big)
+					boost::endian::conditional_reverse_inplace<boost::endian::order::native, boost::endian::order::big>(datTmp);
+
+				if (type == fileType_t::tBinary)
+					fwrite(&datTmp, sizeof(uint16_t), 1, fp);
+				else
+					snprintf(tmp, sizeof(tmp), "%s%X", hexStr, datTmp);
+			}
+			break;
 
 			case 32:
-				snprintf(tmp, 16, "%u", *dat32++);
-				break;
+			{
+				uint32_t datTmp = *dat32++;
+
+				if (endian == boost::endian::order::little)
+					boost::endian::conditional_reverse_inplace<boost::endian::order::native, boost::endian::order::little>(datTmp);
+				else if (endian == boost::endian::order::big)
+					boost::endian::conditional_reverse_inplace<boost::endian::order::native, boost::endian::order::big>(datTmp);
+
+				if (type == fileType_t::tBinary)
+					fwrite(&datTmp, sizeof(uint32_t), 1, fp);
+				else
+					snprintf(tmp, sizeof(tmp), "%s%X", hexStr, datTmp);
+			}
+			break;
+
+			default:
+				show_default_error
 		}
 
 		temp.append(tmp);
@@ -193,13 +238,15 @@ bool saveBinAsText(void * ptr, size_t sizeBin, FILE * fp, fileType_t type, const
 			temp.push_back(endc);
 	}
 
-	if (type == 1)
+	if (type == fileType_t::tCheader)
 		temp.append("};\n");
 
-	if (fp)
-		fputs(temp.c_str(), fp);
-	else
-		Fl::copy(temp.c_str(), temp.length(), 1);
+	if (type != fileType_t::tBinary) {
+		if (fp)
+			fputs(temp.c_str(), fp);
+		else
+			Fl::copy(temp.c_str(), temp.length(), 1);
+	}
 
 	return true;
 }

@@ -130,7 +130,7 @@ static int project__get_(lua_State *L) {
 
 static int project___tostring(lua_State *L) {
 	getProjectIDX
-	lua_pushfstring(L, "project table: %p", projects[projectIDX]);
+	lua_pushfstring(L, "project table: %p", &projects[projectIDX]);
 	return 1;
 }
 

@@ -76,7 +76,7 @@ void save_palette(Fl_Widget*, void*) {
 	fileType_t type = askSaveType();
 	int clipboard;
 
-	if (type) {
+	if (type != fileType_t::tBinary) {
 		clipboard = clipboardAsk();
 
 		if (clipboard == 2)
@@ -105,100 +105,7 @@ void update_palette(Fl_Widget* o, void* v) {
 		pushPaletteEntry(selectedEntry);
 	}
 
-	switch (currentProject->gameSystem) {
-		case segaGenesis:
-		{	unsigned temp_var = 0;
-			unsigned sliderValue = (unsigned)s->value();
-
-			switch ((uintptr_t)v) {
-				case 0://red
-					temp_var = currentProject->pal->palDat[(selectedEntry * 2) + 1]; //get the green value we need to save it for later
-					temp_var &= 0xF0;
-					temp_var |= sliderValue << 1;
-					currentProject->pal->palDat[(selectedEntry * 2) + 1] = temp_var;
-					//now convert the new red value
-					currentProject->pal->rgbPal[selectedEntry * 3] = palTab[sliderValue + palTypeGen];
-					break;
-
-				case 1://green
-					//this is very similar to what I just did above
-					temp_var = currentProject->pal->palDat[(selectedEntry * 2) + 1];
-					temp_var &= 15; //get only the red value
-					//now OR the new green value to it
-					temp_var |= sliderValue << 5;
-					currentProject->pal->palDat[(selectedEntry * 2) + 1] = temp_var;
-					//now convert the new green value
-					currentProject->pal->rgbPal[(selectedEntry * 3) + 1] = palTab[sliderValue + palTypeGen];
-					break;
-
-				case 2:
-					//blue is the most trivial conversion to do
-					currentProject->pal->palDat[selectedEntry * 2] = sliderValue << 1;
-					currentProject->pal->rgbPal[(selectedEntry * 3) + 2] = palTab[sliderValue + palTypeGen];
-					break;
-			}
-		}
-		break;
-
-		case NES:
-		{
-			unsigned pal;
-			uint32_t rgb_out;
-
-			switch ((uintptr_t)v) {
-				/*
-				   76543210
-				   ||||||||
-				   ||||++++- Hue (phase)
-				   ||++----- Value (voltage)
-				   ++------- Unimplemented, reads back as 0
-				   */
-				case 0://Hue
-					//first read out value
-					pal = currentProject->pal->palDat[selectedEntry];
-					pal &= 48;
-					pal |= (unsigned)s->value();
-					break;
-
-				case 1://Value
-					pal = currentProject->pal->palDat[selectedEntry];
-					pal &= 15;
-					pal |= ((unsigned)s->value()) << 4;
-					break;
-			}
-
-			currentProject->pal->palDat[selectedEntry] = pal;
-			rgb_out = nesPalToRgb(pal);
-			currentProject->pal->rgbPal[selectedEntry * 3 + 2] = rgb_out & 255; //blue
-			currentProject->pal->rgbPal[selectedEntry * 3 + 1] = (rgb_out >> 8) & 255; //green
-			currentProject->pal->rgbPal[selectedEntry * 3] = (rgb_out >> 16) & 255; //red
-		}
-		break;
-
-		case masterSystem:
-		{
-			unsigned chan = (uintptr_t)v;
-			unsigned shift = chan * 2;
-			currentProject->pal->palDat[selectedEntry] &= ~(3 << shift);
-			currentProject->pal->palDat[selectedEntry] |= (unsigned)s->value() << shift;
-			currentProject->pal->rgbPal[selectedEntry * 3 + chan] = palTabMasterSystem[(currentProject->pal->palDat[selectedEntry] >> shift) & 3];
-		}
-		break;
-
-		case gameGear:
-		{
-			unsigned chan = (uintptr_t)v;
-			unsigned shift = chan * 4;
-			uint16_t*pal = (uint16_t*)currentProject->pal->palDat + selectedEntry;
-			*pal &= ~15 << shift;
-			*pal |= (unsigned)s->value() << shift;
-			currentProject->pal->rgbPal[selectedEntry * 3 + chan] = palTabGameGear[(*pal >> shift) & 15];
-		}
-		break;
-
-		default:
-			show_default_error
-	}
+	currentProject->pal->changeValueRaw((unsigned)s->value(), (unsigned)(uintptr_t)v, selectedEntry);
 
 	if (mode_editor == tile_edit)
 		currentProject->tileC->truecolor_to_tile(palBar.selRow[1], currentProject->tileC->current_tile, false); //update tile
@@ -222,11 +129,15 @@ void loadPalette(Fl_Widget*, void*) {
 		return;
 
 	offset = atoi(inputTemp);
-	size_t palSize = currentProject->pal->colorCnt + currentProject->pal->colorCntalt;
+	size_t palSize = currentProject->pal->totalColors();
 	palSize -= offset;
 	palSize *= currentProject->pal->esize;
 	offset *= currentProject->pal->esize;
-	filereader f = filereader("Load palette");
+	filereader f = filereader(currentProject->pal->paletteDataEndian, currentProject->pal->esize, "Load palette");
+
+	if (f.amt < 1)
+		return;
+
 	unsigned i = f.selDat();
 	memcpy(currentProject->pal->palDat + offset, f.dat[i], std::min(f.lens[i], palSize));
 	//now convert each value to rgb

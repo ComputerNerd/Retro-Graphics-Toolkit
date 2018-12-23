@@ -33,4 +33,5 @@ public:
 	}
 	void changePrjPtr(Project*prj);
 	void swapTile(unsigned oldTile, unsigned newTile); // Used to make an update apply to all maps.
+	void fixPaletteRows(unsigned num, unsigned dom);
 };

@@ -278,17 +278,11 @@ void ChunkClass::scrollChunks(void) {
 	} else
 		window->chunkY->hide();
 }
-#if _WIN32
-static inline uint16_t swap_word(uint16_t w) {
-	uint8_t a, b;
-	a = w & 255;
-	b = w >> 8;
-	return (a << 8) | b;
-}
-#endif
+
 static void errorNum(void) {
-	fl_alert("Please enter a value greater than zero");
+	fl_alert("Please enter a value greater than zero.");
 }
+
 void ChunkClass::importSonic1(bool append) {
 	if (fl_ask("Custom width and height?")) {
 		char*ptr = (char*)fl_input("Width");
@@ -337,15 +331,11 @@ void ChunkClass::importSonic1(bool append) {
 	pushChunksAll();
 	uint16_t* dat;
 	size_t fileSize;
-	filereader f = filereader("Select a Sonic One chunk file");
+	filereader f = filereader(boost::endian::order::big, 2, "Select a Sonic One chunk file");
 	unsigned i = f.selDat();
 
-	if (compression)
-		dat = (uint16_t*)decodeTypeRam((uint8_t*)f.dat[i], f.lens[i], fileSize, compression);
-	else {
-		dat = (uint16_t*)f.dat[i];
-		fileSize = f.lens[i];
-	}
+	dat = (uint16_t*)f.dat[i];
+	fileSize = f.lens[i];
 
 	uint32_t off;
 
@@ -366,11 +356,6 @@ void ChunkClass::importSonic1(bool append) {
 	for (uint32_t l = 0; l < (fileSize / (wi * hi * 2)); ++l) {
 		for (uint32_t y = 0; y < hi; ++y) {
 			for (uint32_t x = 0; x < wi; ++x) {
-#if _WIN32
-				*datC = swap_word(*datC);
-#else
-				*datC = be16toh(*datC);
-#endif
 				cptr->block = *datC & 1023;
 				cptr->flags = (*datC >> 11) & 15;
 				++cptr;
@@ -378,9 +363,6 @@ void ChunkClass::importSonic1(bool append) {
 			}
 		}
 	}
-
-	if (compression)
-		free(dat);
 }
 void ChunkClass::exportSonic1(void)const {
 	FILE*fp;
@@ -388,7 +370,7 @@ void ChunkClass::exportSonic1(void)const {
 	fileType_t type = askSaveType();
 	size_t fileSize;
 
-	if (type) {
+	if (type != fileType_t::tBinary) {
 		clipboard = clipboardAsk();
 
 		if (clipboard == 2)
@@ -411,7 +393,7 @@ void ChunkClass::exportSonic1(void)const {
 
 		if (clipboard)
 			fp = 0;
-		else if (type)
+		else if (type != fileType_t::tBinary)
 			fp = fopen(the_file.c_str(), "w");
 		else
 			fp = fopen(the_file.c_str(), "wb");
@@ -431,30 +413,32 @@ void ChunkClass::exportSonic1(void)const {
 				}
 
 				temp |= (cptr->flags & 15) << 11;
-#if _WIN32
-				*ptmp++ = swap_word(temp); //mingw appears not to provide htobe16 function
-#else
-				*ptmp++ = htobe16(temp); //needs to be big endian
-#endif
+				*ptmp++ = temp;
 				++cptr;
 			}
 
 			if (compression) {
 				void*tmpold = tmp;
+				// The endian must be corrected before compressing.
+				uint16_t * ptr = (uint16_t*)tmp;
+
+				for (unsigned i = 0; i < wi * hi * amt; ++i) {
+					uint16_t tmp = *ptr;
+					boost::endian::conditional_reverse_inplace<boost::endian::order::native, boost::endian::order::big>(tmp);
+					*ptr++ = tmp;
+				}
+
 				tmp = (uint16_t*)encodeType(tmp, fileSize, fileSize, compression);
 				free(tmpold);
 			}
 
-			if (type) {
-				char temp[2048];
-				snprintf(temp, 2048, "Width: %d Height: %d Amount: %d %s", wi, hi, amt, typeToText(compression));
+			char temp[2048];
+			snprintf(temp, 2048, "Width: %d Height: %d Amount: %d %s", wi, hi, amt, typeToText(compression));
 
-				if (!saveBinAsText(tmp, fileSize, fp, type, temp, "mapDat", 8)) {
-					free(tmp);
-					return;
-				}
-			} else
-				fwrite(tmp, 1, fileSize, fp);
+			if (!saveBinAsText(tmp, fileSize, fp, type, temp, "mapDat", compression ? 8 : 16, compression ? boost::endian::order::native : boost::endian::order::big)) {
+				free(tmp);
+				return;
+			}
 
 			free(tmp);
 

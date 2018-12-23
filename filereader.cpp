@@ -12,19 +12,22 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #include <FL/fl_ask.H>
 #include <FL/filename.H>
 
 #include <stdio.h>
 #include <sys/stat.h>
-#include "filereader.h"
+
+#include "compressionWrapper.h"
+#include "errorMsg.h"
 #include "filemisc.h"
+#include "filereader.h"
 #include "gui.h"
 #include "luaconfig.h"
 #include "runlua.h"
-filereader::filereader(const char*title, bool relptr, unsigned offbits, bool be) {
+filereader::filereader(boost::endian::order endian, unsigned bytesPerElement, const char*title, bool relptr, unsigned offbits, bool be) {
 	char*fname;
 
 	if (title)
@@ -33,25 +36,33 @@ filereader::filereader(const char*title, bool relptr, unsigned offbits, bool be)
 		fname = loadsavefile();
 
 	if (fname) {
+		int compression = compressionAsk();
+
+		if (compression < 0) {
+			amt = 0;
+			return;
+		}
+
 		char*ext = (char*)fl_filename_ext(fname);
 		ext = strdup(ext);
 
 		for (char*p = ext; *p; ++p)
 			*p = tolower(*p);
 
-		fileType_t def = tBinary;
+		fileType_t def = fileType_t::tBinary;
 
-		if (!strcmp(ext, ".asm"))
-			def = tASM;
+		if ((!strcmp(ext, ".asm")) || (!strcmp(ext, ".s")))
+			def = fileType_t::tASM;
 		else if (!strcmp(ext, ".bex"))
-			def = tBEX;
-		else if (!strcmp(ext, ".h"))
-			def = tCheader;
+			def = fileType_t::tBEX;
+		else if ((!strcmp(ext, ".h")) || (!strcmp(ext, ".hh")) || (!strcmp(ext, ".hpp"))
+		         || (!strcmp(ext, ".c")) || (!strcmp(ext, ".cpp")) || (!strcmp(ext, ".cxx")) || (!strcmp(ext, ".cc")))
+			def = fileType_t::tCheader;
 
 		free(ext);
 		fileType_t tp = askSaveType(false, def);
 
-		if (tp == tCancel) {
+		if (tp == fileType_t::tCancel) {
 			amt = 0;
 			free(fname);
 			return;
@@ -59,7 +70,7 @@ filereader::filereader(const char*title, bool relptr, unsigned offbits, bool be)
 
 		struct stat st;
 
-		FILE*fp = fopen(fname, tp == tBinary ? "rb" : "r");
+		FILE*fp = fopen(fname, tp == fileType_t::tBinary ? "rb" : "r");
 
 		if (!fp) {
 			fl_alert("An error has occurred: %s", strerror(errno));
@@ -79,7 +90,7 @@ filereader::filereader(const char*title, bool relptr, unsigned offbits, bool be)
 		fclose(fp);
 		//This is handled by Lua code so the user can modify the behavior of this function with ease
 		lua_getglobal(Lconf, "filereaderProcessText");
-		lua_pushinteger(Lconf, tp);
+		lua_pushinteger(Lconf, (int)tp);
 		lua_pushboolean(Lconf, relptr);
 		lua_pushinteger(Lconf, offbits);
 		lua_pushboolean(Lconf, be);
@@ -104,8 +115,73 @@ filereader::filereader(const char*title, bool relptr, unsigned offbits, bool be)
 				lua_rawgeti(Lconf, -1, 2);
 				size_t ln;
 				const char*src = lua_tolstring(Lconf, -1, &ln);
-				void*dst = malloc(ln);
-				memcpy(dst, src, ln);
+
+				if (ln % bytesPerElement) {
+					fl_alert("This is not a multiple of %d bytes", bytesPerElement);
+					continue;
+				}
+
+				void* dst;
+
+				if (compression) {
+					dst = decodeTypeRam((const uint8_t*)src, ln, ln, compression);
+
+					if (ln == 0) {
+						free(dst);
+						continue;
+					}
+				} else {
+					dst = malloc(ln);
+					memcpy(dst, src, ln);
+				}
+
+				if (boost::endian::order::native != endian) {
+					switch (bytesPerElement) {
+						case 1:
+							// No action required.
+							break;
+
+						case 2:
+						{
+							uint16_t*ptr = (uint16_t*)dst;
+
+							for (size_t i = 0; i < ln / 2; ++i) {
+								uint16_t tmp = *ptr;
+
+								if (endian == boost::endian::order::big)
+									boost::endian::big_to_native_inplace(tmp);
+								else if (endian == boost::endian::order::little)
+									boost::endian::little_to_native_inplace(tmp);
+
+								*ptr++ = tmp;
+
+							}
+						}
+						break;
+
+						case 4:
+						{
+							uint32_t*ptr = (uint32_t*)dst;
+
+							for (size_t i = 0; i < ln / 4; ++i) {
+								uint32_t tmp = *ptr;
+
+								if (endian == boost::endian::order::big)
+									boost::endian::big_to_native_inplace(tmp);
+								else if (endian == boost::endian::order::little)
+									boost::endian::little_to_native_inplace(tmp);
+
+								*ptr++ = tmp;
+
+							}
+						}
+						break;
+
+						default:
+							show_default_error
+					}
+				}
+
 				lens.push_back(ln);
 				dat.push_back(dst);
 				lenTotal += ln;

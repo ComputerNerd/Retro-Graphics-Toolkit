@@ -208,33 +208,45 @@ void Project::moveConstructorCommon(Project&& other) {
 	luaTabs = std::move(other.luaTabs);
 
 	tms = std::move(other.tms);
+
 	if (tms)
 		tms->prj = this;
+
 	other.tms = nullptr;
 
 	tileC = std::move(other.tileC);
+
 	if (tileC)
 		tileC->prj = this;
+
 	other.tileC = nullptr;
 
 	Chunk = std::move(other.Chunk);
+
 	if (Chunk)
 		Chunk->prj = this;
+
 	other.Chunk = nullptr;
 
 	pal = std::move(other.pal);
+
 	if (pal)
 		pal->prj = this;
+
 	other.pal = nullptr;
 
 	ms = std::move(other.ms);
+
 	if (ms)
 		ms->setPrjPtr(this);
+
 	other.ms = nullptr;
 
 	lvl = std::move(other.lvl);
+
 	if (lvl)
 		lvl->prj = this;
+
 	other.lvl = nullptr;
 }
 
@@ -245,6 +257,7 @@ Project::Project(Project&& other) noexcept {
 Project& Project::operator=(Project&& other) noexcept {
 	if (this != &other)
 		moveConstructorCommon(std::move(other));
+
 	return *this;
 }
 
@@ -671,10 +684,8 @@ void switchProject(uint32_t id, bool load) {
 			window->ditherPower->show();
 	}
 
-	if (projects[id].containsData(pjHavePal)) {
-		palBar.sysCache = UNKNOWN_SYSTEM;
+	if (projects[id].containsData(pjHavePal))
 		projects[id].pal->setVars(projects[id].gameSystem);
-	}
 
 	switch (projects[id].gameSystem) {
 		case segaGenesis:
@@ -687,7 +698,7 @@ void switchProject(uint32_t id, bool load) {
 				projects[id].tileC->tileSize = 32;
 
 			if (projects[id].containsData(pjHavePal)) {
-				palBar.setSys();
+				palBar.setSys(true, true);
 				set_palette_type();
 			}
 

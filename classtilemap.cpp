@@ -480,15 +480,6 @@ void tileMap::set_vflip(uint32_t x, uint32_t y, bool vflip_set) {
 		tileMapDat[((y * mapSizeW) + x) * 4] &= ~(1 << 4);
 }
 
-
-#if _WIN32
-static inline uint16_t swap_word(uint16_t w) {
-	uint8_t a, b;
-	a = w & 255;
-	b = w >> 8;
-	return (a << 8) | b;
-}
-#endif
 static int bondsCheckTile(int tile, int mx, unsigned x, unsigned y) {
 	if (tile < 0)
 		tile = 0;
@@ -500,6 +491,7 @@ static int bondsCheckTile(int tile, int mx, unsigned x, unsigned y) {
 
 	return tile;
 }
+
 bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, int compression, const char*label, const char*nesFname, const char*labelNES) {
 	uint32_t x, y;
 	FILE * myfile;
@@ -508,7 +500,7 @@ bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, int c
 
 	if (clipboard)
 		myfile = 0;
-	else if (type)
+	else if (type != fileType_t::tBinary)
 		myfile = fopen(fname, "w");
 	else
 		myfile = fopen(fname, "wb");
@@ -526,12 +518,7 @@ bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, int c
 						int tile = get_tile(x, y);
 						tile += offset;
 						tile = bondsCheckTile(tile, 2047, x, y);
-#if _WIN32
-						tile = swap_word(tile); //mingw appears not to provide htobe16 function
-#else
-						tile = htobe16(tile); //needs to be big endian
-#endif
-						*TheMap = (uint16_t)tileMapDat[((y * mapSizeW) + x) * 4]; //get attributes
+						*TheMap = (uint16_t)tileMapDat[((y * mapSizeW) + x) * 4] << 8; //get attributes
 						*TheMap++ |= (uint16_t)tile; //add tile
 					}
 				}
@@ -571,7 +558,7 @@ bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, int c
 			break;
 
 			case NES:
-			case TMS9918: // Both systems have eigth bit tile entries.
+			case TMS9918: // Both systems have eight bit tile entries.
 			{	uint8_t * TheMap;
 				fileSize = mapSizeW * mapSizeHA;
 				mapptr = (uint8_t *)malloc(fileSize);
@@ -598,22 +585,19 @@ bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, int c
 			free(TheMap);
 		}
 
-		if (type) {
-			char temp[2048];
-			snprintf(temp, 2048, "Width %d Height %d %s", mapSizeW, mapSizeHA, typeToText(compression));
-			int bits;
+		char temp[2048];
+		snprintf(temp, 2048, "Width %d Height %d %s", mapSizeW, mapSizeHA, typeToText(compression));
+		int bits;
 
-			if ((prj->gameSystem == segaGenesis) && (!compression))
-				bits = 16;
-			else
-				bits = 8;
+		if ((prj->gameSystem == segaGenesis) && (!compression))
+			bits = 16;
+		else
+			bits = 8;
 
-			if (!saveBinAsText(mapptr, fileSize, myfile, type, temp, label, bits)) {
-				free(mapptr);
-				return false;
-			}
-		} else
-			fwrite(mapptr, 1, fileSize, myfile);
+		if (!saveBinAsText(mapptr, fileSize, myfile, type, temp, label, bits, getEndianBySystem())) {
+			free(mapptr);
+			return false;
+		}
 
 		free(mapptr);
 
@@ -630,8 +614,8 @@ bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, int c
 
 		if (nesFname) {
 			if (clipboard)
-				myfile = 0;
-			else if (type)
+				myfile = nullptr;
+			else if (type != fileType_t::tBinary)
 				myfile = fopen(nesFname, "w");
 			else
 				myfile = fopen(nesFname, "wb");
@@ -645,11 +629,8 @@ bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, int c
 						* AttrMap++ = getPalRow(x, y) | (getPalRow(x + 2, y) << 2) | (getPalRow(x, y + 2) << 4) | (getPalRow(x + 2, y + 2) << 6);
 				}
 
-				if (type) {
-					if (saveBinAsText(freeAttrMap, ((mapSizeW + 2) / 4) * ((mapSizeHA + 2) / 4), myfile, type, 0, labelNES, 8) == false)
-						return false;
-				} else
-					fwrite(freeAttrMap, 1, ((mapSizeW + 2) / 4) * ((mapSizeHA + 2) / 4), myfile);
+				if (saveBinAsText(freeAttrMap, ((mapSizeW + 2) / 4) * ((mapSizeHA + 2) / 4), myfile, type, 0, labelNES, 8, boost::endian::order::native) == false)
+					return false;
 
 				free(freeAttrMap);
 
@@ -673,7 +654,7 @@ bool tileMap::saveToFile(void) {
 	fileType_t type = askSaveType();
 	int clipboard;
 
-	if (type) {
+	if (type != fileType_t::tBinary) {
 		clipboard = clipboardAsk();
 
 		if (clipboard == 2)
@@ -721,17 +702,47 @@ static void zero_error_tile_map(int32_t x) {
 	//this is a long string I do not want it stored more than once
 	fl_alert("Please enter value greater than zero you on the other hand entered %d", x);
 }
+
+boost::endian::order tileMap::getEndianBySystem() {
+	if (prj->gameSystem == segaGenesis)
+		return boost::endian::order::big;
+	else
+		return boost::endian::order::little;
+}
+
 bool tileMap::loadFromFile() {
 	//start by loading the file
 	/*Only will return false when there is a malloc error or file error.
 	Return true upon user cancellation or the user not entering a number correctly.*/
-	filereader f = filereader("Load a tilemap");
+
+	boost::endian::order systemEndian = getEndianBySystem();
+
+	unsigned bytesPerElement;
+
+	switch (prj->gameSystem) {
+		case segaGenesis:
+		case masterSystem:
+		case gameGear:
+			bytesPerElement = 2;
+			break;
+
+		case NES:
+		case TMS9918:
+			bytesPerElement = 1;
+			break;
+
+		default:
+			show_default_error
+			return false;
+	}
+
+
+	filereader f = filereader(systemEndian, bytesPerElement, "Load a tilemap");
 
 	if (f.amt == 0)
 		return true;
 
 	size_t file_size;
-	int compression = compressionAsk();
 	//get width and height
 	int blocksLoad = fl_ask("Are you loading blocks?");
 	std::string tilemap_file = the_file;
@@ -807,10 +818,6 @@ bool tileMap::loadFromFile() {
 	unsigned index = f.selDat();
 	file_size = f.lens[index];
 	size_t size_temp;
-	uint8_t*output;
-
-	if (compression)
-		output = (uint8_t*)decodeTypeRam((uint8_t*)f.dat[index], f.lens[index], file_size, compression);
 
 	uint32_t blocksLoaded = file_size / w / h;
 
@@ -861,13 +868,11 @@ bool tileMap::loadFromFile() {
 	tileMapDat = (uint8_t *)realloc(tileMapDat, (w * h) * 4 * amt);
 	uint8_t * tempMap = (uint8_t *) malloc(size_temp);
 
-	if (unlikely(!tileMapDat))
+	if (unlikely(!tileMapDat)) {
 		show_malloc_error(size_temp)
-		if (compression) {
-			memcpy(tempMap, output, file_size);
-			free(output);
-		} else
-			memcpy(tempMap, f.dat[index], size_temp);
+	}
+
+	memcpy(tempMap, f.dat[index], size_temp);
 
 	uint32_t x, y;
 
@@ -876,17 +881,15 @@ bool tileMap::loadFromFile() {
 			switch (prj->gameSystem) {
 				case segaGenesis:
 					if (((x + (y * w) + 1) * 2) <= file_size) {
-						int temp = *tempMap++;
+						uint16_t* ptr16 = (uint16_t*)tempMap;
+						uint16_t temp = *ptr16++;
+						tempMap = (uint8_t*)ptr16;
 						//set attributes
-						tileMapDat[((y * mapSizeW) + x) * 4] = (uint8_t)temp & 0xF8;
-						temp &= 7;
-						temp <<= 8;
-						temp |= *tempMap++;
+						tileMapDat[((y * mapSizeW) + x) * 4] = (uint8_t)(temp >> 8) & 0xF8;
+						temp &= 2047;
 
-						if (temp - offset > 0)
-							set_tile(x, y, (int32_t)temp - offset);
-						else
-							set_tile(x, y, 0);
+						int32_t tempCalculated = int32_t(temp) - offset;
+						set_tile(x, y, tempCalculated > 0 ? tempCalculated : 0);
 					} else
 						set_tile(x, y, 0);
 
@@ -925,7 +928,7 @@ bool tileMap::loadFromFile() {
 
 	if (prj->gameSystem == NES) {
 		//now load attributes
-		filereader f2 = filereader("Load Attributes");
+		filereader f2 = filereader(boost::endian::order::native, 1, "Load Attributes");
 
 		if (f2.amt) {
 			unsigned indx2 = f.selDat();
@@ -1621,6 +1624,9 @@ void tileMap::pickExtAttrs(void) {
 					for (unsigned j = 0; j < mapSizeHA; ++j) {
 						for (unsigned i = 0; i < mapSizeW; ++i) {
 							for (unsigned y = 0; y < prj->tileC->height(); ++y) {
+								unsigned tile = get_tile(i, j);
+								if (tile >= prj->tileC->amt) // Skip out of bounds tiles.
+									continue;
 								unsigned offset = (j * prj->tileC->height() * prj->tileC->width() * mapSizeW) + (i * prj->tileC->width()) + (y * mapSizeW * prj->tileC->width());
 								uint8_t*iPtr = indexList + offset;
 								uint8_t*tPtr = imgTmp + (offset * 4) + 3;
@@ -1646,7 +1652,6 @@ void tileMap::pickExtAttrs(void) {
 										break;
 								}
 
-								unsigned tile = get_tile(i, j);
 
 								if (allEqual) {
 									prj->tileC->setExtAttr(tile, y, 0xF0); // White foreground, black background.
@@ -1686,4 +1691,12 @@ void tileMap::removeBlock(unsigned id) {
 		if (id < amt)
 			blockAmt(amt - 1);
 	}
+}
+void tileMap::fixPaletteRows(unsigned num, unsigned dom) {
+	for (unsigned y = 0; y < mapSizeHA; ++y) {
+		for (unsigned x = 0; x < mapSizeW; ++x)
+			set_pal_row(x, y, getPalRow(x, y) * num / dom);
+
+	}
+
 }

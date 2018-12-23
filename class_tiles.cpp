@@ -19,6 +19,7 @@
 #include <ctime>
 #include <exception>
 #include <memory>
+#include <stdexcept>
 #include <unordered_set>
 
 #include "macros.h"
@@ -70,6 +71,12 @@ tiles::~tiles() {
 }
 
 uint8_t tiles::getExtAttr(unsigned tile, unsigned y) {
+	if (tile >= amt)
+		throw std::out_of_range("tile >= amt");
+
+	if (y >= height())
+		throw std::out_of_range("y >= height()");
+
 	switch (prj->getTMS9918subSys()) {
 		case MODE_0:
 			return prj->getPalColTMS9918();
@@ -90,6 +97,12 @@ uint8_t tiles::getExtAttr(unsigned tile, unsigned y) {
 }
 
 void tiles::setExtAttr(unsigned tile, unsigned y, uint8_t fgbg) {
+	if (tile >= amt)
+		throw std::out_of_range("tile >= amt");
+
+	if (y >= height())
+		throw std::out_of_range("y >= height()");
+
 	switch (prj->getTMS9918subSys()) {
 		case MODE_0:
 			prj->setPalColTMS9918(fgbg);
@@ -890,8 +903,8 @@ void tiles::save(const char*fname, fileType_t type, bool clipboard, int compress
 	size_t compsize;
 
 	if (clipboard)
-		myfile = 0;
-	else if (type)
+		myfile = nullptr;
+	else if (type != fileType_t::tBinary)
 		myfile = fopen(fname, "w");
 	else
 		myfile = fopen(fname, "wb");
@@ -900,35 +913,28 @@ void tiles::save(const char*fname, fileType_t type, bool clipboard, int compress
 		if (compression)
 			compdat = (uint8_t*)encodeType(savePtr, outputTileSize * amt, compsize, compression);
 
-		if (type) {
-			char comment[2048];
-			snprintf(comment, 2048, "%d tiles %s", amt, typeToText(compression));
+		char comment[2048];
+		snprintf(comment, 2048, "%d tiles %s", amt, typeToText(compression));
 
-			if (compression) {
-				if (!saveBinAsText(compdat, compsize, myfile, type, comment, label, 8)) {
-					free(compdat);
-					fl_alert("Error: can not save file %s", the_file.c_str());
+		if (compression) {
+			if (!saveBinAsText(compdat, compsize, myfile, type, comment, label, 8, boost::endian::order::native)) {
+				free(compdat);
+				fl_alert("Error: can not save file %s", the_file.c_str());
 
-					if (tt != PLANAR_TILE)
-						free(savePtr);
+				if (tt != PLANAR_TILE)
+					free(savePtr);
 
-					return;
-				}
-			} else {
-				if (!saveBinAsText(savePtr, (amt)*outputTileSize, myfile, type, comment, label, 32)) {
-					fl_alert("Error: can not save file %s", the_file.c_str());
-
-					if (tt != PLANAR_TILE)
-						free(savePtr);
-
-					return;
-				}
+				return;
 			}
 		} else {
-			if (compression)
-				fwrite(compdat, 1, compsize, myfile);
-			else
-				fwrite(savePtr, outputTileSize, (amt), myfile);
+			if (!saveBinAsText(savePtr, (amt)*outputTileSize, myfile, type, comment, label, 8, boost::endian::order::native)) {
+				fl_alert("Error: can not save file %s", the_file.c_str());
+
+				if (tt != PLANAR_TILE)
+					free(savePtr);
+
+				return;
+			}
 		}
 
 		if (compression)
