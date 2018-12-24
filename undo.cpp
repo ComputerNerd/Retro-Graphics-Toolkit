@@ -91,20 +91,17 @@ struct undoEvent { //This struct only holds which type of undo this is and one v
 struct undoTile { //The purpose of this struct is to completely undo a tile
 	tileTypeMask_t type;
 	uint32_t id;
-	void*ptrnew;
 	void*ptr;//when type is both first the truecolor tile will be stored then the regular tile
 };
 struct undoTileAll {
 	tileTypeMask_t type;
-	uint32_t amt, amtnew;
+	uint32_t amt;
 	void*ptr;
-	void*ptrnew;
 };
 struct undoTileGroup {
 	tileTypeMask_t type;
-	std::vector<uint32_t> lst;//Contains group of affect tiles
-	std::vector<uint8_t> data;//Similar situation to other tile structs as in what this contains and what order
-	std::vector<uint8_t> datanew;
+	std::vector<uint32_t> lst; // Which tiles were changed.
+	std::vector<uint8_t> data; // Similar situation to other tile structs as in what this contains and what order
 };
 struct undoAppendgroupdat {
 	uint32_t amt;
@@ -117,9 +114,8 @@ struct undoTilePixel {
 };
 struct undoTilemap { //For undoing the entire tilemap
 	uint32_t plane;
-	uint32_t w, h, wnew, hnew; //The width and height
+	uint32_t w, h; //The width and height
 	void*ptr;//Points to tilemap data that is w*h*4 bytes or attributes if so size is w*h
-	void*ptrnew;
 };
 struct undoTilemapEdit {
 	uint32_t plane;
@@ -127,7 +123,6 @@ struct undoTilemapEdit {
 };
 struct undoTilemapPlane {
 	tileMap*old;
-	tileMap*Tnew;
 	uint32_t plane;
 };
 struct undoResize {
@@ -144,24 +139,30 @@ struct undoPaletteEntry {
 };
 struct undoChunkEdit {
 	uint32_t id, x, y;
-	struct ChunkAttrs valnew, val;
+	struct ChunkAttrs val;
 };
 struct undoChunk {
 	uint32_t id;
-	struct ChunkAttrs*ptr, *ptrnew;
+	struct ChunkAttrs*ptr;
 };
 struct undoChunkAll {
 	uint32_t w, h, wnew, hnew; //The width and height
 	uint32_t amt, amtnew;
-	struct ChunkAttrs*ptr, *ptrnew;
+	struct ChunkAttrs*ptr;
 };
 struct undoSpriteVal {
 	uint32_t metaid, id, subid;
-	uint32_t val, valnew;
+	uint32_t val;
 };
+
+struct undoSpriteValInt32 {
+	uint32_t metaid, id, subid;
+	int32_t val;
+};
+
 struct undoSpriteValbool {
 	uint32_t metaid, id, subid;
-	bool val, valnew;
+	bool val;
 };
 struct undoSpriteDel {
 	uint32_t metaid, id, subid;
@@ -239,11 +240,6 @@ static void cleanupEvent(uint32_t id) {
 			free(ut->ptr);
 			memUsed -= sz;
 
-			if (ut->ptrnew) {
-				free(ut->ptrnew);
-				memUsed -= sz;
-			}
-
 			free(uptr->ptr);
 			memUsed -= sizeof(struct undoTile);
 		}
@@ -259,11 +255,6 @@ static void cleanupEvent(uint32_t id) {
 			unsigned sz = getSzTile(ut->type) * currentProject->tileC->amt;
 			free(ut->ptr);
 			memUsed -= sz;
-
-			if (ut->ptrnew) {
-				free(ut->ptrnew);
-				memUsed -= sz;
-			}
 
 			free(uptr->ptr);
 			memUsed -= sizeof(struct undoTileAll);
@@ -291,11 +282,6 @@ static void cleanupEvent(uint32_t id) {
 			unsigned sz = getSzTile(ut->type) * ut->lst.size();
 			ut->data.clear();
 			memUsed -= sz;
-
-			if (ut->datanew.size()) {
-				ut->datanew.clear();
-				memUsed -= sz;
-			}
 
 			delete uptr->ptr;
 			memUsed -= sizeof(struct undoTileGroup);
@@ -328,15 +314,6 @@ static void cleanupEvent(uint32_t id) {
 			free(um->ptr);
 			memUsed -= sz;
 
-			if (um->ptrnew) {
-				sz = um->wnew * um->hnew;
-
-				if (uptr->type == uTilemap)
-					sz *= 4;
-
-				free(um->ptrnew);
-				memUsed -= sz;
-			}
 
 			free(uptr->ptr);
 			memUsed -= sizeof(undoTilemap);
@@ -411,11 +388,6 @@ static void cleanupEvent(uint32_t id) {
 			free(uc->ptr);
 			memUsed -= uc->w * uc->h * uc->amt * sizeof(struct ChunkAttrs);
 
-			if (uc->ptrnew) {
-				free(uc->ptrnew);
-				memUsed -= uc->wnew * uc->hnew * uc->amtnew * sizeof(struct ChunkAttrs);
-			}
-
 			free(uptr->ptr);
 			memUsed -= sizeof(struct undoChunkAll);
 		}
@@ -426,11 +398,6 @@ static void cleanupEvent(uint32_t id) {
 		{	struct undoChunk*uc = (struct undoChunk*)uptr->ptr;
 			free(uc->ptr);
 			memUsed -= currentProject->Chunk->wi * currentProject->Chunk->hi * sizeof(struct ChunkAttrs);
-
-			if (uc->ptrnew) {
-				free(uc->ptrnew);
-				memUsed -= currentProject->Chunk->wi * currentProject->Chunk->hi * sizeof(struct ChunkAttrs);
-			}
 
 			free(uptr->ptr);
 			memUsed -= sizeof(struct undoChunk);
@@ -593,22 +560,14 @@ static void cpyResizeGeneric(uint8_t*dst, uint8_t*src, uint32_t w, uint32_t h, u
 		}
 	}
 }
-#define mkSpritePop(which) {struct undoSpriteVal*us=(struct undoSpriteVal*)uptr->ptr; \
-	if(redo) \
-		currentProject->ms->sps[us->metaid].groups[us->id].list[us->subid].which=us->valnew; \
-	else{ \
-		us->valnew=currentProject->ms->sps[us->metaid].groups[us->id].list[us->subid].which; \
-		currentProject->ms->sps[us->metaid].groups[us->id].list[us->subid].which=us->val; \
-	} \
+
+#define mkSpritePop_(strt, which) {struct strt*us=(struct strt*)uptr->ptr; \
+	std::swap(currentProject->ms->sps[us->metaid].groups[us->id].list[us->subid].which, us->val); \
 	window->updateSpriteSliders();}
-#define mkSpritePopbool(which) {struct undoSpriteValbool*us=(struct undoSpriteValbool*)uptr->ptr; \
-	if(redo) \
-		currentProject->ms->sps[us->metaid].groups[us->id].list[us->subid].which=us->valnew; \
-	else{ \
-		us->valnew=currentProject->ms->sps[us->metaid].groups[us->id].list[us->subid].which; \
-		currentProject->ms->sps[us->metaid].groups[us->id].list[us->subid].which=us->val; \
-	} \
-	window->updateSpriteSliders();}
+
+#define mkSpritePop(which) mkSpritePop_(undoSpriteVal, which)
+#define mkSpritePopInt32(which) mkSpritePop_(undoSpriteValInt32, which)
+#define mkSpritePopbool(which) mkSpritePop_(undoSpriteValbool, which)
 
 static void isCorrectPlane(uint32_t plane) {
 	if (plane != currentProject->curPlane) {
@@ -667,25 +626,20 @@ static void UndoRedo(bool redo) {
 		{
 			struct undoTile*ut = (struct undoTile*)uptr->ptr;
 
-			if (redo) {
-				if (ut->type & tTypeDeleteFlag) {
+			if (ut->type & tTypeDeleteFlag) {
+				if (redo)
 					currentProject->tileC->remove_tile_at(ut->id);
-					updateTileSelectAmt();
-				} else
-					tilesToU((uint8_t*)ut->ptrnew, ut->id, ut->type);
-			} else {
-				if ((!ut->ptrnew) && (!(ut->type & tTypeDeleteFlag))) {
-					unsigned sz = getSzTile(ut->type);
-					ut->ptrnew = malloc(sz);
-					memUsed += sz;
+				else {
+					currentProject->tileC->insertTile(ut->id);
+					// Restore the deleted data.
+					tilesToU((uint8_t*)ut->ptr, ut->id, ut->type);
 				}
 
-				if (ut->type & tTypeDeleteFlag) {
-					currentProject->tileC->insertTile(ut->id);
-					updateTileSelectAmt();
-				} else
-					tilesTo((uint8_t*)ut->ptrnew, ut->id, ut->type);
-
+				updateTileSelectAmt();
+			} else {
+				// Swap the data stored in ut->id with ut->ptr.
+				std::unique_ptr<uint8_t[]> tmpBuf(new uint8_t[getSzTile(ut->type)]);
+				tilesTo(&tmpBuf[0], ut->id, ut->type);
 				tilesToU((uint8_t*)ut->ptr, ut->id, ut->type);
 			}
 		}
@@ -710,20 +664,15 @@ static void UndoRedo(bool redo) {
 		case uTileAll:
 		{
 			struct undoTileAll*ut = (struct undoTileAll*)uptr->ptr;
-
-			if (redo)
-				cpyAllTilesU((uint8_t*)ut->ptrnew, ut->amtnew, ut->type);
-			else {
-				if (!ut->ptrnew) {
-					ut->amtnew = currentProject->tileC->amt;
-					unsigned sz = getSzTile(ut->type) * ut->amtnew;
-					ut->ptrnew = malloc(sz);
-					memUsed += sz;
-				}
-
-				cpyAllTiles((uint8_t*)ut->ptrnew, ut->amtnew, ut->type);
-				cpyAllTilesU((uint8_t*)ut->ptr, ut->amt, ut->type);
-			}
+			// Swap the contents of the tile data buffer with ut->ptr.
+			uint32_t amtNew = ut->amt;
+			uint32_t amtOld = currentProject->tileC->amt;
+			uint8_t*oldDatBuf = (uint8_t*)malloc(getSzTile(ut->type) * amtOld); // Create a buffer large enough to hold the old data.
+			cpyAllTiles(oldDatBuf, amtOld, ut->type);
+			cpyAllTilesU((uint8_t*)ut->ptr, amtNew, ut->type);
+			ut->amt = amtOld; // Backup the old amount.
+			free(ut->ptr); // Free the old data.
+			ut->ptr = (void*)oldDatBuf;
 		}
 		break;
 
@@ -732,32 +681,16 @@ static void UndoRedo(bool redo) {
 			struct undoTileGroup*ut = (struct undoTileGroup*)uptr->ptr;
 			unsigned sz = getSzTile(ut->type);
 
-			if (redo) {
-				if (ut->type & tTypeDeleteFlag) {
-					std::vector<uint32_t> tmp = ut->lst;
-					std::sort(tmp.begin(), tmp.end());
+			// First ensure that the correct number of tiles are avaliable to put the data in.
+			if (ut->type & tTypeDeleteFlag) {
+				std::vector<uint32_t> tmp = ut->lst;
+				std::sort(tmp.begin(), tmp.end());
 
+				if (redo) {
 					for (int_fast32_t i = tmp.size(); i--;)
 						currentProject->tileC->remove_tile_at(tmp[i]);
-
-					updateTileSelectAmt();
 				} else {
-					for (int_fast32_t i = ut->lst.size() - 1; i >= 0; --i)
-						tilesToU(ut->datanew.data() + (i * sz), ut->lst[i], ut->type);
-				}
-			} else {
-				if ((!(ut->datanew.size())) && (!(ut->type & tTypeDeleteFlag))) {
-					ut->datanew.resize(sz * ut->lst.size());
-					memUsed += sz * ut->lst.size();
-
-					for (int_fast32_t i = ut->lst.size() - 1; i >= 0; --i)
-						tilesTo(ut->datanew.data() + (i * sz), ut->lst[i], ut->type);
-				}
-
-				if (ut->type & tTypeDeleteFlag) {
 					uint32_t fullSize = currentProject->tileC->amt + ut->lst.size();
-					std::vector<uint32_t> tmp = ut->lst;
-					std::sort(tmp.begin(), tmp.end());
 
 					for (int_fast32_t i = 0; i < tmp.size(); ++i) {
 						if (tmp[i] < currentProject->tileC->amt)
@@ -765,11 +698,27 @@ static void UndoRedo(bool redo) {
 					}
 
 					currentProject->tileC->resizeAmt(fullSize);
-					updateTileSelectAmt();
+
+					// Fill in the tiles with data.
+					for (int_fast32_t i = ut->lst.size() - 1; i >= 0; --i)
+						tilesToU(ut->data.data() + (i * sz), ut->lst[i], ut->type);
+
 				}
 
+				updateTileSelectAmt();
+			} else {
+				// Swap the old and new data.
+				std::vector<uint8_t> tmpDat;
+				tmpDat.resize(sz);
+
+				for (int_fast32_t i = ut->lst.size() - 1; i >= 0; --i)
+					tilesTo(tmpDat.data() + (i * sz), ut->lst[i], ut->type);
+
+				// Fill the tiles with the old data.
 				for (int_fast32_t i = ut->lst.size() - 1; i >= 0; --i)
 					tilesToU(ut->data.data() + (i * sz), ut->lst[i], ut->type);
+
+				ut->data = tmpDat;
 			}
 		}
 		break;
@@ -827,36 +776,35 @@ static void UndoRedo(bool redo) {
 		{
 			struct undoTilemap*um = (struct undoTilemap*)uptr->ptr;
 			isCorrectPlane(um->plane);
+			unsigned wOld = currentProject->tms->maps[um->plane].mapSizeW;
+			unsigned hOld = currentProject->tms->maps[um->plane].mapSizeHA;
+			unsigned tmpBufSize = wOld * hOld;
+			unsigned newBufSize = um->w * um->h;
 
-			if (redo) {
-				if (uptr->type == uTilemapattr)
-					attrCpyU(currentProject->tms->maps[um->plane].tileMapDat, (uint8_t*)um->ptrnew, um->wnew * um->hnew);
-				else {
-					currentProject->tms->maps[um->plane].resize_tile_map(um->wnew, um->hnew);
-					memcpy(currentProject->tms->maps[um->plane].tileMapDat, um->ptrnew, um->wnew * um->hnew * 4);
-				}
-			} else {
-				if (!um->ptrnew) {
-					um->wnew = currentProject->tms->maps[um->plane].mapSizeW;
-					um->hnew = currentProject->tms->maps[um->plane].mapSizeHA;
-
-					if (uptr->type == uTilemapattr) {
-						um->ptrnew = malloc(um->wnew * um->hnew);
-						attrCpy((uint8_t*)um->ptrnew, currentProject->tms->maps[um->plane].tileMapDat, um->wnew * um->hnew);
-					} else {
-						um->ptrnew = malloc(um->wnew * um->hnew * 4);
-						memcpy(um->ptrnew, currentProject->tms->maps[um->plane].tileMapDat, um->wnew * um->hnew * 4);
-					}
-				}
-
-				if (uptr->type == uTilemapattr)
-					attrCpyU(currentProject->tms->maps[um->plane].tileMapDat, (uint8_t*)um->ptr, um->w * um->h);
-
-				else {
-					currentProject->tms->maps[um->plane].resize_tile_map(um->w, um->h);
-					memcpy(currentProject->tms->maps[um->plane].tileMapDat, um->ptr, um->w * um->h * 4);
-				}
+			if (uptr->type == uTilemap) {
+				tmpBufSize *= TileMapSizePerEntry;
+				newBufSize *= TileMapSizePerEntry;
 			}
+
+			uint8_t*tmpBuf = (uint8_t*)malloc(tmpBufSize);
+
+			if (uptr->type == uTilemapattr)
+				attrCpy(tmpBuf, currentProject->tms->maps[um->plane].tileMapDat, tmpBufSize);
+			else
+				memcpy((void*)tmpBuf, currentProject->tms->maps[um->plane].tileMapDat, tmpBufSize);
+
+			currentProject->tms->maps[um->plane].resize_tile_map(um->w, um->h);
+
+			if (uptr->type == uTilemapattr)
+				attrCpyU(currentProject->tms->maps[um->plane].tileMapDat, (uint8_t*)um->ptr, newBufSize);
+			else
+				memcpy(currentProject->tms->maps[um->plane].tileMapDat, um->ptr, newBufSize);
+
+			um->w = wOld;
+			um->h = hOld;
+
+			free(um->ptr);
+			um->ptr = tmpBuf;
 		}
 		break;
 
@@ -952,7 +900,8 @@ static void UndoRedo(bool redo) {
 		break;
 
 		case uPaletteEntry:
-		{	struct undoPaletteEntry*up = (struct undoPaletteEntry*)uptr->ptr;
+		{
+			struct undoPaletteEntry*up = (struct undoPaletteEntry*)uptr->ptr;
 
 			switch (currentProject->pal->esize) {
 				case 1:
@@ -1024,7 +973,8 @@ static void UndoRedo(bool redo) {
 		break;
 
 		case uChunkResize:
-		{	struct undoResize*um = (struct undoResize*)uptr->ptr;
+		{
+			struct undoResize*um = (struct undoResize*)uptr->ptr;
 
 			if (redo)
 				currentProject->Chunk->resize(um->wnew, um->hnew);
@@ -1040,15 +990,11 @@ static void UndoRedo(bool redo) {
 		break;
 
 		case uChunkEdit:
-		{	struct undoChunkEdit*uc = (struct undoChunkEdit*)uptr->ptr;
-
-			if (redo)
-				currentProject->Chunk->setElm(uc->id, uc->x, uc->y, uc->valnew);
-
-			else {
-				uc->valnew = currentProject->Chunk->getElm(uc->id, uc->x, uc->y);
-				currentProject->Chunk->setElm(uc->id, uc->x, uc->y, uc->val);
-			}
+		{
+			struct undoChunkEdit*uc = (struct undoChunkEdit*)uptr->ptr;
+			ChunkAttrs oldValue = currentProject->Chunk->getElm(uc->id, uc->x, uc->y);
+			currentProject->Chunk->setElm(uc->id, uc->x, uc->y, uc->val);
+			uc->val = oldValue;
 
 			if (tileEditModeChunk_G)
 				window->updateChunkGUI(uc->x, uc->y);
@@ -1056,13 +1002,12 @@ static void UndoRedo(bool redo) {
 		break;
 
 		case uChunkAppend:
-			if (redo)
-				currentProject->Chunk->resizeAmt(currentProject->Chunk->amt + 1);
-			else
-				currentProject->Chunk->resizeAmt(currentProject->Chunk->amt - 1);
-
+		{
+			int add = redo ? 1 : -1;
+			currentProject->Chunk->resizeAmt(currentProject->Chunk->amt + add);
 			window->updateChunkSel();
-			break;
+		}
+		break;
 
 		case uChunkNew:
 			if (redo)
@@ -1074,25 +1019,26 @@ static void UndoRedo(bool redo) {
 			break;
 
 		case uChunkAll:
-		{	struct undoChunkAll*uc = (struct undoChunkAll*)uptr->ptr;
+		{
+			struct undoChunkAll*uc = (struct undoChunkAll*)uptr->ptr;
+			unsigned wOld = currentProject->Chunk->wi;
+			unsigned hOld = currentProject->Chunk->hi;
+			unsigned oldAmt = currentProject->Chunk->amt;
+			unsigned tmpBufSize = wOld * hOld * oldAmt * sizeof(struct ChunkAttrs);
+			unsigned oldBufSize = uc->w * uc->h * uc->amt * sizeof(struct ChunkAttrs);
+			struct ChunkAttrs* tmpBuf = (struct ChunkAttrs*)malloc(tmpBufSize);
+			memcpy(tmpBuf, currentProject->Chunk->chunks.data(), tmpBufSize);
 
-			if (redo) {
-				currentProject->Chunk->resize(uc->wnew, uc->hnew);
-				currentProject->Chunk->resizeAmt(uc->amtnew);
-				memcpy(currentProject->Chunk->chunks.data(), uc->ptrnew, uc->wnew * uc->hnew * uc->amtnew * sizeof(struct ChunkAttrs));
-			} else {
-				if (!uc->ptrnew) {
-					uc->wnew = currentProject->Chunk->wi;
-					uc->hnew = currentProject->Chunk->hi;
-					uc->amtnew = currentProject->Chunk->amt;
-					uc->ptrnew = (struct ChunkAttrs*)malloc(uc->wnew * uc->hnew * uc->amtnew * sizeof(struct ChunkAttrs));
-					memcpy(uc->ptrnew, currentProject->Chunk->chunks.data(), uc->wnew * uc->hnew * uc->amtnew * sizeof(struct ChunkAttrs));
-				}
+			currentProject->Chunk->resize(uc->w, uc->h);
+			currentProject->Chunk->resizeAmt(uc->amt);
 
-				currentProject->Chunk->resize(uc->w, uc->h);
-				currentProject->Chunk->resizeAmt(uc->amt);
-				memcpy(currentProject->Chunk->chunks.data(), uc->ptr, uc->w * uc->h * uc->amt * sizeof(struct ChunkAttrs));
-			}
+			memcpy(currentProject->Chunk->chunks.data(), uc->ptr, oldBufSize);
+
+			uc->w = wOld;
+			uc->h = hOld;
+			uc->amt = oldAmt;
+			free(uc->ptr);
+			uc->ptr = tmpBuf;
 
 			window->updateChunkSize();
 		}
@@ -1167,11 +1113,11 @@ static void UndoRedo(bool redo) {
 			break;
 
 		case uSpriteoffx:
-			mkSpritePop(offx)
+			mkSpritePopInt32(offx)
 			break;
 
 		case uSpriteoffy:
-			mkSpritePop(offy)
+			mkSpritePopInt32(offy)
 			break;
 
 		case uSpriteprio:
@@ -1249,7 +1195,6 @@ void pushTile(uint32_t id, tileTypeMask_t type) {
 	unsigned sz = getSzTile(type);
 	struct undoTile*ut = (struct undoTile*)uptr->ptr;
 	ut->ptr = malloc(sz);
-	ut->ptrnew = 0;
 	ut->id = id;
 	ut->type = type;
 	memUsed += sz;
@@ -1290,7 +1235,6 @@ void pushTilesAll(tileTypeMask_t type) {
 	ut->ptr = malloc(sz);
 	memUsed += sz;
 	ut->type = type;
-	ut->ptrnew = 0;
 	cpyAllTiles((uint8_t*)ut->ptr, ut->amt, type);
 }
 void pushTileAppend(void) {
@@ -1353,7 +1297,6 @@ void pushTilemapAll(bool attrOnly) {
 	um->plane = currentProject->curPlane;
 	um->w = currentProject->tms->maps[currentProject->curPlane].mapSizeW;
 	um->h = currentProject->tms->maps[currentProject->curPlane].mapSizeHA;
-	um->ptrnew = 0;
 
 	if (attrOnly) {
 		um->ptr = malloc(um->w * um->h);
@@ -1503,7 +1446,6 @@ void pushChunk(uint32_t id, bool rm) {
 	memUsed += sizeof(struct undoChunk);
 	struct undoChunk*uc = (struct undoChunk*)uptr->ptr;
 	uc->id = id;
-	uc->ptrnew = 0;
 	uc->ptr = (struct ChunkAttrs*)malloc(currentProject->Chunk->wi * currentProject->Chunk->hi * sizeof(struct ChunkAttrs));
 	memcpy(uc->ptr, currentProject->Chunk->chunks.data() + (currentProject->Chunk->wi * currentProject->Chunk->hi * id), currentProject->Chunk->wi * currentProject->Chunk->hi * sizeof(struct ChunkAttrs));
 }
@@ -1514,7 +1456,6 @@ void pushChunksAll(void) {
 	uptr->ptr = malloc(sizeof(struct undoChunkAll));
 	memUsed += sizeof(struct undoChunkAll);
 	struct undoChunkAll*uc = (struct undoChunkAll*)uptr->ptr;
-	uc->ptrnew = 0;
 	uc->w = currentProject->Chunk->wi;
 	uc->h = currentProject->Chunk->hi;
 	uc->amt = currentProject->Chunk->amt;
@@ -1542,16 +1483,23 @@ void pushSpriteAppendmeta(void) {
 	struct undoEvent*uptr = undoBuf + pos;
 	uptr->type = uSpriteAppendmeta;
 }
-#define mkSpritePush(thetype,which) pushEventPrepare(); \
+
+#define mkSpritePush_(strt, thetype, which) pushEventPrepare(); \
 	struct undoEvent*uptr=undoBuf+pos; \
 	uptr->type=thetype; \
-	uptr->ptr=malloc(sizeof(struct undoSpriteVal)); \
-	memUsed+=sizeof(struct undoSpriteVal); \
-	struct undoSpriteVal*us=(struct undoSpriteVal*)uptr->ptr; \
+	uptr->ptr=malloc(sizeof(struct strt)); \
+	memUsed+=sizeof(struct strt); \
+	struct strt*us=(struct strt*)uptr->ptr; \
 	us->id=curSpritegroup; \
 	us->subid=curSprite; \
 	us->metaid=window->metaspritesel->value(); \
 	us->val=currentProject->ms->sps[us->metaid].groups[us->id].list[us->subid].which
+
+#define mkSpritePush(thetype, which) mkSpritePush_(undoSpriteVal, thetype, which)
+
+#define mkSpritePushInt32(thetype, which) mkSpritePush_(undoSpriteValInt32, thetype, which)
+#define mkSpritePushbool(thetype, which) mkSpritePush_(undoSpriteValbool, thetype, which)
+
 void pushSpriteWidth(void) {
 	mkSpritePush(uSpriteWidth, w);
 }
@@ -1568,21 +1516,11 @@ void pushSpriteLoadat(void) {
 	mkSpritePush(uSpriteloadat, loadat);
 }
 void pushSpriteOffx(void) {
-	mkSpritePush(uSpriteoffx, offx);
+	mkSpritePushInt32(uSpriteoffx, offx);
 }
 void pushSpriteOffy(void) {
-	mkSpritePush(uSpriteoffy, offy);
+	mkSpritePushInt32(uSpriteoffy, offy);
 }
-#define mkSpritePushbool(thetype,which) pushEventPrepare(); \
-	struct undoEvent*uptr=undoBuf+pos; \
-	uptr->type=thetype; \
-	uptr->ptr=malloc(sizeof(struct undoSpriteValbool)); \
-	memUsed+=sizeof(struct undoSpriteValbool); \
-	struct undoSpriteValbool*us=(struct undoSpriteValbool*)uptr->ptr; \
-	us->id=curSpritegroup; \
-	us->subid=curSprite; \
-	us->metaid=window->metaspritesel->value(); \
-	us->val=currentProject->ms->sps[us->metaid].groups[us->id].list[us->subid].which
 void pushSpriteHflip(void) {
 	mkSpritePushbool(uSpritehflip, hflip);
 }
