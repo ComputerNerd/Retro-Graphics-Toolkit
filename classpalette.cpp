@@ -195,14 +195,12 @@ void palette::write(FILE*fp) {
 	fwrite(palType, totalColors(), 1, fp);
 }
 
-void palette::updateRGBindex(unsigned index) {
-	uint8_t*rgb = rgbPal + (index * 3);
+rgbArray_t palette::valueToRGB(const paletteRawValue_t val) const {
+	rgbArray_t rgb;
 
 	switch (prj->gameSystem) {
 		case segaGenesis:
 		{
-			const uint16_t*ptr = (uint16_t*)palDat + index;
-			const uint16_t val = *ptr;
 			rgb[2] = palTab[((val >> 9) & 7) + palTypeGen]; //Blue
 			rgb[1] = palTab[((val >> 5) & 7) + palTypeGen]; //Green
 			rgb[0] = palTab[((val >> 1) & 7) + palTypeGen]; //Red
@@ -211,7 +209,7 @@ void palette::updateRGBindex(unsigned index) {
 
 		case NES:
 		{
-			uint32_t rgb_out = nesPalToRgb(palDat[index]);
+			uint32_t rgb_out = nesPalToRgb(val);
 			rgb[2] = rgb_out & 255; //blue
 			rgb[1] = (rgb_out >> 8) & 255; //green
 			rgb[0] = (rgb_out >> 16) & 255; //red
@@ -219,28 +217,34 @@ void palette::updateRGBindex(unsigned index) {
 		break;
 
 		case masterSystem:
-			rgb[0] = palTabMasterSystem[palDat[index] & 3];
-			rgb[1] = palTabMasterSystem[(palDat[index] >> 2) & 3];
-			rgb[2] = palTabMasterSystem[(palDat[index] >> 4) & 3];
+			rgb[0] = palTabMasterSystem[val & 3];
+			rgb[1] = palTabMasterSystem[(val >> 2) & 3];
+			rgb[2] = palTabMasterSystem[(val >> 4) & 3];
 			break;
 
 		case gameGear:
 		{
-			const uint16_t*ptr = (uint16_t*)palDat + index;
-			const uint16_t val = *ptr;
 			rgb[0] = palTabGameGear[val & 15];
 			rgb[1] = palTabGameGear[(val >> 4) & 15];
 			rgb[2] = palTabGameGear[(val >> 8) & 15];
 		}
 		break;
 
-		case TMS9918:
-			// Do nothing
-			break;
-
 		default:
 			show_default_error
 	}
+
+	return rgb;
+}
+
+void palette::updateRGBindex(unsigned index) {
+	boundsCheckEntry(index);
+
+	uint8_t*rgb = rgbPal + (index * 3);
+
+	paletteRawValue_t val = getEntry(index);
+	rgbArray_t rgbTmp = valueToRGB(val);
+	memcpy((void*)rgb, (const void*)&rgbTmp[0], 3);
 }
 
 void palette::clear(void) {
@@ -279,18 +283,31 @@ paletteRawValue_t palette::rgbToValue(unsigned r, unsigned g, unsigned b) {
 	return 0;
 }
 
-void palette::setEntry(const paletteRawValue_t rawVal, const unsigned ent) {
+void palette::boundsCheckEntry(unsigned ent) const {
 	const unsigned maxent = totalColors();
 
-	if (ent >= maxent) {
-		fl_alert("Attempted access for color %d but there are only %d colors.", ent + 1, maxent);
-		return;
-	}
+	if (ent >= maxent)
+		throw std::out_of_range("ent >= maxent");
 
-	if (prj->isFixedPalette()) {
-		fl_alert("setEntry must not be used for fixed palette systems.");
-		return;
+	if (prj->isFixedPalette())
+		throw std::logic_error("Fixed palettes cannot be modified.");
+}
+
+paletteRawValue_t palette::getEntry(const unsigned ent)const {
+	switch (esize) {
+		case 1:
+			return palDat[ent];
+
+		case 2:
+		{
+			const uint16_t*palPtr = (uint16_t*)palDat;
+			return palPtr[ent];
+		}
 	}
+}
+
+void palette::setEntry(const paletteRawValue_t rawVal, const unsigned ent) {
+	boundsCheckEntry(ent);
 
 	switch (esize) {
 		case 1:
@@ -369,30 +386,16 @@ void palette::swapEntry(unsigned one, unsigned two) {
 	if (unlikely(one == two))
 		return;
 
-	switch (esize) {
-		case 1:
-		{	uint8_t palOld = palDat[two];
-			palDat[two] = palDat[one];
-			palDat[one] = palOld;
-		}
-		break;
-
-		case 2:
-		{	uint8_t palOld[2];
-			memcpy(palOld, palDat + two + two, 2);
-			memcpy(palDat + two + two, palDat + one + one, 2);
-			memcpy(palDat + one + one, palOld, 2);
-		}
-		break;
-
-		default:
-			show_default_error
-	}
+	paletteRawValue_t tmp = getEntry(two);
+	setEntry(two, getEntry(one));
+	setEntry(one, tmp);
 
 	uint8_t rgb[3];
-	memcpy(rgb, rgbPal + (two * 3), 3);
-	memcpy(rgbPal + (two * 3), rgbPal + (one * 3), 3);
-	memcpy(rgbPal + (one * 3), rgb, 3);
+	one *= 3;
+	two *= 3;
+	memcpy(rgb, rgbPal + two, 3);
+	memcpy(rgbPal + two, rgbPal + one, 3);
+	memcpy(rgbPal + one, rgb, 3);
 }
 bool palette::shouldAddCol(unsigned off, unsigned r, unsigned g, unsigned b, bool sprite) {
 	off -= off % getPerRow(sprite);
@@ -494,7 +497,7 @@ void palette::interpolateBackgroundColors(const palette& other, BgColProcessMode
 	// Cases:
 	// Multiple source rows one dst row: Average all the colors.
 	// One source row multiple dst rows: Copy the same value for all rows.
-	// Multiple sources and destinations:  Use linear interpolation to fill the destinations rows.
+	// Multiple sources and destinations: Use linear interpolation to fill the destinations rows.
 
 	unsigned rSrcStart, rSrcEnd;
 	other.calculateRowStartEnd(rSrcStart, rSrcEnd, src);
@@ -794,7 +797,7 @@ void palette::sortAndReduceColors(const palette& other) {
 	}
 
 	for (unsigned i = 0; i < totalRows(); ++i)
-		reduceRow(colorMap[i], i, getPerRow(i >= rowCntPal) - 1); // - 1  because the background color is not included.
+		reduceRow(colorMap[i], i, getPerRow(i >= rowCntPal) - 1); // - 1 because the background color is not included.
 }
 
 void palette::import(const palette& other) {
@@ -874,8 +877,7 @@ void palette::changeValueRaw(unsigned value, unsigned entryIndex, unsigned index
 			show_default_error
 	}
 
-	if (index >= totalColors())
-		throw std::out_of_range("index >= totalColors()");
+	boundsCheckEntry(index);
 
 	switch (prj->gameSystem) {
 		case segaGenesis:

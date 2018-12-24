@@ -34,6 +34,7 @@ class palette {
 	void groupRows(const palette& other, const std::unique_ptr<rawValPalMap_t[]>& colorMap, BgColProcessMode src, BgColProcessMode dst);
 	void sortAndReduceColors(const palette& other); // This is used for import.
 	void setFixedPalette();
+	void boundsCheckEntry(unsigned ent) const;
 public:
 	Project*prj;
 	uint8_t*rgbPal;
@@ -58,6 +59,8 @@ public:
 	void updateRGBindex(unsigned index);
 	void clear(void);
 	paletteRawValue_t rgbToValue(unsigned r, unsigned g, unsigned b);
+	rgbArray_t valueToRGB(const paletteRawValue_t val) const;
+	paletteRawValue_t getEntry(const unsigned ent)const;
 	void setEntry(const paletteRawValue_t rawVal, const unsigned ent);
 	void rgbToEntry(unsigned r, unsigned g, unsigned b, unsigned ent);
 	uint8_t to_nes_color_rgb(uint8_t red, uint8_t green, uint8_t blue);
