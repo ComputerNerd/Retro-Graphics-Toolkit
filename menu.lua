@@ -12,24 +12,17 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 --]]
 function userGuide(userData)--callback functions **must** have the user data (name does not matter) parameter and only that.
 	fl.alert("The user's guide can be found on the wiki https://github.com/ComputerNerd/Retro-Graphics-Toolkit/wiki or locally in the Manual folder");
 end
 function allMetaDither(unused)
-	rgt.syncProject()--this MUST be called in all callbacks that access certain tables BEFORE any table access.
-	--[[Tables affected by this rule:
-	--palette
-	--tile
-	--tilemaps
-	--chunks
-	--metasprites
-	--project
-	--]]
-	-- The only reason why the level table is unaffected is because sync is called on a project switch which is enough because the table data is only modified via means of Lua scripting.
-	if projects.current:have(project.spritesMask)==true then
-		metasprites.ditherAll()
+	local p = projects.current
+	print(p.metasprites)
+
+	if p:have(project.spritesMask)==true then
+		p.metasprites:ditherAll()
 	else
 		project.haveMessage(project.spritesMask)
 	end
