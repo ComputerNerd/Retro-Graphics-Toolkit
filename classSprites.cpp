@@ -582,8 +582,10 @@ void sprites::importSpriteSheet(const char*fname) {
 					}
 				}
 
-				if ((time(NULL) - lasttime) >= 1) {
-					lasttime = time(NULL);
+				time_t currentTime = std::time(nullptr);
+
+				if ((currentTime - lasttime) >= 1) {
+					lasttime = currentTime;
 					progress->value(h);
 					Fl::check();
 				}
@@ -646,8 +648,9 @@ void sprites::importSpriteSheet(const char*fname) {
 						}
 					}
 
-					if ((time(NULL) - lasttime) >= 1) {
-						lasttime = time(NULL);
+					time_t currentTime = std::time(nullptr);
+					if ((currentTime - lasttime) >= 1) {
+						lasttime = currentTime;
 						progress->maximum(rects.size());
 						progress->value(i);
 						snprintf(txtbuf, 1024, "Rectangles: %d", rects.size());
@@ -695,8 +698,9 @@ void sprites::importSpriteSheet(const char*fname) {
 						}
 					}
 
-					if ((time(NULL) - lasttime) >= 1) {
-						lasttime = time(NULL);
+					time_t currentTime = std::time(nullptr);
+					if ((currentTime - lasttime) >= 1) {
+						lasttime = currentTime;
 						progress->maximum(rects.size());
 						progress->value(i);
 						snprintf(txtbuf, 1024, "Rectangles: %d", rects.size());

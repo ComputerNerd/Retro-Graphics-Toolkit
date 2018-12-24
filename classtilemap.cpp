@@ -1625,8 +1625,10 @@ void tileMap::pickExtAttrs(void) {
 						for (unsigned i = 0; i < mapSizeW; ++i) {
 							for (unsigned y = 0; y < prj->tileC->height(); ++y) {
 								unsigned tile = get_tile(i, j);
+
 								if (tile >= prj->tileC->amt) // Skip out of bounds tiles.
 									continue;
+
 								unsigned offset = (j * prj->tileC->height() * prj->tileC->width() * mapSizeW) + (i * prj->tileC->width()) + (y * mapSizeW * prj->tileC->width());
 								uint8_t*iPtr = indexList + offset;
 								uint8_t*tPtr = imgTmp + (offset * 4) + 3;
