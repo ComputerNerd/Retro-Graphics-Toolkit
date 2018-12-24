@@ -649,6 +649,7 @@ void sprites::importSpriteSheet(const char*fname) {
 					}
 
 					time_t currentTime = std::time(nullptr);
+
 					if ((currentTime - lasttime) >= 1) {
 						lasttime = currentTime;
 						progress->maximum(rects.size());
@@ -699,6 +700,7 @@ void sprites::importSpriteSheet(const char*fname) {
 					}
 
 					time_t currentTime = std::time(nullptr);
+
 					if ((currentTime - lasttime) >= 1) {
 						lasttime = currentTime;
 						progress->maximum(rects.size());

@@ -470,6 +470,10 @@ void palette::calculateRowStartEnd(unsigned& start, unsigned& end, BgColProcessM
 			end = totalRows() - 1;
 			break;
 
+		case BgColProcessMode::ALT_FIRST_ROW:
+			start = end = rowCntPal;
+			break;
+
 		case BgColProcessMode::FIXED_SPRITE_ROW:
 			start = end = fixedSpriteRow;
 			break;
@@ -755,43 +759,23 @@ void palette::sortAndReduceColors(const palette& other) {
 	bool fixedRowSet = false;
 
 	if (fixedSpriteRow >= 0) {
-		unsigned copyAmt, idxStart;
 
 		if (other.fixedSpriteRow >= 0) {
 			// Copy the fixed rows.
-			idxStart = other.getIndexByRow(other.fixedSpriteRow, 1, false);
-			copyAmt = other.perRow;
+			fixedRowSet = true;
+			groupRows(other, colorMap, BgColProcessMode::FIXED_SPRITE_ROW, BgColProcessMode::FIXED_SPRITE_ROW);
 		} else if (other.haveAlt) {
 			// Copy all alternative palette colors into the one row.
-			idxStart = other.colorCnt + 1; // + 1 to skip the first background color.
-			copyAmt = other.colorCntalt;
-		} // Otherwise no special actions are taken for the fixed sprite palette.
-
-		if (other.fixedSpriteRow >= 0 || other.haveAlt) {
 			fixedRowSet = true;
-			const uint8_t* oldColors = other.rgbPal + (idxStart * 3);
-
-			for (unsigned i = 1; i < copyAmt; ++i) { // i = 1 instead of zero because we skipped the first background color using idxStart.
-				if (i % other.perRow) { // Ensure that the old backgrounds colors are skipped.
-					colorMap[fixedSpriteRow][rgbToValue(oldColors[0], oldColors[1], oldColors[2])] = rgbArray_t {oldColors[0], oldColors[1], oldColors[2]};
-				}
-
-				oldColors += 3; // Advance the pointer even if it is a background color.
-			}
-		}
+			groupRows(other, colorMap, BgColProcessMode::ALT, BgColProcessMode::FIXED_SPRITE_ROW);
+		} // Otherwise no special actions are taken for the fixed sprite palette.
 	}
 
 	if (haveAlt) {
 		if (other.fixedSpriteRow >= 0) {
 			// Copy all colors from the fixed sprite row into the first row of the alternative palette.
 			// When haveAlt is enabled we are guaranteed to have at-least one alternative palette row.
-			unsigned idxStart = other.getIndexByRow(other.fixedSpriteRow, 0, false); // false because when fixedSpriteRow >= 0 haveAlt is guaranteed to equal false.
-			const uint8_t* oldColors = other.rgbPal + (idxStart * 3);
-
-			for (unsigned i = 0; i < other.perRow; ++i) {
-				colorMap[rowCntPal][rgbToValue(oldColors[0], oldColors[1], oldColors[2])] = rgbArray_t {oldColors[0], oldColors[1], oldColors[2] };
-				oldColors += 3;
-			}
+			groupRows(other, colorMap, BgColProcessMode::FIXED_SPRITE_ROW, BgColProcessMode::ALT_FIRST_ROW);
 
 			groupRows(other, colorMap, BgColProcessMode::ALL_IGNORE_FIXED, BgColProcessMode::MAIN);
 		} else if (other.haveAlt) {

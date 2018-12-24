@@ -25,7 +25,7 @@
 typedef std::array<uint8_t, 3> rgbArray_t;
 typedef uint16_t paletteRawValue_t;
 typedef std::map<paletteRawValue_t, rgbArray_t> rawValPalMap_t;
-enum class BgColProcessMode {ALL, MAIN, ALT, FIXED_SPRITE_ROW, ALL_IGNORE_FIXED};
+enum class BgColProcessMode {ALL, MAIN, ALT, ALT_FIRST_ROW, FIXED_SPRITE_ROW, ALL_IGNORE_FIXED};
 class palette {
 	void reduceRow(rawValPalMap_t& rowMap, unsigned targetRow, unsigned targetColorCount);
 	void calculateRowStartEnd(unsigned& start, unsigned& end, BgColProcessMode mode) const;
