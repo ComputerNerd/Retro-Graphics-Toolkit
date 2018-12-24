@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cmath>//For some reason this is needed when compiling with mingw otherwise hypot error is encountered
 #include <stdlib.h>
+#include <utility>
 #include "system.h"
 #include "project.h"
 #include "undo.h"
@@ -112,7 +113,7 @@ struct undoAppendgroupdat {
 };
 struct undoTilePixel {
 	tileTypeMask_t type;
-	uint32_t id, x, y, val, valnew;
+	uint32_t id, x, y, val;
 };
 struct undoTilemap { //For undoing the entire tilemap
 	uint32_t plane;
@@ -122,7 +123,7 @@ struct undoTilemap { //For undoing the entire tilemap
 };
 struct undoTilemapEdit {
 	uint32_t plane;
-	uint32_t x, y, val, valnew;
+	uint32_t x, y, val;
 };
 struct undoTilemapPlane {
 	tileMap*old;
@@ -136,10 +137,10 @@ struct undoResize {
 };
 struct undoPalette {
 	void*ptr;
-	void*ptrnew;
 };
 struct undoPaletteEntry {
-	uint32_t id, val, valnew;
+	uint32_t id;
+	paletteRawValue_t val;
 };
 struct undoChunkEdit {
 	uint32_t id, x, y;
@@ -372,15 +373,10 @@ static void cleanupEvent(uint32_t id) {
 
 		case uPalette:
 		{	struct undoPalette*up = (struct undoPalette*)uptr->ptr;
-			unsigned sz = currentProject->pal->colorCnt + currentProject->pal->colorCntalt;
+			unsigned sz = currentProject->pal->totalColors();
 			sz *= currentProject->pal->esize;
 			free(up->ptr);
 			memUsed -= sz;
-
-			if (up->ptrnew) {
-				free(up->ptrnew);
-				memUsed -= sz;
-			}
 
 			free(uptr->ptr);
 			memUsed -= sizeof(struct undoPalette);
@@ -668,7 +664,8 @@ static void UndoRedo(bool redo) {
 
 	switch (uptr->type) {
 		case uTile:
-		{	struct undoTile*ut = (struct undoTile*)uptr->ptr;
+		{
+			struct undoTile*ut = (struct undoTile*)uptr->ptr;
 
 			if (redo) {
 				if (ut->type & tTypeDeleteFlag) {
@@ -695,28 +692,24 @@ static void UndoRedo(bool redo) {
 		break;
 
 		case uTilePixel:
-		{	struct undoTilePixel*ut = (struct undoTilePixel*)uptr->ptr;
+		{
+			struct undoTilePixel*ut = (struct undoTilePixel*)uptr->ptr;
 
 			if (ut->type == tTypeTruecolor) {
-				if (redo)
-					currentProject->tileC->setPixelTc(ut->id, ut->x, ut->y, ut->valnew);
-				else {
-					ut->valnew = currentProject->tileC->getPixelTc(ut->id, ut->x, ut->y);
-					currentProject->tileC->setPixelTc(ut->id, ut->x, ut->y, ut->val);
-				}
+				uint32_t tmp = currentProject->tileC->getPixelTc(ut->id, ut->x, ut->y);
+				currentProject->tileC->setPixelTc(ut->id, ut->x, ut->y, ut->val);
+				ut->val = tmp;
 			} else {
-				if (redo)
-					currentProject->tileC->setPixel(ut->id, ut->x, ut->y, ut->valnew);
-				else {
-					ut->valnew = currentProject->tileC->getPixel(ut->id, ut->x, ut->y);
-					currentProject->tileC->setPixel(ut->id, ut->x, ut->y, ut->val);
-				}
+				uint32_t tmp = currentProject->tileC->getPixel(ut->id, ut->x, ut->y);
+				currentProject->tileC->setPixel(ut->id, ut->x, ut->y, ut->val);
+				ut->val = tmp;
 			}
 		}
 		break;
 
 		case uTileAll:
-		{	struct undoTileAll*ut = (struct undoTileAll*)uptr->ptr;
+		{
+			struct undoTileAll*ut = (struct undoTileAll*)uptr->ptr;
 
 			if (redo)
 				cpyAllTilesU((uint8_t*)ut->ptrnew, ut->amtnew, ut->type);
@@ -735,7 +728,8 @@ static void UndoRedo(bool redo) {
 		break;
 
 		case uTileGroup:
-		{	struct undoTileGroup*ut = (struct undoTileGroup*)uptr->ptr;
+		{
+			struct undoTileGroup*ut = (struct undoTileGroup*)uptr->ptr;
 			unsigned sz = getSzTile(ut->type);
 
 			if (redo) {
@@ -781,7 +775,8 @@ static void UndoRedo(bool redo) {
 		break;
 
 		case uTileAppendgroupdat:
-		{	struct undoAppendgroupdat*ut = (struct undoAppendgroupdat*)uptr->ptr;
+		{
+			struct undoAppendgroupdat*ut = (struct undoAppendgroupdat*)uptr->ptr;
 
 			if (redo) {
 				unsigned amtold = currentProject->tileC->amt;
@@ -814,15 +809,13 @@ static void UndoRedo(bool redo) {
 			break;
 
 		case uTilemapEdit:
-		{	struct undoTilemapEdit*um = (struct undoTilemapEdit*)uptr->ptr;
+		{
+			struct undoTilemapEdit*um = (struct undoTilemapEdit*)uptr->ptr;
 			isCorrectPlane(um->plane);
 
-			if (redo)
-				currentProject->tms->maps[um->plane].setRaw(um->x, um->y, um->valnew);
-			else {
-				um->valnew = currentProject->tms->maps[um->plane].getRaw(um->x, um->y);
-				currentProject->tms->maps[um->plane].setRaw(um->x, um->y, um->val);
-			}
+			uint32_t tmp = currentProject->tms->maps[um->plane].getRaw(um->x, um->y);
+			currentProject->tms->maps[um->plane].setRaw(um->x, um->y, um->val);
+			um->val = tmp;
 
 			if (tileEditModePlace_G)
 				window->updateTileMapGUI(um->x, um->y);
@@ -831,7 +824,8 @@ static void UndoRedo(bool redo) {
 
 		case uTilemap:
 		case uTilemapattr:
-		{	struct undoTilemap*um = (struct undoTilemap*)uptr->ptr;
+		{
+			struct undoTilemap*um = (struct undoTilemap*)uptr->ptr;
 			isCorrectPlane(um->plane);
 
 			if (redo) {
@@ -867,7 +861,8 @@ static void UndoRedo(bool redo) {
 		break;
 
 		case uTilemapResize:
-		{	struct undoResize*um = (struct undoResize*)uptr->ptr;
+		{
+			struct undoResize*um = (struct undoResize*)uptr->ptr;
 			isCorrectPlane(um->plane);
 
 			if (redo)
@@ -882,7 +877,8 @@ static void UndoRedo(bool redo) {
 		break;
 
 		case uTilemapBlocksAmt:
-		{	struct undoResize*um = (struct undoResize*)uptr->ptr;
+		{
+			struct undoResize*um = (struct undoResize*)uptr->ptr;
 			isCorrectPlane(um->plane);
 
 			if (redo) {
@@ -902,7 +898,8 @@ static void UndoRedo(bool redo) {
 		break;
 
 		case uTilemapPlaneDelete:
-		{	struct undoTilemapPlane*um = (struct undoTilemapPlane*)uptr->ptr;
+		{
+			struct undoTilemapPlane*um = (struct undoTilemapPlane*)uptr->ptr;
 
 			if (redo)
 				removePlane(um->plane);
@@ -918,7 +915,8 @@ static void UndoRedo(bool redo) {
 		break;
 
 		case uTilemapPlaneAdd:
-		{	struct undoTilemapPlane*um = (struct undoTilemapPlane*)uptr->ptr;
+		{
+			struct undoTilemapPlane*um = (struct undoTilemapPlane*)uptr->ptr;
 
 			if (redo) {
 				currentProject->tms->maps.insert(currentProject->tms->maps.begin() + um->plane, tileMap(currentProject));
@@ -936,21 +934,15 @@ static void UndoRedo(bool redo) {
 		break;
 
 		case uPalette:
-		{	struct undoPalette*up = (struct undoPalette*)uptr->ptr;
-			unsigned sz, el = currentProject->pal->colorCnt + currentProject->pal->colorCntalt;
+		{
+			struct undoPalette*up = (struct undoPalette*)uptr->ptr;
+			unsigned sz, el = currentProject->pal->totalColors();
 			sz = el * currentProject->pal->esize;
+			std::unique_ptr<uint8_t[]> tmpCopy(new uint8_t[sz]);
 
-			if (redo)
-				memcpy(currentProject->pal->palDat, up->ptrnew, sz);
-			else {
-				if (!up->ptrnew) {
-					up->ptrnew = malloc(sz);
-					memUsed += sz;
-				}
-
-				memcpy(up->ptrnew, currentProject->pal->palDat, sz);
-				memcpy(currentProject->pal->palDat, up->ptr, sz);
-			}
+			memcpy((void*)&tmpCopy[0], currentProject->pal->palDat, sz); // Create a copy of the current palette.
+			memcpy(currentProject->pal->palDat, up->ptr, sz); // Set the palette back to the old data.
+			memcpy(up->ptr, (void*)&tmpCopy[0], sz); // up->ptr now contains what used to be in currentProject->pal->palDat.
 
 			for (unsigned i = 0; i < el; ++i)
 				currentProject->pal->updateRGBindex(i);
@@ -964,24 +956,17 @@ static void UndoRedo(bool redo) {
 
 			switch (currentProject->pal->esize) {
 				case 1:
-					if (redo)
-						currentProject->pal->palDat[up->id] = up->valnew;
-					else {
-						up->valnew = currentProject->pal->palDat[up->id];
-						currentProject->pal->palDat[up->id] = up->val;
-					}
-
-					break;
+				{
+					uint8_t tmp = currentProject->pal->palDat[up->id];
+					currentProject->pal->palDat[up->id] = up->val;
+					up->val = tmp;
+				}
+				break;
 
 				case 2:
-				{	uint16_t*ptr = (uint16_t*)currentProject->pal->palDat + up->id;
-
-					if (redo)
-						*ptr = up->valnew;
-					else {
-						up->valnew = *ptr;
-						*ptr = up->val;
-					}
+				{
+					uint16_t*ptr = (uint16_t*)currentProject->pal->palDat + up->id;
+					std::swap(*ptr, up->val);
 				}
 				break;
 			}
@@ -997,7 +982,8 @@ static void UndoRedo(bool redo) {
 				case tile_edit:
 					palBar.selBox[1] = up->id % currentProject->pal->perRow;
 					palBar.changeRow(up->id / currentProject->pal->perRow, 1);
-					{	unsigned focus = 0;
+					{
+						unsigned focus = 0;
 
 						for (unsigned i = 0; i < currentProject->pal->rowCntPal; ++i)
 							focus |= Fl::focus() == window->palRTE[i];
@@ -1453,7 +1439,6 @@ void pushPaletteAll(void) {
 	up->ptr = malloc(sz);
 	memcpy(up->ptr, currentProject->pal->palDat, sz);
 	memUsed += sz;
-	up->ptrnew = 0;
 }
 void pushPaletteEntry(uint32_t id) {
 	pushEventPrepare();
