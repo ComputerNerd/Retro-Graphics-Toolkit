@@ -60,8 +60,10 @@ function filereaderProcessText(tp,relptr,offbits,be,t,fname)-- Converts text to 
 			t=t:gsub("static","")
 			t=t:gsub("const","")
 			t=t:gsub("long long","int64_t")
-			t=t:gsub("uint","unsigned int")--Solve two problems at once. Simplifies handling of uintx_t and allows for uint to be used as unsigned int
+			t=t:gsub("uint","unsigned int")--Solve two problems at once. Simplifies handling of uintx_t and allows for uint to be used as unsigned int.
 			t=t:gsub(";","")
+			t = t:gsub('#include.*["%<].*["%>]', '') -- Remove include statements.
+			t = t:gsub('(\r?\n)%s*\r?\n', '%1') -- Remove blank lines. Based on: http://lua-users.org/wiki/SciteDeleteBlankLines
 			local sizes={char='b',short='h',int='i',long='j',int8_t='b',int16_t='h',int32_t='i',int64_t='j'}
 			local array={}--{unsigned,size,{data}}
 			local outArray
