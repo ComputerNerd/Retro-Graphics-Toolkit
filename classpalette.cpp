@@ -741,8 +741,10 @@ void palette::groupRows(const palette& other, const std::unique_ptr<rawValPalMap
 				unsigned oldColIdx = other.getIndexByRow(rSrc, col) * 3;
 				const uint8_t* oldColor = other.rgbPal + oldColIdx;
 				rgbArray_t oldC {oldColor[0], oldColor[1], oldColor[2] };
-				if (uniqueColors[rDst].count(oldC) < 1)
-					uniqueColorsNew.emplace(rgbArray_t {oldColor[0], oldColor[1], oldColor[2] });
+				if (uniqueColors[rDst].count(oldC) < 1) {
+					uniqueColorsNew.emplace(oldC);
+					uniqueColors[rDst].emplace(oldC);
+				}
 			}
 
 			for (auto it = uniqueColorsNew.cbegin(); it != uniqueColorsNew.cend(); ++it) {
