@@ -20,6 +20,7 @@
 #include <cstdio>
 #include <map>
 #include <memory>
+#include <set>
 #include "project.h"
 #include "filemisc.h"
 typedef std::array<uint8_t, 3> rgbArray_t;
@@ -31,10 +32,14 @@ class palette {
 	void calculateRowStartEnd(unsigned& start, unsigned& end, BgColProcessMode mode) const;
 	void interpolateBackgroundColors(const palette& other, BgColProcessMode src, BgColProcessMode dst);
 	void importBackgroundColors(const palette& other);
-	void groupRows(const palette& other, const std::unique_ptr<rawValPalMap_t[]>& colorMap, BgColProcessMode src, BgColProcessMode dst);
+	void groupRows(const palette& other, const std::unique_ptr<rawValPalMap_t[]>& colorMap, const std::unique_ptr<std::set<rgbArray_t>[]>& uniqueColors, BgColProcessMode src, BgColProcessMode dst);
 	void sortAndReduceColors(const palette& other); // This is used for import.
 	void setFixedPalette();
 	void boundsCheckEntry(unsigned ent) const;
+	void checkPaletteComponentIndex(unsigned paletteComponentIndex) const;
+	unsigned maxValForPaletteComponent(unsigned paletteComponentIndex) const;
+	unsigned paletteComponentCount() const;
+	paletteRawValue_t changeValueRaw(unsigned value, unsigned paletteComponentIndex, paletteRawValue_t rawVal) const;
 public:
 	Project*prj;
 	uint8_t*rgbPal;
@@ -74,7 +79,7 @@ public:
 	void import(const palette& other);
 	unsigned getIndexByRow(unsigned row, unsigned offset, bool isAlt) const;
 	unsigned getIndexByRow(unsigned row, unsigned offset) const;
-	void changeValueRaw(unsigned value, unsigned entryIndex, unsigned index);
+	void changeIndexRaw(unsigned value, unsigned entryIndex, unsigned index);
 	bool isAltRow(unsigned row) const {
 		return row >= rowCntPal;
 	}

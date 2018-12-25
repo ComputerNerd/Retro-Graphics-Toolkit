@@ -694,7 +694,7 @@ void palette::reduceRow(rawValPalMap_t& rowMap, unsigned targetRow, unsigned tar
 	}
 }
 
-void palette::groupRows(const palette& other, const std::unique_ptr<rawValPalMap_t[]>& colorMap, BgColProcessMode src, BgColProcessMode dst) {
+void palette::groupRows(const palette& other, const std::unique_ptr<rawValPalMap_t[]>& colorMap, const std::unique_ptr<std::set<rgbArray_t>[]>& uniqueColors, BgColProcessMode src, BgColProcessMode dst) {
 	unsigned rSrcStart, rSrcEnd;
 	other.calculateRowStartEnd(rSrcStart, rSrcEnd, src);
 	unsigned useableSourceRows = rSrcEnd - rSrcStart + 1;
@@ -722,24 +722,93 @@ void palette::groupRows(const palette& other, const std::unique_ptr<rawValPalMap
 
 	for (int r = rSrcStart; r <= rSrcEnd; r += rowsInNewRow) {
 
-		int r0 = r - rSrcStart;
-		r0 /= rowsInNewRow;
-		r0 += rDstStart;
+		int rDst = r - rSrcStart;
+		rDst /= rowsInNewRow;
+		rDst += rDstStart;
 
 		if (dst == BgColProcessMode::ALL_IGNORE_FIXED && r == fixedSpriteRow)
 			continue;
 
 		for (int rr = 0; rr < rowsInNewRow; ++rr) {
-			int rc = r + rr;
+			int rSrc = r + rr;
 
-			if (src == BgColProcessMode::ALL_IGNORE_FIXED && rc == other.fixedSpriteRow)
+			if (src == BgColProcessMode::ALL_IGNORE_FIXED && rSrc == other.fixedSpriteRow)
 				continue;
 
-			for (unsigned col = 1; col < other.getPerRow(isAltRow(rc)); ++col) { // Start with one instead of zero to skip the background color.
-				unsigned oldColIdx = other.getIndexByRow(rc, col) * 3;
+			std::set<rgbArray_t> uniqueColorsNew;
+
+			for (unsigned col = 1; col < other.getPerRow(isAltRow(rSrc)); ++col) { // Start with one instead of zero to skip the background color.
+				unsigned oldColIdx = other.getIndexByRow(rSrc, col) * 3;
 				const uint8_t* oldColor = other.rgbPal + oldColIdx;
-				colorMap[r0][rgbToValue(oldColor[0], oldColor[1], oldColor[2])] = rgbArray_t {oldColor[0], oldColor[1], oldColor[2] };
+				rgbArray_t oldC {oldColor[0], oldColor[1], oldColor[2] };
+				if (uniqueColors[rDst].count(oldC) < 1)
+					uniqueColorsNew.emplace(rgbArray_t {oldColor[0], oldColor[1], oldColor[2] });
 			}
+
+			for (auto it = uniqueColorsNew.cbegin(); it != uniqueColorsNew.cend(); ++it) {
+				const rgbArray_t& color = *it;
+				paletteRawValue_t closestColor = rgbToValue(color[0], color[1], color[2]);
+
+				if (colorMap[rDst].count(closestColor) > 0) {
+					std::set<paletteRawValue_t> permutations;
+					// Create the closest unique color possible.
+					const unsigned palComponentCount = paletteComponentCount();
+
+					if (palComponentCount != 2 && palComponentCount != 3)
+						throw std::logic_error("Permutations are not implemented for this number of permutations."); // TODO: is there a more generic way to do this?
+
+					if (palComponentCount == 2) {
+						for (unsigned a = 0; a <= maxValForPaletteComponent(0); ++a) {
+							for (unsigned b = 0; b <= maxValForPaletteComponent(1); ++b) {
+								paletteRawValue_t tmp = changeValueRaw(a, 0, 0);
+								tmp = changeValueRaw(b, 1, tmp);
+								permutations.insert(tmp);
+							}
+						}
+					} else {
+						for (unsigned a = 0; a <= maxValForPaletteComponent(0); ++a) {
+							for (unsigned b = 0; b <= maxValForPaletteComponent(1); ++b) {
+								for (unsigned c = 0; c <= maxValForPaletteComponent(2); ++c) {
+									paletteRawValue_t tmp = changeValueRaw(a, 0, 0);
+									tmp = changeValueRaw(b, 1, tmp);
+									tmp = changeValueRaw(c, 2, tmp);
+									permutations.insert(tmp);
+								}
+							}
+						}
+					}
+
+					// Remove colors that we already have.
+					permutations.erase(closestColor);
+
+					for (auto itCM = colorMap[rDst].cbegin(); itCM != colorMap[rDst].cend(); ++itCM)
+						permutations.erase(itCM->first);
+
+					bool needsInit = true;
+					double bestd;
+					paletteRawValue_t bestColor;
+					rgbArray_t closestColorRGB = valueToRGB(closestColor);
+					double worstd = ciede2000rgb(color[0], color[1], color[2], closestColorRGB[0], closestColorRGB[1], closestColorRGB[2]);
+					worstd *= 2.0;
+
+					for (auto itP = permutations.cbegin(); itP != permutations.cend(); ++itP) {
+						rgbArray_t testColor = valueToRGB(*itP);
+						double d = ciede2000rgb(color[0], color[1], color[2], testColor[0], testColor[1], testColor[2]);
+
+						if (needsInit || d < bestd) {
+							bestd = d;
+							bestColor = *itP;
+							needsInit = false;
+						}
+					}
+
+					if (bestd < worstd)
+						colorMap[rDst][bestColor] = valueToRGB(bestColor);
+					// Now find the second closest color that does not already exist in
+				} else
+					colorMap[rDst][closestColor] = valueToRGB(closestColor);
+			}
+
 		}
 	}
 }
@@ -755,6 +824,7 @@ void palette::sortAndReduceColors(const palette& other) {
 	/* Put the old colors into groups.
 	 * We are allowed to merge existing rows however existing rows will not be split up. */
 	std::unique_ptr<rawValPalMap_t[]> colorMap(new rawValPalMap_t[totalRows()]);
+	std::unique_ptr<std::set<rgbArray_t>[]> uniqueColors(new std::set<rgbArray_t>[totalRows()]);
 	// Populate the set. This provides an easy way to eliminate duplicate colors.
 	const uint8_t* oldColors = other.rgbPal;
 
@@ -766,11 +836,11 @@ void palette::sortAndReduceColors(const palette& other) {
 		if (other.fixedSpriteRow >= 0) {
 			// Copy the fixed rows.
 			fixedRowSet = true;
-			groupRows(other, colorMap, BgColProcessMode::FIXED_SPRITE_ROW, BgColProcessMode::FIXED_SPRITE_ROW);
+			groupRows(other, colorMap, uniqueColors, BgColProcessMode::FIXED_SPRITE_ROW, BgColProcessMode::FIXED_SPRITE_ROW);
 		} else if (other.haveAlt) {
 			// Copy all alternative palette colors into the one row.
 			fixedRowSet = true;
-			groupRows(other, colorMap, BgColProcessMode::ALT, BgColProcessMode::FIXED_SPRITE_ROW);
+			groupRows(other, colorMap, uniqueColors, BgColProcessMode::ALT, BgColProcessMode::FIXED_SPRITE_ROW);
 		} // Otherwise no special actions are taken for the fixed sprite palette.
 	}
 
@@ -778,22 +848,22 @@ void palette::sortAndReduceColors(const palette& other) {
 		if (other.fixedSpriteRow >= 0) {
 			// Copy all colors from the fixed sprite row into the first row of the alternative palette.
 			// When haveAlt is enabled we are guaranteed to have at-least one alternative palette row.
-			groupRows(other, colorMap, BgColProcessMode::FIXED_SPRITE_ROW, BgColProcessMode::ALT_FIRST_ROW);
+			groupRows(other, colorMap, uniqueColors, BgColProcessMode::FIXED_SPRITE_ROW, BgColProcessMode::ALT_FIRST_ROW);
 
-			groupRows(other, colorMap, BgColProcessMode::ALL_IGNORE_FIXED, BgColProcessMode::MAIN);
+			groupRows(other, colorMap, uniqueColors, BgColProcessMode::ALL_IGNORE_FIXED, BgColProcessMode::MAIN);
 		} else if (other.haveAlt) {
-			groupRows(other, colorMap, BgColProcessMode::MAIN, BgColProcessMode::MAIN);
-			groupRows(other, colorMap, BgColProcessMode::ALT, BgColProcessMode::ALT);
+			groupRows(other, colorMap, uniqueColors, BgColProcessMode::MAIN, BgColProcessMode::MAIN);
+			groupRows(other, colorMap, uniqueColors, BgColProcessMode::ALT, BgColProcessMode::ALT);
 		} else { // Put the old main palette in the alternative palette group. We can't copy the results from the main palette because perRow may not equal perRowalt.
-			groupRows(other, colorMap, BgColProcessMode::MAIN, BgColProcessMode::MAIN);
-			groupRows(other, colorMap, BgColProcessMode::MAIN, BgColProcessMode::ALT);
+			groupRows(other, colorMap, uniqueColors, BgColProcessMode::MAIN, BgColProcessMode::MAIN);
+			groupRows(other, colorMap, uniqueColors, BgColProcessMode::MAIN, BgColProcessMode::ALT);
 		}
 	} else {
 		// First do the main palette.
-		groupRows(other, colorMap, BgColProcessMode::MAIN, fixedRowSet ? BgColProcessMode::ALL_IGNORE_FIXED : BgColProcessMode::MAIN);
+		groupRows(other, colorMap, uniqueColors, BgColProcessMode::MAIN, fixedRowSet ? BgColProcessMode::ALL_IGNORE_FIXED : BgColProcessMode::MAIN);
 
 		if (other.haveAlt) // Put the old alternative palette in the same group as the main palette.
-			groupRows(other, colorMap, BgColProcessMode::ALT, BgColProcessMode::ALL_IGNORE_FIXED);
+			groupRows(other, colorMap, uniqueColors, BgColProcessMode::ALT, BgColProcessMode::ALL_IGNORE_FIXED);
 	}
 
 	for (unsigned i = 0; i < totalRows(); ++i)
@@ -858,85 +928,121 @@ unsigned palette::getIndexByRow(unsigned row, unsigned offset) const {
 	return getIndexByRow(row, offset, isAlt);
 }
 
-void palette::changeValueRaw(unsigned value, unsigned entryIndex, unsigned index) {
-	switch (prj->gameSystem) { // ensure entryIndex is in an allowed range.
+unsigned palette::paletteComponentCount() const {
+	switch (prj->gameSystem) { // ensure paletteComponentIndex is in an allowed range.
 		case segaGenesis:
 		case masterSystem:
-			if (entryIndex >= 3)
-				throw std::out_of_range("entryIndex >= 3");
-
-			break;
+		case gameGear:
+			return 3;
 
 		case NES:
-			if (entryIndex >= 2)
-				throw std::out_of_range("entryIndex >= 2");
-
-			break;
+			return 2;
 
 		default:
 			show_default_error
 	}
 
-	boundsCheckEntry(index);
+	return 0;
+}
+
+void palette::checkPaletteComponentIndex(unsigned palComponentIdx) const {
+	unsigned entryIndexThreshold = paletteComponentCount();
+
+	if (palComponentIdx >= entryIndexThreshold)
+		throw std::out_of_range("entryIndex >= entryIndexThreshold");
+}
+
+unsigned palette::maxValForPaletteComponent(unsigned paletteComponentIndex) const {
+
+	switch (prj->gameSystem) {
+		case segaGenesis:
+			return 7;
+
+		case NES:
+			if (paletteComponentIndex == 0)
+				return 15;
+			else
+				return 3;
+
+		case masterSystem:
+			return 3;
+
+		case gameGear:
+			return 15;
+
+		default:
+			show_default_error
+	}
+
+	return 0;
+}
+
+paletteRawValue_t palette::changeValueRaw(unsigned value, unsigned paletteComponentIndex, paletteRawValue_t rawVal) const {
+
+	checkPaletteComponentIndex(paletteComponentIndex);
+
+	unsigned maxVal = maxValForPaletteComponent(paletteComponentIndex);
+
+	if (value > maxVal)
+		throw std::logic_error("value > maxVal");
 
 	switch (prj->gameSystem) {
 		case segaGenesis:
 		{
-			unsigned shift = entryIndex * 4 + 1;
-			uint16_t* palVal = (uint16_t*)palDat + index;
-			*palVal &= ~(7 << shift);
-			*palVal |= (value & 7) << shift;
+			unsigned shift = paletteComponentIndex * 4 + 1;
+			rawVal &= ~(7 << shift);
+			rawVal |= (value & 7) << shift;
 		}
 		break;
 
 		case masterSystem:
 		{
-			unsigned shift = entryIndex * 2;
-			palDat[index] &= ~(3 << shift);
-			palDat[index] |= (value & 3) << shift;
+			unsigned shift = paletteComponentIndex * 2;
+			rawVal &= ~(3 << shift);
+			rawVal |= (value & 3) << shift;
 		}
 		break;
 
 		case gameGear:
 		{
-			unsigned shift = entryIndex * 4;
-			uint16_t*pal = (uint16_t*)palDat + index;
-			*pal &= ~(15 << shift);
-			*pal |= (value & 15) << shift;
+			unsigned shift = paletteComponentIndex * 4;
+			rawVal &= ~(15 << shift);
+			rawVal |= (value & 15) << shift;
 		}
 		break;
 
 		case NES:
-		{
-			unsigned pal = palDat[index];
-
-			switch (entryIndex) {
+			switch (paletteComponentIndex) {
 				/*
-				   76543210
-				   ||||||||
-				   ||||++++- Hue (phase)
-				   ||++----- Value (voltage)
-				   ++------- Unimplemented, reads back as 0
-				   */
+				76543210
+				||||||||
+				||||++++- Hue (phase)
+				||++----- Value (voltage)
+				++------- Unimplemented, reads back as 0
+				*/
 				case 0://Hue
 					//first read out value
-					pal &= 3 << 4;
-					pal |= value;
+					rawVal &= 3 << 4;
+					rawVal |= value;
 					break;
 
 				case 1://Value
-					pal &= 15;
-					pal |= value << 4;
+					rawVal &= 15;
+					rawVal |= value << 4;
 					break;
 			}
 
-			palDat[index] = pal;
-		}
-		break;
+			break;
 
 		default:
 			show_default_error
 	}
 
+	return rawVal;
+}
+
+void palette::changeIndexRaw(unsigned value, unsigned paletteComponentIndex, unsigned index) {
+	paletteRawValue_t val = changeValueRaw(value, paletteComponentIndex, getEntry(index));
+	setEntry(val, index);
 	updateRGBindex(index);
 }

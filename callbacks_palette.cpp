@@ -105,7 +105,7 @@ void update_palette(Fl_Widget* o, void* v) {
 		pushPaletteEntry(selectedEntry);
 	}
 
-	currentProject->pal->changeValueRaw((unsigned)s->value(), (unsigned)(uintptr_t)v, selectedEntry);
+	currentProject->pal->changeIndexRaw((unsigned)s->value(), (unsigned)(uintptr_t)v, selectedEntry);
 
 	if (mode_editor == tile_edit)
 		currentProject->tileC->truecolor_to_tile(palBar.selRow[1], currentProject->tileC->current_tile, false); //update tile
