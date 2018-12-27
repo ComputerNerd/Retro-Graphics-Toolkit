@@ -361,20 +361,25 @@ bool sprites::recttoSprite(int x0, int x1, int y0, int y1, int where, Fl_Shared_
 	hf = loaded_image->h();
 	w = x1 - x0 + 1;
 	h = y1 - y0 + 1;
-	wt = (w + 7) & (~7);
-	ht = (h + 7) & (~7);
+	unsigned tileWidth = prj->tileC->width();
+	unsigned tileHeight = prj->tileC->height();
+
+	unsigned wTiles = (w + tileWidth - 1) / tileWidth;
+	unsigned hTiles = (h + tileHeight - 1) / tileHeight;
+
+	wt = wTiles * tileWidth; // Width of the new sprite including padding.
+	ht = hTiles * tileHeight;
 	//Determine how many sprites will be created
-	unsigned spritesnew = ((wt + wmax - 8) / wmax) * ((ht + hmax - 8) / hmax);
+	unsigned spritesnew = (wTiles / wmax) * (hTiles / hmax);
 
 	if (where >= amt)
 		setAmt(where + 1);
 
 	unsigned startTile = prj->tileC->amt;
 	uint8_t*out = prj->tileC->truetDat.data() + (startTile * 256);
-	unsigned newTiles = (wt / 8) * (ht / 8);
-	prj->tileC->amt += newTiles;
+	unsigned newTiles = wTiles * hTiles;
 	//set new amount
-	prj->tileC->resizeAmt();
+	prj->tileC->resizeAmt(prj->tileC->amt + newTiles);
 	out = prj->tileC->truetDat.data() + (startTile * prj->tileC->tcSize);
 	setAmtingroup(where, spritesnew);
 	unsigned center[3];
@@ -390,18 +395,18 @@ bool sprites::recttoSprite(int x0, int x1, int y0, int y1, int where, Fl_Shared_
 			unsigned dimx, dimy;
 			dimx = ((wt - x) >= wmax) ? wmax : (wt - x) % wmax;
 			dimy = ((ht - y) >= hmax) ? hmax : (ht - y) % hmax;
-			groups[where].list[cnt].w = dimx / 8;
-			groups[where].list[cnt].h = dimy / 8;
+			groups[where].list[cnt].w = dimx / tileWidth;
+			groups[where].list[cnt].h = dimy / tileHeight;
 			groups[where].list[cnt].starttile = tilecnt;
 			groups[where].list[cnt].offx = x;
 			groups[where].list[cnt].offy = y;
 			groups[where].list[cnt].loadat = tilecnt;
-			tilecnt += (dimx / 8) * (dimy / 8);
+			tilecnt += (dimx / tileWidth) * (dimy / tileHeight);
 
-			for (unsigned i = 0; i < dimx; i += 8) {
-				for (unsigned j = 0; j < dimy; j += 8) {
-					for (unsigned b = 0; b < 8; ++b) {
-						for (unsigned a = 0; a < 8; ++a) {
+			for (unsigned i = 0; i < dimx; i += tileWidth) {
+				for (unsigned j = 0; j < dimy; j += tileHeight) {
+					for (unsigned b = 0; b < tileHeight; ++b) {
+						for (unsigned a = 0; a < tileWidth; ++a) {
 							unsigned xx = x + i + a;
 							unsigned yy = y + j + b;
 
