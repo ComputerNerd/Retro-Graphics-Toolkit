@@ -425,7 +425,8 @@ function resizeLayerCB(unused)
 end
 function loadS1layout(unused)
 	rgt.syncProject()
-	if project.have(project.levelMask|project.chunksMask) then
+	local p = projects.current
+	if p:have(project.levelMask|project.chunksMask) then
 		local fname=fl.file_chooser("Load layout")
 		if not (fname == nil or fname == '') then
 			local file=assert(io.open(fname,'rb'))
