@@ -52,7 +52,7 @@ public:
 		return sizeh;
 	}
 	struct Project*prj;
-	unsigned tileSize;/*!< Sets the size on one tile in bytes 16 or 32 depends of if NES or Sega Genesis. */
+	unsigned tileSize;/*!< Sets the size of one tile in bytes 16 or 32 depends of if NES or Sega Genesis. */
 	unsigned tcSize; /*!< The size of one truecolor tile in bytes. */
 	uint32_t amt;/*!< Amount of tiles*/
 	uint32_t current_tile;/*!< The current tile that is being edited. */
@@ -61,7 +61,6 @@ public:
 	std::vector<uint8_t>extAttrs;
 	uint8_t getExtAttr(unsigned tile, unsigned y);
 	void setExtAttr(unsigned tile, unsigned y, uint8_t fgbg);
-	unsigned enforcedMultipleStep, enforcedMultiple;
 	void insertTile(uint32_t at);
 	void setPixel(uint8_t*ptr, uint32_t x, uint32_t y, uint32_t val);
 	void setPixel(uint32_t tile, uint32_t x, uint32_t y, uint32_t val);

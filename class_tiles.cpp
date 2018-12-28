@@ -235,28 +235,13 @@ void tiles::appendTile(unsigned many) {
 void tiles::tms9918Mode1RearrangeActions(bool forceTileToAttribute, uint32_t tile, uint8_t attr) {
 
 	tileAttrMap_t attrs;
-	bool hasBlankTile = false; // We will remove duplicate blank tiles (defined as all pixels == 0 for their rgba values).
-	unsigned blankTileIdx = 0;
 
 	for (unsigned i = 0; i < amt; ++i) {
 		// See if this is a padding tile or a duplicate blank tile.
-		if (isAllZeroTruecolor(i)) {
-			if (hasBlankTile) {
-				// We already have a blank tile. Replace all uses of this tile with blankTileIdx.
-				if (prj->tms)
-					prj->tms->swapTile(i, blankTileIdx);
-			} else {
-				// If we find another blank tile we will use this.
-				hasBlankTile = true;
-				blankTileIdx = i;
-				attrs.emplace(getExtAttr(i, 0), i);
-			}
-		} else if (i != tile)
+		if (i != tile)
 			attrs.emplace(getExtAttr(i, 0), i);
-		else { // i == tile.
-			if (forceTileToAttribute)
-				attrs.emplace(attr, i);
-		}
+		else if (forceTileToAttribute)  // i == tile.
+			attrs.emplace(attr, i);
 	}
 
 	tms9918Mode1RearrangeTiles(attrs, false);
@@ -729,6 +714,10 @@ void tiles::toPlanar(enum tileType tt, unsigned mi, int mx) {
 
 								break;
 
+							case 7:
+								val = *ptr++;
+								break;
+
 							default:
 								val = 0;
 								show_default_error
@@ -776,6 +765,10 @@ void*tiles::toLinear(void) {
 						else
 							*ptr = val << 4;
 
+						break;
+
+					case 7:
+						*ptr++ = val;
 						break;
 
 					default:
@@ -970,6 +963,33 @@ void tiles::tms9918Mode1RearrangeTiles(tileAttrMap_t& attrs, bool forceKeepAllTi
 		processedTiles.clear();
 	}
 
+	// Remove duplicate blank tiles.
+	bool hasBlankTile = false; // We will remove duplicate blank tiles (defined as all pixels == 0 for their rgba values).
+	unsigned blankTileIdx = 0;
+
+	for (auto it = attrs.cbegin(); it != attrs.cend();) {
+		unsigned i = it->second;
+
+		// See if it is blank.
+		if (isAllZeroTruecolor(i)) {
+			if (hasBlankTile && i != blankTileIdx) {
+				// We already have a blank tile. Replace all uses of this tile with blankTileIdx.
+				if (prj->tms)
+					prj->tms->swapTile(i, blankTileIdx);
+
+				// Remove this tile from the list.
+				it = attrs.erase(it);
+				continue; // Avoid the ++it.
+			} else {
+				// If we find another blank tile we will use this.
+				hasBlankTile = true;
+				blankTileIdx = i;
+			}
+		}
+
+		++it;
+	}
+
 	std::vector<uint8_t> newTileData(tDat.size());
 	std::vector<uint8_t> newTruecolorData(truetDat.size());
 
@@ -1073,7 +1093,7 @@ bool tiles::isAllZeroTruecolor(unsigned idx) {
 
 	if (tcSize & 3) {
 		fl_alert("tcSize & 4. Please fix isAllZeroTruecolor.");
-		return false; // Don't know if it is or not. Assuming that it is not.
+		return false; // Don't know if it is all zeros or not. Assuming that it is not.
 	}
 
 	for (unsigned i = 0; i < tcSize / 4; ++i)
