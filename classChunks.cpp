@@ -323,11 +323,6 @@ void ChunkClass::importSonic1(bool append) {
 	} else
 		wi = hi = 16;
 
-	int compression = compressionAsk();
-
-	if (compression < 0)
-		return;
-
 	pushChunksAll();
 	uint16_t* dat;
 	size_t fileSize;
