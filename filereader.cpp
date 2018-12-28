@@ -27,15 +27,19 @@
 #include "gui.h"
 #include "luaconfig.h"
 #include "runlua.h"
-filereader::filereader(boost::endian::order endian, unsigned bytesPerElement, const char*title, bool relptr, unsigned offbits, bool be) {
-	char*fname;
+filereader::filereader(boost::endian::order endian, unsigned bytesPerElement, const char*title, bool relptr, unsigned offbits, bool be, const char * filename, fileType_t forceType) {
+	char*fname = nullptr;
 
-	if (title)
-		fname = loadsavefile(title);
-	else
-		fname = loadsavefile();
+	if (!filename) {
+		if (title)
+			fname = loadsavefile(title);
+		else
+			fname = loadsavefile();
+	}
 
-	if (fname) {
+	const char * useFilename = filename ? filename : fname;
+
+	if (useFilename) {
 		int compression = compressionAsk();
 
 		if (compression < 0) {
@@ -43,21 +47,26 @@ filereader::filereader(boost::endian::order endian, unsigned bytesPerElement, co
 			return;
 		}
 
-		char*ext = (char*)fl_filename_ext(fname);
-		ext = strdup(ext);
+		const char*extFound = fl_filename_ext(useFilename);
+		char* ext = strdup(extFound);
 
 		for (char*p = ext; *p; ++p)
 			*p = tolower(*p);
 
-		fileType_t def = fileType_t::tBinary;
+		fileType_t def;
 
-		if ((!strcmp(ext, ".asm")) || (!strcmp(ext, ".s")))
-			def = fileType_t::tASM;
-		else if (!strcmp(ext, ".bex"))
-			def = fileType_t::tBEX;
-		else if ((!strcmp(ext, ".h")) || (!strcmp(ext, ".hh")) || (!strcmp(ext, ".hpp"))
-		         || (!strcmp(ext, ".c")) || (!strcmp(ext, ".cpp")) || (!strcmp(ext, ".cxx")) || (!strcmp(ext, ".cc")))
-			def = fileType_t::tCheader;
+		if (forceType == fileType_t::tCancel) {
+			def = fileType_t::tBinary;
+
+			if ((!strcmp(ext, ".asm")) || (!strcmp(ext, ".s")))
+				def = fileType_t::tASM;
+			else if (!strcmp(ext, ".bex"))
+				def = fileType_t::tBEX;
+			else if ((!strcmp(ext, ".h")) || (!strcmp(ext, ".hh")) || (!strcmp(ext, ".hpp"))
+			         || (!strcmp(ext, ".c")) || (!strcmp(ext, ".cpp")) || (!strcmp(ext, ".cxx")) || (!strcmp(ext, ".cc")))
+				def = fileType_t::tCheader;
+		} else
+			def = forceType;
 
 		free(ext);
 		fileType_t tp = askSaveType(false, def);
@@ -70,7 +79,7 @@ filereader::filereader(boost::endian::order endian, unsigned bytesPerElement, co
 
 		struct stat st;
 
-		FILE*fp = fopen(fname, tp == fileType_t::tBinary ? "rb" : "r");
+		FILE*fp = fopen(useFilename, tp == fileType_t::tBinary ? "rb" : "r");
 
 		if (!fp) {
 			fl_alert("An error has occurred: %s", strerror(errno));
@@ -95,7 +104,7 @@ filereader::filereader(boost::endian::order endian, unsigned bytesPerElement, co
 		lua_pushinteger(Lconf, offbits);
 		lua_pushboolean(Lconf, be);
 		lua_pushlstring(Lconf, tmp, st.st_size); //Lua makes a copy of the string
-		lua_pushstring(Lconf, fname);
+		lua_pushstring(Lconf, useFilename);
 		free(fname);
 		free(tmp);
 		runLuaFunc(Lconf, 6, 1);

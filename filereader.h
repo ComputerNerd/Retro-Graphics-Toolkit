@@ -24,7 +24,7 @@ struct filereader {
 	std::vector<size_t>lens;
 	std::vector<void*>dat;
 	std::vector<std::string>names;
-	filereader(boost::endian::order endian, unsigned bytesPerElement, const char*title = nullptr, bool relptr = false, unsigned offbits = 16, bool be = true);
+	filereader(boost::endian::order endian, unsigned bytesPerElement, const char*title = nullptr, bool relptr = false, unsigned offbits = 16, bool be = true, const char * filename = nullptr, fileType_t forceType = fileType_t::tCancel);
 	unsigned selDat(void);
 	~filereader();
 };
