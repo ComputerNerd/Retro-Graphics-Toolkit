@@ -12,7 +12,7 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 
 #include "color_compare.h"
@@ -158,6 +158,7 @@ uint32_t count_colors(uint8_t * image_ptr, uint32_t w, uint32_t h, uint8_t *colo
 	putchar('\n');
 	return colors_amount / 3;
 }
+
 void updateNesTab(unsigned emps, bool alt) {
 	uint32_t rgb_out;
 
@@ -177,38 +178,16 @@ void updateNesTab(unsigned emps, bool alt) {
 		}
 	}
 }
-void updateEmphesis(void) {
-	/*76543210
-	  ||||||||
-	  ||||++++- Hue (phase)
-	  ||++----- Value (voltage)
-	  ++------- Unimplemented, reads back as 0*/
-	unsigned emps = (currentProject->subSystem >> NESempShift)&NESempMask;
-	unsigned empsSprite = (currentProject->subSystem >> NESempShiftAlt)&NESempMask;
-	emps <<= 6;
-	empsSprite <<= 6;
-	uint32_t rgb_out;
-	updateNesTab(emps, false);
-	updateNesTab(empsSprite, true);
 
-	for (unsigned c = 0; c < 48; c += 3) {
-		rgb_out = nesPalToRgb(currentProject->pal->palDat[c / 3] | emps);
-		currentProject->pal->rgbPal[c] = (rgb_out >> 16) & 255; //red
-		currentProject->pal->rgbPal[c + 1] = (rgb_out >> 8) & 255; //green
-		currentProject->pal->rgbPal[c + 2] = rgb_out & 255; //blue
+void updateEmphasisCB(Fl_Widget*, void*) {
+	if (mode_editor == spriteEditor) {
+		currentProject->subSystem &= ~(NESempMask << NESempShiftAlt);
+		currentProject->subSystem |= (unsigned)palBar.slide[palBar.toTab(spriteEditor)][2]->value() << NESempShiftAlt;
+	} else {
+		currentProject->subSystem &= ~(NESempMask << NESempShift);
+		currentProject->subSystem |= (unsigned)palBar.slide[palBar.toTab(mode_editor)][2]->value() << NESempShift;
 	}
 
-	for (unsigned c = 48; c < 96; c += 3) {
-		rgb_out = nesPalToRgb(currentProject->pal->palDat[c / 3] | empsSprite);
-		currentProject->pal->rgbPal[c] = (rgb_out >> 16) & 255; //red
-		currentProject->pal->rgbPal[c + 1] = (rgb_out >> 8) & 255; //green
-		currentProject->pal->rgbPal[c + 2] = rgb_out & 255; //blue
-	}
-}
-void updateEmphesisCB(Fl_Widget*, void*) {
-	currentProject->subSystem &= ~((NESempMask << NESempShift) | (NESempMask << NESempShiftAlt));
-	currentProject->subSystem |= (unsigned)palBar.slide[palBar.toTab(mode_editor)][2]->value() << NESempShift;
-	currentProject->subSystem |= (unsigned)palBar.slide[palBar.toTab(spriteEditor)][2]->value() << NESempShiftAlt;
-	updateEmphesis();
+	currentProject->pal->updateEmphasis();
 	window->redraw();
 }

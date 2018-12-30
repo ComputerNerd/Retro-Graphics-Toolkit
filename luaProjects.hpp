@@ -16,7 +16,7 @@
 */
 #ifndef LUA_PROJECTS_HPP
 #define LUA_PROJECTS_HPP
-#include "lualib.h"
-#include "lauxlib.h"
+#include "lua.hpp"
+
 void luaCreateProjectsTable(lua_State* L);
 #endif

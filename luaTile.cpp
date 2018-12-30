@@ -105,8 +105,7 @@ static int lua_tile_draw(lua_State*L) {
 	                                      lua_toboolean(L, 6), // Hflip
 	                                      lua_toboolean(L, 7), // Vflip
 	                                      lua_toboolean(L, 8), // Is sprite?
-	                                      luaL_optinteger(L, 9, 0), // Plane
-	                                      lua_toboolean(L, 10)); // Draw with alpha?
+	                                      lua_toboolean(L, 9)); // Draw with alpha?
 	return 0;
 }
 

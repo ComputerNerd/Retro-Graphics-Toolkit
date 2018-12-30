@@ -314,11 +314,19 @@ void tiles::truecolor_to_tile_ptr(unsigned palette_row, uint32_t cur_tile, uint8
 	//now image needs to be checked for alpha
 	uint8_t * tPtr = useDither ? (uint8_t*)outIdx : truePtr;
 
-	for (unsigned y = 0; y < sizeh; ++y) {
-		for (unsigned x = 0; x < sizew; ++x) {
-			unsigned temp;
+	for (unsigned y = 0; y < height(); ++y) {
+		for (unsigned x = 0; x < width(); ++x) {
+			if (useDither || isIndexArray)
+				setPixel(cur_tile, x, y, (*tPtr++) % prj->pal->getPerRow(isSprite));
+			else {
+				unsigned temp = find_near_color_from_row(palette_row, tPtr[0], tPtr[1], tPtr[2], (prj->pal->haveAlt) && isSprite);
+				tPtr += 3;
 
-			setPixel(cur_tile, x, y, (*tPtr++) % prj->pal->perRow);
+				if (*tPtr++)
+					setPixel(cur_tile, x, y, temp);
+				else
+					setPixel(cur_tile, x, y, 0);
+			}
 		}
 	}
 
@@ -408,7 +416,7 @@ void tiles::draw_truecolor(uint32_t tile_draw, unsigned x, unsigned y, bool useh
 	} else
 		fl_draw_image(grid, x, y, sizew * zoom, sizeh * zoom, 3);
 }
-void tiles::draw_tile(int x_off, int y_off, uint32_t tile_draw, unsigned zoom, unsigned pal_row, bool Usehflip, bool Usevflip, bool isSprite, unsigned plane, bool alpha) {
+void tiles::draw_tile(int x_off, int y_off, uint32_t tile_draw, unsigned zoom, unsigned pal_row, bool Usehflip, bool Usevflip, bool isSprite, bool alpha) {
 	static bool dontShow;
 
 	if (tile_draw >= amt) {
@@ -505,11 +513,14 @@ void tiles::hflip_truecolor(uint32_t id, uint32_t * out) {
 void tiles::vflip_truecolor_ptr(uint8_t * in, uint8_t * out) {
 	/*vflip_truecolor_ptr needs to be a separate function as the output of hflip may be inputted here to form a vertically and horizontally flipped tile*/
 	uint16_t y;
-	uint8_t temp[256];
-	memcpy(temp, in, 256);
+	std::unique_ptr<uint8_t[]> temp(new uint8_t[tcSize]);
+	memcpy(&temp[0], in, tcSize);
 
-	for (y = 0; y < 256; y += 32)
-		memcpy(&out[224 - y], &temp[y], 32);
+	unsigned w4 = width() * 4;
+	unsigned lastRow = (height() - 1) * w4;
+
+	for (y = 0; y < tcSize; y += w4)
+		memcpy(&out[lastRow - y], &temp[y], w4);
 }
 void tiles::vflip_truecolor(uint32_t id, uint8_t * out) {
 	vflip_truecolor_ptr(&truetDat[id * tcSize], out);

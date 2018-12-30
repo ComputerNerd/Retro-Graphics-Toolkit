@@ -32,7 +32,7 @@ void metasprites::setPrjPtr(Project*prj) {
 	this->prj = prj;
 
 	for (unsigned i = 0; i < sps.size(); ++i)
-		sps[i].prj = prj;
+		sps[i].setPrjPtr(prj);
 }
 void metasprites::save(FILE*fp) {
 	if (strcmp(name.c_str(), defMDesc) != 0)

@@ -182,7 +182,7 @@ void tileMap::pickRow(unsigned amount, int type, int method) {
 	double divBy;
 	unsigned addBy;
 
-	if ((currentProject->gameSystem == NES) && (currentProject->subSystem & NES2x2)) {
+	if (currentProject->isNES2x2Tilemap()) {
 		divBy = currentProject->tileC->width() * currentProject->tileC->height() * 4.0; // Four tiles.
 		addBy = 2;
 	} else {
@@ -206,7 +206,7 @@ void tileMap::pickRow(unsigned amount, int type, int method) {
 		if (stretch) {
 			for (y = 0; y < mapSizeHA; y += addBy) {
 				for (x = 0; x < mapSizeW; x += addBy) {
-					if ((currentProject->gameSystem == NES) && (currentProject->subSystem & NES2x2)) {
+					if (currentProject->isNES2x2Tilemap()) {
 						addHist(get_tile(x, y), type, hist, sz);
 						addHist(get_tile(x + 1, y), type, hist, sz);
 						addHist(get_tile(x, y + 1), type, hist, sz);
@@ -241,7 +241,7 @@ void tileMap::pickRow(unsigned amount, int type, int method) {
 			if (method) {
 				std::fill(hist, hist + sz, 0);
 
-				if ((currentProject->gameSystem == NES) && (currentProject->subSystem & NES2x2)) {
+				if (currentProject->isNES2x2Tilemap()) {
 					addHist(get_tile(x, y), type, hist, sz);
 					addHist(get_tile(x + 1, y), type, hist, sz);
 					addHist(get_tile(x, y + 1), type, hist, sz);
@@ -292,7 +292,7 @@ void tileMap::pickRow(unsigned amount, int type, int method) {
 			} else {
 				double hh;
 
-				if ((currentProject->gameSystem == NES) && (currentProject->subSystem & NES2x2)) {
+				if (currentProject->isNES2x2Tilemap()) {
 					hh = getHH(get_tile(x, y), type);
 					hh += getHH(get_tile(x + 1, y), type);
 					hh += getHH(get_tile(x, y + 1), type);
@@ -356,7 +356,7 @@ static const Fl_Menu_Item deltaOrderChoices[] = {
 static const char*deltaOrderLbl = "Sort palette by:";
 static const char*deltaOrderTooltip = "Select an option other than Don't sort to sort the palette by least to most using the select component.";
 void tileMap::pickRowDelta(bool showProgress, Fl_Progress *progress, int alg, int order) {
-	if (currentProject->pal->rowCntPal <= 1) {
+	if (prj->pal->rowCntPal <= 1) {
 		fl_alert("This function needs more than one palette row to work");
 		return;
 	}
@@ -395,15 +395,15 @@ void tileMap::pickRowDelta(bool showProgress, Fl_Progress *progress, int alg, in
 	h = mapSizeHA * 8;
 	uint8_t * imagein = (uint8_t*)malloc(w * h * 4);
 	truecolor_to_image(imagein, -1);
-	uint8_t **imageout = (uint8_t**)malloc(currentProject->pal->rowCntPal * sizeof(void*));
+	uint8_t **imageout = (uint8_t**)malloc(prj->pal->rowCntPal * sizeof(void*));
 	uint32_t xtile = 0, ytile = 0;
 
 	if (showProgress) {
-		progress->maximum(currentProject->pal->rowCntPal * 3);
+		progress->maximum(prj->pal->rowCntPal * 3);
 		progress->value(0);
 	}
 
-	for (x = 0; x < currentProject->pal->rowCntPal; ++x) { //This function has too many hard coded values The four should be a variable with the amount of palette rows
+	for (x = 0; x < prj->pal->rowCntPal; ++x) {
 		if (showProgress) {
 			snprintf((char*)temp, 256, "Dithering %d", x);
 			progress->label((char*)temp);
@@ -440,7 +440,7 @@ void tileMap::pickRowDelta(bool showProgress, Fl_Progress *progress, int alg, in
 
 	unsigned per;
 
-	if ((currentProject->gameSystem == NES) && (currentProject->subSystem & NES2x2))
+	if (prj->isNES2x2Tilemap())
 		per = 2;
 	else
 		per = 1;
@@ -448,16 +448,16 @@ void tileMap::pickRowDelta(bool showProgress, Fl_Progress *progress, int alg, in
 	for (uint_fast32_t a = 0; a < (h * w * 4) - (w * 4 * per); a += w * 4 * 8 * per) { //a tiles y
 		for (uint_fast32_t b = 0; b < w * 4; b += 32 * per) { //b tiles x
 			if (alg == 2 || alg == 1)
-				memset(di, 0, currentProject->pal->rowCntPal * sizeof(uint32_t));
+				memset(di, 0, prj->pal->rowCntPal * sizeof(uint32_t));
 			else
-				std::fill(d, d + currentProject->pal->rowCntPal, 0.);
+				std::fill(d, d + prj->pal->rowCntPal, 0.);
 
-			if ((type_temp != 0) && (currentProject->gameSystem == segaGenesis)) {
-				tempSet = (currentProject->tms->maps[currentProject->curPlane].get_prio(xtile, ytile) ^ 1) * 8;
+			if ((type_temp != 0) && (prj->gameSystem == segaGenesis)) {
+				tempSet = (prj->tms->maps[prj->curPlane].get_prio(xtile, ytile) ^ 1) * 8;
 				set_palette_type_force(tempSet);
 			}
 
-			for (t = 0; t < currentProject->pal->rowCntPal; ++t) {
+			for (t = 0; t < prj->pal->rowCntPal; ++t) {
 				for (unsigned c = 0; c < per * w * 4 * 8; c += w * 4 * 8) {
 					for (uint32_t y = 0; y < w * 4 * 8; y += w * 4) { //pixels y
 						for (unsigned e = 0; e < per * 32; e += 32) {
@@ -500,9 +500,9 @@ void tileMap::pickRowDelta(bool showProgress, Fl_Progress *progress, int alg, in
 			unsigned sillyrow;
 
 			if (alg == 2 || alg == 1)
-				sillyrow = pick4Delta(di, currentProject->pal->rowCntPal);
+				sillyrow = pick4Delta(di, prj->pal->rowCntPal);
 			else
-				sillyrow = pick4Delta(d, currentProject->pal->rowCntPal);
+				sillyrow = pick4Delta(d, prj->pal->rowCntPal);
 
 			set_pal_row(xtile, ytile, sillyrow);
 
@@ -515,7 +515,7 @@ void tileMap::pickRowDelta(bool showProgress, Fl_Progress *progress, int alg, in
 						truecolor_tile_ptr += 32;
 					}
 
-					currentProject->tileC->truecolor_to_tile_ptr(sillyrow, get_tile(xtile + j, ytile + i), temp, false, false);
+					prj->tileC->truecolor_to_tile_ptr(sillyrow, get_tile(xtile + j, ytile + i), temp, false, false);
 				}
 			}
 
@@ -539,12 +539,12 @@ void tileMap::pickRowDelta(bool showProgress, Fl_Progress *progress, int alg, in
 
 	free(imagein);
 
-	for (unsigned i = 0; i < currentProject->pal->rowCntPal; ++i)
+	for (unsigned i = 0; i < prj->pal->rowCntPal; ++i)
 		free(imageout[i]);
 
 	free(imageout);
 
-	if (currentProject->gameSystem == segaGenesis)
+	if (prj->gameSystem == segaGenesis)
 		set_palette_type();
 }
 #define CLIP(X) ( (X) > 255 ? 255 : (X) < 0 ? 0 : X)
@@ -575,7 +575,7 @@ void tileMap::pickRowDelta(bool showProgress, Fl_Progress *progress, int alg, in
 static void colorAmtExceed(void) {
 	fl_alert("No more room for colors\nYou should not be seeing this message please report this.");
 }
-static void reduceImage(uint8_t * image, uint8_t * found_colors, int row, unsigned offsetPal, Fl_Progress *progress, Fl_Window*pwin, unsigned maxCol, unsigned yuv, unsigned alg, bool isSprite = false, bool ditherBefore = true) {
+static void reduceImage(uint8_t * image, uint8_t * found_colors, int row, unsigned offsetPal, Fl_Progress *progress, Fl_Window*pwin, const unsigned maxCol, unsigned yuv, unsigned alg, bool isSprite = false, bool ditherBefore = true) {
 	if (progress)
 		progress->maximum(1.0);
 
@@ -583,8 +583,14 @@ static void reduceImage(uint8_t * image, uint8_t * found_colors, int row, unsign
 	unsigned off3 = offsetPal * 3;
 	unsigned colors_found;
 	unsigned w, h;
-	unsigned maxPal = maxCol;
 	unsigned msprt = curSpritemeta;
+	unsigned maxIdx;
+	bool isAlt = isSprite && currentProject->pal->haveAlt;
+
+	if (row >= 0)
+		maxIdx = currentProject->pal->getIndexByRow(row, currentProject->pal->getPerRow(isAlt) - 1, isAlt);
+	else
+		maxIdx = isAlt ? currentProject->pal->totalColors() - 1 : currentProject->pal->colorCnt - 1;
 
 	if (isSprite) {
 		w = currentProject->ms->sps[msprt].width(curSpritegroup);
@@ -616,35 +622,13 @@ static void reduceImage(uint8_t * image, uint8_t * found_colors, int row, unsign
 
 	if (colors_found <= maxCol) {
 		printf("%d colors\n", colors_found);
-		unsigned offsetTmp = offsetPal;
+		int setColorCnt = currentProject->pal->setPaletteFromRGB(found_colors, colors_found, offsetPal, maxIdx);
 
-		for (unsigned x = 0; x < colors_found; x++) {
-			uint_fast8_t r, g, b;
-againFun:
-
-			if (currentProject->pal->palType[offsetTmp]) {
-				++offsetTmp;
-
-				if (offsetTmp >= maxPal)
-					goto actullyNeededReduction;
-
-				goto againFun;
-			}
-
-			r = found_colors[(x * 3)];
-			g = found_colors[(x * 3) + 1];
-			b = found_colors[(x * 3) + 2];
-			printf("R=%d G=%d B=%d\n", r, g, b);
-
-			if (currentProject->pal->shouldAddCol(offsetTmp, r, g, b, isSprite)) {
-				currentProject->pal->rgbToEntry(r, g, b, offsetTmp);
-				currentProject->pal->updateRGBindex(offsetTmp);
-				++offsetTmp;
-			}
-		}
+		if (setColorCnt < 0 || setColorCnt > maxCol)
+			goto actullyNeededReduction;
 
 		if (currentProject->gameSystem == NES)
-			updateEmphesis();
+			currentProject->pal->updateEmphasis();
 
 		if (window)
 			window->redraw();
@@ -654,7 +638,7 @@ actullyNeededReduction:
 		uint8_t user_pal[3][256];
 		uint8_t rgb_pal2[768];
 		uint8_t rgb_pal3[768];
-		unsigned colorz = maxCol;
+		unsigned quantToTarget = maxCol;
 		bool can_go_again = true;
 		uint8_t*imageuse;
 		uint8_t*output;
@@ -691,26 +675,26 @@ try_again_color:
 
 		switch (alg) {
 			case 4:
-				dl1quant(imageuse, w, h, colorz, user_pal);
+				dl1quant(imageuse, w, h, quantToTarget, user_pal);
 				break;
 
 			case 3:
-				wu_quant(imageuse, w, h, colorz, user_pal);
+				wu_quant(imageuse, w, h, quantToTarget, user_pal);
 				break;
 
 			case 2:
-				NEU_wrapper(w, h, imageuse, colorz, user_pal);
+				NEU_wrapper(w, h, imageuse, quantToTarget, user_pal);
 				break;
 
 			case 1:
-				scolorq_wrapper(imageuse, output, user_pal, w, h, colorz);
+				scolorq_wrapper(imageuse, output, user_pal, w, h, quantToTarget);
 				break;
 
 			default:
-				dl3quant(imageuse, w, h, colorz, user_pal, true, progress); /*this uses Dennis Lee's v3 color quant which is found at http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c*/
+				dl3quant(imageuse, w, h, quantToTarget, user_pal, true, progress); /*this uses Dennis Lee's v3 color quant which is found at http://www.gnu-darwin.org/www001/ports-1.5a-CURRENT/graphics/mtpaint/work/mtpaint-3.11/src/quantizer.c*/
 		}
 
-		for (unsigned x = 0; x < colorz; x++) {
+		for (unsigned x = 0; x < quantToTarget; x++) {
 			unsigned r, g, b;
 
 			if (yuv) {
@@ -729,55 +713,22 @@ try_again_color:
 				b = user_pal[2][x];
 			}
 
-			switch (currentProject->gameSystem) {
-				case segaGenesis:
-					r = nearest_color_index(r);
-					g = nearest_color_index(g);
-					b = nearest_color_index(b);
-					rgb_pal2[(x * 3)] = palTab[r];
-					rgb_pal2[(x * 3) + 1] = palTab[g];
-					rgb_pal2[(x * 3) + 2] = palTab[b];
-					break;
-
-				case NES:
-				{	uint8_t temp = currentProject->pal->to_nes_color_rgb(r, g, b);
-					uint32_t temp_rgb = nesPalToRgb(temp);
-					rgb_pal2[(x * 3)] = (temp_rgb >> 16) & 255;
-					rgb_pal2[(x * 3) + 1] = (temp_rgb >> 8) & 255;
-					rgb_pal2[(x * 3) + 2] = temp_rgb & 255;
-				}
-				break;
-
-				case masterSystem:
-				case gameGear:
-				{	const uint8_t*palUseTab = currentProject->gameSystem == gameGear ? palTabGameGear : palTabMasterSystem;
-					unsigned colsTab = currentProject->gameSystem == gameGear ? 16 : 4;
-					r = nearestOneChannel(r, palUseTab, colsTab);
-					g = nearestOneChannel(g, palUseTab, colsTab);
-					b = nearestOneChannel(b, palUseTab, colsTab);
-					rgb_pal2[(x * 3)] = palUseTab[r];
-					rgb_pal2[(x * 3) + 1] = palUseTab[g];
-					rgb_pal2[(x * 3) + 2] = palUseTab[b];
-				}
-				break;
-
-				default:
-					show_default_error
-			}
+			rgb_pal2[(x * 3)] = r;
+			rgb_pal2[(x * 3) + 1] = g;
+			rgb_pal2[(x * 3) + 2] = b;
 		}
 
-		unsigned new_colors = count_colors(rgb_pal2, colorz, 1, rgb_pal3);
-		printf("Unique colors in palette %u\n", new_colors);
+		int new_colors = currentProject->pal->setPaletteFromRGB(rgb_pal2, quantToTarget, offsetPal, maxIdx);
 
 		if (new_colors < maxCol) {
 			if (can_go_again == true) {
-				if (colorz != 512)
-					colorz++;
+				if (quantToTarget <= 256)
+					quantToTarget++;
 				else
 					can_go_again = false;
 
 				char tmp[1024];
-				snprintf(tmp, 1024, "Found only %d colors trying again with %d", new_colors, colorz);
+				snprintf(tmp, 1024, "Found only %d colors trying again with %d", new_colors, quantToTarget);
 				tmp[sizeof(tmp) - 1] = 0;
 
 				if (pwin) {
@@ -790,50 +741,18 @@ try_again_color:
 			}
 		}
 
-		if (new_colors > maxCol) {
+		if (new_colors > maxCol || new_colors < 0) {
 			can_go_again = false;
 
 			if (pwin)
 				pwin->label("Too many colors");
 
-			colorz--;
+			quantToTarget--;
 			goto try_again_color;
 		}
 
-		unsigned offsetTmp = offsetPal;
-
-		for (unsigned x = 0; x < maxCol; x++) {
-againNerd:
-
-			if (currentProject->pal->palType[offsetTmp]) {
-				++offsetTmp;
-
-				if (offsetTmp > (maxPal + offsetPal)) {
-					if (maxCol > 1) {
-						--colorz;
-						printf("Needed to reduce colors generated due to locked colors %u\n", maxCol);
-					} else {
-						fl_alert("Cannot reduce maximum colors to make this happen...aborting");
-						return;
-					}
-
-					goto try_again_color;
-				}
-
-				goto againNerd;
-			}
-
-			unsigned r = rgb_pal3[x * 3], g = rgb_pal3[x * 3 + 1], b = rgb_pal3[x * 3 + 2];
-
-			if (currentProject->pal->shouldAddCol(offsetTmp, r, g, b, isSprite)) {
-				memcpy(currentProject->pal->rgbPal + (offsetTmp * 3), rgb_pal3 + (x * 3), 3);
-				currentProject->pal->rgbToEntry(r, g, b, offsetTmp);
-				++offsetTmp;
-			}
-		}
-
 		if (currentProject->gameSystem == NES)
-			updateEmphesis();
+			currentProject->pal->updateEmphasis();
 
 		if (alg == 1) {
 			if (isSprite)
@@ -925,9 +844,9 @@ void generate_optimal_paletteapply(Fl_Widget*, void*s) {
 			if (currentProject->pal->haveAlt)
 				off += currentProject->pal->colorCnt;
 
-			reduceImage(image, found_colors, -1, off, progress, win, set->perRow[firstRow], set->colSpace, set->alg, true);
+			reduceImage(image, found_colors, firstRow, off, progress, win, set->perRow[firstRow], set->colSpace, set->alg, true);
 		} else
-			reduceImage(image, found_colors, -1, firstRow * currentProject->pal->perRow + set->off[firstRow], progress, win, set->perRow[firstRow], set->colSpace, set->alg);
+			reduceImage(image, found_colors, firstRow, firstRow * currentProject->pal->perRow + set->off[firstRow], progress, win, set->perRow[firstRow], set->colSpace, set->alg);
 
 		if (window) {
 			window->damage(FL_DAMAGE_USER1);

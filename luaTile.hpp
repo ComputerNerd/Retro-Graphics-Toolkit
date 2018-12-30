@@ -16,8 +16,8 @@
 */
 #ifndef LUA_TILE_HPP
 #define LUA_TILE_HPP
-#include "lualib.h"
-#include "lauxlib.h"
+#include "lua.hpp"
+
 
 int luaopen_Tile(lua_State *L, size_t projectIDX, size_t tileIDX);
 #endif

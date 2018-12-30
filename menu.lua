@@ -22,7 +22,7 @@ function allMetaDither(unused)
 	print(p.metasprites)
 
 	if p:have(project.spritesMask)==true then
-		p.metasprites:ditherAll()
+		p.metasprites:dither()
 	else
 		project.haveMessage(project.spritesMask)
 	end

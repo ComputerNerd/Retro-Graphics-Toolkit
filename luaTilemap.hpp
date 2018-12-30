@@ -16,8 +16,8 @@
 */
 #ifndef LUA_TILEMAP_HPP
 #define LUA_TILEMAP_HPP
-#include "lualib.h"
-#include "lauxlib.h"
+#include "lua.hpp"
+
 
 int luaopen_Tilemap(lua_State *L, size_t projectIDX, size_t tilemapIDX);
 #endif

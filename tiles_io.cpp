@@ -12,8 +12,10 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
+#include <cmath>
+
 #include <FL/fl_ask.H>
 
 #include "project.h"
@@ -80,7 +82,7 @@ void load_tiles(Fl_Widget*, void*o) {
 		return;
 	}
 
-	uint8_t defaultRow = row >= 0 ? row : abs(row) - 1;
+	unsigned defaultRow = row >= 0 ? row : std::abs(row) - 1;
 	bool alphaZero = fl_ask("Set color #0 to alpha 0 instead of 255") ? true : false;
 	filereader f = filereader(boost::endian::order::native, 1, "Load tiles");
 
@@ -93,7 +95,7 @@ void load_tiles(Fl_Widget*, void*o) {
 	truecolor_multiplier = 256 / currentProject->tileC->tileSize;
 
 	if (file_size % currentProject->tileC->tileSize) {
-		fl_alert("Error: This is not a valid tile file each tile is %d bytes and this file is not a multiple of %d so it is not a valid tile file", currentProject->tileC->tileSize, currentProject->tileC->tileSize);
+		fl_alert("Error: This is not a valid tile file each tile is %d bytes and this file is not a multiple of %d so it is not a valid tile file.", currentProject->tileC->tileSize, currentProject->tileC->tileSize);
 		return;
 	}
 
@@ -115,7 +117,7 @@ void load_tiles(Fl_Widget*, void*o) {
 			offset_tiles = off;
 			offset_tiles_bytes = offset_tiles * currentProject->tileC->tileSize;
 		} else {
-			fl_alert("You must enter a number greater than or equal to zero");
+			fl_alert("You must enter a number greater than or equal to zero.");
 			return;
 		}
 	} else if (mode == 1) {
@@ -192,18 +194,22 @@ void load_truecolor_tiles(Fl_Widget*, void*) {
 
 	unsigned i = f.selDat();
 	size_t file_size = f.lens[i];
+	unsigned tcTileSize = currentProject->tileC->tcSize;
 
-	if (file_size & 255) {
-		fl_alert("Error: this file is not a multiple of 256 so it is not a valid truecolor tiles. The file size is: %d", file_size);
+	if (file_size % tcTileSize) {
+		fl_alert("Error: this file is not a multiple of %d so it is not a valid truecolor tiles. The file size is: %d", tcTileSize, file_size);
 		return;
 	}
 
-	currentProject->tileC->truetDat.resize(file_size);
-	currentProject->tileC->tDat.resize(file_size * currentProject->tileC->tileSize / currentProject->tileC->tcSize);
+	size_t tileAmt = file_size / tcTileSize;
+
+	currentProject->tileC->resizeAmt(tileAmt);
+
 	memcpy(currentProject->tileC->truetDat.data(), f.dat[i], file_size);
-	currentProject->tileC->amt = file_size / 256;
 	updateTileSelectAmt();
-	window->redraw();
+
+	if (window)
+		window->redraw();
 }
 void save_tiles_truecolor(Fl_Widget*, void*) {
 	if (!currentProject->containsData(pjHaveTiles)) {

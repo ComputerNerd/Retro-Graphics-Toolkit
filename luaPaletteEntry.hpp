@@ -16,8 +16,8 @@
 */
 #ifndef LUA_PALETTE_ENTRY_HPP
 #define LUA_PALETTE_ENTRY_HPP
-#include "lualib.h"
-#include "lauxlib.h"
+#include "lua.hpp"
+
 
 int luaopen_PaletteEntry(lua_State *L, size_t projectIDX, size_t entryIDX);
 #endif

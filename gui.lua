@@ -20,6 +20,13 @@ function setPalTypeCB(unused)
 	p.palette:toRgbAll()
 	rgt.damage()
 end
+
+function setSpriteSizeCB(unused)
+	local p = projects.current
+	p:setSpriteSizeID(spriteSizeSel:value())
+	rgt.redraw()
+end
+
 function tabConfig(tab)
 	if tab==rgt.paletteTab then
 		palTabSel=Fl_Choice.new(336, 464, 128, 24, "Palette table selection")
@@ -31,6 +38,13 @@ function tabConfig(tab)
 		palTabSel:add('Steps of 32')
 		palTabSel:labelsize(12)
 		palTabSel:value(0)
+
+
+		spriteSizeSel=Fl_Choice.new(336, 464, 128, 24, "Sprite size")
+		spriteSizeSel:align(FL.ALIGN_TOP)
+		spriteSizeSel:callback('setSpriteSizeCB')
+		spriteSizeSel:labelsize(12)
+		spriteSizeSel:hide()
 	elseif tab==rgt.levelTab then
 		initLevelEditor()
 	end

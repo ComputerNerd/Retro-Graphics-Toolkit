@@ -53,9 +53,21 @@ static int lua_project_getPalTab(lua_State*L) {
 	return 1;
 }
 
+static int lua_project_getSpriteSizeID(lua_State*L) {
+	getProjectIDX
+	lua_pushinteger(L, projects[projectIDX].getSpriteSizeID());
+	return 1;
+}
+
 static int lua_project_setPalTab(lua_State*L) {
 	getProjectIDX
 	projects[projectIDX].setPalTab(luaL_optinteger(L, 2, 0));
+	return 0;
+}
+
+static int lua_project_setSpriteSizeID(lua_State*L) {
+	getProjectIDX
+	projects[projectIDX].setSpriteSizeID(luaL_optinteger(L, 2, 0));
 	return 0;
 }
 
@@ -117,6 +129,9 @@ static int project__get_(lua_State *L) {
 		} else if (!strcmp("luaSettings", k)) {
 			lua_pushinteger(L, projects[projectIDX].luaSettings);
 			return 1;
+		} else if (!strcmp("gameSystem", k)) {
+			lua_pushinteger(L, projects[projectIDX].gameSystem);
+			return 1;
 		} else if (!strcmp("metasprites", k)) {
 			if (projects[projectIDX].containsData(pjHaveSprites)) {
 				luaopen_MetaSprites(L, projectIDX);
@@ -145,6 +160,8 @@ static const struct luaL_Reg project_member_methods[] = {
 	{ "haveMessage", lua_project_haveMessage},
 	{ "setPalType", lua_project_setPalTab},
 	{ "getPalType", lua_project_getPalTab},
+	{ "getSpriteSizeID", lua_project_getSpriteSizeID},
+	{ "setSpriteSizeID", lua_project_setSpriteSizeID},
 	{ "load", lua_project_load},
 	{ "save", lua_project_save},
 	{ NULL, NULL},

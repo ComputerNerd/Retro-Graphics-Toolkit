@@ -122,7 +122,7 @@ void paletteBar::setSys(bool upSlide, bool force) {
 						slide[j][2]->value(0);
 						slide[j][2]->maximum(7);
 						slide[j][2]->resize(slide[j][2]->x() + 16, slide[j][2]->y(), slide[j][2]->w() - 16, slide[j][2]->h());
-						slide[j][2]->callback(updateEmphesisCB);
+						slide[j][2]->callback(updateEmphasisCB);
 						break;
 
 					case TMS9918:

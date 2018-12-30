@@ -15,7 +15,7 @@
    Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
-#include "lua.h"
+#include "lua.hpp"
 #include <FL/Fl_Widget.H>
 void updateProjectTablesLua(lua_State*L);
 void runLuaFunc(lua_State*L, unsigned args, unsigned results);

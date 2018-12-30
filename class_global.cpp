@@ -233,7 +233,7 @@ void editor::draw_non_gui(void) {
 
 			if (currentProject->tileC->tDat.size()) {
 				currentProject->tileC->draw_truecolor(currentProject->tileC->current_tile, tile_edit_truecolor_off_x, tile_edit_truecolor_off_y, false, false, tiles_size);
-				currentProject->tileC->draw_tile(tile_edit_offset_x, tile_edit_offset_y, currentProject->tileC->current_tile, tiles_size, palBar.selRow[1], false, false, false, 0);
+				currentProject->tileC->draw_tile(tile_edit_offset_x, tile_edit_offset_y, currentProject->tileC->current_tile, tiles_size, palBar.selRow[1], false, false, false, false);
 
 				if (show_grid) {
 					if (tiles_size > 4) {

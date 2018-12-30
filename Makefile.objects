@@ -1,6 +1,8 @@
 MDCOMP_OBJECTS := mdcomp/src/lib/comper.o mdcomp/src/lib/enigma.o \
 	mdcomp/src/lib/kosinski.o mdcomp/src/lib/nemesis.o mdcomp/src/lib/saxman.o
 
+BINDINGS := $(BINDINGS:.cpp=.o)
+
 OBJECTS := project.o main.o callbacks_palette.o callback_tiles.o class_global.o \
 	quant.o tilemap.o color_convert.o errorMsg.o classpalettebar.o dither.o \
 	class_tiles.o $(MDCOMP_OBJECTS) spatial_color_quant.o NEUQUANT.o \
@@ -13,6 +15,6 @@ OBJECTS := project.o main.o callbacks_palette.o callback_tiles.o class_global.o 
 	luaTileRGBA.o luaTileRGBArow.o luaTileRGBApixel.o luaPalette.o \
 	luaPaletteEntry.o luaSprites.o nearestColor.o CIE.o classpalette.o \
 	classtilemaps.o callbacktilemaps.o nespal.o filereader.o luaconfig.o lua_zlib.o \
-	metasprites.o callbacklua.o dub/dub.o $(BINDINGS:.cpp=.o) cbHelper.o \
-	luaposix/_helpers.o luaposix/strlcpy.o luaChunks.o luaChunk.o luaChunkRow.o luaChunkEntry.o
+	metasprites.o callbacklua.o dub/dub.o $(BINDINGS:.c=.o) cbHelper.o \
+	luaChunks.o luaChunk.o luaChunkRow.o luaChunkEntry.o
 

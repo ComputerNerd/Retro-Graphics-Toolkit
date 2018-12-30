@@ -12,7 +12,7 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #include <FL/Fl_Scroll.H>
 #include <FL/fl_ask.H>
@@ -21,6 +21,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <memory>
 
 #include "macros.h"
 #include "classSprite.h"
@@ -36,7 +37,7 @@ sprites::sprites(Project*prj) {
 	this->prj = prj;
 	amt = 1;
 	groups.push_back(spriteGroup());
-	groups[0].list.push_back(sprite());
+	groups[0].list.push_back(sprite(prj));
 	groups[0].name.assign(spriteDefName);
 	name.assign(spritesName);
 	extraOptDPLC = false;
@@ -55,7 +56,7 @@ sprites::sprites(const sprites&other, Project*prj) {
 		groups[j].name = other.groups[j].name;
 
 		for (uint32_t i = 0; i < sz; ++i)
-			groups[j].list.push_back(sprite(other.groups[j].list[i].w, other.groups[j].list[i].h, other.groups[j].list[i].palrow, other.groups[j].list[i].starttile, other.groups[j].list[i].hflip, other.groups[j].list[i].vflip, other.groups[j].list[i].prio, other.groups[j].list[i].loadat, other.groups[j].list[i].offx, other.groups[j].list[i].offy));
+			groups[j].list.push_back(sprite(other.groups[j].list[i].w, other.groups[j].list[i].h, other.groups[j].list[i].palrow, other.groups[j].list[i].starttile, other.groups[j].list[i].hflip, other.groups[j].list[i].vflip, other.groups[j].list[i].prio, other.groups[j].list[i].loadat, other.groups[j].list[i].offx, other.groups[j].list[i].offy, prj));
 	}
 
 	amt = other.amt;
@@ -337,40 +338,30 @@ bool sprites::recttoSprite(int x0, int x1, int y0, int y1, int where, Fl_Shared_
 		setAmt(amt + 1);
 	}
 
+	const unsigned tileWidth = prj->tileC->width();
+	const unsigned tileHeight = prj->tileC->height();
+
 	unsigned depth = loaded_image->d();
-	unsigned wmax, hmax;
+	unsigned minTilesX, minTilesY, maxTilesX, maxTilesY;
+	prj->getSpriteSizeMinMax(minTilesX, minTilesY, maxTilesX, maxTilesY);
 
-	switch (prj->gameSystem) {
-		case segaGenesis:
-			wmax = hmax = 32;
-			break;
+	unsigned minPixelsX = minTilesX * tileWidth;
+	unsigned minPixelsY = minTilesY * tileHeight;
 
-		case NES:
-		case masterSystem:
-		case gameGear:
-			wmax = 8;
-			hmax = 16;
-			break;
-
-		default:
-			show_default_error
-	}
+	unsigned maxPixelsX = maxTilesX * tileWidth;
+	unsigned maxPixelsY = maxTilesY * tileHeight;
 
 	unsigned wf, hf, w, h, wt, ht;
 	wf = loaded_image->w();
 	hf = loaded_image->h();
 	w = x1 - x0 + 1;
 	h = y1 - y0 + 1;
-	unsigned tileWidth = prj->tileC->width();
-	unsigned tileHeight = prj->tileC->height();
 
-	unsigned wTiles = (w + tileWidth - 1) / tileWidth;
-	unsigned hTiles = (h + tileHeight - 1) / tileHeight;
+	unsigned wTiles = ((w + minPixelsX - 1) / minPixelsX) * minTilesX;
+	unsigned hTiles = ((h + minPixelsY - 1) / minPixelsY) * minTilesY;
 
 	wt = wTiles * tileWidth; // Width of the new sprite including padding.
 	ht = hTiles * tileHeight;
-	//Determine how many sprites will be created
-	unsigned spritesnew = (wTiles / wmax) * (hTiles / hmax);
 
 	if (where >= amt)
 		setAmt(where + 1);
@@ -380,8 +371,7 @@ bool sprites::recttoSprite(int x0, int x1, int y0, int y1, int where, Fl_Shared_
 	unsigned newTiles = wTiles * hTiles;
 	//set new amount
 	prj->tileC->resizeAmt(prj->tileC->amt + newTiles);
-	out = prj->tileC->truetDat.data() + (startTile * prj->tileC->tcSize);
-	setAmtingroup(where, spritesnew);
+	out = &prj->tileC->truetDat.at(startTile * prj->tileC->tcSize);
 	unsigned center[3];
 	center[0] = (wt - w) / 2;
 	center[1] = (ht - h) / 2;
@@ -390,11 +380,12 @@ bool sprites::recttoSprite(int x0, int x1, int y0, int y1, int where, Fl_Shared_
 	printf("Center %d %d %d\n", center[0], center[1], center[2]);
 	printf("w: %d h: %d wt: %d ht: %d new tiles: %d\n", w, h, wt, ht, newTiles);
 
-	for (unsigned y = 0, cnt = 0, tilecnt = startTile; y < ht; y += hmax) {
-		for (unsigned x = 0; x < wt; x += wmax, ++cnt) {
+	for (unsigned y = 0, cnt = 0, tilecnt = startTile; y < ht; y += maxPixelsY) {
+		for (unsigned x = 0; x < wt; x += maxPixelsX, ++cnt) {
+			setAmtingroup(where, cnt + 1);
 			unsigned dimx, dimy;
-			dimx = ((wt - x) >= wmax) ? wmax : (wt - x) % wmax;
-			dimy = ((ht - y) >= hmax) ? hmax : (ht - y) % hmax;
+			dimx = ((wt - x) >= maxPixelsX) ? maxPixelsX : (wt - x) % maxPixelsX;
+			dimy = ((ht - y) >= maxPixelsY) ? maxPixelsY : (ht - y) % maxPixelsY;
 			groups[where].list[cnt].w = dimx / tileWidth;
 			groups[where].list[cnt].h = dimy / tileHeight;
 			groups[where].list[cnt].starttile = tilecnt;
@@ -1598,12 +1589,7 @@ void sprites::spriteGroupToImage(uint8_t*img, uint32_t id, int row, bool alpha) 
 	minmaxoffx(id, minx, maxx);
 	uint32_t w = abs(maxx - minx);
 	uint32_t h = abs(maxy - miny);
-	unsigned bpp;//Bytes per pixel
-
-	if (alpha)
-		bpp = 4;
-	else
-		bpp = 3;
+	unsigned bpp = alpha ? 4 : 3;//Bytes per pixel
 
 	memset(img, 0, w * h * bpp);
 
@@ -1614,7 +1600,7 @@ void sprites::spriteGroupToImage(uint8_t*img, uint32_t id, int row, bool alpha) 
 		yoff -= miny;
 		uint32_t ttile = groups[id].list[i].starttile;
 
-		if ((row != groups[id].list[i].palrow) && (row >= 0))
+		if ((row >= 0) && (row != groups[id].list[i].palrow))
 			continue;//Skip if we only want a specific row
 
 		for (uint32_t x = 0; x < groups[id].list[i].w * prj->tileC->width(); x += prj->tileC->width()) {
@@ -1629,9 +1615,12 @@ void sprites::spriteImageToTiles(uint8_t*img, uint32_t id, int rowUsage, bool al
 	int32_t miny, maxy, minx, maxx;
 	minmaxoffy(id, miny, maxy);
 	minmaxoffx(id, minx, maxx);
-	uint8_t tcTemp[256];
+	std::unique_ptr<uint8_t[]> tcTemp(new uint8_t[prj->tileC->tcSize]);
 	uint32_t w = abs(maxx - minx);
 	uint32_t h = abs(maxy - miny);
+
+	unsigned tileWidth = prj->tileC->width();
+	unsigned tileHeight = prj->tileC->height();
 
 	for (uint32_t i = 0; i < groups[id].list.size(); ++i) {
 		int32_t xoff = groups[id].list[i].offx;
@@ -1643,10 +1632,10 @@ void sprites::spriteImageToTiles(uint8_t*img, uint32_t id, int rowUsage, bool al
 		if ((rowUsage != groups[id].list[i].palrow) && (rowUsage >= 0))
 			continue;//Skip if we only want a specific row
 
-		for (uint32_t x = 0; x < groups[id].list[i].w * prj->tileC->width(); x += prj->tileC->width()) {
-			for (uint32_t y = 0; y < groups[id].list[i].h * prj->tileC->height(); y += prj->tileC->height(), ++ttile) {
-				rect2rect(img, tcTemp, xoff + x, yoff + y, w, prj->tileC->width(), prj->tileC->height(), isIndexArray ? 1 : (alpha ? 4 : 3), false);
-				prj->tileC->truecolor_to_tile_ptr(groups[id].list[i].palrow, ttile, tcTemp, false, true, isIndexArray);
+		for (uint32_t x = 0; x < groups[id].list[i].w * tileWidth; x += tileWidth) {
+			for (uint32_t y = 0; y < groups[id].list[i].h * tileHeight; y += tileHeight, ++ttile) {
+				rect2rect(img, &tcTemp[0], xoff + x, yoff + y, w, tileWidth, tileHeight, isIndexArray ? 1 : (alpha ? 4 : 3), false);
+				prj->tileC->truecolor_to_tile_ptr(groups[id].list[i].palrow, ttile, &tcTemp[0], false, true, isIndexArray);
 			}
 		}
 	}
@@ -1738,7 +1727,7 @@ void sprites::setAmt(uint32_t amtnew) {
 		groups.resize(amtnew);
 
 		for (unsigned n = amt; n < amtnew; ++n) {
-			groups[n].list.push_back(sprite());
+			groups[n].list.push_back(sprite(prj));
 			groups[n].name.assign(spriteDefName);
 		}
 	} else if (amtnew < amt) {
@@ -1758,7 +1747,7 @@ void sprites::setAmtingroup(uint32_t id, uint32_t amtnew) {
 	if (amtold == amtnew)
 		return;
 
-	groups[id].list.resize(amtnew);
+	groups[id].list.resize(amtnew, sprite(prj));
 }
 bool sprites::save(FILE*fp)const {
 	/* Format:
@@ -1971,63 +1960,100 @@ void sprites::delingroup(uint32_t id, uint32_t subid) {
 	else
 		fl_alert("You cannot delete what does not exist");
 }
-void sprites::enforceMax(unsigned wmax, unsigned hmax) {
-	for (unsigned j = 0; j < amt; ++j) {
-		unsigned told = groups[j].list.size();
-		struct spriteGroup& group = groups[j];
+void sprites::enforceMax() {
+	try {
+		unsigned minTilesX, minTilesY, maxTilesX, maxTilesY;
+		prj->getSpriteSizeMinMax(minTilesX, minTilesY, maxTilesX, maxTilesY);
 
-		for (unsigned i = 0; i < told; ++i) {
-			struct sprite& gli = group.list[i]; // gli = Group List[I].
+		const unsigned tileWidth = prj->tileC->width();
+		const unsigned tileHeight = prj->tileC->height();
 
-			if ((gli.w > wmax) || (gli.h > hmax)) {
-				//Divide it up into more sprites
-				unsigned w = gli.w;
-				unsigned h = gli.h;
-				unsigned nSpritesW = ((w + (wmax - 1)) / wmax);
-				unsigned nSpritesH = ((h + (hmax - 1)) / hmax);
-				unsigned snew = nSpritesW * nSpritesH - 1;
-				unsigned start = group.list.size();
-				unsigned st = gli.starttile;
-				unsigned la = gli.loadat;
+		for (unsigned j = 0; j < amt; ++j) {
+			struct spriteGroup* group = &groups.at(j);
+			unsigned told = group->list.size();
 
-				if (gli.w > wmax)
-					gli.w = wmax;
+			for (unsigned i = 0; i < told; ++i) {
+				struct sprite* gli = &group->list.at(i); // gli = Group List[I].
 
-				if (gli.h > hmax)
-					gli.h = hmax;
+				if ((gli->w > maxTilesX) || (gli->h > maxTilesY)) {
+					//Divide it up into more sprites
+					unsigned wOrig = gli->w;
+					unsigned hOrig = gli->h;
+					unsigned nSpritesW = ((wOrig + (maxTilesX - 1)) / maxTilesX);
+					unsigned nSpritesH = ((hOrig + (maxTilesY - 1)) / maxTilesY);
+					unsigned snew = nSpritesW * nSpritesH - 1;
+					unsigned start = group->list.size();
+					unsigned st = gli->starttile;
+					unsigned la = gli->loadat;
 
-				st += gli.h * gli.w;
-				la += gli.h * gli.w;
-				setAmtingroup(j, start + snew);
+					setAmtingroup(j, start + snew);
+					group = &groups[j]; // gli and group must be updated because the pointers may have changed.
+					gli = &group->list[i];
 
-				for (unsigned x = 0, a = start; x < nSpritesW; ++x) {
-					struct sprite& gla = group.list[a];
+					bool hflip = gli->hflip;
+					bool vflip = gli->vflip;
 
-					for (unsigned y = 0; y < nSpritesH; ++y) {
-						if ((!x) && (!y)) // The original sprite is already corrected.
-							continue;
+					int startx = 0;
+					int starty = 0;
 
-						if (x == (w / wmax))
-							gla.w = w % wmax;
-						else
-							gla.w = wmax;
+					int endx = nSpritesW - 1;
+					int endy = nSpritesH - 1;
 
-						if (y == (h / hmax))
-							gla.h = h % hmax;
-						else
-							gla.h = hmax;
+					if (hflip)
+						std::swap(startx, endx);
 
-						gla.offx = gli.offx + (x * wmax * 8);
-						gla.offy = gli.offy + (y * hmax * 8);
-						gla.starttile = st;
-						gla.loadat = la;
-						st += gla.w * gla.h;
-						la += gla.w * gla.h;
-						++a;
+					if (vflip)
+						std::swap(starty, endy);
+
+					int stepx = hflip ? -1 : 1;
+					int stepy = vflip ? -1 : 1;
+
+					bool isFirst = true;
+					unsigned offx = gli->offx;
+					unsigned offy = gli->offy;
+
+					for (int x = startx, a = start; hflip ? (endx <= x) : (x <= endx); x += stepx) {
+						for (int y = starty; vflip ? (endy <= y) : (y <= endy); y += stepy) {
+							struct sprite* gla;
+
+							if (isFirst) { // The original sprite is already corrected.
+								isFirst = false;
+								gla = gli;
+							} else {
+								gla = &group->list.at(a);
+								++a;
+							}
+
+							if (x == endx) {
+								unsigned remx = wOrig % maxTilesX;
+								gla->w = remx == 0 ? maxTilesX : remx;
+							} else
+								gla->w = maxTilesX;
+
+							if (y == endy) {
+								unsigned remy = hOrig % maxTilesY;
+								gla->h = remy == 0 ? maxTilesY : remy;
+							} else
+								gla->h = maxTilesY;
+
+							gla->offx = offx + (x * maxTilesX * tileWidth);
+							gla->offy = offy + (y * maxTilesY * tileHeight);
+							gla->starttile = st;
+							gla->loadat = la;
+							unsigned tadd = gla->w * gla->h;
+							st += tadd;
+							la += tadd;
+							gla->palrow = gli->palrow;
+							gla->hflip = hflip;
+							gla->vflip = vflip;
+							gla->prio = gli->prio;
+						}
 					}
 				}
 			}
 		}
+	} catch (std::exception & e) {
+		fl_alert("%s", e.what());
 	}
 }
 void sprites::allToPalRow(unsigned palRow) {
@@ -2035,4 +2061,16 @@ void sprites::allToPalRow(unsigned palRow) {
 		for (unsigned i = 0; i < groups[j].list.size(); ++i)
 			groups[j].list[i].palrow = palRow;
 	}
+}
+
+void sprites::setPrjPtr(Project*prj) {
+	this->prj = prj;
+
+	for (auto it = groups.begin(); it != groups.end(); ++it) {
+		struct spriteGroup& group = *it;
+
+		for (auto its = group.list.begin(); its != group.list.end(); ++its)
+			its->prj = prj;
+	}
+
 }

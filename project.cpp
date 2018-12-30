@@ -339,7 +339,7 @@ void setHaveProject(uint32_t id, uint32_t mask, bool set) {
 				palBar.setSys();
 
 				if (projects[id].gameSystem == NES)
-					updateEmphesis();
+					projects[id].pal->updateEmphasis();
 			}
 		} else {
 			if (projects[id].useMask & pjHavePal) {
@@ -715,7 +715,7 @@ void switchProject(uint32_t id, bool load) {
 
 			if (projects[id].containsData(pjHavePal)) {
 				palBar.setSys();
-				updateEmphesis();
+				projects[id].pal->updateEmphasis();
 			}
 
 			break;

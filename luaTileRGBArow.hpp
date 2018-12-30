@@ -16,8 +16,8 @@
 */
 #ifndef LUA_TILE_RGBA_ROW_HPP
 #define LUA_TILE_RGBA_ROW_HPP
-#include "lualib.h"
-#include "lauxlib.h"
+#include "lua.hpp"
+
 
 int luaopen_TileRGBArow(lua_State *L, size_t projectIDX, size_t tileIDX);
 #endif

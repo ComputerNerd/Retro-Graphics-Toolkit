@@ -15,13 +15,27 @@
 	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
 --]]
 
+function updateProjectGUI(sys)
+	if sys==project.segaGenesis then
+		palTabSel:show()
+		spriteSizeSel:hide()
+	else
+		palTabSel:hide()
+		spriteSizeSel:show()
+		spriteSizeSel:clear()
+		spriteSizeSel:add('8x8 sprites')
+		if sys == project.NES then
+			spriteSizeSel:add('8x16 sprites')
+		else
+			spriteSizeSel:add('16x16 sprites')
+		end
+		spriteSizeSel:value(0)
+	end
+end
+
 function switchSystemBefore(old,new)
 	if is_headless == 0 then
-		if new==project.segaGenesis then
-			palTabSel:show()
-		else
-			palTabSel:hide()
-		end
+		updateProjectGUI(new)
 	end
 end
 

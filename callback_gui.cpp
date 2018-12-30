@@ -22,7 +22,7 @@
 #include "color_convert.h"
 #include "system.h"
 #include "callback_project.h"
-#include "lua.h"
+#include "lua.hpp"
 #include "CIE.h"
 #include "classpalettebar.h"
 #include "undo.h"
@@ -173,7 +173,6 @@ void set_game_system(Fl_Widget*, void* selection) {
 					window->spritesize[1]->maximum(4);
 				}
 
-				currentProject->ms->sps[msprt].enforceMax(4, 4);
 			}
 
 			if (window) {
@@ -206,7 +205,6 @@ void set_game_system(Fl_Widget*, void* selection) {
 					window->spritesize[1]->maximum(2);
 				}
 
-				currentProject->ms->sps[msprt].enforceMax(1, 2);
 			}
 
 			if (window) {
@@ -225,11 +223,10 @@ void set_game_system(Fl_Widget*, void* selection) {
 
 			if (currentProject->containsData(pjHaveSprites)) {
 				if (window) {
-					window->spritesize[0]->maximum(1);
+					window->spritesize[0]->maximum(2);
 					window->spritesize[1]->maximum(2);
 				}
 
-				currentProject->ms->sps[msprt].enforceMax(1, 2);
 			}
 
 			break;
@@ -244,11 +241,10 @@ void set_game_system(Fl_Widget*, void* selection) {
 
 			if (currentProject->containsData(pjHaveSprites)) {
 				if (window) {
-					window->spritesize[0]->maximum(1);
+					window->spritesize[0]->maximum(2);
 					window->spritesize[1]->maximum(2);
 				}
 
-				currentProject->ms->sps[msprt].enforceMax(2, 2);
 			}
 
 			if (window) {
@@ -284,6 +280,8 @@ void set_game_system(Fl_Widget*, void* selection) {
 			currentProject->ms->sps[msprt].allToPalRow(spRow);
 			palBar.changeRow(spRow, 3);
 		}
+
+		currentProject->ms->sps[msprt].enforceMax();
 
 		if (window)
 			window->updateSpriteSliders();

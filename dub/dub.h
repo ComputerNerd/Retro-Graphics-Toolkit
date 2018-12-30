@@ -49,8 +49,7 @@ typedef int LuaStackSize;
 #endif
 #endif
 
-#include <lua.h>
-#include <lauxlib.h>
+#include <lua.hpp>
 
 #include <string>    // std::string for Exception
 #include <exception> // std::exception

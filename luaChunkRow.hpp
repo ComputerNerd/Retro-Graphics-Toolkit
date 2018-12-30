@@ -12,12 +12,11 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #ifndef LUA_CHUNK_COLUMN_HPP
 #define LUA_CHUNK_COLUMN_HPP
-#include "lualib.h"
-#include "lauxlib.h"
+#include "lua.hpp"
 
 int luaopen_ChunkRow(lua_State *L, size_t projectIDX, size_t chunkIDX, size_t rowIDX);
 #endif

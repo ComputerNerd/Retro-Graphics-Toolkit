@@ -16,8 +16,8 @@
 */
 #ifndef LUA_CHUNKS_HPP
 #define LUA_CHUNKS_HPP
-#include "lualib.h"
-#include "lauxlib.h"
+#include "lua.hpp"
+
 
 int luaopen_Chunks(lua_State *L, unsigned idx);
 #endif

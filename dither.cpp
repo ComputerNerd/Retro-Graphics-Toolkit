@@ -1256,13 +1256,8 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 							g_new = currentProject->pal->rgbPal[temp + 1];
 							b_new = currentProject->pal->rgbPal[temp + 2];
 							temp = 3 * ((temp / 3) == (extAttr >> 4));
-						} else if ((currentProject->pal->haveAlt) && isSprite) {
-							temp = find_near_color_from_row_rgb(pal_row, r_old, g_old, b_old, true);
-							r_new = currentProject->pal->rgbPal[temp + (currentProject->pal->colorCnt * 3)];
-							g_new = currentProject->pal->rgbPal[temp + 1 + (currentProject->pal->colorCnt * 3)];
-							b_new = currentProject->pal->rgbPal[temp + 2 + (currentProject->pal->colorCnt * 3)];
 						} else {
-							temp = find_near_color_from_row_rgb(pal_row, r_old, g_old, b_old, false);
+							temp = find_near_color_from_row_rgb(pal_row, r_old, g_old, b_old, (currentProject->pal->haveAlt) && isSprite);
 							r_new = currentProject->pal->rgbPal[temp];
 							g_new = currentProject->pal->rgbPal[temp + 1];
 							b_new = currentProject->pal->rgbPal[temp + 2];

@@ -16,8 +16,8 @@
 */
 #ifndef LUA_CHUNK_HPP
 #define LUA_CHUNK_HPP
-#include "lualib.h"
-#include "lauxlib.h"
+#include "lua.hpp"
+
 
 int luaopen_Chunk(lua_State *L, size_t projectIDX, size_t chunkIDX);
 #endif

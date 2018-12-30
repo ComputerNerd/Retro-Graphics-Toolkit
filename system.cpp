@@ -190,7 +190,7 @@ unsigned Project::extAttrBytesPerTile(void) {
 					break;
 
 				case MODE_1:
-					return 1; // This is the numberator. It will later be divided by eight.
+					return 1; // This is the numerator. It will later be divided by eight.
 					break;
 
 				case MODE_2:
@@ -215,4 +215,76 @@ void Project::setTMS9918subSys(enum TMS9918SubSys sys) {
 
 	if (oldVal != sys)
 		palBar.setSys(false, true);
+}
+
+void Project::setSpriteSizeID(unsigned sizeID) {
+	sizeID &= 1;
+
+	switch (gameSystem) {
+		case NES:
+		case masterSystem:
+		case gameGear:
+			subSystem &= ~(1 << 2);
+			subSystem |= sizeID << 2;
+			break;
+
+		case TMS9918:
+			subSystem &= ~(1 << 11);
+			subSystem |= sizeID << 11;
+			break;
+
+		default:
+			show_default_error
+	}
+
+}
+
+unsigned Project::getSpriteSizeID() const {
+	switch (gameSystem) {
+		case NES:
+		case masterSystem:
+		case gameGear:
+			return (subSystem >> 2) & 1;
+
+		case TMS9918:
+			return (subSystem >> 11) & 1;
+
+		default:
+			show_default_error
+	}
+
+	return 0;
+}
+
+void Project::getSpriteSizeMinMax(unsigned & minx, unsigned & miny, unsigned & maxx, unsigned & maxy) {
+	switch (gameSystem) {
+		case segaGenesis:
+			minx = miny = 1;
+			maxx = maxy = 4;
+			break;
+
+		case NES:
+			minx = maxx = 1;
+
+			if (getSpriteSizeID())
+				miny = maxy = 2;
+			else
+				miny = maxy = 1;
+
+			break;
+
+		case masterSystem:
+		case gameGear:
+		case TMS9918:
+			if (getSpriteSizeID())
+				minx = miny = maxx = maxy = 2;
+			else
+				minx = miny = maxx = maxy = 1;
+
+			break;
+
+		default:
+			show_default_error
+
+	}
 }

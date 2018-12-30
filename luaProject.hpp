@@ -16,7 +16,7 @@
 */
 #ifndef LUA_PROJECT_HPP
 #define LUA_PROJECT_HPP
-#include "lualib.h"
-#include "lauxlib.h"
+#include "lua.hpp"
+
 int luaopen_Project(lua_State *L, unsigned idx);
 #endif

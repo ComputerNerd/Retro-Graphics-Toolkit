@@ -20,7 +20,10 @@ function switchProject()
 	local p = projects.current
 
 	if is_headless == 0 then
-		palTabSel:value(p:getPalType())--Fixes internal pointer
+		updateProjectGUI(p.gameSystem)
+		if p.gameSystem == project.segaGenesis then
+			palTabSel:value(p:getPalType())--Fixes internal pointer
+		end
 	end
 
 	if p:have(project.palMask) ~= false then

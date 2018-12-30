@@ -31,6 +31,7 @@
 #include "nearestColor.h"
 #include "gui.h"
 #include "errorMsg.h"
+#include "filereader.h"
 const uint8_t TMS9918Palette[] = {
 	0,   0,   0,
 	0,   0,   0,
@@ -65,8 +66,7 @@ palette::palette(const palette&other, Project*prj) {
 	memcpy(rgbPal, other.rgbPal, std::min(totalMemoryUsage(), other.totalMemoryUsage()));
 }
 void palette::setVars(enum gameSystemEnum gameSystem) {
-	fixedSpriteRow = currentProject->fixedSpirtePalRow();
-
+	fixedSpriteRow = prj->fixedSpirtePalRow();
 
 	switch (gameSystem) {
 		case segaGenesis:
@@ -142,14 +142,18 @@ void palette::setVars(enum gameSystemEnum gameSystem) {
 
 	palType = rgbPal + (totalColors() * (3 + esize));
 
-	if (prj->isFixedPalette())
+	if (prj->isFixedPalette()) {
 		setFixedPalette();
+		allColorsCache.clear();
+	} else
+		allColorsCache = getAllColors();
 
 	if (haveAlt && fixedSpriteRow >= 0)
 		throw std::logic_error("haveAlt and fixedSpriteRow cannot both be enabled at the same time.");
 
 	if (rowCntPal <= 1 && fixedSpriteRow >= 0)
 		throw std::logic_error("A fixed sprite row may only be enabled when there are multiple rows.");
+
 }
 void palette::read(FILE*fp, bool supportsAlt) {
 	unsigned readDatCnt;
@@ -252,35 +256,9 @@ void palette::clear(void) {
 }
 
 paletteRawValue_t palette::rgbToValue(unsigned r, unsigned g, unsigned b) {
-	switch (prj->gameSystem) {
-		case segaGenesis:
-			return to_sega_genesis_colorRGB(r, g, b);
-
-		case NES:
-			return to_nes_color_rgb(r, g, b);
-
-		case masterSystem:
-		{
-			uint8_t tmp = nearestOneChannel(r, palTabMasterSystem, 4);
-			tmp |= nearestOneChannel(g, palTabMasterSystem, 4) << 2;
-			tmp |= nearestOneChannel(b, palTabMasterSystem, 4) << 4;
-			return tmp;
-		}
-
-		case gameGear:
-		{
-			uint16_t tmp = nearestOneChannel(r, palTabGameGear, 16);
-			tmp |= nearestOneChannel(g, palTabGameGear, 16) << 4;
-			tmp |= nearestOneChannel(b, palTabGameGear, 16) << 8;
-			return tmp;
-		}
-		break;
-
-		default:
-			show_default_error
-	}
-
-	return 0;
+	bool needsInit = true;
+	double bestd;
+	return searchPermuations(allColorsCache, bestd, r, g, b);
 }
 
 void palette::boundsCheckEntry(unsigned ent) const {
@@ -397,23 +375,11 @@ void palette::swapEntry(unsigned one, unsigned two) {
 	memcpy(rgbPal + two, rgbPal + one, 3);
 	memcpy(rgbPal + one, rgb, 3);
 }
-bool palette::shouldAddCol(unsigned off, unsigned r, unsigned g, unsigned b, bool sprite) {
-	off -= off % getPerRow(sprite);
-
-	for (unsigned i = off * 3; i < (off + getPerRow(sprite)) * 3; i += 3) {
-		if (rgbPal[i] == r && rgbPal[i + 1] == g && rgbPal[i + 2] == b && palType[i / 3] < 2)
-			return false;
-	}
-
-	return true;
-}
 void palette::savePalette(const char*fname, unsigned start, unsigned end, bool skipzero, fileType_t type, int clipboard, const char*label) {
 	std::array<uint8_t, 32> bufskip;
 	unsigned szskip = 0;
 
 	if (skipzero) {
-		uint8_t*bufptr = bufskip.data();
-
 		for (unsigned i = start; i < end; ++i) {
 			if ((i & 3) || (i == 0)) {
 				bufskip.at(szskip) = palDat[i];
@@ -694,6 +660,56 @@ void palette::reduceRow(rawValPalMap_t& rowMap, unsigned targetRow, unsigned tar
 	}
 }
 
+std::set<paletteRawValue_t> palette::getAllColors() {
+	std::set<paletteRawValue_t> permutations;
+	// Create the closest unique color possible.
+	const unsigned palComponentCount = paletteComponentCount();
+
+	if (palComponentCount != 2 && palComponentCount != 3)
+		throw std::logic_error("Permutations are not implemented for this number of permutations."); // TODO: is there a more generic way to do this?
+
+	if (palComponentCount == 2) {
+		for (unsigned a = 0; a <= maxValForPaletteComponent(0); ++a) {
+			for (unsigned b = 0; b <= maxValForPaletteComponent(1); ++b) {
+				paletteRawValue_t tmp = changeValueRaw(a, 0, 0);
+				tmp = changeValueRaw(b, 1, tmp);
+				permutations.insert(tmp);
+			}
+		}
+	} else {
+		for (unsigned a = 0; a <= maxValForPaletteComponent(0); ++a) {
+			for (unsigned b = 0; b <= maxValForPaletteComponent(1); ++b) {
+				for (unsigned c = 0; c <= maxValForPaletteComponent(2); ++c) {
+					paletteRawValue_t tmp = changeValueRaw(a, 0, 0);
+					tmp = changeValueRaw(b, 1, tmp);
+					tmp = changeValueRaw(c, 2, tmp);
+					permutations.insert(tmp);
+				}
+			}
+		}
+	}
+
+	return permutations;
+}
+
+paletteRawValue_t palette::searchPermuations(const std::set<paletteRawValue_t> & permutations, double& bestd, unsigned r, unsigned g, unsigned b) {
+	paletteRawValue_t bestColor;
+	bool needsInit = true;
+
+	for (auto itP = permutations.cbegin(); itP != permutations.cend(); ++itP) {
+		rgbArray_t testColor = valueToRGB(*itP);
+		double d = ciede2000rgb(r, g, b, testColor[0], testColor[1], testColor[2]);
+
+		if (needsInit || d < bestd) {
+			bestd = d;
+			bestColor = *itP;
+			needsInit = false;
+		}
+	}
+
+	return bestColor;
+}
+
 void palette::groupRows(const palette& other, const std::unique_ptr<rawValPalMap_t[]>& colorMap, const std::unique_ptr<std::set<rgbArray_t>[]>& uniqueColors, BgColProcessMode src, BgColProcessMode dst) {
 	unsigned rSrcStart, rSrcEnd;
 	other.calculateRowStartEnd(rSrcStart, rSrcEnd, src);
@@ -741,6 +757,7 @@ void palette::groupRows(const palette& other, const std::unique_ptr<rawValPalMap
 				unsigned oldColIdx = other.getIndexByRow(rSrc, col) * 3;
 				const uint8_t* oldColor = other.rgbPal + oldColIdx;
 				rgbArray_t oldC {oldColor[0], oldColor[1], oldColor[2] };
+
 				if (uniqueColors[rDst].count(oldC) < 1) {
 					uniqueColorsNew.emplace(oldC);
 					uniqueColors[rDst].emplace(oldC);
@@ -752,33 +769,8 @@ void palette::groupRows(const palette& other, const std::unique_ptr<rawValPalMap
 				paletteRawValue_t closestColor = rgbToValue(color[0], color[1], color[2]);
 
 				if (colorMap[rDst].count(closestColor) > 0) {
-					std::set<paletteRawValue_t> permutations;
-					// Create the closest unique color possible.
-					const unsigned palComponentCount = paletteComponentCount();
 
-					if (palComponentCount != 2 && palComponentCount != 3)
-						throw std::logic_error("Permutations are not implemented for this number of permutations."); // TODO: is there a more generic way to do this?
-
-					if (palComponentCount == 2) {
-						for (unsigned a = 0; a <= maxValForPaletteComponent(0); ++a) {
-							for (unsigned b = 0; b <= maxValForPaletteComponent(1); ++b) {
-								paletteRawValue_t tmp = changeValueRaw(a, 0, 0);
-								tmp = changeValueRaw(b, 1, tmp);
-								permutations.insert(tmp);
-							}
-						}
-					} else {
-						for (unsigned a = 0; a <= maxValForPaletteComponent(0); ++a) {
-							for (unsigned b = 0; b <= maxValForPaletteComponent(1); ++b) {
-								for (unsigned c = 0; c <= maxValForPaletteComponent(2); ++c) {
-									paletteRawValue_t tmp = changeValueRaw(a, 0, 0);
-									tmp = changeValueRaw(b, 1, tmp);
-									tmp = changeValueRaw(c, 2, tmp);
-									permutations.insert(tmp);
-								}
-							}
-						}
-					}
+					auto permutations = getAllColors();
 
 					// Remove colors that we already have.
 					permutations.erase(closestColor);
@@ -786,26 +778,14 @@ void palette::groupRows(const palette& other, const std::unique_ptr<rawValPalMap
 					for (auto itCM = colorMap[rDst].cbegin(); itCM != colorMap[rDst].cend(); ++itCM)
 						permutations.erase(itCM->first);
 
-					bool needsInit = true;
-					double bestd;
-					paletteRawValue_t bestColor;
 					rgbArray_t closestColorRGB = valueToRGB(closestColor);
-					double worstd = ciede2000rgb(color[0], color[1], color[2], closestColorRGB[0], closestColorRGB[1], closestColorRGB[2]);
-					worstd *= 2.0;
 
-					for (auto itP = permutations.cbegin(); itP != permutations.cend(); ++itP) {
-						rgbArray_t testColor = valueToRGB(*itP);
-						double d = ciede2000rgb(color[0], color[1], color[2], testColor[0], testColor[1], testColor[2]);
+					double bestd;
+					auto bestColor = searchPermuations(permutations, bestd, closestColorRGB[0], closestColorRGB[1], closestColorRGB[2]);
 
-						if (needsInit || d < bestd) {
-							bestd = d;
-							bestColor = *itP;
-							needsInit = false;
-						}
-					}
-
-					if (bestd < worstd)
+					if (bestd < 20.0)
 						colorMap[rDst][bestColor] = valueToRGB(bestColor);
+
 					// Now find the second closest color that does not already exist in
 				} else
 					colorMap[rDst][closestColor] = valueToRGB(closestColor);
@@ -828,7 +808,6 @@ void palette::sortAndReduceColors(const palette& other) {
 	std::unique_ptr<rawValPalMap_t[]> colorMap(new rawValPalMap_t[totalRows()]);
 	std::unique_ptr<std::set<rgbArray_t>[]> uniqueColors(new std::set<rgbArray_t>[totalRows()]);
 	// Populate the set. This provides an easy way to eliminate duplicate colors.
-	const uint8_t* oldColors = other.rgbPal;
 
 	// First handle fixed row sprite palettes.
 	bool fixedRowSet = false;
@@ -873,8 +852,6 @@ void palette::sortAndReduceColors(const palette& other) {
 }
 
 void palette::import(const palette& other) {
-	unsigned otherColorCount = other.totalColors();
-
 	if (prj->isFixedPalette())
 		setFixedPalette();
 	else {
@@ -1047,4 +1024,108 @@ void palette::changeIndexRaw(unsigned value, unsigned paletteComponentIndex, uns
 	paletteRawValue_t val = changeValueRaw(value, paletteComponentIndex, getEntry(index));
 	setEntry(val, index);
 	updateRGBindex(index);
+}
+
+void palette::loadFromFile(const char * fname, fileType_t forceType, unsigned offset) {
+	size_t palSize = totalColors();
+	palSize -= offset;
+	palSize *= esize;
+	offset *= esize;
+	filereader f = filereader(paletteDataEndian, esize, "Load palette", false, 16, true, fname, forceType);
+
+	if (f.amt < 1)
+		return;
+
+	unsigned i = f.selDat();
+	memcpy(palDat + offset, f.dat[i], std::min(f.lens[i], palSize));
+
+	//now convert each value to RGB.
+	paletteToRgb();
+
+	if (window)
+		window->redraw();
+}
+
+void palette::updateEmphasis(void) {
+	/*76543210
+	  ||||||||
+	  ||||++++- Hue (phase)
+	  ||++----- Value (voltage)
+	  ++------- Unimplemented, reads back as 0*/
+	unsigned emps = (prj->subSystem >> NESempShift)&NESempMask;
+	unsigned empsSprite = (prj->subSystem >> NESempShiftAlt)&NESempMask;
+	emps <<= 6;
+	empsSprite <<= 6;
+	uint32_t rgb_out;
+	updateNesTab(emps, false);
+	updateNesTab(empsSprite, true);
+
+	for (unsigned c = 0; c < 48; c += 3) {
+		rgb_out = nesPalToRgb(palDat[c / 3] | emps);
+		rgbPal[c] = (rgb_out >> 16) & 255; //red
+		rgbPal[c + 1] = (rgb_out >> 8) & 255; //green
+		rgbPal[c + 2] = rgb_out & 255; //blue
+	}
+
+	for (unsigned c = 48; c < 96; c += 3) {
+		rgb_out = nesPalToRgb(palDat[c / 3] | empsSprite);
+		rgbPal[c] = (rgb_out >> 16) & 255; //red
+		rgbPal[c + 1] = (rgb_out >> 8) & 255; //green
+		rgbPal[c + 2] = rgb_out & 255; //blue
+	}
+}
+
+int palette::setPaletteFromRGB(const uint8_t* colors, const unsigned nColors, const unsigned minEntry, const unsigned maxEntry) {
+	std::set<uint32_t> uniqueColors;
+	std::set<paletteRawValue_t> convertedColors;
+
+	for (unsigned i = 0; i < nColors; ++i) {
+		uint32_t c = colors[0] | (colors[1] << 8) | (colors[2] << 16);
+		uniqueColors.emplace(c);
+		colors += 3;
+	}
+
+	for (auto it = uniqueColors.cbegin(); it != uniqueColors.cend(); ++it) {
+		const uint32_t c = *it;
+		convertedColors.emplace(rgbToValue(c & 255, (c >> 8) & 255, c >> 16));
+	}
+
+	unsigned maxAllowedColors = maxEntry - minEntry + 1;
+
+	// Find and remove locked colors from the list of converted colors.
+
+	for (unsigned en = minEntry; en <= maxEntry; ++en) {
+		if (palType[en] == 1) // Is this a locked color?
+			convertedColors.erase(getEntry(en)); // Erase the key if it exists. Otherwise nothing happens.
+	}
+
+	if (convertedColors.size() > maxAllowedColors)
+		return -1; // Too many colors.
+
+	unsigned e = minEntry;
+
+	// First do a dry run to make sure that it is possible to fill the palette without exceeding maxEntry.
+	for (auto it = convertedColors.cbegin(); it != convertedColors.cend(); ++e) {
+		if (e > maxEntry)
+			return -1; // Could not set all colors.
+
+		if (palType[e])
+			continue; // Try again with the next entry.
+
+		++it;
+	}
+
+
+	e = minEntry;
+
+	// Now set the palette.
+	for (auto it = convertedColors.cbegin(); it != convertedColors.cend(); ++e) {
+		if (palType[e])
+			continue; // Try again with the next entry.
+
+		setEntry(*it, e);
+		++it;
+	}
+
+	return convertedColors.size();
 }

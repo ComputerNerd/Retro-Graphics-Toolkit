@@ -12,7 +12,7 @@
 
    You should have received a copy of the GNU General Public License
    along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-   Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+   Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 //Color conversion functions should go here
 #pragma once
@@ -26,8 +26,7 @@ unsigned nearest_color_index(int val);
 void rgbToHsl255(unsigned r, unsigned g, unsigned b, double * hh, double * ll, double * ss);
 void rgbToHsl(double r, double g, double b, double * hh, double * ll, double * ss);
 uint32_t count_colors(uint8_t * image_ptr, uint32_t w, uint32_t h, uint8_t *colors_found, bool useAlpha = false);
-void updateEmphesis(void);
-void updateEmphesisCB(Fl_Widget*, void*);
+void updateEmphasisCB(Fl_Widget*, void*);
 static inline uint32_t toNesRgb(uint8_t ri, uint8_t gi, uint8_t bi) {
 	return nesPalToRgb(currentProject->pal->to_nes_color_rgb(ri, gi, bi));
 }

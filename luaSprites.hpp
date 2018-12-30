@@ -16,7 +16,7 @@
 */
 #ifndef LUA_SPRITES_HPP
 #define LUA_SPRITES_HPP
-#include "lualib.h"
-#include "lauxlib.h"
+#include "lua.hpp"
+
 int luaopen_MetaSprites(lua_State *L, size_t projectIDX);
 #endif

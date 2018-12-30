@@ -106,13 +106,19 @@ struct Project { /*!<Holds all data needed for a project based system for exampl
 		subSystem |= val << 3;
 		palTab = palTabPtr[val];
 	}
+	bool isNES2x2Tilemap(void) {
+		return gameSystem == NES && (!!(subSystem & NES2x2));
+	}
 	unsigned extAttrTilesPerByte(void);
 	unsigned extAttrBytesPerTile(void);
 	bool isFixedPalette(void);
 	bool hasExtAttrs(void);
 	bool supportsFlippedTiles(void);
+	void getSpriteSizeMinMax(unsigned & minx, unsigned & miny, unsigned & maxx, unsigned & maxy);
 	enum tileType getTileType(void);
 	int fixedSpirtePalRow(void);
+	void setSpriteSizeID(unsigned sizeID);
+	unsigned getSpriteSizeID() const;
 	std::string Name;
 	gameSystemEnum gameSystem;
 	uint32_t subSystem;

@@ -2,9 +2,9 @@
 				  Dependencies
 ===============================================================================
 
-FLTK
+FLTK (1.3.x or later if compatible)
 Boost
-Lua (compiled locally)
+Lua 5.3 or greater.
 
 ===============================================================================
 				  Instructions
@@ -13,60 +13,6 @@ Lua (compiled locally)
 If you are a Windows user and want to compile Retro Graphics Toolkit you will
 need Mingw or Mingw-w64.
 
-Note that Lua needs to be compiled locally. Do not use your systems
-installation of Lua. This is because Lua is compiled with a C++ compiler in
-order to take advantage of zero cost exceptions.
-
-First of all in the Retro Graphics Toolkit directory create a folder called lua
-or luawin if you are compiling for Windows. This folder shall contain the
-latest version of Lua. The folder shall not contain a folder called something
-to the effect of lua/lua-version-number.
-
-Extract the latest version of Lua in the newly created folder.
-
-Now edit the makefile in src. Edit the line that starts with CC=gcc and change
-it to: CC=g++ or CC=clang++ removing anything that follows it.
-
-On the line that starts with CFLAGS= remove -DLUA_COMPAT_5_2
-
-If you are using a cross compiler make sure to take into account it's prefix
-also you will need to modify the AR and RANLIB variables if such is the case.
-For example on windows ar, randlib and g++ will need to be prefixed with
-x86_64-w64-mingw32-g++. You may also need to add extra CFLAGS such as -m32 if
-you are doing a 32-bit build with a 32/64 bit multilib compiler.
-
-Also if you are building on Windows you must replace this line in the Makefile
-	"AR=$(CC) -shared -o" "RANLIB=strip --strip-unneeded" \
-with
-	"AR=$(CC) -shared -static-libgcc -static-libstdc++ -o" "RANLIB=strip --strip-all" \
-
-If you are building on Mac OS X replace (in lua/src/Makefile):
-	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_MACOSX" SYSLIBS="-lreadline" CC=cc
-with
-	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_MACOSX" SYSLIBS="-lreadline"
-
-If you are building on Linux replace (in lua/src/Makefile):
-	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_LINUX" SYSLIBS="-Wl,-E -ldl -lreadline" CC=cc
-with
-	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_LINUX" SYSLIBS="-Wl,-E -ldl -lreadline"
-
-In other words remove CC=cc from the end of the line.
-
-We do this because we should not override the CC variable which we specified
-earlier. We need to use the system's C++ compiler.
-
-We build Lua using C++ in order to take advantage of of zero cost exception
-handling using throw.
-
-The reason Lua is built even though many distributions already provide Lua is
-so that the latest version is used and so that this version which may be built
-with a different configuration does not overwrite your system's instillation of
-Lua.
-
-Now run make linux, make macosx, or make mingw depending on what system Retro
-Graphics Toolkit is being compiled for.
-
-DO NOT RUN MAKE INSTALL.
 
 ===============================================================================
 			       WINDOWS ONLY BEGIN
@@ -75,10 +21,10 @@ DO NOT RUN MAKE INSTALL.
 This step is only for Windows users. On other operating system, the
 distribution should already have provided FLTK.
 
-You will now need to build FLTK to do this download fltk-1.3.4-2 and extract it
-into the Retro Graphics Toolkit project folder and build it using either
-./configure if you are on Windows or if you are cross compiling you need to do
-something like this:
+You will now need to build FLTK to do this download fltk-1.3.4-2 (or later if
+compatible) and extract it into the Retro Graphics Toolkit project folder and
+build it using either ./configure if you are on Windows or if you are cross
+compiling you need to do something like this:
 
 RANLIB=~/mingw/bin/i686-w64-mingw32-gcc-ranlib NM=~/mingw/bin/i686-w64-mingw32-gcc-nm AR=~/mingw/bin/i686-w64-mingw32-gcc-ar CFLAGS="-Os -s -flto=16 -fuse-linker-plugin -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=i686-w64-mingw32 --build=x86_64-unknown-linux-gnu ; make -j16
 
@@ -94,14 +40,37 @@ directory where GCC was compiled. Do likewise in the folder called
 x86_64-w64-mingw32 (may be different depending on how you compiled your mingw
 toolchain)
 
-
-find \( -name '*.o' -o -name '*.a' \) -exec x86_64-w64-mingw32-objcopy -R '.rdata$zzz' {} \;
-or
 find \( -name '*.o' -o -name '*.a' \) -exec i686-w64-mingw32-objcopy -R '.rdata$zzz' {} \;
 
-The purpose of these two commands is to remove all the GCC version strings. If
-you don't run this command you will hundreds of duplicate GCC version strings
+The purpose of that command is to remove all the GCC version strings. If you
+don't run this command you will have hundreds of duplicate GCC version strings
 in the final binary.
+
+In the Retro Graphics Toolkit directory create a folder called luawin. This
+folder shall contain the latest version of Lua. The folder shall not contain a
+folder called something to the effect of luawin/lua-version-number.
+
+Extract the latest version of Lua in the newly created folder.
+
+Now edit the makefile in src. Edit the line that starts with CC=gcc and remove
+anything that follows it.
+
+On the line that starts with CFLAGS= remove -DLUA_COMPAT_5_2
+
+If you are using a cross compiler make sure to take into account it's prefix
+also you will need to modify the AR and RANLIB variables if such is the case.
+For example on windows ar, randlib and gcc will need to be prefixed with
+x86_64-w64-mingw32-gcc. You may also need to add extra CFLAGS such as -m32 if
+you are doing a 32-bit build with a 32/64 bit multilib compiler.
+
+Also if you are building on Windows you must replace this line in the Makefile
+	"AR=$(CC) -shared -o" "RANLIB=strip --strip-unneeded" \
+with
+	"AR=$(CC) -shared -static-libgcc -o" "RANLIB=strip --strip-all" \
+
+Now run make mingw
+
+DO NOT RUN MAKE INSTALL.
 
 ===============================================================================
 			  END OF WINDOWS ONLY SECTION

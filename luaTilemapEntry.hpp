@@ -16,8 +16,8 @@
 */
 #ifndef LUA_TILEMAP_ENTRY_HPP
 #define LUA_TILEMAP_ENTRY_HPP
-#include "lualib.h"
-#include "lauxlib.h"
+#include "lua.hpp"
+
 
 int luaopen_TilemapEntry(lua_State *L, size_t projectIDX, size_t tilemapIDX, size_t columnIDX, size_t entryIDX);
 #endif

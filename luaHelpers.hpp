@@ -17,8 +17,7 @@
 #ifndef LUA_HELPERS_HPP
 #define LUA_HELPERS_HPP
 #include <stdint.h>
-#include "lualib.h"
-#include "lauxlib.h"
+#include "lua.hpp"
 
 #define arLen(ar) (sizeof(ar)/sizeof(ar[0]))
 

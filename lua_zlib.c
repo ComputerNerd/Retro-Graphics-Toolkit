@@ -1,5 +1,4 @@
 //From https://github.com/brimworks/lua-zlib/blob/master/lua_zlib.c
-//Renamed to the *.cpp extension because I compile Lua as a C++ library and the names are mangled.
 #include <ctype.h>
 #include <lauxlib.h>
 #include <lua.h>

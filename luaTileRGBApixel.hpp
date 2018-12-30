@@ -16,8 +16,8 @@
 */
 #ifndef LUA_TILE_RGBA_PIXEL_HPP
 #define LUA_TILE_RGBA_PIXEL_HPP
-#include "lualib.h"
-#include "lauxlib.h"
+#include "lua.hpp"
+
 
 int luaopen_TileRGBApixel(lua_State *L, size_t projectIDX, size_t tileIDX, size_t yIDX, size_t xIDX);
 #endif

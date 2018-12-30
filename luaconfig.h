@@ -15,7 +15,7 @@
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
-#include "lualib.h"
+#include "lua.hpp"
 #include "lauxlib.h"
 extern lua_State*Lconf;
 void startLuaConf(const char*fname, bool isHeadless);

@@ -10,7 +10,7 @@ LDFLAGS := -flto -O3 -march=native -fuse-linker-plugin -s -fno-rtti -std=gnu++14
 
 EXECUTABLE := RetroGraphicsToolkit
 
-all: $(SOURCES) $(EXECUTABLE)
+all: $(EXECUTABLE)
 	
 $(EXECUTABLE): $(OBJECTS)
 	$(CXX) $(OBJECTS) $(LDFLAGS) -o $@

@@ -119,7 +119,7 @@ void loadPalette(Fl_Widget*, void*) {
 	}
 
 	uint32_t file_size;
-	unsigned offset;
+	int offset;
 	char * inputTemp = (char *)fl_input("Counting from zero enter the first entry that you want the palette to start at.\nFor NES to load a sprite palette enter 16 or greater.", "0");
 
 	if (!inputTemp)
@@ -129,20 +129,14 @@ void loadPalette(Fl_Widget*, void*) {
 		return;
 
 	offset = atoi(inputTemp);
-	size_t palSize = currentProject->pal->totalColors();
-	palSize -= offset;
-	palSize *= currentProject->pal->esize;
-	offset *= currentProject->pal->esize;
-	filereader f = filereader(currentProject->pal->paletteDataEndian, currentProject->pal->esize, "Load palette");
 
-	if (f.amt < 1)
+	if (offset < 0) {
+		fl_alert("Offset must be greater than or equal to zero.");
 		return;
+	}
 
-	unsigned i = f.selDat();
-	memcpy(currentProject->pal->palDat + offset, f.dat[i], std::min(f.lens[i], palSize));
-	//now convert each value to rgb
-	currentProject->pal->paletteToRgb();
-	window->redraw();
+	currentProject->pal->loadFromFile(nullptr, fileType_t::tCancel, offset);
+
 }
 void set_ditherAlg(Fl_Widget*, void* typeset) {
 	if ((uintptr_t)typeset == 0)

@@ -16,8 +16,8 @@
 */
 #ifndef LUA_FLKT_HPP
 #define LUA_FLKT_HPP
-#include "lualib.h"
-#include "lauxlib.h"
+#include "lua.hpp"
+
 void createFLTKbindings(lua_State *L);
 #endif
 

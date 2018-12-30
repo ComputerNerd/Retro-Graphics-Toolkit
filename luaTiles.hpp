@@ -16,8 +16,8 @@
 */
 #ifndef LUA_TILES_HPP
 #define LUA_TILES_HPP
-#include "lualib.h"
-#include "lauxlib.h"
+#include "lua.hpp"
+
 
 int luaopen_Tiles(lua_State *L, unsigned idx);
 #endif

@@ -512,7 +512,7 @@ void tilemap_remove_callback(Fl_Widget*, void*) {
 
 	int32_t tile = atoi(str_ptr);
 
-	if (tile < 0) {
+	if (unlikely(tile < 0)) {
 		fl_alert("You must enter a number greater than or equal to 0 however you entered %d\n", tile);
 		return;
 	}

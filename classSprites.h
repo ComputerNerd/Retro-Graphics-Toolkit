@@ -68,6 +68,7 @@ public:
 	void setAmtingroup(uint32_t id, uint32_t amtnew);
 	void del(uint32_t id);
 	void delingroup(uint32_t id, uint32_t subid);
-	void enforceMax(unsigned wmax, unsigned hmax);
+	void enforceMax();
 	void allToPalRow(unsigned palRow);
+	void setPrjPtr(Project*prj);
 };

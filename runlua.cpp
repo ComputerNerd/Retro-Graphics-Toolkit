@@ -34,8 +34,6 @@
 #include <unistd.h>
 
 #include "runlua.h"
-#include "lualib.h"
-#include "lauxlib.h"
 #include "savepng.h"
 
 #include "gui.h"
@@ -67,6 +65,7 @@
 #include "luaProject.hpp"
 #include "luaProjects.hpp"
 
+
 static int panic(lua_State *L) {
 	fl_alert("PANIC: unprotected error in call to Lua API (%s)\n", lua_tostring(L, -1));
 	throw 0;//Otherwise abort() would be called when not needed
@@ -76,7 +75,7 @@ static void *l_alloc(void *ud, void *ptr, size_t osize, size_t nsize) {
 		return realloc(ptr, nsize);
 	else {
 		free(ptr);
-		return 0;
+		return nullptr;
 	}
 }
 static int lua_palette_fixSliders(lua_State*L) {
@@ -789,6 +788,21 @@ static int lua_rgt_savePNG(lua_State*L) {
 	                          ));
 	return 1;
 }
+
+#if 0
+extern "C" {
+#include "ldo.h"
+}
+// This is disabled because it requires ldo.h. This is not provided with some system packages.
+static int lua_rgt_testluaD_throw(lua_State*L) {
+	// Lets the user test luaD_throw which if not handled correctly could call abort. This should never happen.
+	// Because I am running the scripts in protected mode calling luaD_throw causes lua_pcall to return.
+	// This is good because it means that the user will see the error instead of crashing Retro Graphics Toolkit.
+	luaD_throw(L, 'T' << 24 | 'E' << 16 | 'S' << 8 | 'T');
+	return 0;
+}
+#endif
+
 static const luaL_Reg lua_rgtAPI[] = {
 	{"redraw", lua_rgt_redraw},
 	{"damage", lua_rgt_damage},
@@ -803,6 +817,9 @@ static const luaL_Reg lua_rgtAPI[] = {
 	{"w", lua_rgt_w},
 	{"h", lua_rgt_h},
 	{"savePNG", lua_rgt_savePNG},
+#if 0
+	{"testluaD_throw", lua_rgt_testluaD_throw},
+#endif
 	{0, 0}
 };
 static const struct keyPairi rgtConsts[] = {
@@ -1021,6 +1038,7 @@ void runLua(lua_State*L, const char*str, bool isFile) {
 		fl_alert("Lua error while running script\nthrow was called and the exception is unknown\nlua_tostring(): %s", lua_tostring(L, -1));
 	}
 }
+
 lua_State*createLuaState(void) {
 	lua_State *L = lua_newstate(l_alloc, NULL);
 
@@ -1103,12 +1121,12 @@ lua_State*createLuaState(void) {
 		lua_setglobal(L, "sched");
 		luaopen_posix_fnmatch(L);
 		lua_setglobal(L, "fnmatch");
+		luaopen_posix_unistd(L);
+		lua_setglobal(L, "unistd");
 #endif
 		luaopen_posix_libgen(L);
 		lua_setglobal(L, "libgen");
 
-		luaopen_posix_unistd(L);
-		lua_setglobal(L, "unistd");
 
 		luaopen_settings(L);
 		lua_setglobal(L, "settings");

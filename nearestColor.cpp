@@ -20,16 +20,21 @@
 #include "CIE.h"
 #include "nearestColor.h"
 unsigned find_near_color_from_row_rgb(unsigned row, int r, int g, int b, bool alt) {
-	row *= currentProject->pal->perRow;
-	uint8_t*rgbPtr = currentProject->pal->rgbPal + (row * 3);
+	unsigned pr = currentProject->pal->getPerRow(alt);
 
-	if ((currentProject->pal->haveAlt) && alt)
-		rgbPtr += currentProject->pal->colorCnt * 3;
+	if (currentProject->pal->haveAlt && alt)
+		row = currentProject->pal->colorCnt + (row * pr);
+	else
+		row *= pr;
 
-	return (nearestColIndex(r, g, b, rgbPtr, currentProject->pal->perRow, true, row) + row) * 3; //Yes this function does return three times the value TODO refractor
+	const uint8_t*rgbPtr = currentProject->pal->rgbPal + (row * 3);
+
+	unsigned nearestIndex = nearestColIndex(r, g, b, rgbPtr, pr, true, row);
+
+	return (nearestIndex + row) * 3; //Yes this function does return three times the value. TODO refactor
 }
 unsigned find_near_color_from_row(unsigned row, int r, int g, int b, bool alt) {
-	return (find_near_color_from_row_rgb(row, r, g, b, alt) / 3) - (row * currentProject->pal->perRow);
+	return (find_near_color_from_row_rgb(row, r, g, b, alt) / 3) - (row * currentProject->pal->getPerRow(alt));
 }
 unsigned chooseTwoColor(unsigned index0, unsigned index1, int rgoal, int ggoal, int bgoal) {
 	uint8_t tmp[6];
@@ -67,7 +72,7 @@ static inline int sq(int x) {
 static inline double sqd(double x) {
 	return x * x;
 }
-unsigned nearestColIndex(int red, int green, int blue, uint8_t*pal, unsigned amt, bool checkType, unsigned off) {
+unsigned nearestColIndex(int red, int green, int blue, const uint8_t*pal, unsigned amt, bool checkType, unsigned off) {
 	unsigned bestcolor = 0;
 
 	switch (((currentProject->settings) >> nearestColorShift)&nearestColorSettingsMask) {

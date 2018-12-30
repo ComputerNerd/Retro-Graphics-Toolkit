@@ -15,7 +15,7 @@
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
-#define MAX_ROWS_PALETTE 4//TODO refractor to allow "unlimited" rows
+#define MAX_ROWS_PALETTE 4//TODO refactor to allow "unlimited" rows
 //System declarations
 enum tileType {LINEAR, PLANAR_TILE, PLANAR_LINE};
 enum gameSystemEnum {segaGenesis, NES, masterSystem, gameGear, TMS9918, SNES, frameBufferPal, frameBuffer, UNKNOWN_SYSTEM};
@@ -25,10 +25,11 @@ enum TMS9918SubSys {MODE_0, MODE_1, MODE_2, MODE_3};
  * These are not compatible when switching systems
  * For the Sega Genesis, Master System and Game Gear bits 1-0 contain bit depth 0 means 1 bit
  * For the Sega Genesis bit 2 sets if shadow highlight is enabled and bit 3 sets if highlight should be displayed instead of shadow
- * For the Sega Genesis bit 5-3 contain which palette table is used.
- * For the NES bit 1 contains bit depth 1 if 2 bit 0 if 1 bit
- * For the TMS9918 bits 1-0 contain the subsystem
- * For palette framebuffer bits 2-0 contain bit depth add 1 to get actual just like the others
+ * For the Sega Genesis bit 5-4 contain which palette table is used.
+ * For the NES bit 1 contains bit depth 1 if 2 bit 0 if 1 bit. Bit 0 contains if 2x2 or 1x1 palette attribute precision. Bit 2 contains if 8x16 or 8x8 sprites.
+ * For the TMS9918 bits 0 - 2 contain the subsystem. Bits 3 - 10 contain the foreground and background color. Bit 11 Contains if sprites are 16x16 (if true) or 8x8 (if false).
+ * For the Master System and Game Gear bit 2 contains if 16x16 (true) or 8x8 (false) sprites are used.
+ * For palette framebuffer bits 3-0 contain bit depth add 1 to get actual just like the others
  * Bits 6-2 contain screen depth for example if set to 15 (16 remember always +1) that would mean palette is based on rgb565 colors
  * For framebuffer bits 4-0 contain bit depth again remember to add one to get actual bit depth
  * Valid values are

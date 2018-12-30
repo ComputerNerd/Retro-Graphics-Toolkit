@@ -40,6 +40,9 @@ class palette {
 	unsigned maxValForPaletteComponent(unsigned paletteComponentIndex) const;
 	unsigned paletteComponentCount() const;
 	paletteRawValue_t changeValueRaw(unsigned value, unsigned paletteComponentIndex, paletteRawValue_t rawVal) const;
+	std::set<paletteRawValue_t> getAllColors();
+	std::set<paletteRawValue_t> allColorsCache;
+	paletteRawValue_t searchPermuations(const std::set<paletteRawValue_t> & permutations, double& bestd, unsigned r, unsigned g, unsigned b);
 public:
 	Project*prj;
 	uint8_t*rgbPal;
@@ -74,12 +77,14 @@ public:
 	uint16_t to_sega_genesis_colorRGB(uint8_t r, uint8_t g, uint8_t b);
 	unsigned calMaxPerRow(unsigned row);
 	void swapEntry(unsigned one, unsigned two);
-	bool shouldAddCol(unsigned off, unsigned r, unsigned g, unsigned b, bool sprite);
 	void savePalette(const char*fname, unsigned start, unsigned end, bool skipzero, fileType_t type, int clipboard, const char*label = "palDat");
 	void import(const palette& other);
 	unsigned getIndexByRow(unsigned row, unsigned offset, bool isAlt) const;
 	unsigned getIndexByRow(unsigned row, unsigned offset) const;
 	void changeIndexRaw(unsigned value, unsigned entryIndex, unsigned index);
+	void loadFromFile(const char * fname, fileType_t forceType, unsigned offset); // use fileType_t::tCancel to prompt for the filetype.
+	void updateEmphasis(void);
+	int setPaletteFromRGB(const uint8_t* colors, const unsigned nColors, const unsigned minEntry, const unsigned maxEntry);
 	bool isAltRow(unsigned row) const {
 		return row >= rowCntPal;
 	}
