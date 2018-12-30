@@ -33,9 +33,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <cstdlib>
 #include <ctime>
 #include <limits>
-#include <stdint.h>
-#include <FL/fl_ask.H>
+#include <cstdint>
 #include <cstring>
+
+#include <FL/fl_ask.H>
 
 template <typename T, int length>
 class vector_fixed {
@@ -60,11 +61,15 @@ public:
 		std::copy(rhs, rhs.end(), data);
 	}
 
+	const T& operator()(int i) const {
+		return data[i];
+	}
+
 	T& operator()(int i) {
 		return data[i];
 	}
 
-	int get_length() {
+	int get_length() const {
 		return length;
 	}
 
@@ -108,40 +113,40 @@ public:
 		return result;
 	}
 
-	vector_fixed<T, length>& operator+=(vector_fixed<T, length> rhs) {
+	vector_fixed<T, length>& operator+=(const vector_fixed<T, length>& rhs) {
 		for (int i = 0; i < length; i++)
 			data[i] += rhs(i);
 
 		return *this;
 	}
 
-	vector_fixed<T, length> operator+(vector_fixed<T, length> rhs) {
+	vector_fixed<T, length> operator+(const vector_fixed<T, length>& rhs) {
 		vector_fixed<T, length> result(*this);
 		result += rhs;
 		return result;
 	}
 
-	vector_fixed<T, length>& operator-=(vector_fixed<T, length> rhs) {
+	vector_fixed<T, length>& operator-=(const vector_fixed<T, length>& rhs) {
 		for (int i = 0; i < length; i++)
 			data[i] -= rhs(i);
 
 		return *this;
 	}
 
-	vector_fixed<T, length> operator-(vector_fixed<T, length> rhs) {
+	vector_fixed<T, length> operator-(const vector_fixed<T, length>& rhs) {
 		vector_fixed<T, length> result(*this);
 		result -= rhs;
 		return result;
 	}
 
-	vector_fixed<T, length>& operator*=(T scalar) {
+	vector_fixed<T, length>& operator*=(const T scalar) {
 		for (int i = 0; i < length; i++)
 			data[i] *= scalar;
 
 		return *this;
 	}
 
-	vector_fixed<T, length> operator*(T scalar) {
+	vector_fixed<T, length> operator*(const T scalar) {
 		vector_fixed<T, length> result(*this);
 		result *= scalar;
 		return result;
@@ -202,14 +207,14 @@ public:
 		return data[row * width + col];
 	}
 
-	int get_width() {
+	int get_width() const {
 		return width;
 	}
-	int get_height() {
+	int get_height() const {
 		return height;
 	}
 
-	array2d<T>& operator*=(T scalar) {
+	array2d<T>& operator*=(const T scalar) {
 		T*ptr = data;
 
 		for (int i = 0; i < width; ++i) {
@@ -220,7 +225,7 @@ public:
 		return *this;
 	}
 
-	array2d<T> operator*(T scalar) {
+	array2d<T> operator*(const T scalar) {
 		array2d<T> result(*this);
 		result *= scalar;
 		return result;
@@ -360,13 +365,13 @@ public:
 		return data[row * width * depth + col * depth + layer];
 	}
 
-	int get_width() {
+	int get_width() const {
 		return width;
 	}
-	int get_height() {
+	int get_height() const {
 		return height;
 	}
-	int get_depth() {
+	int get_depth() const {
 		return depth;
 	}
 
