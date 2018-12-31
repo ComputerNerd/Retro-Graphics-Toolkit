@@ -12,7 +12,7 @@ boilerplate="""/*
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 #pragma once
 """
@@ -20,16 +20,17 @@ import os
 from glob import glob
 inclst=''
 addlib=''
-for fname in sorted(glob('*.cpp')):
+for fnameFull in sorted(glob('bind/*.cpp')):
+    fname = os.path.basename(fnameFull)
     print('Processing: '+fname)
     base,ext=os.path.splitext(fname)
     inclst+='#include "'+base+'.h"\n'
     baseName=base.replace('FLTK_','').replace('Lua','')
     addlib+='luaopen_'+base+'(L);\nlua_setglobal(L, "'+baseName+'");\n'
     txt=''
-    with open(fname) as f:
-        txt=f.read()
-    if baseName.startswith("Fl_")==True:
+    with open(fnameFull) as f:
+        txt = f.read()
+    if baseName.startswith("Fl_"):
         if 'using '+baseName+'::'+baseName+';' not in txt and '"callback"' in txt:
             rpl='Fl_Lua_'+baseName[3:]
             txt=txt.replace(baseName,rpl)
@@ -80,9 +81,9 @@ for fname in sorted(glob('*.cpp')):
             idx=txt.index(boilerplatefunc.split('\n',1)[0])
             idx2=txt.find('\n}',idx)
             txt=txt.replace(txt[idx:idx2+3],boilerplatefunc)
-    with open(fname,'w') as f:
+    with open(fnameFull, 'w') as f:
         f.write(txt.replace('DUB_EXPORT','').replace('"type"','"Type"').replace('"end"','"End"'))
-    with open(base+'.h','w') as f:
+    with open(base+'.h', 'w') as f:
         f.write(boilerplate)
         f.write('int luaopen_'+base+'(lua_State *L);\n') 
 with open('includes.h','w') as f:

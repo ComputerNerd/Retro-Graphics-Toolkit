@@ -2241,8 +2241,6 @@ static const struct luaL_Reg Fl_Lua_Int_Input_member_methods[] = {
 	{ "clear_changed", Fl_Lua_Int_Input_clear_changed },
 #if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 	{ "clear_active", Fl_Lua_Int_Input_clear_active },
-#endif
-#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 	{ "set_active", Fl_Lua_Int_Input_set_active },
 #endif
 	{ "take_focus", Fl_Lua_Int_Input_take_focus },
@@ -2264,8 +2262,6 @@ static const struct luaL_Reg Fl_Lua_Int_Input_member_methods[] = {
 	{ "window", Fl_Lua_Int_Input_window  },
 #if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 	{ "top_window", Fl_Lua_Int_Input_top_window },
-#endif
-#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 	{ "top_window_offset", Fl_Lua_Int_Input_top_window_offset },
 #endif
 	{ "as_group", Fl_Lua_Int_Input_as_group },

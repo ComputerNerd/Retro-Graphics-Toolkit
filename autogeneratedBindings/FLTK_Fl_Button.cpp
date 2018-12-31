@@ -1866,8 +1866,6 @@ static const struct luaL_Reg Fl_Lua_Button_member_methods[] = {
 	{ "clear_changed", Fl_Lua_Button_clear_changed },
 #if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 	{ "clear_active", Fl_Lua_Button_clear_active },
-#endif
-#if (FL_MAJOR_VERSION>=1 && FL_MINOR_VERSION>=3 && FL_PATCH_VERSION>=3)
 	{ "set_active", Fl_Lua_Button_set_active },
 #endif
 	{ "take_focus", Fl_Lua_Button_take_focus },
