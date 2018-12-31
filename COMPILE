@@ -28,6 +28,9 @@ compiling you need to do something like this:
 
 RANLIB=~/mingw/bin/i686-w64-mingw32-gcc-ranlib NM=~/mingw/bin/i686-w64-mingw32-gcc-nm AR=~/mingw/bin/i686-w64-mingw32-gcc-ar CFLAGS="-Os -s -flto=16 -fuse-linker-plugin -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=i686-w64-mingw32 --build=x86_64-unknown-linux-gnu ; make -j16
 
+For some reason if the absolute path is not specified for RANLIB, NM and AR you
+will get errors relating to plugin support needed for LTO.
+
 Regardless of how ./configure is ran you will just need to run make and you are
 done building FLTK.
 

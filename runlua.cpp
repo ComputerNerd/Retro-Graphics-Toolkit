@@ -1091,8 +1091,6 @@ lua_State*createLuaState(void) {
 		lua_setglobal(L, "grp");
 		luaopen_posix_time(L);
 		lua_setglobal(L, "time");
-		luaopen_posix_dirent(L);
-		lua_setglobal(L, "dirent");
 		luaopen_posix_glob(L);
 		lua_setglobal(L, "glob");
 		luaopen_posix_syslog(L);
@@ -1126,6 +1124,8 @@ lua_State*createLuaState(void) {
 #endif
 		luaopen_posix_libgen(L);
 		lua_setglobal(L, "libgen");
+		luaopen_posix_dirent(L);
+		lua_setglobal(L, "dirent");
 
 
 		luaopen_settings(L);
