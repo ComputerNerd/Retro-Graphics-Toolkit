@@ -1,3 +1,243 @@
+; This example is based on: https://github.com/BigEvilCorporation/megadrive_samples
+;==============================================================
+; SEGA MEGA DRIVE/GENESIS - DEMO 1 - HELLO WORLD SAMPLE
+;==============================================================
+; by Big Evil Corporation
+;==============================================================
+
+; A small, discreet, and complete Hello World sample, with
+; a healthy dose of comments and explanations for beginners.
+; Runs on genuine hardware, and (hopefully) all emulators.
+;
+; To assemble this program with ASM68K.EXE:
+;    ASM68K.EXE /p hello.asm,hello.bin,hello.map,hello.lst
+;
+; To assemble this program with SNASM68K.EXE:
+;    SNASM68K.EXE /p hello.asm,hello.map,hello.lst,hello.bin
+;
+; hello.asm = this source file
+; hello.bin = the binary file, fire this up in your emulator!
+; hello.lst = listing file, shows assembled addresses alongside your source code, open in a text editor
+; hello.map = symbol map file for linking (unused)
+
+;==============================================================
+
+	CPU 68000
+	padding off
+
+; A label defining the start of ROM so we can compute the total size.
+ROM_Start:
+
+;==============================================================
+; CPU VECTOR TABLE
+;==============================================================
+; A table of addresses that the CPU needs to know about -
+; things like stack address, "main()" function address,
+; vertical/horizontal interrupt addresses, etc.
+;==============================================================
+; For any interrupts we don't want to handle in this demo,
+; we specify INT_Null (an interrupt at the bottom of the
+; file that doesn't do anything).
+;==============================================================
+; This must be the very first thing in the ROM, since the CPU
+; reads it from $0000 on bootup.
+;==============================================================
+	dc.l   $00FFE000			; Initial stack pointer value
+	dc.l   CPU_EntryPoint		; Start of program
+	dc.l   CPU_Exception 		; Bus error
+	dc.l   CPU_Exception 		; Address error
+	dc.l   CPU_Exception 		; Illegal instruction
+	dc.l   CPU_Exception 		; Division by zero
+	dc.l   CPU_Exception 		; CHK CPU_Exception
+	dc.l   CPU_Exception 		; TRAPV CPU_Exception
+	dc.l   CPU_Exception 		; Privilege violation
+	dc.l   INT_Null				; TRACE exception
+	dc.l   INT_Null				; Line-A emulator
+	dc.l   INT_Null				; Line-F emulator
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Spurious exception
+	dc.l   INT_Null				; IRQ level 1
+	dc.l   INT_Null				; IRQ level 2
+	dc.l   INT_Null				; IRQ level 3
+	dc.l   INT_HInterrupt		; IRQ level 4 (horizontal retrace interrupt)
+	dc.l   INT_Null  			; IRQ level 5
+	dc.l   INT_VInterrupt		; IRQ level 6 (vertical retrace interrupt)
+	dc.l   INT_Null				; IRQ level 7
+	dc.l   INT_Null				; TRAP #00 exception
+	dc.l   INT_Null				; TRAP #01 exception
+	dc.l   INT_Null				; TRAP #02 exception
+	dc.l   INT_Null				; TRAP #03 exception
+	dc.l   INT_Null				; TRAP #04 exception
+	dc.l   INT_Null				; TRAP #05 exception
+	dc.l   INT_Null				; TRAP #06 exception
+	dc.l   INT_Null				; TRAP #07 exception
+	dc.l   INT_Null				; TRAP #08 exception
+	dc.l   INT_Null				; TRAP #09 exception
+	dc.l   INT_Null				; TRAP #10 exception
+	dc.l   INT_Null				; TRAP #11 exception
+	dc.l   INT_Null				; TRAP #12 exception
+	dc.l   INT_Null				; TRAP #13 exception
+	dc.l   INT_Null				; TRAP #14 exception
+	dc.l   INT_Null				; TRAP #15 exception
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	dc.l   INT_Null				; Unused (reserved)
+	
+;==============================================================
+; SEGA MEGA DRIVE ROM HEADER
+;==============================================================
+; A structure that specifies some metadata about the ROM, like
+; its name, author, version number, release date, region,
+; and any special peripherals used.
+; Note that the Mega Drive console itself doesn't read any of
+; this, it's more a convenience for the programmer, but
+; most emulators will read the title and region.
+;==============================================================
+; If your emulator doesn't show the correct ROM name, then this
+; table is in the wrong place or in the wrong format.
+;==============================================================
+	dc.b "SEGA MEGA DRIVE "                                 ; Console name
+	dc.b "BIGEVILCORP.    "                                 ; Copyright holder and release date
+	dc.b "HELLO WORLD                                     " ; Domestic name
+	dc.b "HELLO WORLD                                     " ; International name
+	dc.b "GM XXXXXXXX-XX"                                   ; Version number
+	dc.w $0000                                             ; Checksum
+	dc.b "J               "                                 ; I/O support
+	dc.l ROM_Start                                          ; Start address of ROM
+	dc.l ROM_End-1                                          ; End address of ROM
+	dc.l $00FF0000                                         ; Start address of RAM
+	dc.l $00FF0000+$0000FFFF                              ; End address of RAM
+	dc.l $00000000                                         ; SRAM enabled
+	dc.l $00000000                                         ; Unused
+	dc.l $00000000                                         ; Start address of SRAM
+	dc.l $00000000                                         ; End address of SRAM
+	dc.l $00000000                                         ; Unused
+	dc.l $00000000                                         ; Unused
+	dc.b "                                        "         ; Notes (unused)
+	dc.b "JUE             "                                 ; Country codes
+	
+;==============================================================
+; INITIAL VDP REGISTER VALUES
+;==============================================================
+; 24 register values to be copied to the VDP during initialisation.
+; These specify things like initial width/height of the planes,
+; addresses within VRAM to find scroll/sprite data, the
+; background palette/colour index, whether or not the display
+; is on, and clears initial values for things like DMA.
+;==============================================================
+VDPRegisters:
+	dc.b $14 ; $00:  H interrupt on, palettes on
+	dc.b $74 ; $01:  V interrupt on, display on, DMA on, Genesis mode on
+	dc.b $30 ; $02:  Pattern table for Scroll Plane A at VRAM $C000 (bits 3-5 = bits 13-15)
+	dc.b $00 ; $03:  Pattern table for Window Plane at VRAM $0000 (disabled) (bits 1-5 = bits 11-15)
+	dc.b $07 ; $04:  Pattern table for Scroll Plane B at VRAM $E000 (bits 0-2 = bits 11-15)
+	dc.b $78 ; $05:  Sprite table at VRAM $F000 (bits 0-6 = bits 9-15)
+	dc.b $00 ; $06:  Unused
+	dc.b $00 ; $07:  Background colour: bits 0-3 = colour, bits 4-5 = palette
+	dc.b $00 ; $08:  Unused
+	dc.b $00 ; $09:  Unused
+	dc.b $08 ; $0A: Frequency of Horiz. interrupt in Rasters (number of lines travelled by the beam)
+	dc.b $00 ; $0B: External interrupts off, V scroll fullscreen, H scroll fullscreen
+	dc.b $89 ; $0C: Shadows and highlights on, interlace off, H40 mode (320 x 224 screen res)
+	dc.b $3F ; $0D: Horiz. scroll table at VRAM $FC00 (bits 0-5)
+	dc.b $00 ; $0E: Unused
+	dc.b $02 ; $0F: Autoincrement 2 bytes
+	dc.b $01 ; $10: Scroll plane size: 64x32 tiles
+	dc.b $00 ; $11: Window Plane X pos 0 left (pos in bits 0-4, left/right in bit 7)
+	dc.b $00 ; $12: Window Plane Y pos 0 up (pos in bits 0-4, up/down in bit 7)
+	dc.b $FF ; $13: DMA length lo byte
+	dc.b $FF ; $14: DMA length hi byte
+	dc.b $00 ; $15: DMA source address lo byte
+	dc.b $00 ; $16: DMA source address mid byte
+	dc.b $80 ; $17: DMA source address hi byte, memory-to-VRAM mode (bits 6-7)
+	
+	align 2
+	
+;==============================================================
+; CONSTANTS
+;==============================================================
+; Defines names for commonly used values and addresses to make
+; the code more readable.
+;==============================================================
+	
+; VDP port addresses
+vdp_control				equ $00C00004
+vdp_data				equ $00C00000
+
+; VDP commands
+vdp_cmd_vram_write		equ $40000000
+vdp_cmd_cram_write		equ $C0000000
+
+; VDP memory addresses
+; according to VDP registers $2 and $4 (see table above)
+vram_addr_tiles			equ $0000
+vram_addr_plane_a		equ $C000
+vram_addr_plane_b		equ $E000
+
+; Screen width and height (in pixels)
+vdp_screen_width		equ $0140
+vdp_screen_height		equ $00F0
+
+; The plane width and height (in tiles)
+; according to VDP register $10 (see table above)
+vdp_plane_width			equ $40
+vdp_plane_height		equ $20
+
+; Hardware version address
+hardware_ver_address	equ $00A10001
+
+; TMSS
+tmss_address			equ $00A14000
+tmss_signature			equ 'SEGA'
+
+; The size of a word and longword
+size_word				equ 2
+size_long				equ 4
+
+; The size of one palette (in bytes, words, and longwords)
+size_palette_b			equ $80
+size_palette_w			equ size_palette_b/size_word
+size_palette_l			equ size_palette_b/size_long
+
+; The size of one graphics tile (in bytes, words, and longwords)
+size_tile_b				equ $20
+size_tile_w				equ size_tile_b/size_word
+size_tile_l				equ size_tile_b/size_long
+
+
+;==============================================================
+; VRAM WRITE MACROS
+;==============================================================
+; Some utility macros to help generate addresses and commands for
+; writing data to video memory, since they're tricky (and
+; error prone) to calculate manually.
+; They were taken from the Sonic 1 disassembly.
+;==============================================================
+
 vdp_data_port:		equ $C00000
 vdp_control_port:	equ $C00004
 vdp_counter:		equ $C00008
@@ -7,13 +247,13 @@ v_vdp_buffer2:	= $FFFFF640	; VDP instruction buffer (2 bytes)
 ; input: source, length, destination
 ; ---------------------------------------------------------------------------
 
-writeVRAM:	macro
+writeVRAM:	macro source, length, destination
 		lea	(vdp_control_port).l,a5
-		move.l	#$94000000+(((\2>>1)&$FF00)<<8)+$9300+((\2>>1)&$FF),(a5)
-		move.l	#$96000000+(((\1>>1)&$FF00)<<8)+$9500+((\1>>1)&$FF),(a5)
-		move.w	#$9700+((((\1>>1)&$FF0000)>>16)&$7F),(a5)
-		move.w	#$4000+(\3&$3FFF),(a5)
-		move.w	#$80+((\3&$C000)>>14),(v_vdp_buffer2).w
+		move.l	#$94000000+(((length>>1)&$FF00)<<8)+$9300+((length>>1)&$FF),(a5)
+		move.l	#$96000000+(((source>>1)&$FF00)<<8)+$9500+((source>>1)&$FF),(a5)
+		move.w	#$9700+((((source>>1)&$FF0000)>>16)&$7F),(a5)
+		move.w	#$4000+(destination&$3FFF),(a5)
+		move.w	#$80+((destination&$C000)>>14),(v_vdp_buffer2).w
 		move.w	(v_vdp_buffer2).w,(a5)
 		endm
 
@@ -22,223 +262,69 @@ writeVRAM:	macro
 ; input: source, length, destination
 ; ---------------------------------------------------------------------------
 
-writeCRAM:	macro
+writeCRAM:	macro source, length, destination
 		lea	(vdp_control_port).l,a5
-		move.l	#$94000000+(((\2>>1)&$FF00)<<8)+$9300+((\2>>1)&$FF),(a5)
-		move.l	#$96000000+(((\1>>1)&$FF00)<<8)+$9500+((\1>>1)&$FF),(a5)
-		move.w	#$9700+((((\1>>1)&$FF0000)>>16)&$7F),(a5)
-		move.w	#$C000+(\3&$3FFF),(a5)
-		move.w	#$80+((\3&$C000)>>14),(v_vdp_buffer2).w
+		move.l	#$94000000+(((length>>1)&$FF00)<<8)+$9300+((length>>1)&$FF),(a5)
+		move.l	#$96000000+(((source>>1)&$FF00)<<8)+$9500+((source>>1)&$FF),(a5)
+		move.w	#$9700+((((source>>1)&$FF0000)>>16)&$7F),(a5)
+		move.w	#$C000+(destination&$3FFF),(a5)
+		move.w	#$80+((destination&$C000)>>14),(v_vdp_buffer2).w
 		move.w	(v_vdp_buffer2).w,(a5)
 		endm
+	
+;==============================================================
+; PALETTE
+;==============================================================
+; A single colour palette (64 colours) we'll be using to draw the image.
+; Colour #0 is always transparent, no matter what colour value
+; you specify.
+;==============================================================
+; Each colour is in binary format 0000 BBB0 GGG0 RRR0,
+; so $0000 is black, $0EEE is white (NOT $0FFF, since the
+; bottom bit is discarded), $000E is red, $00E0 is green, and
+; $0E00 is blue.
+;==============================================================
+Palette:
+	dc.w $0,$242,$66,$6C,$222,$C42,$26A,$48,$22,$44,$286,$26,$EEE,$448,$62,$AE
+	dc.w $0,$40,$282,$220,$A6,$840,$C86,$2A6,$64,$20,$42,$4CC,$62,$22,$264,$242
+	dc.w $0,$C40,$664,$642,$EC2,$E80,$A20,$EA0,$620,$2AA,$C88,$EEE,$E40,$420,$E62,$242
+	dc.w $0,$64,$22,$444,$E42,$222,$644,$C66,$EC2,$C42,$EA8,$ECC,$CA8,$CCC,$688,$EEE
 
-Vectors:
-    dc.l $FFFE00, Entrypoint, Error, Error
-    dc.l Error, Error, Error, Error
-    dc.l Error, Error, Error, Error
-    dc.l Error, Error, Error, Error
-    dc.l Error, Error, Error, Error
-    dc.l Error, Error, Error, Error
-    dc.l Error, Error, Error, Error
-    dc.l HBlank, Error, VBlank, Error
-    dc.l Error, Error, Error, Error
-    dc.l Error, Error, Error, Error
-    dc.l Error, Error, Error, Error
-    dc.l Error, Error, Error, Error
-    dc.l Error, Error, Error, Error
-    dc.l Error, Error, Error, Error
-    dc.l Error, Error, Error, Error
-    dc.l Error, Error, Error, Error
-Header:
-    dc.b "SEGA MEGA DRIVE " ; Console name
-    dc.b "(C) Sega 16 2014" ; Copyright/Date
-DomesticName:
-    dc.b "Code template by drx - www.hacking-cult.org     " ; Domestic Name
-    dc.b "Code template by drx - www.hacking-cult.org     " ; International Name
-    dc.b "GM 00000000-00" ; Version
-Checksum:
-    dc.w $1337  ; Checksum
-    dc.b "J               " ; I/O Support
-RomStartLoc:
-    dc.l 0 ; ROM Start
-RomEndLoc:
-    dc.l RomEnd ; ROM End
-RamStartLoc:
-    dc.l $FF0000 ; RAM Start
-RamEndLoc:
-    dc.l $FFFFFF ; RAM End
+;==============================================================
+; CODE ENTRY POINT
+;==============================================================
+; The "main()" function. Your code starts here. Once the CPU
+; has finished initialising, it will jump to this entry point
+; (specified in the vector table at the top of the file).
+;==============================================================
+CPU_EntryPoint:
 
-    dc.b $20,$20,$20,$20 ; 'RA',$F8,$20 if SRAM = on
+	;==============================================================
+	; Initialise the Mega Drive
+	;==============================================================
 
-SramStart:
-    dc.l $20202020 ; $200000 if SRAM = on
-SramEnd:
-    dc.l $20202020 ; $20xxxx if SRAM = on
+	; Write the TMSS signature (if a model 1+ Mega Drive)
+	jsr    VDP_WriteTMSS
 
-    dc.b  "    "
-    dc.b  "                "
-    dc.b  "                "
-    dc.b  "                "
-    dc.b  "F               "  ; enable any hardware configuration
+	; Load the initial VDP registers
+	jsr    VDP_LoadRegisters
 
-;---------------------
-; Code start
-;---------------------
-
-Entrypoint:
-
-	tst.l ($A10008).l ;Test Port A control
-	bne PortA_Ok
-
-	tst.w ($A1000C).l ;Test Port C control
-
-PortA_Ok:
-	bne SkipSetup
-
-	move.b ($A10001).l,d0 ;version
-	andi.b #$F,d0
-	beq SkipSecurity ;if the smd/gen model is 1, skip the security
-	move.l #'SEGA',($A14000).l
-
-SkipSecurity:
-
-	move.w ($C00004).l,d0 ;hang if VDP locked due to security failure
-
-	moveq #0,d0
-	movea.l d0,a6
-	move.l a6,usp ;set usp to $0
-
-;---------------------
-; Setup VDP registers
-;---------------------
-	lea (VDPSetupArray,pc),a0
-	move.w #(VDPSetupArrayEnd-VDPSetupArray)/2,d1 ;$18 VDP registers
-
-VDPSetupLoop:
-	move.w (a0)+,($C00004).l
-	dbra d1,VDPSetupLoop
-
-	move.l #$40000080,($C00004).l
-	move.w #0,($C00000).l ;clean the screen
-
-
-;---------------------
-; Init the Z80
-;---------------------
-
-	move.w #$100,($A11100).l ;Stop the Z80
-	move.w #$100,($A11200).l ;Deassert reset to the Z80
-
-Waitforz80:
-	btst #0,($A11100).l
-	bne Waitforz80 ;Wait for z80 to halt
-
-	lea (Z80Init,pc),a0
-	lea ($A00000).l,a1
-	move.w #Z80InitEnd-Z80Init,d1
-
-InitZ80:
-	move.b (a0)+,(a1)+
-	dbra d1,InitZ80
-
-	move.w #0,($A11200).l ;Assert reset to the Z80
-	move.w #0,($A11100).l ;Start the Z80
-	move.w #$100,($A11200).l ;Deassert reset to the Z80
-
-
-;---------------------
-; Reset the RAM
-;---------------------
-
-	lea ($FFFF0000).l,a0
-	move.w #$3fff,d1
-
-ClearRAM:
-	move.l #0,(a0)+
-	dbra d1,ClearRAM
-
-
-;---------------------
-; VDP again
-;---------------------
-
-
-	move.w	#$8174,($C00004).l
-	move.w	#$8F02,($C00004).l
-
-
-;---------------------
-; Clear the CRAM
-;---------------------
-
-	move.l #$C0000000,($C00004).l ;Set VDP ctrl to CRAM write
-	move.w #$3f,d1
-
-ClearCRAM:
-	move.w #0,($C00000).l
-	dbra d1,ClearCRAM
-
-
-;---------------------
-; Clear the VDP stuff
-;---------------------
-
-	move.l #$40000010,($C00004).l
-	move.w #$13,d1
-
-ClearStuff:
-	move.l #0,($C00000).l
-	dbra d1,ClearStuff
-
-
-;---------------------
-; Init the PSG
-;---------------------
-
-	move.b #$9F,($C00011).l
-	move.b #$BF,($C00011).l
-	move.b #$DF,($C00011).l
-	move.b #$FF,($C00011).l
-
-;---------------------
-; Load the z80 driver
-;---------------------
-
-	move.w #$100,($A11100).l ;Stop the Z80
-	move.w #$100,($A11200).l ;Deassert reset to the Z80
-
-Waitforz80a:
-	btst #0,($A11100).l
-	bne Waitforz80a ;Wait for z80 to halt
-
-	lea (Z80Driver,pc),a0
-	lea ($A00000).l,a1
-	move.w #Z80DriverEnd-Z80Driver,d1
-
-LoadZ80Driver:
-	move.b (a0)+,(a1)+
-	dbra d1,LoadZ80Driver
-
-	move.w #0,($A11200).l ;Assert reset to the Z80
-	move.w #0,($A11100).l ;Start the Z80
-	move.w #$100,($A11200).l ;Deassert reset to the Z80
-
-;---------------------
-; Clear the registers
-; and set the SR
-;---------------------
-
-	movem.l ($FF0000).l,d0-a6
-	lea ($FFFE00).l,a7
-	move #$2700,sr
-SkipSetup:
-
-
-;-----------------------
-; Here starts your code
-;-----------------------
-Main:
-	writeCRAM	palDat,64*2,0
+	;==============================================================
+	; Initialise status register and set interrupt level.
+	; This begins firing vertical and horizontal interrupts.
+	;==============================================================
+	move.w #$2300, sr
+	
+	;==============================================================
+	; Write the palette to CRAM (colour memory)
+	;==============================================================
+	
+	; Setup the VDP to write to CRAM address $0000 (first palette)
+	writeCRAM	Palette, 64 * 2, 0
+	;==============================================================
+	; Write the tiles to VRAM
+	;==============================================================
+	
 	lea	(tileDat).l,a0
 	lea	($FF0000).l,a1
 	bsr.w	KosDec
@@ -252,13 +338,19 @@ Main:
 	moveq	#40-1,d1
 	moveq	#28-1,d2
 	bsr.w	TilemapToVRAM
-;---------------------------------
-; nothing else for the 68000 to do
-;---------------------------------
-loop:
-	bra.s	loop
-	include "Kosinski Decompression.asm"
-	include "Enigma Decompression.asm"
+	; Finished!
+	
+	;==============================================================
+	; Loop forever
+	;==============================================================
+	; This loops forever, effectively ending our code. The VDP will
+	; still continue to run (and fire vertical/horizontal interrupts)
+	; of its own accord, so it will continue to render our Hello World
+	; even though the CPU is stuck in this loop.
+	.InfiniteLp:
+	bra.s .InfiniteLp
+
+; From the Sonic 1 disassembly.
 ; ---------------------------------------------------------------------------
 ; Subroutine to	copy a tile map from RAM to VRAM namespace
 
@@ -287,87 +379,102 @@ TilemapToVRAM:				; XREF: GM_Sega; GM_Title; SS_BGLoad
 		dbf	d2,Tilemap_Line
 		rts	
 ; End of function TilemapToVRAM
+;==============================================================
+; INTERRUPT ROUTINES
+;==============================================================
+; The interrupt routines, as specified in the vector table at
+; the top of the file.
+; Note that we use RTE to return from an interrupt, not
+; RTS like a subroutine.
+;==============================================================
 
-;---------------------
-; VDP registers array
-;---------------------
-
-VDPSetupArray:
-	dc.w $8004 ;9-bit palette = 1 (otherwise would be 3-bit), HBlank = 0
-	dc.w $8134 ;Genesis display = 1, DMA = 1, VBlank = 1, display = 0
-	dc.w $8230 ;Scroll A - $C000
-	dc.w $8338 ;Window - $E000
-	dc.w $8407 ;Scroll B - $E000
-	dc.w $857c ;Sprites - $F800
-	dc.w $8600 ;Unused
-	dc.w $8700 ;Backdrop color - $00
-	dc.w $8800 ;Unused
-	dc.w $8900 ;Unused
-	dc.w $8A00 ;H Interrupt register
-	dc.w $8B00 ;Full screen scroll, no external interrupts
-	;dc.w $8C81 ;40 cells display
-	dc.w $8C89 ;40 cells display shadow highlight mode enabled
-	dc.w $8D3F ;H Scroll - $FC00
-	dc.w $8E00 ;Unused
-	dc.w $8F02 ;VDP auto increment
-	dc.w $9001 ;64 cells scroll
-	dc.w $9100 ;Window H position
-	dc.w $9200 ;Window V position
-	dc.w $93FF ;DMA stuff (off)
-	dc.w $94FF ;DMA stuff (off)
-	dc.w $9500 ;DMA stuff (off)
-	dc.w $9600 ;DMA stuff (off)
-	dc.w $9780 ;DMA stuff (off)
-VDPSetupArrayEnd:
-;---------------------
-; Z80 init code
-;---------------------
-
-Z80Init:
-	dc.w $af01, $d91f, $1127, $0021, $2600, $f977
-	dc.w $edb0, $dde1, $fde1, $ed47, $ed4f, $d1e1
-	dc.w $f108, $d9c1, $d1e1, $f1f9, $f3ed, $5636
-	dc.w $e9e9
-Z80InitEnd:
-;---------------------
-; Error exceptions
-;---------------------
-
-Error:
-    rte
-;---------------------
-; Horizontal Blank
-;---------------------
-HBlank:
+; Vertical interrupt - run once per frame
+INT_VInterrupt:
+	; Doesn't do anything in this demo
 	rte
-;---------------------
-; Vertical Blank
-;---------------------
-VBlank:
-	rte
-;---------------------
-; Music driver (z80)
-;---------------------		
 
-Z80Driver:
-		dc.b	$c3,$46,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-		dc.b	$00,$00,$00,$00,$00,$f3,$ed,$56,$31,$00,$20,$3a,$39,$00,$b7,$ca,$4c,$00,$21,$3a,$00,$11,$40,$00,$01,$06,$00,$ed,$b0,$3e,$00,$32,$39,$00,$3e,$b4,$32,$02,$40,$3e,$c0,$32,$03,$40,$3e,$2b,$32,$00,$40,$3e,$80,$32,$01,$40,$3a,$43,$00,$4f,$3a,$44,$00,$47,$3e,$06,$3d
-		dc.b	$c2,$81,$00,$21,$00,$60,$3a,$41,$00,$07,$77,$3a,$42,$00,$77,$0f,$77,$0f,$77,$0f,$77,$0f,$77,$0f,$77,$0f,$77,$0f,$77,$3a,$40,$00,$6f,$3a,$41,$00,$f6,$80,$67,$3e,$2a,$32,$00,$40,$7e,$32,$01,$40,$21,$40,$00,$7e,$c6,$01,$77,$23,$7e,$ce,$00,$77,$23,$7e,$ce,$00,$77
-		dc.b	$3a,$39,$00,$b7,$c2,$4c,$00,$0b,$78,$b1,$c2,$7f,$00,$3a,$45,$00,$b7,$ca,$4c,$00,$3d,$3a,$45,$00,$06,$ff,$0e,$ff,$c3,$7f,$00
-Z80DriverEnd:
-; Colors 0-63
-palDat:
-	dc.b 0,0,2,66,0,102,0,108,2,34,12,66,2,106,0,72,0,34,0,68,2,134,0,38,14,238,4,72,0,98,0,174
-	dc.b 0,0,0,64,2,130,2,32,0,166,8,64,12,134,2,166,0,100,0,32,0,66,4,204,0,98,0,34,2,100,2,66
-	dc.b 0,0,12,64,6,100,6,66,14,194,14,128,10,32,14,160,6,32,2,170,12,136,14,238,14,64,4,32,14,98,2,66
-	dc.b 0,0,0,100,0,34,4,68,14,66,2,34,6,68,12,102,14,194,12,66,14,168,14,204,12,168,12,204,6,136,14,238
-	even
+; Horizontal interrupt - run once per N scanlines (N = specified in VDP register $A)
+INT_HInterrupt:
+	; Doesn't do anything in this demo
+	rte
+
+; NULL interrupt - for interrupts we don't care about
+INT_Null:
+	rte
+
+; Exception interrupt - called if an error has occured
+CPU_Exception:
+	; Just halt the CPU if an error occurred. Later on, you may want to write
+	; an exception handler to draw the current state of the machine to screen
+	; (registers, stack, error type, etc) to help debug the problem.
+	stop   #$2700
+	rte
+	
+;==============================================================
+; UTILITY FUNCTIONS
+;==============================================================
+; Subroutines to initialise the TMSS, and load all VDP registers
+;==============================================================
+
+VDP_WriteTMSS:
+
+	; The TMSS (Trademark Security System) locks up the VDP if we don't
+	; write the string 'SEGA' to a special address. This was to discourage
+	; unlicensed developers, since doing this displays the "LICENSED BY SEGA
+	; ENTERPRISES LTD" message to screen (on Mega Drive models 1 and higher).
+	;
+	; First, we need to check if we're running on a model 1+, then write
+	; 'SEGA' to hardware address $A14000.
+
+	move.b hardware_ver_address, d0			; Move Megadrive hardware version to d0
+	andi.b #$0F, d0						; The version is stored in last four bits, so mask it with 0F
+	beq    .SkipTMSS						; If version is equal to 0, skip TMSS signature
+	move.l #tmss_signature, tmss_address	; Move the string "SEGA" to $A14000
+	.SkipTMSS:
+
+	; Check VDP
+	move.w vdp_control, d0					; Read VDP status register (hangs if no access)
+	
+	rts
+
+VDP_LoadRegisters:
+
+	; To initialise the VDP, we write all of its initial register values from
+	; the table at the top of the file, using a loop.
+	;
+	; To write a register, we write a word to the control port.
+	; The top bit must be set to 1 (so $8000), bits 8-12 specify the register
+	; number to write to, and the bottom byte is the value to set.
+	;
+	; In binary:
+	;   100X XXXX YYYY YYYY
+	;   X = register number
+	;   Y = value to write
+
+	; Set VDP registers
+	lea    VDPRegisters, a0		; Load address of register table into a0
+	move.w #$18-1, d0			; 24 registers to write (-1 for loop counter)
+	move.w #$8000, d1			; 'Set register 0' command to d1
+
+	.CopyRegLp:
+	move.b (a0)+, d1			; Move register value from table to lower byte of d1 (and post-increment the table address for next time)
+	move.w d1, vdp_control		; Write command and value to VDP control port
+	addi.w #$0100, d1			; Increment register #
+	dbra   d0, .CopyRegLp		; Decrement d0, and jump back to top of loop if d0 is still >= 0
+	
+	rts
+
+	include "Enigma.asm"
+	include "Kosinski.asm"
+
+; A label defining the end of ROM so we can compute the total size.
+
 tileDat:
 	;Contains 1120 tiles
-	incbin tiles.kos
-	even
+	binclude tiles.kos
+	align 2
 tilemapDat:
 	;40x28 tiles
-	incbin tilemap.eni
-	even
-RomEnd:
+	binclude tilemap.eni
+	align 2
+ROM_End:
