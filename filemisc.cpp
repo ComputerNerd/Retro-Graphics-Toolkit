@@ -200,14 +200,13 @@ bool saveBinAsText(const void * ptr, size_t sizeBin, FILE * fp, fileType_t type,
 			{
 				uint16_t datTmp = *dat16++;
 
-				if (endian == boost::endian::order::little)
-					boost::endian::conditional_reverse_inplace<boost::endian::order::native, boost::endian::order::little>(datTmp);
-				else if (endian == boost::endian::order::big)
-					boost::endian::conditional_reverse_inplace<boost::endian::order::native, boost::endian::order::big>(datTmp);
-
-				if (type == fileType_t::tBinary)
+				if (type == fileType_t::tBinary) {
+					if (endian == boost::endian::order::little)
+						boost::endian::conditional_reverse_inplace<boost::endian::order::native, boost::endian::order::little>(datTmp);
+					else if (endian == boost::endian::order::big)
+						boost::endian::conditional_reverse_inplace<boost::endian::order::native, boost::endian::order::big>(datTmp);
 					fwrite(&datTmp, sizeof(uint16_t), 1, fp);
-				else
+				} else
 					snprintf(tmp, sizeof(tmp), "%s%X", hexStr, datTmp);
 			}
 			break;
@@ -216,14 +215,14 @@ bool saveBinAsText(const void * ptr, size_t sizeBin, FILE * fp, fileType_t type,
 			{
 				uint32_t datTmp = *dat32++;
 
-				if (endian == boost::endian::order::little)
-					boost::endian::conditional_reverse_inplace<boost::endian::order::native, boost::endian::order::little>(datTmp);
-				else if (endian == boost::endian::order::big)
-					boost::endian::conditional_reverse_inplace<boost::endian::order::native, boost::endian::order::big>(datTmp);
 
-				if (type == fileType_t::tBinary)
+				if (type == fileType_t::tBinary) {
+					if (endian == boost::endian::order::little)
+						boost::endian::conditional_reverse_inplace<boost::endian::order::native, boost::endian::order::little>(datTmp);
+					else if (endian == boost::endian::order::big)
+						boost::endian::conditional_reverse_inplace<boost::endian::order::native, boost::endian::order::big>(datTmp);
 					fwrite(&datTmp, sizeof(uint32_t), 1, fp);
-				else
+				} else
 					snprintf(tmp, sizeof(tmp), "%s%X", hexStr, datTmp);
 			}
 			break;

@@ -581,6 +581,16 @@ bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, int c
 
 		if (compression) {
 			void*TheMap = mapptr;
+			if (prj->gameSystem == segaGenesis) {
+				// The endian must be corrected before compressing.
+				uint16_t * ptr = (uint16_t*)mapptr;
+
+				for (unsigned i = 0; i < mapSizeW * mapSizeHA; ++i) {
+					uint16_t tmp = *ptr;
+					boost::endian::conditional_reverse_inplace<boost::endian::order::native, boost::endian::order::big>(tmp);
+					*ptr++ = tmp;
+				}
+			}
 			mapptr = (uint8_t*)encodeType(TheMap, fileSize, fileSize, compression);
 			free(TheMap);
 		}
@@ -594,7 +604,7 @@ bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, int c
 		else
 			bits = 8;
 
-		if (!saveBinAsText(mapptr, fileSize, myfile, type, temp, label, bits, getEndianBySystem())) {
+		if (!saveBinAsText(mapptr, fileSize, myfile, type, temp, label, bits, compression ? boost::endian::order::native : getEndianBySystem())) {
 			free(mapptr);
 			return false;
 		}

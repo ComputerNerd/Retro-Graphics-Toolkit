@@ -4,3 +4,6 @@
 [submodule "luaposix"]
 	path = luaposix
 	url = https://github.com/luaposix/luaposix
+[submodule "moonfltk"]
+	path = moonfltk
+	url = https://github.com/stetre/moonfltk

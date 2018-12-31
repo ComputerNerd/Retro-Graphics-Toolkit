@@ -15,6 +15,7 @@
 	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 --]]
 function setPalTypeCB(unused)
+	print('Got callback')
 	local p = projects.current
 	p:setPalType(palTabSel:value())
 	p.palette:toRgbAll()
@@ -29,20 +30,21 @@ end
 
 function tabConfig(tab)
 	if tab==rgt.paletteTab then
-		palTabSel=Fl_Choice.new(336, 464, 128, 24, "Palette table selection")
+		fltk.trace_objects(true)
+		palTabSel=fltk.choice(336, 464, 128, 24, "Palette table selection")
 		palTabSel:align(FL.ALIGN_TOP)
-		palTabSel:callback('setPalTypeCB')
+		palTabSel:callback(setPalTypeCB)
 		palTabSel:add("HardwareMan's measured values")
 		palTabSel:add('round(255*v\\/7)')
 		palTabSel:add('Steps of 36')
 		palTabSel:add('Steps of 32')
 		palTabSel:labelsize(12)
-		palTabSel:value(0)
+		--palTabSel:value(0)
 
 
-		spriteSizeSel=Fl_Choice.new(336, 464, 128, 24, "Sprite size")
+		spriteSizeSel=fltk.choice(336, 464, 128, 24, "Sprite size")
 		spriteSizeSel:align(FL.ALIGN_TOP)
-		spriteSizeSel:callback('setSpriteSizeCB')
+		spriteSizeSel:callback(setSpriteSizeCB)
 		spriteSizeSel:labelsize(12)
 		spriteSizeSel:hide()
 	elseif tab==rgt.levelTab then

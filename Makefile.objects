@@ -2,6 +2,7 @@ MDCOMP_OBJECTS := mdcomp/src/lib/comper.o mdcomp/src/lib/enigma.o \
 	mdcomp/src/lib/kosinski.o mdcomp/src/lib/nemesis.o mdcomp/src/lib/saxman.o
 
 BINDINGS := $(BINDINGS:.cpp=.o)
+BINDINGS := $(BINDINGS:.cc=.o)
 
 OBJECTS := project.o main.o callbacks_palette.o callback_tiles.o class_global.o \
 	quant.o tilemap.o color_convert.o errorMsg.o classpalettebar.o dither.o \
