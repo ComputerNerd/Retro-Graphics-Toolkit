@@ -86,6 +86,12 @@ static int palette__get_(lua_State *L) {
 		} else if (!strcmp("esize", k)) {
 			lua_pushinteger(L, projects[projectIDX].pal->esize);
 			return 1;
+		} else if (!strcmp("fixedSpriteRow", k)) {
+			lua_pushinteger(L, projects[projectIDX].pal->fixedSpriteRow);
+			return 1;
+		} else if (!strcmp("fixedPalette", k)) {
+			lua_pushboolean(L, projects[projectIDX].isFixedPalette());
+			return 1;
 		}
 	}
 

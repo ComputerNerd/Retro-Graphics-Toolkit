@@ -27,7 +27,9 @@ function switchProject()
 	end
 
 	if p:have(project.palMask) ~= false then
-		p.palette:toRgbAll()
+		if p.palette.fixedPalette == false then
+			p.palette:toRgbAll()
+		end
 	end
 
 	if is_headless == 0 then
