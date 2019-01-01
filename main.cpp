@@ -15,8 +15,10 @@
 	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
 
+#define FL_INTERNALS
 #include <FL/Fl_File_Icon.H>
 #include <FL/fl_ask.H>
+#include <FL/x.H>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -149,6 +151,13 @@ int main(int argc, char **argv) {
 		////       fltk_images library, potentially reducing the size of your executable.
 		//// Loading the system icons is not required by the OSX or Windows native file choosers.
 		window->show(argc, argv);
-		return Fl::run();
+		while(Fl_X::first) {
+			try{
+				Fl::wait(1e20);
+			}catch(...) {
+				fl_alert("Unhandled exception.");
+			}
+		}
+		return 0;
 	}
 }
