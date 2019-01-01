@@ -15,22 +15,20 @@
 	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 --]]
 function setPalTypeCB(unused)
-	print('Got callback')
 	local p = projects.current
-	p:setPalType(palTabSel:value())
+	p:setPalType(palTabSel:get_index())
 	p.palette:toRgbAll()
 	rgt.damage()
 end
 
 function setSpriteSizeCB(unused)
 	local p = projects.current
-	p:setSpriteSizeID(spriteSizeSel:value())
+	p:setSpriteSizeID(spriteSizeSel:get_index())
 	rgt.redraw()
 end
 
 function tabConfig(tab)
 	if tab==rgt.paletteTab then
-		fltk.trace_objects(true)
 		palTabSel=fltk.choice(336, 464, 128, 24, "Palette table selection")
 		palTabSel:align(FL.ALIGN_TOP)
 		palTabSel:callback(setPalTypeCB)
@@ -39,7 +37,6 @@ function tabConfig(tab)
 		palTabSel:add('Steps of 36')
 		palTabSel:add('Steps of 32')
 		palTabSel:labelsize(12)
-		--palTabSel:value(0)
 
 
 		spriteSizeSel=fltk.choice(336, 464, 128, 24, "Sprite size")

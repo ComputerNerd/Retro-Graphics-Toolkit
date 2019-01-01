@@ -98,7 +98,7 @@ function checkCurLayerBounds()
 end
 
 function lvlsetLayerCB(unused)
-	lvlsetlayer(layerSel:value())
+	lvlsetlayer(layerSel:get_index())
 	rgt.damage()
 end
 
@@ -319,7 +319,7 @@ function handleLevel(e)
 				spriteEdit=level.objamt[lvlCurLayer+1]-1
 				spriteSel:value(spriteEdit)
 				local info=level.getObj(lvlCurLayer,spriteEdit)
-				updateSpriteSlidrs(info)
+				updateSpriteSliders(info)
 				info.x=x
 				info.y=y
 				info.prjid=prj
@@ -403,7 +403,8 @@ function handleLevel(e)
 end
 function setLayerSrc(val)
 	local p = projects.current
-	if val==level.BLOCKS and p.tilemaps[1].useBlocks[(curLayerInfo.src>>2)+1]~=true then
+	local plane = (curLayerInfo.src >> 2) + 1
+	if val == level.BLOCKS and p.tilemaps[plane].useBlocks ~= true then
 		fl.alert("You must first enable blocks in the plane editor")
 		lvlSrc:value(curLayerInfo.src&3)
 		return
@@ -414,7 +415,7 @@ function setLayerSrc(val)
 	setSizePer()
 end
 function setLayerSrcCB(unused)
-	setLayerSrc(lvlSrc:value())
+	setLayerSrc(lvlSrc:get_index())
 	rgt.damage()
 end
 function resizeLayerCB(unused)
