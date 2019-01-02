@@ -56,10 +56,7 @@ static int palette__get_(lua_State *L) {
 	} else if (type == LUA_TSTRING) {
 		const char* k = luaL_checkstring(L, 2);
 
-		if (!strcmp("current", k)) {
-			lua_pushinteger(L, projects[projectIDX].curPlane + 1);
-			return 1;
-		} else if (!strcmp("cnt", k)) {
+		if (!strcmp("cnt", k)) {
 			lua_pushinteger(L, projects[projectIDX].pal->colorCnt);
 			return 1;
 		} else if (!strcmp("cntAlt", k)) {
