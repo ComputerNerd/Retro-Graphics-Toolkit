@@ -21,24 +21,26 @@
 #include "dub/dub.h"
 #include "gui.h"
 static int tilemaps__get_(lua_State *L) {
+	checkAlreadyExists
+	
+	getProjectIDX
 	int type = lua_type(L, 2);
-	size_t idx = getSizeTUserData(L);
 
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2) - 1;
 
-		if (k >= 0 && k < projects[idx].tms->maps.size()) {
-			luaopen_Tilemap(L, idx, k);
+		if (k >= 0 && k < projects[projectIDX].tms->maps.size()) {
+			luaopen_Tilemap(L, projectIDX, k);
 			return 1;
 		}
 	} else if (type == LUA_TSTRING) {
 		const char*k = luaL_checkstring(L, 2);
 
 		if (!strcmp("current", k)) {
-			luaopen_Tilemap(L, idx, projects[idx].curPlane);
+			luaopen_Tilemap(L, projectIDX, projects[projectIDX].curPlane);
 			return 1;
 		} else if (!strcmp("currentIdx", k)) {
-			lua_pushinteger(L, projects[idx].curPlane + 1);
+			lua_pushinteger(L, projects[projectIDX].curPlane + 1);
 			return 1;
 		}
 	}
