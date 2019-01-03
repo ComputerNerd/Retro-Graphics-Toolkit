@@ -135,7 +135,7 @@ void loadPalette(Fl_Widget*, void*) {
 		return;
 	}
 
-	currentProject->pal->loadFromFile(nullptr, fileType_t::tCancel, offset);
+	currentProject->pal->loadFromFile(nullptr, fileType_t::tCancel, offset, CompressionType::Cancel);
 
 }
 void set_ditherAlg(Fl_Widget*, void* typeset) {

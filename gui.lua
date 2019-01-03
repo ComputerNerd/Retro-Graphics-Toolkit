@@ -12,11 +12,14 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2019)
 --]]
-function setPalTypeCB(unused)
+function setPalTypeCB(menuItm)
+	local vStr = menuItm:value()
+	local v = palTabSelLUT[vStr]
+
 	local p = projects.current
-	p:setPalType(palTabSel:get_index())
+	p:setPalType(v)
 	p.palette:toRgbAll()
 	rgt.damage()
 end
@@ -27,15 +30,29 @@ function setSpriteSizeCB(unused)
 	rgt.redraw()
 end
 
+function generateLutFromList(choiceList)
+	local tmp = {}
+	for i = 1, #choiceList do
+		tmp[choiceList[i]] = i - 1
+	end
+	return tmp
+end
+
+function addItemsToChoice(menu, choiceList)
+	for i = 1, #choiceList do
+		local menuItemEscaped = choiceList[i]:gsub('/', '\\/')
+		menu:add(menuItemEscaped)
+	end
+end
+
 function tabConfig(tab)
-	if tab==rgt.paletteTab then
+	if tab == rgt.paletteTab then
 		palTabSel=fltk.choice(336, 464, 128, 24, "Palette table selection")
 		palTabSel:align(FL.ALIGN_TOP)
 		palTabSel:callback(setPalTypeCB)
-		palTabSel:add("HardwareMan's measured values")
-		palTabSel:add('round(255*v\\/7)')
-		palTabSel:add('Steps of 36')
-		palTabSel:add('Steps of 32')
+		palTabSelOptions = {"HardwareMan's measured values", 'round(255*v/7)', 'Steps of 36', 'Steps of 32'}
+		palTabSelLUT = generateLutFromList(palTabSelOptions)
+		addItemsToChoice(palTabSel, palTabSelOptions)
 		palTabSel:labelsize(12)
 
 

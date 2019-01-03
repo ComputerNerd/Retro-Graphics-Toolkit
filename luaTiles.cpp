@@ -24,7 +24,7 @@
 static int lua_tiles_save(lua_State*L) {
 	getProjectIDX
 	//void save(const char*fname,fileType_t type,bool clipboard,int compression);
-	projects[projectIDX].tileC->save(lua_tostring(L, 2), (fileType_t)lua_tointeger(L, 3), lua_toboolean(L, 4), lua_tointeger(L, 5), lua_tostring(L, 6));
+	projects[projectIDX].tileC->save(lua_tostring(L, 2), (fileType_t)lua_tointeger(L, 3), lua_toboolean(L, 4), (CompressionType)lua_tointeger(L, 5), lua_tostring(L, 6));
 	return 0;
 }
 

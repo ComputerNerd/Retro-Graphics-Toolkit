@@ -16,9 +16,15 @@
 */
 #pragma once
 #include <string>
-const char*typeToText(int type);
-int compressionAsk(void);
-std::string decodeTypeStr(const char * filename, size_t &filesize, int type);
-void*decodeTypeRam(const uint8_t*dat, size_t inputSize, size_t &filesize, int type);
-void*decodeType(const char * filename, size_t &filesize, int type);
-void*encodeType(void*in, size_t n, size_t&outSize, int type);
+enum class CompressionType {Cancel = -1,
+                            Uncompressed = 0,
+                            Nemesis, Kosinski,
+                            Enigma, Saxman,
+                            Comper
+                           };
+const char*typeToText(CompressionType type);
+CompressionType compressionAsk(void);
+std::string decodeTypeStr(const char * filename, size_t &filesize, CompressionType type);
+void*decodeTypeRam(const uint8_t*dat, size_t inputSize, size_t &filesize, CompressionType type);
+void*decodeType(const char * filename, size_t &filesize, CompressionType type);
+void*encodeType(void*in, size_t n, size_t&outSize, CompressionType type);

@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2019)
 */
 #include "luaPalette.hpp"
 #include "luaPaletteEntry.hpp"
@@ -31,6 +31,15 @@ static int lua_palette_save(lua_State*L) {
 	getProjectIDX
 	//void savePalette(const char*fname,unsigned start,unsigned end,bool skipzero,fileType_t type,int clipboard,const char*label="palDat");
 	projects[projectIDX].pal->savePalette(lua_tostring(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4), lua_toboolean(L, 5), (fileType_t)lua_tointeger(L, 6), lua_toboolean(L, 7), lua_tostring(L, 8));
+	return 0;
+}
+
+static int lua_palette_load(lua_State*L) {
+	getProjectIDX
+	projects[projectIDX].pal->loadFromFile(lua_tostring(L, 2),
+	                                       (fileType_t)luaL_checkinteger(L, 3),
+	                                       luaL_checkinteger(L, 4),
+	                                       (CompressionType)luaL_checkinteger(L, 5));
 	return 0;
 }
 
@@ -111,9 +120,10 @@ static const struct luaL_Reg palette_member_methods[] = {
 	{ "__index", palette__get_       },
 	{ "__len", palette__len_       },
 	{ "__tostring", palette___tostring  },
-	{"save", lua_palette_save},
-	{"toRgbAll", lua_palette_paletteToRgb},
-	{"maxInRow", lua_palette_maxInRow},
+	{ "save", lua_palette_save},
+	{ "load", lua_palette_load},
+	{ "toRgbAll", lua_palette_paletteToRgb},
+	{ "maxInRow", lua_palette_maxInRow},
 	{ "deleted", dub::isDeleted    },
 	{ NULL, NULL},
 };

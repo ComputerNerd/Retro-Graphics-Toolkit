@@ -40,10 +40,8 @@ static int tileRGBApixel__set_(lua_State *L) {
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2) - 1;
 
-		if (k >= 0 && k < 4) {
+		if (k >= 0 && k < 4)
 			rgbaPixel[k] = luaL_checkinteger(L, 3);
-			return 1;
-		}
 	} else if (type == LUA_TSTRING) {
 		const char*k = luaL_checkstring(L, 2);
 

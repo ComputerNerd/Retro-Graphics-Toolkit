@@ -151,13 +151,15 @@ int main(int argc, char **argv) {
 		////       fltk_images library, potentially reducing the size of your executable.
 		//// Loading the system icons is not required by the OSX or Windows native file choosers.
 		window->show(argc, argv);
-		while(Fl_X::first) {
-			try{
+
+		while (Fl_X::first) {
+			try {
 				Fl::wait(1e20);
-			}catch(...) {
+			} catch (...) {
 				fl_alert("Unhandled exception.");
 			}
 		}
+
 		return 0;
 	}
 }

@@ -1026,12 +1026,12 @@ void palette::changeIndexRaw(unsigned value, unsigned paletteComponentIndex, uns
 	updateRGBindex(index);
 }
 
-void palette::loadFromFile(const char * fname, fileType_t forceType, unsigned offset) {
+void palette::loadFromFile(const char * fname, fileType_t forceType, unsigned offset, CompressionType compression) {
 	size_t palSize = totalColors();
 	palSize -= offset;
 	palSize *= esize;
 	offset *= esize;
-	filereader f = filereader(paletteDataEndian, esize, "Load palette", false, 16, true, fname, forceType);
+	filereader f = filereader(paletteDataEndian, esize, "Load palette", false, 16, true, fname, forceType, compression);
 
 	if (f.amt < 1)
 		return;

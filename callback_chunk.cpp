@@ -35,8 +35,8 @@ void setCurPlaneChunkCB(Fl_Widget*w, void*) {
 	window->damage(FL_DAMAGE_USER1);
 }
 void insertChunkCB(Fl_Widget*, void*) {
-	pushChunkNew(currentChunk + 1);
-	currentProject->Chunk->insert(currentChunk + 1);
+	pushChunkNew(currentChunk);
+	currentProject->Chunk->insert(currentChunk);
 	window->chunk_select->maximum(currentProject->Chunk->amt - 1);
 	window->redraw();
 }

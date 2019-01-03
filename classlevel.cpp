@@ -91,7 +91,6 @@ void level::setlayeramt(unsigned amt, bool lastLayerDim) {
 	if (amt > layeramt) {
 		if (lastLayerDim)
 			lvlI.reserve(amt);
-
 		else {
 			lvlI.resize(amt, {1, 1, 1, 1, 0, 0, CHUNKS});
 		}

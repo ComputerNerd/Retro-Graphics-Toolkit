@@ -23,6 +23,7 @@
 #include <set>
 #include "project.h"
 #include "filemisc.h"
+#include "compressionWrapper.h"
 typedef std::array<uint8_t, 3> rgbArray_t;
 typedef uint16_t paletteRawValue_t;
 typedef std::map<paletteRawValue_t, rgbArray_t> rawValPalMap_t;
@@ -82,7 +83,7 @@ public:
 	unsigned getIndexByRow(unsigned row, unsigned offset, bool isAlt) const;
 	unsigned getIndexByRow(unsigned row, unsigned offset) const;
 	void changeIndexRaw(unsigned value, unsigned entryIndex, unsigned index);
-	void loadFromFile(const char * fname, fileType_t forceType, unsigned offset); // use fileType_t::tCancel to prompt for the filetype.
+	void loadFromFile(const char * fname, fileType_t forceType, unsigned offset, CompressionType compression); // use fileType_t::tCancel to prompt for the filetype.
 	void updateEmphasis(void);
 	int setPaletteFromRGB(const uint8_t* colors, const unsigned nColors, const unsigned minEntry, const unsigned maxEntry);
 	bool isAltRow(unsigned row) const {

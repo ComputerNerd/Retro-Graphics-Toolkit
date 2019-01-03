@@ -26,6 +26,9 @@ class ChunkClass {
 private:
 	unsigned getOff(const uint32_t id, const uint32_t x, const uint32_t y)const;
 	void getXYblock(unsigned id, unsigned x, unsigned y, unsigned& xo, unsigned& yo)const;
+	unsigned sizeOfChunk() const {
+		return wi * hi;
+	}
 public:
 	uint32_t amt;//Amount of chunks
 	uint32_t wi, hi; //How many blocks/Tiles the chunk contains

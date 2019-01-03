@@ -21,4 +21,3 @@
 int luaopen_ChunkEntry(lua_State *L, size_t projectIDX, size_t chunkIDX, size_t columnIDX, size_t entryIDX);
 #endif
 
-

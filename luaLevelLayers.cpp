@@ -12,75 +12,73 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2019)
 */
-#include "luaTilemaps.hpp"
-#include "luaTilemap.hpp"
-#include "luaHelpers.hpp"
-#include "project.h"
 #include "dub/dub.h"
-#include "gui.h"
-static int tilemaps__get_(lua_State *L) {
+#include "luaHelpers.hpp"
+#include "luaLevelLayer.hpp"
+#include "project.h"
+
+static int levelLayers__get_(lua_State *L) {
 	checkAlreadyExists
 
-	getProjectIDX
 	int type = lua_type(L, 2);
+	getProjectIDX
 
 	if (type == LUA_TNUMBER) {
-		int k = luaL_checkinteger(L, 2) - 1;
+		int k = luaL_checkinteger(L, 2);
 
-		if (k >= 0 && k < projects[projectIDX].tms->maps.size()) {
-			luaopen_Tilemap(L, projectIDX, k);
+		if (k > 0 && k <= projects[projectIDX].lvl->layeramt) {
+			luaopen_LevelLayer(L, projectIDX, k - 1);
 			return 1;
 		}
-	} else if (type == LUA_TSTRING) {
+	} else if (type == LUA_TSTRING)
 		const char*k = luaL_checkstring(L, 2);
-
-		if (!strcmp("current", k)) {
-			luaopen_Tilemap(L, projectIDX, projects[projectIDX].curPlane);
-			return 1;
-		} else if (!strcmp("currentIdx", k)) {
-			lua_pushinteger(L, projects[projectIDX].curPlane + 1);
-			return 1;
-		}
-	}
 
 	return 0;
 }
 
-static int tilemaps__len_(lua_State *L) {
+static int levelLayers___tostring(lua_State *L) {
 	getProjectIDX
-	lua_pushinteger(L, projects[projectIDX].tms->maps.size());
+	lua_pushfstring(L, "levelLayers table: %p", projects[projectIDX].lvl);
 	return 1;
 }
 
-static int tilemaps___tostring(lua_State *L) {
+static int levelLayers__len_(lua_State *L) {
 	getProjectIDX
-	lua_pushfstring(L, "tilemaps table: %p", projects[projectIDX].tms);
+	lua_pushinteger(L, projects[projectIDX].lvl->layeramt);
 	return 1;
 }
 
+static int lua_levelLayers_amount(lua_State*L) {
+	getProjectIDX
 
-static const struct luaL_Reg tilemaps_member_methods[] = {
-	{ "__index", tilemaps__get_       },
-	{ "__len", tilemaps__len_       },
-	{ "__tostring", tilemaps___tostring  },
+	projects[projectIDX].lvl->setlayeramt(luaL_checkinteger(L, 2), luaL_checkboolean(L, 3));
+	return 0;
+}
+
+static const struct luaL_Reg levelLayers_member_methods[] = {
+	{ "__index", levelLayers__get_       },
+	{ "__tostring", levelLayers___tostring  },
+	{ "__len", levelLayers__len_       },
+	{ "amount", lua_levelLayers_amount},
 	{ "deleted", dub::isDeleted    },
 	{ NULL, NULL},
 };
 
-int luaopen_Tilemaps(lua_State *L, size_t projectIDX) {
+int luaopen_LevelLayers(lua_State *L, size_t projectIDX) {
 	// Create the metatable which will contain all the member methods
-	luaL_newmetatable(L, "tilemaps");
+	luaL_newmetatable(L, "levelLayers");
 	// <mt>
 
 	// register member methods
-	dub::fregister(L, tilemaps_member_methods);
-	dub::setup(L, "tilemaps");
+	dub::fregister(L, levelLayers_member_methods);
+	dub::setup(L, "levelLayers");
 	// setup meta-table
 	size_t* idxUserData = (size_t*)lua_newuserdata(L, sizeof(size_t));
-	luaL_getmetatable(L, "tilemaps");
+	luaL_getmetatable(L, "levelLayers");
 	*idxUserData = projectIDX;
 	lua_setmetatable(L, -2);
 	return 1;
 }
+

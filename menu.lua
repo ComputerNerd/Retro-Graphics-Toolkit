@@ -64,7 +64,7 @@ function removeDuplicateBlocks(unused)
 									p.chunks:subBlock(bb,aa)
 								end
 								if p:have(project.levelMask) then
-									level.subType(bb,aa,level.BLOCKS,i)
+									p.level:subType(bb, aa, level.BLOCKS, i)
 								end
 							end
 						end

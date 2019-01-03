@@ -57,7 +57,7 @@ typedef int LuaStackSize;
 // Helpers to check for explicit 'false' or 'true' return values.
 #define lua_isfalse(L,i) (lua_isboolean(L,i) && !lua_toboolean(L,i))
 #define lua_istrue(L,i)  (lua_isboolean(L,i) && lua_toboolean(L,i))
-#define luaL_checkboolean(L,n) (lua_toboolean(L,n))
+bool luaL_checkboolean(lua_State* L, int n);
 
 struct DubUserdata {
   void *ptr;

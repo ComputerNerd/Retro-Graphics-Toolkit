@@ -492,7 +492,7 @@ static int bondsCheckTile(int tile, int mx, unsigned x, unsigned y) {
 	return tile;
 }
 
-bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, int compression, const char*label, const char*nesFname, const char*labelNES) {
+bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, CompressionType compression, const char*label, const char*nesFname, const char*labelNES) {
 	uint32_t x, y;
 	FILE * myfile;
 	size_t fileSize;
@@ -579,8 +579,9 @@ bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, int c
 				show_default_error
 		}
 
-		if (compression) {
+		if (compression != CompressionType::Uncompressed) {
 			void*TheMap = mapptr;
+
 			if (prj->gameSystem == segaGenesis) {
 				// The endian must be corrected before compressing.
 				uint16_t * ptr = (uint16_t*)mapptr;
@@ -591,6 +592,7 @@ bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, int c
 					*ptr++ = tmp;
 				}
 			}
+
 			mapptr = (uint8_t*)encodeType(TheMap, fileSize, fileSize, compression);
 			free(TheMap);
 		}
@@ -599,12 +601,12 @@ bool tileMap::saveToFile(const char*fname, fileType_t type, int clipboard, int c
 		snprintf(temp, 2048, "Width %d Height %d %s", mapSizeW, mapSizeHA, typeToText(compression));
 		int bits;
 
-		if ((prj->gameSystem == segaGenesis) && (!compression))
+		if ((prj->gameSystem == segaGenesis) && (compression == CompressionType::Uncompressed))
 			bits = 16;
 		else
 			bits = 8;
 
-		if (!saveBinAsText(mapptr, fileSize, myfile, type, temp, label, bits, compression ? boost::endian::order::native : getEndianBySystem())) {
+		if (!saveBinAsText(mapptr, fileSize, myfile, type, temp, label, bits, compression == CompressionType::Uncompressed ? boost::endian::order::native : getEndianBySystem())) {
 			free(mapptr);
 			return false;
 		}
@@ -660,7 +662,6 @@ bool tileMap::saveToFile(void) {
 	*/
 	//first see how this file should be saved
 	uint32_t x, y;
-	int compression;
 	fileType_t type = askSaveType();
 	int clipboard;
 
@@ -693,9 +694,9 @@ bool tileMap::saveToFile(void) {
 			}
 		}
 
-		compression = compressionAsk();
+		CompressionType compression = compressionAsk();
 
-		if (compression < 0) {
+		if (compression == CompressionType::Cancel) {
 			free(fname);
 			free(nesFname);
 			return true;

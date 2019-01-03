@@ -23,6 +23,7 @@
 
 #include "filemisc.h"
 #include "project.h"
+#include "compressionWrapper.h"
 
 typedef std::multimap<uint8_t, uint32_t> tileAttrMap_t;
 
@@ -91,7 +92,7 @@ public:
 	void*toLinePlanar(void);
 	void changeDim(unsigned w, unsigned h, unsigned bd);
 	void swap(unsigned first, unsigned second);
-	void save(const char*fname, fileType_t type, bool clipboard, int compression, const char*label = "tileDat");
+	void save(const char*fname, fileType_t type, bool clipboard, CompressionType compression, const char*label = "tileDat");
 	void tms9918Mode1RearrangeTiles(tileAttrMap_t& attrs, bool forceKeepAllTiles = true);
 	bool isAllZeroTruecolor(unsigned idx);
 	void tms9918Mode1RearrangeActions(bool forceTileToAttribute, uint32_t tile, uint8_t attr);

@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2019)
 */
 
 /** @file runlua.cpp
@@ -35,7 +35,7 @@
 
 #include "runlua.h"
 #include "savepng.h"
-
+#include "luaconfig.h"
 #include "gui.h"
 #include "project.h"
 #include "color_convert.h"
@@ -53,9 +53,6 @@
 #include <mdcomp/kosinski.hh>
 #include <mdcomp/saxman.hh>
 #include "filemisc.h"
-#include "level_levDat.h"
-#include "level_levelInfo.h"
-#include "level_levobjDat.h"
 #include "undoLua.h"
 #include "posix.h"
 #include "callback_tilemap.h"
@@ -64,6 +61,7 @@
 #include "luaSprites.hpp"
 #include "luaProject.hpp"
 #include "luaProjects.hpp"
+#include "compressionWrapper.h"
 
 
 static int panic(lua_State *L) {
@@ -439,65 +437,16 @@ int luaopen_settings(lua_State *L)
 }
 
 static void updateLevelTable(lua_State*L);
-static int lua_level_setLayerAmt(lua_State*L) {
-	currentProject->lvl->setlayeramt(luaL_optinteger(L, 1, 0), lua_toboolean(L, 2));
-	updateLevelTable(L);
-	return 0;
+
+bool luaL_checkboolean(lua_State* L, int n) {
+	if (lua_isboolean(L, n))
+		return lua_tostring(L, n);
+	else
+		luaL_error(L, "Expected boolean for argument %d.", n);
+
+	return false;
 }
-static int lua_level_setLayerName(lua_State*L) {
-	currentProject->lvl->layernames[luaL_optinteger(L, 1, 0)].assign(luaL_optstring(L, 2, ""));
-	updateLevelTable(L);
-	return 0;
-}
-static int lua_level_getInfo(lua_State*L) {
-	luaopen_level_levelInfo(L, currentProject->lvl->getInfo(luaL_optinteger(L, 1, 0)));
-	return 1;
-}
-static int lua_level_getObj(lua_State*L) {
-	luaopen_level_levobjDat(L, currentProject->lvl->getObjDat(luaL_optinteger(L, 1, 0), luaL_optinteger(L, 2, 0)));
-	return 1;
-}
-static int lua_level_getXY(lua_State*L) {
-	luaopen_level_levDat(L, currentProject->lvl->getlevDat(luaL_optinteger(L, 1, 0), luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0)));
-	return 1;
-}
-static int lua_level_appendObj(lua_State*L) {
-	currentProject->lvl->odat[luaL_optinteger(L, 1, 0)]->emplace_back();
-	updateLevelTable(L);
-	return 0;
-}
-static int lua_level_delObj(lua_State*L) {
-	unsigned idx = luaL_optinteger(L, 1, 0);
-	currentProject->lvl->odat[idx]->erase(currentProject->lvl->odat[idx]->begin() + luaL_optinteger(L, 2, 0));
-	updateLevelTable(L);
-	return 0;
-}
-static int lua_level_removeLayer(lua_State*L) {
-	currentProject->lvl->removeLayer(luaL_optinteger(L, 1, 0));
-	updateLevelTable(L);
-	return 0;
-}
-static int lua_level_resizeLayer(lua_State*L) {
-	currentProject->lvl->resizeLayer(luaL_optinteger(L, 1, 0), luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0));
-	return 0;
-}
-static int lua_level_subType(lua_State*L) {
-	currentProject->lvl->subType(lua_tointeger(L, 1), lua_tointeger(L, 2), (enum source)lua_tointeger(L, 3), lua_tointeger(L, 4));
-	return 0;
-}
-static const luaL_Reg lua_levelAPI[] = {
-	{"setLayerAmt", lua_level_setLayerAmt},
-	{"setLayerName", lua_level_setLayerName},
-	{"getInfo", lua_level_getInfo},
-	{"getObj", lua_level_getObj},
-	{"getXY", lua_level_getXY},
-	{"appendObj", lua_level_appendObj},
-	{"delObj", lua_level_delObj},
-	{"removeLayer", lua_level_removeLayer},
-	{"resizeLayer", lua_level_resizeLayer},
-	{"subType", lua_level_subType},
-	{0, 0}
-};
+
 static const struct dub::const_Reg level_const[] = {
 	{ "TILES", ::TILES              },
 	{ "BLOCKS", ::BLOCKS             },
@@ -530,36 +479,13 @@ static const luaL_Reg lua_projectAPI[] = { /*!This is the project table. The glo
 	{"setSystem", lua_project_setSystem},
 	{0, 0}
 };
+
 static void updateLevelTable(lua_State*L) {
-	lua_pushnil(L);
+	lua_createtable(L, 0, (arLen(level_const) - 1));
+	dub::register_const(L, level_const);
 	lua_setglobal(L, "level");
-
-	if (currentProject->containsData(pjHaveLevel)) {
-		lua_createtable(L, 0, (arLen(lua_levelAPI) - 1) + (arLen(level_const) - 1) + 3);
-		luaL_setfuncs(L, lua_levelAPI, 0);
-		dub::register_const(L, level_const);
-		lua_pushstring(L, "names");
-		lua_createtable(L, currentProject->lvl->layernames.size(), 0);
-
-		for (unsigned i = 0; i < currentProject->lvl->layernames.size(); ++i) {
-			lua_pushstring(L, currentProject->lvl->layernames[i].c_str());
-			lua_rawseti(L, -2, i + 1);
-		}
-
-		lua_rawset(L, -3);
-		mkKeyunsigned(L, "amt", currentProject->lvl->layeramt);
-		lua_pushstring(L, "objamt");
-		lua_createtable(L, currentProject->lvl->layeramt, 0);
-
-		for (unsigned i = 0; i < currentProject->lvl->layernames.size(); ++i) {
-			lua_pushinteger(L, currentProject->lvl->odat[i]->size());
-			lua_rawseti(L, -2, i + 1);
-		}
-
-		lua_rawset(L, -3);
-		lua_setglobal(L, "level");
-	}
 }
+
 void updateProjectTablesLua(lua_State*L) {
 	//Retro Graphics Toolkit bindings
 	lua_pushnil(L);
@@ -595,7 +521,6 @@ void updateProjectTablesLua(lua_State*L) {
 	mkKeyunsigned(L, "spritesMask", pjHaveSprites);
 	mkKeyunsigned(L, "levelMask", pjHaveLevel);
 	mkKeyunsigned(L, "allMask", pjAllMask);
-	mkKeyunsigned(L, "gameSystem", currentProject->gameSystem);
 	mkKeyunsigned(L, "segaGenesis", segaGenesis);
 	mkKeyunsigned(L, "NES", NES);
 	mkKeyunsigned(L, "gameGear", gameGear);
@@ -837,6 +762,16 @@ static const struct keyPairi rgtConsts[] = {
 	{"tASM", (int)fileType_t::tASM},
 	{"tBEX", (int)fileType_t::tBEX}
 };
+
+static const struct keyPairi compressionTypes[] = {
+	{"cancel", (int)CompressionType::Cancel},
+	{"uncompressed", (int)CompressionType::Uncompressed},
+	{"nemesis", (int)CompressionType::Nemesis},
+	{"kosinski", (int)CompressionType::Kosinski},
+	{"enigma", (int)CompressionType::Enigma},
+	{"saxman", (int)CompressionType::Saxman},
+	{"comper", (int)CompressionType::Comper},
+};
 static int lua_tabs_append(lua_State*L) {
 	int rx, ry, rw, rh;
 
@@ -978,7 +913,7 @@ mkCompress(comper)
 mkCompress(enigma)
 mkCompress(kosinski)
 mkCompress(nemesis)
-mkCompressEx(saxman, lua_toboolean(L, 2))
+mkCompressEx(saxman, luaL_checkboolean(L, 2))
 static const luaL_Reg lua_kensAPI[] = {
 	{"comperDecompress", lua_comperDecompress},
 	{"comperCompress", lua_comperCompress},
@@ -1039,10 +974,14 @@ void runLua(lua_State*L, const char*str, bool isFile) {
 	}
 }
 
+lua_State* moonfltk_main_lua_state = 0;
+
 lua_State*createLuaState(void) {
 	lua_State *L = lua_newstate(l_alloc, NULL);
 
 	if (L) {
+		moonfltk_main_lua_state = L;
+
 		lua_atpanic(L, &panic);
 		luaL_openlibs(L);
 
@@ -1059,6 +998,13 @@ lua_State*createLuaState(void) {
 			mkKeyint(L, rgtConsts[x].key, rgtConsts[x].pair);
 
 		lua_setglobal(L, "rgt");
+
+		lua_createtable(L, 0, arLen(compressionTypes) - 1);
+
+		for (unsigned x = 0; x < arLen(compressionTypes); ++x)
+			mkKeyint(L, compressionTypes[x].key, compressionTypes[x].pair);
+
+		lua_setglobal(L, "compressionType");
 
 		luaL_newlib(L, lua_kensAPI);
 		lua_setglobal(L, "mdcomp");
@@ -1131,7 +1077,7 @@ lua_State*createLuaState(void) {
 		luaopen_settings(L);
 		lua_setglobal(L, "settings");
 	} else
-		fl_alert("lua_newstate failed");
+		fl_alert("lua_newstate failed.");
 
 	return L;
 }
@@ -1145,9 +1091,7 @@ void runLuaCB(Fl_Widget*, void*) {
 #else
 		chdir(dirname(dup));
 #endif
-		lua_State*L = createLuaState();
-		runLua(L, st);
-		lua_close(L);
+		runLua(Lconf, st);
 		free(st);
 		free(dup);
 	}

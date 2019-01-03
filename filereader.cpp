@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2019)
 */
 #include <FL/fl_ask.H>
 #include <FL/filename.H>
@@ -20,14 +20,13 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
-#include "compressionWrapper.h"
 #include "errorMsg.h"
 #include "filemisc.h"
 #include "filereader.h"
 #include "gui.h"
 #include "luaconfig.h"
 #include "runlua.h"
-filereader::filereader(boost::endian::order endian, unsigned bytesPerElement, const char*title, bool relptr, unsigned offbits, bool be, const char * filename, fileType_t forceType) {
+filereader::filereader(boost::endian::order endian, unsigned bytesPerElement, const char*title, bool relptr, unsigned offbits, bool be, const char * filename, fileType_t forceType, CompressionType compression) {
 	char*fname = nullptr;
 
 	if (!filename) {
@@ -40,9 +39,10 @@ filereader::filereader(boost::endian::order endian, unsigned bytesPerElement, co
 	const char * useFilename = filename ? filename : fname;
 
 	if (useFilename) {
-		int compression = compressionAsk();
+		if (compression == CompressionType::Cancel)
+			compression = compressionAsk();
 
-		if (compression < 0) {
+		if (compression == CompressionType::Cancel) {
 			amt = 0;
 			return;
 		}
@@ -53,9 +53,10 @@ filereader::filereader(boost::endian::order endian, unsigned bytesPerElement, co
 		for (char*p = ext; *p; ++p)
 			*p = tolower(*p);
 
-		fileType_t def;
+		fileType_t tp;
 
 		if (forceType == fileType_t::tCancel) {
+			fileType_t def;
 			def = fileType_t::tBinary;
 
 			if ((!strcmp(ext, ".asm")) || (!strcmp(ext, ".s")))
@@ -65,11 +66,12 @@ filereader::filereader(boost::endian::order endian, unsigned bytesPerElement, co
 			else if ((!strcmp(ext, ".h")) || (!strcmp(ext, ".hh")) || (!strcmp(ext, ".hpp"))
 			         || (!strcmp(ext, ".c")) || (!strcmp(ext, ".cpp")) || (!strcmp(ext, ".cxx")) || (!strcmp(ext, ".cc")))
 				def = fileType_t::tCheader;
+
+			tp = askSaveType(false, def);
 		} else
-			def = forceType;
+			tp = forceType;
 
 		free(ext);
-		fileType_t tp = askSaveType(false, def);
 
 		if (tp == fileType_t::tCancel) {
 			amt = 0;
@@ -132,7 +134,7 @@ filereader::filereader(boost::endian::order endian, unsigned bytesPerElement, co
 
 				void* dst;
 
-				if (compression) {
+				if (compression != CompressionType::Uncompressed) {
 					dst = decodeTypeRam((const uint8_t*)src, ln, ln, compression);
 
 					if (ln == 0) {

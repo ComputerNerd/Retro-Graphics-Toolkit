@@ -148,7 +148,7 @@ static int lua_tilemap_subTile(lua_State*L) {
 static int lua_tilemap_save(lua_State*L) {
 	getProjectIDX
 	size_t tilemapIDX = idxPtr[1];
-	projects[projectIDX].tms->maps[tilemapIDX].saveToFile(lua_tostring(L, 2), (fileType_t)lua_tointeger(L, 3), lua_toboolean(L, 4), lua_tointeger(L, 5), lua_tostring(L, 6), luaL_optstring(L, 7, nullptr), luaL_optstring(L, 8, nullptr));
+	projects[projectIDX].tms->maps[tilemapIDX].saveToFile(lua_tostring(L, 2), (fileType_t)lua_tointeger(L, 3), lua_toboolean(L, 4), (CompressionType)lua_tointeger(L, 5), lua_tostring(L, 6), luaL_optstring(L, 7, nullptr), luaL_optstring(L, 8, nullptr));
 	return 0;
 }
 static int lua_tilemap_pickRowDelta(lua_State*L) {

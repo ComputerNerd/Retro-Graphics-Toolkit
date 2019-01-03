@@ -670,7 +670,7 @@ void editor::_editor() {
 				o->callback(appendChunkCB);
 			}
 
-			{	Fl_Button *o = new Fl_Button(tile_place_buttons_x_off, 396, 128, 32, "Insert after chunk");
+			{	Fl_Button *o = new Fl_Button(tile_place_buttons_x_off, 396, 128, 32, "Insert blank chunk");
 				o->callback(insertChunkCB);
 			}
 			{	Fl_Button *o = new Fl_Button(tile_place_buttons_x_off, 428, 160, 32, "Delete selected chunk");

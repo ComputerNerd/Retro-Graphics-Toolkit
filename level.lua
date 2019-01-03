@@ -12,20 +12,19 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2019)
 --]]
-lvlCurLayer=0
-curLayerInfo=nil
+lvlCurLayer = 1
 editX,editY=0,0
 szX,szY=0,0
 
 function setSizePer()
-	local src=curLayerInfo.src&3
-	local plane=(curLayerInfo.src>>2)+1
-
-	rgt.syncProject()
-
 	local p = projects.current
+	local info = p.level.layers[lvlCurLayer].info
+
+	local src = info.src & 3
+	local plane = (info.src>>2) + 1
+
 	local chunks = p.chunks
 
 	local tileW = p.tiles.width
@@ -53,27 +52,37 @@ scrollX,scrollY=0,0
 xOff,yOff=168,72
 
 function setScrollBounds()
-	local w,h=szX*lvlZoom*curLayerInfo.w,szY*lvlZoom*curLayerInfo.h
+	local p = projects.current
+	local info = p.level.layers[lvlCurLayer].info
+
+	local w = szX * lvlZoom * info.w
+	local h = szY * lvlZoom * info.h
+
 	if w<rgt.w()-xOff then
 		lvlScrollx:hide()
-		scrollX=0
+		scrollX = 0
 	else
 		lvlScrollx:show()
-		lvlScrollx:bounds(0,curLayerInfo.w)
+		lvlScrollx:bounds(0, info.w)
 	end
 	if h<rgt.h()-yOff then
 		lvlScrolly:hide()
-		scrollY=0
+		scrollY = 0
 	else
 		lvlScrolly:show()
-		lvlScrolly:bounds(0,curLayerInfo.h)
+		lvlScrolly:bounds(0, info.h)
 	end
 end
 
-function lvlsetlayer(layer)
-	lvlCurLayer=layer
-	layerName:value(level.names[lvlCurLayer+1])
-	curLayerInfo=level.getInfo(lvlCurLayer)
+function lvlsetlayer(layerIDX)
+	local p = projects.current
+	local layer = p.level.layers[layerIDX]
+
+	lvlCurLayer = layerIDX
+
+	layerNameInput:value(layer.name)
+
+	local curLayerInfo = p.level.layers[lvlCurLayer].info
 	wLayer:value(curLayerInfo.w)
 	hLayer:value(curLayerInfo.h)
 	if editX>=curLayerInfo.w then
@@ -82,36 +91,57 @@ function lvlsetlayer(layer)
 	if editY>=curLayerInfo.h then
 		editY=curLayerInfo.h-1
 	end
-	lvlSrc:value(curLayerInfo.src&3)
+
+	local layerSource = curLayerInfo.src & 3
+
+	lvlSrc:value(lvlSrcOptions[layerSource + 1])
 	setScrollBounds()
 	setSizePer()
-	if level.objamt[lvlCurLayer+1]>0 then
-		spriteSel:maximum(level.objamt[lvlCurLayer+1]-1)
-		updateSpriteSliders(level.getObj(lvlCurLayer,spriteEdit))
+
+	local objectsCount = #layer.objects
+	if objectsCount > 0 then
+		spriteSel:maximum(objectsCount)
+		updateSpriteSliders(layer.objects[spriteEdit])
 	end
 end
 
 function checkCurLayerBounds()
-	if lvlCurLayer>=level.amt then
-		lvlsetlayer(level.amt-1)
+	local maxLayer = #projects.current.level.layers
+	if lvlCurLayer > maxLayer then
+		lvlsetlayer(maxLayer)
 	end
 end
 
-function lvlsetLayerCB(unused)
-	lvlsetlayer(layerSel:get_index())
+function layerNameToIndex(layerName)
+	local layers = projects.current.level.layers
+	for i = 1, #layers do
+		local ln = layers[i].name
+		if ln == layerName then
+			return i
+		end
+	end
+	return -1 -- Not found.
+end
+
+function lvlsetLayerCB(choiceObj)
+	local layerIndex = layerNameToIndex(choiceObj:value())
+	lvlsetlayer(layerIndex)
 	rgt.damage()
 end
 
 function lvlappend(unused)
-	level.setLayerAmt(level.amt+1)
-	layerSel:add(level.names[level.amt])
+	local layers = projects.current.level.layers
+	layers:amount(#layers + 1, true)
+	local newLayer = layers[#layers]
+	layerSel:add(newLayer.name)
 	rgt.redraw()
 end
 
 function lvldelete(unused)
-	if level.amt>1 then
-		level.removeLayer(lvlCurLayer)
-		layerSel:remove(lvlCurLayer)
+	local layers = projects.current.level.layers
+	if #layers > 1 then
+		layerSel:remove(layers[lvlCurLayer].name)
+		layers[lvlCurLayer].remove()
 		checkCurLayerBounds()
 		rgt.redraw()
 	else
@@ -120,12 +150,12 @@ function lvldelete(unused)
 end
 
 function lvlscrollCB(unused)
-	scrollX=lvlScrollx:value()
-	scrollY=lvlScrolly:value()
+	scrollX = lvlScrollx:value()
+	scrollY = lvlScrolly:value()
 	rgt.redraw()
 end
 
-showSprites=true
+showSprites = false
 
 function lvlshowspirtes(unused)
 	showSprites=spriteBtn:value()~=0
@@ -133,13 +163,16 @@ function lvlshowspirtes(unused)
 end
 
 function setLayerName(unused)
-	level.setLayerName(lvlCurLayer,layerName:value())
-	layerSel:replace(lvlCurLayer,level.names[lvlCurLayer+1])
+	local layer = projects.current.level.layers[lvlCurLayer]
+
+	local newLayerName = layerNameInput:value()
+	layerSel:replace(layer.name, newLayerName)
+	layer.name = newLayerName
 	rgt.redraw()
 end
 
 function setLvlzoomCB(unused)
-	lvlZoom=tSizeScrl:value()
+	lvlZoom = tSizeScrl:value()
 	setScrollBounds()
 	rgt.damage()
 end
@@ -152,13 +185,13 @@ function selSlideUpdateMax(src)
 	local p = projects.current
 	local chunks = p.chunks
 
-	if src==level.TILES then
+	if src == level.TILES then
 		selSlide:maximum(#p.tiles - 1)
-	elseif src==level.BLOCKS then
+	elseif src == level.BLOCKS then
 		local plane=(curLayerInfo.src>>2)+1
 		local tilemap = p.tilemaps[plane]
 		selSlide:maximum(tilemap.hAll // tilemap.h - 1)
-	elseif src==level.CHUNKS then
+	elseif src == level.CHUNKS then
 		selSlide:maximum(#chunks - 1)
 	else
 		invalidSource(src)
@@ -168,30 +201,32 @@ end
 editModeLevel=false
 
 function drawLevel()
-	xOff=168*rgt.w()//800
-	yOff=72*rgt.h()//600
-	setScrollBounds()
-	local xs,ys=xOff,yOff
-	local src=curLayerInfo.src&3
-	rgt.syncProject()
 	local p = projects.current
-	for j=scrollY,curLayerInfo.h-1 do
-		local xxs=xs
-		for i=scrollX,curLayerInfo.w-1 do
-			--print('j',j,'i',i,'xxs',xxs,'ys',ys)
-			local a=level.getXY(lvlCurLayer,i,j)
-			local plane=(curLayerInfo.src>>2)
-			--print('a',a,'a.dat',a.dat,'lvlCurLayer',lvlCurLayer)
-			if src==level.TILES then
+	local layer = p.level.layers[lvlCurLayer]
+	local curLayerInfo = layer.info
+
+	xOff = 168 * rgt.w() // 800
+	yOff = 72 * rgt.h() // 600
+
+	setScrollBounds()
+	local xs = xOff
+	local ys = yOff
+	local src = curLayerInfo.src & 3
+	for j = scrollY, curLayerInfo.h - 1 do
+		local xxs = xs
+		for i = scrollX, curLayerInfo.w - 1 do
+			local a = layer[j + 1][i + 1]
+			local plane = curLayerInfo.src >> 2
+			if src == level.TILES then
 				local tile = p.tiles[a.id + 1]
 				if tile ~= nil then
-					tile:draw(xxs,ys,lvlZoom,(a.dat>>2)&3,a.dat&1,a.dat&2,false,0--[[TODO extended attributes--]],plane,false)
+					tile:draw(xxs, ys, lvlZoom, (a.dat>>2)&3, a.dat&1, a.dat&2, false, false)
 				end
-			elseif src==level.BLOCKS then
-				tilemaps.drawBlock(plane,a.id,xxs,ys,a.dat&3,lvlZoom)
-			elseif src==level.CHUNKS then
+			elseif src == level.BLOCKS then
+				p.tilemaps[plane + 1].drawBlock(a.id, xxs, ys, a.dat & 3, lvlZoom)
+			elseif src == level.CHUNKS then
 				local chunks = p.chunks
-				if a.id<#chunks then
+				if a.id < #chunks then
 					chunks[a.id + 1]:draw(xxs,ys,lvlZoom,0,0)
 				else
 					print('a.id>=chunks.amt',a.id,#chunks)
@@ -213,9 +248,10 @@ function drawLevel()
 		end
 	end
 	if showSprites then
-		if level.objamt[lvlCurLayer+1]>0 then
-			for i=0,level.objamt[lvlCurLayer+1]-1 do
-				local info = level.getObj(lvlCurLayer, i)
+		local objects = layer.objects
+		if #objects > 0 then
+			for i = 1, #objects do
+				local info = objects[i]
 
 				local ms = projects[info.prjid + 1].metasprites[info.metaid + 1]
 				local sg = ms[info.groupid + 1]
@@ -224,19 +260,22 @@ function drawLevel()
 		end
 	end
 	selSlideUpdateMax(src)
-	if level.objamt[lvlCurLayer+1]>0 then
-		updateSpriteSliders(level.getObj(lvlCurLayer,spriteEdit))
+	if #layer.objects > 0 then
+		updateSpriteSliders(layer.objects[spriteEdit])
 	end
 end
-selectedIdx=0
+
+selectedIdx = 0
+
 function selSlideCB(unused)
 	selectedIdx=selSlide:value()
 	if editModeLevel then
-		local i=level.getXY(lvlCurLayer,editX,editY)
-		i.id=selectedIdx
+		local layerItem = projects.current.level.layers[lvlCurLayer][editY][editX]
+		layerItem.id = selectedIdx
 		rgt.damage()
 	end
 end
+
 function idBondsChk(idraw)
 	if idraw<0 then
 		return 0
@@ -250,14 +289,15 @@ editSpriteMode=false
 function editSpritesCB(unused)
 	editSpriteMode=editSpriteBtn:value()~=0
 end
-spriteEdit=0
+spriteEdit = 1
 function updateSpriteSliders(info)
-	if level.objamt[lvlCurLayer+1]>0 then
+	local layer = projects.current.level.layers[lvlCurLayer]
+	if #layer.objects > 0 then
 		spriteSel:show()
 		spritePrj:show()
 		spriteMeta:show()
 		spriteGroup:show()
-		local oldID=project.curProjectID
+		local oldID = projects.currentIdx
 		spritePrj:maximum(#projects - 1)
 		if info.prjid~=oldID then
 			project.set(info.prjid)
@@ -308,9 +348,11 @@ function setSpriteGroup(unused)
 	rgt.redraw()
 end
 function handleLevel(e)
+	local p = projects.current
+	local x, y
 	if editSpriteMode then
 		if e==FL.PUSH then
-			local x,y=Fl.event_x()-xOff,Fl.event_y()-yOff
+			x,y=Fl.event_x()-xOff,Fl.event_y()-yOff
 			if x>=0 and y>=0 then
 				x=(x//lvlZoom)+(scrollX*szX)
 				y=(y//lvlZoom)+(scrollY*szY)
@@ -329,63 +371,74 @@ function handleLevel(e)
 			end
 		end
 	else
-		local shouldDamage=0
-		if e==FL.PUSH then
-			local x,y=Fl.event_x(),Fl.event_y()
+		local shouldDamage = false
+		local curLayerInfo
+		local layer
+		if e == FL.PUSH or e == FL.SHORTCUT then
+			x,y=Fl.event_x(),Fl.event_y()
 			x=((x-xOff)//(szX*lvlZoom))+scrollX
 			y=((y-yOff)//(szY*lvlZoom))+scrollY
-			if x<curLayerInfo.w and y<curLayerInfo.h and x>=0 and y>=0 then
-				if Fl.event_button()==FL.LEFT_MOUSE then
-					if not (editModeLevel and editX==x and editY==y) then
-						local info=level.getXY(lvlCurLayer,x,y)
-						info.id=selectedIdx
-					end
+			if x < 0 or y < 0 then
+				return
+			end
+			layer = p.level.layers[lvlCurLayer]
+			curLayerInfo = layer.info
+			if x >= curLayerInfo.w or y >= curLayerInfo.h then
+				return
+			end
+		end
+
+		if e == FL.PUSH then
+			if Fl.event_button()==FL.LEFT_MOUSE then
+				if not (editModeLevel and editX==x and editY==y) then
+					local info = layer[y + 1][x + 1]
+					info.id=selectedIdx
+				end
+				editModeLevel=false
+			else
+				if editModeLevel then
 					editModeLevel=false
 				else
-					if editModeLevel then
-						editModeLevel=false
-					else
-						local info=level.getXY(lvlCurLayer,x,y)
-						selectedIdx=info.id
-						selSlide:value(info.id)
-						editX=x
-						editY=y
-						editModeLevel=true
-					end
+					local info = layer[y + 1][x + 1]
+					selectedIdx=info.id
+					selSlide:value(info.id)
+					editX=x
+					editY=y
+					editModeLevel=true
 				end
-				rgt.damage()
 			end
+			rgt.damage()
 		elseif e==FL.SHORTCUT then
 			t=Fl.event_text()
 			local addT=0
 			if t=='a' then 
 				addT=-1
-				shouldDamage=1
+				shouldDamage = true
 			elseif t=='s' then 
 				addT=1
-				shouldDamage=1
+				shouldDamage = true
 			end
-			local info=level.getXY(lvlCurLayer,x,y)
+			local info = layer[y + 1][x + 1]
 			if editModeLevel then
 				if t=='h' then
 					if editX>0 then
 						editX=editX-1
-						shouldDamage=1
+						shouldDamage = true
 					end
 				elseif t=='j' then
 					if editY<(curLayerInfo.h-1) then
 						editY=editY+1
-						shouldDamage=1
+						shouldDamage = true
 					end
 				elseif t=='k' then
 					if editY>0 then
 						editY=editY-1
-						shouldDamage=1
+						shouldDamage = true
 					end
 				elseif t=='l' then
 					if editX<(curLayerInfo.w-1) then
 						editX=editX+1
-						shouldDamage=1
+						shouldDamage = true
 					end
 				end
 				selectedIdx=idBondsChk(info.id+addT)
@@ -396,36 +449,41 @@ function handleLevel(e)
 				selSlide:value(selectedIdx)
 			end
 		end
-		if shouldDamage~=0 then
+		if shouldDamage then
 			rgt.damage()
 		end
 	end
 end
-function setLayerSrc(val)
+function setLayerSrc(valStr)
 	local p = projects.current
+	local curLayerInfo = p.level.layers[lvlCurLayer].info
 	local plane = (curLayerInfo.src >> 2) + 1
+
+	local val = lvlSrcLUT[valStr]
+
 	if val == level.BLOCKS and p.tilemaps[plane].useBlocks ~= true then
 		fl.alert("You must first enable blocks in the plane editor")
-		lvlSrc:value(curLayerInfo.src&3)
+		lvlSrc:value(lvlSrcOptions[(curLayerInfo.src & 3) + 1])
 		return
 	end
+
 	curLayerInfo.src=(curLayerInfo.src&(~3))|val
 	rgt.syncProject()--Needed for selSlideUpdateMax
 	selSlideUpdateMax(val)
 	setSizePer()
 end
 function setLayerSrcCB(unused)
-	setLayerSrc(lvlSrc:get_index())
+	setLayerSrc(lvlSrc:value())
 	rgt.damage()
 end
 function resizeLayerCB(unused)
-	level.resizeLayer(lvlCurLayer,wLayer:value(),hLayer:value())
+	local layer = projects.current.level.layers[lvlCurLayer]
+	layer:resize(wLayer:value(), hLayer:value())
 	lvlsetlayer(lvlCurLayer)
 	setScrollBounds()
 	rgt.redraw()
 end
 function loadS1layout(unused)
-	rgt.syncProject()
 	local p = projects.current
 	if p:have(project.levelMask|project.chunksMask) then
 		local fname=fl.file_chooser("Load layout")
@@ -434,16 +492,19 @@ function loadS1layout(unused)
 			local str=file:read("*a")--Lua strings can have embedded zeros
 			io.close(file)
 			local w,h=str:byte(1)+1,str:byte(2)+1
-			level.resizeLayer(lvlCurLayer,w,h)
+
+			local layer = p.level.layers[lvlCurLayer]
+
+			layer:resize(w, h)
 			lvlsetlayer(lvlCurLayer)
-			setLayerSrc(level.CHUNKS)
-			lvlSrc:value(curLayerInfo.src&3)
+			setLayerSrc('Chunks')
+			lvlSrc:value('Chunks')
 			wLayer:value(w)
 			hLayer:value(h)
 			local idx=3
-			for j=0,h-1 do
-				for i=0,w-1 do
-					info=level.getXY(lvlCurLayer,i,j)
+			for j = 1, h do
+				for i = 1, w do
+					local info = layer[j][i]
 					info.id=str:byte(idx)&127
 					info.dat=str:byte(idx)&128
 					idx=idx+1
@@ -479,10 +540,13 @@ function saveS1layout(unused)
 	end
 end
 function appendSpriteCB(unused)
-	level.appendObj(lvlCurLayer)
-	spriteSel:maximum(level.objamt[lvlCurLayer+1]-1)
-	local info=level.getObj(lvlCurLayer,spriteEdit)
-	updateSpriteSliders(info)
+	local layer = projects.current.level.layers[lvlCurLayer]
+	local objects = layer.objects
+
+	objects:append()
+	spriteSel:maximum(#objects - 1)
+
+	updateSpriteSliders(objects[spriteEdit + 1])
 	rgt.redraw()
 end
 function deleteSpriteCB(unused)
@@ -509,21 +573,24 @@ function deleteSpriteCB(unused)
 	rgt.redraw()
 end
 function initLevelEditor()
+	local p = projects.current
+	local level = p.level
+	local layer = level.layers[lvlCurLayer]
 	--Note Lua's scoping rules are different than C/C++. All these variables are in fact globals and thus you can access them in the callbacks
-	curLayerInfo=level.getInfo(0)
+
 	setSizePer()
 	layerSel=fltk.choice(4,64,136,24,"Layer selection:")
 	layerSel:align(FL.ALIGN_TOP)
 	layerSel:callback(lvlsetLayerCB)
 	layerSel:tooltip('Sets the current layer')
-	for i=1,#level.names do
-		layerSel:add(level.names[i])
+	for i = 1, #level.layers do
+		layerSel:add(level.layers[i].name)
 	end
-	layerName=fltk.input(4,108,136,24,"Layer name:")
-	layerName:align(FL.ALIGN_TOP)
-	layerName:tooltip('Sets the name for the current layer')
-	layerName:callback(setLayerName)
-	layerName:value(level.names[1])
+	layerNameInput=fltk.input(4,108,136,24,"Layer name:")
+	layerNameInput:align(FL.ALIGN_TOP)
+	layerNameInput:tooltip('Sets the name for the current layer')
+	layerNameInput:callback(setLayerName)
+	layerNameInput:value(layer.name)
 	appendBtn=fltk.button(4,144,64,24,"Append layer")
 	appendBtn:callback(lvlappend)
 	appendBtn:labelsize(11)
@@ -542,7 +609,7 @@ function initLevelEditor()
 	spriteBtn:selection_color(FL.FOREGROUND_COLOR)
 	spriteBtn:callback(lvlshowspirtes)
 	spriteBtn:type(FL.TOGGLE_BUTTON)
-	spriteBtn:value(true)
+	spriteBtn:value(showSprites)
 	selSlide = fltk.value_slider(4,240,136,24,'Index selection')
 	selSlide:align(FL.ALIGN_TOP)
 	selSlide:tooltip('Sets current (tile|blocks|chunk)')
@@ -566,11 +633,11 @@ function initLevelEditor()
 	hLayer=fltk.int_input(48,340,92,24,"Height:")
 	hLayer:value(1)
 	hLayer:callback(resizeLayerCB)
-	lvlSrc=fltk.choice(4,380,136,24,"Source selection:")
+	lvlSrc=fltk.choice(4, 380, 136, 24, "Source selection:")
 	lvlSrc:align(FL.ALIGN_TOP)
-	lvlSrc:add('Tiles')
-	lvlSrc:add('Blocks')
-	lvlSrc:add('Chunks')
+	lvlSrcOptions = {'Tiles', 'Blocks', 'Chunks'}
+	lvlSrcLUT = generateLutFromList(lvlSrcOptions)
+	addItemsToChoice(lvlSrc, lvlSrcOptions)
 	lvlSrc:callback(setLayerSrcCB)
 
 	editSpriteBtn=fltk.light_button(4,404,136,24,"Click add sprites?")

@@ -12,21 +12,11 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2019)
 */
-#include <boost/endian/conversion.hpp>
+#ifndef LUA_LEVELOBJECTS_HPP
+#define LUA_LEVELOBJECTS_HPP
+#include "lua.hpp"
 
-#include <vector>
-#include <string>
-#include <stdint.h>
-
-#include "compressionWrapper.h"
-struct filereader {
-	size_t amt, lenTotal;
-	std::vector<size_t>lens;
-	std::vector<void*>dat;
-	std::vector<std::string>names;
-	filereader(boost::endian::order endian, unsigned bytesPerElement, const char*title = nullptr, bool relptr = false, unsigned offbits = 16, bool be = true, const char * filename = nullptr, fileType_t forceType = fileType_t::tCancel, CompressionType compression = CompressionType::Cancel);
-	unsigned selDat(void);
-	~filereader();
-};
+int luaopen_LevelObjects(lua_State *L, size_t projectIDX, size_t layerIDX);
+#endif

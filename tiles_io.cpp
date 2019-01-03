@@ -50,9 +50,9 @@ void save_tiles(Fl_Widget*, void*) {
 		pickedFile = load_file_generic("Pick a location to save tiles", true);
 
 	if (pickedFile) {
-		int compression = compressionAsk();
+		CompressionType compression = compressionAsk();
 
-		if (compression < 0)
+		if (compression == CompressionType::Cancel)
 			return;
 
 		currentProject->tileC->save(the_file.c_str(), type, clipboard, compression);

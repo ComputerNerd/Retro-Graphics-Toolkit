@@ -23,45 +23,46 @@
 #include <mdcomp/comper.hh>
 #include <mdcomp/saxman.hh>
 
+#include "compressionWrapper.h"
 #include "gui.h"
 #include "errorMsg.h"
-static const char*const TypeTab[] = {"Uncompressed", "Nemesis", "Kosinski", "Enigma", "Saxman", "Comper"};
-const char*typeToText(int type) {
-	return TypeTab[type];
+static const char*const TypeTab[] = {"Cancel", "Uncompressed", "Nemesis", "Kosinski", "Enigma", "Saxman", "Comper"};
+const char*typeToText(CompressionType type) {
+	return TypeTab[int(type) + 1];
 }
-int compressionAsk(void) {
-	return MenuPopup("Compression?", "Select a compression algorithm or use uncompressed", 6, 0, TypeTab[0], TypeTab[1], TypeTab[2], TypeTab[3], TypeTab[4], TypeTab[5]);
+CompressionType compressionAsk(void) {
+	return (CompressionType)MenuPopup("Compression?", "Select a compression algorithm or use uncompressed", 6, 0, TypeTab[0], TypeTab[1], TypeTab[2], TypeTab[3], TypeTab[4], TypeTab[5]);
 }
-std::string decodeTypeStr(const char * filename, size_t &filesize, int type) {
+std::string decodeTypeStr(const char * filename, size_t &filesize, CompressionType type) {
 	std::stringstream outDecomp;
 	std::ifstream ifs (filename, std::ifstream::in | std::ifstream::binary);
 
 	switch (type) {
-		case 1:
+		case CompressionType::Nemesis:
 		{	nemesis decomp;
 			decomp.decode(ifs, outDecomp);
 		}
 		break;
 
-		case 2:
+		case CompressionType::Kosinski:
 		{	kosinski decomp;
 			decomp.decode(ifs, outDecomp);
 		}
 		break;
 
-		case 3:
+		case CompressionType::Enigma:
 		{	enigma decomp;
 			decomp.decode(ifs, outDecomp);
 		}
 		break;
 
-		case 4:
+		case CompressionType::Saxman:
 		{	saxman decomp;
 			decomp.decode(ifs, outDecomp);
 		}
 		break;
 
-		case 5:
+		case CompressionType::Comper:
 		{	comper decomp;
 			decomp.decode(ifs, outDecomp);
 		}
@@ -75,44 +76,44 @@ std::string decodeTypeStr(const char * filename, size_t &filesize, int type) {
 	printf("Decompressed to %d bytes\n", filesize);
 	return outDecomp.str();
 }
-void*decodeType(const char * filename, size_t &filesize, int type) {
+void*decodeType(const char * filename, size_t &filesize, CompressionType type) {
 	std::string output = decodeTypeStr(filename, filesize, type);
 	char * Dat = (char *)malloc(filesize);
 	output.copy(Dat, filesize);
 	return Dat;
 }
-void*decodeTypeRam(const uint8_t*dat, size_t inputSize, size_t &filesize, int type) {
+void*decodeTypeRam(const uint8_t*dat, size_t inputSize, size_t &filesize, CompressionType type) {
 	std::stringstream ss, outDecomp;
 
 	for (size_t i = 0; i < inputSize; ++i)
 		ss << dat[i];
 
 	switch (type) {
-		case 1:
+		case CompressionType::Nemesis:
 		{	nemesis decomp;
 			decomp.decode(ss, outDecomp);
 		}
 		break;
 
-		case 2:
+		case CompressionType::Kosinski:
 		{	kosinski decomp;
 			decomp.decode(ss, outDecomp);
 		}
 		break;
 
-		case 3:
+		case CompressionType::Enigma:
 		{	enigma decomp;
 			decomp.decode(ss, outDecomp);
 		}
 		break;
 
-		case 4:
+		case CompressionType::Saxman:
 		{	saxman decomp;
 			decomp.decode(ss, outDecomp);
 		}
 		break;
 
-		case 5:
+		case CompressionType::Comper:
 		{	comper decomp;
 			decomp.decode(ss, outDecomp);
 		}
@@ -129,39 +130,39 @@ void*decodeTypeRam(const uint8_t*dat, size_t inputSize, size_t &filesize, int ty
 	out.copy((char*)dst, filesize);
 	return dst;
 }
-void*encodeType(void*in, size_t n, size_t&outSize, int type) {
+void*encodeType(void*in, size_t n, size_t&outSize, CompressionType type) {
 	std::string input;
 	input.assign((const char *)in, n);
 	std::istringstream iss(input);
 	std::ostringstream outfun;
 
 	switch (type) {
-		case 1:
+		case CompressionType::Nemesis:
 		{	nemesis comp;
 			comp.encode(iss, outfun);
 		}
 		break;
 
-		case 2:
+		case CompressionType::Kosinski:
 		{	kosinski comp;
 			comp.encode(iss, outfun);
 		}
 		break;
 
-		case 3:
+		case CompressionType::Enigma:
 		{	enigma comp;
 			comp.encode(iss, outfun);
 		}
 		break;
 
-		case 4:
+		case CompressionType::Saxman:
 		{	basic_saxman comp;
 			comp.encode(iss, outfun, true);
 			//is >> iss;
 		}
 		break;
 
-		case 5:
+		case CompressionType::Comper:
 		{	comper comp;
 			comp.encode(iss, outfun);
 		}

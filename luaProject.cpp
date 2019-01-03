@@ -22,6 +22,7 @@
 #include "luaTiles.hpp"
 #include "luaChunks.hpp"
 #include "luaSprites.hpp"
+#include "luaLevel.hpp"
 #include "project.h"
 
 static int project__set_(lua_State *L) {
@@ -135,6 +136,11 @@ static int project__get_(lua_State *L) {
 		} else if (!strcmp("metasprites", k)) {
 			if (projects[projectIDX].containsData(pjHaveSprites)) {
 				luaopen_MetaSprites(L, projectIDX);
+				return 1;
+			}
+		} else if (!strcmp("level", k)) {
+			if (projects[projectIDX].containsData(pjHaveLevel)) {
+				luaopen_Level(L, projectIDX);
 				return 1;
 			}
 		}

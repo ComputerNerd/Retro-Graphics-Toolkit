@@ -50,7 +50,7 @@ ChunkClass::~ChunkClass(void) {
 void ChunkClass::insert(uint32_t at) {
 	struct ChunkAttrs tmp;
 	memset(&tmp, 0, sizeof(tmp));
-	chunks.insert(chunks.begin() + (at * wi * hi), wi * hi, tmp);
+	chunks.insert(chunks.begin() + (at * sizeOfChunk()), sizeOfChunk(), tmp);
 	++amt;
 }
 void ChunkClass::setElm(uint32_t id, uint32_t x, uint32_t y, struct ChunkAttrs c) {
@@ -361,7 +361,7 @@ void ChunkClass::importSonic1(bool append) {
 }
 void ChunkClass::exportSonic1(void)const {
 	FILE*fp;
-	int compression, clipboard;
+	int clipboard;
 	fileType_t type = askSaveType();
 	size_t fileSize;
 
@@ -381,9 +381,9 @@ void ChunkClass::exportSonic1(void)const {
 		pickedFile = load_file_generic("Save tilemap to", true);
 
 	if (pickedFile) {
-		compression = compressionAsk();
+		CompressionType compression = compressionAsk();
 
-		if (compression < 0)
+		if (compression == CompressionType::Cancel)
 			return;
 
 		if (clipboard)
@@ -412,7 +412,7 @@ void ChunkClass::exportSonic1(void)const {
 				++cptr;
 			}
 
-			if (compression) {
+			if (compression != CompressionType::Uncompressed) {
 				void*tmpold = tmp;
 				// The endian must be corrected before compressing.
 				uint16_t * ptr = (uint16_t*)tmp;
@@ -430,7 +430,8 @@ void ChunkClass::exportSonic1(void)const {
 			char temp[2048];
 			snprintf(temp, 2048, "Width: %d Height: %d Amount: %d %s", wi, hi, amt, typeToText(compression));
 
-			if (!saveBinAsText(tmp, fileSize, fp, type, temp, "mapDat", compression ? 8 : 16, compression ? boost::endian::order::native : boost::endian::order::big)) {
+			if (!saveBinAsText(tmp, fileSize, fp, type, temp, "mapDat", compression != CompressionType::Uncompressed ? 8 : 16,
+			                   compression != CompressionType::Uncompressed ? boost::endian::order::native : boost::endian::order::big)) {
 				free(tmp);
 				return;
 			}

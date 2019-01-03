@@ -24,6 +24,7 @@
 
 #include "project.h"
 #include "filemisc.h"
+#include "compressionWrapper.h"
 class tileMap {
 private:
 	boost::endian::order getEndianBySystem();
@@ -67,7 +68,7 @@ public:
 	void set_tile(uint32_t x, uint32_t y, uint32_t tile);
 	void set_prio(uint32_t x, uint32_t y, bool prio_set);
 	void allRowSet(unsigned row);
-	bool saveToFile(const char*fname, fileType_t type, int clipboard, int compression, const char*label = "mapDat", const char*nesFname = nullptr, const char*labelNES = "attrMapDat");
+	bool saveToFile(const char*fname, fileType_t type, int clipboard, CompressionType compression, const char*label = "mapDat", const char*nesFname = nullptr, const char*labelNES = "attrMapDat");
 	bool saveToFile(void);
 	bool loadFromFile();
 	void swapTile(uint32_t oldTile, uint32_t newTile);

@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2019)
 --]]
 function switchProject()
 	rgt.syncProject()
@@ -22,7 +22,7 @@ function switchProject()
 	if is_headless == 0 then
 		updateProjectGUI(p.gameSystem)
 		if p.gameSystem == project.segaGenesis then
-			palTabSel:value(p:getPalType())--Fixes internal pointer
+			palTabSel:value(palTabSelOptions[p:getPalType() + 1]) -- Ensure the right selection is made.
 		end
 	end
 
@@ -35,12 +35,17 @@ function switchProject()
 	if is_headless == 0 then
 		if p:have(project.levelMask) ~= false then
 			layerSel:clear()
-			for i=1,#level.names do
-				layerSel:add(level.names[i])
+			local layers = p.level.layers
+			for i=1, #layers do
+				local layer = layers[i]
+				print(layer)
+				local name = layer.name
+				print(i, name)
+				layerSel:add(name)
 			end
-			layerSel:value(0)
-			layerName:value(level.names[1])
-			lvlsetlayer(0)
+			lvlsetlayer(1)
+			local currentLayerName = layers[lvlCurLayer].name
+			layerSel:value(currentLayerName)
 		end
 	end
 end

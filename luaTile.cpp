@@ -12,12 +12,13 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2019)
 */
 #include <FL/fl_ask.H>
 
 #include "luaTile.hpp"
 #include "luaTileRGBArow.hpp"
+#include "luaTilePixels.hpp"
 #include "luaHelpers.hpp"
 #include "project.h"
 #include "dub/dub.h"
@@ -31,9 +32,8 @@ static unsigned inRangeTile(unsigned tile, size_t projectIDX) {
 	return 1;
 }
 static int lua_tile_setTileRGBA(lua_State*L) {
-	getIdxPtrChk
-	size_t projectIDX = *idxPtr;
-	size_t tile = idxPtr[1];
+	getProjectIDX
+	const size_t tile = idxPtr[1];
 
 	if (inRangeTile(tile, projectIDX)) {
 		uint8_t*tptr = ((uint8_t*)projects[projectIDX].tileC->truetDat.data() + (tile * projects[projectIDX].tileC->tcSize));
@@ -51,9 +51,8 @@ static int lua_tile_setTileRGBA(lua_State*L) {
 }
 
 static int lua_tile_compareTileRGBA(lua_State*L) {
-	getIdxPtrChk
-	size_t projectIDX = *idxPtr;
-	size_t tile1 = idxPtr[1];
+	getProjectIDX
+	const size_t tile1 = idxPtr[1];
 	unsigned tile2 = luaL_optinteger(L, 2, 0);
 
 	if (inRangeTile(tile1, projectIDX) && inRangeTile(tile2, projectIDX) && (tile1 != tile2)) {
@@ -131,6 +130,9 @@ static int tile__get_(lua_State *L) {
 		if (!strcmp("rgba", k)) {
 			luaopen_TileRGBArow(L, idx, tileIDX);
 			return 1;
+		} else if (!strcmp("pixels", k)) {
+			luaopen_TilePixels(L, idx, tileIDX);
+			return 1;
 		}
 
 		return 0;
@@ -146,6 +148,7 @@ static const struct luaL_Reg tile_member_methods[] = {
 	{ "__index", tile__get_       },
 	{ "__tostring", tile___tostring  },
 	{ "compareTileRGBA", lua_tile_compareTileRGBA},
+	{ "setTileRGBA", lua_tile_setTileRGBA},
 	{ "dither", lua_tile_dither},
 	{ "draw", lua_tile_draw},
 	{ "remove", lua_tile_remove},
