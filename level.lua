@@ -270,7 +270,7 @@ selectedIdx = 0
 function selSlideCB(unused)
 	selectedIdx=selSlide:value()
 	if editModeLevel then
-		local layerItem = projects.current.level.layers[lvlCurLayer][editY][editX]
+		local layerItem = projects.current.level.layers[lvlCurLayer][editY + 1][editX + 1]
 		layerItem.id = selectedIdx
 		rgt.damage()
 	end

@@ -38,9 +38,7 @@ function switchProject()
 			local layers = p.level.layers
 			for i=1, #layers do
 				local layer = layers[i]
-				print(layer)
 				local name = layer.name
-				print(i, name)
 				layerSel:add(name)
 			end
 			lvlsetlayer(1)

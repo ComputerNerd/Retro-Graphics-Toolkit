@@ -369,7 +369,7 @@ bool handle1byteImg(Fl_Shared_Image*loaded_image, unsigned*remap, unsigned*numco
 	char*timgptr = (char*)loaded_image->data()[0];
 
 	//See if grayscale or colormapped xpm
-	if (isdigit(*timgptr)) {
+	if (isdigit(*timgptr) && loaded_image->count() > 2) { // Count will always return greater than two for pix maps.
 		/* Checking to see if the first byte is a digit is not enough.
 		 * What if the first pixel just happen to fall in digit range?
 		 * Avoid this by verifying width and height*/

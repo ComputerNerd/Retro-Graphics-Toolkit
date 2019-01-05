@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2019)
 */
 
 #define FL_INTERNALS
@@ -92,6 +92,12 @@ int main(int argc, char **argv) {
 	Fl::visual(FL_DOUBLE | FL_INDEX);
 	fl_register_images();
 #if !defined(WIN32) && !defined(__APPLE__)
+	//// For a nicer looking browser under Linux, call Fl_File_Icon::load_system_icons();
+	//// (If you do this, you'll need to link with fltk_images)
+	//// NOTE: If you do not load the system icons, the file chooser will still work, but
+	////       no icons will be shown. However, this means you do not need to link in the
+	////       fltk_images library, potentially reducing the size of your executable.
+	//// Loading the system icons is not required by the OSX or Windows native file choosers.
 	Fl_File_Icon::load_system_icons();
 #endif
 
@@ -144,12 +150,6 @@ int main(int argc, char **argv) {
 		window->resizable(window);
 		updateTileSelectAmt();
 		updatePlaneTilemapMenu(curProjectID, window->planeSelect);
-		//// For a nicer looking browser under Linux, call Fl_File_Icon::load_system_icons();
-		//// (If you do this, you'll need to link with fltk_images)
-		//// NOTE: If you do not load the system icons, the file chooser will still work, but
-		////       no icons will be shown. However, this means you do not need to link in the
-		////       fltk_images library, potentially reducing the size of your executable.
-		//// Loading the system icons is not required by the OSX or Windows native file choosers.
 		window->show(argc, argv);
 
 		while (Fl_X::first) {

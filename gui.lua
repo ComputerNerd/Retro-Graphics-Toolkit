@@ -47,7 +47,7 @@ end
 
 function tabConfig(tab)
 	if tab == rgt.paletteTab then
-		palTabSel=fltk.choice(336, 464, 128, 24, "Palette table selection")
+		palTabSel = fltk.choice(336, 464, 128, 24, "Palette table selection")
 		palTabSel:align(FL.ALIGN_TOP)
 		palTabSel:callback(setPalTypeCB)
 		palTabSelOptions = {"HardwareMan's measured values", 'round(255*v/7)', 'Steps of 36', 'Steps of 32'}
@@ -56,7 +56,7 @@ function tabConfig(tab)
 		palTabSel:labelsize(12)
 
 
-		spriteSizeSel=fltk.choice(336, 464, 128, 24, "Sprite size")
+		spriteSizeSel = fltk.choice(336, 464, 128, 24, "Sprite size")
 		spriteSizeSel:align(FL.ALIGN_TOP)
 		spriteSizeSel:callback(setSpriteSizeCB)
 		spriteSizeSel:labelsize(12)

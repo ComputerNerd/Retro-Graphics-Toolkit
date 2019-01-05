@@ -55,6 +55,8 @@ static int tilemapEntry__set_(lua_State *L) {
 		tm->set_tile(entryIDX, columnIDX, lua_tointeger(L, 3));
 	else if (!strcmp("row", k))
 		tm->set_pal_row(entryIDX, columnIDX, lua_tointeger(L, 3));
+	else if (!strcmp("raw", k))
+		tm->setRaw(entryIDX, columnIDX, lua_tointeger(L, 3));
 
 	return 0;
 }
