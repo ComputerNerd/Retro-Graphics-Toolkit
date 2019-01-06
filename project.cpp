@@ -1215,7 +1215,7 @@ static bool saveProjectFile(uint32_t id, FILE * fo, bool saveShared, bool saveVe
 
 	if (haveTemp & pjHaveLevel) {
 		if (saveShared || (projects[id].share[3] < 0))
-			currentProject->lvl->save(fo);
+			projects[id].lvl->save(fo);
 	}
 
 	uint32_t luaSize = projects[id].lScrpt.size();
