@@ -620,7 +620,7 @@ int editor::handle(int event) {
 									currentProject->Chunk->setSolid(currentChunk, tx, ty, solidBits_G);
 									currentProject->Chunk->setHflip(currentChunk, tx, ty, G_hflip[1]);
 									currentProject->Chunk->setVflip(currentChunk, tx, ty, G_vflip[1]);
-									currentProject->Chunk->setBlock(currentChunk, tx, ty, selBlock);
+									currentProject->Chunk->setBlock(currentChunk, tx, ty, tile_select_3->value());
 									setXYdisp(tx, ty, 1);
 								}
 

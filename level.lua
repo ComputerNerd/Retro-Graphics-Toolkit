@@ -519,18 +519,22 @@ function saveS1layout(unused)
 	rgt.syncProject()
 	local p = projects.current
 	if p:have(project.levelMask) then
+		local layer = p.level.layers[lvlCurLayer]
+		local curLayerInfo = layer.info
 		if curLayerInfo.w<=256 and curLayerInfo.h<=256 then
 			local fname=fl.file_chooser("Save layout")
 			if not (fname == nil or fname == '') then
 				local file=assert(io.open(fname,'wb'))
 				file:write(string.char(curLayerInfo.w-1))
 				file:write(string.char(curLayerInfo.h-1))
-				for j=0,curLayerInfo.h do
-					for i=0,curLayerInfo.w do
-						str=level.getXY(lvlCurLayer,i,j)
+				for j=1, curLayerInfo.h do
+					local layerRow = layer[j]
+					for i=1, curLayerInfo.w do
+						local info = layerRow[i]
 						file:write(string.char((info.id&127)|(info.dat&128)))
 					end
 				end
+				file:close()
 			end
 		else
 			fl.alert("The header only allows one byte for width and height. The maximum width and height is 256")

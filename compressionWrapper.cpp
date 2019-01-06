@@ -31,7 +31,7 @@ const char*typeToText(CompressionType type) {
 	return TypeTab[int(type) + 1];
 }
 CompressionType compressionAsk(void) {
-	return (CompressionType)MenuPopup("Compression?", "Select a compression algorithm or use uncompressed", 6, 0, TypeTab[0], TypeTab[1], TypeTab[2], TypeTab[3], TypeTab[4], TypeTab[5]);
+	return (CompressionType)MenuPopup("Compression?", "Select a compression algorithm or use uncompressed", 6, 0, TypeTab[1], TypeTab[2], TypeTab[3], TypeTab[4], TypeTab[5], TypeTab[6]);
 }
 std::string decodeTypeStr(const char * filename, size_t &filesize, CompressionType type) {
 	std::stringstream outDecomp;

@@ -28,7 +28,6 @@ bool tileEditModeChunk_G;
 unsigned ChunkOff[2] = {DefaultChunkX, DefaultChunkY};
 unsigned scrollChunks_G[2];
 uint_fast32_t editChunk_G[2];//x,y
-uint32_t selBlock;
 void setCurPlaneChunkCB(Fl_Widget*w, void*) {
 	Fl_Value_Slider*v = (Fl_Value_Slider*)w;
 	currentProject->Chunk->usePlane = v->value();
@@ -70,7 +69,7 @@ void resizeChunkCB(Fl_Widget*, void*) {
 }
 void selBlockCB(Fl_Widget*o, void*) {
 	Fl_Slider*s = (Fl_Slider*)o;
-	selBlock = (uintptr_t)s->value();
+	uint32_t selBlock = (uintptr_t)s->value();
 
 	if (tileEditModeChunk_G) {
 		pushChunkEdit(currentChunk, editChunk_G[0], editChunk_G[1]);

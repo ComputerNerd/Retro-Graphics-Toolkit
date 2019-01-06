@@ -29,6 +29,10 @@
 #include "palette.h"
 #include "errorMsg.h"
 void pickExtAttrsCB(Fl_Widget*, void*) {
+	if (!currentProject->containsData(pjHaveMap)) {
+		currentProject->haveMessage(pjHaveMap);
+		return;
+	}
 	currentProject->tms->maps[currentProject->curPlane].pickExtAttrs();
 	window->damage(FL_DAMAGE_USER1);
 }
