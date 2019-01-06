@@ -345,6 +345,7 @@ void setHaveProject(uint32_t id, uint32_t mask, bool set) {
 			if (projects[id].useMask & pjHavePal) {
 				delete projects[id].pal;
 				projects[id].useMask &= ~pjHavePal;
+				projects[id].pal = nullptr;
 			}
 		}
 	}
@@ -359,6 +360,7 @@ void setHaveProject(uint32_t id, uint32_t mask, bool set) {
 			if (projects[id].useMask & pjHaveTiles) {
 				delete projects[id].tileC;
 				projects[id].useMask &= ~pjHaveTiles;
+				projects[id].tileC = nullptr;
 			}
 		}
 	}
@@ -373,6 +375,7 @@ void setHaveProject(uint32_t id, uint32_t mask, bool set) {
 			if (projects[id].useMask & pjHaveMap) {
 				delete projects[id].tms;
 				projects[id].useMask &= ~pjHaveMap;
+				projects[id].tms = nullptr;
 			}
 		}
 	}
@@ -387,6 +390,7 @@ void setHaveProject(uint32_t id, uint32_t mask, bool set) {
 			if (projects[id].useMask & pjHaveChunks) {
 				delete projects[id].Chunk;
 				projects[id].useMask &= ~pjHaveChunks;
+				projects[id].Chunk = nullptr;
 			}
 		}
 	}
@@ -407,6 +411,7 @@ void setHaveProject(uint32_t id, uint32_t mask, bool set) {
 
 				delete projects[id].ms;
 				projects[id].useMask &= ~pjHaveSprites;
+				projects[id].ms = nullptr;
 			}
 		}
 	}
@@ -421,6 +426,7 @@ void setHaveProject(uint32_t id, uint32_t mask, bool set) {
 			if (projects[id].useMask & pjHaveLevel) {
 				projects[id].useMask &= ~pjHaveLevel;
 				delete projects[id].lvl;
+				projects[id].lvl = nullptr;
 			}
 		}
 	}
