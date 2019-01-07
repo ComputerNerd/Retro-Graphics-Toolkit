@@ -1043,14 +1043,13 @@ static bool loadProjectFile(uint32_t id, FILE * fi, bool loadVersion = true, uin
 			}
 		}
 
-		updateLuaScriptWindow(id, true);
-
 		if (tabsAmt || userDat || controlDat)
 			fl_alert("This version of Retro Graphics Toolkit does not fully support Lua user data please upgrade.");
 	}
 
 	return true;
 }
+
 bool loadProject(uint32_t id, const char*fname) {
 	FILE * fi = fopen(fname, "rb");
 	std::fill(projects[id].share, &projects[id].share[shareAmtPj], -1); //One file projects do not support sharing
