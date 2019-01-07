@@ -14,6 +14,8 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2019)
 */
+#include <exception>
+
 #include <FL/fl_ask.H>
 
 #include "luaLevelLayer.hpp"
@@ -41,34 +43,40 @@ static int lua_levelLayer_resize(lua_State*L) {
 }
 
 static int levelLayer__get_(lua_State *L) {
-	checkAlreadyExists
+	try {
+		checkAlreadyExists
 
-	int type = lua_type(L, 2);
-	getProjectIDX
-	const size_t idx2 = idxPtr[1];
+		int type = lua_type(L, 2);
+		getProjectIDX
+		const size_t idx2 = idxPtr[1];
 
-	if (type == LUA_TNUMBER) {
-		int k = luaL_checkinteger(L, 2) - 1;
+		if (type == LUA_TNUMBER) {
+			int k = luaL_checkinteger(L, 2) - 1;
 
-		struct levelInfo* info = projects[projectIDX].lvl->getInfo(projectIDX);
+			struct levelInfo* info = projects[projectIDX].lvl->getInfo(idx2);
 
-		if (k >= 0 && k < info->h) {
-			luaopen_LevelLayerRow(L, projectIDX, idx2, k);
-			return 1;
+			if (k >= 0 && k < info->h) {
+				luaopen_LevelLayerRow(L, projectIDX, idx2, k);
+				return 1;
+			}
+		} else if (type == LUA_TSTRING) {
+			const char*k = luaL_checkstring(L, 2);
+
+			if (!strcmp("info", k)) {
+				luaopen_level_levelInfo(L, projects[projectIDX].lvl->getInfo(idx2));
+				return 1;
+			} else if (!strcmp("objects", k)) {
+				luaopen_LevelObjects(L, projectIDX, idx2);
+				return 1;
+			} else if (!strcmp("name", k)) {
+				lua_pushstring(L, projects[projectIDX].lvl->layernames[idx2].c_str());
+				return 1;
+			}
 		}
-	} else if (type == LUA_TSTRING) {
-		const char*k = luaL_checkstring(L, 2);
-
-		if (!strcmp("info", k)) {
-			luaopen_level_levelInfo(L, projects[projectIDX].lvl->getInfo(idx2));
-			return 1;
-		} else if (!strcmp("objects", k)) {
-			luaopen_LevelObjects(L, projectIDX, idx2);
-			return 1;
-		} else if (!strcmp("name", k)) {
-			lua_pushstring(L, projects[projectIDX].lvl->layernames[idx2].c_str());
-			return 1;
-		}
+	} catch (std::exception &e) {
+		return luaL_error(L, "Exception in levelLayer__get_: %s", e.what());
+	} catch (...) {
+		return luaL_error(L, "Unknown exception in levelLayer__get_");
 	}
 
 	return 0;
@@ -76,7 +84,7 @@ static int levelLayer__get_(lua_State *L) {
 
 static int levelLayer___tostring(lua_State *L) {
 	getIdxPtrChk
-	lua_pushfstring(L, "LevelLayer: %d from project: %d", idxPtr[0], idxPtr[1]);
+	lua_pushfstring(L, "LevelLayer: %d from project: %d", idxPtr[1], idxPtr[0]);
 	return 1;
 }
 
