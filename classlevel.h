@@ -54,7 +54,7 @@ struct level {
 	void setlevObjDat(unsigned layer, unsigned idx, struct levobjDat d);
 	void setlayeramt(unsigned amt, bool lastLayerDim);
 	void resizeLayer(unsigned idx, unsigned nw, unsigned nh);
-	void save(FILE*fp);
+	void save(FILE*fp) const;
 	void load(FILE*fp, uint32_t version);
 	void subType(unsigned oid, unsigned nid, enum source s, int plane);
 };

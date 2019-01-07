@@ -211,7 +211,7 @@ static int levelInfo_levelInfo(lua_State *L, struct levelInfo*i) {
 // --=============================================== __tostring
 static int levelInfo___tostring(lua_State *L) {
 	levelInfo *self = *((levelInfo **)dub::checksdata_n(L, 1, "level.levelInfo"));
-	lua_pushfstring(L, "level.levelInfo: %p", self);
+	lua_pushfstring(L, "level.levelInfo: %p\nw: %d\nh: %d", self, self->w, self->h);
 
 	return 1;
 }

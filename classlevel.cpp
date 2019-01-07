@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2019)
 */
 #include <FL/fl_ask.H>
 #include <string.h>
@@ -70,7 +70,7 @@ bool level::inRangeLayer(unsigned tst) {
 		return true;
 }
 struct levelInfo*level::getInfo(unsigned layer) {
-	return&lvlI.at(layer);
+	return& lvlI.at(layer);
 }
 void level::setInfo(unsigned layer, struct levelInfo i) {
 	lvlI[layer] = i;
@@ -135,7 +135,7 @@ void level::resizeLayer(unsigned idx, unsigned nw, unsigned nh) {
 	lvlI[idx].w = nw;
 	lvlI[idx].h = nh;
 }
-void level::save(FILE*fp) {
+void level::save(FILE*fp) const {
 	/*Format
 	 * uint32_t layers amount
 	 * For each layer info struct
