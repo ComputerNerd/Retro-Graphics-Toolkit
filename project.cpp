@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2019)
 */
 #include <FL/fl_ask.H>
 
@@ -162,7 +162,7 @@ Project::Project() {
 	Name.assign(defaultName);
 	gameSystem = segaGenesis;
 	subSystem = 3;
-	settings = (15 << subsettingsDitherShift) | (aWeighted << nearestColorShift);
+	settings = (15 << subsettingsDitherShift) | (aCiede2000 << nearestColorShift);
 	curPlane = 0;
 	useMask = 0;
 	std::fill(share, &share[shareAmtPj], -1);
