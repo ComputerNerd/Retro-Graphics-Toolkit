@@ -153,7 +153,7 @@ void changeProjectAmt(void);
 bool appendProject();
 bool removeProject(uint32_t id);
 void switchProjectSlider(uint32_t id, bool oldExists = true);
-void switchProject(uint32_t id, bool load = false);
+void switchProject(uint32_t id, uint32_t oldID, bool load = false);
 bool loadProject(uint32_t id, const char*fname);
 bool saveProject(uint32_t id, const char*fname);
 bool saveAllProjects(void);

@@ -46,7 +46,7 @@ void loadAllProjectsCB(Fl_Widget*, void*) {
 
 	pushProjectAll();
 	loadAllProjects(the_file.c_str());
-	switchProject(curProjectID);
+	switchProject(curProjectID, curProjectID);
 }
 void haveCB(Fl_Widget*o, void*mask) {
 	Fl_Check_Button* b = (Fl_Check_Button*)o;
@@ -194,7 +194,7 @@ void loadProjectCB(Fl_Widget*, void*) {
 
 	pushProject();
 	loadProject(curProjectID, the_file.c_str());
-	switchProject(curProjectID, true);
+	switchProject(curProjectID, curProjectID, true);
 }
 void saveProjectCB(Fl_Widget*, void*) {
 	currentProject->Name.assign(window->TxtBufProject->text());//Update the project text.
@@ -228,5 +228,5 @@ void deleteProjectCB(Fl_Widget*, void*) {
 	}
 
 	currentProject = &projects[curProjectID];
-	switchProject(curProjectID);
+	switchProject(curProjectID, curProjectID);
 }

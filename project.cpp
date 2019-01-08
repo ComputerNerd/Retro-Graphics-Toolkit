@@ -648,20 +648,22 @@ void switchProjectSlider(uint32_t id, bool oldExists) {
 		currentProject->Name.assign(window->TxtBufProject->text());//Save text to old project
 
 	window->projectSelect->value(id);
+	auto oldID = curProjectID;
 	curProjectID = id;
 	currentProject = &projects[curProjectID];
-	switchProject(curProjectID);
+	switchProject(curProjectID, oldID);
 }
 extern int curScript;
-static void updateLuaScriptWindow(uint32_t id, bool load = false) {
+static void updateLuaScriptWindow(uint32_t id, uint32_t oldID, bool load = false) {
 	if (!window)
 		return;
 
+	size_t amt = projects[id].lScrpt.size();
+
 	if ((curScript >= 0) && (!load))
-		currentProject->lScrpt[curScript].str.assign(window->luaBufProject->text());
+		projects[oldID].lScrpt[curScript].str.assign(window->luaBufProject->text()); // currentProject is the old ID.
 
 	window->luaScriptSel->clear();
-	size_t amt = projects[id].lScrpt.size();
 
 	if (amt) {
 		window->luaEditProject->show();
@@ -676,9 +678,9 @@ static void updateLuaScriptWindow(uint32_t id, bool load = false) {
 		curScript = -1;
 	}
 }
-void switchProject(uint32_t id, bool load) {
+void switchProject(uint32_t id, uint32_t oldID, bool load) {
 	if (window) {
-		updateLuaScriptWindow(id, load);
+		updateLuaScriptWindow(id, oldID, load);
 		window->TxtBufProject->text(projects[id].Name.c_str());//Make editor displays new text
 		window->gameSysSel->value(projects[id].gameSystem);
 		window->ditherPower->value(1 + ((projects[id].settings >> subsettingsDitherShift)&subsettingsDitherMask));
@@ -1033,8 +1035,9 @@ static bool loadProjectFile(uint32_t id, FILE * fi, bool loadVersion = true, uin
 		fread(&controlDat, 1, sizeof(uint32_t), fi);
 		fread(&userDat, 1, sizeof(uint32_t), fi);
 
+		project.lScrpt.clear();
+
 		if (scriptAmt) {
-			project.lScrpt.clear();
 			project.lScrpt.resize(scriptAmt);
 
 			for (unsigned i = 0; i < scriptAmt; ++i) {
@@ -1231,7 +1234,8 @@ static bool saveProjectFile(uint32_t id, FILE * fo, bool saveShared, bool saveVe
 	fwrite(&luaSize, 1, sizeof(uint32_t), fo);
 
 	if (projects[id].lScrpt.size()) {
-		currentProject->lScrpt[curScript].str.assign(window->luaBufProject->text());
+		if (id == curProjectID)
+			projects[id].lScrpt[curScript].str.assign(window->luaBufProject->text());
 
 		for (unsigned i = 0; i < projects[id].lScrpt.size(); ++i) {
 			saveStrifNot(fo, projects[id].lScrpt[i].name.c_str(), (std::to_string(i)).c_str());
