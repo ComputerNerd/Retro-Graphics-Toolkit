@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2019)
 */
 #include "luaHelpers.hpp"
 #include "luaSprites.hpp"
@@ -23,7 +23,7 @@ static int sprite__set_(lua_State *L) {
 	getProjectIDX
 	const size_t metaSpriteIDX = idxPtr[1];
 	const size_t spriteGroupIDX = idxPtr[2];
-	const size_t spriteIDX = idxPtr[2];
+	const size_t spriteIDX = idxPtr[3];
 	sprite *self = &projects[projectIDX].ms->sps[metaSpriteIDX].groups[spriteGroupIDX].list[spriteIDX];
 	const char *key = luaL_checkstring(L, 2);
 
@@ -85,7 +85,7 @@ static int sprite__get_(lua_State *L) {
 	getProjectIDX
 	const size_t metaSpriteIDX = idxPtr[1];
 	const size_t spriteGroupIDX = idxPtr[2];
-	const size_t spriteIDX = idxPtr[2];
+	const size_t spriteIDX = idxPtr[3];
 	const sprite *self = &projects[projectIDX].ms->sps[metaSpriteIDX].groups[spriteGroupIDX].list[spriteIDX];
 
 	int type = lua_type(L, 2);
@@ -153,9 +153,11 @@ static int sprite___tostring(lua_State *L) {
 	getProjectIDX
 	const size_t metaSpriteIDX = idxPtr[1];
 	const size_t spriteGroupIDX = idxPtr[2];
-	const size_t spriteIDX = idxPtr[2];
+	const size_t spriteIDX = idxPtr[3];
 	const sprite *self = &projects[projectIDX].ms->sps[metaSpriteIDX].groups[spriteGroupIDX].list[spriteIDX];
-	lua_pushfstring(L, "sprite table: %p\n\tWidth: %d\n\tHeight: %d\n\tPalette row: %d\n\tHorizontal flip: %s\n\tVertical flip: %s\n\tHigh priority: %s", self, self->w, self->h, self->palrow, (self->hflip ? "true" : "false"), (self->vflip ? "true" : "false"), (self->prio ? "true" : "false"));
+	lua_pushfstring(L, "metasprites[%d].groups[%d][%d] sprite table: %p\n\tWidth: %d\n\tHeight: %d\n\tPalette row: %d\n\tHorizontal flip: %s\n\tVertical flip: %s\n\tHigh priority: %s",
+			metaSpriteIDX, spriteGroupIDX, spriteIDX,
+			self, self->w, self->h, self->palrow, (self->hflip ? "true" : "false"), (self->vflip ? "true" : "false"), (self->prio ? "true" : "false"));
 	return 1;
 }
 static const struct luaL_Reg sprite_member_methods[] = {
