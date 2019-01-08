@@ -13,18 +13,41 @@ local p = projects.current
 local haveMask = project.tilesMask | project.mapMask
 if p:have(haveMask) then
 	local tiles = p.tiles
+	local tilemap = p.tilemaps.current
 	local tileWidth = tiles.width
 	local tileHeight = tiles.height
+
+	local shouldAppend = fl.ask('Append blocks?')
+	if shouldAppend and (not tilemap.useBlocks) then
+		fl.alert('Blocks must be enabled when using append mode.')
+		return
+	end
 
 	local selectedDirectory = fl.dir_chooser()
 	if selectedDirectory ~= nil and selectedDirectory ~= '' then
 		local filesIterator = dirent.files(selectedDirectory)
-		local currentTile = 1
-		local tileQty = 0
-		local isFirstTile = true
+		local startTileQty
+		if shouldAppend then
+			startTileQty = #tiles
+		else
+			startTileQty = 0
+		end
+		local tileQty = startTileQty
+		local currentTile = tileQty + 1
 		local expectedImageWidth, expectedImageHeight
+		local isFirstTile
 		local tilesPerBlock
 		local tilesX, tilesY
+		if shouldAppend then
+			tilesX = tilemap.width
+			tilesY = tilemap.height -- tilemap.height is the height of one block in tiles.
+			tilesPerBlock = tilesX * tilesY
+			expectedImageWidth = tilesX * tileWidth
+			expectedImageHeight = tilesY * tileHeight
+			isFirstTile = false
+		else
+			isFirstTile = true
+		end
 		local blocksLoaded = 0
 		for fn in filesIterator do
 			if fn ~= '.' and fn ~= '..' then
@@ -97,16 +120,31 @@ if p:have(haveMask) then
 		end
 		-- Build the tilemap.
 		-- First setup the tilemap to use blocks.
-		local tilemap = p.tilemaps.current
-		tilemap:setBlocksEnabled(false) -- Disable blocks and resize the tilemap to contain one block.
-		tilemap:resize(tilesX, tilesY) -- This sets the size of one block.
-		tilemap.useBlocks = true -- Set the flag for use blocks. This only sets the flag so using this alone is bad.
-		tilemap:setBlocksEnabled(true) -- Ensure that any GUI updates take place. By first setting useBlocks we skip the GUI for asking how big the blocks should be.
-		tilemap:setBlocksAmt(blocksLoaded)
-		currentTile = 0
+		local yOffset
+		if shouldAppend then
+			yOffset = tilemap.hAll
+		else
+			yOffset = 0
+		end
+		if shouldAppend then
+			local oldBlockCount = tilemap.hAll // tilemap.height
+			tilemap:setBlocksAmt(blocksLoaded + oldBlockCount)
+		else
+			tilemap:setBlocksEnabled(false) -- Disable blocks and resize the tilemap to contain one block.
+			tilemap:resize(tilesX, tilesY) -- This sets the size of one block.
+			tilemap.useBlocks = true -- Set the flag for use blocks. This only sets the flag so using this alone is bad.
+			tilemap:setBlocksEnabled(true) -- Ensure that any GUI updates take place. By first setting useBlocks we skip the GUI for asking how big the blocks should be.
+			tilemap:setBlocksAmt(blocksLoaded)
+		end
+		currentTile = startTileQty
 		for y = 1, blocksLoaded * tilesY do
+			local tilemapRow = tilemap[y + yOffset]
 			for x = 1, tilesX do
-				tilemap[y][x]:setFull(currentTile) -- Clear all attributes except which tile is selected. This ensures that no tiles are accidently flipped.
+				if tilemapRow == nil then
+					print('tilemapRow is nil', y)
+				else
+					tilemapRow[x]:setFull(currentTile) -- Clear all attributes except which tile is selected. This ensures that no tiles are accidently flipped.
+				end
 				currentTile = currentTile + 1
 			end
 		end
