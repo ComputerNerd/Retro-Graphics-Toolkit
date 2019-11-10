@@ -90,10 +90,10 @@ void sprite::toImage(uint8_t*img) {
 
 	for (unsigned y = 0, ctile = starttile; y < h; ++y) {
 		for (unsigned x = 0; x < w; ++x, ++ctile) {
-			uint8_t*outptr = prj->tileC->truetDat.data() + (ctile * prj->tileC->tcSize);
+			const uint8_t* outptr = &prj->tileC->truetDat.at(ctile * prj->tileC->tcSize);
 
 			for (unsigned i = 0; i < 8; ++i)
-				memcpy(img + (x * 8 * 4) + (y * w * 8 * 4) + (i * w * 4), outptr + (i * 8 * 4), 8 * 4);
+				memcpy(img + (x * 8 * 4) + (y * w * 8 * 4) + (i * w * 4), outptr + (i * 8 * 4), tileWidth * 4);
 		}
 	}
 }

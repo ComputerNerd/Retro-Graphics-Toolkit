@@ -38,8 +38,7 @@ function switchProject()
 			local layers = p.level.layers
 			for i=1, #layers do
 				local layer = layers[i]
-				local name = layer.name
-				layerSel:add(name)
+				layerSel:add(layer.name)
 			end
 			lvlsetlayer(1)
 			local currentLayerName = layers[lvlCurLayer].name

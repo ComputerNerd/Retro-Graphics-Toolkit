@@ -156,8 +156,8 @@ static int sprite___tostring(lua_State *L) {
 	const size_t spriteIDX = idxPtr[3];
 	const sprite *self = &projects[projectIDX].ms->sps[metaSpriteIDX].groups[spriteGroupIDX].list[spriteIDX];
 	lua_pushfstring(L, "metasprites[%d].groups[%d][%d] sprite table: %p\n\tWidth: %d\n\tHeight: %d\n\tPalette row: %d\n\tHorizontal flip: %s\n\tVertical flip: %s\n\tHigh priority: %s",
-			metaSpriteIDX, spriteGroupIDX, spriteIDX,
-			self, self->w, self->h, self->palrow, (self->hflip ? "true" : "false"), (self->vflip ? "true" : "false"), (self->prio ? "true" : "false"));
+	                metaSpriteIDX, spriteGroupIDX, spriteIDX,
+	                self, self->w, self->h, self->palrow, (self->hflip ? "true" : "false"), (self->vflip ? "true" : "false"), (self->prio ? "true" : "false"));
 	return 1;
 }
 static const struct luaL_Reg sprite_member_methods[] = {
