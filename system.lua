@@ -19,26 +19,35 @@ function updateProjectGUI(sys)
 	if sys==project.segaGenesis then
 		palTabSel:show()
 		spriteSizeSel:hide()
+		spriteSizeTextToValueTable = nil
 	else
 		palTabSel:hide()
 		spriteSizeSel:show()
 		spriteSizeSel:clear()
-		spriteSizeSel:add('8x8 sprites')
+		
+		local spriteSizeOptions = {'8x8 sprites'}
+		
 		if sys == project.NES then
-			spriteSizeSel:add('8x16 sprites')
+			spriteSizeOptions[2] = '8x16 sprites'
 		else
-			spriteSizeSel:add('16x16 sprites')
+			spriteSizeOptions[2] = '16x16 sprites'
 		end
-		spriteSizeSel:value(0)
+
+		spriteSizeTextToValueTable = generateLutFromList(spriteSizeOptions)
+		addItemsToChoice(spriteSizeSel, spriteSizeOptions)
+
+		local p = projects.current
+		local spriteSizeID = p:getSpriteSizeID()
+
+		spriteSizeSel:value(spriteSizeOptions[spriteSizeID + 1])
 	end
 end
 
 function switchSystemBefore(old,new)
-	if is_headless == 0 then
-		updateProjectGUI(new)
-	end
 end
 
 function switchSystemAfter(old,new)
-
+	if is_headless == 0 then
+		updateProjectGUI(new)
+	end
 end

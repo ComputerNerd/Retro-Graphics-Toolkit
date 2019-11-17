@@ -24,9 +24,15 @@ function setPalTypeCB(menuItm)
 	rgt.damage()
 end
 
+spriteSizeTextToValueTable = nil
+
 function setSpriteSizeCB(unused)
 	local p = projects.current
-	p:setSpriteSizeID(spriteSizeSel:get_index())
+
+	local spriteSizeTxt = spriteSizeSel:value()
+	local spriteSizeID = spriteSizeTextToValueTable[spriteSizeTxt]
+
+	p:setSpriteSizeID(spriteSizeID)
 	rgt.redraw()
 end
 
