@@ -127,6 +127,7 @@ void compactPrjMem(void) {
 
 	for (uint_fast32_t i = 0; i < projects->size(); ++i) {
 		Project& prj = projects->at(i);
+
 		if (prj.containsData(pjHaveTiles)) {
 			Cold += prj.tileC->tDat.capacity();
 			Cold += prj.tileC->truetDat.capacity();
@@ -348,6 +349,7 @@ void setHaveProject(uint32_t id, uint32_t mask, bool set) {
 	if have is already enabled no new data will be allocated
 	if have was enabled data will be freeded*/
 	Project& prjAtID = projects->at(id);
+
 	if ((mask & pjHavePal) && (prjAtID.share[0] < 0)) {
 		if (set) {
 			if (!(prjAtID.useMask & pjHavePal)) {
@@ -460,6 +462,7 @@ void shareProject(uint32_t share, uint32_t with, uint32_t what, bool enable) {
 
 	Project& prjAtShare = projects->at(share);
 	Project& prjAtWith = projects->at(with);
+
 	if (enable) {
 		if (what & pjHavePal) {
 			if ((prjAtShare.share[0] < 0) && (prjAtShare.useMask & pjHavePal))
@@ -700,6 +703,7 @@ static void updateLuaScriptWindow(uint32_t id, uint32_t oldID, bool load = false
 }
 void switchProject(uint32_t id, uint32_t oldID, bool load) {
 	Project&prj = projects->at(id);
+
 	if (window) {
 		updateLuaScriptWindow(id, oldID, load);
 		window->TxtBufProject->text(prj.Name.c_str());//Make editor displays new text

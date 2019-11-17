@@ -37,9 +37,9 @@ static int lua_palette_save(lua_State*L) {
 static int lua_palette_load(lua_State*L) {
 	getProjectIDX
 	projects->at(projectIDX).pal->loadFromFile(lua_tostring(L, 2),
-	                                       (fileType_t)luaL_checkinteger(L, 3),
-	                                       luaL_checkinteger(L, 4),
-	                                       (CompressionType)luaL_checkinteger(L, 5));
+	        (fileType_t)luaL_checkinteger(L, 3),
+	        luaL_checkinteger(L, 4),
+	        (CompressionType)luaL_checkinteger(L, 5));
 	return 0;
 }
 

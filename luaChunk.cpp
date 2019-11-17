@@ -27,10 +27,10 @@ static int lua_chunk_draw(lua_State*L) {
 	size_t chunk = idxPtr[1];
 
 	projects->at(projectIDX).Chunk->drawChunk(chunk,
-	                                      luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), // X offset, Y offset.
-	                                      luaL_optinteger(L, 4, 1), // Zoom
-	                                      luaL_optinteger(L, 5, 0), luaL_optinteger(L, 6, 0) // Scroll X, scroll Y
-	                                     );
+	        luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), // X offset, Y offset.
+	        luaL_optinteger(L, 4, 1), // Zoom
+	        luaL_optinteger(L, 5, 0), luaL_optinteger(L, 6, 0) // Scroll X, scroll Y
+	                                         );
 	return 0;
 }
 

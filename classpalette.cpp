@@ -687,6 +687,7 @@ std::set<paletteRawValue_t> palette::getAllColors() {
 			for (unsigned b = 0; b <= maxValForPaletteComponent(1); ++b) {
 				paletteRawValue_t tmp = changeValueRaw(a, 0, 0);
 				tmp = changeValueRaw(b, 1, tmp);
+
 				if (isRawValueValid(tmp))
 					permutations.insert(tmp);
 			}
@@ -698,6 +699,7 @@ std::set<paletteRawValue_t> palette::getAllColors() {
 					paletteRawValue_t tmp = changeValueRaw(a, 0, 0);
 					tmp = changeValueRaw(b, 1, tmp);
 					tmp = changeValueRaw(c, 2, tmp);
+
 					if (isRawValueValid(tmp))
 						permutations.insert(tmp);
 				}
