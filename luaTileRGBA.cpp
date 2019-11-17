@@ -32,7 +32,7 @@ static int tileRGBA__get_(lua_State *L) {
 		size_t tileIDX = idxPtr[1];
 		size_t yIDX = idxPtr[2];
 
-		if (k >= 0 && k < projects[idx].tileC->width()) {
+		if (k >= 0 && k < projects->at(idx).tileC->width()) {
 			luaopen_TileRGBApixel(L, idx, tileIDX, yIDX, k);
 			return 1;
 		}
@@ -43,7 +43,7 @@ static int tileRGBA__get_(lua_State *L) {
 
 static int tileRGBA__len_(lua_State *L) {
 	getProjectIDX
-	lua_pushinteger(L, projects[projectIDX].tileC->width());
+	lua_pushinteger(L, projects->at(projectIDX).tileC->width());
 	return 1;
 }
 

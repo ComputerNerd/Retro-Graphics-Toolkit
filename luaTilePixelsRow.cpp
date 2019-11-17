@@ -30,8 +30,8 @@ static int tilePixelsRow__get_(lua_State *L) {
 		const size_t tileIDX = idxPtr[1];
 		const size_t yIDX = idxPtr[2];
 
-		if (k >= 0 && k < projects[projectIDX].tileC->width()) {
-			lua_pushinteger(L, projects[projectIDX].tileC->getPixel(tileIDX, k, yIDX));
+		if (k >= 0 && k < projects->at(projectIDX).tileC->width()) {
+			lua_pushinteger(L, projects->at(projectIDX).tileC->getPixel(tileIDX, k, yIDX));
 			return 1;
 		}
 	}
@@ -48,8 +48,8 @@ static int tilePixelsRow__set_(lua_State *L) {
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2) - 1;
 
-		if (k >= 0 && k < projects[projectIDX].tileC->width())
-			projects[projectIDX].tileC->setPixel(tileIDX, k, yIDX, luaL_checkinteger(L, 3));
+		if (k >= 0 && k < projects->at(projectIDX).tileC->width())
+			projects->at(projectIDX).tileC->setPixel(tileIDX, k, yIDX, luaL_checkinteger(L, 3));
 	}
 
 	return 0;
@@ -57,7 +57,7 @@ static int tilePixelsRow__set_(lua_State *L) {
 
 static int tilePixelsRow__len_(lua_State *L) {
 	getProjectIDX
-	lua_pushinteger(L, projects[projectIDX].tileC->width());
+	lua_pushinteger(L, projects->at(projectIDX).tileC->width());
 	return 1;
 }
 

@@ -22,3 +22,6 @@ void runLuaFunc(lua_State*L, unsigned args, unsigned results);
 void runLua(lua_State*L, const char*str, bool isFile = true);
 lua_State*createLuaState(void);
 void runLuaCB(Fl_Widget*, void*);
+bool luaL_checkboolean(lua_State* L, int n);
+void registerProjectTables(lua_State*L);
+void setProjectConstants(lua_State*L);

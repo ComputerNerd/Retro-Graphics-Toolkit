@@ -24,7 +24,7 @@ static int sprite__set_(lua_State *L) {
 	const size_t metaSpriteIDX = idxPtr[1];
 	const size_t spriteGroupIDX = idxPtr[2];
 	const size_t spriteIDX = idxPtr[3];
-	sprite *self = &projects[projectIDX].ms->sps[metaSpriteIDX].groups[spriteGroupIDX].list[spriteIDX];
+	sprite *self = &projects->at(projectIDX).ms->sps[metaSpriteIDX].groups[spriteGroupIDX].list[spriteIDX];
 	const char *key = luaL_checkstring(L, 2);
 
 	if (!strcmp(key, "w")) {
@@ -86,7 +86,7 @@ static int sprite__get_(lua_State *L) {
 	const size_t metaSpriteIDX = idxPtr[1];
 	const size_t spriteGroupIDX = idxPtr[2];
 	const size_t spriteIDX = idxPtr[3];
-	const sprite *self = &projects[projectIDX].ms->sps[metaSpriteIDX].groups[spriteGroupIDX].list[spriteIDX];
+	const sprite *self = &projects->at(projectIDX).ms->sps[metaSpriteIDX].groups[spriteGroupIDX].list[spriteIDX];
 
 	int type = lua_type(L, 2);
 
@@ -154,7 +154,7 @@ static int sprite___tostring(lua_State *L) {
 	const size_t metaSpriteIDX = idxPtr[1];
 	const size_t spriteGroupIDX = idxPtr[2];
 	const size_t spriteIDX = idxPtr[3];
-	const sprite *self = &projects[projectIDX].ms->sps[metaSpriteIDX].groups[spriteGroupIDX].list[spriteIDX];
+	const sprite *self = &projects->at(projectIDX).ms->sps[metaSpriteIDX].groups[spriteGroupIDX].list[spriteIDX];
 	lua_pushfstring(L, "metasprites[%d].groups[%d][%d] sprite table: %p\n\tWidth: %d\n\tHeight: %d\n\tPalette row: %d\n\tHorizontal flip: %s\n\tVertical flip: %s\n\tHigh priority: %s",
 	                metaSpriteIDX, spriteGroupIDX, spriteIDX,
 	                self, self->w, self->h, self->palrow, (self->hflip ? "true" : "false"), (self->vflip ? "true" : "false"), (self->prio ? "true" : "false"));
@@ -194,7 +194,7 @@ static int spriteGroup__set_(lua_State *L) {
 	getProjectIDX
 	const size_t msIDX = idxPtr[1];
 	const size_t sgIDX = idxPtr[2];
-	spriteGroup *self = &projects[projectIDX].ms->sps[msIDX].groups[sgIDX];
+	spriteGroup *self = &projects->at(projectIDX).ms->sps[msIDX].groups[sgIDX];
 
 	const char *key = luaL_checkstring(L, 2);
 
@@ -210,7 +210,7 @@ static int spriteGroup__get_(lua_State *L) {
 	getProjectIDX
 	const size_t msIDX = idxPtr[1];
 	const size_t sgIDX = idxPtr[2];
-	const spriteGroup *self = &projects[projectIDX].ms->sps[msIDX].groups[sgIDX];
+	const spriteGroup *self = &projects->at(projectIDX).ms->sps[msIDX].groups[sgIDX];
 	int type = lua_type(L, 2);
 
 	if (type == LUA_TNUMBER) {
@@ -236,7 +236,7 @@ static int spriteGroup__len_(lua_State *L) {
 	getProjectIDX
 	const size_t msIDX = idxPtr[1];
 	const size_t sgIDX = idxPtr[2];
-	const spriteGroup *self = &projects[projectIDX].ms->sps[msIDX].groups[sgIDX];
+	const spriteGroup *self = &projects->at(projectIDX).ms->sps[msIDX].groups[sgIDX];
 	lua_pushinteger(L, self->list.size());
 	return 1;
 }
@@ -245,7 +245,7 @@ static int spriteGroup___tostring(lua_State *L) {
 	getProjectIDX
 	const size_t msIDX = idxPtr[1];
 	const size_t sgIDX = idxPtr[2];
-	const spriteGroup *self = &projects[projectIDX].ms->sps[msIDX].groups[sgIDX];
+	const spriteGroup *self = &projects->at(projectIDX).ms->sps[msIDX].groups[sgIDX];
 	lua_pushfstring(L, "sprite group table: %p\nNamed: %s", self, self->name.c_str());
 	return 1;
 }
@@ -254,7 +254,7 @@ static int spriteGroup_dither(lua_State *L) {
 	getProjectIDX
 	const size_t msIDX = idxPtr[1];
 	const size_t sgIDX = idxPtr[2];
-	ditherSpriteAsImage(msIDX, sgIDX, &projects[projectIDX]);
+	ditherSpriteAsImage(msIDX, sgIDX, &projects->at(projectIDX));
 	return 0;
 }
 
@@ -264,7 +264,7 @@ static int spriteGroup_draw(lua_State *L) {
 	const size_t sgIDX = idxPtr[2];
 
 	int32_t outx, outy;
-	projects[projectIDX].ms->sps[msIDX].draw(sgIDX, luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0), lua_toboolean(L, 5), &outx, &outy);
+	projects->at(projectIDX).ms->sps[msIDX].draw(sgIDX, luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0), lua_toboolean(L, 5), &outx, &outy);
 	lua_pushinteger(L, outx);
 	lua_pushinteger(L, outy);
 	return 2;
@@ -306,7 +306,7 @@ static int luaopen_spriteGroup(lua_State *L, unsigned projectIDX, unsigned metaS
 static int spriteGroups__set_(lua_State *L) {
 	getProjectIDX
 	const size_t msIDX = idxPtr[1];
-	class sprites *self = &projects[projectIDX].ms->sps[msIDX];
+	class sprites *self = &projects->at(projectIDX).ms->sps[msIDX];
 	const char *key = luaL_checkstring(L, 2);
 
 	if (!strcmp(key, "name"))
@@ -319,7 +319,7 @@ static int spriteGroups__get_(lua_State *L) {
 
 	getProjectIDX
 	const size_t msIDX = idxPtr[1];
-	const class sprites *self = &projects[projectIDX].ms->sps[msIDX];
+	const class sprites *self = &projects->at(projectIDX).ms->sps[msIDX];
 
 	int type = lua_type(L, 2);
 
@@ -345,7 +345,7 @@ static int spriteGroups__get_(lua_State *L) {
 static int spriteGroups__len_(lua_State *L) {
 	getProjectIDX
 	size_t msIDX = idxPtr[1];
-	const class sprites *self = &projects[projectIDX].ms->sps[msIDX];
+	const class sprites *self = &projects->at(projectIDX).ms->sps[msIDX];
 	lua_pushinteger(L, self->groups.size());
 	return 1;
 }
@@ -353,7 +353,7 @@ static int spriteGroups__len_(lua_State *L) {
 static int spriteGroups___tostring(lua_State *L) {
 	getProjectIDX
 	const size_t msIDX = idxPtr[1];
-	const class sprites *self = &projects[projectIDX].ms->sps[msIDX];
+	const class sprites *self = &projects->at(projectIDX).ms->sps[msIDX];
 	lua_pushfstring(L, "sprite groups table: %p\nNamed: %s", self, self->name.c_str());
 	return 1;
 }
@@ -361,14 +361,14 @@ static int spriteGroups___tostring(lua_State *L) {
 static int spriteGroups_importSpriteSheet(lua_State *L) {
 	getProjectIDX
 	size_t msIDX = idxPtr[1];
-	projects[projectIDX].ms->sps[msIDX].importSpriteSheet(luaL_checkstring(L, 2));
+	projects->at(projectIDX).ms->sps[msIDX].importSpriteSheet(luaL_checkstring(L, 2));
 	return 0;
 }
 
 static int spriteGroups_dither(lua_State *L) {
 	getProjectIDX
 	size_t msIDX = idxPtr[1];
-	ditherGroupAsImage(msIDX, &projects[projectIDX]);
+	ditherGroupAsImage(msIDX, &projects->at(projectIDX));
 	return 0;
 }
 
@@ -408,7 +408,7 @@ static int sprites__set_(lua_State *L) {
 	const char *key = luaL_checkstring(L, 2);
 
 	if (!strcmp(key, "name"))
-		projects[projectIDX].ms->name.assign(luaL_checkstring(L, 3));
+		projects->at(projectIDX).ms->name.assign(luaL_checkstring(L, 3));
 
 	return 0;
 }
@@ -422,7 +422,7 @@ static int sprites__get_(lua_State *L) {
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2);
 
-		if (k >= 1 && k <= projects[projectIDX].ms->sps.size()) {
+		if (k >= 1 && k <= projects->at(projectIDX).ms->sps.size()) {
 			luaopen_spriteGroups(L, projectIDX, k - 1);
 			return 1;
 		}
@@ -430,7 +430,7 @@ static int sprites__get_(lua_State *L) {
 		const char*k = luaL_checkstring(L, 2);
 
 		if (!strcmp("name", k)) {
-			lua_pushstring(L, projects[projectIDX].ms->name.c_str());
+			lua_pushstring(L, projects->at(projectIDX).ms->name.c_str());
 			return 1;
 		}
 	}
@@ -440,13 +440,13 @@ static int sprites__get_(lua_State *L) {
 
 static int sprites__len_(lua_State *L) {
 	getProjectIDX
-	lua_pushinteger(L, projects[projectIDX].ms->sps.size());
+	lua_pushinteger(L, projects->at(projectIDX).ms->sps.size());
 	return 1;
 }
 
 static int sprites___tostring(lua_State *L) {
 	getProjectIDX
-	const struct metasprites* ms = projects[projectIDX].ms;
+	const struct metasprites* ms = projects->at(projectIDX).ms;
 	lua_pushfstring(L, "metasprite table: %p\nNamed: %s", ms, ms->name.c_str());
 	return 1;
 }
@@ -454,8 +454,8 @@ static int sprites___tostring(lua_State *L) {
 static int metaSprites_dither(lua_State *L) {
 	getProjectIDX
 
-	for (unsigned i = 0; i < projects[projectIDX].ms->sps.size(); ++i)
-		ditherGroupAsImage(i, &projects[projectIDX]);
+	for (unsigned i = 0; i < projects->at(projectIDX).ms->sps.size(); ++i)
+		ditherGroupAsImage(i, &projects->at(projectIDX));
 
 	return 0;
 }

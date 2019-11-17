@@ -24,7 +24,7 @@
 #include "dub/dub.h"
 
 static unsigned inRangeTile(unsigned tile, size_t projectIDX) {
-	if (tile >= projects[projectIDX].tileC->amt) {
+	if (tile >= projects->at(projectIDX).tileC->amt) {
 		outofBoundsAlert("tile", tile);
 		return 0;
 	}
@@ -32,11 +32,11 @@ static unsigned inRangeTile(unsigned tile, size_t projectIDX) {
 	return 1;
 }
 static int lua_tile_setTileRGBA(lua_State*L) {
-	getProjectIDX
+	getProjectRef
 	const size_t tile = idxPtr[1];
 
 	if (inRangeTile(tile, projectIDX)) {
-		uint8_t*tptr = ((uint8_t*)projects[projectIDX].tileC->truetDat.data() + (tile * projects[projectIDX].tileC->tcSize));
+		uint8_t*tptr = ((uint8_t*)prj.tileC->truetDat.data() + (tile * prj.tileC->tcSize));
 		unsigned len = lua_rawlen(L, 2);
 
 		if (!len) {
@@ -44,23 +44,23 @@ static int lua_tile_setTileRGBA(lua_State*L) {
 			return 0;
 		}
 
-		fillucharFromTab(L, 2, len, projects[projectIDX].tileC->tcSize, tptr);
+		fillucharFromTab(L, 2, len, prj.tileC->tcSize, tptr);
 	}
 
 	return 0;
 }
 
 static int lua_tile_compareTileRGBA(lua_State*L) {
-	getProjectIDX
+	getProjectRef
 	const size_t tile1 = idxPtr[1];
 	unsigned tile2 = luaL_optinteger(L, 2, 0);
 
 	if (inRangeTile(tile1, projectIDX) && inRangeTile(tile2, projectIDX) && (tile1 != tile2)) {
 		unsigned diffSum = 0;
-		uint8_t*off1 = projects[projectIDX].tileC->truetDat.data() + (tile1 * projects[projectIDX].tileC->tcSize);
-		uint8_t*off2 = projects[projectIDX].tileC->truetDat.data() + (tile2 * projects[projectIDX].tileC->tcSize);
+		uint8_t*off1 = prj.tileC->truetDat.data() + (tile1 * prj.tileC->tcSize);
+		uint8_t*off2 = prj.tileC->truetDat.data() + (tile2 * prj.tileC->tcSize);
 
-		for (unsigned i = 0; i < projects[projectIDX].tileC->tcSize; i += 4) {
+		for (unsigned i = 0; i < prj.tileC->tcSize; i += 4) {
 			int tmp = 0;
 
 			for (unsigned j = 0; j < 3; ++j)
@@ -86,7 +86,7 @@ static int lua_tile_dither(lua_State*L) {
 	bool useAlt = luaL_optboolean(L, 3, false);
 
 	if (inRangeTile(tile, projectIDX))
-		projects[projectIDX].tileC->truecolor_to_tile(row, tile, useAlt);
+		projects->at(projectIDX).tileC->truecolor_to_tile(row, tile, useAlt);
 
 	return 0;
 }
@@ -96,7 +96,7 @@ static int lua_tile_draw(lua_State*L) {
 	size_t projectIDX = *idxPtr;
 	size_t tile = idxPtr[1];
 
-	projects[projectIDX].tileC->draw_tile(luaL_optinteger(L, 2, 0), // X
+	projects->at(projectIDX).tileC->draw_tile(luaL_optinteger(L, 2, 0), // X
 	                                      luaL_optinteger(L, 3, 0), // Y
 	                                      tile,
 	                                      luaL_optinteger(L, 4, 0), // Zoom
@@ -113,7 +113,7 @@ static int lua_tile_remove(lua_State*L) {
 	size_t projectIDX = *idxPtr;
 	size_t tileIDX = idxPtr[1];
 
-	projects[projectIDX].tileC->remove_tile_at(tileIDX);
+	projects->at(projectIDX).tileC->remove_tile_at(tileIDX);
 	return 0;
 }
 static int tile__get_(lua_State *L) {

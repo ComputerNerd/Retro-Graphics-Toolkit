@@ -23,20 +23,20 @@
 
 static int lua_palette_paletteToRgb(lua_State*L) {
 	getProjectIDX
-	projects[projectIDX].pal->paletteToRgb();
+	projects->at(projectIDX).pal->paletteToRgb();
 	return 0;
 }
 
 static int lua_palette_save(lua_State*L) {
 	getProjectIDX
 	//void savePalette(const char*fname,unsigned start,unsigned end,bool skipzero,fileType_t type,int clipboard,const char*label="palDat");
-	projects[projectIDX].pal->savePalette(lua_tostring(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4), lua_toboolean(L, 5), (fileType_t)lua_tointeger(L, 6), lua_toboolean(L, 7), lua_tostring(L, 8));
+	projects->at(projectIDX).pal->savePalette(lua_tostring(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4), lua_toboolean(L, 5), (fileType_t)lua_tointeger(L, 6), lua_toboolean(L, 7), lua_tostring(L, 8));
 	return 0;
 }
 
 static int lua_palette_load(lua_State*L) {
 	getProjectIDX
-	projects[projectIDX].pal->loadFromFile(lua_tostring(L, 2),
+	projects->at(projectIDX).pal->loadFromFile(lua_tostring(L, 2),
 	                                       (fileType_t)luaL_checkinteger(L, 3),
 	                                       luaL_checkinteger(L, 4),
 	                                       (CompressionType)luaL_checkinteger(L, 5));
@@ -45,7 +45,7 @@ static int lua_palette_load(lua_State*L) {
 
 static int lua_palette_maxInRow(lua_State*L) {
 	getProjectIDX
-	lua_pushinteger(L, projects[projectIDX].pal->calMaxPerRow(luaL_optinteger(L, 2, 0)));
+	lua_pushinteger(L, projects->at(projectIDX).pal->calMaxPerRow(luaL_optinteger(L, 2, 0)));
 	return 1;
 }
 
@@ -53,12 +53,12 @@ static int palette__get_(lua_State *L) {
 	checkAlreadyExists
 
 	int type = lua_type(L, 2);
-	getProjectIDX
+	getProjectRef
 
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2) - 1;
 
-		if (k >= 0 && k < projects[projectIDX].pal->colorCnt + projects[projectIDX].pal->colorCntalt) {
+		if (k >= 0 && k < prj.pal->colorCnt + prj.pal->colorCntalt) {
 			luaopen_PaletteEntry(L, projectIDX, k);
 			return 1;
 		}
@@ -66,37 +66,37 @@ static int palette__get_(lua_State *L) {
 		const char* k = luaL_checkstring(L, 2);
 
 		if (!strcmp("cnt", k)) {
-			lua_pushinteger(L, projects[projectIDX].pal->colorCnt);
+			lua_pushinteger(L, prj.pal->colorCnt);
 			return 1;
 		} else if (!strcmp("cntAlt", k)) {
-			lua_pushinteger(L, projects[projectIDX].pal->colorCntalt);
+			lua_pushinteger(L, prj.pal->colorCntalt);
 			return 1;
 		} else if (!strcmp("cntTotal", k)) {
-			lua_pushinteger(L, projects[projectIDX].pal->colorCntalt + projects[projectIDX].pal->colorCnt);
+			lua_pushinteger(L, prj.pal->colorCntalt + prj.pal->colorCnt);
 			return 1;
 		} else if (!strcmp("perRow", k)) {
-			lua_pushinteger(L, projects[projectIDX].pal->perRow);
+			lua_pushinteger(L, prj.pal->perRow);
 			return 1;
 		} else if (!strcmp("perRowAlt", k)) {
-			lua_pushinteger(L, projects[projectIDX].pal->perRowalt);
+			lua_pushinteger(L, prj.pal->perRowalt);
 			return 1;
 		} else if (!strcmp("rowCnt", k)) {
-			lua_pushinteger(L, projects[projectIDX].pal->rowCntPal);
+			lua_pushinteger(L, prj.pal->rowCntPal);
 			return 1;
 		} else if (!strcmp("rowCntAlt", k)) {
-			lua_pushinteger(L, projects[projectIDX].pal->rowCntPalalt);
+			lua_pushinteger(L, prj.pal->rowCntPalalt);
 			return 1;
 		} else if (!strcmp("haveAlt", k)) {
-			lua_pushboolean(L, projects[projectIDX].pal->haveAlt);
+			lua_pushboolean(L, prj.pal->haveAlt);
 			return 1;
 		} else if (!strcmp("esize", k)) {
-			lua_pushinteger(L, projects[projectIDX].pal->esize);
+			lua_pushinteger(L, prj.pal->esize);
 			return 1;
 		} else if (!strcmp("fixedSpriteRow", k)) {
-			lua_pushinteger(L, projects[projectIDX].pal->fixedSpriteRow);
+			lua_pushinteger(L, prj.pal->fixedSpriteRow);
 			return 1;
 		} else if (!strcmp("fixedPalette", k)) {
-			lua_pushboolean(L, projects[projectIDX].isFixedPalette());
+			lua_pushboolean(L, prj.isFixedPalette());
 			return 1;
 		}
 	}
@@ -105,14 +105,14 @@ static int palette__get_(lua_State *L) {
 }
 
 static int palette__len_(lua_State *L) {
-	getProjectIDX
-	lua_pushinteger(L, projects[projectIDX].pal->colorCnt + projects[projectIDX].pal->colorCntalt);
+	getProjectRef
+	lua_pushinteger(L, prj.pal->colorCnt + prj.pal->colorCntalt);
 	return 1;
 }
 
 static int palette___tostring(lua_State *L) {
 	getProjectIDX
-	lua_pushfstring(L, "palette table: %p", projects[projectIDX].pal);
+	lua_pushfstring(L, "palette table: %p", projects->at(projectIDX).pal);
 	return 1;
 }
 

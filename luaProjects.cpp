@@ -25,7 +25,7 @@ static int projects__get_(lua_State *L) {
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2);
 
-		if (k > 0 && k <= projects.size()) {
+		if (k > 0 && k <= projects->size()) {
 			luaopen_Project(L, k - 1);
 			return 1;
 		}
@@ -45,12 +45,12 @@ static int projects__get_(lua_State *L) {
 }
 
 static int projects__len_(lua_State *L) {
-	lua_pushinteger(L, projects.size());
+	lua_pushinteger(L, projects->size());
 	return 1;
 }
 
 static int projects___tostring(lua_State *L) {
-	lua_pushfstring(L, "projects table: %p Entries: %d", &projects, projects.size());
+	lua_pushfstring(L, "projects table: %p Entries: %d", projects, projects->size());
 	return 1;
 }
 

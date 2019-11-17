@@ -26,7 +26,7 @@ static int lua_chunk_draw(lua_State*L) {
 	getProjectIDX
 	size_t chunk = idxPtr[1];
 
-	projects[projectIDX].Chunk->drawChunk(chunk,
+	projects->at(projectIDX).Chunk->drawChunk(chunk,
 	                                      luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), // X offset, Y offset.
 	                                      luaL_optinteger(L, 4, 1), // Zoom
 	                                      luaL_optinteger(L, 5, 0), luaL_optinteger(L, 6, 0) // Scroll X, scroll Y
@@ -38,7 +38,7 @@ static int lua_chunk_remove(lua_State*L) {
 	getProjectIDX
 	size_t chunkIDX = idxPtr[1];
 
-	projects[projectIDX].Chunk->removeAt(chunkIDX);
+	projects->at(projectIDX).Chunk->removeAt(chunkIDX);
 	return 0;
 }
 
@@ -53,7 +53,7 @@ static int chunk__get_(lua_State *L) {
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2) - 1;
 
-		if (k >= 0 && k < projects[projectIDX].Chunk->amt) {
+		if (k >= 0 && k < projects->at(projectIDX).Chunk->amt) {
 			luaopen_ChunkRow(L, projectIDX, chunkIDX, k);
 			return 1;
 		}
@@ -72,7 +72,7 @@ static int chunk___tostring(lua_State * L) {
 
 static int chunk__len(lua_State *L) {
 	getProjectIDX
-	lua_pushinteger(L, projects[projectIDX].Chunk->hi);
+	lua_pushinteger(L, projects->at(projectIDX).Chunk->hi);
 	return 1;
 }
 

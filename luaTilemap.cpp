@@ -31,7 +31,7 @@ static int lua_tilemap_dither(lua_State*L) {
 
 	unsigned method = luaL_optinteger(L, 2, 1);
 
-	projects[projectIDX].tms->maps[tilemapIDX].ditherAsImage(method);
+	projects->at(projectIDX).tms->maps[tilemapIDX].ditherAsImage(method);
 	return 0;
 }
 
@@ -39,7 +39,7 @@ static int lua_tilemap_loadImage(lua_State*L) {
 	getProjectIDX
 	size_t tilemapIDX = idxPtr[1];
 
-	load_image_to_tilemap_project_ptr(&projects[projectIDX], lua_tostring(L, 2), luaL_optboolean(L, 3, false), luaL_optboolean(L, 4, false), luaL_optboolean(L, 5, false), tilemapIDX);
+	load_image_to_tilemap_project_ptr(&projects->at(projectIDX), lua_tostring(L, 2), luaL_optboolean(L, 3, false), luaL_optboolean(L, 4, false), luaL_optboolean(L, 5, false), tilemapIDX);
 	return 0;
 }
 
@@ -60,12 +60,12 @@ static int lua_tilemap_imageToTiles(lua_State*L) {
 	bool convert = luaL_optboolean(L, 6, false);
 	unsigned bpp = useAlpha + 3;
 	uint32_t w, h;
-	w = projects[projectIDX].tms->maps[tilemapIDX].mapSizeW * projects[projectIDX].tileC->width();
-	h = projects[projectIDX].tms->maps[tilemapIDX].mapSizeHA * projects[projectIDX].tileC->height();
+	w = projects->at(projectIDX).tms->maps[tilemapIDX].mapSizeW * projects->at(projectIDX).tileC->width();
+	h = projects->at(projectIDX).tms->maps[tilemapIDX].mapSizeHA * projects->at(projectIDX).tileC->height();
 	unsigned sz = w * h * bpp;
 	uint8_t*image = (uint8_t*)malloc(sz);
 	fillucharFromTab(L, 2, len, sz, image);
-	projects[projectIDX].tms->maps[tilemapIDX].truecolorimageToTiles(image, row, useAlpha, copyToTruecol, convert);
+	projects->at(projectIDX).tms->maps[tilemapIDX].truecolorimageToTiles(image, row, useAlpha, copyToTruecol, convert);
 	free(image);
 	return 0;
 }
@@ -74,7 +74,7 @@ static int lua_tilemaps_removePlane(lua_State*L) {
 	getProjectIDX
 	size_t tilemapIDX = idxPtr[1];
 
-	projects[projectIDX].tms->removePlane(tilemapIDX);
+	projects->at(projectIDX).tms->removePlane(tilemapIDX);
 	return 0;
 }
 
@@ -82,19 +82,19 @@ static int lua_tilemaps_resize(lua_State*L) {
 	getProjectIDX
 	size_t tilemapIDX = idxPtr[1];
 
-	projects[projectIDX].tms->maps[tilemapIDX].resize_tile_map(luaL_optinteger(L, 2, 1), luaL_optinteger(L, 3, 1));
+	projects->at(projectIDX).tms->maps[tilemapIDX].resize_tile_map(luaL_optinteger(L, 2, 1), luaL_optinteger(L, 3, 1));
 	return 0;
 }
 static void updateMapAmt(size_t projectIDX, size_t tilemapIDX) {
-	if (tilemapIDX == projects[projectIDX].curPlane && curProjectID == projectIDX && window)
-		window->map_amt->value(std::to_string(projects[projectIDX].tms->maps[tilemapIDX].amt).c_str());
+	if (tilemapIDX == projects->at(projectIDX).curPlane && curProjectID == projectIDX && window)
+		window->map_amt->value(std::to_string(projects->at(projectIDX).tms->maps[tilemapIDX].amt).c_str());
 }
 
 static int lua_tilemaps_setBlocksAmt(lua_State*L) {
 	getProjectIDX
 	size_t tilemapIDX = idxPtr[1];
 
-	projects[projectIDX].tms->maps[tilemapIDX].blockAmt(luaL_optinteger(L, 2, 1));
+	projects->at(projectIDX).tms->maps[tilemapIDX].blockAmt(luaL_optinteger(L, 2, 1));
 
 	updateMapAmt(projectIDX, tilemapIDX);
 	return 0;
@@ -104,7 +104,7 @@ static int lua_tilemaps_removeBlock(lua_State*L) {
 	getProjectIDX
 	size_t tilemapIDX = idxPtr[1];
 
-	projects[projectIDX].tms->maps[tilemapIDX].removeBlock(luaL_optinteger(L, 2, 0));
+	projects->at(projectIDX).tms->maps[tilemapIDX].removeBlock(luaL_optinteger(L, 2, 0));
 
 	updateMapAmt(projectIDX, tilemapIDX);
 	return 0;
@@ -114,7 +114,7 @@ static int lua_tilemaps_setBlocksEnabled(lua_State*L) {
 	getProjectIDX
 	size_t tilemapIDX = idxPtr[1];
 
-	projects[projectIDX].tms->maps[tilemapIDX].toggleBlocks(lua_toboolean(L, 2));
+	projects->at(projectIDX).tms->maps[tilemapIDX].toggleBlocks(lua_toboolean(L, 2));
 
 	updateMapAmt(projectIDX, tilemapIDX);
 	return 0;
@@ -123,50 +123,50 @@ static int lua_tilemaps_setBlocksEnabled(lua_State*L) {
 static int lua_tilemap_drawBlock(lua_State*L) {
 	getProjectIDX
 	size_t tilemapIDX = idxPtr[1];
-	projects[projectIDX].tms->maps[tilemapIDX].drawBlock(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0), luaL_optinteger(L, 5, 0), luaL_optinteger(L, 6, 0));
+	projects->at(projectIDX).tms->maps[tilemapIDX].drawBlock(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0), luaL_optinteger(L, 5, 0), luaL_optinteger(L, 6, 0));
 	return 0;
 }
 static int lua_tilemap_getRaw(lua_State*L) {
 	getProjectIDX
 	size_t tilemapIDX = idxPtr[1];
-	lua_pushinteger(L, projects[projectIDX].tms->maps[tilemapIDX].getRaw(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0)));
+	lua_pushinteger(L, projects->at(projectIDX).tms->maps[tilemapIDX].getRaw(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0)));
 	return 1;
 }
 static int lua_tilemap_setRaw(lua_State*L) {
 	getProjectIDX
 	size_t tilemapIDX = idxPtr[1];
-	projects[projectIDX].tms->maps[tilemapIDX].setRaw(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0));
+	projects->at(projectIDX).tms->maps[tilemapIDX].setRaw(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0));
 	return 0;
 }
 static int lua_tilemap_subTile(lua_State*L) {
 	getProjectIDX
 	size_t tilemapIDX = idxPtr[1];
-	projects[projectIDX].tms->maps[tilemapIDX].sub_tile_map(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_toboolean(L, 4), lua_toboolean(L, 5));
+	projects->at(projectIDX).tms->maps[tilemapIDX].sub_tile_map(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_toboolean(L, 4), lua_toboolean(L, 5));
 	return 0;
 }
 
 static int lua_tilemap_save(lua_State*L) {
 	getProjectIDX
 	size_t tilemapIDX = idxPtr[1];
-	projects[projectIDX].tms->maps[tilemapIDX].saveToFile(lua_tostring(L, 2), (fileType_t)lua_tointeger(L, 3), lua_toboolean(L, 4), (CompressionType)lua_tointeger(L, 5), lua_tostring(L, 6), luaL_optstring(L, 7, nullptr), luaL_optstring(L, 8, nullptr));
+	projects->at(projectIDX).tms->maps[tilemapIDX].saveToFile(lua_tostring(L, 2), (fileType_t)lua_tointeger(L, 3), lua_toboolean(L, 4), (CompressionType)lua_tointeger(L, 5), lua_tostring(L, 6), luaL_optstring(L, 7, nullptr), luaL_optstring(L, 8, nullptr));
 	return 0;
 }
 static int lua_tilemap_pickRowDelta(lua_State*L) {
 	getProjectIDX
 	size_t tilemapIDX = idxPtr[1];
-	projects[projectIDX].tms->maps[tilemapIDX].pickRowDelta(false, nullptr, lua_tointeger(L, 2), lua_tointeger(L, 3));
+	projects->at(projectIDX).tms->maps[tilemapIDX].pickRowDelta(false, nullptr, lua_tointeger(L, 2), lua_tointeger(L, 3));
 	return 0;
 }
 static int lua_tilemap_pickRow(lua_State*L) {
 	getProjectIDX
 	size_t tilemapIDX = idxPtr[1];
-	projects[projectIDX].tms->maps[tilemapIDX].pickRow(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4));
+	projects->at(projectIDX).tms->maps[tilemapIDX].pickRow(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4));
 	return 0;
 }
 static int lua_tilemap_allToRow(lua_State*L) {
 	getProjectIDX
 	size_t tilemapIDX = idxPtr[1];
-	projects[projectIDX].tms->maps[tilemapIDX].allRowSet(luaL_optinteger(L, 2, 0));
+	projects->at(projectIDX).tms->maps[tilemapIDX].allRowSet(luaL_optinteger(L, 2, 0));
 	return 0;
 }
 
@@ -177,8 +177,8 @@ static int lua_tilemap_toImage(lua_State*L) {
 	int row = luaL_optinteger(L, 2, -1);
 	bool useAlpha = luaL_optboolean(L, 3, false);
 	uint32_t w, h;
-	w = projects[projectIDX].tms->maps[tilemapIDX].mapSizeW * projects[projectIDX].tileC->width();
-	h = projects[projectIDX].tms->maps[tilemapIDX].mapSizeHA * projects[projectIDX].tileC->height();
+	w = projects->at(projectIDX).tms->maps[tilemapIDX].mapSizeW * projects->at(projectIDX).tileC->width();
+	h = projects->at(projectIDX).tms->maps[tilemapIDX].mapSizeHA * projects->at(projectIDX).tileC->height();
 	unsigned bpp = useAlpha + 3;
 	uint8_t*image = (uint8_t *)malloc(w * h * bpp);
 
@@ -187,7 +187,7 @@ static int lua_tilemap_toImage(lua_State*L) {
 		return 0;
 	}
 
-	projects[projectIDX].tms->maps[tilemapIDX].truecolor_to_image(image, row, useAlpha);
+	projects->at(projectIDX).tms->maps[tilemapIDX].truecolor_to_image(image, row, useAlpha);
 	uint8_t*imgptr = image;
 	lua_newtable(L);
 
@@ -211,7 +211,7 @@ static int tilemap__get_(lua_State *L) {
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2) - 1;
 
-		if (k >= 0 && k < projects[idx].tms->maps[idx].mapSizeHA) {
+		if (k >= 0 && k < projects->at(idx).tms->maps[idx].mapSizeHA) {
 			luaopen_TilemapRow(L, idx, idx2, k);
 			return 1;
 		}
@@ -219,19 +219,19 @@ static int tilemap__get_(lua_State *L) {
 		const char*k = luaL_checkstring(L, 2);
 
 		if (!strcmp("width", k)) {
-			lua_pushinteger(L, projects[idx].tms->maps[idx2].mapSizeW);
+			lua_pushinteger(L, projects->at(idx).tms->maps[idx2].mapSizeW);
 			return 1;
 		} else if (!strcmp("height", k)) {
-			lua_pushinteger(L, projects[idx].tms->maps[idx2].mapSizeH);
+			lua_pushinteger(L, projects->at(idx).tms->maps[idx2].mapSizeH);
 			return 1;
 		} else if (!strcmp("hAll", k)) {
-			lua_pushinteger(L, projects[idx].tms->maps[idx2].mapSizeHA);
+			lua_pushinteger(L, projects->at(idx).tms->maps[idx2].mapSizeHA);
 			return 1;
 		} else if (!strcmp("useBlocks", k)) {
-			lua_pushboolean(L, projects[idx].tms->maps[idx2].isBlock);
+			lua_pushboolean(L, projects->at(idx).tms->maps[idx2].isBlock);
 			return 1;
 		} else if (!strcmp("name", k)) {
-			lua_pushstring(L, projects[idx].tms->maps[idx2].planeName.c_str());
+			lua_pushstring(L, projects->at(idx).tms->maps[idx2].planeName.c_str());
 			return 1;
 		}
 	}
@@ -249,7 +249,7 @@ static int tilemap__len_(lua_State *L) {
 	getProjectIDX
 	size_t tilemapIDX = idxPtr[2];
 
-	lua_pushinteger(L, projects[projectIDX].tms->maps[tilemapIDX].mapSizeHA);
+	lua_pushinteger(L, projects->at(projectIDX).tms->maps[tilemapIDX].mapSizeHA);
 	return 1;
 }
 
@@ -257,7 +257,7 @@ static int tilemap__set_(lua_State *L) {
 	const char *key = luaL_checkstring(L, 2);
 	getProjectIDX
 	const size_t tilemapIDX = idxPtr[1];
-	class tileMap *tm = &projects[projectIDX].tms->maps[tilemapIDX];
+	class tileMap *tm = &projects->at(projectIDX).tms->maps[tilemapIDX];
 
 	const char*k = luaL_checkstring(L, 2);
 

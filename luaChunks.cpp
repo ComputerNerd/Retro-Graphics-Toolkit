@@ -25,7 +25,7 @@ static int chunk__set_(lua_State *L) {
 	const char *key = luaL_checkstring(L, 2);
 	getProjectIDX
 
-	class ChunkClass *chunk = projects[projectIDX].Chunk;
+	class ChunkClass *chunk = projects->at(projectIDX).Chunk;
 
 	const char*k = luaL_checkstring(L, 2);
 
@@ -39,18 +39,18 @@ static int chunk__set_(lua_State *L) {
 
 static int lua_chunks_importSonic1(lua_State*L) {
 	getProjectIDX
-	projects[projectIDX].Chunk->importSonic1(luaL_optboolean(L, 2, false));
+	projects->at(projectIDX).Chunk->importSonic1(luaL_optboolean(L, 2, false));
 	return 0;
 }
 static int lua_chunks_exportSonic1(lua_State*L) {
 	getProjectIDX
-	projects[projectIDX].Chunk->exportSonic1();
+	projects->at(projectIDX).Chunk->exportSonic1();
 	return 0;
 }
 
 static int lua_chunks_append(lua_State*L) {
 	getProjectIDX
-	projects[projectIDX].Chunk->append();
+	projects->at(projectIDX).Chunk->append();
 
 	if (window && curProjectID == projectIDX)
 		window->updateChunkSel();
@@ -60,7 +60,7 @@ static int lua_chunks_append(lua_State*L) {
 
 static int lua_chunks_setAmt(lua_State*L) {
 	getProjectIDX
-	projects[projectIDX].Chunk->resizeAmt(luaL_optinteger(L, 2, 1));
+	projects->at(projectIDX).Chunk->resizeAmt(luaL_optinteger(L, 2, 1));
 
 	if (window && curProjectID == projectIDX)
 		window->updateChunkSel();
@@ -70,7 +70,7 @@ static int lua_chunks_setAmt(lua_State*L) {
 
 static int lua_chunks_setWH(lua_State*L) {
 	getProjectIDX
-	projects[projectIDX].Chunk->resize(luaL_optinteger(L, 2, 1), luaL_optinteger(L, 3, 1));
+	projects->at(projectIDX).Chunk->resize(luaL_optinteger(L, 2, 1), luaL_optinteger(L, 3, 1));
 
 	if (window && curProjectID == projectIDX)
 		window->updateChunkSize();
@@ -80,7 +80,7 @@ static int lua_chunks_setWH(lua_State*L) {
 
 static int lua_chunks_subBlock(lua_State*L) {
 	getProjectIDX
-	projects[projectIDX].Chunk->subBlock(luaL_optinteger(L, 2, 1), luaL_optinteger(L, 3, 1));
+	projects->at(projectIDX).Chunk->subBlock(luaL_optinteger(L, 2, 1), luaL_optinteger(L, 3, 1));
 
 	if (window && curProjectID == projectIDX)
 		window->updateChunkSize();
@@ -97,7 +97,7 @@ static int chunks__get_(lua_State *L) {
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2) - 1;
 
-		if (k >= 0 && k < projects[projectIDX].Chunk->amt) {
+		if (k >= 0 && k < projects->at(projectIDX).Chunk->amt) {
 			luaopen_Chunk(L, projectIDX, k);
 			return 1;
 		}
@@ -105,16 +105,16 @@ static int chunks__get_(lua_State *L) {
 		const char*k = luaL_checkstring(L, 2);
 
 		if (!strcmp("useBlocks", k)) {
-			lua_pushboolean(L, projects[projectIDX].Chunk->useBlocks);
+			lua_pushboolean(L, projects->at(projectIDX).Chunk->useBlocks);
 			return 1;
 		} else if (!strcmp("width", k)) {
-			lua_pushinteger(L, projects[projectIDX].Chunk->wi);
+			lua_pushinteger(L, projects->at(projectIDX).Chunk->wi);
 			return 1;
 		} else if (!strcmp("height", k)) {
-			lua_pushinteger(L, projects[projectIDX].Chunk->hi);
+			lua_pushinteger(L, projects->at(projectIDX).Chunk->hi);
 			return 1;
 		} else if (!strcmp("usePlane", k)) {
-			lua_pushinteger(L, projects[projectIDX].Chunk->usePlane);
+			lua_pushinteger(L, projects->at(projectIDX).Chunk->usePlane);
 			return 1;
 		}
 	}
@@ -124,13 +124,13 @@ static int chunks__get_(lua_State *L) {
 
 static int chunks__len_(lua_State *L) {
 	getProjectIDX
-	lua_pushinteger(L, projects[projectIDX].Chunk->amt);
+	lua_pushinteger(L, projects->at(projectIDX).Chunk->amt);
 	return 1;
 }
 
 static int chunks___tostring(lua_State *L) {
 	getProjectIDX
-	lua_pushfstring(L, "Chunks table: %p", projects[projectIDX].Chunk);
+	lua_pushfstring(L, "Chunks table: %p", projects->at(projectIDX).Chunk);
 	return 1;
 }
 

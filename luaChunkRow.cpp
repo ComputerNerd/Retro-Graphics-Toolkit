@@ -27,7 +27,7 @@ static int chunkRow__get_(lua_State *L) {
 
 		int k = luaL_checkinteger(L, 2) - 1;
 
-		if (k >= 0 && k < projects[idxPtr[0]].Chunk->wi) {
+		if (k >= 0 && k < projects->at(idxPtr[0]).Chunk->wi) {
 			luaopen_ChunkEntry(L, idxPtr[0], idxPtr[1], idxPtr[2], k);
 			return 1;
 		}
@@ -38,7 +38,7 @@ static int chunkRow__get_(lua_State *L) {
 
 static int chunkRow__len_(lua_State *L) {
 	getProjectIDX
-	lua_pushinteger(L, projects[projectIDX].Chunk->wi);
+	lua_pushinteger(L, projects->at(projectIDX).Chunk->wi);
 	return 1;
 }
 

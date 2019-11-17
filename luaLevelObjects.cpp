@@ -27,7 +27,7 @@ static int lua_levelObjects_remove(lua_State*L) {
 	getProjectIDX
 	size_t layerIDX = idxPtr[1];
 
-	projects[projectIDX].lvl->odat[layerIDX]->erase(projects[projectIDX].lvl->odat[layerIDX]->begin() + luaL_checkinteger(L, 2));
+	projects->at(projectIDX).lvl->odat[layerIDX]->erase(projects->at(projectIDX).lvl->odat[layerIDX]->begin() + luaL_checkinteger(L, 2));
 	return 0;
 }
 
@@ -35,7 +35,7 @@ static int lua_levelObjects_append(lua_State*L) {
 	getProjectIDX
 	size_t layerIDX = idxPtr[1];
 
-	projects[projectIDX].lvl->odat[layerIDX]->emplace_back();
+	projects->at(projectIDX).lvl->odat[layerIDX]->emplace_back();
 	return 0;
 }
 
@@ -45,7 +45,7 @@ static int levelObjects__get_(lua_State *L) {
 	int type = lua_type(L, 2);
 	getProjectIDX
 	const size_t idx2 = idxPtr[1];
-	struct level* lvl = projects[projectIDX].lvl;
+	struct level* lvl = projects->at(projectIDX).lvl;
 
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2) - 1;
@@ -69,7 +69,7 @@ static int levelObjects__len_(lua_State *L) {
 	getProjectIDX
 	size_t layerIDX = idxPtr[1];
 
-	lua_pushinteger(L, projects[projectIDX].lvl->odat[layerIDX]->size());
+	lua_pushinteger(L, projects->at(projectIDX).lvl->odat[layerIDX]->size());
 	return 1;
 }
 

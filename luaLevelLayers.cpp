@@ -28,7 +28,7 @@ static int levelLayers__get_(lua_State *L) {
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2);
 
-		if (k > 0 && k <= projects[projectIDX].lvl->layeramt) {
+		if (k > 0 && k <= projects->at(projectIDX).lvl->layeramt) {
 			luaopen_LevelLayer(L, projectIDX, k - 1);
 			return 1;
 		}
@@ -40,20 +40,20 @@ static int levelLayers__get_(lua_State *L) {
 
 static int levelLayers___tostring(lua_State *L) {
 	getProjectIDX
-	lua_pushfstring(L, "levelLayers table: %p", projects[projectIDX].lvl);
+	lua_pushfstring(L, "levelLayers table: %p", projects->at(projectIDX).lvl);
 	return 1;
 }
 
 static int levelLayers__len_(lua_State *L) {
 	getProjectIDX
-	lua_pushinteger(L, projects[projectIDX].lvl->layeramt);
+	lua_pushinteger(L, projects->at(projectIDX).lvl->layeramt);
 	return 1;
 }
 
 static int lua_levelLayers_amount(lua_State*L) {
 	getProjectIDX
 
-	projects[projectIDX].lvl->setlayeramt(luaL_checkinteger(L, 2), luaL_checkboolean(L, 3));
+	projects->at(projectIDX).lvl->setlayeramt(luaL_checkinteger(L, 2), luaL_checkboolean(L, 3));
 	return 0;
 }
 

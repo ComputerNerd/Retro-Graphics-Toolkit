@@ -52,18 +52,18 @@ void updatePlaneTilemapMenu(uint32_t id, Fl_Choice*plM) {
 	if (plM->size())
 		plM->clear();
 
-	size_t sz = projects[id].tms->maps.size();
+	size_t sz = projects->at(id).tms->maps.size();
 
 	for (uintptr_t i = 0; i < sz; ++i)
-		plM->add(projects[id].tms->maps[i].planeName.c_str(), 0, setCurPlaneTilemaps, (void*)i, 0);
+		plM->add(projects->at(id).tms->maps[i].planeName.c_str(), 0, setCurPlaneTilemaps, (void*)i, 0);
 
-	plM->value(projects[id].curPlane);
+	plM->value(projects->at(id).curPlane);
 
-	if (projects[id].containsData(pjHaveChunks)) {
-		if (projects[id].Chunk->usePlane >= sz)
-			projects[id].Chunk->usePlane = sz - 1;
+	if (projects->at(id).containsData(pjHaveChunks)) {
+		if (projects->at(id).Chunk->usePlane >= sz)
+			projects->at(id).Chunk->usePlane = sz - 1;
 
-		window->planeSelectChunk->value(projects[id].Chunk->usePlane);
+		window->planeSelectChunk->value(projects->at(id).Chunk->usePlane);
 	}
 
 	window->planeSelectChunk->maximum(sz - 1);

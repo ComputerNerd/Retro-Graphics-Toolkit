@@ -35,7 +35,7 @@ static int tileRGBApixel__set_(lua_State *L) {
 	size_t xIDX = idxPtr[3];
 	int type = lua_type(L, 2);
 
-	uint8_t*rgbaPixel = (uint8_t*)projects[projectIDX].tileC->getPixelPtrTC(tileIDX, xIDX, yIDX);
+	uint8_t*rgbaPixel = (uint8_t*)projects->at(projectIDX).tileC->getPixelPtrTC(tileIDX, xIDX, yIDX);
 
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2) - 1;
@@ -68,7 +68,7 @@ static int tileRGBApixel__get_(lua_State *L) {
 	size_t yIDX = idxPtr[2];
 	size_t xIDX = idxPtr[3];
 
-	uint8_t*rgbaPixel = (uint8_t*)projects[projectIDX].tileC->getPixelPtrTC(tileIDX, xIDX, yIDX);
+	uint8_t*rgbaPixel = (uint8_t*)projects->at(projectIDX).tileC->getPixelPtrTC(tileIDX, xIDX, yIDX);
 
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2) - 1;
@@ -97,7 +97,7 @@ static int tileRGBApixel__get_(lua_State *L) {
 
 static int tileRGBApixel__len_(lua_State *L) {
 	getProjectIDX
-	lua_pushinteger(L, projects[projectIDX].tileC->height());
+	lua_pushinteger(L, projects->at(projectIDX).tileC->height());
 	return 1;
 }
 

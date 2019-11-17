@@ -137,11 +137,15 @@ struct Project { /*!<Holds all data needed for a project based system for exampl
 	std::vector<struct luaControl>lCtrl;
 	std::vector<struct luaScript>lScrpt;
 	std::vector<std::string>luaTabs;
+
+
+	bool loadProjectFile(FILE * fi, bool loadVersion = true, uint32_t version = currentProjectVersionNUM);
+	bool saveProjectFile(FILE * fo, bool saveShared, bool saveVersion = true);
+	void changeTileDim(unsigned w, unsigned h);
 };
-extern std::vector<struct Project> projects;
+extern std::vector<struct Project>* projects;
 extern struct Project * currentProject;
 extern Fl_Slider* curPrj;
-void changeTileDim(unsigned w, unsigned h, struct Project*p);
 const char*maskToName(unsigned mask);
 void compactPrjMem(void);
 void initProject(void);

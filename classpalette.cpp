@@ -32,6 +32,9 @@
 #include "gui.h"
 #include "errorMsg.h"
 #include "filereader.h"
+#include "runlua.h"
+#include "luaconfig.h"
+
 const uint8_t TMS9918Palette[] = {
 	0,   0,   0,
 	0,   0,   0,
@@ -282,6 +285,17 @@ paletteRawValue_t palette::getEntry(const unsigned ent)const {
 			return palPtr[ent];
 		}
 	}
+}
+
+
+bool palette::isRawValueValid(paletteRawValue_t val)const {
+	lua_getglobal(Lconf, "isRawPaletteValueValid");
+	lua_pushinteger(Lconf, prj->gameSystem);
+	lua_pushinteger(Lconf, val);
+	runLuaFunc(Lconf, 2, 1);
+	bool ret = luaL_checkboolean(Lconf, -1);
+	lua_pop(Lconf, 1);
+	return ret;
 }
 
 void palette::setEntry(const paletteRawValue_t rawVal, const unsigned ent) {
@@ -673,7 +687,8 @@ std::set<paletteRawValue_t> palette::getAllColors() {
 			for (unsigned b = 0; b <= maxValForPaletteComponent(1); ++b) {
 				paletteRawValue_t tmp = changeValueRaw(a, 0, 0);
 				tmp = changeValueRaw(b, 1, tmp);
-				permutations.insert(tmp);
+				if (isRawValueValid(tmp))
+					permutations.insert(tmp);
 			}
 		}
 	} else {
@@ -683,7 +698,8 @@ std::set<paletteRawValue_t> palette::getAllColors() {
 					paletteRawValue_t tmp = changeValueRaw(a, 0, 0);
 					tmp = changeValueRaw(b, 1, tmp);
 					tmp = changeValueRaw(c, 2, tmp);
-					permutations.insert(tmp);
+					if (isRawValueValid(tmp))
+						permutations.insert(tmp);
 				}
 			}
 		}

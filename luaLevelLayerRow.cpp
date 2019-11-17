@@ -28,10 +28,10 @@ static int levelLayerRow__get_(lua_State *L) {
 		const size_t levelLayerIDX = idxPtr[1];
 
 		int k = luaL_checkinteger(L, 2) - 1;
-		struct levelInfo* info = projects[projectIDX].lvl->getInfo(levelLayerIDX);
+		struct levelInfo* info = projects->at(projectIDX).lvl->getInfo(levelLayerIDX);
 
 		if (k >= 0 && k < info->w) {
-			luaopen_level_levDat(L, projects[projectIDX].lvl->getlevDat(levelLayerIDX, k, idxPtr[2]));
+			luaopen_level_levDat(L, projects->at(projectIDX).lvl->getlevDat(levelLayerIDX, k, idxPtr[2]));
 			return 1;
 		}
 	}
@@ -42,7 +42,7 @@ static int levelLayerRow__get_(lua_State *L) {
 static int levelLayerRow__len_(lua_State *L) {
 	getProjectIDX
 	size_t levelLayerIDX = idxPtr[1];
-	struct levelInfo* info = projects[projectIDX].lvl->getInfo(levelLayerIDX);
+	struct levelInfo* info = projects->at(projectIDX).lvl->getInfo(levelLayerIDX);
 
 	lua_pushinteger(L, info->w);
 	return 1;

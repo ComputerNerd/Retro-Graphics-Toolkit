@@ -158,7 +158,7 @@ void switchShareCB(Fl_Widget*o, void*mask) {
 void shareProjectCB(Fl_Widget*o, void*mask) {
 	Fl_Check_Button* b = (Fl_Check_Button*)o;
 
-	if (projects.size() <= 1) {
+	if (projects->size() <= 1) {
 		fl_alert("Cannot share when there is only one project");
 		b->value(0);
 		window->redraw();
@@ -215,7 +215,7 @@ void appendProjectCB(Fl_Widget*, void*) {
 	window->redraw();
 }
 void deleteProjectCB(Fl_Widget*, void*) {
-	if (projects.size() <= 1) {
+	if (projects->size() <= 1) {
 		fl_alert("You must have at least one project.");
 		return;
 	}
@@ -227,6 +227,6 @@ void deleteProjectCB(Fl_Widget*, void*) {
 		window->projectSelect->value(curProjectID);
 	}
 
-	currentProject = &projects[curProjectID];
+	currentProject = &projects->at(curProjectID);
 	switchProject(curProjectID, curProjectID);
 }

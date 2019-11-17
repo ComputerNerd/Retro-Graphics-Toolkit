@@ -81,16 +81,16 @@ void setGameSysTMS9918(Project*prj) {
 
 	switch (subSysnew) {
 		case MODE_0:
-			changeTileDim(6, 8, prj);
+			prj->changeTileDim(6, 8);
 			break;
 
 		case MODE_1:
 		case MODE_2:
-			changeTileDim(8, 8, prj);
+			prj->changeTileDim(8, 8);
 			break;
 
 		case MODE_3:
-			changeTileDim(2, 2, prj);
+			prj->changeTileDim(2, 2);
 			break;
 	}
 }

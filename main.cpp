@@ -64,7 +64,6 @@ static void createargtable (lua_State *L, char **argv, int argc, int script) {
 #define _chdir chdir
 #endif
 int main(int argc, char **argv) {
-	initProject();
 #ifdef _WIN32
 	char olddirname[MAX_PATH];
 	getcwd(olddirname, sizeof(olddirname));
@@ -104,6 +103,8 @@ int main(int argc, char **argv) {
 	if (headless) {
 		// Run Lua script.
 		startLuaConf("config.lua", true);
+		// The configuration file must be ran before the project is ready.
+		initProject();
 		lua_State*Lheadless = createLuaState();
 		// Create arg table just like Lua standalone
 		std::string pathbld = "./headlessExamples/";

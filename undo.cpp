@@ -1137,8 +1137,8 @@ static void UndoRedo(bool redo) {
 			Project*tmp = new Project(*currentProject);
 			tmp->copyClasses(*currentProject);
 
-			projects[up->id] = *up->ptr;
-			projects[up->id].copyClasses(*up->ptr);
+			projects->at(up->id) = *up->ptr;
+			projects->at(up->id).copyClasses(*up->ptr);
 			delete up->ptr;
 			up->ptr = tmp;
 
@@ -1150,15 +1150,15 @@ static void UndoRedo(bool redo) {
 		case uProjectAll:
 		{
 			struct undoProjectAll*up = (struct undoProjectAll*)uptr->ptr;
-			std::vector<struct Project> oldBackup = projects;
+			std::vector<struct Project> oldBackup = *projects;
 
 			for (size_t i = 0; i < oldBackup.size(); ++i)
-				oldBackup[i].copyClasses(projects[i]);
+				oldBackup[i].copyClasses(projects->at(i));
 
-			projects = up->old; // up->old already contains a copy of the classes.
+			projects = &up->old; // up->old already contains a copy of the classes.
 			up->old = oldBackup;
 
-			for (size_t i = 0; i < projects.size(); ++i)
+			for (size_t i = 0; i < projects->size(); ++i)
 				prjChangePtr(i);
 
 			changeProjectAmt();
@@ -1170,7 +1170,7 @@ static void UndoRedo(bool redo) {
 			if (redo)
 				appendProject();
 			else
-				removeProject(projects.size() - 1);
+				removeProject(projects->size() - 1);
 
 			break;
 	}
@@ -1553,10 +1553,10 @@ void pushProjectAll(void) {
 	uptr->ptr = new struct undoProjectAll;
 	memUsed += sizeof(struct undoProjectAll);
 	struct undoProjectAll*up = (struct undoProjectAll*)uptr->ptr;
-	up->old = projects;
+	up->old = *projects;
 
-	for (size_t i = 0; i < projects.size(); ++i)
-		up->old[i].copyClasses(projects[i]);
+	for (size_t i = 0; i < projects->size(); ++i)
+		up->old[i].copyClasses(projects->at(i));
 }
 static Fl_Window*win;
 static void closeHistory(Fl_Widget*, void*) {

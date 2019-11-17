@@ -31,7 +31,7 @@ static int tileRGBArow__get_(lua_State *L) {
 		size_t idx = *idxPtr;
 		size_t tileIDX = idxPtr[1];
 
-		if (k >= 0 && k < projects[idx].tileC->height()) {
+		if (k >= 0 && k < projects->at(idx).tileC->height()) {
 			luaopen_TileRGBA(L, idx, tileIDX, k);
 			return 1;
 		}
@@ -42,7 +42,7 @@ static int tileRGBArow__get_(lua_State *L) {
 
 static int tileRGBArow__len_(lua_State *L) {
 	getProjectIDX
-	lua_pushinteger(L, projects[projectIDX].tileC->height());
+	lua_pushinteger(L, projects->at(projectIDX).tileC->height());
 	return 1;
 }
 

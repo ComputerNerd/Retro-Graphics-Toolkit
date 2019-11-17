@@ -440,9 +440,9 @@ static void updateLevelTable(lua_State*L);
 
 bool luaL_checkboolean(lua_State* L, int n) {
 	if (lua_isboolean(L, n))
-		return lua_tostring(L, n);
+		return lua_toboolean(L, n);
 	else
-		luaL_error(L, "Expected boolean for argument %d.", n);
+		luaL_error(L, "Expected boolean for argument %d. Type: %s.", n, lua_typename(L, lua_type(L, -1)));
 
 	return false;
 }
@@ -486,6 +486,23 @@ static void updateLevelTable(lua_State*L) {
 	lua_setglobal(L, "level");
 }
 
+void setProjectConstants(lua_State*L) {
+	lua_createtable(L, 0, (sizeof(lua_projectAPI) / sizeof((lua_projectAPI)[0]) - 1) + 12);
+	luaL_setfuncs(L, lua_projectAPI, 0);
+	mkKeyunsigned(L, "palMask", pjHavePal);
+	mkKeyunsigned(L, "tilesMask", pjHaveTiles);
+	mkKeyunsigned(L, "mapMask", pjHaveMap);
+	mkKeyunsigned(L, "chunksMask", pjHaveChunks);
+	mkKeyunsigned(L, "spritesMask", pjHaveSprites);
+	mkKeyunsigned(L, "levelMask", pjHaveLevel);
+	mkKeyunsigned(L, "allMask", pjAllMask);
+	mkKeyunsigned(L, "segaGenesis", segaGenesis);
+	mkKeyunsigned(L, "NES", NES);
+	mkKeyunsigned(L, "gameGear", gameGear);
+	mkKeyunsigned(L, "masterSystem", masterSystem);
+	lua_setglobal(L, "project");
+}
+
 void updateProjectTablesLua(lua_State*L) {
 	//Retro Graphics Toolkit bindings
 	lua_pushnil(L);
@@ -510,27 +527,11 @@ void updateProjectTablesLua(lua_State*L) {
 
 	updateLevelTable(L);
 
-	lua_pushnil(L);
-	lua_setglobal(L, "project");
-	lua_createtable(L, 0, (sizeof(lua_projectAPI) / sizeof((lua_projectAPI)[0]) - 1) + 12);
-	luaL_setfuncs(L, lua_projectAPI, 0);
-	mkKeyunsigned(L, "palMask", pjHavePal);
-	mkKeyunsigned(L, "tilesMask", pjHaveTiles);
-	mkKeyunsigned(L, "mapMask", pjHaveMap);
-	mkKeyunsigned(L, "chunksMask", pjHaveChunks);
-	mkKeyunsigned(L, "spritesMask", pjHaveSprites);
-	mkKeyunsigned(L, "levelMask", pjHaveLevel);
-	mkKeyunsigned(L, "allMask", pjAllMask);
-	mkKeyunsigned(L, "segaGenesis", segaGenesis);
-	mkKeyunsigned(L, "NES", NES);
-	mkKeyunsigned(L, "gameGear", gameGear);
-	mkKeyunsigned(L, "masterSystem", masterSystem);
-	lua_setglobal(L, "project");
 }
 static int lua_project_set(lua_State*L) {
 	unsigned off = luaL_optinteger(L, 1, 1) - 1;
 
-	if ((off >= projects.size()) || (off == curProjectID))
+	if ((off >= projects->size()) || (off == curProjectID))
 		lua_pushboolean(L, false); //Failure
 	else {
 		switchProjectSlider(off);
@@ -976,6 +977,14 @@ void runLua(lua_State*L, const char*str, bool isFile) {
 
 lua_State* moonfltk_main_lua_state = 0;
 
+void registerProjectTables(lua_State*L) {
+	luaCreateProjectsTable(L);
+
+	updateProjectTablesLua(L);
+
+	setProjectConstants(L);
+}
+
 lua_State*createLuaState(void) {
 	lua_State *L = lua_newstate(l_alloc, NULL);
 
@@ -987,9 +996,8 @@ lua_State*createLuaState(void) {
 
 		createFLTKbindings(L);
 
-		luaCreateProjectsTable(L);
-
-		updateProjectTablesLua(L);
+		if (projects)
+			registerProjectTables(L);
 
 		lua_createtable(L, 0, arLen(rgtConsts) + arLen(lua_rgtAPI) - 1);
 		luaL_setfuncs(L, lua_rgtAPI, 0);

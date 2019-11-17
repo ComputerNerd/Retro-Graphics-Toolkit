@@ -70,6 +70,7 @@ public:
 	paletteRawValue_t rgbToValue(unsigned r, unsigned g, unsigned b);
 	rgbArray_t valueToRGB(const paletteRawValue_t val) const;
 	paletteRawValue_t getEntry(const unsigned ent)const;
+	bool isRawValueValid(paletteRawValue_t val)const;
 	void setEntry(const paletteRawValue_t rawVal, const unsigned ent);
 	void rgbToEntry(unsigned r, unsigned g, unsigned b, unsigned ent);
 	uint8_t to_nes_color_rgb(uint8_t red, uint8_t green, uint8_t blue);

@@ -21,7 +21,7 @@
 
 static int lua_level_subType(lua_State*L) {
 	getProjectIDX
-	projects[projectIDX].lvl->subType(lua_tointeger(L, 2), lua_tointeger(L, 3), (enum source)lua_tointeger(L, 4), lua_tointeger(L, 5));
+	projects->at(projectIDX).lvl->subType(lua_tointeger(L, 2), lua_tointeger(L, 3), (enum source)lua_tointeger(L, 4), lua_tointeger(L, 5));
 	return 0;
 }
 
@@ -45,7 +45,7 @@ static int level__get_(lua_State *L) {
 
 static int level___tostring(lua_State *L) {
 	getProjectIDX
-	lua_pushfstring(L, "level table: %p", projects[projectIDX].lvl);
+	lua_pushfstring(L, "level table: %p", projects->at(projectIDX).lvl);
 	return 1;
 }
 

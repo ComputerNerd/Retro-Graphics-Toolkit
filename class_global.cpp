@@ -91,7 +91,7 @@ void editor::updateMapWH(void) {
 	updateMapWH(currentProject->tms->maps[currentProject->curPlane].mapSizeW, currentProject->tms->maps[currentProject->curPlane].mapSizeH);
 }
 void editor::updateBlockTilesChunk(uint32_t prj) {
-	if (projects[prj].Chunk->useBlocks) {
+	if (projects->at(prj).Chunk->useBlocks) {
 		tile_select_3->label("Block select");
 		useBlocksChunkCBtn->value(1);
 	} else {
@@ -105,20 +105,22 @@ void editor::updateBlockTilesChunk(void) {
 static void intstr(int x, char*tmp) {
 	snprintf(tmp, 16, "%d", x);
 }
-void editor::updateSpriteSliders(uint32_t prj) {
-	bool haveSprite = (projects[prj].ms->sps[curSpritemeta].groups[curSpritegroup].list.size()) ? true : false;
-	metaspritesel->maximum(projects[prj].ms->sps.size() - 1);
+void editor::updateSpriteSliders(uint32_t prjIDX) {
+	Project&prj = projects->at(prjIDX);
+
+	bool haveSprite = (prj.ms->sps[curSpritemeta].groups[curSpritegroup].list.size()) ? true : false;
+	metaspritesel->maximum(prj.ms->sps.size() - 1);
 
 	if (metaspritesel->value() >= metaspritesel->maximum()) {
-		metaspritesel->value(projects[prj].ms->sps.size() - 1);
-		curSpritemeta = projects[prj].ms->sps.size() - 1;
+		metaspritesel->value(prj.ms->sps.size() - 1);
+		curSpritemeta = prj.ms->sps.size() - 1;
 	}
 
-	spriteselgroup->maximum(projects[prj].ms->sps[curSpritemeta].amt - 1);
+	spriteselgroup->maximum(prj.ms->sps[curSpritemeta].amt - 1);
 
-	if (spriteselgroup->value() > projects[prj].ms->sps[curSpritemeta].amt - 1) {
-		spriteselgroup->value(projects[prj].ms->sps[curSpritemeta].amt - 1);
-		curSpritegroup = projects[prj].ms->sps[curSpritemeta].amt - 1;
+	if (spriteselgroup->value() > prj.ms->sps[curSpritemeta].amt - 1) {
+		spriteselgroup->value(prj.ms->sps[curSpritemeta].amt - 1);
+		curSpritegroup = prj.ms->sps[curSpritemeta].amt - 1;
 	}
 
 	if (haveSprite) {
@@ -144,32 +146,32 @@ void editor::updateSpriteSliders(uint32_t prj) {
 				spritealign[i]->show();
 		}
 
-		spritesel->maximum(projects[prj].ms->sps[curSpritemeta].groups[curSpritegroup].list.size() - 1);
+		spritesel->maximum(prj.ms->sps[curSpritemeta].groups[curSpritegroup].list.size() - 1);
 
-		if (spritesel->value() > projects[prj].ms->sps[curSpritemeta].groups[curSpritegroup].list.size() - 1) {
-			spritesel->value(projects[prj].ms->sps[curSpritemeta].groups[curSpritegroup].list.size() - 1);
-			curSprite = projects[prj].ms->sps[curSpritemeta].groups[curSpritegroup].list.size() - 1;
+		if (spritesel->value() > prj.ms->sps[curSpritemeta].groups[curSpritegroup].list.size() - 1) {
+			spritesel->value(prj.ms->sps[curSpritemeta].groups[curSpritegroup].list.size() - 1);
+			curSprite = prj.ms->sps[curSpritemeta].groups[curSpritegroup].list.size() - 1;
 		}
 
-		spritest->value(projects[prj].ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].starttile);
-		spriteslat->value(projects[prj].ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].loadat);
-		spritesize[0]->value(projects[prj].ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].w);
-		spritesize[1]->value(projects[prj].ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].h);
+		spritest->value(prj.ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].starttile);
+		spriteslat->value(prj.ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].loadat);
+		spritesize[0]->value(prj.ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].w);
+		spritesize[1]->value(prj.ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].h);
 
 		if (fixedRow < 0) {
 			spritepalrow->show();
-			spritepalrow->value(projects[prj].ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].palrow);
+			spritepalrow->value(prj.ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].palrow);
 		} else
 			spritepalrow->hide();
 
 		char tmp[16];
-		intstr(projects[prj].ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].offx, tmp);
+		intstr(prj.ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].offx, tmp);
 		spritesoff[0]->value(tmp);
-		intstr(projects[prj].ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].offy, tmp);
+		intstr(prj.ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].offy, tmp);
 		spritesoff[1]->value(tmp);
-		spritehflip->value(projects[prj].ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].hflip);
-		spritevflip->value(projects[prj].ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].vflip);
-		spriteprio->value(projects[prj].ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].prio);
+		spritehflip->value(prj.ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].hflip);
+		spritevflip->value(prj.ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].vflip);
+		spriteprio->value(prj.ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].prio);
 	} else {
 		curSprite = 0;
 
@@ -191,7 +193,7 @@ void editor::updateSpriteSliders(uint32_t prj) {
 		}
 	}
 
-	spritegrouptxt->value(projects[prj].ms->sps[curSpritemeta].groups[curSpritegroup].name.c_str());
+	spritegrouptxt->value(prj.ms->sps[curSpritemeta].groups[curSpritegroup].name.c_str());
 }
 void editor::updateSpriteSliders(void) {
 	updateSpriteSliders(curProjectID);

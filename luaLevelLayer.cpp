@@ -30,7 +30,7 @@ static int lua_levelLayer_remove(lua_State*L) {
 	getProjectIDX
 	size_t levelLayerIDX = idxPtr[1];
 
-	projects[projectIDX].lvl->removeLayer(levelLayerIDX);
+	projects->at(projectIDX).lvl->removeLayer(levelLayerIDX);
 	return 0;
 }
 
@@ -38,7 +38,7 @@ static int lua_levelLayer_resize(lua_State*L) {
 	getProjectIDX
 	size_t levelLayerIDX = idxPtr[1];
 
-	projects[projectIDX].lvl->resizeLayer(levelLayerIDX, luaL_optinteger(L, 2, 1), luaL_optinteger(L, 3, 1));
+	projects->at(projectIDX).lvl->resizeLayer(levelLayerIDX, luaL_optinteger(L, 2, 1), luaL_optinteger(L, 3, 1));
 	return 0;
 }
 
@@ -53,7 +53,7 @@ static int levelLayer__get_(lua_State *L) {
 		if (type == LUA_TNUMBER) {
 			int k = luaL_checkinteger(L, 2) - 1;
 
-			struct levelInfo* info = projects[projectIDX].lvl->getInfo(idx2);
+			struct levelInfo* info = projects->at(projectIDX).lvl->getInfo(idx2);
 
 			if (k >= 0 && k < info->h) {
 				luaopen_LevelLayerRow(L, projectIDX, idx2, k);
@@ -63,13 +63,13 @@ static int levelLayer__get_(lua_State *L) {
 			const char*k = luaL_checkstring(L, 2);
 
 			if (!strcmp("info", k)) {
-				luaopen_level_levelInfo(L, projects[projectIDX].lvl->getInfo(idx2));
+				luaopen_level_levelInfo(L, projects->at(projectIDX).lvl->getInfo(idx2));
 				return 1;
 			} else if (!strcmp("objects", k)) {
 				luaopen_LevelObjects(L, projectIDX, idx2);
 				return 1;
 			} else if (!strcmp("name", k)) {
-				lua_pushstring(L, projects[projectIDX].lvl->layernames[idx2].c_str());
+				lua_pushstring(L, projects->at(projectIDX).lvl->layernames[idx2].c_str());
 				return 1;
 			}
 		}
@@ -91,7 +91,7 @@ static int levelLayer___tostring(lua_State *L) {
 static int levelLayer__len_(lua_State *L) {
 	getProjectIDX
 	size_t levelLayerIDX = idxPtr[1];
-	struct levelInfo* info = projects[projectIDX].lvl->getInfo(levelLayerIDX);
+	struct levelInfo* info = projects->at(projectIDX).lvl->getInfo(levelLayerIDX);
 
 	lua_pushinteger(L, info->h);
 	return 1;
@@ -105,7 +105,7 @@ static int levelLayer__set_(lua_State *L) {
 	const char*k = luaL_checkstring(L, 2);
 
 	if (!strcmp("name", k))
-		projects[projectIDX].lvl->layernames[levelLayerIDX].assign(lua_tostring(L, 3));
+		projects->at(projectIDX).lvl->layernames[levelLayerIDX].assign(lua_tostring(L, 3));
 
 	return 0;
 }

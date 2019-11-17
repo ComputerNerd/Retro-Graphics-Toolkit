@@ -23,31 +23,31 @@
 #include "errorMsg.h"
 
 static int palette__set_(lua_State *L) {
-	getProjectIDX
+	getProjectRef
 	size_t entryIDX = idxPtr[1];
 
 	const char *key = luaL_checkstring(L, 2);
 
 	if (!strcmp("r", key))
-		projects[projectIDX].pal->rgbPal[entryIDX * 3] = luaL_checkinteger(L, 3);
+		prj.pal->rgbPal[entryIDX * 3] = luaL_checkinteger(L, 3);
 	else if (!strcmp("g", key))
-		projects[projectIDX].pal->rgbPal[entryIDX * 3 + 1] = luaL_checkinteger(L, 3);
+		prj.pal->rgbPal[entryIDX * 3 + 1] = luaL_checkinteger(L, 3);
 	else if (!strcmp("b", key))
-		projects[projectIDX].pal->rgbPal[entryIDX * 3 + 2] = luaL_checkinteger(L, 3);
+		prj.pal->rgbPal[entryIDX * 3 + 2] = luaL_checkinteger(L, 3);
 	else if (!strcmp("raw", key)) {
 		unsigned val = luaL_checkinteger(L, 3);
-		projects[projectIDX].pal->setEntry(val, entryIDX);
+		prj.pal->setEntry(val, entryIDX);
 	}
 
 	return 0;
 }
 
 static int lua_palette_convertFromRGB(lua_State*L) {
-	getProjectIDX
+	getProjectRef
 	size_t entryIDX = idxPtr[1];
 	size_t ent3 = entryIDX * 3;
 
-	projects[projectIDX].pal->rgbToEntry(projects[projectIDX].pal->rgbPal[ent3], projects[projectIDX].pal->rgbPal[ent3 + 1], projects[projectIDX].pal->rgbPal[ent3 + 2], entryIDX);
+	prj.pal->rgbToEntry(prj.pal->rgbPal[ent3], prj.pal->rgbPal[ent3 + 1], prj.pal->rgbPal[ent3 + 2], entryIDX);
 
 	return 1;
 }
@@ -56,7 +56,7 @@ static int lua_palette_setRGB(lua_State*L) {
 	getProjectIDX
 	size_t entryIDX = idxPtr[1];
 
-	projects[projectIDX].pal->rgbToEntry(luaL_checkinteger(L, 2), luaL_checkinteger(L, 3), luaL_checkinteger(L, 4), entryIDX);
+	projects->at(projectIDX).pal->rgbToEntry(luaL_checkinteger(L, 2), luaL_checkinteger(L, 3), luaL_checkinteger(L, 4), entryIDX);
 
 	return 1;
 }
@@ -65,29 +65,29 @@ static int paletteEntry__get_(lua_State *L) {
 	checkAlreadyExists
 
 	int type = lua_type(L, 2);
-	getProjectIDX
+	getProjectRef
 	const size_t entryIDX = idxPtr[1];
 
 	if (type == LUA_TSTRING) {
 		const char*k = luaL_checkstring(L, 2);
 
 		if (!strcmp("r", k)) {
-			lua_pushinteger(L, projects[projectIDX].pal->rgbPal[entryIDX * 3]);
+			lua_pushinteger(L, prj.pal->rgbPal[entryIDX * 3]);
 			return 1;
 		} else if (!strcmp("g", k)) {
-			lua_pushinteger(L, projects[projectIDX].pal->rgbPal[entryIDX * 3 + 1]);
+			lua_pushinteger(L, prj.pal->rgbPal[entryIDX * 3 + 1]);
 			return 1;
 		} else if (!strcmp("b", k)) {
-			lua_pushinteger(L, projects[projectIDX].pal->rgbPal[entryIDX * 3 + 2]);
+			lua_pushinteger(L, prj.pal->rgbPal[entryIDX * 3 + 2]);
 			return 1;
 		} else if (!strcmp("raw", k)) {
-			lua_pushinteger(L, projects[projectIDX].pal->getEntry(entryIDX));
+			lua_pushinteger(L, prj.pal->getEntry(entryIDX));
 			return 1;
 		} else if (!strcmp("type", k)) {
-			lua_pushinteger(L, projects[projectIDX].pal->palType[luaL_optinteger(L, 1, 0)]);
+			lua_pushinteger(L, prj.pal->palType[luaL_optinteger(L, 1, 0)]);
 			return 1;
 		} else if (!strcmp("pType", k)) {
-			lua_pushinteger(L, projects[projectIDX].pal->palType[entryIDX]);
+			lua_pushinteger(L, prj.pal->palType[entryIDX]);
 			return 1;
 		}
 	}

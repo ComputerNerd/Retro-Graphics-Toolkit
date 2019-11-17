@@ -178,7 +178,10 @@ void editor::_editor() {
 	//create the window
 	keepUserdat = new std::vector<std::pair<unsigned, int64_t>>;
 	luaCallback = new std::vector<std::pair<std::string, int64_t>>;
+
 	startLuaConf("config.lua", false);
+	initProject();
+
 	menu = new Fl_Menu_Bar(0, 0, 800, 24); //Create menubar, items..
 	lua_getglobal(Lconf, "generateMenu");
 	runLuaFunc(Lconf, 0, 1);

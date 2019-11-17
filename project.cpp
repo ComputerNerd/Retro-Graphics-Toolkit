@@ -27,27 +27,28 @@
 #include "callback_gui.h"
 #include "callbacklua.h"
 #include "luaconfig.h"
+#include "luaProjects.hpp"
 #include "runlua.h"
 #include "filemisc.h"
 #include "errorMsg.h"
 
 
 extern editor *window;
-std::vector<struct Project> projects;
+std::vector<struct Project>* projects;
 struct Project * currentProject;
 Fl_Slider* curPrj;
 static const char * defaultName = "Add a description here.";
 uint32_t curProjectID;
 static const char*const maskNames[] = {"palette", "tiles", "tilemap", "chunks", "sprites", "level", "{Undefined}"};
-void changeTileDim(unsigned w, unsigned h, struct Project*p) {
-	if (p->containsData(pjHaveTiles)) {
-		unsigned sw = p->tileC->width(), sh = p->tileC->height();
-		p->tileC->changeDim(w, h, p->getBitdepthSys());
+void Project::changeTileDim(unsigned w, unsigned h) {
+	if (containsData(pjHaveTiles)) {
+		unsigned sw = tileC->width(), sh = tileC->height();
+		tileC->changeDim(w, h, getBitdepthSys());
 
-		if (sw > w && sh > h && p->containsData(pjHaveMap)) {
-			for (size_t i = 0; i < p->tms->maps.size(); ++i) {
-				tileMap*tm = new tileMap(p->tms->maps[i], p);
-				p->tms->maps[i].resize_tile_map(p->tms->maps[i].mapSizeW * sw / w, p->tms->maps[i].mapSizeH * sh / h);
+		if (sw > w && sh > h && containsData(pjHaveMap)) {
+			for (size_t i = 0; i < tms->maps.size(); ++i) {
+				tileMap*tm = new tileMap(tms->maps[i], this);
+				tms->maps[i].resize_tile_map(tms->maps[i].mapSizeW * sw / w, tms->maps[i].mapSizeH * sh / h);
 				delete tm;
 			}
 		}
@@ -124,33 +125,34 @@ bool Project::containsDataOR(uint32_t mask) {
 void compactPrjMem(void) {
 	int Cold = 0, Cnew = 0; //Old and new capacity
 
-	for (uint_fast32_t i = 0; i < projects.size(); ++i) {
-		if (projects[i].containsData(pjHaveTiles)) {
-			Cold += projects[i].tileC->tDat.capacity();
-			Cold += projects[i].tileC->truetDat.capacity();
-			projects[i].tileC->tDat.shrink_to_fit();
-			projects[i].tileC->truetDat.shrink_to_fit();
-			Cnew += projects[i].tileC->tDat.capacity();
-			Cnew += projects[i].tileC->truetDat.capacity();
+	for (uint_fast32_t i = 0; i < projects->size(); ++i) {
+		Project& prj = projects->at(i);
+		if (prj.containsData(pjHaveTiles)) {
+			Cold += prj.tileC->tDat.capacity();
+			Cold += prj.tileC->truetDat.capacity();
+			prj.tileC->tDat.shrink_to_fit();
+			prj.tileC->truetDat.shrink_to_fit();
+			Cnew += prj.tileC->tDat.capacity();
+			Cnew += prj.tileC->truetDat.capacity();
 		}
 
-		if (projects[i].containsData(pjHaveChunks)) {
-			Cold += projects[i].Chunk->chunks.capacity();
-			projects[i].Chunk->chunks.shrink_to_fit();
-			Cnew += projects[i].Chunk->chunks.capacity();
+		if (prj.containsData(pjHaveChunks)) {
+			Cold += prj.Chunk->chunks.capacity();
+			prj.Chunk->chunks.shrink_to_fit();
+			Cnew += prj.Chunk->chunks.capacity();
 		}
 
-		if (projects[i].containsData(pjHaveSprites)) {
-			for (uint32_t j = 0; j < projects[i].ms->sps.size(); ++j) {
-				for (uint32_t n = 0; n < projects[i].ms->sps[j].amt; ++n) {
-					Cold += projects[i].ms->sps[j].groups[n].list.capacity();
-					projects[i].ms->sps[j].groups[n].list.shrink_to_fit();
-					Cnew += projects[i].ms->sps[j].groups[n].list.capacity();
+		if (prj.containsData(pjHaveSprites)) {
+			for (uint32_t j = 0; j < prj.ms->sps.size(); ++j) {
+				for (uint32_t n = 0; n < prj.ms->sps[j].amt; ++n) {
+					Cold += prj.ms->sps[j].groups[n].list.capacity();
+					prj.ms->sps[j].groups[n].list.shrink_to_fit();
+					Cnew += prj.ms->sps[j].groups[n].list.capacity();
 				}
 
-				Cold += projects[i].ms->sps[j].groups.capacity();
-				projects[i].ms->sps[j].groups.shrink_to_fit();
-				Cnew += projects[i].ms->sps[j].groups.capacity();
+				Cold += prj.ms->sps[j].groups.capacity();
+				prj.ms->sps[j].groups.shrink_to_fit();
+				Cnew += prj.ms->sps[j].groups.capacity();
 			}
 		}
 	}
@@ -313,120 +315,135 @@ void Project::copyClasses(const Project&other) {
 }
 
 static void initNewProject(unsigned at) {
-	projects[at].tileC = new tiles(&projects[at]);
-	projects[at].tms = new tilemaps(&projects[at]);
-	projects[at].Chunk = new ChunkClass(&projects[at]);
-	projects[at].ms = new metasprites(&projects[at]);
-	projects[at].pal = new palette(&projects[at]);
-	projects[at].lvl = new level(&projects[at]);
-	projects[at].useMask = pjDefaultMask;
+	Project& prj = projects->at(at);
+	prj.tileC = new tiles(&prj);
+	prj.tms = new tilemaps(&prj);
+	prj.Chunk = new ChunkClass(&prj);
+	prj.ms = new metasprites(&prj);
+	prj.pal = new palette(&prj);
+	prj.lvl = new level(&prj);
+	prj.useMask = pjDefaultMask;
 }
 
+static bool didInitLconf;
 void initProject(void) {
+	projects = new std::vector<struct Project>();
+
+	if (!didInitLconf) {
+		luaCreateProjectsTable(Lconf);
+		setProjectConstants(Lconf);
+	}
+
 	resizeProjects(1);
 	initNewProject(0);
+
+	if (!didInitLconf) {
+		updateProjectTablesLua(Lconf);
+		didInitLconf = true;
+	}
 }
 
 void setHaveProject(uint32_t id, uint32_t mask, bool set) {
 	/*This function will allocate/free data if and only if it is not being shared
 	if have is already enabled no new data will be allocated
 	if have was enabled data will be freeded*/
-	if ((mask & pjHavePal) && (projects[id].share[0] < 0)) {
+	Project& prjAtID = projects->at(id);
+	if ((mask & pjHavePal) && (prjAtID.share[0] < 0)) {
 		if (set) {
-			if (!(projects[id].useMask & pjHavePal)) {
-				projects[id].pal = new palette(&projects[id]);
-				projects[id].useMask |= pjHavePal;
+			if (!(prjAtID.useMask & pjHavePal)) {
+				prjAtID.pal = new palette(&prjAtID);
+				prjAtID.useMask |= pjHavePal;
 				palBar.setSys();
 
-				if (projects[id].gameSystem == NES)
-					projects[id].pal->updateEmphasis();
+				if (prjAtID.gameSystem == NES)
+					prjAtID.pal->updateEmphasis();
 			}
 		} else {
-			if (projects[id].useMask & pjHavePal) {
-				delete projects[id].pal;
-				projects[id].useMask &= ~pjHavePal;
-				projects[id].pal = nullptr;
+			if (prjAtID.useMask & pjHavePal) {
+				delete prjAtID.pal;
+				prjAtID.useMask &= ~pjHavePal;
+				prjAtID.pal = nullptr;
 			}
 		}
 	}
 
-	if ((mask & pjHaveTiles) && (projects[id].share[1] < 0)) {
+	if ((mask & pjHaveTiles) && (prjAtID.share[1] < 0)) {
 		if (set) {
-			if (!(projects[id].useMask & pjHaveTiles)) {
-				projects[id].tileC = new tiles(&projects[id], &projects[id]);
-				projects[id].useMask |= pjHaveTiles;
+			if (!(prjAtID.useMask & pjHaveTiles)) {
+				prjAtID.tileC = new tiles(&prjAtID, &prjAtID);
+				prjAtID.useMask |= pjHaveTiles;
 			}
 		} else {
-			if (projects[id].useMask & pjHaveTiles) {
-				delete projects[id].tileC;
-				projects[id].useMask &= ~pjHaveTiles;
-				projects[id].tileC = nullptr;
+			if (prjAtID.useMask & pjHaveTiles) {
+				delete prjAtID.tileC;
+				prjAtID.useMask &= ~pjHaveTiles;
+				prjAtID.tileC = nullptr;
 			}
 		}
 	}
 
-	if ((mask & pjHaveMap) && (projects[id].share[2] < 0)) {
+	if ((mask & pjHaveMap) && (prjAtID.share[2] < 0)) {
 		if (set) {
-			if (!(projects[id].useMask & pjHaveMap)) {
-				projects[id].tms = new tilemaps(&projects[id]);
-				projects[id].useMask |= pjHaveMap;
+			if (!(prjAtID.useMask & pjHaveMap)) {
+				prjAtID.tms = new tilemaps(&prjAtID);
+				prjAtID.useMask |= pjHaveMap;
 			}
 		} else {
-			if (projects[id].useMask & pjHaveMap) {
-				delete projects[id].tms;
-				projects[id].useMask &= ~pjHaveMap;
-				projects[id].tms = nullptr;
+			if (prjAtID.useMask & pjHaveMap) {
+				delete prjAtID.tms;
+				prjAtID.useMask &= ~pjHaveMap;
+				prjAtID.tms = nullptr;
 			}
 		}
 	}
 
-	if ((mask & pjHaveChunks) && (projects[id].share[3] < 0)) {
+	if ((mask & pjHaveChunks) && (prjAtID.share[3] < 0)) {
 		if (set) {
-			if (!(projects[id].useMask & pjHaveChunks)) {
-				projects[id].Chunk = new ChunkClass(&projects[id]);
-				projects[id].useMask |= pjHaveChunks;
+			if (!(prjAtID.useMask & pjHaveChunks)) {
+				prjAtID.Chunk = new ChunkClass(&prjAtID);
+				prjAtID.useMask |= pjHaveChunks;
 			}
 		} else {
-			if (projects[id].useMask & pjHaveChunks) {
-				delete projects[id].Chunk;
-				projects[id].useMask &= ~pjHaveChunks;
-				projects[id].Chunk = nullptr;
+			if (prjAtID.useMask & pjHaveChunks) {
+				delete prjAtID.Chunk;
+				prjAtID.useMask &= ~pjHaveChunks;
+				prjAtID.Chunk = nullptr;
 			}
 		}
 	}
 
-	if ((mask & pjHaveSprites) && (projects[id].share[4] < 0)) {
+	if ((mask & pjHaveSprites) && (prjAtID.share[4] < 0)) {
 		if (set) {
-			if (!(projects[id].useMask & pjHaveSprites)) {
+			if (!(prjAtID.useMask & pjHaveSprites)) {
 				if (window)
 					window->spriteglobaltxt->show();
 
-				projects[id].ms = new metasprites(&projects[id]);
-				projects[id].useMask |= pjHaveSprites;
+				prjAtID.ms = new metasprites(&prjAtID);
+				prjAtID.useMask |= pjHaveSprites;
 			}
 		} else {
-			if (projects[id].useMask & pjHaveSprites) {
+			if (prjAtID.useMask & pjHaveSprites) {
 				if (window)
 					window->spriteglobaltxt->hide();
 
-				delete projects[id].ms;
-				projects[id].useMask &= ~pjHaveSprites;
-				projects[id].ms = nullptr;
+				delete prjAtID.ms;
+				prjAtID.useMask &= ~pjHaveSprites;
+				prjAtID.ms = nullptr;
 			}
 		}
 	}
 
-	if ((mask & pjHaveLevel) && (projects[id].share[5] < 0)) {
+	if ((mask & pjHaveLevel) && (prjAtID.share[5] < 0)) {
 		if (set) {
-			if (!(projects[id].useMask & pjHaveLevel)) {
-				projects[id].useMask |= pjHaveLevel;
-				projects[id].lvl = new level(&projects[id]);
+			if (!(prjAtID.useMask & pjHaveLevel)) {
+				prjAtID.useMask |= pjHaveLevel;
+				prjAtID.lvl = new level(&prjAtID);
 			}
 		} else {
-			if (projects[id].useMask & pjHaveLevel) {
-				projects[id].useMask &= ~pjHaveLevel;
-				delete projects[id].lvl;
-				projects[id].lvl = nullptr;
+			if (prjAtID.useMask & pjHaveLevel) {
+				prjAtID.useMask &= ~pjHaveLevel;
+				delete prjAtID.lvl;
+				prjAtID.lvl = nullptr;
 			}
 		}
 	}
@@ -441,101 +458,103 @@ void shareProject(uint32_t share, uint32_t with, uint32_t what, bool enable) {
 		return;
 	}
 
+	Project& prjAtShare = projects->at(share);
+	Project& prjAtWith = projects->at(with);
 	if (enable) {
 		if (what & pjHavePal) {
-			if ((projects[share].share[0] < 0) && (projects[share].useMask & pjHavePal))
-				delete projects[share].pal;
+			if ((prjAtShare.share[0] < 0) && (prjAtShare.useMask & pjHavePal))
+				delete prjAtShare.pal;
 
-			projects[share].share[0] = with;
-			projects[share].pal = projects[with].pal;
+			prjAtShare.share[0] = with;
+			prjAtShare.pal = prjAtWith.pal;
 		}
 
 		if (what & pjHaveTiles) {
-			if ((projects[share].share[1] < 0) && (projects[share].useMask & pjHaveTiles))
-				delete projects[share].tileC;
+			if ((prjAtShare.share[1] < 0) && (prjAtShare.useMask & pjHaveTiles))
+				delete prjAtShare.tileC;
 
-			projects[share].share[1] = with;
-			projects[share].tileC = projects[with].tileC;
+			prjAtShare.share[1] = with;
+			prjAtShare.tileC = prjAtWith.tileC;
 		}
 
 		if (what & pjHaveMap) {
-			if ((projects[share].share[2] < 0) && (projects[share].useMask & pjHaveMap))
-				delete projects[share].tms;
+			if ((prjAtShare.share[2] < 0) && (prjAtShare.useMask & pjHaveMap))
+				delete prjAtShare.tms;
 
-			projects[share].share[2] = with;
-			projects[share].tms = projects[with].tms;
+			prjAtShare.share[2] = with;
+			prjAtShare.tms = prjAtWith.tms;
 		}
 
 		if (what & pjHaveChunks) {
-			if ((projects[share].share[chunkEditor] < 0) && (projects[share].useMask & pjHaveChunks))
-				delete projects[share].Chunk;
+			if ((prjAtShare.share[chunkEditor] < 0) && (prjAtShare.useMask & pjHaveChunks))
+				delete prjAtShare.Chunk;
 
-			projects[share].share[chunkEditor] = with;
-			projects[share].Chunk = projects[with].Chunk;
+			prjAtShare.share[chunkEditor] = with;
+			prjAtShare.Chunk = prjAtWith.Chunk;
 		}
 
 		if (what & pjHaveSprites) {
-			if ((projects[share].share[spriteEditor] < 0) && (projects[share].useMask & pjHaveSprites))
-				delete projects[share].ms;
+			if ((prjAtShare.share[spriteEditor] < 0) && (prjAtShare.useMask & pjHaveSprites))
+				delete prjAtShare.ms;
 
-			projects[share].share[spriteEditor] = with;
-			projects[share].ms = projects[with].ms;
+			prjAtShare.share[spriteEditor] = with;
+			prjAtShare.ms = prjAtWith.ms;
 		}
 
 		if (what & pjHaveLevel) {
-			if ((projects[share].share[levelEditor] < 0) && (projects[share].useMask & pjHaveLevel))
-				delete projects[share].lvl;
+			if ((prjAtShare.share[levelEditor] < 0) && (prjAtShare.useMask & pjHaveLevel))
+				delete prjAtShare.lvl;
 
-			projects[share].share[levelEditor] = with;
-			projects[share].lvl = projects[with].lvl;
+			prjAtShare.share[levelEditor] = with;
+			prjAtShare.lvl = prjAtWith.lvl;
 		}
 	} else {
 		if (what & pjHavePal) {
-			if ((projects[share].share[pal_edit] >= 0) && (projects[share].useMask & pjHavePal))
-				projects[share].pal = new palette(*projects[with].pal, &projects[share]);
+			if ((prjAtShare.share[pal_edit] >= 0) && (prjAtShare.useMask & pjHavePal))
+				prjAtShare.pal = new palette(*prjAtWith.pal, &prjAtShare);
 
-			projects[share].share[pal_edit] = -1;
+			prjAtShare.share[pal_edit] = -1;
 		}
 
 		if (what & pjHaveTiles) {
-			if ((projects[share].share[tile_edit] >= 0) && (projects[share].useMask & pjHaveTiles)) //Create a copy of the shared data
-				projects[share].tileC = new tiles(*projects[with].tileC, &projects[share]);
+			if ((prjAtShare.share[tile_edit] >= 0) && (prjAtShare.useMask & pjHaveTiles)) //Create a copy of the shared data
+				prjAtShare.tileC = new tiles(*prjAtWith.tileC, &prjAtShare);
 
-			projects[share].share[tile_edit] = -1;
+			prjAtShare.share[tile_edit] = -1;
 		}
 
 		if (what & pjHaveMap) {
-			if ((projects[share].share[tile_place] >= 0) && (projects[share].useMask & pjHaveMap))
-				projects[share].tms = new tilemaps(*projects[with].tms, &projects[share]);
+			if ((prjAtShare.share[tile_place] >= 0) && (prjAtShare.useMask & pjHaveMap))
+				prjAtShare.tms = new tilemaps(*prjAtWith.tms, &prjAtShare);
 
-			projects[share].share[tile_place] = -1; //Even if we don't have the data sharing can still be disabled
+			prjAtShare.share[tile_place] = -1; //Even if we don't have the data sharing can still be disabled
 		}
 
 		if (what & pjHaveChunks) {
-			if ((projects[share].share[chunkEditor] >= 0) && (projects[share].useMask & pjHaveChunks))
-				projects[share].Chunk = new ChunkClass(*projects[with].Chunk, &projects[share]);
+			if ((prjAtShare.share[chunkEditor] >= 0) && (prjAtShare.useMask & pjHaveChunks))
+				prjAtShare.Chunk = new ChunkClass(*prjAtWith.Chunk, &prjAtShare);
 
-			projects[share].share[chunkEditor] = -1; //Even if we don't have the data sharing can still be disabled
+			prjAtShare.share[chunkEditor] = -1; //Even if we don't have the data sharing can still be disabled
 		}
 
 		if (what & pjHaveSprites) {
-			if ((projects[share].share[spriteEditor] >= 0) && (projects[share].useMask & pjHaveSprites))
-				projects[share].ms = new metasprites(*projects[with].ms, &projects[share]);
+			if ((prjAtShare.share[spriteEditor] >= 0) && (prjAtShare.useMask & pjHaveSprites))
+				prjAtShare.ms = new metasprites(*prjAtWith.ms, &prjAtShare);
 
-			projects[share].share[spriteEditor] = -1; //Even if we don't have the data sharing can still be disabled
+			prjAtShare.share[spriteEditor] = -1; //Even if we don't have the data sharing can still be disabled
 		}
 
 		if (what & pjHaveLevel) {
-			if ((projects[share].share[levelEditor] >= 0) && (projects[share].useMask & pjHaveLevel))
-				projects[share].lvl = new level(*projects[with].lvl, &projects[share]);
+			if ((prjAtShare.share[levelEditor] >= 0) && (prjAtShare.useMask & pjHaveLevel))
+				prjAtShare.lvl = new level(*prjAtWith.lvl, &prjAtShare);
 
-			projects[share].share[levelEditor] = -1; //Even if we don't have the data sharing can still be disabled
+			prjAtShare.share[levelEditor] = -1; //Even if we don't have the data sharing can still be disabled
 		}
 	}
 }
 
 void prjChangePtr(unsigned id) {
-	Project& project = projects[id];
+	Project& project = projects->at(id);
 
 	if (project.isUniqueData(pjHavePal))
 		project.pal->prj = &project;
@@ -551,9 +570,9 @@ void prjChangePtr(unsigned id) {
 }
 
 int resizeProjects(size_t amt) {
-	projects.resize(amt);
+	projects->resize(amt);
 
-	for (size_t i = 0; i < projects.size(); ++i)
+	for (size_t i = 0; i < projects->size(); ++i)
 		prjChangePtr(i);
 
 	if (curProjectID >= amt) {
@@ -561,7 +580,7 @@ int resizeProjects(size_t amt) {
 		switchProjectSlider(curProjectID);
 	}
 
-	currentProject = &projects[curProjectID]; //The address may have changed
+	currentProject = &projects->at(curProjectID); //The address may have changed
 	return 0;
 }
 
@@ -569,20 +588,20 @@ void changeProjectAmt(void) {
 	if (!window)
 		return;
 
-	if (curProjectID >= projects.size())
-		switchProjectSlider(projects.size() - 1, false);
+	if (curProjectID >= projects->size())
+		switchProjectSlider(projects->size() - 1, false);
 
-	window->projectSelect->maximum(projects.size() - 1);
+	window->projectSelect->maximum(projects->size() - 1);
 
 	for (int x = 0; x < shareAmtPj; ++x)
-		window->shareWith[x]->maximum(projects.size() - 1);
+		window->shareWith[x]->maximum(projects->size() - 1);
 }
 
 bool appendProject() {
-	if (resizeProjects(projects.size() + 1))
+	if (resizeProjects(projects->size() + 1))
 		return false;
 
-	initNewProject(projects.size() - 1);
+	initNewProject(projects->size() - 1);
 	changeProjectAmt();
 	return true;
 }
@@ -620,14 +639,14 @@ Project::~Project() {
 
 bool removeProject(uint32_t id) {
 	//removes selected project
-	if (projects.size() <= 1) {
+	if (projects->size() <= 1) {
 		fl_alert("You must have at least one project.");
 		return false;
 	}
 
-	projects.erase(projects.begin() + id);
+	projects->erase(projects->begin() + id);
 
-	currentProject = &projects[curProjectID]; //The address may have changed
+	currentProject = &projects->at(curProjectID); //The address may have changed
 
 	changeProjectAmt();
 	return true;
@@ -650,7 +669,7 @@ void switchProjectSlider(uint32_t id, bool oldExists) {
 	window->projectSelect->value(id);
 	auto oldID = curProjectID;
 	curProjectID = id;
-	currentProject = &projects[curProjectID];
+	currentProject = &projects->at(curProjectID);
 	switchProject(curProjectID, oldID);
 }
 extern int curScript;
@@ -658,10 +677,11 @@ static void updateLuaScriptWindow(uint32_t id, uint32_t oldID, bool load = false
 	if (!window)
 		return;
 
-	size_t amt = projects[id].lScrpt.size();
+	Project&prjAtID = projects->at(id);
+	size_t amt = prjAtID.lScrpt.size();
 
 	if ((curScript >= 0) && (!load))
-		projects[oldID].lScrpt[curScript].str.assign(window->luaBufProject->text()); // currentProject is the old ID.
+		projects->at(oldID).lScrpt[curScript].str.assign(window->luaBufProject->text()); // currentProject is the old ID.
 
 	window->luaScriptSel->clear();
 
@@ -669,7 +689,7 @@ static void updateLuaScriptWindow(uint32_t id, uint32_t oldID, bool load = false
 		window->luaEditProject->show();
 
 		for (unsigned i = 0; i < amt; ++i)
-			window->luaScriptSel->add(projects[id].lScrpt[i].name.c_str(), 0, switchCurLuaScript, (void*)(intptr_t)i);
+			window->luaScriptSel->add(prjAtID.lScrpt[i].name.c_str(), 0, switchCurLuaScript, (void*)(intptr_t)i);
 
 		window->luaScriptSel->value(0);
 		switchCurLuaScript(nullptr, (void*)(intptr_t)0);
@@ -679,33 +699,34 @@ static void updateLuaScriptWindow(uint32_t id, uint32_t oldID, bool load = false
 	}
 }
 void switchProject(uint32_t id, uint32_t oldID, bool load) {
+	Project&prj = projects->at(id);
 	if (window) {
 		updateLuaScriptWindow(id, oldID, load);
-		window->TxtBufProject->text(projects[id].Name.c_str());//Make editor displays new text
-		window->gameSysSel->value(projects[id].gameSystem);
-		window->ditherPower->value(1 + ((projects[id].settings >> subsettingsDitherShift)&subsettingsDitherMask));
-		window->ditherAlgSel->value(projects[id].settings & subsettingsDitherMask);
+		window->TxtBufProject->text(prj.Name.c_str());//Make editor displays new text
+		window->gameSysSel->value(prj.gameSystem);
+		window->ditherPower->value(1 + ((prj.settings >> subsettingsDitherShift)&subsettingsDitherMask));
+		window->ditherAlgSel->value(prj.settings & subsettingsDitherMask);
 
-		if ((projects[id].settings & subsettingsDitherMask))
+		if ((prj.settings & subsettingsDitherMask))
 			window->ditherPower->hide();
 		else
 			window->ditherPower->show();
 	}
 
-	if (projects[id].containsData(pjHavePal))
-		projects[id].pal->setVars(projects[id].gameSystem);
+	if (prj.containsData(pjHavePal))
+		prj.pal->setVars(prj.gameSystem);
 
-	switch (projects[id].gameSystem) {
+	switch (prj.gameSystem) {
 		case segaGenesis:
 			if (window) {
 				window->subSysC->copy(subSysGenesis);
-				window->subSysC->value((projects[id].subSystem & sgSHmask) >> sgSHshift);
+				window->subSysC->value((prj.subSystem & sgSHmask) >> sgSHshift);
 			}
 
-			if (projects[id].containsData(pjHaveTiles))
-				projects[id].tileC->tileSize = 32;
+			if (prj.containsData(pjHaveTiles))
+				prj.tileC->tileSize = 32;
 
-			if (projects[id].containsData(pjHavePal)) {
+			if (prj.containsData(pjHavePal)) {
 				palBar.setSys(true, true);
 				set_palette_type();
 			}
@@ -715,44 +736,44 @@ void switchProject(uint32_t id, uint32_t oldID, bool load) {
 		case NES:
 			if (window) {
 				window->subSysC->copy(subSysNES);
-				window->subSysC->value(projects[id].subSystem & 1);
+				window->subSysC->value(prj.subSystem & 1);
 			}
 
-			if (projects[id].containsData(pjHaveTiles))
-				projects[id].tileC->tileSize = 16;
+			if (prj.containsData(pjHaveTiles))
+				prj.tileC->tileSize = 16;
 
-			if (projects[id].containsData(pjHavePal)) {
+			if (prj.containsData(pjHavePal)) {
 				palBar.setSys();
-				projects[id].pal->updateEmphasis();
+				prj.pal->updateEmphasis();
 			}
 
 			break;
 
 		case masterSystem:
 		case gameGear:
-			if (projects[id].containsData(pjHaveTiles))
-				projects[id].tileC->tileSize = 32;
+			if (prj.containsData(pjHaveTiles))
+				prj.tileC->tileSize = 32;
 
-			if (projects[id].containsData(pjHavePal)) {
+			if (prj.containsData(pjHavePal)) {
 				palBar.setSys();
-				projects[id].pal->paletteToRgb();
+				prj.pal->paletteToRgb();
 			}
 
 			break;
 
 		case TMS9918:
-			setGameSysTMS9918(&projects[id]);
+			setGameSysTMS9918(&prj);
 
 			if (window) {
 				window->subSysC->copy(subSysTMS9918);
-				window->subSysC->value(projects[id].getTMS9918subSys());
+				window->subSysC->value(prj.getTMS9918subSys());
 			}
 
-			if (projects[id].containsData(pjHavePal))
+			if (prj.containsData(pjHavePal))
 				palBar.setSys();
 
-			if (projects[id].containsData(pjHaveTiles))
-				projects[id].tileC->tileSize = 8;
+			if (prj.containsData(pjHaveTiles))
+				prj.tileC->tileSize = 8;
 
 			break;
 
@@ -761,37 +782,37 @@ void switchProject(uint32_t id, uint32_t oldID, bool load) {
 	}
 
 	//Make sure sliders have correct values
-	if (projects[id].containsData(pjHaveMap)) {
+	if (prj.containsData(pjHaveMap)) {
 		if (window) {
 			updatePlaneTilemapMenu(id, window->planeSelect);
-			window->updateMapWH(projects[id].tms->maps[projects[id].curPlane].mapSizeW, projects[id].tms->maps[projects[id].curPlane].mapSizeH);
+			window->updateMapWH(prj.tms->maps[prj.curPlane].mapSizeW, prj.tms->maps[prj.curPlane].mapSizeH);
 			char tmp[16];
-			snprintf(tmp, 16, "%u", projects[id].tms->maps[projects[id].curPlane].amt);
+			snprintf(tmp, 16, "%u", prj.tms->maps[prj.curPlane].amt);
 			window->map_amt->value(tmp);
 		}
 	}
 
-	if (projects[id].containsData(pjHaveTiles) && window)
-		updateTileSelectAmt(projects[id].tileC->amt);
+	if (prj.containsData(pjHaveTiles) && window)
+		updateTileSelectAmt(prj.tileC->amt);
 
 	for (int x = 0; x < shareAmtPj; ++x) {
 		if (window) {
-			window->sharePrj[x]->value(projects[id].share[x] < 0 ? 0 : 1);
-			window->havePrj[x]->value(projects[id].useMask >> x & 1);
+			window->sharePrj[x]->value(prj.share[x] < 0 ? 0 : 1);
+			window->havePrj[x]->value(prj.useMask >> x & 1);
 
-			if (projects[id].share[x] < 0)
+			if (prj.share[x] < 0)
 				window->havePrj[x]->show();
 			else
 				window->havePrj[x]->hide();
 
-			if (projects[id].useMask >> x & 1) {
+			if (prj.useMask >> x & 1) {
 				if (window->tabsHidden[x]) {
 					window->the_tabs->insert(*window->tabsMain[x], x);
 					window->tabsHidden[x] = false;
 				}
 			} else {
 				if (!window->tabsHidden[x]) {
-					if (projects[id].share[x] < 0) {
+					if (prj.share[x] < 0) {
 						window->the_tabs->remove(window->tabsMain[x]);
 						window->tabsHidden[x] = true;
 					}
@@ -800,24 +821,24 @@ void switchProject(uint32_t id, uint32_t oldID, bool load) {
 		}
 	}
 
-	if (projects[id].containsData(pjHaveMap) && window)
-		window->BlocksCBtn->value(projects[id].tms->maps[projects[id].curPlane].isBlock ? 1 : 0);
+	if (prj.containsData(pjHaveMap) && window)
+		window->BlocksCBtn->value(prj.tms->maps[prj.curPlane].isBlock ? 1 : 0);
 
-	if (projects[id].containsData(pjHaveChunks) && window) {
-		window->chunk_select->maximum(projects[id].Chunk->amt - 1);
-		window->updateChunkSize(projects[id].Chunk->wi, projects[id].Chunk->hi);
+	if (prj.containsData(pjHaveChunks) && window) {
+		window->chunk_select->maximum(prj.Chunk->amt - 1);
+		window->updateChunkSize(prj.Chunk->wi, prj.Chunk->hi);
 	}
 
-	if (projects[id].containsData(pjHaveMap))
-		projects[id].tms->maps[projects[id].curPlane].toggleBlocks(projects[id].tms->maps[projects[id].curPlane].isBlock);
+	if (prj.containsData(pjHaveMap))
+		prj.tms->maps[prj.curPlane].toggleBlocks(prj.tms->maps[prj.curPlane].isBlock);
 
-	if (projects[id].containsData(pjHaveChunks) && window)
+	if (prj.containsData(pjHaveChunks) && window)
 		window->updateBlockTilesChunk(id);
 
-	if (projects[id].containsData(pjHaveSprites) && window) {
+	if (prj.containsData(pjHaveSprites) && window) {
 		window->updateSpriteSliders(id);
 		window->spriteglobaltxt->show();
-		window->spriteglobaltxt->value(projects[id].ms->name.c_str());
+		window->spriteglobaltxt->value(prj.ms->name.c_str());
 	} else if (window)
 		window->spriteglobaltxt->hide();
 
@@ -827,7 +848,7 @@ void switchProject(uint32_t id, uint32_t oldID, bool load) {
 	if (window)
 		window->redraw();
 }
-static bool loadProjectFile(uint32_t id, FILE * fi, bool loadVersion = true, uint32_t version = currentProjectVersionNUM) {
+bool Project::loadProjectFile(FILE * fi, bool loadVersion, uint32_t version) {
 	if (fgetc(fi) != 'R') {
 		invaildProject();
 		fclose(fi);
@@ -846,12 +867,10 @@ static bool loadProjectFile(uint32_t id, FILE * fi, bool loadVersion = true, uin
 		return false;
 	}
 
-	struct Project& project = projects[id];
-
 	// First clear out any of the old classes.
-	project.deleteClasses();
+	deleteClasses();
 
-	fileToStr(fi, project.Name, defaultName);
+	fileToStr(fi, Name, defaultName);
 
 	if (loadVersion) {
 		fread(&version, 1, sizeof(uint32_t), fi);
@@ -859,83 +878,83 @@ static bool loadProjectFile(uint32_t id, FILE * fi, bool loadVersion = true, uin
 	}
 
 	if (version > currentProjectVersionNUM) {
-		fl_alert("The latest project version Retro Graphics Toolkit supports is %u but you are opening %u", currentProjectVersionNUM, version);
+		fl_alert("The latest project version Retro Graphics Toolkit supports is %u but you are opening a project with version: %u", currentProjectVersionNUM, version);
 		fclose(fi);
 		return false;
 	}
 
 	if (version)
-		fread(&project.useMask, 1, sizeof(uint32_t), fi);
-	else
-		project.useMask = pjHavePal | pjHaveTiles | pjHaveMap;
+		fread(&useMask, 1, sizeof(uint32_t), fi);
+	else // Version zero did not support the use mask.
+		useMask = pjHavePal | pjHaveTiles | pjHaveMap;
 
 	uint32_t gameTemp;
 	fread(&gameTemp, 1, sizeof(uint32_t), fi);
-	project.gameSystem = (gameSystemEnum)gameTemp;
+	gameSystem = (gameSystemEnum)gameTemp;
 
 	if (version >= 4) {
-		fread(&project.subSystem, 1, sizeof(uint32_t), fi);
+		fread(&subSystem, 1, sizeof(uint32_t), fi);
 
-		if ((version < 6) && (project.gameSystem == segaGenesis))
-			project.subSystem = 3; //Old projects were storing the wrong number for 4bit graphics even though that is what is stored
+		if ((version < 6) && (gameSystem == segaGenesis))
+			subSystem = 3; //Old projects were storing the wrong number for 4bit graphics even though that is what is stored
 
-		if ((version == 4) && (project.gameSystem == NES)) {
-			project.subSystem ^= 1; //Fix the fact that NES2x2 and NES1x1 were switched around in version 4
-			project.subSystem |= 2; //Default to 2 bit
+		if ((version == 4) && (gameSystem == NES)) {
+			subSystem ^= 1; //Fix the fact that NES2x2 and NES1x1 were switched around in version 4
+			subSystem |= 2; //Default to 2 bit
 		}
 	} else
-		project.subSystem = 3;
+		subSystem = 3;
 
 	if (version >= 8) {
-		fread(&project.settings, 1, sizeof(uint32_t), fi);
-		fread(&project.luaSettings, 1, sizeof(uint32_t), fi);
+		fread(&settings, 1, sizeof(uint32_t), fi);
+		fread(&luaSettings, 1, sizeof(uint32_t), fi);
 	} else {
-		project.settings = 15 << subsettingsDitherShift | (aWeighted << nearestColorShift);
-		project.luaSettings = 0;
+		settings = 15 << subsettingsDitherShift | (aWeighted << nearestColorShift);
+		luaSettings = 0;
 	}
 
-	if (project.useMask & pjHavePal) {
-		if (project.share[0] < 0) {
-			project.pal = new palette(&project);
+	if (useMask & pjHavePal) {
+		if (share[0] < 0) {
+			pal = new palette(this);
 
-			project.pal->setVars(project.gameSystem);
-			project.pal->read(fi, version >= 7);
+			pal->setVars(gameSystem);
+			pal->read(fi, version >= 7);
 		}
 	}
 
-	if (project.useMask & pjHaveTiles) {
-		if (project.share[1] < 0) {
-			project.tileC = new tiles(&project);
+	if (useMask & pjHaveTiles) {
+		if (share[1] < 0) {
+			tileC = new tiles(this);
 
-			if (project.gameSystem == TMS9918)
-				setGameSysTMS9918(&project);
+			if (gameSystem == TMS9918)
+				setGameSysTMS9918(this);
 			else
-				project.tileC->changeDim(8, 8, project.getBitdepthSys());
+				tileC->changeDim(8, 8, getBitdepthSys());
 
-			fread(&project.tileC->amt, 1, sizeof(uint32_t), fi);
+			fread(&tileC->amt, 1, sizeof(uint32_t), fi);
 
 			if (version < 6)
-				++project.tileC->amt;
+				++tileC->amt;
 
-			project.tileC->resizeAmt();
-			decompressFromFile(project.tileC->tDat.data(), project.tileC->tileSize * (project.tileC->amt), fi);
-			decompressFromFile(project.tileC->truetDat.data(), project.tileC->tcSize * (project.tileC->amt), fi);
+			tileC->resizeAmt();
+			decompressFromFile(tileC->tDat.data(), tileC->tileSize * (tileC->amt), fi);
+			decompressFromFile(tileC->truetDat.data(), tileC->tcSize * (tileC->amt), fi);
 
 			if (version >= 8) {
-				size_t extSize = project.tileC->extAttrs.size();
+				size_t extSize = tileC->extAttrs.size();
 
 				if (extSize > 0)
-					decompressFromFile(project.tileC->extAttrs.data(), extSize, fi);
+					decompressFromFile(tileC->extAttrs.data(), extSize, fi);
 			}
 
-			if (version <= 7 && (project.getTileType() != PLANAR_TILE))
-				project.tileC->toPlanar(project.getTileType());
+			if (version <= 7 && (getTileType() != PLANAR_TILE))
+				tileC->toPlanar(getTileType());
 		}
 	}
 
-	if (project.useMask & pjHaveMap) {
-		if (project.share[2] < 0) {
-			project.tms = new tilemaps(&project);
+	if (useMask & pjHaveMap) {
+		if (share[2] < 0) {
+			tms = new tilemaps(this);
 
 			uint32_t readCnt;
 
@@ -944,86 +963,86 @@ static bool loadProjectFile(uint32_t id, FILE * fi, bool loadVersion = true, uin
 			else
 				readCnt = 1;
 
-			project.curPlane = 0;
-			project.tms->setPlaneCnt(readCnt);
+			curPlane = 0;
+			tms->setPlaneCnt(readCnt);
 
 			for (unsigned i = 0; i < readCnt; ++i) {
 				if (version >= 8) {
 					char firstC = fgetc(fi);
 
 					if (firstC) {
-						project.tms->maps[i].planeName.clear();
+						tms->maps[i].planeName.clear();
 
 						do {
-							project.tms->maps[i].planeName.push_back(firstC);
+							tms->maps[i].planeName.push_back(firstC);
 						} while ((firstC = fgetc(fi)));
 					} else
-						project.tms->assignNum(i);
+						tms->assignNum(i);
 				} else
-					project.tms->assignNum(i);
+					tms->assignNum(i);
 
-				fread(&project.tms->maps[i].mapSizeW, 1, sizeof(uint32_t), fi);
-				fread(&project.tms->maps[i].mapSizeH, 1, sizeof(uint32_t), fi);
+				fread(&tms->maps[i].mapSizeW, 1, sizeof(uint32_t), fi);
+				fread(&tms->maps[i].mapSizeH, 1, sizeof(uint32_t), fi);
 
 				if (version >= 2) {
 					uint8_t isBlockTemp;
 					fread(&isBlockTemp, 1, sizeof(uint8_t), fi);
-					project.tms->maps[i].isBlock = isBlockTemp ? true : false;
+					tms->maps[i].isBlock = isBlockTemp ? true : false;
 
 					if (isBlockTemp)
-						fread(&project.tms->maps[i].amt, 1, sizeof(uint32_t), fi);
+						fread(&tms->maps[i].amt, 1, sizeof(uint32_t), fi);
 					else
-						project.tms->maps[i].amt = 1;
+						tms->maps[i].amt = 1;
 
-					project.tms->maps[i].mapSizeHA = project.tms->maps[i].mapSizeH * project.tms->maps[i].amt;
+					tms->maps[i].mapSizeHA = tms->maps[i].mapSizeH * tms->maps[i].amt;
 				} else
-					project.tms->maps[i].mapSizeHA = project.tms->maps[i].mapSizeH;
+					tms->maps[i].mapSizeHA = tms->maps[i].mapSizeH;
 
 				if (version >= 8)
-					fread(&project.tms->maps[i].offset, 1, sizeof(int32_t), fi);
+					fread(&tms->maps[i].offset, 1, sizeof(int32_t), fi);
 				else
-					project.tms->maps[i].offset = 0;
+					tms->maps[i].offset = 0;
 
-				project.tms->maps[i].tileMapDat = (uint8_t*)realloc(project.tms->maps[i].tileMapDat, 4 * project.tms->maps[i].mapSizeW * project.tms->maps[i].mapSizeHA);
-				decompressFromFile(project.tms->maps[i].tileMapDat, 4 * project.tms->maps[i].mapSizeW * project.tms->maps[i].mapSizeHA, fi);
+				tms->maps[i].tileMapDat = (uint8_t*)realloc(tms->maps[i].tileMapDat, 4 * tms->maps[i].mapSizeW * tms->maps[i].mapSizeHA);
+				decompressFromFile(tms->maps[i].tileMapDat, 4 * tms->maps[i].mapSizeW * tms->maps[i].mapSizeHA, fi);
 			}
 		}
 	}
 
-	if (project.useMask & pjHaveChunks) {
-		if (project.share[3] < 0) {
+	if (useMask & pjHaveChunks) {
+		if (share[3] < 0) {
 			if (version >= 3) {
-				project.Chunk = new ChunkClass(&project);
+				Chunk = new ChunkClass(this);
 				uint8_t useBlockTemp;
 				fread(&useBlockTemp, 1, sizeof(uint8_t), fi);
-				project.Chunk->useBlocks = useBlockTemp ? true : false;
-				fread(&project.Chunk->wi, 1, sizeof(uint32_t), fi);
-				fread(&project.Chunk->hi, 1, sizeof(uint32_t), fi);
-				fread(&project.Chunk->amt, 1, sizeof(uint32_t), fi);
+				Chunk->useBlocks = useBlockTemp ? true : false;
+				fread(&Chunk->wi, 1, sizeof(uint32_t), fi);
+				fread(&Chunk->hi, 1, sizeof(uint32_t), fi);
+				fread(&Chunk->amt, 1, sizeof(uint32_t), fi);
 
 				if (version >= 8)
-					fread(&project.Chunk->usePlane, 1, sizeof(uint32_t), fi);
+					fread(&Chunk->usePlane, 1, sizeof(uint32_t), fi);
 
-				project.Chunk->resizeAmt();
-				decompressFromFile(project.Chunk->chunks.data(), project.Chunk->wi * project.Chunk->hi * sizeof(struct ChunkAttrs)*project.Chunk->amt, fi);
+				Chunk->resizeAmt();
+				decompressFromFile(Chunk->chunks.data(), Chunk->wi * Chunk->hi * sizeof(struct ChunkAttrs)*Chunk->amt, fi);
 			}
 		}
 	}
 
-	if (project.useMask & pjHaveSprites) {
-		if (project.share[4] < 0) {
+	if (useMask & pjHaveSprites) {
+		if (share[4] < 0) {
 			if (version >= 5) {
-				project.ms = new metasprites(&project);
-				project.ms->load(fi, version);
+				ms = new metasprites(this);
+				ms->load(fi, version);
 			}
 		}
 	}
 
-	if (project.useMask & pjHaveLevel) {
-		if (project.share[5] < 0) {
+	if (useMask & pjHaveLevel) {
+		if (share[5] < 0) {
 			if (version >= 8) {
-				project.lvl = new level(&project);
-				project.lvl->load(fi, version);
+				lvl = new level(this);
+				lvl->load(fi, version);
 			}
 		}
 	}
@@ -1035,14 +1054,14 @@ static bool loadProjectFile(uint32_t id, FILE * fi, bool loadVersion = true, uin
 		fread(&controlDat, 1, sizeof(uint32_t), fi);
 		fread(&userDat, 1, sizeof(uint32_t), fi);
 
-		project.lScrpt.clear();
+		lScrpt.clear();
 
 		if (scriptAmt) {
-			project.lScrpt.resize(scriptAmt);
+			lScrpt.resize(scriptAmt);
 
 			for (unsigned i = 0; i < scriptAmt; ++i) {
-				fileToStr(fi, project.lScrpt[i].name, std::to_string(i).c_str());
-				fileToStr(fi, project.lScrpt[i].str, "");
+				fileToStr(fi, lScrpt[i].name, std::to_string(i).c_str());
+				fileToStr(fi, lScrpt[i].str, "");
 			}
 		}
 
@@ -1055,14 +1074,17 @@ static bool loadProjectFile(uint32_t id, FILE * fi, bool loadVersion = true, uin
 
 bool loadProject(uint32_t id, const char*fname) {
 	FILE * fi = fopen(fname, "rb");
-	std::fill(projects[id].share, &projects[id].share[shareAmtPj], -1); //One file projects do not support sharing
 
-	if (loadProjectFile(id, fi))
+	Project&prj = projects->at(id);
+	std::fill(prj.share, &prj.share[shareAmtPj], -1); //One file projects do not support sharing
+
+	if (prj.loadProjectFile(fi))
 		fclose(fi);
 
 	return true;
 }
-static bool saveProjectFile(uint32_t id, FILE * fo, bool saveShared, bool saveVersion = true) {
+
+bool Project::saveProjectFile(FILE * fo, bool saveShared, bool saveVersion) {
 	/*!
 	File format
 	char R
@@ -1128,7 +1150,7 @@ static bool saveProjectFile(uint32_t id, FILE * fo, bool saveShared, bool saveVe
 	*/
 	fputc('R', fo);
 	fputc('P', fo);
-	saveStrifNot(fo, projects[id].Name.c_str(), defaultName);
+	saveStrifNot(fo, Name.c_str(), defaultName);
 
 	if (saveVersion) {
 		uint32_t version = currentProjectVersionNUM;
@@ -1138,51 +1160,51 @@ static bool saveProjectFile(uint32_t id, FILE * fo, bool saveShared, bool saveVe
 	uint32_t haveTemp;
 
 	if (saveShared) {
-		haveTemp = projects[id].useMask;
+		haveTemp = useMask;
 
 		for (unsigned x = 0; x < shareAmtPj; ++x)
-			haveTemp |= (projects[id].share[x] >= 0 ? 1 : 0) << x;
+			haveTemp |= (share[x] >= 0 ? 1 : 0) << x;
 	} else
-		haveTemp = projects[id].useMask;
+		haveTemp = useMask;
 
 	fwrite(&haveTemp, sizeof(uint32_t), 1, fo);
-	uint32_t gameTemp = (uint32_t)projects[id].gameSystem;
+	uint32_t gameTemp = (uint32_t)gameSystem;
 	fwrite(&gameTemp, 1, sizeof(uint32_t), fo);
-	fwrite(&projects[id].subSystem, sizeof(uint32_t), 1, fo);
-	fwrite(&projects[id].settings, sizeof(uint32_t), 1, fo);
-	fwrite(&projects[id].luaSettings, sizeof(uint32_t), 1, fo);
+	fwrite(&subSystem, sizeof(uint32_t), 1, fo);
+	fwrite(&settings, sizeof(uint32_t), 1, fo);
+	fwrite(&luaSettings, sizeof(uint32_t), 1, fo);
 
 	if (haveTemp & pjHavePal) {
-		if (saveShared || (projects[id].share[0] < 0))
-			projects[id].pal->write(fo);
+		if (saveShared || (share[0] < 0))
+			pal->write(fo);
 	}
 
 	if (haveTemp & pjHaveTiles) {
-		if (saveShared || (projects[id].share[1] < 0)) {
-			fwrite(&projects[id].tileC->amt, 1, sizeof(uint32_t), fo);
-			compressToFile(projects[id].tileC->tDat.data(), projects[id].tileC->tileSize * (projects[id].tileC->amt), fo);
-			compressToFile(projects[id].tileC->truetDat.data(), projects[id].tileC->tcSize * (projects[id].tileC->amt), fo);
+		if (saveShared || (share[1] < 0)) {
+			fwrite(&tileC->amt, 1, sizeof(uint32_t), fo);
+			compressToFile(tileC->tDat.data(), tileC->tileSize * (tileC->amt), fo);
+			compressToFile(tileC->truetDat.data(), tileC->tcSize * (tileC->amt), fo);
 			{
-				size_t extSize = projects[id].tileC->extAttrs.size();
+				size_t extSize = tileC->extAttrs.size();
 
 				if (extSize)
-					compressToFile(projects[id].tileC->extAttrs.data(), extSize, fo);
+					compressToFile(tileC->extAttrs.data(), extSize, fo);
 			}
 		}
 	}
 
 	if (haveTemp & pjHaveMap) {
-		if (saveShared || (projects[id].share[2] < 0)) {
-			uint32_t cnt = projects[id].tms->maps.size();
+		if (saveShared || (share[2] < 0)) {
+			uint32_t cnt = tms->maps.size();
 			fwrite(&cnt, 1, 4, fo);
 
-			for (unsigned i = 0; i < projects[id].tms->maps.size(); ++i) {
+			for (unsigned i = 0; i < tms->maps.size(); ++i) {
 				//Write the name or if default just write 0
 				char tmp[16];
 				snprintf(tmp, 16, "%u", i);
 
-				if (strcmp(projects[id].tms->maps[i].planeName.c_str(), tmp)) {
-					const char*st = projects[id].tms->maps[i].planeName.c_str();
+				if (strcmp(tms->maps[i].planeName.c_str(), tmp)) {
+					const char*st = tms->maps[i].planeName.c_str();
 
 					do {
 						fputc(*st, fo);
@@ -1190,56 +1212,56 @@ static bool saveProjectFile(uint32_t id, FILE * fo, bool saveShared, bool saveVe
 				} else
 					fputc(0, fo);
 
-				fwrite(&projects[id].tms->maps[i].mapSizeW, 1, sizeof(uint32_t), fo);
-				fwrite(&projects[id].tms->maps[i].mapSizeH, 1, sizeof(uint32_t), fo);
-				uint8_t isBlockTemp = projects[id].tms->maps[i].isBlock ? 1 : 0;
+				fwrite(&tms->maps[i].mapSizeW, 1, sizeof(uint32_t), fo);
+				fwrite(&tms->maps[i].mapSizeH, 1, sizeof(uint32_t), fo);
+				uint8_t isBlockTemp = tms->maps[i].isBlock ? 1 : 0;
 				fwrite(&isBlockTemp, 1, sizeof(uint8_t), fo);
 
 				if (isBlockTemp)
-					fwrite(&projects[id].tms->maps[i].amt, 1, sizeof(uint32_t), fo);
+					fwrite(&tms->maps[i].amt, 1, sizeof(uint32_t), fo);
 
-				fwrite(&projects[id].tms->maps[i].offset, 1, sizeof(int32_t), fo);
-				compressToFile(projects[id].tms->maps[i].tileMapDat, 4 * projects[id].tms->maps[i].mapSizeW * projects[id].tms->maps[i].mapSizeHA, fo);
+				fwrite(&tms->maps[i].offset, 1, sizeof(int32_t), fo);
+				compressToFile(tms->maps[i].tileMapDat, 4 * tms->maps[i].mapSizeW * tms->maps[i].mapSizeHA, fo);
 			}
 		}
 	}
 
 	if (haveTemp & pjHaveChunks) {
-		if (saveShared || (projects[id].share[3] < 0)) {
-			uint8_t useBlockTemp = projects[id].Chunk->useBlocks ? 1 : 0;
+		if (saveShared || (share[3] < 0)) {
+			uint8_t useBlockTemp = Chunk->useBlocks ? 1 : 0;
 			fwrite(&useBlockTemp, 1, sizeof(uint8_t), fo);
-			fwrite(&projects[id].Chunk->wi, 1, sizeof(uint32_t), fo);
-			fwrite(&projects[id].Chunk->hi, 1, sizeof(uint32_t), fo);
-			fwrite(&projects[id].Chunk->amt, 1, sizeof(uint32_t), fo);
-			fwrite(&projects[id].Chunk->usePlane, 1, sizeof(uint32_t), fo);
-			compressToFile(projects[id].Chunk->chunks.data(), projects[id].Chunk->wi * projects[id].Chunk->hi * sizeof(struct ChunkAttrs)*projects[id].Chunk->amt, fo);
+			fwrite(&Chunk->wi, 1, sizeof(uint32_t), fo);
+			fwrite(&Chunk->hi, 1, sizeof(uint32_t), fo);
+			fwrite(&Chunk->amt, 1, sizeof(uint32_t), fo);
+			fwrite(&Chunk->usePlane, 1, sizeof(uint32_t), fo);
+			compressToFile(Chunk->chunks.data(), Chunk->wi * Chunk->hi * sizeof(struct ChunkAttrs)*Chunk->amt, fo);
 		}
 	}
 
 	if (haveTemp & pjHaveSprites) {
-		if (saveShared || (projects[id].share[4] < 0))
-			projects[id].ms->save(fo);
+		if (saveShared || (share[4] < 0))
+			ms->save(fo);
 	}
 
 	if (haveTemp & pjHaveLevel) {
-		if (saveShared || (projects[id].share[3] < 0))
-			projects[id].lvl->save(fo);
+		if (saveShared || (share[3] < 0))
+			lvl->save(fo);
 	}
 
-	uint32_t luaSize = projects[id].lScrpt.size();
+	uint32_t luaSize = lScrpt.size();
 	fwrite(&luaSize, 1, sizeof(uint32_t), fo);
 	luaSize = 0;
 	fwrite(&luaSize, 1, sizeof(uint32_t), fo); //TODO implement saving of user data and control data
 	fwrite(&luaSize, 1, sizeof(uint32_t), fo);
 	fwrite(&luaSize, 1, sizeof(uint32_t), fo);
 
-	if (projects[id].lScrpt.size()) {
-		if (id == curProjectID)
-			projects[id].lScrpt[curScript].str.assign(window->luaBufProject->text());
+	if (lScrpt.size()) {
+		if (this == currentProject)
+			lScrpt[curScript].str.assign(window->luaBufProject->text());
 
-		for (unsigned i = 0; i < projects[id].lScrpt.size(); ++i) {
-			saveStrifNot(fo, projects[id].lScrpt[i].name.c_str(), (std::to_string(i)).c_str());
-			saveStrifNot(fo, projects[id].lScrpt[i].str.c_str(), "");
+		for (unsigned i = 0; i < lScrpt.size(); ++i) {
+			saveStrifNot(fo, lScrpt[i].name.c_str(), (std::to_string(i)).c_str());
+			saveStrifNot(fo, lScrpt[i].str.c_str(), "");
 		}
 	}
 
@@ -1248,10 +1270,11 @@ static bool saveProjectFile(uint32_t id, FILE * fo, bool saveShared, bool saveVe
 bool saveProject(uint32_t id, const char*fname) {
 	//Start by creating a save file dialog
 	FILE * fo = fopen(fname, "wb");
-	saveProjectFile(id, fo, true);
+	projects->at(id).saveProjectFile(fo, true);
 	fclose(fo);
 	return true;
 }
+
 bool saveAllProjects(void) {
 	/*!The format is the same except it begins with
 	char R
@@ -1268,28 +1291,32 @@ bool saveAllProjects(void) {
 	FILE * fo = fopen(the_file.c_str(), "wb");
 	fputc('R', fo);
 	fputc('G', fo);
-	const uint32_t projectSize = projects.size();
+	const uint32_t projectSize = projects->size();
 	fwrite(&projectSize, 1, sizeof(uint32_t), fo);
 	uint32_t version = currentProjectVersionNUM;
 	fwrite(&version, sizeof(uint32_t), 1, fo);
 
-	for (uint32_t s = 0; s < projects.size(); ++s) {
-		fwrite(projects[s].share, shareAmtPj, sizeof(uint32_t), fo);
-		saveProjectFile(s, fo, false, false);
+	for (uint32_t s = 0; s < projects->size(); ++s) {
+		Project&prj = projects->at(s);
+		fwrite(prj.share, shareAmtPj, sizeof(uint32_t), fo);
+		prj.saveProjectFile(fo, false, false);
 	}
 
 	fclose(fo);
 	return true;
 }
+
 static void invaildGroup(void) {
 	fl_alert("This is not a valid project group");
 }
+
 static void readShare(unsigned amt, FILE*fi, unsigned x) {
-	fread(projects[x].share, amt, sizeof(uint32_t), fi);
+	fread(projects->at(x).share, amt, sizeof(uint32_t), fi);
 
 	if (amt < shareAmtPj)
-		std::fill(&projects[x].share[amt - 1], &projects[x].share[shareAmtPj], -1);
+		std::fill(&projects->at(x).share[amt - 1], &projects->at(x).share[shareAmtPj], -1);
 }
+
 bool loadAllProjects(const char*fname) {
 	FILE * fi = fopen(fname, "rb");
 
@@ -1328,7 +1355,7 @@ bool loadAllProjects(const char*fname) {
 		return false;
 	}
 
-	for (unsigned x = 0; x < projects.size(); ++x) {
+	for (unsigned x = 0; x < projects->size(); ++x) {
 		if (version < 4)
 			readShare(3, fi, x);
 		else if (version == 4)
@@ -1338,27 +1365,29 @@ bool loadAllProjects(const char*fname) {
 		else
 			readShare(shareAmtPj, fi, x);
 
-		if (!(loadProjectFile(x, fi, false, version)))
+		if (!(projects->at(x).loadProjectFile(fi, false, version)))
 			return false;
 	}
 
-	for (unsigned x = 0; x < projects.size(); ++x) {
-		if (projects[x].share[0] >= 0)
-			shareProject(x, projects[x].share[0], pjHavePal, true);
+	for (unsigned x = 0; x < projects->size(); ++x) {
+		Project&prj = projects->at(x);
 
-		if (projects[x].share[1] >= 0)
-			shareProject(x, projects[x].share[1], pjHaveTiles, true);
+		if (prj.share[0] >= 0)
+			shareProject(x, prj.share[0], pjHavePal, true);
 
-		if (projects[x].share[2] >= 0)
-			shareProject(x, projects[x].share[2], pjHaveMap, true);
+		if (prj.share[1] >= 0)
+			shareProject(x, prj.share[1], pjHaveTiles, true);
+
+		if (prj.share[2] >= 0)
+			shareProject(x, prj.share[2], pjHaveMap, true);
 
 		if (version >= 3) {
-			if (projects[x].share[3] >= 0)
-				shareProject(x, projects[x].share[3], pjHaveChunks, true);
+			if (prj.share[3] >= 0)
+				shareProject(x, prj.share[3], pjHaveChunks, true);
 
 			if (version >= 5) {
-				if (projects[x].share[4] >= 0)
-					shareProject(x, projects[x].share[4], pjHaveSprites, true);
+				if (prj.share[4] >= 0)
+					shareProject(x, prj.share[4], pjHaveSprites, true);
 			}
 		}
 	}
