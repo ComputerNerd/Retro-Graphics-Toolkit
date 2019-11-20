@@ -625,6 +625,16 @@ static int lua_rgt_rgbToHsl(lua_State*L) {
 	lua_pushnumber(L, l);
 	return 3;
 }
+
+static int lua_rgt_hslToRgb(lua_State*L) {
+	uint8_t r, g, b;
+	hslToRgb(luaL_optnumber(L, 1, 0.0), luaL_optnumber(L, 2, 0.0), luaL_optnumber(L, 3, 0.0), r, g, b);
+	lua_pushinteger(L, r);
+	lua_pushinteger(L, g);
+	lua_pushinteger(L, b);
+	return 3;
+}
+
 static int lua_rgt_setTab(lua_State*L) {
 	if (!window)
 		return 0;
@@ -738,6 +748,7 @@ static const luaL_Reg lua_rgtAPI[] = {
 	{"rgbToLch", lua_rgt_rgbToLch},
 	{"lchToRgb", lua_rgt_lchToRgb},
 	{"rgbToHsl", lua_rgt_rgbToHsl},
+	{"hslToRgb", lua_rgt_hslToRgb},
 	{"setTab", lua_rgt_setTab},
 	{"syncProject", lua_rgt_syncProject},
 	{"w", lua_rgt_w},

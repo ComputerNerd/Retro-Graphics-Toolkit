@@ -87,6 +87,8 @@ public:
 	void loadFromFile(const char * fname, fileType_t forceType, unsigned offset, CompressionType compression); // use fileType_t::tCancel to prompt for the filetype.
 	void updateEmphasis(void);
 	int setPaletteFromRGB(const uint8_t* colors, const unsigned nColors, const unsigned minEntry, const unsigned maxEntry);
+	rgbArray_t rgbToNearestSystemColor(rgbArray_t rgbIn);
+	unsigned nearestColIndex(int red, int green, int blue, const uint8_t*pal, unsigned amt, bool checkType = false, unsigned off = 0);
 	bool isAltRow(unsigned row) const {
 		return row >= rowCntPal;
 	}

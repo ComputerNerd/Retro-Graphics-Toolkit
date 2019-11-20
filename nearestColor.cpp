@@ -17,6 +17,7 @@
 #include <cstring>
 
 #include "project.h"
+#include "classpalette.h"
 #include "CIE.h"
 #include "nearestColor.h"
 unsigned find_near_color_from_row_rgb(unsigned row, int r, int g, int b, bool alt) {
@@ -29,7 +30,7 @@ unsigned find_near_color_from_row_rgb(unsigned row, int r, int g, int b, bool al
 
 	const uint8_t*rgbPtr = currentProject->pal->rgbPal + (row * 3);
 
-	unsigned nearestIndex = nearestColIndex(r, g, b, rgbPtr, pr, true, row);
+	unsigned nearestIndex = currentProject->pal->nearestColIndex(r, g, b, rgbPtr, pr, true, row);
 
 	return (nearestIndex + row) * 3; //Yes this function does return three times the value. TODO refactor
 }
@@ -40,7 +41,7 @@ unsigned chooseTwoColor(unsigned index0, unsigned index1, int rgoal, int ggoal, 
 	uint8_t tmp[6];
 	memcpy(tmp, currentProject->pal->rgbPal + (index0 * 3), 3);
 	memcpy(tmp + 3, currentProject->pal->rgbPal + (index1 * 3), 3);
-	bool second = nearestColIndex(rgoal, ggoal, bgoal, tmp, 2, false, 0);
+	bool second = currentProject->pal->nearestColIndex(rgoal, ggoal, bgoal, tmp, 2, false, 0);
 
 	if (second && (currentProject->pal->palType[index1] != 2))
 		return index1;
@@ -72,10 +73,10 @@ static inline int sq(int x) {
 static inline double sqd(double x) {
 	return x * x;
 }
-unsigned nearestColIndex(int red, int green, int blue, const uint8_t*pal, unsigned amt, bool checkType, unsigned off) {
+unsigned palette::nearestColIndex(int red, int green, int blue, const uint8_t*pal, unsigned amt, bool checkType, unsigned off) {
 	unsigned bestcolor = 0;
 
-	switch (((currentProject->settings) >> nearestColorShift)&nearestColorSettingsMask) {
+	switch (((prj->settings) >> nearestColorShift)&nearestColorSettingsMask) {
 		case aCiede2000:
 		{
 			double minerrord = 1e99;
@@ -83,7 +84,7 @@ unsigned nearestColIndex(int red, int green, int blue, const uint8_t*pal, unsign
 			for (int i = (amt - 1) * 3; i >= 0; i -= 3) {
 				double distance = ciede2000rgb(red, green, blue, pal[i], pal[i + 1], pal[i + 2]);
 
-				if (!checkType || (currentProject->pal->palType[i / 3 + off] != 2)) {
+				if (!checkType || (palType[i / 3 + off] != 2)) {
 					if (distance < minerrord) {
 						minerrord = distance;
 						bestcolor = i;
@@ -100,7 +101,7 @@ unsigned nearestColIndex(int red, int green, int blue, const uint8_t*pal, unsign
 			for (int i = (amt - 1) * 3; i >= 0; i -= 3) {
 				uint32_t distance = ColourDistance(red, green, blue, pal[i], pal[i + 1], pal[i + 2]);
 
-				if (!checkType || (currentProject->pal->palType[i / 3 + off] != 2)) {
+				if (!checkType || (palType[i / 3 + off] != 2)) {
 					if (distance < minerrori) {
 						minerrori = distance;
 						bestcolor = i;
@@ -120,7 +121,7 @@ unsigned nearestColIndex(int red, int green, int blue, const uint8_t*pal, unsign
 				Rgb2Lab255(&L2, &a2, &b2, pal[i], pal[i + 1], pal[i + 2]);
 				double distance = sqd(L1 - L2) + sqd(a1 - a2) + sqd(b1 - b2);
 
-				if (!checkType || (currentProject->pal->palType[i / 3 + off] != 2)) {
+				if (!checkType || (palType[i / 3 + off] != 2)) {
 					if (distance < minerrord) {
 						minerrord = distance;
 						bestcolor = i;
@@ -137,7 +138,7 @@ unsigned nearestColIndex(int red, int green, int blue, const uint8_t*pal, unsign
 			for (int i = (amt - 1) * 3; i >= 0; i -= 3) {
 				int distance = sq((int)pal[i] - red) + sq((int)pal[i + 1] - green) + sq((int)pal[i + 2] - blue);
 
-				if (!checkType || (currentProject->pal->palType[i / 3 + off] != 2)) {
+				if (!checkType || (palType[i / 3 + off] != 2)) {
 					if (distance < minerrori) {
 						minerrori = distance;
 						bestcolor = i;

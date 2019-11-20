@@ -49,6 +49,35 @@ static int lua_palette_maxInRow(lua_State*L) {
 	return 1;
 }
 
+static int lua_palette_rgbToValue(lua_State*L) {
+	getProjectIDX
+	lua_pushinteger(L, projects->at(projectIDX).pal->rgbToValue(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0)));
+	return 1;
+}
+
+static int lua_palette_valueToRGB(lua_State*L) {
+	getProjectIDX
+	rgbArray_t res = projects->at(projectIDX).pal->valueToRGB(luaL_optinteger(L, 2, 0));
+
+	for (int i = 0; i < 3; ++i)
+		lua_pushinteger(L, res[i]);
+
+	return 3;
+}
+
+static int lua_palette_rgbToNearestSystemColor(lua_State*L) {
+	getProjectIDX
+	rgbArray_t tmp;
+
+	for (unsigned i = 0; i < 3; ++i)
+		tmp[i] = luaL_optinteger(L, 2 + i, 0);
+
+	auto res = projects->at(projectIDX).pal->rgbToNearestSystemColor(tmp);
+	for (unsigned i = 0; i < 3; ++i)
+		lua_pushinteger(L, res[i]);
+	return 3;
+}
+
 static int palette__get_(lua_State *L) {
 	checkAlreadyExists
 
@@ -124,6 +153,9 @@ static const struct luaL_Reg palette_member_methods[] = {
 	{ "load", lua_palette_load},
 	{ "toRgbAll", lua_palette_paletteToRgb},
 	{ "maxInRow", lua_palette_maxInRow},
+	{ "rgbToValue", lua_palette_rgbToValue},
+	{ "valueToRGB", lua_palette_valueToRGB},
+	{ "rgbToNearestSystemColor", lua_palette_rgbToNearestSystemColor},
 	{ "deleted", dub::isDeleted    },
 	{ NULL, NULL},
 };

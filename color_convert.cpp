@@ -103,6 +103,45 @@ void rgbToHsl(double r, double g, double b, double * hh, double * ss, double * l
 	*ll = l;
 	*ss = s;
 }
+
+static double hueToRGB(double v1, double v2, double vH) {
+	if (vH < 0.0)
+		vH += 1.0;
+
+	if (vH > 1.0)
+		vH -= 1.0;
+
+	if ((6.0 * vH) < 1.0)
+		return (v1 + (v2 - v1) * 6.0 * vH);
+
+	if ((2.0 * vH) < 1.0)
+		return v2;
+
+	if ((3.0 * vH) < 2.0)
+		return (v1 + (v2 - v1) * ((2.0 / 3.0) - vH) * 6.0);
+
+	return v1;
+}
+
+// HSL to RGB Based on: https://www.programmingalgorithms.com/algorithm/hsl-to-rgb/
+void hslToRgb(double hue, double s, double l, uint8_t&r, uint8_t&g, uint8_t&b) {
+	r = 0;
+	g = 0;
+	b = 0;
+
+	if (s == 0.0)
+		r = g = b = l * 255.0;
+	else {
+		double v2 = (l < 0.5) ? (l * (1.0 + s)) : ((l + s) - (l * s));
+		double v1 = 2.0 * l - v2;
+
+		r = (255.0 * hueToRGB(v1, v2, hue + (1.0f / 3)));
+		g = (255.0 * hueToRGB(v1, v2, hue));
+		b = (255.0 * hueToRGB(v1, v2, hue - (1.0f / 3)));
+	}
+}
+
+
 static inline uint32_t sq(uint32_t x) {
 	return x * x;
 }

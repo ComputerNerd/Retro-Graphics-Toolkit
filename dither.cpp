@@ -1061,7 +1061,7 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 								break;
 
 							case TMS9918:
-								temp = nearestColIndex(r_old, g_old, b_old, currentProject->pal->rgbPal, currentProject->pal->colorCnt) * 3;
+								temp = currentProject->pal->nearestColIndex(r_old, g_old, b_old, currentProject->pal->rgbPal, currentProject->pal->colorCnt) * 3;
 
 								if (toIndex)
 									indexPtr[(x / rgbPixelsize) + (y * w)] = temp / 3;
@@ -1225,7 +1225,7 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 								break;
 
 							case TMS9918:
-								temp = nearestColIndex(r_old, g_old, b_old, currentProject->pal->rgbPal, currentProject->pal->colorCnt) * 3;
+								temp = currentProject->pal->nearestColIndex(r_old, g_old, b_old, currentProject->pal->rgbPal, currentProject->pal->colorCnt) * 3;
 
 								if (toIndex)
 									indexPtr[x + (y * w)] = temp / 3;

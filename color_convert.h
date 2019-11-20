@@ -25,6 +25,7 @@ unsigned nearest_color_index(int val, unsigned startindex);
 unsigned nearest_color_index(int val);
 void rgbToHsl255(unsigned r, unsigned g, unsigned b, double * hh, double * ll, double * ss);
 void rgbToHsl(double r, double g, double b, double * hh, double * ll, double * ss);
+void hslToRgb(double hue, double s, double l, uint8_t&r, uint8_t&g, uint8_t&b);
 uint32_t count_colors(uint8_t * image_ptr, uint32_t w, uint32_t h, uint8_t *colors_found, bool useAlpha = false);
 void updateEmphasisCB(Fl_Widget*, void*);
 static inline uint32_t toNesRgb(uint8_t ri, uint8_t gi, uint8_t bi) {
