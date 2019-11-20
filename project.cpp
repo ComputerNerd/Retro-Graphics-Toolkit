@@ -45,7 +45,7 @@ void Project::changeTileDim(unsigned w, unsigned h) {
 		unsigned sw = tileC->width(), sh = tileC->height();
 		tileC->changeDim(w, h, getBitdepthSys());
 
-		if (sw > w && sh > h && containsData(pjHaveMap)) {
+		if (sw > w && sh > h && containsData(pjHaveMap) && tms) {
 			for (size_t i = 0; i < tms->maps.size(); ++i) {
 				tileMap*tm = new tileMap(tms->maps[i], this);
 				tms->maps[i].resize_tile_map(tms->maps[i].mapSizeW * sw / w, tms->maps[i].mapSizeH * sh / h);
