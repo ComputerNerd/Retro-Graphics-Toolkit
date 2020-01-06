@@ -579,7 +579,7 @@ static MixingPlan DeviseBestMixingPlanY2(uint8_t rIn, uint8_t gIn, uint8_t bIn, 
 	LabItem input((float)rIn / 255.0f, (float)gIn / 255.0f, (float)bIn / 255.0f);
 #endif
 	// Tally so far (gamma-corrected)
-	float so_far[3] = { 0, 0, 0 };
+	float so_far[3] = { 0.0f, 0.0f, 0.0f };
 
 	MixingPlan result;
 
@@ -646,7 +646,7 @@ static MixingPlan DeviseBestMixingPlanY3(uint8_t rIn, uint8_t gIn, uint8_t bIn, 
 	std::map<unsigned, unsigned> Solution;
 
 	// The penalty of our currently "best" solution.
-	float current_penalty = -1;
+	float current_penalty = -1.0f;
 
 	// First, find the closest color to the input color.
 	// It is our seed.
