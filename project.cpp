@@ -1043,7 +1043,7 @@ bool Project::loadProjectFile(FILE * fi, bool loadVersion, uint32_t version) {
 	}
 
 	if (useMask & pjHaveLevel) {
-		if (share[5] < 0) {
+		if (share[levelEditor] < 0) {
 			if (version >= 8) {
 				lvl = new level(this);
 				lvl->load(fi, version);
@@ -1248,7 +1248,7 @@ bool Project::saveProjectFile(FILE * fo, bool saveShared, bool saveVersion) {
 	}
 
 	if (haveTemp & pjHaveLevel) {
-		if (saveShared || (share[3] < 0))
+		if (saveShared || (share[levelEditor] < 0))
 			lvl->save(fo);
 	}
 
