@@ -15,7 +15,7 @@ Retro Graphics Toolkit is also extensible with Lua scripting support.
 The compiling instructions are in the file COMPILE.
 
 # Dependencies
-Retro Graphics Toolkit needs only FLTK installed. It does depend on Lua but that is compiled in the same folder.
+Retro Graphics Toolkit only needs FLTK and Lua installed. GNU/Linux users may use their system package manager to install these depending on the distribution.
 
 # License
 Retro Graphics Toolkit is licensed under the terms of GPL v3 or later. This can be found in the file called COPYING.
