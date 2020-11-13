@@ -282,8 +282,12 @@ void setGameSystem(Project*prjPtr, uint32_t prjIdx, gameSystemEnum sel) {
 
 		prjPtr->ms->sps[msprt].enforceMax();
 
-		if (window)
+	}
+
+	if (prjPtr->containsData(pjHaveSprites)) {
+		if (window && (prjIdx == curProjectID)) {
 			window->updateSpriteSliders();
+		}
 	}
 
 	if (prjPtr->isUniqueData(pjHaveTiles)) {
