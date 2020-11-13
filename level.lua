@@ -77,20 +77,22 @@ end
 function lvlsetlayer(layerIDX)
 	local p = projects.current
 	local layer = p.level.layers[layerIDX]
+	if layer == nil then
+		print('lvlsetlayerl called with invalid index', layerIDX)
+		return
+	end
 
 	lvlCurLayer = layerIDX
 
 	layerNameInput:value(layer.name)
 
-	local curLayerInfo = p.level.layers[lvlCurLayer].info
+	local curLayerInfo = layer.info
 	wLayer:value(curLayerInfo.w)
 	hLayer:value(curLayerInfo.h)
-	if editX>=curLayerInfo.w then
-		editX=curLayerInfo.w-1
-	end
-	if editY>=curLayerInfo.h then
-		editY=curLayerInfo.h-1
-	end
+
+	-- Cap editX and editY to the bounds of the level.
+	editX = math.max(0, math.min(editX, curLayerInfo.w - 1))
+	editY = math.max(0, math.min(editY, curLayerInfo.h - 1))
 
 	local layerSource = curLayerInfo.src & 3
 
@@ -203,6 +205,10 @@ editModeLevel=false
 function drawLevel()
 	local p = projects.current
 	local layer = p.level.layers[lvlCurLayer]
+	if layer == nil then
+		print('drawLevel called with invalid layer index', lvlCurLayer)
+		return
+	end
 	local curLayerInfo = layer.info
 
 	xOff = 168 * rgt.w() // 800
