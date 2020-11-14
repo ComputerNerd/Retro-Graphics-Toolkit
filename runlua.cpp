@@ -179,12 +179,6 @@ static int settings__get_(lua_State *L) {
 
 	settings *self = *((settings **)dub::checksdata_n(L, 1, "settings", true));
 	const char *key = luaL_checkstring(L, 2);
-	puts(lua_typename(L, lua_type(L, 0)));
-	puts(lua_typename(L, lua_type(L, 1)));
-	puts(lua_typename(L, lua_type(L, 2)));
-	puts(lua_typename(L, lua_type(L, 3)));
-	puts(lua_typename(L, lua_type(L, 4)));
-	puts("__END__");
 	// <self> "key" <mt>
 	// rawget(mt, key)
 	lua_pushvalue(L, 2);

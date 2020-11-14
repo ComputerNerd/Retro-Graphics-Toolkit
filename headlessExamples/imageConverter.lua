@@ -18,20 +18,26 @@ parser:argument('images','You can specify one or more images.\nIn the same direc
 local args = parser:parse()
 
 local sysmap={G=project.segaGenesis,N=project.NES,GG=project.gameGear,M=project.masterSystem}
-local datatmap={C=rgt.Cheader,A=rgt.ASM,Be=rgt.BEX,Bi=rgt.Binary}
+local datatmap={C=rgt.tCheader,A=rgt.tASM,Be=rgt.tBEX,Bi=rgt.tBinary}
 local sys=sysmap[args.system]
 local datat=datatmap[args.data]
-local datatExtmap={[rgt.Cheader]='.c',[rgt.ASM]='.asm',[rgt.BEX]='.bex',[rgt.Binary]='.bin'}
+local datatExtmap={[rgt.tCheader]='.c',[rgt.tASM]='.asm',[rgt.tBEX]='.bex',[rgt.tBinary]='.bin'}
 local datatExt=datatExtmap[datat]
 
 for k,v in pairs(args.images) do
 	if sys~=project.segaGenesis then
-		print('Setting to',sys)
+		print('Setting project to',sys)
 		project.setSystem(sys)
 	end
 	rgt.syncProject()
-	tilemaps.loadImage(v)
-	local set=settings.new()
+
+	local prj = projects.current
+	local prjTilemaps = prj.tilemaps
+	local curTM = prjTilemaps.current
+
+	curTM:loadImage(v)
+
+	local set = settings.new()
 	--[[
 	struct settings{//TODO avoid hardcoding palette row amount
 		bool sprite;//Are we generating the palette for a sprite
@@ -46,30 +52,40 @@ for k,v in pairs(args.images) do
 		int rowAutoEx[2];
 	};
 	--]]
-	set.sprite=false
-	for i=1,palette.rowCnt do
-		set:off(i,0)
+	set.sprite = false -- This is a tilemap not a sprite.
+
+	local curPal = prj.palette
+
+	for i=1, curPal.rowCnt do
+		set:off(i, 0)
 	end
+
 	set.alg=0
 	set.ditherAfter=true
 	set.entireRow=false
 	set.colSpace=0
-	for i=1,palette.rowCnt do
-		set:perRow(i,palette.perRow)
+	for i=1,curPal.rowCnt do
+		set:perRow(i,curPal.perRow)
 	end
-	for i=1,palette.rowCnt do
+	for i=1,curPal.rowCnt do
 		set:useRow(i,true)
 	end
 	set.rowAuto=1
 	set:rowAutoEx(1,0)
 	set:rowAutoEx(2,0)
+	-- Find the optimal palette for the tilemap and dither the tilemap.
 	tilemaps.generatePalette(set)
-	tile.removeDuplicate(false)
-	baselabel=libgen.basename(fl.filename_setext(v,'')):gsub('-','_'):gsub(' ','_')
-	palette.save(fl.filename_setext(v,'_pal'..datatExt),0,palette.cnt,sys==project.NES,datat,false,baselabel..'_pal')
-	tilemaps.save(0,fl.filename_setext(v,'_map'..datatExt),datat,false,args.tile_map_compression,baselabel..'_map',fl.filename_setext(v,'_attributes'..datatExt),baselabel..'_attributes')
-	tile.save(fl.filename_setext(v,'_tiles'..datatExt),datat,false,args.tile_compression,baselabel..'_tiles')
-	if datat==rgt.Cheader then
+
+	local prjTiles = prj.tiles
+	prjTiles:removeDuplicate(false)
+
+	baselabel = libgen.basename(fl.filename_setext(v,'')):gsub('-','_'):gsub(' ','_')
+
+	curPal:save(fl.filename_setext(v,'_pal'..datatExt),0,curPal.cnt,sys==project.NES,datat,false,baselabel..'_pal')
+	curTM:save(fl.filename_setext(v,'_map'..datatExt),datat,false,args.tile_map_compression,baselabel..'_map',fl.filename_setext(v,'_attributes'..datatExt),baselabel..'_attributes')
+	prjTiles:save(fl.filename_setext(v,'_tiles'..datatExt),datat,false,args.tile_compression,baselabel..'_tiles')
+
+	if datat == rgt.tCheader then
 		function createHeader(fname,lbl,extra)
 			io.output(fname)
 			io.write('extern const uint8_t '..lbl..'[];\n')
@@ -81,10 +97,10 @@ for k,v in pairs(args.images) do
 		createHeader(fl.filename_setext(v,'_pal'..'.h'),baselabel..'_pal',nil)
 		maplbl=baselabel..'_map'
 		maplblu=maplbl:upper()
-		createHeader(fl.filename_setext(v,'_map'..'.h'),maplbl,string.format("#define %s_W %d\n#define %s_H %d\n",maplblu,tilemaps.width[1],maplblu,tilemaps.heightA[1]))
+		createHeader(fl.filename_setext(v,'_map'..'.h'),maplbl,string.format("#define %s_W %d\n#define %s_H %d\n",maplblu,curTM.width,maplblu,curTM.hAll))
 		tileslbl=baselabel..'_tiles'
 		tileslblu=tileslbl:upper()
-		createHeader(fl.filename_setext(v,'_tiles'..'.h'),tileslbl,string.format('#define %s_CNT %d\n',tileslblu,tile.amt))
+		createHeader(fl.filename_setext(v,'_tiles'..'.h'),tileslbl,string.format('#define %s_CNT %d\n',tileslblu, #prjTiles))
 		if sys==project.NES then
 			createHeader(fl.filename_setext(v,'_attributes'..'.h'),baselabel..'_attributes',nil)
 		end
