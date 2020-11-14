@@ -160,7 +160,7 @@ void switchProjectSlider(uint32_t id, bool oldExists = true);
 void switchProject(uint32_t id, uint32_t oldID, bool load = false);
 bool loadProject(uint32_t id, const char*fname);
 bool saveProject(uint32_t id, const char*fname);
-bool saveAllProjects(void);
+bool saveAllProjects(const char* projectGroupFilename);
 bool loadAllProjects(const char*fname);
 #define pjHavePal 1
 #define pjHaveTiles 2

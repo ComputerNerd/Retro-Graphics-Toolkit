@@ -200,6 +200,7 @@ void palette::read(FILE*fp, bool supportsAlt) {
 void palette::write(FILE*fp) {
 	if (!prj->isFixedPalette())
 		saveBinAsText(palDat, totalColors() * esize, fp, fileType_t::tBinary, nullptr, nullptr, esize * 8, paletteDataEndian);
+
 	fwrite(palType, totalColors(), 1, fp);
 }
 
@@ -1153,8 +1154,10 @@ rgbArray_t palette::rgbToNearestSystemColor(rgbArray_t rgbIn) {
 	if (prj->isFixedPalette()) {
 		rgbArray_t rgbOut;
 		unsigned bestIdx = nearestColIndex(rgbIn[0], rgbIn[1], rgbIn[2], rgbPal, totalColors(), false, 0) * 3;
+
 		for (unsigned i = 0; i < 3; ++i)
 			rgbOut[i] = rgbPal[bestIdx + i];
+
 		return rgbOut;
 	} else {
 		auto rawV = rgbToValue(rgbIn[0], rgbIn[1], rgbIn[2]);

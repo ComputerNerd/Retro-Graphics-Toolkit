@@ -14,12 +14,15 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 */
+#include "luaHelpers.hpp"
 #include "luaProjects.hpp"
 #include "luaProject.hpp"
 #include "dub/dub.h"
 #include "project.h"
 
 static int projects__get_(lua_State *L) {
+	checkAlreadyExists
+
 	int type = lua_type(L, 2);
 
 	if (type == LUA_TNUMBER) {
@@ -54,11 +57,24 @@ static int projects___tostring(lua_State *L) {
 	return 1;
 }
 
+static int lua_projects_load(lua_State*L) {
+	lua_pushboolean(L, loadAllProjects(lua_tostring(L, 1)));
+	switchProject(curProjectID, curProjectID);
+	return 1;
+}
+
+static int lua_projects_save(lua_State*L) {
+	lua_pushboolean(L, saveAllProjects(lua_tostring(L, 1)));
+	return 1;
+}
+
 static const struct luaL_Reg projects_member_methods[] = {
 	{ "__index", projects__get_       },
 	{ "__len", projects__len_       },
 	{ "__tostring", projects___tostring  },
 	{ "deleted", dub::isDeleted       },
+	{ "load", lua_projects_load},
+	{ "save", lua_projects_save},
 	{ NULL, NULL},
 };
 void luaCreateProjectsTable(lua_State* L) {

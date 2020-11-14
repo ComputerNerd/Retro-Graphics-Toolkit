@@ -38,7 +38,10 @@ void setNesTile(Fl_Widget*o, void*) {
 		currentProject->subSystem &= ~NES2x2;
 }
 void saveAllProjectsCB(Fl_Widget*, void*) {
-	saveAllProjects();
+	if (!load_file_generic("Save projects group as...", true))
+		return;
+
+	saveAllProjects(the_file.c_str());
 }
 void loadAllProjectsCB(Fl_Widget*, void*) {
 	if (!load_file_generic("Load projects group"))

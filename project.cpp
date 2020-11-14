@@ -1279,7 +1279,7 @@ bool saveProject(uint32_t id, const char*fname) {
 	return true;
 }
 
-bool saveAllProjects(void) {
+bool saveAllProjects(const char* projectGroupFilename) {
 	/*!The format is the same except it begins with
 	char R
 	char G
@@ -1289,10 +1289,7 @@ bool saveAllProjects(void) {
 	int32_t share[shareAmtPj] For version 4 the value of shareAmtPj is 4 in version 5 the value is 5
 	(format described in saveProject is repeated n amount of times let n = amount of projects stored) The only difference is version is not stored
 	*/
-	if (!load_file_generic("Save projects group as...", true))
-		return true;
-
-	FILE * fo = fopen(the_file.c_str(), "wb");
+	FILE * fo = fopen(projectGroupFilename, "wb");
 	fputc('R', fo);
 	fputc('G', fo);
 	const uint32_t projectSize = projects->size();

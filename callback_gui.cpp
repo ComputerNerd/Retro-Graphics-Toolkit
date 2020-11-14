@@ -145,15 +145,16 @@ void setGameSystem(Project*prjPtr, uint32_t prjIdx, gameSystemEnum sel) {
 
 		delete prjPtr->pal;
 		prjPtr->pal = newPal;
+
 		for (unsigned i = 0; i < projects->size(); ++i) {
 			if (i == curProjectID)
 				continue;
 
 			Project*prj = &projects->at(i);
 			int32_t *shr = prj->share;
-			if (shr[pal_edit] == prjIdx) {
+
+			if (shr[pal_edit] == prjIdx)
 				prj->pal = newPal;
-			}
 		}
 
 		palBar.setSys(true, true);
@@ -285,9 +286,8 @@ void setGameSystem(Project*prjPtr, uint32_t prjIdx, gameSystemEnum sel) {
 	}
 
 	if (prjPtr->containsData(pjHaveSprites)) {
-		if (window && (prjIdx == curProjectID)) {
+		if (window && (prjIdx == curProjectID))
 			window->updateSpriteSliders();
-		}
 	}
 
 	if (prjPtr->isUniqueData(pjHaveTiles)) {
@@ -395,11 +395,11 @@ void set_game_system(Fl_Widget*, void* selection) {
 
 		Project*prj = &projects->at(i);
 		int32_t *shr = prj->share;
+
 		for (unsigned j = 0; j < shareAmtPj; ++j) {
 			if (shr[j] == curProjectID) {
-				if (prj->gameSystem != sel) {
+				if (prj->gameSystem != sel)
 					setGameSystem(prj, i, sel);
-				}
 			}
 		}
 	}

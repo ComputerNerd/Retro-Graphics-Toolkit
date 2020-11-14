@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
 	char*tmp = strdup(argv[0]);
 	chdir(dirname(tmp));
 	free((void*)tmp);
-	bool headless = false, useExampleFolder = false;
+	bool headless = false, useExampleFolder = false, runScript = false;
 
 	if (argc >= 3) {
 		if (!strcmp(argv[1], "--headless"))
@@ -86,6 +86,9 @@ int main(int argc, char **argv) {
 			headless = true;
 			useExampleFolder = true;
 		}
+
+		if (!strcmp(argv[1], "--run-script"))
+			runScript = true;
 	}
 
 	Fl::visual(FL_DOUBLE | FL_INDEX);
@@ -152,6 +155,9 @@ int main(int argc, char **argv) {
 		updateTileSelectAmt();
 		updatePlaneTilemapMenu(curProjectID, window->planeSelect);
 		window->show(argc, argv);
+
+		if (runScript)
+			runLua(Lconf, argv[2]);
 
 		while (Fl_X::first) {
 			try {

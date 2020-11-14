@@ -73,8 +73,10 @@ static int lua_palette_rgbToNearestSystemColor(lua_State*L) {
 		tmp[i] = luaL_optinteger(L, 2 + i, 0);
 
 	auto res = projects->at(projectIDX).pal->rgbToNearestSystemColor(tmp);
+
 	for (unsigned i = 0; i < 3; ++i)
 		lua_pushinteger(L, res[i]);
+
 	return 3;
 }
 

@@ -92,6 +92,7 @@ void level::setlayeramt(unsigned amt, bool lastLayerDim) {
 		fprintf(stderr, "level:setlayeramt called with invalid amount (%u). Forcing amount to one.\n", amt);
 		amt = 1;
 	}
+
 	if (amt > layeramt) {
 		if (lastLayerDim)
 			lvlI.reserve(amt);
@@ -162,10 +163,12 @@ void level::save(FILE*fp) const {
 void level::load(FILE*fp, uint32_t version) {
 	uint32_t amtnew;
 	fread(&amtnew, 1, sizeof(uint32_t), fp);
+
 	if (amtnew <= 0) {
 		fprintf(stderr, "Invalid number of level layers detected (%u). Skipping loading levels.\n", amtnew);
 		return;
 	}
+
 	setlayeramt(amtnew, false);
 
 	for (unsigned i = 0; i < layeramt; ++i) {
