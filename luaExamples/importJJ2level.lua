@@ -121,25 +121,36 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 			idx=idx+4
 			print('Height layer:',i,height[i])
 		end
-		level.setLayerAmt(validcnt)
-		basename=fl.filename_name(fname)
-		local cnt=0
+
+		local currentLevel = p.level
+		local levelLayers = currentLevel.layers
+
+		levelLayers:amount(validcnt, false)
+
+		basename = fl.filename_name(fname)
+
+		local cnt = 1
 		for i=1,8 do
 			if valid[i] then
-				level.setLayerName(cnt,string.format("%s layer %d",basename,i))
-				cnt=cnt+1
+				local currentLayer = levelLayers[cnt]
+				currentLayer.name = string.format("%s layer %d", basename, i)
+				cnt = cnt + 1
 			end
 		end
-		cnt=0
+		cnt = 1
 		for i=1,8 do
 			print(i)
 			if valid[i] then
-				level.resizeLayer(cnt,w4[i],height[i])
-				local info=level.getInfo(cnt)
-				info.src=level.CHUNKS
-				cnt=cnt+1
+				local currentLayer = levelLayers[cnt]
+				currentLayer:resize(w4[i], height[i])
+
+				local info = currentLayer.info
+				info.src = level.CHUNKS
+
+				cnt = cnt + 1
 			end
 		end
+
 		local chunks = p.chunks
 		chunks:setWH(4,1)
 		chunks:setAmt(Udat3/8)
@@ -173,21 +184,24 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 		end
 		cd4=zlib.inflate()(str:sub(263+Cdat1+Cdat2+Cdat3,263+Cdat1+Cdat2+Cdat3+Cdat4))
 		idx=1
-		cnt=0
+
+		cnt = 1
+
 		for i=1,8 do
 			print(i)
 			if valid[i] then
-				for y=0,height[i]-1 do
-					for x=0,w4[i]-1 do
-						local info=level.getXY(cnt,x,y)
-						info.id=strts(cd4:sub(idx,idx+1))
+				for y = 1, height[i] do
+					for x = 1, w4[i] do
+						local currentLayer = levelLayers[cnt]
+
+						currentLayer[y][x].id = strts(cd4:sub(idx,idx+1))
 						idx=idx+2
 					end
 				end
-				cnt=cnt+1
+				cnt = cnt + 1
 			end
 		end
-		project.update()--Sync the level GUI with these changes
+		project.update() -- Sync the level GUI with these changes.
 	end
 	local fname = fl.file_chooser("Load j2t", '*.j2t')
 	if not (fname == nil or fname == '') then
