@@ -92,6 +92,7 @@ public:
 	void*toLinePlanar(void);
 	void changeDim(unsigned w, unsigned h, unsigned bd);
 	void swap(unsigned first, unsigned second);
+	void saveExtAttrs(const char*fname, fileType_t type, bool clipboard, CompressionType compression, const char*label = "extAttrsDat");
 	void save(const char*fname, fileType_t type, bool clipboard, CompressionType compression, const char*label = "tileDat");
 	void tms9918Mode1RearrangeTiles(tileAttrMap_t& attrs, bool forceKeepAllTiles = true);
 	bool isAllZeroTruecolor(unsigned idx);

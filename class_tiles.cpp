@@ -876,6 +876,50 @@ void tiles::changeDim(unsigned w, unsigned h, unsigned bd) {
 
 	updateTileSelectAmt();
 }
+void tiles::saveExtAttrs(const char*fname, fileType_t type, bool clipboard, CompressionType compression, const char*label) {
+	FILE* myfile;
+	uint8_t* compdat;
+	size_t compsize, uncompsize;
+
+	if (clipboard)
+		myfile = nullptr;
+	else if (type == fileType_t::tBinary)
+		myfile = fopen(fname, "wb");
+	else
+		myfile = fopen(fname, "w");
+
+	const uint8_t* savePtr = extAttrs.data();
+
+	if (likely(myfile || clipboard)) {
+		uncompsize = extAttrs.size();
+		if (compression != CompressionType::Uncompressed)
+			compdat = (uint8_t*)encodeType(savePtr, uncompsize, compsize, compression);
+
+		char comment[2048];
+		snprintf(comment, 2048, "%d tiles %s", amt, typeToText(compression));
+
+		if (compression != CompressionType::Uncompressed) {
+			if (!saveBinAsText(compdat, compsize, myfile, type, comment, label, 8, boost::endian::order::native)) {
+				free(compdat);
+				fl_alert("Error: can not save file %s", fname);
+				return;
+			}
+		} else {
+			if (!saveBinAsText(savePtr, uncompsize, myfile, type, comment, label, 8, boost::endian::order::native)) {
+				fl_alert("Error: can not save file %s", fname);
+				return;
+			}
+		}
+
+		if (compression != CompressionType::Uncompressed)
+			free(compdat);
+
+	} else
+		fl_alert("Error: can not save file %s", fname);
+
+	if (myfile)
+		fclose(myfile);
+}
 void tiles::save(const char*fname, fileType_t type, bool clipboard, CompressionType compression, const char*label) {
 	uint8_t*savePtr;
 	enum tileType tt = prj->getTileType();
@@ -908,10 +952,10 @@ void tiles::save(const char*fname, fileType_t type, bool clipboard, CompressionT
 
 	if (clipboard)
 		myfile = nullptr;
-	else if (type != fileType_t::tBinary)
-		myfile = fopen(fname, "w");
-	else
+	else if (type == fileType_t::tBinary)
 		myfile = fopen(fname, "wb");
+	else
+		myfile = fopen(fname, "w");
 
 	if (likely(myfile || clipboard)) {
 		if (compression != CompressionType::Uncompressed)
@@ -923,7 +967,7 @@ void tiles::save(const char*fname, fileType_t type, bool clipboard, CompressionT
 		if (compression != CompressionType::Uncompressed) {
 			if (!saveBinAsText(compdat, compsize, myfile, type, comment, label, 8, boost::endian::order::native)) {
 				free(compdat);
-				fl_alert("Error: can not save file %s", the_file.c_str());
+				fl_alert("Error: can not save file %s", fname);
 
 				if (tt != PLANAR_TILE)
 					free(savePtr);
@@ -932,7 +976,7 @@ void tiles::save(const char*fname, fileType_t type, bool clipboard, CompressionT
 			}
 		} else {
 			if (!saveBinAsText(savePtr, (amt)*outputTileSize, myfile, type, comment, label, 8, boost::endian::order::native)) {
-				fl_alert("Error: can not save file %s", the_file.c_str());
+				fl_alert("Error: can not save file %s", fname);
 
 				if (tt != PLANAR_TILE)
 					free(savePtr);
@@ -947,7 +991,7 @@ void tiles::save(const char*fname, fileType_t type, bool clipboard, CompressionT
 		if (tt != PLANAR_TILE)
 			free(savePtr);
 	} else
-		fl_alert("Error: can not save file %s", the_file.c_str());
+		fl_alert("Error: can not save file %s", fname);
 
 	if (myfile)
 		fclose(myfile);

@@ -28,6 +28,12 @@ static int lua_tiles_save(lua_State*L) {
 	return 0;
 }
 
+static int lua_tiles_saveExtAttrs(lua_State*L) {
+	getProjectIDX
+	projects->at(projectIDX).tileC->saveExtAttrs(lua_tostring(L, 2), (fileType_t)lua_tointeger(L, 3), lua_toboolean(L, 4), (CompressionType)lua_tointeger(L, 5), lua_tostring(L, 6));
+	return 0;
+}
+
 static int lua_tiles_removeDuplicate(lua_State*L) {
 	getProjectIDX
 	projects->at(projectIDX).tileC->remove_duplicate_tiles(lua_toboolean(L, 2));
@@ -109,6 +115,7 @@ static const struct luaL_Reg tiles_member_methods[] = {
 	{ "__tostring", tiles___tostring  },
 	{ "deleted", dub::isDeleted    },
 	{ "save", lua_tiles_save},
+	{ "saveExtAttrs", lua_tiles_saveExtAttrs},
 	{ "removeDuplicate", lua_tiles_removeDuplicate},
 	{ "append", lua_tiles_append},
 	{ "setAmt", lua_tiles_resize},

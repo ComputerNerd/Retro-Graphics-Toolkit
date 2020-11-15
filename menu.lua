@@ -80,6 +80,32 @@ function removeDuplicateBlocks(unused)
 		p:haveMessage(project.mapMast)
 	end
 end
+function saveExtendedTileAttributes(unused)
+	local ftypeVal = rgt.askSaveType(true, rgt.tBinary)
+	if ftypeVal == rgt.tCancel then
+		return
+	end
+
+	local clipboardVal = 0
+	if ftypeVal ~= rgt.tBinary then
+		clipboardVal = rgt.clipboardAsk()
+		if clipboardVal == 2 then
+			return
+		end
+	end
+	local fname = ''
+	if clipboardVal == 0 then
+		fname = fl.file_chooser("Save extended attributes as.")
+		if (fname == nil or fname == '') then
+			return
+		end
+	end
+	local ct = rgt.compressionAsk()
+	if ct == compressionType.cancel then
+		return
+	end
+	projects.current.tiles:saveExtAttrs(fname, ftypeVal, clipboardVal == 1, ct, "extAttrsData")
+end
 function generateMenu()
 --[[ This function shall return a table containing menu items that will be added to the main menu.
 --   The table shall be a two dimensional array. The first dimension specifies the amount of menu items.
@@ -96,6 +122,7 @@ function generateMenu()
 			{"Open truecolor tiles",0,2--[[load_truecolor_tiles--]]},
 			{"Save tiles",0,3--[[save_tiles--]]},
 			{"Save truecolor tiles",0,4--[[save_tiles_truecolor--]]},
+			{"Save extended attributes",0, 'saveExtendedTileAttributes'},
 			{"Import image to tiles",0,5--[[load_image_to_tilemap--]],2},
 			{},-- This signifies the end of the submenu
 		{"Palette",0,0,0,FL.SUBMENU},

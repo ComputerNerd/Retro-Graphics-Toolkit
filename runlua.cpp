@@ -553,6 +553,21 @@ static int lua_rgt_hide(lua_State*L) {
 
 	return 0;
 }
+static int lua_rgt_clipboardAsk(lua_State*L) {
+	lua_pushinteger(L, clipboardAsk());
+
+	return 1;
+}
+static int lua_rgt_askSaveType(lua_State*L) {
+	lua_pushinteger(L, (lua_Integer)askSaveType(lua_toboolean(L, 1), (fileType_t)luaL_checkinteger(L, 2)));
+
+	return 1;
+}
+static int lua_rgt_compressionAsk(lua_State*L) {
+	lua_pushinteger(L, (lua_Integer)compressionAsk());
+
+	return 1;
+}
 static int lua_rgt_ditherImage(lua_State*L) {
 	unsigned len = lua_rawlen(L, 1);
 
@@ -743,6 +758,9 @@ static const luaL_Reg lua_rgtAPI[] = {
 	{"redraw", lua_rgt_redraw},
 	{"damage", lua_rgt_damage},
 	{"hide", lua_rgt_hide},
+	{"clipboardAsk", lua_rgt_clipboardAsk},
+	{"askSaveType", lua_rgt_askSaveType},
+	{"compressionAsk", lua_rgt_compressionAsk},
 	{"ditherImage", lua_rgt_ditherImage},
 	{"rgbToLab", lua_rgt_rgbToLab},
 	{"labToRgb", lua_rgt_labToRgb},

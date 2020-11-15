@@ -130,7 +130,7 @@ void*decodeTypeRam(const uint8_t*dat, size_t inputSize, size_t &filesize, Compre
 	out.copy((char*)dst, filesize);
 	return dst;
 }
-void*encodeType(void*in, size_t n, size_t&outSize, CompressionType type) {
+void*encodeType(const void*in, size_t n, size_t&outSize, CompressionType type) {
 	std::string input;
 	input.assign((const char *)in, n);
 	std::istringstream iss(input);

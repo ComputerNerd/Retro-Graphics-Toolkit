@@ -27,4 +27,4 @@ CompressionType compressionAsk(void);
 std::string decodeTypeStr(const char * filename, size_t &filesize, CompressionType type);
 void*decodeTypeRam(const uint8_t*dat, size_t inputSize, size_t &filesize, CompressionType type);
 void*decodeType(const char * filename, size_t &filesize, CompressionType type);
-void*encodeType(void*in, size_t n, size_t&outSize, CompressionType type);
+void*encodeType(const void*in, size_t n, size_t&outSize, CompressionType type);
