@@ -60,7 +60,8 @@ palette::palette(Project*prj) {
 	memset(rgbPal, 0, totalMemoryUsage());
 }
 palette::~palette(void) {
-	free(rgbPal);
+	if (rgbPalIsManagedByClass)
+		free(rgbPal);
 }
 palette::palette(const palette&other, Project*prj) {
 	this->prj = prj;
@@ -68,6 +69,35 @@ palette::palette(const palette&other, Project*prj) {
 	setVars(prj->gameSystem);
 	memcpy(rgbPal, other.rgbPal, std::min(totalMemoryUsage(), other.totalMemoryUsage()));
 }
+palette::palette(uint8_t*rgbData, unsigned mainColorCount, unsigned spritePaletteCount, unsigned mainPerRowCount, unsigned spritePalettePerRowCount, int fSpriteRow) {
+	// This is only used to import a RGB palette.
+	this->rgbPalIsManagedByClass = false; // Don't attempt to free rgbPal.
+	this->prj = nullptr; // This object is not associated with a project.
+	this->rgbPal = rgbData;
+	this->palDat = nullptr;
+	this->palType = nullptr;
+	this->colorCnt = mainColorCount;
+	this->haveAlt = spritePaletteCount > 0;
+
+	if (this->haveAlt) {
+		this->colorCntalt = spritePaletteCount;
+		this->rowCntPalalt = spritePaletteCount / spritePalettePerRowCount;
+		this->perRowalt = spritePalettePerRowCount;
+		this->fixedSpriteRow = -1;
+	} else {
+		this->colorCntalt = 0;
+		this->rowCntPalalt = 0;
+		this->perRowalt = 0;
+		this->fixedSpriteRow = fSpriteRow;
+	}
+
+	this->rowCntPal = mainColorCount / mainPerRowCount;
+	this->perRow = mainPerRowCount;
+
+	this->esize = 0; // We don't have real palette data.
+}
+
+
 void palette::setVars(enum gameSystemEnum gameSystem) {
 	fixedSpriteRow = prj->fixedSpirtePalRow();
 
@@ -496,9 +526,8 @@ void palette::interpolateBackgroundColors(const palette& other, BgColProcessMode
 			if (dst == BgColProcessMode::ALL_IGNORE_FIXED && r == fixedSpriteRow)
 				continue;
 
-			unsigned dstIdx = getIndexByRow(r, 0) * 3;
-			uint8_t* dstColor = rgbPal + dstIdx;
-			std::memcpy(dstColor, sourceColor, 3);
+			unsigned dstIdx = getIndexByRow(r, 0);
+			rgbToEntry(sourceColor[0], sourceColor[1], sourceColor[2], dstIdx);
 		}
 	} else {
 		if (rDstStart == rDstEnd) { // One destination row.

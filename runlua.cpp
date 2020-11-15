@@ -669,7 +669,7 @@ static int lua_rgt_h(lua_State*L) {
 		return 0;
 }
 
-static void tableToVector(lua_State*L, unsigned idx, std::vector<uint8_t>&vu8) {
+void tableToVector(lua_State*L, unsigned idx, std::vector<uint8_t>&vu8) {
 	int len = lua_rawlen(L, idx);
 	vu8.clear();
 	vu8.reserve(len);

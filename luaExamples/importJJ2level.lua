@@ -274,6 +274,8 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 		long FMaskAddress[MAX_TILES];   //flipped version of the above
 		} --]]
 		local PaletteColor = {}
+		local rgbPalette = {}
+		local rgbPalIdx = 1
 		for i = 1, 1024, 4 do
 			i4 = (i + 3) // 4
 			PaletteColor[i4] = {}
@@ -281,7 +283,15 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 			PaletteColor[i4][2] = strtb(d:sub(i + 1, i + 1))
 			PaletteColor[i4][3] = strtb(d:sub(i + 2, i + 2))
 			PaletteColor[i4][4] = strtb(d:sub(i + 3, i + 3))
+			rgbPalette[rgbPalIdx] = PaletteColor[i4][1]
+			rgbPalette[rgbPalIdx + 1] = PaletteColor[i4][2]
+			rgbPalette[rgbPalIdx + 2] = PaletteColor[i4][3]
+			rgbPalIdx = rgbPalIdx + 3
 		end
+
+		local colorCnt = #rgbPalette // 3
+		p.palette:importRGB(rgbPalette, colorCnt, 0, colorCnt, 0, -1)
+
 		local TileCount = strti(d:sub(1025, 1028))
 		if TileCount > maxTiles then
 			fl.alert('TileCount > maxTiles')

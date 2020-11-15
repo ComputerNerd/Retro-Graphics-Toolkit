@@ -20,6 +20,8 @@
 #include "project.h"
 #include "dub/dub.h"
 #include "gui.h"
+#include "runlua.h"
+#include "classpalettebar.h"
 
 static int lua_palette_paletteToRgb(lua_State*L) {
 	getProjectIDX
@@ -78,6 +80,28 @@ static int lua_palette_rgbToNearestSystemColor(lua_State*L) {
 		lua_pushinteger(L, res[i]);
 
 	return 3;
+}
+
+static int lua_palette_importRGB(lua_State*L) {
+	getProjectRef
+
+	int arg2Type = lua_type(L, 2);
+
+	if (arg2Type != LUA_TTABLE) {
+		fputs("The first argument to importRGB should be a table.", stderr);
+		return 0;
+	}
+
+	std::vector<uint8_t> rgbPal;
+	tableToVector(L, 2, rgbPal);
+
+	palette tmp(rgbPal.data(), luaL_checkinteger(L, 3), luaL_checkinteger(L, 4), luaL_checkinteger(L, 5), luaL_checkinteger(L, 6), luaL_checkinteger(L, 7));
+
+	prj.pal->import(tmp);
+
+	palBar.updateSliders();
+
+	return 0;
 }
 
 static int palette__get_(lua_State *L) {
@@ -158,6 +182,7 @@ static const struct luaL_Reg palette_member_methods[] = {
 	{ "rgbToValue", lua_palette_rgbToValue},
 	{ "valueToRGB", lua_palette_valueToRGB},
 	{ "rgbToNearestSystemColor", lua_palette_rgbToNearestSystemColor},
+	{ "importRGB", lua_palette_importRGB},
 	{ "deleted", dub::isDeleted    },
 	{ NULL, NULL},
 };

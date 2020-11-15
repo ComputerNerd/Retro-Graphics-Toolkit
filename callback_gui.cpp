@@ -106,19 +106,6 @@ Fl_Menu_Item subSysTMS9918[] = {
 	{"Mode 3 (Multicolor)", 0, TMS9918SetSubSysCB, (void*)MODE_3},
 	{0}
 };
-static void palCopyConvert(unsigned cols) {
-	uint8_t*rgbTmp = (uint8_t*)alloca(cols * 3);
-	uint8_t*palTypeTmp = (uint8_t*)alloca(cols);
-	memcpy(palTypeTmp, currentProject->pal->palType, cols);
-	memcpy(rgbTmp, currentProject->pal->rgbPal, cols * 3);
-	palBar.setSys(false);
-	uint8_t*nPtr = currentProject->pal->rgbPal;
-
-	for (unsigned i = 0; i < cols; ++i, nPtr += 3)
-		currentProject->pal->rgbToEntry(nPtr[0], nPtr[1], nPtr[2], i);
-
-	memcpy(currentProject->pal->palType, palTypeTmp, cols);
-}
 void setGameSystem(Project*prjPtr, uint32_t prjIdx, gameSystemEnum sel) {
 	const gameSystemEnum gold = prjPtr->gameSystem;
 

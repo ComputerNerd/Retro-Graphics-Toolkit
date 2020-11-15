@@ -15,6 +15,8 @@
    Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #pragma once
+#include <vector>
+#include <cstdint>
 #include "lua.hpp"
 #include <FL/Fl_Widget.H>
 void updateProjectTablesLua(lua_State*L);
@@ -25,3 +27,4 @@ void runLuaCB(Fl_Widget*, void*);
 bool luaL_checkboolean(lua_State* L, int n);
 void registerProjectTables(lua_State*L);
 void setProjectConstants(lua_State*L);
+void tableToVector(lua_State*L, unsigned idx, std::vector<uint8_t>&vu8);

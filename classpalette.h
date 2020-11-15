@@ -46,6 +46,7 @@ class palette {
 	paletteRawValue_t searchPermuations(const std::set<paletteRawValue_t> & permutations, double& bestd, unsigned r, unsigned g, unsigned b);
 public:
 	Project*prj;
+	bool rgbPalIsManagedByClass = true;
 	uint8_t*rgbPal;
 	uint8_t*palDat;
 	uint8_t*palType;/*!<Sets 3 different types for each palette entry free, locked and reserved*/
@@ -60,6 +61,7 @@ public:
 	int fixedSpriteRow; // fixedSpriteRow and haveAlt cannot be enabled at the same time.
 	bool haveAlt;//Does the current game system use an alternative sprite palette?
 	palette(Project*prj);
+	palette(uint8_t*rgbData, unsigned mainColorCount, unsigned spritePaletteCount, unsigned mainPerRowCount, unsigned spritePalettePerRowCount, int fSpriteRow);
 	~palette(void);
 	palette(const palette&other, Project*prj);
 	void setVars(enum gameSystemEnum gameSystem);
