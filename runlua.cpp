@@ -547,6 +547,12 @@ static int lua_rgt_damage(lua_State*L) {
 
 	return 0;
 }
+static int lua_rgt_hide(lua_State*L) {
+	if (window)
+		window->hide();
+
+	return 0;
+}
 static int lua_rgt_ditherImage(lua_State*L) {
 	unsigned len = lua_rawlen(L, 1);
 
@@ -736,6 +742,7 @@ static int lua_rgt_testluaD_throw(lua_State*L) {
 static const luaL_Reg lua_rgtAPI[] = {
 	{"redraw", lua_rgt_redraw},
 	{"damage", lua_rgt_damage},
+	{"hide", lua_rgt_hide},
 	{"ditherImage", lua_rgt_ditherImage},
 	{"rgbToLab", lua_rgt_rgbToLab},
 	{"labToRgb", lua_rgt_labToRgb},
