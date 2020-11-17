@@ -78,17 +78,17 @@ end
 local p = projects.current
 if p:have(project.palMask) then
 	local p = projects.current
-	win=Fl_Window.new(320,200,'Shift hue by')
+	win=fltk.window(320,200,'Shift hue by')
 	win:set_modal()
-	win:setDrawFunction("draw")
-	sld=Fl_Value_Slider.new(10,166,300,24)
-	sld:Type(FL.HOR_SLIDER)
-	sld:callback('setShift')
-	okbtn=Fl_Button.new((320-64)/2-64-10,134,64,24,"OK")
-	okbtn:callback('btnCB',1)
-	cancelbtn=Fl_Button.new((320-64)/2+64+10,134,64,24,"Cancel")
-	cancelbtn:callback('btnCB')
-	win:End()
+	--win:setDrawFunction("draw")
+	sld=value_slider(10,166,300,24)
+	sld:type(FL.HOR_SLIDER)
+	sld:callback(setShift)
+	okbtn=fltk.button((320-64)/2-64-10,134,64,24,"OK")
+	--okbtn:callback(btnCB,1)
+	cancelbtn=fltk.button((320-64)/2+64+10,134,64,24,"Cancel")
+	--cancelbtn:callback('btnCB')
+	win:done()
 	win:show()
 	while win:shown()~=0 do
 		Fl.wait()
