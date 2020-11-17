@@ -2,7 +2,6 @@
 win=fltk.window(640,480)
 win:done()
 win:show()
-while win:shown()~=0 do
+while win:shown() do
 	Fl.wait()
 end
-

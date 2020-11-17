@@ -45,9 +45,9 @@ function idxHelper(idx)
 	r,g,b=hsl_to_rgb((h+shift)%1.,s,l)
 	return r*255.//1,g*255.//1,b*255.//1
 end
-function draw()
+function draw(win)
 	local p = projects.current
-	win:baseDraw()
+	win:super_draw()
 	if shift~=nil then
 		for row=0,p.palette.rowCnt-1 do
 			for idx=0,p.palette.perRow-1 do
@@ -75,22 +75,29 @@ function btnCB(val)
 	ok=val
 	win:hide()
 end
+
+function PaletteWindow()
+	win = fltk.double_window_sub(320, 200, 'Shift hue by')
+	win:override_draw(draw)
+
+	return win
+end
+
 local p = projects.current
 if p:have(project.palMask) then
 	local p = projects.current
-	win=fltk.window(320,200,'Shift hue by')
+	win = PaletteWindow()
 	win:set_modal()
-	--win:setDrawFunction("draw")
-	sld=value_slider(10,166,300,24)
+	sld=fltk.value_slider(10,166,300,24)
 	sld:type(FL.HOR_SLIDER)
 	sld:callback(setShift)
 	okbtn=fltk.button((320-64)/2-64-10,134,64,24,"OK")
-	--okbtn:callback(btnCB,1)
+	okbtn:callback(btnCB,1)
 	cancelbtn=fltk.button((320-64)/2+64+10,134,64,24,"Cancel")
-	--cancelbtn:callback('btnCB')
+	cancelbtn:callback(btnCB)
 	win:done()
 	win:show()
-	while win:shown()~=0 do
+	while win:shown() do
 		Fl.wait()
 	end
 	if ok~=0 then
