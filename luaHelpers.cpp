@@ -66,3 +66,20 @@ void outofBoundsAlert(const char*what, unsigned val) {
 void noUserDataError() {
 	fl_alert("Lua code error: No user data");
 }
+
+void luaStringToVector(lua_State*L, int index, std::vector<uint8_t>&v) {
+	if (lua_isstring(L, index)) {
+		size_t len;
+		const char*lstr = lua_tolstring(L, index, &len);
+
+		if (lstr == nullptr)
+			luaL_error(L, "lua_tolstring returned null when used on index %d.", index);
+
+		else {
+			v.resize(len);
+			memcpy(v.data(), lstr, len);
+		}
+
+	} else
+		luaL_error(L, "String expected at index %d.", index);
+}

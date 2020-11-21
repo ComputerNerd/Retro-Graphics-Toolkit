@@ -60,6 +60,20 @@ static int lua_tiles_resize(lua_State*L) {
 	return 0;
 }
 
+static int tiles__set_(lua_State *L) {
+	const char *key = luaL_checkstring(L, 2);
+	getProjectRef
+
+	if (!strcmp(key, "data"))
+		luaStringToVector(L, 3, prj.tileC->tDat);
+
+	else if (!strcmp(key, "rgbData"))
+		luaStringToVector(L, 3, prj.tileC->truetDat);
+
+
+	return 0;
+}
+
 static int tiles__get_(lua_State *L) {
 	checkAlreadyExists
 
@@ -69,7 +83,7 @@ static int tiles__get_(lua_State *L) {
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2) - 1;
 
-		if (k >= 0 && k < prj.tileC->amt) {
+		if (k >= 0 && k < prj.tileC->amount()) {
 			luaopen_Tile(L, projectIDX, k);
 			return 1;
 		}
@@ -91,6 +105,12 @@ static int tiles__get_(lua_State *L) {
 		} else if (!strcmp("height", k)) {
 			lua_pushinteger(L, prj.tileC->height());
 			return 1;
+		} else if (!strcmp("data", k)) {
+			lua_pushlstring(L, (const char*)prj.tileC->tDat.data(), prj.tileC->tDat.size());
+			return 1;
+		} else if (!strcmp("rgbData", k)) {
+			lua_pushlstring(L, (const char*)prj.tileC->truetDat.data(), prj.tileC->truetDat.size());
+			return 1;
 		}
 	}
 
@@ -99,7 +119,7 @@ static int tiles__get_(lua_State *L) {
 
 static int tiles__len_(lua_State *L) {
 	getProjectIDX
-	lua_pushinteger(L, projects->at(projectIDX).tileC->amt);
+	lua_pushinteger(L, projects->at(projectIDX).tileC->amount());
 	return 1;
 }
 
@@ -110,10 +130,11 @@ static int tiles___tostring(lua_State *L) {
 }
 
 static const struct luaL_Reg tiles_member_methods[] = {
-	{ "__index", tiles__get_       },
-	{ "__len", tiles__len_       },
-	{ "__tostring", tiles___tostring  },
-	{ "deleted", dub::isDeleted    },
+	{ "__newindex", tiles__set_},
+	{ "__index", tiles__get_},
+	{ "__len", tiles__len_},
+	{ "__tostring", tiles___tostring},
+	{ "deleted", dub::isDeleted},
 	{ "save", lua_tiles_save},
 	{ "saveExtAttrs", lua_tiles_saveExtAttrs},
 	{ "removeDuplicate", lua_tiles_removeDuplicate},

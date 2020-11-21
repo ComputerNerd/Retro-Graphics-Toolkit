@@ -24,7 +24,7 @@
 #include "dub/dub.h"
 
 static unsigned inRangeTile(unsigned tile, size_t projectIDX) {
-	if (tile >= projects->at(projectIDX).tileC->amt) {
+	if (tile >= projects->at(projectIDX).tileC->amount()) {
 		outofBoundsAlert("tile", tile);
 		return 0;
 	}
@@ -145,14 +145,14 @@ static int tile___tostring(lua_State * L) {
 	return 1;
 }
 static const struct luaL_Reg tile_member_methods[] = {
-	{ "__index", tile__get_       },
-	{ "__tostring", tile___tostring  },
+	{ "__index", tile__get_},
+	{ "__tostring", tile___tostring},
 	{ "compareTileRGBA", lua_tile_compareTileRGBA},
 	{ "setTileRGBA", lua_tile_setTileRGBA},
 	{ "dither", lua_tile_dither},
 	{ "draw", lua_tile_draw},
 	{ "remove", lua_tile_remove},
-	{ "deleted", dub::isDeleted    },
+	{ "deleted", dub::isDeleted},
 	{ NULL, NULL},
 };
 

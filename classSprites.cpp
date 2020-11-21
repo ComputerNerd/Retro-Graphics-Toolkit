@@ -126,8 +126,8 @@ void sprites::freeOptmizations(unsigned which) {
 			bool notBlank = false;
 
 			for (unsigned h = groups[which].list[i].h; h--; --ctile) {
-				if (ctile >= prj->tileC->amt) {
-					printf("Tile %u exceeded %u\n", ctile, prj->tileC->amt - 1);
+				if (ctile >= prj->tileC->amount()) {
+					printf("Tile %u exceeded %u\n", ctile, prj->tileC->amount() - 1);
 					continue;
 				} else
 					notBlank |= chkNotZero(prj->tileC->truetDat.data() + (ctile * 256), 256);
@@ -366,11 +366,11 @@ bool sprites::recttoSprite(int x0, int x1, int y0, int y1, int where, Fl_Shared_
 	if (where >= amt)
 		setAmt(where + 1);
 
-	unsigned startTile = prj->tileC->amt;
+	unsigned startTile = prj->tileC->amount();
 	uint8_t*out = prj->tileC->truetDat.data() + (startTile * 256);
 	unsigned newTiles = wTiles * hTiles;
 	//set new amount
-	prj->tileC->resizeAmt(prj->tileC->amt + newTiles);
+	prj->tileC->resizeAmt(prj->tileC->amount() + newTiles);
 	out = &prj->tileC->truetDat.at(startTile * prj->tileC->tcSize);
 	unsigned center[3];
 	center[0] = (wt - w) / 2;

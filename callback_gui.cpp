@@ -284,7 +284,7 @@ void setGameSystem(Project*prjPtr, uint32_t prjIdx, gameSystemEnum sel) {
 		{	gameSystemEnum gnew = prjPtr->gameSystem;
 			uint32_t snew = prjPtr->subSystem;
 
-			for (unsigned i = 0; i < tilesOld->amt; ++i) {
+			for (unsigned i = 0; i < tilesOld->amount(); ++i) {
 				unsigned usedRow = 0;
 
 				if ((sel == masterSystem || sel == gameGear) && (gold == NES) && prjPtr->isUniqueData(pjHaveMap)) {

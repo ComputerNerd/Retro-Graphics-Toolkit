@@ -156,7 +156,7 @@ void updateTileSelectAmt(uint32_t newMax) {
 	}
 }
 void updateTileSelectAmt(void) {
-	updateTileSelectAmt(currentProject->tileC->amt);
+	updateTileSelectAmt(currentProject->tileC->amount());
 }
 static void setRet(Fl_Widget*, void*r) {
 	bool Cancel = (uintptr_t)r ? true : false;

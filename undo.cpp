@@ -252,7 +252,7 @@ static void cleanupEvent(uint32_t id) {
 
 		case uTileAll:
 		{	struct undoTileAll*ut = (struct undoTileAll*)uptr->ptr;
-			unsigned sz = getSzTile(ut->type) * currentProject->tileC->amt;
+			unsigned sz = getSzTile(ut->type) * currentProject->tileC->amount();
 			free(ut->ptr);
 			memUsed -= sz;
 
@@ -503,7 +503,7 @@ static void cpyAllTiles(uint8_t*ptr, unsigned amt, tileTypeMask_t type) {
 		memcpy(ptr, currentProject->tileC->truetDat.data(), amt * currentProject->tileC->tcSize);
 }
 static void cpyAllTilesU(uint8_t*ptr, unsigned amt, tileTypeMask_t type) {
-	if (amt != currentProject->tileC->amt) {
+	if (amt != currentProject->tileC->amount()) {
 		currentProject->tileC->resizeAmt(amt);
 		updateTileSelectAmt();
 	}
@@ -666,7 +666,7 @@ static void UndoRedo(bool redo) {
 			struct undoTileAll*ut = (struct undoTileAll*)uptr->ptr;
 			// Swap the contents of the tile data buffer with ut->ptr.
 			uint32_t amtNew = ut->amt;
-			uint32_t amtOld = currentProject->tileC->amt;
+			uint32_t amtOld = currentProject->tileC->amount();
 			uint8_t*oldDatBuf = (uint8_t*)malloc(getSzTile(ut->type) * amtOld); // Create a buffer large enough to hold the old data.
 			cpyAllTiles(oldDatBuf, amtOld, ut->type);
 			cpyAllTilesU((uint8_t*)ut->ptr, amtNew, ut->type);
@@ -690,10 +690,10 @@ static void UndoRedo(bool redo) {
 					for (int_fast32_t i = tmp.size(); i--;)
 						currentProject->tileC->remove_tile_at(tmp[i]);
 				} else {
-					uint32_t fullSize = currentProject->tileC->amt + ut->lst.size();
+					uint32_t fullSize = currentProject->tileC->amount() + ut->lst.size();
 
 					for (int_fast32_t i = 0; i < tmp.size(); ++i) {
-						if (tmp[i] < currentProject->tileC->amt)
+						if (tmp[i] < currentProject->tileC->amount())
 							currentProject->tileC->insertTile(tmp[i]);
 					}
 
@@ -728,12 +728,12 @@ static void UndoRedo(bool redo) {
 			struct undoAppendgroupdat*ut = (struct undoAppendgroupdat*)uptr->ptr;
 
 			if (redo) {
-				unsigned amtold = currentProject->tileC->amt;
+				unsigned amtold = currentProject->tileC->amount();
 				currentProject->tileC->resizeAmt(amtold + ut->amt);
 				memcpy(currentProject->tileC->tDat.data() + ((amtold * currentProject->tileC->tileSize)), ut->dat.data(), currentProject->tileC->tileSize * ut->amt);
 				memcpy(currentProject->tileC->truetDat.data() + ((amtold * currentProject->tileC->tcSize)), ut->truedat.data(), currentProject->tileC->tcSize * ut->amt);
 			} else
-				currentProject->tileC->resizeAmt(currentProject->tileC->amt - ut->amt);
+				currentProject->tileC->resizeAmt(currentProject->tileC->amount() - ut->amt);
 
 			updateTileSelectAmt();
 		}
@@ -743,7 +743,7 @@ static void UndoRedo(bool redo) {
 			if (redo)
 				currentProject->tileC->appendTile();
 			else
-				currentProject->tileC->resizeAmt(currentProject->tileC->amt - 1);
+				currentProject->tileC->resizeAmt(currentProject->tileC->amount() - 1);
 
 			updateTileSelectAmt();
 			break;
@@ -1230,7 +1230,7 @@ void pushTilesAll(tileTypeMask_t type) {
 	uptr->ptr = malloc(sizeof(struct undoTileAll));
 	memUsed += sizeof(struct undoTileAll);
 	struct undoTileAll*ut = (struct undoTileAll*)uptr->ptr;
-	ut->amt = currentProject->tileC->amt;
+	ut->amt = currentProject->tileC->amount();
 	unsigned sz = getSzTile(type) * ut->amt;
 	ut->ptr = malloc(sz);
 	memUsed += sz;

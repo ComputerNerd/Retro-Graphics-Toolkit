@@ -1201,7 +1201,7 @@ bool tileMap::truecolor_to_image(uint8_t * the_image, int useRow, bool useAlpha)
 			else
 				truecolor_tile_ptr = get_tile(x_tile, y_tile) * prj->tileC->tcSize;
 
-			if ((truecolor_tile_ptr != -prj->tileC->tcSize) && (truecolor_tile_ptr < (prj->tileC->amt * prj->tileC->tcSize))) {
+			if ((truecolor_tile_ptr != -prj->tileC->tcSize) && (truecolor_tile_ptr < (prj->tileC->amount() * prj->tileC->tcSize))) {
 				for (uint_fast32_t y = 0; y < stepTileRowBytes; y += wBytes) { //pixels y
 					if (useAlpha)
 						memcpy(&the_image[a + b + y], &prj->tileC->truetDat[truecolor_tile_ptr], prj->tileC->width() * 4);
@@ -1256,12 +1256,12 @@ void tileMap::truecolorimageToTiles(uint8_t * image, int rowusage, bool useAlpha
 			if (rowusage < 0) {
 				current_tile = get_tile(x_tile, y_tile);
 
-				if (current_tile >= prj->tileC->amt)
+				if (current_tile >= prj->tileC->amount())
 					goto dont_convert_tile;
 			} else {
 				current_tile = get_tileRow(x_tile, y_tile, rowusage);
 
-				if (current_tile >= prj->tileC->amt)
+				if (current_tile >= prj->tileC->amount())
 					goto dont_convert_tile;
 
 				if (current_tile == -1)
@@ -1587,7 +1587,7 @@ void tileMap::pickExtAttrs(void) {
 							unsigned hist[16];
 							int32_t tile = get_tile(i, j);
 
-							if (tile < prj->tileC->amt) {
+							if (tile < prj->tileC->amount()) {
 								memset(hist, 0, sizeof(hist));
 
 								for (unsigned y = 0; y < prj->tileC->height(); ++y) {
@@ -1637,7 +1637,7 @@ void tileMap::pickExtAttrs(void) {
 							for (unsigned y = 0; y < prj->tileC->height(); ++y) {
 								unsigned tile = get_tile(i, j);
 
-								if (tile >= prj->tileC->amt) // Skip out of bounds tiles.
+								if (tile >= prj->tileC->amount()) // Skip out of bounds tiles.
 									continue;
 
 								unsigned offset = (j * prj->tileC->height() * prj->tileC->width() * mapSizeW) + (i * prj->tileC->width()) + (y * mapSizeW * prj->tileC->width());

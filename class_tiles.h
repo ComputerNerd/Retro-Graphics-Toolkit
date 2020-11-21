@@ -52,10 +52,13 @@ public:
 	unsigned height()const {
 		return sizeh;
 	}
+	unsigned amount()const {
+		return tDat.size() / tileSize;
+	}
+
 	struct Project*prj;
 	unsigned tileSize;/*!< Sets the size of one tile in bytes 16 or 32 depends of if NES or Sega Genesis. */
 	unsigned tcSize; /*!< The size of one truecolor tile in bytes. */
-	uint32_t amt;/*!< Amount of tiles*/
 	uint32_t current_tile;/*!< The current tile that is being edited. */
 	std::vector<uint8_t>tDat;/*!< Tile data*/
 	std::vector<uint8_t>truetDat;/*< Truecolor tile data*/
@@ -71,7 +74,6 @@ public:
 	void setPixelTc(uint32_t tile, uint32_t x, uint32_t y, uint32_t val);
 	uint32_t getPixelTc(uint32_t tile, uint32_t x, uint32_t y) const;
 	void resizeAmt(uint32_t amtnew);// Resizes array to hold enough for set amount.
-	void resizeAmt(void);
 	void appendTile(unsigned many = 1);
 	void remove_tile_at(uint32_t);
 	void truecolor_to_tile_ptr(unsigned palette_row, uint32_t cur_tile, uint8_t * tileinput, bool Usedither, bool isSprite, bool isIndexArray = false);

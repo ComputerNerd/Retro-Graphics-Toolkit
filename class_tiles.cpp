@@ -36,7 +36,6 @@ tiles::tiles(struct Project*prj) {
 	this->prj = prj;
 
 	current_tile = 0;
-	amt = 1;
 	setDim(8, 8, prj->getBitdepthSys());
 }
 
@@ -49,7 +48,6 @@ void tiles::setWidth(unsigned w) {
 tiles::tiles(const tiles&other, Project*prj) {
 	this->prj = prj;
 	current_tile = other.current_tile;
-	amt = other.amt;
 	tileSize = other.tileSize;
 
 	setWidth(other.width());
@@ -71,8 +69,8 @@ tiles::~tiles() {
 }
 
 uint8_t tiles::getExtAttr(unsigned tile, unsigned y) {
-	if (tile >= amt)
-		throw std::out_of_range("tile >= amt");
+	if (tile >= amount())
+		throw std::out_of_range("tile >= amount");
 
 	if (y >= height())
 		throw std::out_of_range("y >= height()");
@@ -97,8 +95,8 @@ uint8_t tiles::getExtAttr(unsigned tile, unsigned y) {
 }
 
 void tiles::setExtAttr(unsigned tile, unsigned y, uint8_t fgbg) {
-	if (tile >= amt)
-		throw std::out_of_range("tile >= amt");
+	if (tile >= amount())
+		throw std::out_of_range("tile >= amount");
 
 	if (y >= height())
 		throw std::out_of_range("y >= height()");
@@ -123,10 +121,8 @@ void tiles::setExtAttr(unsigned tile, unsigned y, uint8_t fgbg) {
 
 void tiles::insertTile(uint32_t at) {
 	try {
-		if (at > amt)
+		if (at > amount())
 			resizeAmt(at);
-		else
-			++amt;
 
 		tDat.insert(tDat.begin() + at * tileSize, tileSize, 0);
 		truetDat.insert(truetDat.begin() + at * tcSize, tcSize, 0);
@@ -206,37 +202,33 @@ uint32_t tiles::getPixelTc(uint32_t tile, uint32_t x, uint32_t y) const {
 	return*tt;
 }
 void tiles::resizeAmt(uint32_t amtnew) {
-	amt = amtnew;
-	resizeAmt();
-}
-void tiles::resizeAmt(void) {
 	try {
-		tDat.resize(amt * tileSize);
-		truetDat.resize(amt * tcSize);
+		tDat.resize(amtnew * tileSize);
+		truetDat.resize(amtnew * tcSize);
 		unsigned tp = prj->extAttrTilesPerByte();
 		unsigned tpMult = prj->extAttrBytesPerTile();
 
 		if (tp)
-			tp = ((amt * tpMult) + tp - 1) / tp;
+			tp = ((amtnew * tpMult) + tp - 1) / tp;
 
 		extAttrs.resize(tp);
 
 		if (prj == currentProject)
-			updateTileSelectAmt(amt);
+			updateTileSelectAmt(amtnew);
 	} catch (std::exception&e) {
-		fl_alert("Error: cannot resize tiles to %u\nAdditional details %s", amt, e.what());
+		fl_alert("Error: cannot resize tiles to %u\nAdditional details %s", amtnew, e.what());
 		exit(1);
 	}
 }
 void tiles::appendTile(unsigned many) {
-	resizeAmt(amt + many);
+	resizeAmt(amount() + many);
 }
 
 void tiles::tms9918Mode1RearrangeActions(bool forceTileToAttribute, uint32_t tile, uint8_t attr) {
 
 	tileAttrMap_t attrs;
 
-	for (unsigned i = 0; i < amt; ++i) {
+	for (unsigned i = 0; i < amount(); ++i) {
 		// See if this is a padding tile or a duplicate blank tile.
 		if (i != tile)
 			attrs.emplace(getExtAttr(i, 0), i);
@@ -248,12 +240,12 @@ void tiles::tms9918Mode1RearrangeActions(bool forceTileToAttribute, uint32_t til
 }
 
 void tiles::remove_tile_at(uint32_t tileDel) {
-	if (tileDel >= amt) {
-		fl_alert("Cannot delete tile %d as there are only %d tiles", tileDel, amt);
+	if (tileDel >= amount()) {
+		fl_alert("Cannot delete tile %d as there are only %d tiles", tileDel, amount());
 		return;
 	}
 
-	if (amt <= 1) {
+	if (amount() <= 1) {
 		fl_alert("You cannot delete the last time. Instead disable tiles in the project settings to do this.");
 		return;
 	}
@@ -284,8 +276,7 @@ void tiles::remove_tile_at(uint32_t tileDel) {
 	truetDat.erase(truetDat.begin() + (tileDel * tcSize), truetDat.begin() + ((tileDel + 1)*tcSize));
 
 
-	--amt;
-	resizeAmt(); // Ensure extended attributes have the correct size.
+	resizeAmt(amount()); // Ensure extended attributes have the correct size. We write amount() instead of amount() - 1 because it's based on the size of tDat.
 }
 void tiles::truecolor_to_tile(unsigned palette_row, uint32_t cur_tile, bool isSprite) {
 	truecolor_to_tile_ptr(palette_row, cur_tile, &truetDat[(cur_tile * tcSize)], true, isSprite);
@@ -335,12 +326,12 @@ void tiles::truecolor_to_tile_ptr(unsigned palette_row, uint32_t cur_tile, uint8
 void tiles::draw_truecolor(uint32_t tile_draw, unsigned x, unsigned y, bool usehflip, bool usevflip, unsigned zoom) {
 	static bool dontShow;
 
-	if (tile_draw >= amt) {
+	if (tile_draw >= amount()) {
 		if (unlikely(!dontShow)) {
-			fl_alert("Warning tried to draw truecolor tile # %d at X: %d y: %d\nBut there is only %d tiles.\nNote that this message will not be shown again.\n Instead it will be outputted to stdout", tile_draw, x, y, amt);
+			fl_alert("Warning tried to draw truecolor tile # %d at X: %d y: %d\nBut there is only %d tiles.\nNote that this message will not be shown again.\n Instead it will be outputted to stdout", tile_draw, x, y, amount());
 			dontShow = true;
 		} else
-			printf("Warning tried to draw truecolor tile # %d at X: %d y: %d\nBut there is only %d tiles.\n", tile_draw, x, y, amt);
+			printf("Warning tried to draw truecolor tile # %d at X: %d y: %d\nBut there is only %d tiles.\n", tile_draw, x, y, amount());
 
 		return;
 	}
@@ -419,12 +410,12 @@ void tiles::draw_truecolor(uint32_t tile_draw, unsigned x, unsigned y, bool useh
 void tiles::draw_tile(int x_off, int y_off, uint32_t tile_draw, unsigned zoom, unsigned pal_row, bool Usehflip, bool Usevflip, bool isSprite, bool alpha) {
 	static bool dontShow;
 
-	if (tile_draw >= amt) {
+	if (tile_draw >= amount()) {
 		if (unlikely(!dontShow)) {
-			fl_alert("Warning tried to draw tile # %d at X: %d y: %d\nBut there is only %d tiles.\nNote that this message will not be shown again.\n Instead it will be outputted to stdout", tile_draw, x_off, y_off, amt);
+			fl_alert("Warning tried to draw tile # %d at X: %d y: %d\nBut there is only %d tiles.\nNote that this message will not be shown again.\n Instead it will be outputted to stdout", tile_draw, x_off, y_off, amount());
 			dontShow = true;
 		} else
-			printf("Warning tried to draw tile # %d at X: %d y: %d\nBut there is only %d tiles.\n", tile_draw, x_off, y_off, amt);
+			printf("Warning tried to draw tile # %d at X: %d y: %d\nBut there is only %d tiles.\n", tile_draw, x_off, y_off, amount());
 
 		return;
 	}
@@ -571,17 +562,17 @@ void tiles::remove_duplicate_tiles(bool tColor) {
 	else
 		tileTemp = (uint8_t *)alloca(tileSize);
 
-	std::vector<uint32_t> remap(amt);
+	std::vector<uint32_t> remap(amount());
 	time_t lastt = time(NULL);
 
-	for (uint32_t i = 0; i < amt; ++i)
+	for (uint32_t i = 0; i < amount(); ++i)
 		remap[i] = i;
 
-	for (cur_tile = 0; cur_tile < amt; ++cur_tile) {
+	for (cur_tile = 0; cur_tile < amount(); ++cur_tile) {
 		snprintf(bufT, 1024, "Comparing tiles with: %d", cur_tile);
 		win->copy_label(bufT);
 
-		for (curT = amt - 1; curT >= cur_tile; curT--) {
+		for (curT = amount() - 1; curT >= cur_tile; curT--) {
 			if (cur_tile == curT)//don't compare with itself
 				continue;
 
@@ -656,14 +647,14 @@ void tiles::remove_duplicate_tiles(bool tColor) {
 
 			if ((time(NULL) - lastt) >= 1) {
 				lastt = time(NULL);
-				progress->value((float)cur_tile / (float)amt);
+				progress->value((float)cur_tile / (float)amount());
 				snprintf(bufT, 1024, "Removed %d tiles", tile_remove_c);
 				progress->label(bufT);
 				Fl::check();
 			}
 		}
 
-		progress->value((float)cur_tile / (float)amt);
+		progress->value((float)cur_tile / (float)amount());
 		snprintf(bufT, 1024, "Removed %d tiles", tile_remove_c);
 		progress->label(bufT);
 		Fl::check();
@@ -704,7 +695,7 @@ void tiles::toPlanar(enum tileType tt, unsigned mi, int mx) {
 	unsigned bdr = prj->getBitdepthSysraw();
 
 	if (mx < 0)
-		mx = amt;
+		mx = amount();
 
 	for (unsigned i = mi; i < mx; ++i) {
 		uint8_t*ptr = tmp;
@@ -759,12 +750,12 @@ void tiles::toPlanar(enum tileType tt, unsigned mi, int mx) {
 	}
 }
 void*tiles::toLinear(void) {
-	void*pt = malloc(amt * tileSize);
+	void*pt = malloc(amount() * tileSize);
 	uint8_t*ptr = (uint8_t*)pt;
 	unsigned bdr = prj->getBitdepthSysraw();
 	uint8_t*tPtr = tDat.data();
 
-	for (unsigned i = 0; i < amt; ++i) {
+	for (unsigned i = 0; i < amount(); ++i) {
 		for (unsigned y = 0; y < sizeh; ++y) {
 			for (unsigned x = 0; x < sizew; ++x) {
 				unsigned val = getPixel(tPtr, x, y);
@@ -794,7 +785,7 @@ void*tiles::toLinear(void) {
 	return pt;
 }
 void*tiles::toLinePlanar(void) {
-	void*pt = malloc(amt * tileSize);
+	void*pt = malloc(amount() * tileSize);
 	uint8_t*ptr = (uint8_t*)pt;
 	unsigned bdr = prj->getBitdepthSysraw();
 	uint8_t*tPtr = tDat.data();
@@ -804,7 +795,7 @@ void*tiles::toLinePlanar(void) {
 		return 0;
 	}
 
-	for (unsigned i = 0; i < amt; ++i) {
+	for (unsigned i = 0; i < amount(); ++i) {
 		for (unsigned y = 0; y < sizeh; ++y) {
 			for (unsigned b = 0; b <= bdr; ++b) {
 				*ptr = 0;
@@ -822,12 +813,13 @@ void*tiles::toLinePlanar(void) {
 	return pt;
 }
 void tiles::setDim(unsigned w, unsigned h, unsigned bd) {
+	uint32_t oldAmount = amount();
 	setWidth(w);
 	sizeh = h;
 	curBD = bd;
 	tcSize = sizew * sizeh * 4;
 	tileSize = sizewbytesbits * sizeh * bd / 8;
-	resizeAmt();
+	resizeAmt(oldAmount);
 }
 void tiles::swap(unsigned first, unsigned second) {
 	if (first == second)
@@ -852,8 +844,8 @@ void tiles::changeDim(unsigned w, unsigned h, unsigned bd) {
 		}
 	}
 
-	unsigned amto = amt;
-	amt = amt * sizew / w * sizeh / h;
+	unsigned amto = amount();
+	unsigned newAmount = amto * sizew / w * sizeh / h;
 	unsigned sw = sizew, sh = sizeh;
 
 	if (sw != w || sh != h)
@@ -892,11 +884,12 @@ void tiles::saveExtAttrs(const char*fname, fileType_t type, bool clipboard, Comp
 
 	if (likely(myfile || clipboard)) {
 		uncompsize = extAttrs.size();
+
 		if (compression != CompressionType::Uncompressed)
 			compdat = (uint8_t*)encodeType(savePtr, uncompsize, compsize, compression);
 
 		char comment[2048];
-		snprintf(comment, 2048, "%d tiles %s", amt, typeToText(compression));
+		snprintf(comment, 2048, "%d tiles %s", amount(), typeToText(compression));
 
 		if (compression != CompressionType::Uncompressed) {
 			if (!saveBinAsText(compdat, compsize, myfile, type, comment, label, 8, boost::endian::order::native)) {
@@ -959,10 +952,10 @@ void tiles::save(const char*fname, fileType_t type, bool clipboard, CompressionT
 
 	if (likely(myfile || clipboard)) {
 		if (compression != CompressionType::Uncompressed)
-			compdat = (uint8_t*)encodeType(savePtr, outputTileSize * amt, compsize, compression);
+			compdat = (uint8_t*)encodeType(savePtr, outputTileSize * amount(), compsize, compression);
 
 		char comment[2048];
-		snprintf(comment, 2048, "%d tiles %s", amt, typeToText(compression));
+		snprintf(comment, 2048, "%d tiles %s", amount(), typeToText(compression));
 
 		if (compression != CompressionType::Uncompressed) {
 			if (!saveBinAsText(compdat, compsize, myfile, type, comment, label, 8, boost::endian::order::native)) {
@@ -975,7 +968,7 @@ void tiles::save(const char*fname, fileType_t type, bool clipboard, CompressionT
 				return;
 			}
 		} else {
-			if (!saveBinAsText(savePtr, (amt)*outputTileSize, myfile, type, comment, label, 8, boost::endian::order::native)) {
+			if (!saveBinAsText(savePtr, (amount())*outputTileSize, myfile, type, comment, label, 8, boost::endian::order::native)) {
 				fl_alert("Error: can not save file %s", fname);
 
 				if (tt != PLANAR_TILE)
@@ -1008,7 +1001,7 @@ void tiles::tms9918Mode1RearrangeTiles(tileAttrMap_t& attrs, bool forceKeepAllTi
 		for (auto it = attrs.cbegin(); it != attrs.cend(); ++it)
 			processedTiles.emplace(it->second);
 
-		for (unsigned i = 0; i < amt; ++i) {
+		for (unsigned i = 0; i < amount(); ++i) {
 			const bool tileExists = processedTiles.find(i) != processedTiles.end();
 
 			if (!tileExists)
@@ -1049,7 +1042,7 @@ void tiles::tms9918Mode1RearrangeTiles(tileAttrMap_t& attrs, bool forceKeepAllTi
 	std::vector<uint8_t> newTruecolorData(truetDat.size());
 
 	for (auto it = attrs.cbegin(); it != attrs.cend(); ++it) {
-		if (it->second >= amt) {
+		if (it->second >= amount()) {
 			tileMapping[it->second] = it->second; // Leave invalid entries alone.
 			continue;
 		}
@@ -1067,9 +1060,9 @@ void tiles::tms9918Mode1RearrangeTiles(tileAttrMap_t& attrs, bool forceKeepAllTi
 			if (extraTiles) {
 				extraTiles = 8 - extraTiles; // This gives us how many tiles we need to add.
 				printf("Padding tiles with %d tiles at index: %d\n", extraTiles, curTile);
-				resizeAmt(amt + extraTiles);
-				newTileData.resize(amt * tileSize);
-				newTruecolorData.resize(amt * tcSize);
+				resizeAmt(amount() + extraTiles);
+				newTileData.resize(amount() * tileSize);
+				newTruecolorData.resize(amount() * tcSize);
 				curTile += extraTiles; // Skip past these blank tiles.
 			}
 

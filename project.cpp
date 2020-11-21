@@ -797,7 +797,7 @@ void switchProject(uint32_t id, uint32_t oldID, bool load) {
 	}
 
 	if (prj.containsData(pjHaveTiles) && window)
-		updateTileSelectAmt(prj.tileC->amt);
+		updateTileSelectAmt(prj.tileC->amount());
 
 	for (int x = 0; x < shareAmtPj; ++x) {
 		if (window) {
@@ -935,14 +935,15 @@ bool Project::loadProjectFile(FILE * fi, bool loadVersion, uint32_t version) {
 			else
 				tileC->changeDim(8, 8, getBitdepthSys());
 
-			fread(&tileC->amt, 1, sizeof(uint32_t), fi);
+			uint32_t tileAmount;
+			fread(&tileAmount, 1, sizeof(uint32_t), fi);
 
 			if (version < 6)
-				++tileC->amt;
+				++tileAmount;
 
-			tileC->resizeAmt();
-			decompressFromFile(tileC->tDat.data(), tileC->tileSize * (tileC->amt), fi);
-			decompressFromFile(tileC->truetDat.data(), tileC->tcSize * (tileC->amt), fi);
+			tileC->resizeAmt(tileAmount);
+			decompressFromFile(tileC->tDat.data(), tileC->tDat.size(), fi);
+			decompressFromFile(tileC->truetDat.data(), tileC->truetDat.size(), fi);
 
 			if (version >= 8) {
 				size_t extSize = tileC->extAttrs.size();
@@ -1185,9 +1186,10 @@ bool Project::saveProjectFile(FILE * fo, bool saveShared, bool saveVersion) {
 
 	if (haveTemp & pjHaveTiles) {
 		if (saveShared || (share[1] < 0)) {
-			fwrite(&tileC->amt, 1, sizeof(uint32_t), fo);
-			compressToFile(tileC->tDat.data(), tileC->tileSize * (tileC->amt), fo);
-			compressToFile(tileC->truetDat.data(), tileC->tcSize * (tileC->amt), fo);
+			uint32_t tileAmount = tileC->amount();
+			fwrite(&tileAmount, 1, sizeof(uint32_t), fo);
+			compressToFile(tileC->tDat.data(), tileC->tDat.size(), fo);
+			compressToFile(tileC->truetDat.data(), tileC->truetDat.size(), fo);
 			{
 				size_t extSize = tileC->extAttrs.size();
 

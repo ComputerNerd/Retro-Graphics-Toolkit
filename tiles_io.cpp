@@ -121,7 +121,7 @@ void load_tiles(Fl_Widget*, void*o) {
 			return;
 		}
 	} else if (mode == 1) {
-		offset_tiles = currentProject->tileC->amt;
+		offset_tiles = currentProject->tileC->amount();
 		offset_tiles_bytes = offset_tiles * currentProject->tileC->tileSize;
 	} else {
 		offset_tiles = 0;
@@ -129,7 +129,7 @@ void load_tiles(Fl_Widget*, void*o) {
 	}
 
 	if (mode == 2) {
-		if (offset_tiles + (file_size / currentProject->tileC->tileSize) >= currentProject->tileC->amt)
+		if (offset_tiles + (file_size / currentProject->tileC->tileSize) >= currentProject->tileC->amount())
 			currentProject->tileC->tDat.resize(offset_tiles_bytes + file_size);
 	} else
 		currentProject->tileC->tDat.resize(offset_tiles_bytes + file_size);
@@ -140,7 +140,7 @@ void load_tiles(Fl_Widget*, void*o) {
 		currentProject->tileC->toPlanar(currentProject->getTileType(), offset_tiles, offset_tiles + (file_size / currentProject->tileC->tileSize));
 
 	if (mode == 2) {
-		if (offset_tiles + (file_size / currentProject->tileC->tileSize) >= currentProject->tileC->amt)
+		if (offset_tiles + (file_size / currentProject->tileC->tileSize) >= currentProject->tileC->amount())
 			currentProject->tileC->truetDat.resize((file_size * truecolor_multiplier) + (offset_tiles_bytes * truecolor_multiplier));
 	} else
 		currentProject->tileC->truetDat.resize((file_size * truecolor_multiplier) + (offset_tiles_bytes * truecolor_multiplier));
@@ -163,16 +163,6 @@ doTile:
 			currentProject->tileC->tileToTrueCol(&currentProject->tileC->tDat[(c * currentProject->tileC->tileSize)], &currentProject->tileC->truetDat[(c * 256)], foundRow, true, alphaZero);
 		} else
 			currentProject->tileC->tileToTrueCol(&currentProject->tileC->tDat[(c * currentProject->tileC->tileSize)], &currentProject->tileC->truetDat[(c * 256)], defaultRow, true, alphaZero);
-	}
-
-	if (mode == 2) {
-		if (offset_tiles + (file_size / currentProject->tileC->tileSize) >= currentProject->tileC->amt) {
-			currentProject->tileC->amt = (file_size / currentProject->tileC->tileSize);
-			currentProject->tileC->amt += offset_tiles;
-		}
-	} else {
-		currentProject->tileC->amt = (file_size / currentProject->tileC->tileSize);
-		currentProject->tileC->amt += offset_tiles;
 	}
 
 	updateTileSelectAmt();
@@ -222,7 +212,7 @@ void save_tiles_truecolor(Fl_Widget*, void*) {
 		myfile = fopen(the_file.c_str(), "wb");
 
 		if (myfile) {
-			fwrite(currentProject->tileC->truetDat.data(), 1, (currentProject->tileC->amt)*currentProject->tileC->tcSize, myfile);
+			fwrite(currentProject->tileC->truetDat.data(), 1, (currentProject->tileC->amount())*currentProject->tileC->tcSize, myfile);
 			fclose(myfile);
 		} else
 			fl_alert("Error: can not save file %s", the_file.c_str());

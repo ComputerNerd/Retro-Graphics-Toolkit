@@ -24,7 +24,7 @@
 void tilesnewfilppedCB(Fl_Widget*, void*) {
 	pushTilemapAll(false);
 	pushTileappendGroupPrepare();
-	uint32_t amt = currentProject->tileC->amt;
+	uint32_t amt = currentProject->tileC->amount();
 	uint32_t*hflip = (uint32_t*)malloc(amt * sizeof(uint32_t));
 	uint32_t*vflip = (uint32_t*)malloc(amt * sizeof(uint32_t));
 	uint32_t*hvflip = (uint32_t*)malloc(amt * sizeof(uint32_t));
@@ -157,16 +157,16 @@ void update_all_tiles(Fl_Widget*, void*) {
 	else
 		sel_pal = palBar.selRow[1];
 
-	if (currentProject->tileC->amt >= 63)
+	if (currentProject->tileC->amount() >= 63)
 		putchar('\n');
 
 	pushTilesAll(tTypeTile);
 
-	for (uint32_t x = 0; x < currentProject->tileC->amt; ++x) {
+	for (uint32_t x = 0; x < currentProject->tileC->amount(); ++x) {
 		currentProject->tileC->truecolor_to_tile(sel_pal, x, mode_editor == spriteEditor);
 
 		if ((!(x & 63)) && x)
-			printf("Progress: %f\r", ((float)x / (float)currentProject->tileC->amt) * 100.0f);
+			printf("Progress: %f\r", ((float)x / (float)currentProject->tileC->amount()) * 100.0f);
 	}
 
 	window->redraw();

@@ -346,7 +346,7 @@ void editor::draw_non_gui(void) {
 
 					for (unsigned y = tilesSpriteOff[1]; y < h(); y += currentProject->tileC->height() * 2) {
 						for (unsigned x = tilesSpriteOff[0]; x < w(); x += currentProject->tileC->width() * 2, ++looptile) {
-							if (looptile >= currentProject->tileC->amt)
+							if (looptile >= currentProject->tileC->amount())
 								break;
 
 							unsigned palrow = currentProject->ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].palrow;
@@ -362,7 +362,7 @@ void editor::draw_non_gui(void) {
 							}
 						}
 
-						if (looptile >= currentProject->tileC->amt)
+						if (looptile >= currentProject->tileC->amount())
 							break;
 					}
 

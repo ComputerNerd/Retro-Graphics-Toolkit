@@ -27,9 +27,7 @@
 
 static int project__set_(lua_State *L) {
 	const char *key = luaL_checkstring(L, 2);
-	getProjectIDX
-
-	Project&prj = projects->at(projectIDX);
+	getProjectRef
 
 	if (!strcmp(key, "name"))
 		prj.Name.assign(luaL_checkstring(L, 3));

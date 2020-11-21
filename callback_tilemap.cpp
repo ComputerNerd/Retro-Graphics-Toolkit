@@ -83,7 +83,7 @@ void FixOutOfRangeCB(Fl_Widget*, void*) {
 
 	for (int y = 0; y < currentProject->tms->maps[currentProject->curPlane].mapSizeHA; ++y) {
 		for (int x = 0; x < currentProject->tms->maps[currentProject->curPlane].mapSizeW; ++x) {
-			if (currentProject->tms->maps[currentProject->curPlane].get_tile(x, y) >= currentProject->tileC->amt)
+			if (currentProject->tms->maps[currentProject->curPlane].get_tile(x, y) >= currentProject->tileC->amount())
 				currentProject->tms->maps[currentProject->curPlane].set_tile_full(x, y, currentProject->tileC->current_tile, palBar.selRow[2], G_hflip[0], G_vflip[0], G_highlow_p[0]);
 		}
 	}
@@ -286,7 +286,7 @@ void load_image_to_tilemap_project_ptr(struct Project* cProject, const char*fnam
 
 	if (!over) {
 		if (append)
-			appendoff = cProject->tileC->amt;
+			appendoff = cProject->tileC->amount();
 		else
 			appendoff = 0;
 
@@ -335,7 +335,7 @@ void load_image_to_tilemap_project_ptr(struct Project* cProject, const char*fnam
 				ctile = cProject->tms->maps[curPlane].get_tile(x / cProject->tileC->width(), y / cProject->tileC->height());
 
 				//See if ctile is allocated
-				if (ctile >= cProject->tileC->amt) {
+				if (ctile >= cProject->tileC->amount()) {
 					//tile on map but not a tile associated with it
 					imgptr += cProject->tileC->width() * depth;
 					continue;
