@@ -1260,7 +1260,7 @@ bool Project::saveProjectFile(FILE * fo, bool saveShared, bool saveVersion) {
 	fwrite(&luaSize, 1, sizeof(uint32_t), fo);
 
 	if (lScrpt.size()) {
-		if (this == currentProject)
+		if (this == currentProject && (window != nullptr))
 			lScrpt[curScript].str.assign(window->luaBufProject->text());
 
 		for (unsigned i = 0; i < lScrpt.size(); ++i) {
