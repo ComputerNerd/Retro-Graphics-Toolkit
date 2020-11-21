@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2020)
 */
 #include <FL/Fl_Color_Chooser.H>
 #include <FL/Fl_File_Chooser.H>
@@ -21,10 +21,6 @@
 #include "dub/dub.h"
 #include "luafltk.hpp"
 #include "luaHelpers.hpp"
-static int luafl_alert(lua_State*L) {
-	fl_alert(luaL_optstring(L, 1, "Default message"));
-	return 0;
-}
 static int luafl_ask(lua_State*L) {
 	lua_pushboolean(L, fl_ask(luaL_optstring(L, 1, "Default message")));
 	return 1;
@@ -436,7 +432,6 @@ static int FLTK_fl_filename_free_list(lua_State *L) {
 	return lua_error(L);
 }
 static const luaL_Reg lua_flAPI[] = {
-	{"alert", luafl_alert},
 	{"ask", luafl_ask},
 	{"beep", luafl_beep},
 	{"choice", luafl_choice},
