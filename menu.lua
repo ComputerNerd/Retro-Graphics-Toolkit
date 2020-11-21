@@ -15,7 +15,7 @@
 	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
 --]]
 function userGuide(userData)--callback functions **must** have the user data (name does not matter) parameter and only that.
-	fl.alert("The user's guide can be found on the wiki https://github.com/ComputerNerd/Retro-Graphics-Toolkit/wiki or locally in the Manual folder");
+	fltk.alert("The user's guide can be found on the wiki https://github.com/ComputerNerd/Retro-Graphics-Toolkit/wiki or locally in the Manual folder");
 end
 function allMetaDither(unused)
 	local p = projects.current
@@ -144,9 +144,9 @@ function generateMenu()
 			{"Save project",FL.CTRL+FL.SHIFT+string.byte('s'),13--[[saveProjectCB--]],0},
 			{},
 		{"Chunks",0,0,0,FL.SUBMENU},
-			{"Import sonic 1 chunks",0,16--[[ImportS1CBChunks--]],0},
-			{"Import sonic 1 chunks (append)",0,16--[[ImportS1CBChunks--]],1},
-			{"Export chunks as sonic 1 format",0,17--[[saveChunkS1CB--]]},
+			{"Import Sonic 1 chunks",0,16--[[ImportS1CBChunks--]],0},
+			{"Import Sonic 1 chunks (append)",0,16--[[ImportS1CBChunks--]],1},
+			{"Export chunks as Sonic 1 format",0,17--[[saveChunkS1CB--]]},
 			{},
 		{"Sprites",0,0,0,FL.SUBMENU},
 			{"Import sprite from image",0,18--[[SpriteimportCB--]],0},
@@ -159,7 +159,7 @@ function generateMenu()
 				{},
 			{"Import DPLC",0,0,0,FL.SUBMENU},
 				{"Sonic 1",0,21--[[importSonicDPLCCB--]],0},
-				{"Sonic 2 (or sonic 3 character)",0,21--[[importSonicDPLCCB--]],1},
+				{"Sonic 2 (or Sonic 3 character)",0,21--[[importSonicDPLCCB--]],1},
 				{"Sonic 3",0,21--[[importSonicDPLCCB--]],2},
 				{},
 			{"Export mapping",0,0,0,FL.SUBMENU},
@@ -169,7 +169,7 @@ function generateMenu()
 				{},
 			{"Export DPLC",0,0,0,FL.SUBMENU},
 				{"Sonic 1",0,23--[[exportSonicDPLCCB--]],0},
-				{"Sonic 2 (or sonic 3 character)",0,23--[[exportSonicDPLCCB--]],1},
+				{"Sonic 2 (or Sonic 3 character)",0,23--[[exportSonicDPLCCB--]],1},
 				{"Sonic 3",0,23--[[exportSonicDPLCCB--]],2},
 				{},
 			{},

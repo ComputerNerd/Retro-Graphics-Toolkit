@@ -1,1 +1,1 @@
-fl.message("Hello world")
+fltk.message("Hello world")

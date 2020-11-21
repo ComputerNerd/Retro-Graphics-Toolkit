@@ -31,7 +31,7 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 		long UData4;            // uncompressed size of Data4 (259,262)--]]
 		io.close(file)
 		if str:sub(181,184)~='LEVL' then
-			fl.alert('The magic signature is wrong')
+			fltk.alert('The magic signature is wrong')
 		end
 		print('Level name',str:sub(189,220))
 		local Version = str:sub(221, 222)
@@ -227,7 +227,7 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 		local str=file:read('*a')
 		io.close(file)
 		if str:sub(181,184)~='TILE' then
-			fl.alert('The magic signature is wrong')
+			fltk.alert('The magic signature is wrong')
 		end
 		local title = str:sub(189, 220)
 		print('Title', title)
@@ -238,7 +238,7 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 		elseif version == 513 then
 			maxTiles = 4096
 		else
-			fl.alert(string.format('Unknown version %d', version))
+			fltk.alert(string.format('Unknown version %d', version))
 			return
 		end
 		print('Version', version)
@@ -294,7 +294,7 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 
 		local TileCount = strti(d:sub(1025, 1028))
 		if TileCount > maxTiles then
-			fl.alert('TileCount > maxTiles')
+			fltk.alert('TileCount > maxTiles')
 			return
 		end
 		print('TileCount', TileCount)
@@ -306,7 +306,7 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 		for i = 1, TileCount do
 			local tileIdx = strti(d:sub(o, o + 3))
 			if tileIdx % 1024 ~= 0 then
-				fl.alert('tileIdx must be a multiple of 1024')
+				fltk.alert('tileIdx must be a multiple of 1024')
 				return
 			end
 			tileLUT[i] = tileIdx // 1024
@@ -318,15 +318,15 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 		-- This would require somehow merging the tiles. I am not aware of any use cases for this yet.
 		local tiles = p.tiles
 		if tiles.width > 32 or tiles.height > 32 then
-			fl.alert('Tiles must be 32 pixels or smaller in size')
+			fltk.alert('Tiles must be 32 pixels or smaller in size')
 			return
 		end
 		if 32 % tiles.width ~= 0 then
-			fl.alert('Not a multiple of 32')
+			fltk.alert('Not a multiple of 32')
 			return
 		end
 		if 32 % tiles.height ~= 0 then
-			fl.alert('Not a multiple of 32')
+			fltk.alert('Not a multiple of 32')
 			return
 		end
 
@@ -349,12 +349,12 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 		local th = 32 // tiles.height
 		local downscale = math.floor(tonumber(fl.input(string.format('Downscale 1 to %d', tw))))
 		if tw % downscale ~= 0 then
-			fl.alert('Invalid downscale.')
+			fltk.alert('Invalid downscale.')
 			return
 		end
 		local ds2 = downscale * downscale
 		if 32 % downscale ~= 0 then
-			fl.alert('Invalid downscale. 32 % downscale must == 0.')
+			fltk.alert('Invalid downscale. 32 % downscale must == 0.')
 			return
 		end
 		tw = tw // downscale
@@ -380,7 +380,7 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 
 		d = zlib.inflate()(str:sub(263+CData1, 263+CData1 + CData2))
 		if #d % 1024 ~= 0 then
-			fl.alert('Not a multiple of 1024')
+			fltk.alert('Not a multiple of 1024')
 			return
 		end
 		local tm = (32 // tiles.width // downscale) * (32 // tiles.height // downscale)

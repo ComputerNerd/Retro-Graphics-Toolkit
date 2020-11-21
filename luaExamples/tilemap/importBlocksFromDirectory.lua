@@ -19,7 +19,7 @@ if p:have(haveMask) then
 
 	local shouldAppend = fl.ask('Append blocks?')
 	if shouldAppend and (not tilemap.useBlocks) then
-		fl.alert('Blocks must be enabled when using append mode.')
+		fltk.alert('Blocks must be enabled when using append mode.')
 		return
 	end
 

@@ -1,2 +1,2 @@
 fl.beep()
-fl.alert("a beep has occurred")
+fltk.alert("a beep has occurred")

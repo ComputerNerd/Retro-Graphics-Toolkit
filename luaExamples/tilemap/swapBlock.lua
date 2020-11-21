@@ -19,12 +19,12 @@ if p:have(project.mapMask) then
 	local maxBlock = tilemap.hAll // tilemap.height
 
 	if firstBlock < 0 or secondBlock < 0 then
-		fl.alert('Must be greater than or equal to zero.')
+		fltk.alert('Must be greater than or equal to zero.')
 		return
 	end
 
 	if firstBlock >= maxBlock or secondBlock >= maxBlock then
-		fl.alert('Must be less than the number of blocks.')
+		fltk.alert('Must be less than the number of blocks.')
 		return
 	end
 

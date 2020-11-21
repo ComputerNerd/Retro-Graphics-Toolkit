@@ -147,7 +147,7 @@ function lvldelete(unused)
 		checkCurLayerBounds()
 		rgt.redraw()
 	else
-		fl.alert("You must have a minimum of one layer. If do not want a level disable it via means of the have level option in project settings")
+		fltk.alert("You must have a minimum of one layer. If do not want a level disable it via means of the have level option in project settings")
 	end
 end
 
@@ -180,7 +180,7 @@ function setLvlzoomCB(unused)
 end
 
 function invalidSource(src)
-	fl.alert(string.format("%d is not a valid source",src))
+	fltk.alert(string.format("%d is not a valid source",src))
 end
 
 function selSlideUpdateMax(src)
@@ -468,7 +468,7 @@ function setLayerSrc(valStr)
 	local val = lvlSrcLUT[valStr]
 
 	if val == level.BLOCKS and p.tilemaps[plane].useBlocks ~= true then
-		fl.alert("You must first enable blocks in the plane editor")
+		fltk.alert("You must first enable blocks in the plane editor")
 		lvlSrc:value(lvlSrcOptions[(curLayerInfo.src & 3) + 1])
 		return
 	end
@@ -543,7 +543,7 @@ function saveS1layout(unused)
 				file:close()
 			end
 		else
-			fl.alert("The header only allows one byte for width and height. The maximum width and height is 256")
+			fltk.alert("The header only allows one byte for width and height. The maximum width and height is 256")
 		end
 	else
 		p:haveMessage(project.levelMask)

@@ -7,3 +7,6 @@
 [submodule "moonfltk"]
 	path = moonfltk
 	url = https://github.com/stetre/moonfltk
+[submodule "lua-zlib"]
+	path = lua-zlib
+	url = https://github.com/brimworks/lua-zlib

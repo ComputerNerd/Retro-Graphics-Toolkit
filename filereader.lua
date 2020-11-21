@@ -40,7 +40,7 @@ function packCommaStr(w,pstr,hexstr)
 			nu=tonumber(n)
 		end
 		if nu==nil then
-			fl.alert('tonumber() returned nil.\nInput was: '..n)
+			fltk.alert('tonumber() returned nil.\nInput was: '..n)
 		else
 			str=str..string.pack(pstr,nu)
 		end
@@ -50,7 +50,7 @@ end
 function filereaderProcessText(tp,relptr,offbits,be,t,fname)-- Converts text to tables
 	if relptr==true then
 		-- Not yet supported.
-		fl.alert('Error: should be unreachable')
+		fltk.alert('Error: should be unreachable')
 	else
 		if tp==rgt.tBinary then
 			return {{fl.filename_name(fname),t}}-- Simply return a table with one element which contains the input
@@ -98,7 +98,7 @@ function filereaderProcessText(tp,relptr,offbits,be,t,fname)-- Converts text to 
 						end
 						outArray=false
 					else
-						fl.alert('Unknown variable keyword: '..w..'\nPlease modify filereader.lua to add support for it. Look for the table called sizes')
+						fltk.alert('Unknown variable keyword: '..w..'\nPlease modify filereader.lua to add support for it. Look for the table called sizes')
 						return nil
 					end
 				else
@@ -154,7 +154,7 @@ function filereaderProcessText(tp,relptr,offbits,be,t,fname)-- Converts text to 
 							array[idx][2]=array[idx][2]..packCommaStr(w,holdType,'$')
 						end
 					else
-						fl.alert('Unhandled word: '..w)
+						fltk.alert('Unhandled word: '..w)
 						return nil
 					end
 				end

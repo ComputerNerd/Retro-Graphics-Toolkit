@@ -13,11 +13,11 @@ if p:have(project.mapMask) then
 
 		-- Ensure that we can fit the image without padding.
 		if 4096 % tiles.width ~= 0 then
-			fl.alert('tile width must be a multiple of 4096')
+			fltk.alert('tile width must be a multiple of 4096')
 			return
 		end
 		if 4096 % tiles.height ~= 0 then
-			fl.alert('tile height must be a multiple of 4096')
+			fltk.alert('tile height must be a multiple of 4096')
 			return
 		end
 		local tileWidth = 4096 // tiles.width
