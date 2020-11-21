@@ -367,7 +367,7 @@ bool sprites::recttoSprite(int x0, int x1, int y0, int y1, int where, Fl_Shared_
 		setAmt(where + 1);
 
 	unsigned startTile = prj->tileC->amount();
-	uint8_t*out = prj->tileC->truetDat.data() + (startTile * 256);
+	uint8_t*out = prj->tileC->truetDat.data() + (startTile * prj->tileC->tcSize);
 	unsigned newTiles = wTiles * hTiles;
 	//set new amount
 	prj->tileC->resizeAmt(prj->tileC->amount() + newTiles);
