@@ -59,10 +59,6 @@ static int luafl_input(lua_State*L) {
 	lua_pushstring(L, fl_input(luaL_optstring(L, 1, "Enter text"), luaL_optstring(L, 2, NULL)));
 	return 1;
 }
-static int luafl_message(lua_State*L) {
-	fl_message(luaL_optstring(L, 1, "Default message"));
-	return 0;
-}
 static int luafl_password(lua_State*L) {
 	fl_password(luaL_optstring(L, 1, "Enter text"), luaL_optstring(L, 2, NULL));
 	return 0;
@@ -434,7 +430,6 @@ static const luaL_Reg lua_flAPI[] = {
 	{"dir_chooser", luafl_dir_chooser},
 	{"file_chooser", luafl_file_chooser},
 	{"input", luafl_input},
-	{"message", luafl_message},
 	{"password", luafl_password},
 	{"eventnames", luafl_eventnames},
 	{"point", luafl_point},
