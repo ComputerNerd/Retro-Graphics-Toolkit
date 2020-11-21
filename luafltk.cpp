@@ -29,10 +29,6 @@ static int luafl_beep(lua_State*L) {
 	fl_beep();
 	return 0;
 }
-static int luafl_choice(lua_State*L) {
-	lua_pushinteger(L, fl_choice(luaL_optstring(L, 1, "Default message"), luaL_optstring(L, 2, NULL), luaL_optstring(L, 3, NULL), luaL_optstring(L, 4, NULL)));
-	return 1;
-}
 static int luafl_color_chooser(lua_State*L) {
 	double r, g, b;
 	r = luaL_optnumber(L, 3, 0.);
@@ -434,7 +430,6 @@ static int FLTK_fl_filename_free_list(lua_State *L) {
 static const luaL_Reg lua_flAPI[] = {
 	{"ask", luafl_ask},
 	{"beep", luafl_beep},
-	{"choice", luafl_choice},
 	{"color_chooser", luafl_color_chooser},
 	{"dir_chooser", luafl_dir_chooser},
 	{"file_chooser", luafl_file_chooser},
