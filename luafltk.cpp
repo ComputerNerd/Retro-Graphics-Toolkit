@@ -22,7 +22,7 @@
 #include "luafltk.hpp"
 #include "luaHelpers.hpp"
 static int luafl_ask(lua_State*L) {
-	lua_pushboolean(L, fl_ask(luaL_optstring(L, 1, "Default message")));
+	lua_pushboolean(L, fl_ask("%s", luaL_optstring(L, 1, "Default message")));
 	return 1;
 }
 static int luafl_beep(lua_State*L) {
