@@ -75,6 +75,10 @@ static int lua_project_setSpriteSizeID(lua_State*L) {
 static int lua_project_load(lua_State*L) {
 	getProjectIDX
 	loadProject(projectIDX, lua_tostring(L, 2));
+
+	if (projectIDX == curProjectID)
+		switchProject(curProjectID, curProjectID, true);
+
 	return 0;
 }
 
