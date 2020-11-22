@@ -126,18 +126,6 @@ static int lua_tilemap_drawBlock(lua_State*L) {
 	projects->at(projectIDX).tms->maps[tilemapIDX].drawBlock(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0), luaL_optinteger(L, 5, 0), luaL_optinteger(L, 6, 0));
 	return 0;
 }
-static int lua_tilemap_getRaw(lua_State*L) {
-	getProjectIDX
-	size_t tilemapIDX = idxPtr[1];
-	lua_pushinteger(L, projects->at(projectIDX).tms->maps[tilemapIDX].getRaw(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0)));
-	return 1;
-}
-static int lua_tilemap_setRaw(lua_State*L) {
-	getProjectIDX
-	size_t tilemapIDX = idxPtr[1];
-	projects->at(projectIDX).tms->maps[tilemapIDX].setRaw(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0));
-	return 0;
-}
 static int lua_tilemap_subTile(lua_State*L) {
 	getProjectIDX
 	size_t tilemapIDX = idxPtr[1];
@@ -274,11 +262,9 @@ static const struct luaL_Reg tilemap_member_methods[] = {
 	{ "__tostring", tilemap___tostring  },
 	{ "allToRow", lua_tilemap_allToRow},
 	{ "drawBlock", lua_tilemap_drawBlock},
-	{ "getRaw", lua_tilemap_getRaw},
 	{ "pickRow", lua_tilemap_pickRow},
 	{ "pickRowDelta", lua_tilemap_pickRowDelta},
 	{ "save", lua_tilemap_save},
-	{ "setRaw", lua_tilemap_setRaw},
 	{ "subTile", lua_tilemap_subTile},
 	{ "toImage", lua_tilemap_toImage},
 	{ "dither", lua_tilemap_dither},

@@ -86,7 +86,7 @@ static int lua_tile_dither(lua_State*L) {
 	bool useAlt = luaL_optboolean(L, 3, false);
 
 	if (inRangeTile(tile, projectIDX))
-		projects->at(projectIDX).tileC->truecolor_to_tile(row, tile, useAlt);
+		projects->at(projectIDX).tileC->truecolor_to_tile(row - 1, tile, useAlt);
 
 	return 0;
 }

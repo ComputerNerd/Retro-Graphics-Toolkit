@@ -44,7 +44,7 @@ function loadTilesNoGUI(f, prj, offset, defaultRow, getRowFromTilemap, useAlphaZ
 				local tmr = tm[y]
 				for x = 1, #tmr do
 					local tme = tmr[x]
-					rowMapping[tme.tile + 1] = tme.row
+					rowMapping[tme.tile] = tme.row
 				end
 			end
 

@@ -27,8 +27,8 @@ static int lua_tilemap_setFull(lua_State*L) {
 	const size_t entryIDX = idxPtr[3];
 	projects->at(projectIDX).tms->maps[tilemapIDX].set_tile_full(entryIDX, // x
 	        columnIDX, // y
-	        luaL_optinteger(L, 2, 0), // tile
-	        luaL_optboolean(L, 3, false), // palette_row
+	        luaL_optinteger(L, 2, 1) - 1, // tile
+	        luaL_optinteger(L, 3, 1) - 1, // palette_row
 	        luaL_optboolean(L, 4, false), // hflip
 	        luaL_optboolean(L, 5, false), // vflip
 	        luaL_optboolean(L, 6, false)); // priority
@@ -52,9 +52,9 @@ static int tilemapEntry__set_(lua_State *L) {
 	else if (!strcmp("priority", k))
 		tm->set_prio(entryIDX, columnIDX, lua_toboolean(L, 3));
 	else if (!strcmp("tile", k))
-		tm->set_tile(entryIDX, columnIDX, lua_tointeger(L, 3));
+		tm->set_tile(entryIDX, columnIDX, lua_tointeger(L, 3) - 1);
 	else if (!strcmp("row", k))
-		tm->set_pal_row(entryIDX, columnIDX, lua_tointeger(L, 3));
+		tm->set_pal_row(entryIDX, columnIDX, lua_tointeger(L, 3) - 1);
 	else if (!strcmp("raw", k))
 		tm->setRaw(entryIDX, columnIDX, lua_tointeger(L, 3));
 
@@ -62,11 +62,11 @@ static int tilemapEntry__set_(lua_State *L) {
 }
 
 static int lua_tilemap_getTileRow(lua_State*L) {
-	getProjectIDX
+	getProjectRef
 	const size_t tilemapIDX = idxPtr[1];
 	const size_t columnIDX = idxPtr[2];
 	const size_t entryIDX = idxPtr[3];
-	lua_pushinteger(L, projects->at(projectIDX).tms->maps[entryIDX].get_tileRow(entryIDX, columnIDX, luaL_optinteger(L, 2, 0)));
+	lua_pushinteger(L, prj.tms->maps[entryIDX].get_tileRow(entryIDX, columnIDX, luaL_optinteger(L, 2, 0)) + 1);
 	return 1;
 }
 
@@ -94,10 +94,10 @@ static int tilemapEntry__get_(lua_State *L) {
 			lua_pushboolean(L, tm->get_prio(entryIDX, columnIDX));
 			return 1;
 		} else if (!strcmp("tile", k)) {
-			lua_pushinteger(L, tm->get_tile(entryIDX, columnIDX));
+			lua_pushinteger(L, tm->get_tile(entryIDX, columnIDX) + 1);
 			return 1;
 		} else if (!strcmp("row", k)) {
-			lua_pushinteger(L, tm->getPalRow(entryIDX, columnIDX));
+			lua_pushinteger(L, tm->getPalRow(entryIDX, columnIDX) + 1);
 			return 1;
 		} else if (!strcmp("raw", k)) {
 			lua_pushinteger(L, tm->getRaw(entryIDX, columnIDX));
