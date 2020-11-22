@@ -39,7 +39,7 @@ bool luaL_optboolean (lua_State *L, int narg, bool def);
 void fillucharFromTab(lua_State*L, unsigned index, unsigned len, unsigned sz, uint8_t*ptr);
 void outofBoundsAlert(const char*what, unsigned val);
 void noUserDataError();
-void luaStringToVector(lua_State*L, int index, std::vector<uint8_t>&v, unsigned multOfRequirment);
+void luaStringToVector(lua_State*L, int index, std::vector<uint8_t>&v, unsigned sizeReq, bool isExactSize, int inplaceIdx);
 
 #define checkAlreadyExists lua_getmetatable(L, 1); \
 lua_pushvalue(L, 2); \

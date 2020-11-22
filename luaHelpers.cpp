@@ -67,20 +67,38 @@ void noUserDataError() {
 	fl_alert("Lua code error: No user data");
 }
 
-void luaStringToVector(lua_State*L, int index, std::vector<uint8_t>&v, unsigned multOfRequirment) {
+void luaStringToVector(lua_State*L, int index, std::vector<uint8_t>&v, unsigned sizeReq, bool isExactSize, int inplaceIdx) {
 	if (lua_isstring(L, index)) {
 		size_t len;
 		const char*lstr = lua_tolstring(L, index, &len);
 
-		if ((len % multOfRequirment) != 0)
-			luaL_error(L, "The string of length %d must be a multiple of %d bytes.", len, multOfRequirment);
+		if (isExactSize) {
+			if (len != sizeReq)
+				luaL_error(L, "The string of length %d must be a exactly %d bytes.", len, sizeReq);
+		} else {
+			if ((len % sizeReq) != 0)
+				luaL_error(L, "The string of length %d must be a multiple of %d bytes.", len, sizeReq);
+		}
 
 		if (lstr == nullptr)
 			luaL_error(L, "lua_tolstring returned null when used on index %d.", index);
 
 		else {
-			v.resize(len);
-			memcpy(v.data(), lstr, len);
+			uint8_t*dstPtr;
+
+			if (inplaceIdx >= 0) {
+				size_t minSizeNeeded = inplaceIdx + len;
+
+				if (v.size() < minSizeNeeded)
+					v.resize(minSizeNeeded);
+
+				dstPtr = &v.at(inplaceIdx);
+			} else {
+				v.resize(len);
+				dstPtr = v.data();
+			}
+
+			memcpy(dstPtr, lstr, len);
 		}
 
 	} else

@@ -36,6 +36,7 @@ tiles::tiles(struct Project*prj) {
 	this->prj = prj;
 
 	current_tile = 0;
+	tileSize = 0;
 	setDim(8, 8, prj->getBitdepthSys());
 }
 
@@ -690,6 +691,9 @@ void tiles::tileToTrueCol(const uint8_t*input, uint8_t*output, unsigned row, boo
 	}
 }
 void tiles::toPlanar(enum tileType tt, unsigned mi, int mx) {
+	if (tt == PLANAR_TILE)
+		return;
+
 	uint8_t*tmp = (uint8_t*)alloca(tileSize);
 	uint8_t*tPtr = tDat.data() + (mi * tileSize);
 	unsigned bdr = prj->getBitdepthSysraw();
@@ -813,7 +817,13 @@ void*tiles::toLinePlanar(void) {
 	return pt;
 }
 void tiles::setDim(unsigned w, unsigned h, unsigned bd) {
-	uint32_t oldAmount = amount();
+	uint32_t oldAmount;
+
+	if (tileSize > 0)
+		oldAmount = amount();
+	else
+		oldAmount = 1;
+
 	setWidth(w);
 	sizeh = h;
 	curBD = bd;
@@ -866,6 +876,7 @@ void tiles::changeDim(unsigned w, unsigned h, unsigned bd) {
 		}
 	}
 
+	resizeAmt(newAmount);
 	updateTileSelectAmt();
 }
 void tiles::saveExtAttrs(const char*fname, fileType_t type, bool clipboard, CompressionType compression, const char*label) {

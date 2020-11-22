@@ -102,9 +102,9 @@ if p:have(project.palMask) then
 	end
 	if ok~=0 then
 		undo.pushPaletteAll()
-		for ent=0,p.palette.cntTotal - 1, 1 do
-			local r,g,b=idxHelper(ent + 1)
-			p.palette[ent + 1]:setRGB(r,g,b)
+		for ent = 1, p.palette.cntTotal, 1 do
+			local r,g,b=idxHelper(ent)
+			p.palette[ent]:setRGB(r,g,b)
 		end
 		palette.fixSliders()
 		rgt.damage()

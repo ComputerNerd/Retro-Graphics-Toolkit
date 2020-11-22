@@ -28,3 +28,4 @@ bool luaL_checkboolean(lua_State* L, int n);
 void registerProjectTables(lua_State*L);
 void setProjectConstants(lua_State*L);
 void tableToVector(lua_State*L, unsigned idx, std::vector<uint8_t>&vu8);
+void runLuaCD(const char*fname);

@@ -157,7 +157,7 @@ int main(int argc, char **argv) {
 		window->show(argc, argv);
 
 		if (runScript)
-			runLua(Lconf, argv[2]);
+			runLuaCD(argv[2]);
 
 		while (Fl_X::first) {
 			try {

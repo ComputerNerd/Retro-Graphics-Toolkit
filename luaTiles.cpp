@@ -60,16 +60,24 @@ static int lua_tiles_resize(lua_State*L) {
 	return 0;
 }
 
+static int lua_tiles_toPlanar(lua_State*L) {
+	getProjectRef
+	size_t tileIDX = idxPtr[1];
+
+	prj.tileC->toPlanar((tileType)luaL_checkinteger(L, 2), luaL_optinteger(L, 3, 1) - 1, luaL_optinteger(L, 4, prj.tileC->amount()));
+	return 0;
+}
+
 static int tiles__set_(lua_State *L) {
 	const char *key = luaL_checkstring(L, 2);
 	getProjectRef
 
 	if (!strcmp(key, "data")) {
-		luaStringToVector(L, 3, prj.tileC->tDat, prj.tileC->tileSize);
+		luaStringToVector(L, 3, prj.tileC->tDat, prj.tileC->tileSize, false, -1);
 		prj.tileC->truetDat.resize(prj.tileC->amount() * prj.tileC->tcSize);
 
-	} else if (!strcmp(key, "rgbData")) {
-		luaStringToVector(L, 3, prj.tileC->truetDat, prj.tileC->tcSize);
+	} else if (!strcmp(key, "rgbaData")) {
+		luaStringToVector(L, 3, prj.tileC->truetDat, prj.tileC->tcSize, false, -1);
 		prj.tileC->tDat.resize(prj.tileC->amount() * prj.tileC->tileSize);
 	}
 
@@ -111,7 +119,7 @@ static int tiles__get_(lua_State *L) {
 		} else if (!strcmp("data", k)) {
 			lua_pushlstring(L, (const char*)prj.tileC->tDat.data(), prj.tileC->tDat.size());
 			return 1;
-		} else if (!strcmp("rgbData", k)) {
+		} else if (!strcmp("rgbaData", k)) {
 			lua_pushlstring(L, (const char*)prj.tileC->truetDat.data(), prj.tileC->truetDat.size());
 			return 1;
 		}
@@ -143,6 +151,7 @@ static const struct luaL_Reg tiles_member_methods[] = {
 	{ "removeDuplicate", lua_tiles_removeDuplicate},
 	{ "append", lua_tiles_append},
 	{ "setAmt", lua_tiles_resize},
+	{ "toPlanar", lua_tiles_toPlanar},
 	{ NULL, NULL},
 };
 

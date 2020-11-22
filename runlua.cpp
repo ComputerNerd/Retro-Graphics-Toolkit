@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2019)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2020)
 */
 
 /** @file runlua.cpp
@@ -63,6 +63,7 @@
 #include "luaProjects.hpp"
 #include "compressionWrapper.h"
 #include "lua-struct/struct.h"
+#include "filereader_filereader.hpp"
 
 
 static int panic(lua_State *L) {
@@ -822,6 +823,18 @@ static const struct keyPairi rgtConsts[] = {
 	{"tBEX", (int)fileType_t::tBEX}
 };
 
+static const struct keyPairi tileTypes[] = {
+	{"linear", (int)tileType::LINEAR},
+	{"planar", (int)tileType::PLANAR_TILE},
+	{"planarLine", (int)tileType::PLANAR_LINE}
+};
+
+static const struct keyPairi endians[] = {
+	{"native", (int)boost::endian::order::native},
+	{"little", (int)boost::endian::order::little},
+	{"big", (int)boost::endian::order::big}
+};
+
 static const struct keyPairi compressionTypes[] = {
 	{"cancel", (int)CompressionType::Cancel},
 	{"uncompressed", (int)CompressionType::Uncompressed},
@@ -1010,7 +1023,7 @@ void runLua(lua_State*L, const char*str, bool isFile) {
 
 			if (msg == NULL) msg = "(error object is not a string)";
 
-			fl_alert(msg);
+			fl_alert("%s", msg);
 			lua_pop(L, 1);
 		} else {
 			// execute Lua program
@@ -1022,7 +1035,7 @@ void runLua(lua_State*L, const char*str, bool isFile) {
 
 				if (msg == NULL) msg = "(error object is not a string)";
 
-				fl_alert(msg);
+				fl_alert("%s", msg);
 				lua_pop(L, 1);
 			}
 		}
@@ -1064,6 +1077,17 @@ lua_State*createLuaState(void) {
 			mkKeyint(L, rgtConsts[x].key, rgtConsts[x].pair);
 
 		lua_setglobal(L, "rgt");
+
+		lua_createtable(L, 0, arLen(tileTypes) - 1);
+		for (unsigned x = 0; x < arLen(tileTypes); ++x)
+			mkKeyint(L, tileTypes[x].key, tileTypes[x].pair);
+		lua_setglobal(L, "tileTypes");
+
+		lua_createtable(L, 0, arLen(endians) - 1);
+		for (unsigned x = 0; x < arLen(endians); ++x)
+			mkKeyint(L, endians[x].key, endians[x].pair);
+		lua_setglobal(L, "endians");
+
 
 		lua_createtable(L, 0, arLen(compressionTypes) - 1);
 
@@ -1145,23 +1169,32 @@ lua_State*createLuaState(void) {
 
 		luaopen_struct(L);
 		lua_setglobal(L, "struct");
+
+		luaopen_filereader_filereader(L);
+		lua_setglobal(L, "filereader");
 	} else
 		fl_alert("lua_newstate failed.");
 
 	return L;
 }
+void runLuaCD(const char*fname) {
+
+	char*dup = strdup(fname);
+	char*dup2 = strdup(fname);
+#ifdef _WIN32
+	_chdir(dirname(dup));
+#else
+	chdir(dirname(dup));
+#endif
+	runLua(Lconf, basename(dup2));
+	free(dup);
+	free(dup2);
+}
 void runLuaCB(Fl_Widget*, void*) {
 	char*st;
 
 	if (st = loadsavefile("Select a Lua script", false)) {
-		char*dup = strdup(st);
-#ifdef _WIN32
-		_chdir(dirname(dup));
-#else
-		chdir(dirname(dup));
-#endif
-		runLua(Lconf, st);
+		runLuaCD(st);
 		free(st);
-		free(dup);
 	}
 }

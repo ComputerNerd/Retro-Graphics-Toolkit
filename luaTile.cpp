@@ -116,22 +116,51 @@ static int lua_tile_remove(lua_State*L) {
 	projects->at(projectIDX).tileC->remove_tile_at(tileIDX);
 	return 0;
 }
+
+static int lua_tile_toPlanar(lua_State*L) {
+	getProjectRef
+	size_t tileIDX = idxPtr[1];
+
+	prj.tileC->toPlanar((tileType)luaL_checkinteger(L, 2), tileIDX, tileIDX + 1);
+	return 0;
+}
+
+static int tile__set_(lua_State *L) {
+	const char *key = luaL_checkstring(L, 2);
+	getProjectRef
+
+	size_t tileIDX = idxPtr[1];
+
+	if (!strcmp(key, "data"))
+		luaStringToVector(L, 3, prj.tileC->tDat, prj.tileC->tileSize, true, tileIDX * prj.tileC->tileSize);
+
+	else if (!strcmp(key, "rgbaData"))
+		luaStringToVector(L, 3, prj.tileC->truetDat, prj.tileC->tcSize, true, tileIDX * prj.tileC->tcSize);
+
+	return 0;
+}
+
 static int tile__get_(lua_State *L) {
 	checkAlreadyExists
 	int type = lua_type(L, 2);
 
 	if (type == LUA_TSTRING) {
-		const size_t *idxPtr = (const size_t*)lua_touserdata(L, 1);
-		size_t idx = *idxPtr;
+		getProjectRef
 		size_t tileIDX = idxPtr[1];
 
 		const char*k = luaL_checkstring(L, 2);
 
 		if (!strcmp("rgba", k)) {
-			luaopen_TileRGBArow(L, idx, tileIDX);
+			luaopen_TileRGBArow(L, projectIDX, tileIDX);
 			return 1;
 		} else if (!strcmp("pixels", k)) {
-			luaopen_TilePixels(L, idx, tileIDX);
+			luaopen_TilePixels(L, projectIDX, tileIDX);
+			return 1;
+		} else if (!strcmp("data", k)) {
+			lua_pushlstring(L, (const char*)&prj.tileC->tDat.at(tileIDX * prj.tileC->tileSize), prj.tileC->tileSize);
+			return 1;
+		} else if (!strcmp("rgbaData", k)) {
+			lua_pushlstring(L, (const char*)&prj.tileC->truetDat.at(tileIDX * prj.tileC->tcSize), prj.tileC->tcSize);
 			return 1;
 		}
 
@@ -145,6 +174,7 @@ static int tile___tostring(lua_State * L) {
 	return 1;
 }
 static const struct luaL_Reg tile_member_methods[] = {
+	{ "__newindex", tile__set_},
 	{ "__index", tile__get_},
 	{ "__tostring", tile___tostring},
 	{ "compareTileRGBA", lua_tile_compareTileRGBA},
@@ -152,6 +182,7 @@ static const struct luaL_Reg tile_member_methods[] = {
 	{ "dither", lua_tile_dither},
 	{ "draw", lua_tile_draw},
 	{ "remove", lua_tile_remove},
+	{ "toPlanar", lua_tile_toPlanar},
 	{ "deleted", dub::isDeleted},
 	{ NULL, NULL},
 };
