@@ -64,11 +64,14 @@ static int tiles__set_(lua_State *L) {
 	const char *key = luaL_checkstring(L, 2);
 	getProjectRef
 
-	if (!strcmp(key, "data"))
-		luaStringToVector(L, 3, prj.tileC->tDat);
+	if (!strcmp(key, "data")) {
+		luaStringToVector(L, 3, prj.tileC->tDat, prj.tileC->tileSize);
+		prj.tileC->truetDat.resize(prj.tileC->amount() * prj.tileC->tcSize);
 
-	else if (!strcmp(key, "rgbData"))
-		luaStringToVector(L, 3, prj.tileC->truetDat);
+	} else if (!strcmp(key, "rgbData")) {
+		luaStringToVector(L, 3, prj.tileC->truetDat, prj.tileC->tcSize);
+		prj.tileC->tDat.resize(prj.tileC->amount() * prj.tileC->tileSize);
+	}
 
 
 	return 0;

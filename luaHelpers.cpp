@@ -67,10 +67,13 @@ void noUserDataError() {
 	fl_alert("Lua code error: No user data");
 }
 
-void luaStringToVector(lua_State*L, int index, std::vector<uint8_t>&v) {
+void luaStringToVector(lua_State*L, int index, std::vector<uint8_t>&v, unsigned multOfRequirment) {
 	if (lua_isstring(L, index)) {
 		size_t len;
 		const char*lstr = lua_tolstring(L, index, &len);
+
+		if ((len % multOfRequirment) != 0)
+			luaL_error(L, "The string of length %d must be a multiple of %d bytes.", len, multOfRequirment);
 
 		if (lstr == nullptr)
 			luaL_error(L, "lua_tolstring returned null when used on index %d.", index);

@@ -62,6 +62,7 @@
 #include "luaProject.hpp"
 #include "luaProjects.hpp"
 #include "compressionWrapper.h"
+#include "lua-struct/struct.h"
 
 
 static int panic(lua_State *L) {
@@ -740,6 +741,31 @@ static int lua_rgt_savePNG(lua_State*L) {
 	return 1;
 }
 
+static int lua_rgt_stringToTable(lua_State*L) {
+	lua_newtable(L);
+	int idx = 0;
+
+	size_t len;
+	const char*str = lua_tolstring(L, 1, &len);
+
+	if (str == nullptr)
+		luaL_error(L, "lua_tolstring returned null in lua_rgt_stringToTable.");
+
+	for (size_t i = 0; i < len; ++i) {
+		lua_pushinteger(L, str[i]);
+		lua_rawseti(L, -2, ++idx);
+	}
+
+	return 1;
+}
+
+static int lua_rgt_ucharTableToString(lua_State*L) {
+	std::vector<uint8_t> tmp;
+	tableToVector(L, 1, tmp);
+	lua_pushlstring(L, (const char*)tmp.data(), tmp.size());
+	return 1;
+}
+
 #if 0
 extern "C" {
 #include "ldo.h"
@@ -773,6 +799,8 @@ static const luaL_Reg lua_rgtAPI[] = {
 	{"w", lua_rgt_w},
 	{"h", lua_rgt_h},
 	{"savePNG", lua_rgt_savePNG},
+	{"stringToTable", lua_rgt_stringToTable},
+	{"ucharTableToString", lua_rgt_ucharTableToString},
 #if 0
 	{"testluaD_throw", lua_rgt_testluaD_throw},
 #endif
@@ -1114,6 +1142,9 @@ lua_State*createLuaState(void) {
 
 		luaopen_settings(L);
 		lua_setglobal(L, "settings");
+
+		luaopen_struct(L);
+		lua_setglobal(L, "struct");
 	} else
 		fl_alert("lua_newstate failed.");
 
