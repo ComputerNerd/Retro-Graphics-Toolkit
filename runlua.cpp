@@ -746,7 +746,7 @@ static int lua_rgt_stringToTable(lua_State*L) {
 	int idx = 0;
 
 	size_t len;
-	const char*str = lua_tolstring(L, 1, &len);
+	const uint8_t*str = (const uint8_t*)lua_tolstring(L, 1, &len);
 
 	if (str == nullptr)
 		luaL_error(L, "lua_tolstring returned null in lua_rgt_stringToTable.");
@@ -890,14 +890,15 @@ static void tableToSS(lua_State*L, unsigned idx, std::stringstream&ss) {
 
 static void SStoTable(lua_State*L, std::stringstream&ss) {
 	lua_newtable(L);
-	int idx = 0;
-	ss.seekg(0, ss.beg);
 
-	while (!ss.eof()) {
-		unsigned char c;
-		ss >> c;
+	ss.seekg(0, ss.end);
+	size_t len = ss.tellg();
+
+	ss.seekg(0, ss.beg);
+	for (int idx = 1; idx <= len; ++idx) {
+		unsigned char c = ss.get();
 		lua_pushinteger(L, c);
-		lua_rawseti(L, -2, ++idx);
+		lua_rawseti(L, -2, idx);
 	}
 }
 #define mkDecompress(name) static int lua_##name##Decompress(lua_State*L){ \
