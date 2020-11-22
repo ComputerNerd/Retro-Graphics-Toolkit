@@ -125,6 +125,14 @@ static int lua_tile_toPlanar(lua_State*L) {
 	return 0;
 }
 
+static int lua_tile_convertToRGBA(lua_State*L) {
+	getProjectRef
+	size_t tileIDX = idxPtr[1];
+
+	prj.tileC->tileToTrueCol(&prj.tileC->tDat.at(tileIDX * prj.tileC->tileSize), (uint8_t*)prj.tileC->getPixelPtrTC(tileIDX, 0, 0), luaL_checkinteger(L, 2), true, luaL_checkboolean(L, 3));
+	return 0;
+}
+
 static int tile__set_(lua_State *L) {
 	const char *key = luaL_checkstring(L, 2);
 	getProjectRef
@@ -183,6 +191,7 @@ static const struct luaL_Reg tile_member_methods[] = {
 	{ "draw", lua_tile_draw},
 	{ "remove", lua_tile_remove},
 	{ "toPlanar", lua_tile_toPlanar},
+	{ "convertToRGBA", lua_tile_convertToRGBA},
 	{ "deleted", dub::isDeleted},
 	{ NULL, NULL},
 };

@@ -149,6 +149,9 @@ static int project__get_(lua_State *L) {
 				luaopen_Level(L, projectIDX);
 				return 1;
 			}
+		} else if (!strcmp("tileType", k)) {
+			lua_pushinteger(L, prj.getTileType());
+			return 1;
 		}
 	}
 

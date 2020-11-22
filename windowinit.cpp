@@ -108,7 +108,7 @@ extern const char*spritesName;
 static void(*const mainCBtab[])(Fl_Widget*, void*) = {
 	//Number is plus one because it is that way in the Lua configuration file
 	//Subtract one to get the index of said function.
-	load_tiles,//1
+	nullptr,//1
 	load_truecolor_tiles,//2
 	save_tiles,//3
 	save_tiles_truecolor,//4

@@ -18,6 +18,7 @@
 #include "project.h"
 #include "class_global.h"
 #include "runlua.h"
+#include "luaconfig.h"
 int curScript = -1;
 void appendLuaScript(Fl_Widget*, void*) {
 	window->luaEditProject->show();
@@ -66,8 +67,7 @@ void switchCurLuaScript(Fl_Widget*, void*o) {
 }
 void runCurLuaScript(Fl_Widget*, void*) {
 	if (curScript >= 0) {
-		lua_State*L = createLuaState();
 		currentProject->lScrpt[curScript].str.assign(window->luaBufProject->text());
-		runLua(L, currentProject->lScrpt[curScript].str.c_str(), false);
+		runLua(Lconf, currentProject->lScrpt[curScript].str.c_str(), false);
 	}
 }

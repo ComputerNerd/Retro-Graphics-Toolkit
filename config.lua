@@ -33,6 +33,7 @@ end
 dofile "project.lua"
 dofile "system.lua"
 dofile "paletteValidation.lua"
+dofile "tiles.lua"
 if is_headless == 0 then
 	dofile "filereader.lua"
 end

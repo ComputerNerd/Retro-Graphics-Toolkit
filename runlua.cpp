@@ -62,7 +62,6 @@
 #include "luaProject.hpp"
 #include "luaProjects.hpp"
 #include "compressionWrapper.h"
-#include "lua-struct/struct.h"
 #include "filereader_filereader.hpp"
 
 
@@ -1166,9 +1165,6 @@ lua_State*createLuaState(void) {
 
 		luaopen_settings(L);
 		lua_setglobal(L, "settings");
-
-		luaopen_struct(L);
-		lua_setglobal(L, "struct");
 
 		luaopen_filereader_filereader(L);
 		lua_setglobal(L, "filereader");

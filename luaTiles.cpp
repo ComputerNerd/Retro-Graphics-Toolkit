@@ -68,6 +68,20 @@ static int lua_tiles_toPlanar(lua_State*L) {
 	return 0;
 }
 
+static int lua_tiles_assignData(lua_State*L) {
+	getProjectRef
+	tileType tt = (tileType)luaL_checkinteger(L, 2);
+	unsigned firstTile = luaL_checkinteger(L, 3) - 1;
+	unsigned offset = firstTile * prj.tileC->tileSize;
+
+	size_t len = luaStringToVector(L, 4, prj.tileC->tDat, prj.tileC->tileSize, false, offset);
+	prj.tileC->truetDat.resize(prj.tileC->amount() * prj.tileC->tcSize);
+	size_t nTiles = len / prj.tileC->tileSize;
+	prj.tileC->toPlanar((tileType)tt, firstTile, firstTile + nTiles);
+	if (curProjectID == projectIDX)
+		updateTileSelectAmt();
+}
+
 static int tiles__set_(lua_State *L) {
 	const char *key = luaL_checkstring(L, 2);
 	getProjectRef
@@ -152,6 +166,7 @@ static const struct luaL_Reg tiles_member_methods[] = {
 	{ "append", lua_tiles_append},
 	{ "setAmt", lua_tiles_resize},
 	{ "toPlanar", lua_tiles_toPlanar},
+	{ "assignData", lua_tiles_assignData},
 	{ NULL, NULL},
 };
 

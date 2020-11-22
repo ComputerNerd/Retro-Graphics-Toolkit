@@ -67,7 +67,7 @@ void noUserDataError() {
 	fl_alert("Lua code error: No user data");
 }
 
-void luaStringToVector(lua_State*L, int index, std::vector<uint8_t>&v, unsigned sizeReq, bool isExactSize, int inplaceIdx) {
+size_t luaStringToVector(lua_State*L, int index, std::vector<uint8_t>&v, unsigned sizeReq, bool isExactSize, int inplaceIdx) {
 	if (lua_isstring(L, index)) {
 		size_t len;
 		const char*lstr = lua_tolstring(L, index, &len);
@@ -99,8 +99,10 @@ void luaStringToVector(lua_State*L, int index, std::vector<uint8_t>&v, unsigned 
 			}
 
 			memcpy(dstPtr, lstr, len);
+			return len;
 		}
 
 	} else
 		luaL_error(L, "String expected at index %d.", index);
+	return 0;
 }

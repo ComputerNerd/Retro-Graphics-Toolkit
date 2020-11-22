@@ -116,9 +116,7 @@ function generateMenu()
 	return {
 	{"File",0,0,0,FL.SUBMENU},
 		{"Tiles",0,0,0,FL.SUBMENU},
-			{"Open tiles",0,1--[[load_tiles--]]},
-			{"Open tiles (append)",0,1--[[load_tiles--]],1},
-			{"Open tiles starting at",0,1--[[load_tiles--]],2},
+			{"Open tiles", 0, 'loadTilesCB'},
 			{"Open truecolor tiles",0,2--[[load_truecolor_tiles--]]},
 			{"Save tiles",0,3--[[save_tiles--]]},
 			{"Save truecolor tiles",0,4--[[save_tiles_truecolor--]]},

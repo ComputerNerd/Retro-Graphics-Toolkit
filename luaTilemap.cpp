@@ -246,10 +246,10 @@ static int tilemap___tostring(lua_State *L) {
 }
 
 static int tilemap__len_(lua_State *L) {
-	getProjectIDX
-	size_t tilemapIDX = idxPtr[2];
+	getProjectRef
+	size_t tilemapIDX = idxPtr[1];
 
-	lua_pushinteger(L, projects->at(projectIDX).tms->maps[tilemapIDX].mapSizeHA);
+	lua_pushinteger(L, prj.tms->maps[tilemapIDX].mapSizeHA);
 	return 1;
 }
 
