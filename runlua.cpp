@@ -759,6 +759,28 @@ static int lua_rgt_stringToTable(lua_State*L) {
 	return 1;
 }
 
+static int lua_rgt_stringToTable16(lua_State*L) {
+	lua_newtable(L);
+	int idx = 0;
+
+	size_t len;
+	if (len & 1) {
+		luaL_error(L, "String must be a multiple of two bytes but it's length: %d.", len);
+	}
+
+	const uint16_t*str = (const uint16_t*)lua_tolstring(L, 1, &len);
+
+	if (str == nullptr)
+		luaL_error(L, "lua_tolstring returned null in lua_rgt_stringToTable.");
+
+	for (size_t i = 0; i < len / 2; ++i) {
+		lua_pushinteger(L, str[i]);
+		lua_rawseti(L, -2, ++idx);
+	}
+
+	return 1;
+}
+
 static int lua_rgt_ucharTableToString(lua_State*L) {
 	std::vector<uint8_t> tmp;
 	tableToVector(L, 1, tmp);
@@ -800,6 +822,7 @@ static const luaL_Reg lua_rgtAPI[] = {
 	{"h", lua_rgt_h},
 	{"savePNG", lua_rgt_savePNG},
 	{"stringToTable", lua_rgt_stringToTable},
+	{"stringToTable16", lua_rgt_stringToTable16},
 	{"ucharTableToString", lua_rgt_ucharTableToString},
 #if 0
 	{"testluaD_throw", lua_rgt_testluaD_throw},

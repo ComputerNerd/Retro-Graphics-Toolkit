@@ -129,7 +129,7 @@ static int lua_tile_convertToRGBA(lua_State*L) {
 	getProjectRef
 	size_t tileIDX = idxPtr[1];
 
-	prj.tileC->tileToTrueCol(&prj.tileC->tDat.at(tileIDX * prj.tileC->tileSize), (uint8_t*)prj.tileC->getPixelPtrTC(tileIDX, 0, 0), luaL_checkinteger(L, 2), true, luaL_checkboolean(L, 3));
+	prj.tileC->tileToTrueCol(&prj.tileC->tDat.at(tileIDX * prj.tileC->tileSize), (uint8_t*)prj.tileC->getPixelPtrTC(tileIDX, 0, 0), luaL_checkinteger(L, 2) - 1, true, luaL_checkboolean(L, 3));
 	return 0;
 }
 

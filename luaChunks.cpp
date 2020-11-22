@@ -32,7 +32,7 @@ static int chunk__set_(lua_State *L) {
 	if (!strcmp("useBlocks", k))
 		chunk->useBlocks = lua_toboolean(L, 3);
 	else if (!strcmp("usePlane", k))
-		chunk->useBlocks = lua_tointeger(L, 3) % chunk->amt;
+		chunk->usePlane = lua_tointeger(L, 3) % chunk->amt;
 
 	return 0;
 }

@@ -30,8 +30,8 @@ if p:have(project.mapMask) then
 		-- Setup the tilemap.
 		for j = 0, tileHeight - 1 do
 			local row = tilemap[j + 1]
-			for i = 0, tileWidth - 1 do
-				row[i + 1].tile = j * tileWidth + i
+			for i = 1, tileWidth do
+				row[i].tile = j * tileWidth + i
 			end
 		end
 	else

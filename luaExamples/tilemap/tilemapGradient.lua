@@ -10,9 +10,9 @@ if p:have(project.tilesMask+project.mapMask) then
 			p.tiles:setAmt(tilemap.height)
 			
 			-- Fill the tilemap.
-			for j=0,tilemap.height - 1 do
-				for i=0, tilemap.width - 1 do
-					tilemap[j + 1][i + 1].tile = j -- CAUTION: in Lua arrays start with one.
+			for j = 1, tilemap.height do
+				for i = 1, tilemap.width do
+					tilemap[j][i].tile = j -- CAUTION: in Lua arrays start with one.
 				end
 			end
 

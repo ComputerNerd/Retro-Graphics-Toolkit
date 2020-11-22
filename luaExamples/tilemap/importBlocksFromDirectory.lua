@@ -26,14 +26,14 @@ if p:have(haveMask) then
 	local selectedDirectory = fl.dir_chooser()
 	if selectedDirectory ~= nil and selectedDirectory ~= '' then
 		local filesIterator = dirent.files(selectedDirectory)
-		local startTileQty
+		local startTileIdx
 		if shouldAppend then
-			startTileQty = #tiles
+			startTileIdx = #tiles + 1 -- Start after the last currently existing tile.
 		else
-			startTileQty = 0
+			startTileIdx = 1
 		end
-		local tileQty = startTileQty
-		local currentTile = tileQty + 1
+		local tileQty = startTileIdx - 1
+		local currentTile = startTileIdx
 		local expectedImageWidth, expectedImageHeight
 		local isFirstTile
 		local tilesPerBlock
@@ -136,7 +136,7 @@ if p:have(haveMask) then
 			tilemap:setBlocksEnabled(true) -- Ensure that any GUI updates take place. By first setting useBlocks we skip the GUI for asking how big the blocks should be.
 			tilemap:setBlocksAmt(blocksLoaded)
 		end
-		currentTile = startTileQty
+		currentTile = startTileIdx
 		for y = 1, blocksLoaded * tilesY do
 			local tilemapRow = tilemap[y + yOffset]
 			for x = 1, tilesX do

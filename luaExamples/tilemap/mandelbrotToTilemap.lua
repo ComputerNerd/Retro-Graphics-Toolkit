@@ -47,10 +47,10 @@ if p:have(project.mapMask) then
 		local tilemap = p.tilemaps.current
 		p.tiles:setAmt(tilemap.width * tilemap.height)
 
-		for j = 0, tilemap.height -1 do
+		for j = 0, tilemap.height - 1 do
 			local row = tilemap[j + 1]
-			for i = 0, tilemap.width - 1 do
-				row[i + 1].tile = j * tilemap.width + i
+			for i = 1, tilemap.width do
+				row[i].tile = j * tilemap.width + i
 			end
 		end
 

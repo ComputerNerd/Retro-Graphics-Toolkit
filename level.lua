@@ -489,34 +489,38 @@ function resizeLayerCB(unused)
 	setScrollBounds()
 	rgt.redraw()
 end
+function loadS1layoutFname(fname)
+	local p = projects.current
+	if not (fname == nil or fname == '') then
+		local file=assert(io.open(fname,'rb'))
+		local str=file:read("*a")--Lua strings can have embedded zeros
+		io.close(file)
+		local w,h=str:byte(1)+1,str:byte(2)+1
+
+		local layer = p.level.layers[lvlCurLayer]
+
+		layer:resize(w, h)
+		lvlsetlayer(lvlCurLayer)
+		setLayerSrc('Chunks')
+		lvlSrc:value('Chunks')
+		wLayer:value(w)
+		hLayer:value(h)
+		local idx=3
+		for j = 1, h do
+			for i = 1, w do
+				local info = layer[j][i]
+				info.id=str:byte(idx)&127
+				info.dat=str:byte(idx)&128
+				idx=idx+1
+			end
+		end
+	end
+end
 function loadS1layout(unused)
 	local p = projects.current
 	if p:have(project.levelMask|project.chunksMask) then
-		local fname=fl.file_chooser("Load layout")
-		if not (fname == nil or fname == '') then
-			local file=assert(io.open(fname,'rb'))
-			local str=file:read("*a")--Lua strings can have embedded zeros
-			io.close(file)
-			local w,h=str:byte(1)+1,str:byte(2)+1
-
-			local layer = p.level.layers[lvlCurLayer]
-
-			layer:resize(w, h)
-			lvlsetlayer(lvlCurLayer)
-			setLayerSrc('Chunks')
-			lvlSrc:value('Chunks')
-			wLayer:value(w)
-			hLayer:value(h)
-			local idx=3
-			for j = 1, h do
-				for i = 1, w do
-					local info = layer[j][i]
-					info.id=str:byte(idx)&127
-					info.dat=str:byte(idx)&128
-					idx=idx+1
-				end
-			end
-		end
+		local fname = fl.file_chooser("Load layout")
+		loadS1layoutFname(fname)
 	else
 		project.haveMessage(project.levelMask|project.chunksMask)
 	end

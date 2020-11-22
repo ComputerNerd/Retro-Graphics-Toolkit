@@ -39,7 +39,7 @@ static int chunkEntry__set_(lua_State *L) {
 	else if (!strcmp("priority", k))
 		chunk->setPrio(chunkIDX, entryIDX, columnIDX, lua_toboolean(L, 3));
 	else if (!strcmp("block", k))
-		chunk->setBlock(chunkIDX, entryIDX, columnIDX, lua_tointeger(L, 3));
+		chunk->setBlock(chunkIDX, entryIDX, columnIDX, lua_tointeger(L, 3) - 1);
 	else if (!strcmp("flag", k))
 		chunk->setFlag(chunkIDX, entryIDX, columnIDX, lua_tointeger(L, 3));
 
@@ -78,7 +78,7 @@ static int chunkEntry__get_(lua_State *L) {
 			lua_pushboolean(L, chunk->getPrio(chunkIDX, entryIDX, columnIDX));
 			return 1;
 		} else if (!strcmp("block", k)) {
-			lua_pushinteger(L, chunk->getBlock(chunkIDX, entryIDX, columnIDX));
+			lua_pushinteger(L, chunk->getBlock(chunkIDX, entryIDX, columnIDX) + 1);
 			return 1;
 		} else if (!strcmp("flag", k)) {
 			lua_pushinteger(L, chunk->getFlag(chunkIDX, entryIDX, columnIDX));

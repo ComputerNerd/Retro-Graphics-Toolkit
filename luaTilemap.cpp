@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2020)
 */
 #include <FL/fl_ask.H>
 
@@ -154,7 +154,7 @@ static int lua_tilemap_pickRow(lua_State*L) {
 static int lua_tilemap_allToRow(lua_State*L) {
 	getProjectIDX
 	size_t tilemapIDX = idxPtr[1];
-	projects->at(projectIDX).tms->maps[tilemapIDX].allRowSet(luaL_optinteger(L, 2, 0));
+	projects->at(projectIDX).tms->maps[tilemapIDX].allRowSet(luaL_optinteger(L, 2, 1) - 1);
 	return 0;
 }
 

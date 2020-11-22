@@ -32,6 +32,7 @@ function loadTilesNoGUI(f, prj, offset, defaultRow, getRowFromTilemap, useAlphaZ
 	-- Arrays start with one in Lua so one is the first tile.
 	offset = offset + 1
 	local defaultRow = math.floor(defaultRow)
+	defaultRow = defaultRow + 1
 
 	local loadedTileData = f:dat(1)
 	local tilesLoaded = #loadedTileData // ct.tileSize
