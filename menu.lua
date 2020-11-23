@@ -43,24 +43,28 @@ function removeDuplicateBlocks(unused)
 					end
 					table.insert(blockToOldIndices[blockData], b)
 				end
-				local newBlockCount = 0
+
+				local blocksSorted = {}
 				for k, v in pairs(blockToOldIndices) do
-					newBlockCount = newBlockCount + 1
+					table.insert(blocksSorted, {k, v})
 				end
-				print('There are now', newBlockCount, 'blocks')
-				tm:setBlocksAmt(newBlockCount)
-				local newIdx = 1
-				local doChunks = p:have(project.chunksMask) -- Avoid having to call the function many times in the loop.
+				function sortGetFirstElm(a, b)
+					return a[1] < b[1]
+				end
+				table.sort(blocksSorted, sortGetFirstElm)
+
+				print('There are now', #blocksSorted, 'blocks')
+				tm:setBlocksAmt(#blocksSorted)
+				local doChunks = p:have(project.chunksMask)
 				if doChunks then
 					local ch = p.chunks
 					doChunks = (ch.usePlane == i) and (ch.useBlocks)
 					if doChunks then
 						local oldIdxToNew = {}
-						for blockData, oldIdxList in pairs(blockToOldIndices) do
-							for unused, oldIdx in ipairs(oldIdxList) do
+						for newIdx, blockData in ipairs(blocksSorted) do
+							for unused, oldIdx in ipairs(blockData[2]) do
 								oldIdxToNew[oldIdx] = newIdx
 							end
-							newIdx = newIdx + 1
 						end
 						for cidx = 1, #ch do
 							local ce = ch[cidx]
@@ -75,9 +79,8 @@ function removeDuplicateBlocks(unused)
 						newIdx = 1
 					end
 				end
-				for blockData, oldIdxList in pairs(blockToOldIndices) do
-					tm.blocks[newIdx].data = blockData
-					newIdx = newIdx + 1
+				for newIdx, blockData in ipairs(blocksSorted) do
+					tm.blocks[newIdx].data = blockData[1]
 				end
 
 			else
