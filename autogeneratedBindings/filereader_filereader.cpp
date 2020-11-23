@@ -77,9 +77,10 @@ static int filereader_lens(lua_State *L) {
 		filereader *self = *((filereader **)dub::checksdata(L, 1, "filereader.filereader"));
 		int top__ = lua_gettop(L);
 
-		if (top__ >= 3) {
+		if (top__ >= 3)
 			return 0;
-		} else {
+
+		else {
 			size_t i = dub::checkinteger(L, 2);
 
 			if (!i || i > self->lens.size()) return 0;
@@ -104,9 +105,10 @@ static int filereader_dat(lua_State *L) {
 		filereader *self = *((filereader **)dub::checksdata(L, 1, "filereader.filereader"));
 		int top__ = lua_gettop(L);
 
-		if (top__ >= 3) {
+		if (top__ >= 3)
 			return 0;
-		} else {
+
+		else {
 			size_t i = dub::checkinteger(L, 2);
 
 			if (!i || i > self->dat.size()) return 0;

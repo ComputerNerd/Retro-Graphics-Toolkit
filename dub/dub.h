@@ -60,8 +60,8 @@ typedef int LuaStackSize;
 bool luaL_checkboolean(lua_State* L, int n);
 
 struct DubUserdata {
-  void *ptr;
-  bool gc;
+	void *ptr;
+	bool gc;
 };
 
 // ======================================================================
@@ -74,16 +74,16 @@ namespace dub {
  * in Lua (through lua_error).
  */
 class Exception : public std::exception {
-  std::string message_;
+	std::string message_;
 public:
-  explicit Exception(const char *format, ...);
-  ~Exception() throw();
-  const char* what() const throw();
+	explicit Exception(const char *format, ...);
+	~Exception() throw();
+	const char* what() const throw();
 };
 
 class TypeException : public Exception {
 public:
-  explicit TypeException(lua_State *L, int narg, const char *type, bool is_super = false);
+	explicit TypeException(lua_State *L, int narg, const char *type, bool is_super = false);
 };
 
 /** This class allows an object to be deleted from either C++ or Lua.
@@ -92,30 +92,30 @@ public:
  */
 class Object {
 public:
-  Object() : dub_userdata_(NULL) {}
+	Object() : dub_userdata_(NULL) {}
 
-  /** The destructor marks the userdata as deleted so that Lua no
-   * longer tries to access it.
-   */
-  virtual ~Object() {
-    if (dub_userdata_) {
-      // Protect from gc.
-      dub_userdata_->gc = false;
-      // Invalidate Lua userdata.
-      dub_userdata_->ptr = NULL;
-    }
-  }
+	/** The destructor marks the userdata as deleted so that Lua no
+	 * longer tries to access it.
+	 */
+	virtual ~Object() {
+		if (dub_userdata_) {
+			// Protect from gc.
+			dub_userdata_->gc = false;
+			// Invalidate Lua userdata.
+			dub_userdata_->ptr = NULL;
+		}
+	}
 
-  /** This is called on object instanciation by dub instead of
-   * dub::pushudata to setup dub_userdata_.
-   *
-   */
-  void dub_pushobject(lua_State *L, void *ptr, const char *type_name, bool gc = true);
+	/** This is called on object instanciation by dub instead of
+	 * dub::pushudata to setup dub_userdata_.
+	 *
+	 */
+	void dub_pushobject(lua_State *L, void *ptr, const char *type_name, bool gc = true);
 
 protected:
-  /** Pointer to the userdata. *userdata => pointer to C++ object.
-   */
-  DubUserdata *dub_userdata_;
+	/** Pointer to the userdata. *userdata => pointer to C++ object.
+	 */
+	DubUserdata *dub_userdata_;
 };
 
 /** This class creates a 'self' table and prepares a thread
@@ -123,45 +123,45 @@ protected:
  */
 class Thread : public Object {
 public:
-  Thread()
-    : dub_L(NULL) {}
-  /** This is called on object instanciation by dub to create the lua
-   * thread, prepare the <self> table and setup metamethods. This is
-   * called instead of dub::pushudata.
-   * <udata> <mt>
-   */
-  void dub_pushobject(lua_State *L, void *ptr, const char *type_name, bool gc = true);
+	Thread()
+		: dub_L(NULL) {}
+	/** This is called on object instanciation by dub to create the lua
+	 * thread, prepare the <self> table and setup metamethods. This is
+	 * called instead of dub::pushudata.
+	 * <udata> <mt>
+	 */
+	void dub_pushobject(lua_State *L, void *ptr, const char *type_name, bool gc = true);
 
-  /** Push function 'name' found in <self> on the stack with <self> as
-   * first argument.
-   *
-   * Constness is there to make it easy to implement callbacks like
-   * int rowCount() const, without requiring users to fiddle with constness
-   * which is not a notion part of Lua anyway.
-   */
-  bool dub_pushcallback(const char *name) const;
+	/** Push function 'name' found in <self> on the stack with <self> as
+	 * first argument.
+	 *
+	 * Constness is there to make it easy to implement callbacks like
+	 * int rowCount() const, without requiring users to fiddle with constness
+	 * which is not a notion part of Lua anyway.
+	 */
+	bool dub_pushcallback(const char *name) const;
 
-  /** Push any lua value from self on the stack.
-   */
-  void dub_pushvalue(const char *name) const;
-  
-  /** Execute the protected call. If an error occurs, dub tries to find
-   * an 'error' function in <self> and calls this function with the
-   * error string. If no error function is found, the error message is
-   * just printed out to stderr.
-   */
-  bool dub_call(int param_count, int retval_count) const;
+	/** Push any lua value from self on the stack.
+	 */
+	void dub_pushvalue(const char *name) const;
 
-  /** Lua thread that contains <self> on stack position 1. This lua thread
-   * is public to ease object state manipulation from C++ (but stack *must
-   * not* be messed up).
-   */
-  lua_State *dub_L;
+	/** Execute the protected call. If an error occurs, dub tries to find
+	 * an 'error' function in <self> and calls this function with the
+	 * error string. If no error function is found, the error message is
+	 * just printed out to stderr.
+	 */
+	bool dub_call(int param_count, int retval_count) const;
+
+	/** Lua thread that contains <self> on stack position 1. This lua thread
+	 * is public to ease object state manipulation from C++ (but stack *must
+	 * not* be messed up).
+	 */
+	lua_State *dub_L;
 
 protected:
-  /** Type name (allows faster check for cast).
-   */
-  const char *dub_typename_;
+	/** Type name (allows faster check for cast).
+	 */
+	const char *dub_typename_;
 };
 
 // ======================================================================
@@ -170,43 +170,46 @@ protected:
 
 // To ease storing a LuaRef in a void* pointer.
 struct DubRef {
-  int ref;
+	int ref;
 
-  static int set(lua_State *L, void **ptr, int id) {
-    if (lua_isnil(L, id)) {
-      cleanup(L, ptr);
-    } else {
-      DubRef *ref;
-      if (*ptr) {
-        ref = (DubRef*)*ptr;
-        luaL_unref(L, LUA_REGISTRYINDEX, ref->ref);
-      } else {
-        ref = new DubRef();
-        *ptr = ref;
-      }
-      ref->ref = luaL_ref(L, LUA_REGISTRYINDEX);
-    }
-    return 0;
-  }
+	static int set(lua_State *L, void **ptr, int id) {
+		if (lua_isnil(L, id))
+			cleanup(L, ptr);
 
-  static int push(lua_State *L, void *ptr) {
-    if (ptr) {
-      DubRef *ref = (DubRef*)ptr;
-      lua_rawgeti(L, LUA_REGISTRYINDEX, ref->ref);
-      return 1;
-    } else {
-      return 0;
-    }
-  }
+		else {
+			DubRef *ref;
 
-  static void cleanup(lua_State *L, void **ptr) {
-    if (*ptr) {
-      DubRef *ref = (DubRef*)*ptr;
-      luaL_unref(L, LUA_REGISTRYINDEX, ref->ref);
-      delete ref;
-      *ptr = NULL;
-    }
-  }
+			if (*ptr) {
+				ref = (DubRef*)*ptr;
+				luaL_unref(L, LUA_REGISTRYINDEX, ref->ref);
+			} else {
+				ref = new DubRef();
+				*ptr = ref;
+			}
+
+			ref->ref = luaL_ref(L, LUA_REGISTRYINDEX);
+		}
+
+		return 0;
+	}
+
+	static int push(lua_State *L, void *ptr) {
+		if (ptr) {
+			DubRef *ref = (DubRef*)ptr;
+			lua_rawgeti(L, LUA_REGISTRYINDEX, ref->ref);
+			return 1;
+		} else
+			return 0;
+	}
+
+	static void cleanup(lua_State *L, void **ptr) {
+		if (*ptr) {
+			DubRef *ref = (DubRef*)*ptr;
+			luaL_unref(L, LUA_REGISTRYINDEX, ref->ref);
+			delete ref;
+			*ptr = NULL;
+		}
+	}
 };
 
 /** Push a custom type on the stack.
@@ -222,28 +225,28 @@ void pushudata(lua_State *L, const void *ptr, const char *type_name, bool gc = t
 
 template<class T>
 struct DubFullUserdata {
-  T *ptr;
-  T obj;
+	T *ptr;
+	T obj;
 };
 
 template<class T>
 void pushfulldata(lua_State *L, const T &obj, const char *type_name) {
-  DubFullUserdata<T> *copy = (DubFullUserdata<T>*)lua_newuserdata(L, sizeof(DubFullUserdata<T>));
-  copy->obj = obj;
-  // now **copy gives back the object.
-  copy->ptr = &copy->obj;
+	DubFullUserdata<T> *copy = (DubFullUserdata<T>*)lua_newuserdata(L, sizeof(DubFullUserdata<T>));
+	copy->obj = obj;
+	// now **copy gives back the object.
+	copy->ptr = &copy->obj;
 
-  // the userdata is now on top of the stack
+	// the userdata is now on top of the stack
 
-  // set metatable (contains methods)
-  luaL_getmetatable(L, type_name);
-  lua_setmetatable(L, -2);
+	// set metatable (contains methods)
+	luaL_getmetatable(L, type_name);
+	lua_setmetatable(L, -2);
 }
 
 template<class T>
 void pushclass(lua_State *L, const T &obj, const char *type_name) {
-  T *copy = new T(obj);
-  pushudata(L, (void*)copy, type_name);
+	T *copy = new T(obj);
+	pushudata(L, (void*)copy, type_name);
 }
 
 // ======================================================================
@@ -252,21 +255,21 @@ void pushclass(lua_State *L, const T &obj, const char *type_name) {
 
 /** Push a custom type on the stack and give it the pointer to the userdata.
  * Passing the userdata enables early deletion from C++ that safely
- * invalidates the userdatum by calling 
+ * invalidates the userdatum by calling
  */
 template<class T>
 void pushclass2(lua_State *L, T *ptr, const char *type_name) {
-  T **userdata = (T**)lua_newuserdata(L, sizeof(T*));
-  *userdata = ptr;
+	T **userdata = (T**)lua_newuserdata(L, sizeof(T*));
+	*userdata = ptr;
 
-  // Store pointer in class so that it can set it to NULL on destroy with
-  // *userdata = NULL
-  ptr->luaInit((void**)userdata);
-  // <udata>
-  luaL_getmetatable(L, type_name);
-  // <udata> <mt>
-  lua_setmetatable(L, -2);
-  // <udata>
+	// Store pointer in class so that it can set it to NULL on destroy with
+	// *userdata = NULL
+	ptr->luaInit((void**)userdata);
+	// <udata>
+	luaL_getmetatable(L, type_name);
+	// <udata> <mt>
+	lua_setmetatable(L, -2);
+	// <udata>
 }
 
 // ======================================================================
@@ -274,8 +277,8 @@ void pushclass2(lua_State *L, T *ptr, const char *type_name) {
 // ======================================================================
 
 typedef struct const_Reg {
-  const char *name;
-  double value;
+	const char *name;
+	double value;
 } const_Reg;
 
 // register constants in the table at the top
@@ -294,7 +297,7 @@ void **checkudata(lua_State *L, int ud, const char *tname, bool keep_mt = false)
 
 // Super aware userdata calls (finds userdata inside provided table with table.super).
 void **checksdata(lua_State *L, int ud, const char *tname, bool keep_mt = false) throw(dub::Exception);
-// Super aware userdata calls that DOES NOT check for dangling pointers (used in 
+// Super aware userdata calls that DOES NOT check for dangling pointers (used in
 // __gc binding).
 void **checksdata_d(lua_State *L, int ud, const char *tname) throw(dub::Exception);
 // Return pointer if the type is correct. Used to resolve overloaded functions when there
@@ -307,11 +310,11 @@ void **issdata(lua_State *L, int ud, const char *tname, int type);
 void **checksdata_n(lua_State *L, int ud, const char *tname, bool keep_mt = false);
 
 inline const char *checkstring(lua_State *L, int narg) throw(dub::TypeException) {
-  return checklstring(L, narg, NULL);
+	return checklstring(L, narg, NULL);
 }
 
 inline int checkboolean(lua_State *L, int narg) throw() {
-  return lua_toboolean(L, narg);
+	return lua_toboolean(L, narg);
 }
 
 // This calls lua_Error after preparing the error message with line
@@ -343,6 +346,5 @@ void fregister(lua_State *L, const luaL_Reg *l);
 
 
 } // dub
-  
-#endif // DUB_BINDING_GENERATOR_DUB_H_
 
+#endif // DUB_BINDING_GENERATOR_DUB_H_

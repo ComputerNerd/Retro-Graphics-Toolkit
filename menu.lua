@@ -33,45 +33,53 @@ function removeDuplicateBlocks(unused)
 	if p:have(project.mapMask) then
 		local tilemaps = p.tilemaps
 		for i=1, #tilemaps do
-			local tilemap = tilemaps[i]
-			if tilemap.useBlocks then
-				local a=0
-				while a<tilemap.hAll do
-					local b = tilemap.hAll - tilemap.height
-					while b>=0 do
-						if a~=b then
-							local equ=true
-							for j=1, tilemap.height do
-								local tr1 = tilemap[a + j]
-								local tr2 = tilemap[b + j]
-								for k=1, tilemap.width do
-									local r1 = tr1[k].raw
-									local r2 = tr2[k].raw
-									if r1 ~= r2 then
-										equ = false
-										break
-									end
-								end
-								if not equ then
-									break
-								end
+			local tm = tilemaps[i]
+			if tm.useBlocks then
+				local blockToOldIndices = {}
+				for b = 1, #tm.blocks do
+					local blockData = tm.blocks[b].data
+					if blockToOldIndices[blockData] == nil then
+						blockToOldIndices[blockData] = {}
+					end
+					table.insert(blockToOldIndices[blockData], b)
+				end
+				local newBlockCount = 0
+				for k, v in pairs(blockToOldIndices) do
+					newBlockCount = newBlockCount + 1
+				end
+				print('There are now', newBlockCount, 'blocks')
+				tm:setBlocksAmt(newBlockCount)
+				local newIdx = 1
+				local doChunks = p:have(project.chunksMask) -- Avoid having to call the function many times in the loop.
+				if doChunks then
+					local ch = p.chunks
+					doChunks = (ch.usePlane == i) and (ch.useBlocks)
+					if doChunks then
+						local oldIdxToNew = {}
+						for blockData, oldIdxList in pairs(blockToOldIndices) do
+							for unused, oldIdx in ipairs(oldIdxList) do
+								oldIdxToNew[oldIdx] = newIdx
 							end
-							if equ then
-								local aa,bb=a//tilemap.height, b//tilemap.height
-								print('Found match', aa, bb)
-								tilemap:removeBlock(bb)
-								if p:have(project.chunksMask) and i == p.chunks.usePlane then
-									p.chunks:subBlock(bb,aa)
-								end
-								if p:have(project.levelMask) then
-									p.level:subType(bb, aa, level.BLOCKS, i)
+							newIdx = newIdx + 1
+						end
+						for cidx = 1, #ch do
+							local ce = ch[cidx]
+							for y = 1, #ce do
+								local cy = ce[y]
+								for x = 1, #cy do
+									local cx = cy[x]
+									cx.block = oldIdxToNew[cx.block]
 								end
 							end
 						end
-						b = b - tilemap.height
+						newIdx = 1
 					end
-					a = a + tilemap.height
 				end
+				for blockData, oldIdxList in pairs(blockToOldIndices) do
+					tm.blocks[newIdx].data = blockData
+					newIdx = newIdx + 1
+				end
+
 			else
 				print(string.format('Skipping plane %d -- it does not use blocks', i))
 			end

@@ -764,11 +764,11 @@ static int lua_rgt_stringToTable16(lua_State*L) {
 	int idx = 0;
 
 	size_t len;
-	if (len & 1) {
-		luaL_error(L, "String must be a multiple of two bytes but it's length: %d.", len);
-	}
 
 	const uint16_t*str = (const uint16_t*)lua_tolstring(L, 1, &len);
+
+	if (len & 1)
+		luaL_error(L, "String must be a multiple of two bytes but it's length: %d.", len);
 
 	if (str == nullptr)
 		luaL_error(L, "lua_tolstring returned null in lua_rgt_stringToTable.");
@@ -918,6 +918,7 @@ static void SStoTable(lua_State*L, std::stringstream&ss) {
 	size_t len = ss.tellg();
 
 	ss.seekg(0, ss.beg);
+
 	for (int idx = 1; idx <= len; ++idx) {
 		unsigned char c = ss.get();
 		lua_pushinteger(L, c);
@@ -1102,13 +1103,17 @@ lua_State*createLuaState(void) {
 		lua_setglobal(L, "rgt");
 
 		lua_createtable(L, 0, arLen(tileTypes) - 1);
+
 		for (unsigned x = 0; x < arLen(tileTypes); ++x)
 			mkKeyint(L, tileTypes[x].key, tileTypes[x].pair);
+
 		lua_setglobal(L, "tileTypes");
 
 		lua_createtable(L, 0, arLen(endians) - 1);
+
 		for (unsigned x = 0; x < arLen(endians); ++x)
 			mkKeyint(L, endians[x].key, endians[x].pair);
+
 		lua_setglobal(L, "endians");
 
 

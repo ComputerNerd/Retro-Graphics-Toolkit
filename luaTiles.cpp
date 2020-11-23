@@ -78,6 +78,7 @@ static int lua_tiles_assignData(lua_State*L) {
 	prj.tileC->truetDat.resize(prj.tileC->amount() * prj.tileC->tcSize);
 	size_t nTiles = len / prj.tileC->tileSize;
 	prj.tileC->toPlanar((tileType)tt, firstTile, firstTile + nTiles);
+
 	if (curProjectID == projectIDX)
 		updateTileSelectAmt();
 }

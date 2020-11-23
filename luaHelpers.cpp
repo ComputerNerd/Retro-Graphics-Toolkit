@@ -104,5 +104,6 @@ size_t luaStringToVector(lua_State*L, int index, std::vector<uint8_t>&v, unsigne
 
 	} else
 		luaL_error(L, "String expected at index %d.", index);
+
 	return 0;
 }

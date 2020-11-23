@@ -59,7 +59,6 @@ if(!idxPtr) { \
 #define getProjectIDX getIdxPtrChk \
 const size_t projectIDX = *idxPtr;
 
-#define getProjectRef getIdxPtrChk \
-const size_t projectIDX = *idxPtr; \
+#define getProjectRef getProjectIDX \
 Project&prj = projects->at(projectIDX);
 #endif

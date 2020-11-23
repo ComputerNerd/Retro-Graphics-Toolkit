@@ -18,6 +18,7 @@
 
 #include "luaTilemap.hpp"
 #include "luaTilemapRow.hpp"
+#include "luaTilemapBlocks.hpp"
 #include "luaHelpers.hpp"
 #include "project.h"
 #include "dub/dub.h"
@@ -220,6 +221,12 @@ static int tilemap__get_(lua_State *L) {
 			return 1;
 		} else if (!strcmp("name", k)) {
 			lua_pushstring(L, projects->at(idx).tms->maps[idx2].planeName.c_str());
+			return 1;
+		} else if (!strcmp("blocks", k)) {
+			if (!projects->at(idx).tms->maps[idx2].isBlock)
+				luaL_error(L, "Blocks must be enabled to use this.");
+
+			luaopen_TilemapBlocks(L, idx, idx2);
 			return 1;
 		}
 	}

@@ -12,7 +12,7 @@ OBJECTS := project.o main.o callbacks_palette.o callback_tiles.o class_global.o 
 	compressionWrapper.o callback_chunk.o gui.o wu.o system.o filemisc.o \
 	classSprite.o classSprites.o callbacksprites.o undo.o image.o classlevel.o \
 	runlua.o luafltk.o luaHelpers.o luaProject.o luaProjects.o luaTiles.o \
-	luaTile.o luaTilemaps.o luaTilemap.o luaTilemapRow.o luaTilemapEntry.o \
+	luaTile.o luaTilemaps.o luaTilemap.o luaTilemapRow.o luaTilemapBlocks.o luaTilemapBlock.o luaTilemapEntry.o \
 	luaTileRGBA.o luaTileRGBArow.o luaTileRGBApixel.o luaPalette.o \
 	luaPaletteEntry.o luaSprites.o nearestColor.o CIE.o classpalette.o \
 	classtilemaps.o callbacktilemaps.o nespal.o filereader.o luaconfig.o \
