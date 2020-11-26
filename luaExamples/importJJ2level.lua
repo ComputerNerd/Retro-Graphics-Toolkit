@@ -178,7 +178,7 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 					flag = 0
 				end
 				chunkEntry.flag = flag
-				chunkEntry.block = tile & tileMask
+				chunkEntry.block = (tile & tileMask) + 1 -- In Lua the first entry is one. In the JJ2 data the first entry is zero.
 				idx=idx+2
 			end
 		end
