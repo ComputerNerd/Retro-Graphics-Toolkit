@@ -180,7 +180,7 @@ void Project::copyConstructorCommon(const Project&other) {
 	useMask = other.useMask;
 	memcpy(share, other.share, sizeof(Project::share));
 	curPlane = other.curPlane;
-	lDat = other.lDat;
+	luaStringStore = other.luaStringStore;
 	lCtrl = other.lCtrl;
 	lScrpt = other.lScrpt;
 	luaTabs = other.luaTabs;
@@ -205,7 +205,7 @@ void Project::moveConstructorCommon(Project&& other) {
 
 	memcpy(share, other.share, sizeof(Project::share));
 	curPlane = other.curPlane;
-	lDat = std::move(other.lDat);
+	luaStringStore = std::move(other.luaStringStore);
 	lCtrl = std::move(other.lCtrl);
 	lScrpt = std::move(other.lScrpt);
 	luaTabs = std::move(other.luaTabs);

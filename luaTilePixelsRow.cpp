@@ -34,6 +34,7 @@ static int tiles_getExtAttr(lua_State *L) {
 	} catch (...) {
 		lua_pushfstring(L, "getExtAttr: Unknown exception");
 	}
+
 	return dub::error(L);
 }
 
@@ -51,6 +52,7 @@ static int tiles_setExtAttr(lua_State *L) {
 	} catch (...) {
 		lua_pushfstring(L, "setExtAttr: Unknown exception");
 	}
+
 	return dub::error(L);
 }
 
@@ -107,8 +109,8 @@ static const struct luaL_Reg tilePixelsRow_member_methods[] = {
 	{ "__index", tilePixelsRow__get_       },
 	{ "__len", tilePixelsRow__len_       },
 	{ "__tostring", tilePixelsRow___tostring  },
-	{ "getExtAttr"   , tiles_getExtAttr     },
-	{ "setExtAttr"   , tiles_setExtAttr     },
+	{ "getExtAttr", tiles_getExtAttr     },
+	{ "setExtAttr", tiles_setExtAttr     },
 	{ "deleted", dub::isDeleted    },
 	{ NULL, NULL},
 };

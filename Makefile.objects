@@ -18,5 +18,6 @@ OBJECTS := project.o main.o callbacks_palette.o callback_tiles.o class_global.o 
 	classtilemaps.o callbacktilemaps.o nespal.o filereader.o luaconfig.o \
 	metasprites.o callbacklua.o dub/dub.o $(BINDINGS:.c=.o) cbHelper.o \
 	luaChunks.o luaChunk.o luaChunkRow.o luaChunkEntry.o luaLevel.o luaLevelLayers.o \
-	luaLevelLayer.o luaLevelLayerRow.o luaLevelObjects.o luaTilePixels.o luaTilePixelsRow.o
+	luaLevelLayer.o luaLevelLayerRow.o luaLevelObjects.o luaTilePixels.o luaTilePixelsRow.o \
+	luaStringStore.o
 

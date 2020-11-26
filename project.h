@@ -20,6 +20,7 @@
 #define shareAmtPj 6
 #include <FL/Fl_Slider.H>
 #include <string>
+#include <map>
 #include <vector>
 
 #include "system.h"
@@ -37,12 +38,6 @@
 #define currentProjectVersionNUM 8
 extern uint32_t curProjectID;
 enum luaLocEnum {PALETTE_C, TILEMAP_C, CHUNK_C, SPRITE_C, LEVEL_C, GLOBAL_C/*Not allowed for luaControl*/, CUSTOM_TAB_0/*And so on*/};
-struct luaDat {
-	uint32_t len;
-	std::string name;
-	enum luaLocEnum datLoc;
-	void*dat;
-};
 enum luaControlType {INPUT_T, RADIO_T, INT_INPUT_T, CHECKBOX_T, CHOICE_T};
 struct inputLua {
 	std::string label, value;
@@ -133,7 +128,7 @@ struct Project { /*!<Holds all data needed for a project based system for exampl
 	struct level*lvl;
 	int32_t share[shareAmtPj];/*!<Negative if not sharing or project id (which is always positive) if sharing*/
 	unsigned curPlane;
-	std::vector<struct luaDat>lDat;
+	std::map<std::vector<uint8_t>, std::vector<uint8_t>> luaStringStore;
 	std::vector<struct luaControl>lCtrl;
 	std::vector<struct luaScript>lScrpt;
 	std::vector<std::string>luaTabs;

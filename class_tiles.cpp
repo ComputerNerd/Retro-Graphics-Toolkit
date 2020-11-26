@@ -1007,10 +1007,10 @@ void tiles::tms9918Mode1RearrangeTiles(tileAttrMap_t& attrs, bool forceKeepAllTi
 	lua_getglobal(Lconf, "tms9918Graphics1RemapTiles");
 
 	int projectIdx = -1;
+
 	for (auto it = projects->cbegin(); it != projects->cend(); ++it) {
-		if (((const Project*)&(*it)) == this->prj) {
+		if (((const Project*) & (*it)) == this->prj)
 			projectIdx = std::distance(projects->cbegin(), it);
-		}
 	}
 
 	if (projectIdx < 0)
@@ -1022,26 +1022,30 @@ void tiles::tms9918Mode1RearrangeTiles(tileAttrMap_t& attrs, bool forceKeepAllTi
 	uint8_t lastKey;
 	bool isFirstIter = true;
 	int tableIdx;
+
 	for (auto it = attrs.cbegin(); it != attrs.cend(); ++it) {
 		uint8_t curKey = it->first;
+
 		if (isFirstIter || (lastKey != curKey)) {
 			if (isFirstIter) {
 				lastKey = curKey;
 				isFirstIter = false;
 			}
-			if (lastKey != curKey) {
+
+			if (lastKey != curKey)
 				lua_rawset(Lconf, -3);
-			}
 
 			tableIdx = 0;
 			lua_pushinteger(Lconf, curKey); // the key must be before the value when using lua_rawset so we push the key prior to pushing the value.
 			lua_newtable(Lconf);
 		}
+
 		lua_pushinteger(Lconf, it->second + 1); // + 1 so the tile starts at one instead of zero.
 		lua_rawseti(Lconf, -2, ++tableIdx);
 
 		lastKey = curKey;
 	}
+
 	// Do the last set.
 	lua_rawset(Lconf, -3);
 

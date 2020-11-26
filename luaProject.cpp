@@ -24,6 +24,7 @@
 #include "luaSprites.hpp"
 #include "luaLevel.hpp"
 #include "project.h"
+#include "luaStringStore.hpp"
 
 static int project__set_(lua_State *L) {
 	const char *key = luaL_checkstring(L, 2);
@@ -151,6 +152,9 @@ static int project__get_(lua_State *L) {
 			}
 		} else if (!strcmp("tileType", k)) {
 			lua_pushinteger(L, prj.getTileType());
+			return 1;
+		} else if (!strcmp("stringStore", k)) {
+			luaopen_StringStore(L, projectIDX);
 			return 1;
 		}
 	}
