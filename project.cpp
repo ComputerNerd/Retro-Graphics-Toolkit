@@ -1070,8 +1070,38 @@ bool Project::loadProjectFile(FILE * fi, bool loadVersion, uint32_t version) {
 			}
 		}
 
-		if (tabsAmt || userDat || controlDat)
-			fl_alert("This version of Retro Graphics Toolkit does not fully support Lua user data please upgrade.");
+		// We need to clear the existing map in all cases even if we don't have any data.
+		luaStringStore.clear();
+		if (userDat > 0) {
+			// Read the solid data.
+			uint32_t solidSize;
+			fread(&solidSize, 1, sizeof(uint32_t), fi);
+			std::vector<uint8_t> solidData;
+			solidData.resize(solidSize);
+			decompressFromFile(solidData.data(), solidSize, fi);
+
+			auto it = solidData.cbegin();
+			while (it != solidData.cend()) {
+				uint32_t keySize = *it++ << 24;
+				keySize |= *it++ << 16;
+				keySize |= *it++ << 8;
+				keySize |= *it++;
+				std::vector<uint8_t> keyData(it, it + keySize);
+				it += keySize;
+
+				uint32_t valueSize = *it++ << 24;
+				valueSize |= *it++ << 16;
+				valueSize |= *it++ << 8;
+				valueSize |= *it++;
+				std::vector<uint8_t> valueData(it, it + valueSize);
+				it += valueSize;
+
+				luaStringStore[keyData] = valueData;
+			}
+		}
+
+		if (tabsAmt || controlDat)
+			fl_alert("This version of Retro Graphics Toolkit does not support the option(s) used in the project file. Please upgrade to a newer version.");
 	}
 
 	return true;
@@ -1087,6 +1117,13 @@ bool loadProject(uint32_t id, const char*fname) {
 		fclose(fi);
 
 	return true;
+}
+
+void pushUint32t(std::vector<uint8_t>&vec, uint32_t value) {
+	vec.emplace_back((value >> 24) & 255);
+	vec.emplace_back((value >> 16) & 255);
+	vec.emplace_back((value >> 8) & 255);
+	vec.emplace_back(value & 255);
 }
 
 bool Project::saveProjectFile(FILE * fo, bool saveShared, bool saveVersion) {
@@ -1257,8 +1294,9 @@ bool Project::saveProjectFile(FILE * fo, bool saveShared, bool saveVersion) {
 	uint32_t luaSize = lScrpt.size();
 	fwrite(&luaSize, 1, sizeof(uint32_t), fo);
 	luaSize = 0;
-	fwrite(&luaSize, 1, sizeof(uint32_t), fo); //TODO implement saving of user data and control data
+	fwrite(&luaSize, 1, sizeof(uint32_t), fo); // These two values are reserved for future use.
 	fwrite(&luaSize, 1, sizeof(uint32_t), fo);
+	luaSize = luaStringStore.size();
 	fwrite(&luaSize, 1, sizeof(uint32_t), fo);
 
 	if (lScrpt.size()) {
@@ -1269,6 +1307,23 @@ bool Project::saveProjectFile(FILE * fo, bool saveShared, bool saveVersion) {
 			saveStrifNot(fo, lScrpt[i].name.c_str(), (std::to_string(i)).c_str());
 			saveStrifNot(fo, lScrpt[i].str.c_str(), "");
 		}
+	}
+
+	if (luaStringStore.size() > 0) {
+		std::vector<uint8_t> solidStore; // The reason for storing these as a solid block of data is so that if two strings are similar it won't take up as much space and because compression has a little bit of overhead so if compressed each key and value it may actually end up taking more space.
+		// The solid format is simple: uint32_t key length, key data, uint32_t value length, value data.
+		for (auto it = luaStringStore.cbegin(); it != luaStringStore.cend(); ++it) {
+			pushUint32t(solidStore, it->first.size());
+			solidStore.insert(solidStore.end(), it->first.cbegin(), it->first.cend());
+
+			pushUint32t(solidStore, it->second.size());
+			solidStore.insert(solidStore.end(), it->second.cbegin(), it->second.cend());
+		}
+
+		// We need to store the uncompressed size of the solid data block because we need to know how much memory to allocate before decompressing it.
+		uint32_t solidSize = solidStore.size();
+		fwrite(&solidSize, 1, sizeof(uint32_t), fo);
+		compressToFile(solidStore.data(), solidStore.size(), fo);
 	}
 
 	return true;
