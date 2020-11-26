@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2020)
 --]]
 function userGuide(userData)--callback functions **must** have the user data (name does not matter) parameter and only that.
 	fltk.alert("The user's guide can be found on the wiki https://github.com/ComputerNerd/Retro-Graphics-Toolkit/wiki or locally in the Manual folder");
@@ -88,7 +88,7 @@ function removeDuplicateBlocks(unused)
 			end
 		end
 	else
-		p:haveMessage(project.mapMast)
+		p:haveMessage(project.mapMask)
 	end
 end
 function saveExtendedTileAttributes(unused)

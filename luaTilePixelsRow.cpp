@@ -20,7 +20,43 @@
 #include "project.h"
 #include "dub/dub.h"
 #include "gui.h"
+
+static int tiles_getExtAttr(lua_State *L) {
+	try {
+		getProjectRef
+		const size_t tileIDX = idxPtr[1];
+		const size_t yIDX = idxPtr[2];
+
+		lua_pushinteger(L, prj.tileC->getExtAttr(tileIDX, yIDX));
+		return 1;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "getExtAttr: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "getExtAttr: Unknown exception");
+	}
+	return dub::error(L);
+}
+
+static int tiles_setExtAttr(lua_State *L) {
+	try {
+		getProjectRef
+		const size_t tileIDX = idxPtr[1];
+		const size_t yIDX = idxPtr[2];
+
+		unsigned char fgbg = dub::checkinteger(L, 2);
+		prj.tileC->setExtAttr(tileIDX, yIDX, fgbg);
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "setExtAttr: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "setExtAttr: Unknown exception");
+	}
+	return dub::error(L);
+}
+
 static int tilePixelsRow__get_(lua_State *L) {
+	checkAlreadyExists
+
 	int type = lua_type(L, 2);
 
 	if (type == LUA_TNUMBER) {
@@ -71,6 +107,8 @@ static const struct luaL_Reg tilePixelsRow_member_methods[] = {
 	{ "__index", tilePixelsRow__get_       },
 	{ "__len", tilePixelsRow__len_       },
 	{ "__tostring", tilePixelsRow___tostring  },
+	{ "getExtAttr"   , tiles_getExtAttr     },
+	{ "setExtAttr"   , tiles_setExtAttr     },
 	{ "deleted", dub::isDeleted    },
 	{ NULL, NULL},
 };

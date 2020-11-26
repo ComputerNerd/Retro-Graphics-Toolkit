@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2020)
 */
 #include <FL/fl_ask.H>
 
@@ -21,6 +21,7 @@
 #include <memory>
 #include <stdexcept>
 #include <unordered_set>
+#include <algorithm>
 
 #include "macros.h"
 #include "nearestColor.h"
@@ -32,6 +33,9 @@
 #include "classpalettebar.h"
 #include "gui.h"
 #include "compressionWrapper.h"
+#include "runlua.h"
+#include "luaconfig.h"
+
 tiles::tiles(struct Project*prj) {
 	this->prj = prj;
 
@@ -230,7 +234,6 @@ void tiles::tms9918Mode1RearrangeActions(bool forceTileToAttribute, uint32_t til
 	tileAttrMap_t attrs;
 
 	for (unsigned i = 0; i < amount(); ++i) {
-		// See if this is a padding tile or a duplicate blank tile.
 		if (i != tile)
 			attrs.emplace(getExtAttr(i, 0), i);
 		else if (forceTileToAttribute)  // i == tile.
@@ -1001,157 +1004,56 @@ void tiles::save(const char*fname, fileType_t type, bool clipboard, CompressionT
 		fclose(myfile);
 }
 void tiles::tms9918Mode1RearrangeTiles(tileAttrMap_t& attrs, bool forceKeepAllTiles) {
-	// multimap always sorts by key. This is very good for us.
-	uint8_t keyHold = attrs.cbegin()->first;
-	unsigned tileCount = 0;
-	unsigned curTile = 0;
-	std::map<uint32_t, uint32_t> tileMapping;
-	std::unordered_set<uint32_t> processedTiles;
+	lua_getglobal(Lconf, "tms9918Graphics1RemapTiles");
 
-	if (forceKeepAllTiles) {
-		for (auto it = attrs.cbegin(); it != attrs.cend(); ++it)
-			processedTiles.emplace(it->second);
-
-		for (unsigned i = 0; i < amount(); ++i) {
-			const bool tileExists = processedTiles.find(i) != processedTiles.end();
-
-			if (!tileExists)
-				attrs.emplace(getExtAttr(i, 0), i);
+	int projectIdx = -1;
+	for (auto it = projects->cbegin(); it != projects->cend(); ++it) {
+		if (((const Project*)&(*it)) == this->prj) {
+			projectIdx = std::distance(projects->cbegin(), it);
 		}
-
-		processedTiles.clear();
 	}
 
-	// Remove duplicate blank tiles.
-	bool hasBlankTile = false; // We will remove duplicate blank tiles (defined as all pixels == 0 for their rgba values).
-	unsigned blankTileIdx = 0;
+	if (projectIdx < 0)
+		throw new std::out_of_range("Cannot get index of project.");
 
-	for (auto it = attrs.cbegin(); it != attrs.cend();) {
-		unsigned i = it->second;
+	lua_pushinteger(Lconf, projectIdx + 1); // + 1 because in Lua the first project is one.
 
-		// See if it is blank.
-		if (isAllZeroTruecolor(i)) {
-			if (hasBlankTile && i != blankTileIdx) {
-				// We already have a blank tile. Replace all uses of this tile with blankTileIdx.
-				if (prj->tms)
-					prj->tms->swapTile(i, blankTileIdx);
-
-				// Remove this tile from the list.
-				it = attrs.erase(it);
-				continue; // Avoid the ++it.
-			} else {
-				// If we find another blank tile we will use this.
-				hasBlankTile = true;
-				blankTileIdx = i;
-			}
-		}
-
-		++it;
-	}
-
-	std::vector<uint8_t> newTileData(tDat.size());
-	std::vector<uint8_t> newTruecolorData(truetDat.size());
-
+	lua_newtable(Lconf);
+	uint8_t lastKey;
+	bool isFirstIter = true;
+	int tableIdx;
 	for (auto it = attrs.cbegin(); it != attrs.cend(); ++it) {
-		if (it->second >= amount()) {
-			tileMapping[it->second] = it->second; // Leave invalid entries alone.
-			continue;
-		}
-
-		const bool alreadyProcessed = processedTiles.find(it->second) != processedTiles.end();
-
-		if (alreadyProcessed)
-			continue;
-
-		uint8_t key = it->first;
-
-		if (keyHold != key) {
-			unsigned extraTiles = (tileCount & 7);
-
-			if (extraTiles) {
-				extraTiles = 8 - extraTiles; // This gives us how many tiles we need to add.
-				printf("Padding tiles with %d tiles at index: %d\n", extraTiles, curTile);
-				resizeAmt(amount() + extraTiles);
-				newTileData.resize(amount() * tileSize);
-				newTruecolorData.resize(amount() * tcSize);
-				curTile += extraTiles; // Skip past these blank tiles.
+		uint8_t curKey = it->first;
+		if (isFirstIter || (lastKey != curKey)) {
+			if (isFirstIter) {
+				lastKey = curKey;
+				isFirstIter = false;
+			}
+			if (lastKey != curKey) {
+				lua_rawset(Lconf, -3);
 			}
 
-			tileCount = 0;
+			tableIdx = 0;
+			lua_pushinteger(Lconf, curKey); // the key must be before the value when using lua_rawset so we push the key prior to pushing the value.
+			lua_newtable(Lconf);
 		}
+		lua_pushinteger(Lconf, it->second + 1); // + 1 so the tile starts at one instead of zero.
+		lua_rawseti(Lconf, -2, ++tableIdx);
 
-		extAttrs.at(curTile / 8) = key; // Set the attribute.
-
-		// Copy the tiles.
-		uint8_t * tileDst = newTileData.data();
-		tileDst += curTile * tileSize;
-		const uint8_t * tileSrc = tDat.data();
-		tileSrc += it->second * tileSize;
-		memcpy(tileDst, tileSrc, tileSize);
-		// Do the same for truecolor tiles.
-		tileDst = newTruecolorData.data();
-		tileDst += curTile * tcSize;
-		tileSrc = truetDat.data();
-		tileSrc += it->second * tcSize;
-		memcpy(tileDst, tileSrc, tcSize);
-		tileMapping[it->second] = curTile;
-
-		keyHold = key;
-		++tileCount;
-		++curTile;
-
-		// Don't accidentally do the same tile again if it is in the list more than once.
-		// This happens when the tile is on a tilemap more than once.
-		processedTiles.emplace(it->second);
+		lastKey = curKey;
 	}
+	// Do the last set.
+	lua_rawset(Lconf, -3);
 
-	tDat = newTileData;
-	truetDat = newTruecolorData;
+	lua_pushboolean(Lconf, forceKeepAllTiles);
+	runLuaFunc(Lconf, 3, 0);
 
-	resizeAmt(curTile); // curTile contains the final amount of tiles.
-
-	if (prj->tms) {
-		for (unsigned i = 0; i < prj->tms->maps.size(); ++i) {
-			class tileMap* mapClass = &prj->tms->maps[i];
-
-			if (mapClass) {
-				for (unsigned y = 0; y < mapClass->mapSizeHA; ++y) {
-					for (unsigned x = 0; x < mapClass->mapSizeW; ++x) {
-						unsigned inputTile = mapClass->get_tile(x, y);
-
-						try {
-							mapClass->set_tile(x, y, tileMapping.at(inputTile));
-						} catch (...) {
-							fl_alert("Cannot map tile %d at (%d, %d) in %d", inputTile, x, y, i);
-						}
-					}
-				}
-			}
-		}
-	}
-
-	if (window && prj == currentProject) {
-		// Update the currently shown tile.
-		try {
-			current_tile = tileMapping.at(current_tile);
-		} catch (...) {}
-
-		try {
-			window->tile_select->value(tileMapping.at(window->tile_select->value()));
-		} catch (...) {}
-
-		try {
-			window->tile_select_2->value(tileMapping.at(window->tile_select_2->value()));
-		} catch (...) {}
-
-		window->redraw();
-	}
 }
 bool tiles::isAllZeroTruecolor(unsigned idx) {
 	uint32_t*ptr = (uint32_t*)getPixelPtrTC(idx, 0, 0);
 
 	if (tcSize & 3) {
-		fl_alert("tcSize & 4. Please fix isAllZeroTruecolor.");
+		fl_alert("tcSize & 3. Please fix isAllZeroTruecolor.");
 		return false; // Don't know if it is all zeros or not. Assuming that it is not.
 	}
 

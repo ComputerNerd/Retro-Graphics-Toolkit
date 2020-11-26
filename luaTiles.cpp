@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2020)
 */
 #include "luaTiles.hpp"
 #include "luaTile.hpp"
@@ -83,18 +83,37 @@ static int lua_tiles_assignData(lua_State*L) {
 		updateTileSelectAmt();
 }
 
+static int lua_tiles_tms9918Mode1RearrangeActions(lua_State*L) {
+	try {
+		getProjectRef
+
+		bool forceTileToAttribute = dub::checkboolean(L, 2);
+		unsigned int tile = dub::checkinteger(L, 3);
+		unsigned char attr = dub::checkinteger(L, 4);
+		prj.tileC->tms9918Mode1RearrangeActions(forceTileToAttribute, tile, attr);
+		return 0;
+	} catch (std::exception &e) {
+		lua_pushfstring(L, "tms9918Mode1RearrangeActions: %s", e.what());
+	} catch (...) {
+		lua_pushfstring(L, "tms9918Mode1RearrangeActions: Unknown exception");
+	}
+
+	return dub::error(L);
+}
+
 static int tiles__set_(lua_State *L) {
 	const char *key = luaL_checkstring(L, 2);
 	getProjectRef
 
 	if (!strcmp(key, "data")) {
 		luaStringToVector(L, 3, prj.tileC->tDat, prj.tileC->tileSize, false, -1);
-		prj.tileC->truetDat.resize(prj.tileC->amount() * prj.tileC->tcSize);
+		prj.tileC->resizeAmt(prj.tileC->amount());
 
 	} else if (!strcmp(key, "rgbaData")) {
 		luaStringToVector(L, 3, prj.tileC->truetDat, prj.tileC->tcSize, false, -1);
-		prj.tileC->tDat.resize(prj.tileC->amount() * prj.tileC->tileSize);
-	}
+		prj.tileC->resizeAmt(prj.tileC->truetDat.size() / prj.tileC->tcSize);
+	} else if (!strcmp(key, "extAttrs"))
+		luaStringToVector(L, 3, prj.tileC->extAttrs, prj.tileC->extAttrs.size(), true, 0);
 
 
 	return 0;
@@ -137,6 +156,9 @@ static int tiles__get_(lua_State *L) {
 		} else if (!strcmp("rgbaData", k)) {
 			lua_pushlstring(L, (const char*)prj.tileC->truetDat.data(), prj.tileC->truetDat.size());
 			return 1;
+		} else if (!strcmp("extAttrs", k)) {
+			lua_pushlstring(L, (const char*)prj.tileC->extAttrs.data(), prj.tileC->extAttrs.size());
+			return 1;
 		}
 	}
 
@@ -168,6 +190,7 @@ static const struct luaL_Reg tiles_member_methods[] = {
 	{ "setAmt", lua_tiles_resize},
 	{ "toPlanar", lua_tiles_toPlanar},
 	{ "assignData", lua_tiles_assignData},
+	{ "tms9918Mode1RearrangeActions", lua_tiles_tms9918Mode1RearrangeActions},
 	{ NULL, NULL},
 };
 
