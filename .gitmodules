@@ -10,3 +10,6 @@
 [submodule "lua-zlib"]
 	path = lua-zlib
 	url = https://github.com/brimworks/lua-zlib
+[submodule "serpent"]
+	path = serpent
+	url = https://github.com/pkulchenko/serpent

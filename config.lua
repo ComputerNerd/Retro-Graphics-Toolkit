@@ -23,6 +23,8 @@ For example menu.lua allows you to edit the shortcut keys to various menu items.
 Warning: This file is executed very early. Before the project objects are ready.
 --]]
 
+serpent = require("serpent.src.serpent")
+
 Fl.scheme('plastic')
 if is_headless == 0 then
 	dofile "menu.lua"
