@@ -371,8 +371,8 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 			local it =  i * th * tw -- The tile that will be placed at the top of the tilemap.
 			for y = 1, th do
 				for x = 1, tw do
-					tilemap[ih + y][x]:setFull(it)
 					it = it + 1
+					tilemap[ih + y][x]:setFull(it)
 				end
 			end
 		end

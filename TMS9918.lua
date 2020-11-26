@@ -27,12 +27,12 @@ function tms9918Graphics1RemapTiles(projectIDX, attrsByTile, forceKeepAllUnique)
 	local blankRGBAtile = string.rep('\0', ct.tcSize)
 
 	local tilesAddedToList = {} -- Keep track of tiles added to the list.
-	local blankTileList = {}
+	local blankTileSet = {}
 	for attr, tileIndices in pairs(attrsByTile) do
 		for k, tileIdx in ipairs(tileIndices) do
 			local rgbaData = ct[tileIdx].rgbaData
 			if rgbaData == blankRGBAtile then
-				blankTileList[tileIdx] = true
+				blankTileSet[tileIdx] = true
 			else
 				if sortedTiles[attr] == nil then
 					sortedTiles[attr] = {}
@@ -54,7 +54,7 @@ function tms9918Graphics1RemapTiles(projectIDX, attrsByTile, forceKeepAllUnique)
 
 				local rgbaData = t.rgbaData
 				if rgbaData == blankRGBAtile then
-					blankTileList[tileIdx] = true
+					blankTileSet[tileIdx] = true
 				else
 					if sortedTiles[attr] == nil then
 						sortedTiles[attr] = {}
@@ -72,6 +72,11 @@ function tms9918Graphics1RemapTiles(projectIDX, attrsByTile, forceKeepAllUnique)
 	tilesFinal = {}
 	local blankTile = string.rep('\0', ct.tileSize)
 
+	local blankTileList = {}
+	for k, v in pairs(blankTileSet) do
+		table.insert(blankTileList, k)
+	end
+
 	local hasBlankTile = false
 	for attr, rgbaDataList in pairs(sortedTiles) do
 		local tileCount = 0
@@ -84,7 +89,7 @@ function tms9918Graphics1RemapTiles(projectIDX, attrsByTile, forceKeepAllUnique)
 			local tilesNeeded = 8 - tilesRemaining
 			for pi = 1, tilesNeeded do
 				hasBlankTile = true
-				table.insert(tilesFinal, {attr, blankRGBAtile, blankTile, {}})
+				table.insert(tilesFinal, {attr, blankRGBAtile, blankTile, blankTileList})
 			end
 		end
 	end
@@ -98,7 +103,7 @@ function tms9918Graphics1RemapTiles(projectIDX, attrsByTile, forceKeepAllUnique)
 					local cty = ctm[y]
 					for x = 1, #cty do
 						local ctx = cty[x]
-						if blankTileList[ctx.tile] ~= nil then
+						if blankTileSet[ctx.tile] ~= nil then
 							hasBlankTile = true
 						end
 					end
