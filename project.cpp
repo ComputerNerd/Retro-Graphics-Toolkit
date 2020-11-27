@@ -1072,6 +1072,7 @@ bool Project::loadProjectFile(FILE * fi, bool loadVersion, uint32_t version) {
 
 		// We need to clear the existing map in all cases even if we don't have any data.
 		luaStringStore.clear();
+
 		if (userDat > 0) {
 			// Read the solid data.
 			uint32_t solidSize;
@@ -1081,6 +1082,7 @@ bool Project::loadProjectFile(FILE * fi, bool loadVersion, uint32_t version) {
 			decompressFromFile(solidData.data(), solidSize, fi);
 
 			auto it = solidData.cbegin();
+
 			while (it != solidData.cend()) {
 				uint32_t keySize = *it++ << 24;
 				keySize |= *it++ << 16;
@@ -1307,6 +1309,7 @@ bool Project::saveProjectFile(FILE * fo, bool saveShared, bool saveVersion) {
 
 	if (luaStringStore.size() > 0) {
 		std::vector<uint8_t> solidStore; // The reason for storing these as a solid block of data is so that if two strings are similar it won't take up as much space and because compression has a little bit of overhead so if compressed each key and value it may actually end up taking more space.
+
 		// The solid format is simple: uint32_t key length, key data, uint32_t value length, value data.
 		for (auto it = luaStringStore.cbegin(); it != luaStringStore.cend(); ++it) {
 			pushUint32t(solidStore, it->first.size());
