@@ -1,4 +1,4 @@
-Doxygen documentation can be found at: http://tdistler.com/iqa
+Doxygen documentation can be found at: https://web.archive.org/web/20150724084852/http://tdistler.com/iqa/
 
 BUILD:
 
