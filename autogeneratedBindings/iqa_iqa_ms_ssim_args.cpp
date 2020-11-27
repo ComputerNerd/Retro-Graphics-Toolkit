@@ -196,7 +196,7 @@ static const struct luaL_Reg iqa_ms_ssim_args_member_methods[] = {
 };
 
 
-DUB_EXPORT int luaopen_iqa_iqa_ms_ssim_args(lua_State *L)
+int luaopen_iqa_iqa_ms_ssim_args(lua_State *L)
 {
 	// Create the metatable which will contain all the member methods
 	luaL_newmetatable(L, "iqa.iqa_ms_ssim_args");

@@ -63,7 +63,7 @@
 #include "luaProjects.hpp"
 #include "compressionWrapper.h"
 #include "filereader_filereader.hpp"
-
+#include "iqaLua.hpp"
 
 static int panic(lua_State *L) {
 	fl_alert("PANIC: unprotected error in call to Lua API (%s)\n", lua_tostring(L, -1));
@@ -1191,12 +1191,14 @@ lua_State*createLuaState(void) {
 		luaopen_posix_dirent(L);
 		lua_setglobal(L, "dirent");
 
-
 		luaopen_settings(L);
 		lua_setglobal(L, "settings");
 
 		luaopen_filereader_filereader(L);
 		lua_setglobal(L, "filereader");
+
+		luaopen_iqaLua(L);
+		lua_setglobal(L, "iqa");
 	} else
 		fl_alert("lua_newstate failed.");
 
