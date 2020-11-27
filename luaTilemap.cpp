@@ -193,40 +193,39 @@ static int tilemap__get_(lua_State *L) {
 	checkAlreadyExists
 
 	int type = lua_type(L, 2);
-	getIdxPtrChk
-	size_t idx = *idxPtr;
+	getProjectRef
 	size_t idx2 = idxPtr[1];
 
 	if (type == LUA_TNUMBER) {
 		int k = luaL_checkinteger(L, 2) - 1;
 
-		if (k >= 0 && k < projects->at(idx).tms->maps[idx].mapSizeHA) {
-			luaopen_TilemapRow(L, idx, idx2, k);
+		if (k >= 0 && k < prj.tms->maps[idx2].mapSizeHA) {
+			luaopen_TilemapRow(L, projectIDX, idx2, k);
 			return 1;
 		}
 	} else if (type == LUA_TSTRING) {
 		const char*k = luaL_checkstring(L, 2);
 
 		if (!strcmp("width", k)) {
-			lua_pushinteger(L, projects->at(idx).tms->maps[idx2].mapSizeW);
+			lua_pushinteger(L, prj.tms->maps[idx2].mapSizeW);
 			return 1;
 		} else if (!strcmp("height", k)) {
-			lua_pushinteger(L, projects->at(idx).tms->maps[idx2].mapSizeH);
+			lua_pushinteger(L, prj.tms->maps[idx2].mapSizeH);
 			return 1;
 		} else if (!strcmp("hAll", k)) {
-			lua_pushinteger(L, projects->at(idx).tms->maps[idx2].mapSizeHA);
+			lua_pushinteger(L, prj.tms->maps[idx2].mapSizeHA);
 			return 1;
 		} else if (!strcmp("useBlocks", k)) {
-			lua_pushboolean(L, projects->at(idx).tms->maps[idx2].isBlock);
+			lua_pushboolean(L, prj.tms->maps[idx2].isBlock);
 			return 1;
 		} else if (!strcmp("name", k)) {
-			lua_pushstring(L, projects->at(idx).tms->maps[idx2].planeName.c_str());
+			lua_pushstring(L, prj.tms->maps[idx2].planeName.c_str());
 			return 1;
 		} else if (!strcmp("blocks", k)) {
-			if (!projects->at(idx).tms->maps[idx2].isBlock)
+			if (!prj.tms->maps[idx2].isBlock)
 				luaL_error(L, "Blocks must be enabled to use this.");
 
-			luaopen_TilemapBlocks(L, idx, idx2);
+			luaopen_TilemapBlocks(L, projectIDX, idx2);
 			return 1;
 		}
 	}

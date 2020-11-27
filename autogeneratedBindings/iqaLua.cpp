@@ -68,7 +68,11 @@ static int iqa_iqa_ssim(lua_State *L) {
 		int h = dub::checkinteger(L, 4);
 		int stride = dub::checkinteger(L, 5);
 		int gaussian = dub::checkinteger(L, 6);
-		iqa_ssim_args *args = *((iqa_ssim_args **)dub::checksdata(L, 7, "iqa.iqa_ssim_args"));
+		iqa_ssim_args *args;
+		if (lua_type(L, 7) == LUA_TNIL)
+			args = nullptr;
+		else
+			args = *((iqa_ssim_args **)dub::checksdata(L, 7, "iqa.iqa_ssim_args"));
 		lua_pushnumber(L, iqa_ssim(ref, cmp, w, h, stride, gaussian, args));
 		return 1;
 	} catch (std::exception &e) {
@@ -104,10 +108,10 @@ static int iqa_iqa_ms_ssim(lua_State *L) {
 
 // --=============================================== FUNCTIONS
 static const struct luaL_Reg iqa_functions[] = {
-	{ "iqa_mse", iqa_iqa_mse          },
-	{ "iqa_psnr", iqa_iqa_psnr         },
-	{ "iqa_ssim", iqa_iqa_ssim         },
-	{ "iqa_ms_ssim", iqa_iqa_ms_ssim      },
+	{ "mse", iqa_iqa_mse          },
+	{ "psnr", iqa_iqa_psnr         },
+	{ "ssim", iqa_iqa_ssim         },
+	{ "ms_ssim", iqa_iqa_ms_ssim      },
 	{ NULL, NULL},
 };
 

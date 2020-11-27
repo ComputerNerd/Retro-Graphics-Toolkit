@@ -671,7 +671,7 @@ void tiles::remove_duplicate_tiles(bool tColor) {
 	delete win;
 	Fl::check();
 }
-void tiles::tileToTrueCol(const uint8_t*input, uint8_t*output, unsigned row, bool useAlpha, bool alphaZero) {
+void tiles::tileToTrueCol(const uint8_t*input, uint8_t*output, unsigned row, bool useAlpha, bool alphaZero)const {
 	row *= prj->pal->perRow * 3;
 
 	for (unsigned y = 0; y < sizeh; ++y) {

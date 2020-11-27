@@ -1145,7 +1145,7 @@ void generate_optimal_palette(Fl_Widget*, void*spriteIn) {
 	if (rowCnt <= 1)
 		palchoice->hide();
 
-	forceBtn = new Fl_Check_Button(216, 104, 176, 24, "For all tiles to selected row");
+	forceBtn = new Fl_Check_Button(216, 104, 176, 24, "Force all tiles to selected row");
 	forceBtn->callback(toggleBoolCB, &set.rowAuto);
 
 	if (rowCnt > 1)

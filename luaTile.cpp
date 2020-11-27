@@ -22,6 +22,7 @@
 #include "luaHelpers.hpp"
 #include "project.h"
 #include "dub/dub.h"
+#include "CIE.h"
 
 static unsigned inRangeTile(unsigned tile, size_t projectIDX) {
 	if (tile >= projects->at(projectIDX).tileC->amount()) {
@@ -133,6 +134,40 @@ static int lua_tile_convertToRGBA(lua_State*L) {
 	return 0;
 }
 
+void rgbaToGrayscale(std::vector<uint8_t>& finalTile, const uint8_t*tilePtr, unsigned backgroundValue, const tiles* tileC) {
+	finalTile.reserve(tileC->tileSize);
+	for (unsigned y = 0; y < tileC->width(); ++y) {
+		for (unsigned x = 0; x < tileC->height(); ++x) {
+			double L,a,b;
+			Rgb2Lab255(&L, &a, &b, tilePtr[0], tilePtr[1], tilePtr[2]);
+			a = 0.0;
+			b = 0.0;
+			uint8_t redVal, greenUnused, blueUnused; // r, g and b will all be the same because a and b are zero.
+			Lab2Rgb255(&redVal, &greenUnused, &blueUnused, L, a, b);
+			
+			unsigned alphaVal = tilePtr[3];
+			unsigned v = ((redVal * alphaVal) + (backgroundValue * (255 - alphaVal))) / 255;
+			finalTile.emplace_back(v);
+			tilePtr += 4;
+		}
+	}
+}
+
+static int lua_tile_asGrayscale(lua_State*L) {
+	getProjectRef
+	size_t tileIDX = idxPtr[1];
+
+	unsigned backgroundValue = luaL_checkinteger(L, 2);
+
+	std::vector<uint8_t> finalTile;
+
+	const uint8_t* tilePtr = (const uint8_t*)prj.tileC->getPixelPtrTC(tileIDX, 0, 0);
+	rgbaToGrayscale(finalTile, tilePtr, backgroundValue, prj.tileC);
+
+	lua_pushlstring(L, (const char*)finalTile.data(), finalTile.size());
+	return 1;
+}
+
 static int tile__set_(lua_State *L) {
 	const char *key = luaL_checkstring(L, 2);
 	getProjectRef
@@ -192,6 +227,7 @@ static const struct luaL_Reg tile_member_methods[] = {
 	{ "remove", lua_tile_remove},
 	{ "toPlanar", lua_tile_toPlanar},
 	{ "convertToRGBA", lua_tile_convertToRGBA},
+	{ "asGrayscale", lua_tile_asGrayscale},
 	{ "deleted", dub::isDeleted},
 	{ NULL, NULL},
 };

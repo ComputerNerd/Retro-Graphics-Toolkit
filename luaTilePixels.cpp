@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2019)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2020)
 */
 #include "luaTilePixels.hpp"
 #include "luaTilePixelsRow.hpp"
@@ -21,7 +21,31 @@
 #include "project.h"
 #include "dub/dub.h"
 #include "gui.h"
+
+void rgbaToGrayscale(std::vector<uint8_t>& finalTile, const uint8_t*tilePtr, unsigned backgroundValue, const tiles* tileC);
+
+static int lua_tilePixels_asGrayscale(lua_State*L) {
+	getProjectRef
+	size_t tileIDX = idxPtr[1];
+
+	unsigned backgroundValue = luaL_checkinteger(L, 2);
+
+	std::vector<uint8_t> tmpTile;
+	tmpTile.resize(prj.tileC->tcSize);
+	prj.tileC->tileToTrueCol(prj.tileC->tDat.data() + (tileIDX * prj.tileC->tileSize), tmpTile.data(), luaL_checkinteger(L, 3) - 1, true, true);
+
+	std::vector<uint8_t> finalTile;
+
+	const uint8_t* tilePtr = tmpTile.data();
+	rgbaToGrayscale(finalTile, tilePtr, backgroundValue, prj.tileC);
+
+	lua_pushlstring(L, (const char*)finalTile.data(), finalTile.size());
+	return 1;
+}
+
 static int tilePixels__get_(lua_State *L) {
+	checkAlreadyExists
+
 	int type = lua_type(L, 2);
 
 	if (type == LUA_TNUMBER) {
@@ -55,6 +79,7 @@ static const struct luaL_Reg tilePixels_member_methods[] = {
 	{ "__index", tilePixels__get_       },
 	{ "__len", tilePixels__len_       },
 	{ "__tostring", tilePixels___tostring  },
+	{ "asGrayscale", lua_tilePixels_asGrayscale},
 	{ "deleted", dub::isDeleted    },
 	{ NULL, NULL},
 };
