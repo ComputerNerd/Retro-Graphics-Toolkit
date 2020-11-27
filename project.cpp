@@ -1101,7 +1101,7 @@ bool Project::loadProjectFile(FILE * fi, bool loadVersion, uint32_t version) {
 		}
 
 		if (tabsAmt || controlDat)
-			fl_alert("This version of Retro Graphics Toolkit does not support the option(s) used in the project file. Please upgrade to a newer version.");
+			fl_alert("This version of Retro Graphics Toolkit does not support the option or options used in the project file. Please upgrade to a newer version.");
 	}
 
 	return true;
@@ -1176,11 +1176,7 @@ bool Project::saveProjectFile(FILE * fo, bool saveShared, bool saveVersion) {
 		uint32_t luaControlCount
 		uint32_t luaUserDataCount
 
-		Lua user data Format:
-			for each with count
-				const char*name null terminated
-				uint32_t length
-				void*data
+		The Lua user data Format is documented later.
 
 		Lua control data Format:
 			for each with count
