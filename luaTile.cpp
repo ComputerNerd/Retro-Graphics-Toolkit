@@ -100,12 +100,27 @@ static int lua_tile_draw(lua_State*L) {
 	projects->at(projectIDX).tileC->draw_tile(luaL_optinteger(L, 2, 0), // X
 	        luaL_optinteger(L, 3, 0), // Y
 	        tile,
-	        luaL_optinteger(L, 4, 0), // Zoom
-	        luaL_optinteger(L, 5, 0), // Palette row
+	        luaL_optinteger(L, 4, 1), // Zoom
+	        luaL_optinteger(L, 5, 1) - 1, // Palette row
 	        lua_toboolean(L, 6), // Hflip
 	        lua_toboolean(L, 7), // Vflip
 	        lua_toboolean(L, 8), // Is sprite?
 	        lua_toboolean(L, 9)); // Draw with alpha?
+	return 0;
+}
+
+static int lua_tile_drawTC(lua_State*L) {
+	getIdxPtrChk
+	size_t projectIDX = *idxPtr;
+	size_t tile = idxPtr[1];
+
+	projects->at(projectIDX).tileC->draw_truecolor(tile,
+		luaL_optinteger(L, 2, 0), // X
+	        luaL_optinteger(L, 3, 0), // Y
+	        lua_toboolean(L, 4), // Hflip
+	        lua_toboolean(L, 5), // Vflip
+	        luaL_optinteger(L, 6, 1) // Zoom
+		);
 	return 0;
 }
 
@@ -136,15 +151,16 @@ static int lua_tile_convertToRGBA(lua_State*L) {
 
 void rgbaToGrayscale(std::vector<uint8_t>& finalTile, const uint8_t*tilePtr, unsigned backgroundValue, const tiles* tileC) {
 	finalTile.reserve(tileC->tileSize);
+
 	for (unsigned y = 0; y < tileC->width(); ++y) {
 		for (unsigned x = 0; x < tileC->height(); ++x) {
-			double L,a,b;
+			double L, a, b;
 			Rgb2Lab255(&L, &a, &b, tilePtr[0], tilePtr[1], tilePtr[2]);
 			a = 0.0;
 			b = 0.0;
 			uint8_t redVal, greenUnused, blueUnused; // r, g and b will all be the same because a and b are zero.
 			Lab2Rgb255(&redVal, &greenUnused, &blueUnused, L, a, b);
-			
+
 			unsigned alphaVal = tilePtr[3];
 			unsigned v = ((redVal * alphaVal) + (backgroundValue * (255 - alphaVal))) / 255;
 			finalTile.emplace_back(v);
@@ -163,6 +179,29 @@ static int lua_tile_asGrayscale(lua_State*L) {
 
 	const uint8_t* tilePtr = (const uint8_t*)prj.tileC->getPixelPtrTC(tileIDX, 0, 0);
 	rgbaToGrayscale(finalTile, tilePtr, backgroundValue, prj.tileC);
+
+	lua_pushlstring(L, (const char*)finalTile.data(), finalTile.size());
+	return 1;
+}
+
+static int lua_tile_rgbaGetChannel(lua_State*L) {
+	getProjectRef
+	size_t tileIDX = idxPtr[1];
+
+	unsigned channel = luaL_checkinteger(L, 2) - 1;
+	if (channel >= 4) {
+		luaL_error(L, "Valid channel range is 1 to 4.");
+		return 0;
+	}
+
+	std::vector<uint8_t> finalTile;
+	finalTile.reserve(prj.tileC->tcSize / 4);
+
+	const uint8_t* tilePtr = (const uint8_t*)prj.tileC->getPixelPtrTC(tileIDX, 0, 0);
+	for (unsigned i = 0; i < prj.tileC->tcSize; i += 4) {
+		finalTile.emplace_back(tilePtr[channel]);
+		tilePtr += 4;
+	}
 
 	lua_pushlstring(L, (const char*)finalTile.data(), finalTile.size());
 	return 1;
@@ -224,10 +263,12 @@ static const struct luaL_Reg tile_member_methods[] = {
 	{ "setTileRGBA", lua_tile_setTileRGBA},
 	{ "dither", lua_tile_dither},
 	{ "draw", lua_tile_draw},
+	{ "drawTC", lua_tile_drawTC},
 	{ "remove", lua_tile_remove},
 	{ "toPlanar", lua_tile_toPlanar},
 	{ "convertToRGBA", lua_tile_convertToRGBA},
 	{ "asGrayscale", lua_tile_asGrayscale},
+	{ "rgbaGetChannel", lua_tile_rgbaGetChannel},
 	{ "deleted", dub::isDeleted},
 	{ NULL, NULL},
 };

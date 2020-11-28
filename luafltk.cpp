@@ -804,46 +804,9 @@ static const keyPair FLconsts[] = {
 };
 
 
-void moonfltk_open_Fl(lua_State *L);
-void moonfltk_open_Fl_for_background(lua_State *L);
-void moonfltk_open_Additional(lua_State *L);
-void moonfltk_open_FlColor(lua_State *L);
-void moonfltk_open_FlFont(lua_State *L);
-void moonfltk_open_FlWindow(lua_State *L);
-void moonfltk_open_FlEvent(lua_State *L);
-void moonfltk_open_FlClipboard(lua_State *L);
-void moonfltk_open_FlScreen(lua_State *L);
-void moonfltk_open_FlDraw(lua_State *L);
-void moonfltk_open_FlFile(lua_State *L);
-void moonfltk_open_FlUnicode(lua_State *L);
-void moonfltk_open_FlCommon(lua_State *L);
-void moonfltk_open_FlTooltip(lua_State *L);
-void moonfltk_open_Widget(lua_State *L);
-void moonfltk_open_Button(lua_State *L);
-void moonfltk_open_Clock(lua_State *L);
-void moonfltk_open_Group(lua_State *L);
-void moonfltk_open_Window(lua_State *L);
-void moonfltk_open_Image(lua_State *L);
-void moonfltk_open_Browser(lua_State *L);
-void moonfltk_open_Menu_Item(lua_State *L);
-void moonfltk_open_Menu(lua_State *L);
-void moonfltk_open_Input(lua_State *L);
-void moonfltk_open_Valuator(lua_State *L);
-void moonfltk_open_Slider(lua_State *L);
-void moonfltk_open_Tabs(lua_State *L);
-void moonfltk_open_Input_Choice(lua_State *L);
-void moonfltk_open_Color_Chooser(lua_State *L);
-void moonfltk_open_Subclass(lua_State *L);
-void moonfltk_open_Text_Buffer(lua_State *L);
-void moonfltk_open_Text_Display(lua_State *L);
-void moonfltk_open_Text_Editor(lua_State *L);
-void moonfltk_open_Native_File_Chooser(lua_State *L);
-void moonfltk_open_Handlers(lua_State *L);
-void moonfltk_open_Table(lua_State *L);
-void moonfltk_open_Chart(lua_State *L);
-void moonfltk_open_Help_Dialog(lua_State *L);
-void moonfltk_open_Help_View(lua_State *L);
-void moonfltk_open_Tree(lua_State *L);
+extern "C" {
+int moonfltk_open_main(lua_State *L);
+}
 
 void createFLTKbindings(lua_State *L) {
 	//FLTK bindings
@@ -863,44 +826,6 @@ void createFLTKbindings(lua_State *L) {
 
 	lua_setglobal(L, "FL");
 
-	lua_createtable(L, 0, 0);
-	moonfltk_open_Fl(L);
-	moonfltk_open_Additional(L);
-	moonfltk_open_FlColor(L);
-	moonfltk_open_FlFont(L);
-	moonfltk_open_FlWindow(L);
-	moonfltk_open_FlClipboard(L);
-	moonfltk_open_FlScreen(L);
-	moonfltk_open_FlDraw(L);
-	moonfltk_open_FlFile(L);
-	moonfltk_open_FlUnicode(L);
-	moonfltk_open_FlCommon(L);
-	moonfltk_open_FlTooltip(L);
-	moonfltk_open_Widget(L);
-	moonfltk_open_Button(L);
-	moonfltk_open_Clock(L);
-	moonfltk_open_Group(L);
-	moonfltk_open_Window(L);
-	moonfltk_open_Image(L);
-	moonfltk_open_Browser(L);
-	moonfltk_open_Menu(L);
-	moonfltk_open_Input(L);
-	moonfltk_open_Valuator(L);
-	moonfltk_open_Slider(L);
-	moonfltk_open_Tabs(L);
-	moonfltk_open_Input_Choice(L);
-	moonfltk_open_Color_Chooser(L);
-	moonfltk_open_FlEvent(L);
-	moonfltk_open_Text_Buffer(L);
-	moonfltk_open_Text_Display(L);
-	moonfltk_open_Text_Editor(L);
-	moonfltk_open_Native_File_Chooser(L);
-	moonfltk_open_Handlers(L);
-	moonfltk_open_Table(L);
-	moonfltk_open_Subclass(L);
-	moonfltk_open_Chart(L);
-	moonfltk_open_Help_Dialog(L);
-	moonfltk_open_Help_View(L);
-	moonfltk_open_Tree(L);
+	moonfltk_open_main(L);
 	lua_setglobal(L, "fltk");
 }

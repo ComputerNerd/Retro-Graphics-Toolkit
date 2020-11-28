@@ -69,10 +69,12 @@ static int iqa_iqa_ssim(lua_State *L) {
 		int stride = dub::checkinteger(L, 5);
 		int gaussian = dub::checkinteger(L, 6);
 		iqa_ssim_args *args;
+
 		if (lua_type(L, 7) == LUA_TNIL)
 			args = nullptr;
 		else
 			args = *((iqa_ssim_args **)dub::checksdata(L, 7, "iqa.iqa_ssim_args"));
+
 		lua_pushnumber(L, iqa_ssim(ref, cmp, w, h, stride, gaussian, args));
 		return 1;
 	} catch (std::exception &e) {

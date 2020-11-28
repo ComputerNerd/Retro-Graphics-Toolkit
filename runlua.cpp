@@ -1070,7 +1070,6 @@ void runLua(lua_State*L, const char*str, bool isFile) {
 	}
 }
 
-lua_State* moonfltk_main_lua_state = 0;
 
 void registerProjectTables(lua_State*L) {
 	luaCreateProjectsTable(L);
@@ -1084,8 +1083,6 @@ lua_State*createLuaState(void) {
 	lua_State *L = lua_newstate(l_alloc, NULL);
 
 	if (L) {
-		moonfltk_main_lua_state = L;
-
 		lua_atpanic(L, &panic);
 		luaL_openlibs(L);
 

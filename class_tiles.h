@@ -78,7 +78,7 @@ public:
 	void remove_tile_at(uint32_t);
 	void truecolor_to_tile_ptr(unsigned palette_row, uint32_t cur_tile, uint8_t * tileinput, bool Usedither, bool isSprite, bool isIndexArray = false);
 	void truecolor_to_tile(unsigned, uint32_t, bool isSprite); /*!< truecolor_to_tile will update/dither the selected tile*/
-	void draw_truecolor(uint32_t, unsigned x, unsigned y, bool usehflip, bool usevflip, unsigned zoom);
+	void draw_truecolor(uint32_t tile, unsigned x, unsigned y, bool usehflip, bool usevflip, unsigned zoom);
 	void draw_tile(int x_off, int y_off, uint32_t tile_draw, unsigned zoom, unsigned pal_row, bool Usehflip, bool Usevflip, bool isSprite = false, bool alpha = false);
 	void hflip_truecolor(uint32_t, uint32_t *);
 	void vflip_truecolor(uint32_t, uint8_t *);
