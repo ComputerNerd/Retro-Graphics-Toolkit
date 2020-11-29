@@ -1028,9 +1028,11 @@ void runLuaFunc(lua_State*L, unsigned args, unsigned results) {
 		if (lua_pcall(L, args, results, 0) != LUA_OK)
 			luaL_error(L, "error: %s", lua_tostring(L, -1));
 	} catch (std::exception &e) {
-		fl_alert("Lua error: %s\nlua_tostring(): \%s", e.what(), lua_tostring(L, -1));
+		fprintf(stderr, "Lua error: %s\nlua_tostring(): %s\n", e.what(), lua_tostring(L, -1));
+		fl_alert("Lua error: %s\nlua_tostring(): %s", e.what(), lua_tostring(L, -1));
 	} catch (...) {
-		fl_alert("Lua error while running script\nthrow was called and the exception is unknown\nlua_tostring(): %s", lua_tostring(L, -1));
+		fprintf(stderr, "Lua error while running script\nthrow was called and the exception is unknown\nlua_tostring(): %s\n", lua_tostring(L, -1));
+		fl_alert("Lua error while running script\nthrow was called and the exception is unknown\nlua_tostring(): %s\n", lua_tostring(L, -1));
 	}
 }
 void runLua(lua_State*L, const char*str, bool isFile) {
@@ -1047,6 +1049,7 @@ void runLua(lua_State*L, const char*str, bool isFile) {
 
 			if (msg == NULL) msg = "(error object is not a string)";
 
+			fputs(msg, stderr);
 			fl_alert("%s", msg);
 			lua_pop(L, 1);
 		} else {
@@ -1059,13 +1062,16 @@ void runLua(lua_State*L, const char*str, bool isFile) {
 
 				if (msg == NULL) msg = "(error object is not a string)";
 
+				fputs(msg, stderr);
 				fl_alert("%s", msg);
 				lua_pop(L, 1);
 			}
 		}
 	} catch (std::exception &e) {
+		fprintf(stderr, "Lua error: %s\nlua_tostring(): \%s\n", e.what(), lua_tostring(L, -1));
 		fl_alert("Lua error: %s\nlua_tostring(): \%s", e.what(), lua_tostring(L, -1));
 	} catch (...) {
+		fprintf(stderr, "Lua error while running script\nthrow was called and the exception is unknown\nlua_tostring(): %s\n", lua_tostring(L, -1));
 		fl_alert("Lua error while running script\nthrow was called and the exception is unknown\nlua_tostring(): %s", lua_tostring(L, -1));
 	}
 }
