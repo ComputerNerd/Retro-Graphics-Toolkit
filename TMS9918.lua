@@ -16,6 +16,7 @@
 --]]
 
 function tms9918Graphics1RemapTiles(projectIDX, attrsByTile, forceKeepAllUnique)
+	local bgColLookFor = bit32.band(projects[projectIDX].palColTMS9918, 15)
 	-- attrsByTile starts with a table in the form of attrsByTile[attr] = {list of tiles with this attribute}
 	-- Force keep all means we should scan all true color tiles and keep all unique true color tiles.
 	
@@ -28,7 +29,23 @@ function tms9918Graphics1RemapTiles(projectIDX, attrsByTile, forceKeepAllUnique)
 
 	local tilesAddedToList = {} -- Keep track of tiles added to the list.
 	local blankTileSet = {}
+
+	local function processAttr(atr)
+		local bgcol = bit32.band(atr, 15)
+		local fgcol = bit32.band(bit32.rshift(atr, 4), 15)
+		if bgcol == bgColLookFor then
+			bgcol = 0
+		end
+		if fgcol == bgColLookFor then
+			fgcol = 0
+		end
+		local mic = math.min(bgcol, fgcol)
+		local mxc = math.max(bgcol, fgcol)
+		return bit32.bor(mic, bit32.lshift(mxc, 4))
+	end
+
 	for attr, tileIndices in pairs(attrsByTile) do
+		attr = processAttr(attr)
 		for k, tileIdx in ipairs(tileIndices) do
 			local rgbaData = ct[tileIdx].rgbaData
 			if rgbaData == blankRGBAtile then
@@ -50,7 +67,7 @@ function tms9918Graphics1RemapTiles(projectIDX, attrsByTile, forceKeepAllUnique)
 		for tileIdx = 1, #ct do
 			if tilesAddedToList[tileIdx] == nil then
 				local t = ct[tileIdx]
-				local attr = t.pixels[1]:getExtAttr() -- The reason it's part of pixels is for Graphics II mode so it can be indexed by a y value. In Graphics I mode getExtAttr will return the same value regardless of the y value.
+				local attr = processAttr(t.pixels[1]:getExtAttr()) -- The reason it's part of pixels is for Graphics II mode so it can be indexed by a y value. In Graphics I mode getExtAttr will return the same value regardless of the y value.
 
 				local rgbaData = t.rgbaData
 				if rgbaData == blankRGBAtile then
@@ -111,14 +128,13 @@ function tms9918Graphics1RemapTiles(projectIDX, attrsByTile, forceKeepAllUnique)
 			end
 
 			if hasBlankTile then
-				local bgCol = bit32.band(projects[projectIDX].palColTMS9918, 15)
 				for pi = 1, 8 do
-					table.insert(tilesFinal, {bgCol, blankRGBAtile, blankTile, blankTileList})
+					table.insert(tilesFinal, {bgColLookFor, blankRGBAtile, blankTile, blankTileList})
 				end
 			end
 		end
 	end
-	function sortTileList(a, b)
+	local function sortTileList(a, b)
 		if a[1] == b[1] then
 			if a[2] == b[2] then
 				return a[3] < b[3]
@@ -143,7 +159,6 @@ function tms9918Graphics1RemapTiles(projectIDX, attrsByTile, forceKeepAllUnique)
 	end
 
 	-- Attempt to make the blank tiles match the background color.
-	local bgColLookFor = bit32.band(projects[projectIDX].palColTMS9918, 15)
 	for newTileIdx, tileInfo in ipairs(tilesFinal) do
 		local bgColFound = bit32.band(tileInfo[1], 15)
 		if bgColLookFor == bgColFound then
