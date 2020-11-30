@@ -138,6 +138,7 @@ struct Project { /*!<Holds all data needed for a project based system for exampl
 	bool saveProjectFile(FILE * fo, bool saveShared, bool saveVersion = true);
 	void changeTileDim(unsigned w, unsigned h);
 	void setBGcolorTMS9918(uint8_t bgColVal);
+	void setGameSysTMS9918(enum TMS9918SubSys subSysOld);
 };
 extern std::vector<struct Project>* projects;
 extern struct Project * currentProject;

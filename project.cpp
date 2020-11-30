@@ -766,7 +766,7 @@ void switchProject(uint32_t id, uint32_t oldID, bool load) {
 			break;
 
 		case TMS9918:
-			setGameSysTMS9918(&prj);
+			prj.setGameSysTMS9918(prj.getTMS9918subSys());
 
 			if (window) {
 				window->subSysC->copy(subSysTMS9918);
@@ -931,7 +931,7 @@ bool Project::loadProjectFile(FILE * fi, bool loadVersion, uint32_t version) {
 			tileC = new tiles(this);
 
 			if (gameSystem == TMS9918)
-				setGameSysTMS9918(this);
+				setGameSysTMS9918(getTMS9918subSys());
 			else
 				tileC->changeDim(8, 8, getBitdepthSys());
 

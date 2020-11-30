@@ -64,40 +64,53 @@ Fl_Menu_Item subSysGenesis[] = {
 	{"Highlight", 0, setSegaPalType, (void*)sgSHmask},
 	{0}
 };
-void setGameSysTMS9918(Project*prj) {
-	enum TMS9918SubSys subSysnew = prj->getTMS9918subSys();
+void Project::setGameSysTMS9918(enum TMS9918SubSys subSysOld) {
+	enum TMS9918SubSys subSysnew = getTMS9918subSys();
+
+	if ((subSysOld == MODE_1) && (subSysnew == MODE_2)) {
+		// Duplicate each attribute 64 (8 tiles * 8 lines) times.
+		std::vector<uint8_t> newExtAttrs;
+		newExtAttrs.reserve(tileC->extAttrs.size() * 64);
+		for (unsigned i = 0; i < tileC->extAttrs.size(); ++i) {
+			for (unsigned j = 0; j < 64; ++j) {
+				newExtAttrs.emplace_back(tileC->extAttrs[i]);
+			}
+		}
+		tileC->extAttrs = newExtAttrs;
+	}
 
 	switch (subSysnew) {
 		case MODE_0:
 		case MODE_1:
 		case MODE_2:
-			prj->setBitdepthSys(1);
+			setBitdepthSys(1);
 			break;
 
 		case MODE_3:
-			prj->setBitdepthSys(4);
+			setBitdepthSys(4);
 			break;
 	}
 
 	switch (subSysnew) {
 		case MODE_0:
-			prj->changeTileDim(6, 8);
+			changeTileDim(6, 8);
 			break;
 
 		case MODE_1:
 		case MODE_2:
-			prj->changeTileDim(8, 8);
+			changeTileDim(8, 8);
 			break;
 
 		case MODE_3:
-			prj->changeTileDim(2, 2);
+			changeTileDim(2, 2);
 			break;
 	}
 }
 static void TMS9918SetSubSysCB(Fl_Widget*, void*sys) {
 	enum TMS9918SubSys subSysnew = (enum TMS9918SubSys)(uintptr_t)sys;
+	enum TMS9918SubSys subSysOld = currentProject->getTMS9918subSys();
 	currentProject->setTMS9918subSys(subSysnew);
-	setGameSysTMS9918(currentProject);
+	currentProject->setGameSysTMS9918(subSysOld);
 }
 Fl_Menu_Item subSysTMS9918[] = {
 	{"Mode 0 (Text)", 0, TMS9918SetSubSysCB, (void*)MODE_0},
