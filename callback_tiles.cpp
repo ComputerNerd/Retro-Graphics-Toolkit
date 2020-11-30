@@ -140,7 +140,7 @@ void set_tile_currentTP(Fl_Widget* o, void*) {
 
 	if (tileEditModePlace_G) {
 		pushTilemapEdit(selTileE_G[0], selTileE_G[1]);
-		currentProject->tms->maps[currentProject->curPlane].set_tile(selTileE_G[0], selTileE_G[1], window->getCurrentTileCurrentTab());
+		currentProject->tms->maps[currentProject->curPlane].set_tile(selTileE_G[0], selTileE_G[1], s->value());
 	}
 
 	palBar.updateColorSelectionTile(s->value(), 2);

@@ -77,6 +77,8 @@ function doAssignQue()
 			end
 		end
 	end
+	-- The tile select slider will change if a tile is selected in the tile map editor.
+	rgt.redraw()
 end
 doAssignQue()
 

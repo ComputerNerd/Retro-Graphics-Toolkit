@@ -377,6 +377,14 @@ void editor::draw_non_gui(void) {
 }
 
 void editor::draw() {
+
+	switch(mode_editor) {
+		case tile_place:
+			if (tileEditModePlace_G)
+				tile_select_2->value(getCurrentTileCurrentTab());
+			break;
+	}
+
 	if (damage() != FL_DAMAGE_USER1)
 		Fl_Double_Window::draw();
 
