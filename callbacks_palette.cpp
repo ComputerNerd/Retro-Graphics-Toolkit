@@ -246,16 +246,5 @@ void updateYselection(Fl_Widget*, void* tab) {
 
 void setBGcolorTMS9918(Fl_Widget*sliderWidget, void*) {
 	Fl_Slider * slider = (Fl_Slider*) sliderWidget;
-	uint8_t bgColVal = slider->value();
-	bgColVal &= 15; // Ensure that the value ranges from 0 to 15.
-	uint8_t oldBGFGval = currentProject->getPalColTMS9918();
-	oldBGFGval &= ~15; // Clear the old background color and preserve the foreground color.
-	currentProject->setPalColTMS9918(oldBGFGval | bgColVal);
-	memcpy(currentProject->pal->rgbPal, TMS9918Palette + (bgColVal * 3), 3); // Copy the selected color to the first entry.
-
-	for (unsigned i = 0; i < TABS_WITH_PALETTE; ++i)
-		palBar.slide[i][0]->value(bgColVal);
-
-	if (window)
-		window->damage(FL_DAMAGE_USER1);
+	currentProject->setBGcolorTMS9918(slider->value());
 }

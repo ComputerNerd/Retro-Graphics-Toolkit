@@ -111,8 +111,9 @@ function tms9918Graphics1RemapTiles(projectIDX, attrsByTile, forceKeepAllUnique)
 			end
 
 			if hasBlankTile then
+				local bgCol = bit32.band(projects[projectIDX].palColTMS9918, 15)
 				for pi = 1, 8 do
-					table.insert(tilesFinal, {0, blankRGBAtile, blankTile, blankTileList})
+					table.insert(tilesFinal, {bgCol, blankRGBAtile, blankTile, blankTileList})
 				end
 			end
 		end
@@ -138,6 +139,20 @@ function tms9918Graphics1RemapTiles(projectIDX, attrsByTile, forceKeepAllUnique)
 		t.data = tileInfo[3]
 		for unused, oldIdx in ipairs(tileInfo[4]) do
 			oldTileIdxToNew[oldIdx] = newTileIdx
+		end
+	end
+
+	-- Attempt to make the blank tiles match the background color.
+	local bgColLookFor = bit32.band(projects[projectIDX].palColTMS9918, 15)
+	for newTileIdx, tileInfo in ipairs(tilesFinal) do
+		local bgColFound = bit32.band(tileInfo[1], 15)
+		if bgColLookFor == bgColFound then
+			if tileInfo[2] == blankRGBAtile then
+				for bi = 1, #blankTileList do
+					oldTileIdxToNew[blankTileList[bi]] = newTileIdx
+				end
+				break
+			end
 		end
 	end
 

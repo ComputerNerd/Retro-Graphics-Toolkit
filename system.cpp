@@ -18,6 +18,7 @@
 #include "system.h"
 #include "errorMsg.h"
 #include "classpalettebar.h"
+#include "class_global.h"
 static void setbdmask(unsigned bd, unsigned mask, struct Project*p) {
 	if (bd > mask)
 		bd = mask;
@@ -287,5 +288,22 @@ void Project::getSpriteSizeMinMax(unsigned & minx, unsigned & miny, unsigned & m
 		default:
 			show_default_error
 
+	}
+}
+
+void Project::setBGcolorTMS9918(uint8_t bgColVal) {
+	bgColVal &= 15; // Ensure that the value ranges from 0 to 15.
+	uint8_t oldBGFGval = getPalColTMS9918();
+	oldBGFGval &= ~15; // Clear the old background color and preserve the foreground color.
+	setPalColTMS9918(oldBGFGval | bgColVal);
+
+	if (this == currentProject) {
+		memcpy(pal->rgbPal, TMS9918Palette + (bgColVal * 3), 3); // Copy the selected color to the first entry.
+
+		for (unsigned i = 0; i < TABS_WITH_PALETTE; ++i)
+			palBar.slide[i][0]->value(bgColVal);
+
+		if (window)
+			window->damage(FL_DAMAGE_USER1);
 	}
 }

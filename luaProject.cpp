@@ -34,6 +34,8 @@ static int project__set_(lua_State *L) {
 		prj.Name.assign(luaL_checkstring(L, 3));
 	else if (!strcmp("luaSettings", key))
 		prj.luaSettings = luaL_optinteger(L, 3, 0);
+	else if (!strcmp("palColTMS9918", key))
+		prj.setPalColTMS9918(luaL_optinteger(L, 3, 0));
 
 	return 0;
 }
@@ -156,7 +158,10 @@ static int project__get_(lua_State *L) {
 		} else if (!strcmp("stringStore", k)) {
 			luaopen_StringStore(L, projectIDX);
 			return 1;
-		}
+		} else if (!strcmp("palColTMS9918", k)) {
+			lua_pushinteger(L, prj.getPalColTMS9918());
+			return 1;
+		} 
 	}
 
 	return 0;
