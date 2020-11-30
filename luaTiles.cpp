@@ -135,10 +135,7 @@ static int tiles__get_(lua_State *L) {
 	} else if (type == LUA_TSTRING) {
 		const char*k = luaL_checkstring(L, 2);
 
-		if (!strcmp("current", k)) {
-			lua_pushinteger(L, prj.tileC->current_tile + 1);
-			return 1;
-		} else if (!strcmp("tileSize", k)) {
+		if (!strcmp("tileSize", k)) {
 			lua_pushinteger(L, prj.tileC->tileSize);
 			return 1;
 		} else if (!strcmp("tcSize", k)) {

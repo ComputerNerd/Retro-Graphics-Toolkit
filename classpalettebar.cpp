@@ -332,7 +332,7 @@ void paletteBar::checkBox(int x, int y, unsigned tab) {
 		extAttrTmp |= selBoxAlt[tab];
 
 		if (currentProject->tileC) {
-			currentProject->tileC->setExtAttr(currentProject->tileC->current_tile, slide[tab][1]->value(), extAttrTmp);
+			currentProject->tileC->setExtAttr(window->getCurrentTileCurrentTab(), slide[tab][1]->value(), extAttrTmp);
 			window->damage(FL_DAMAGE_USER1);
 		}
 	}

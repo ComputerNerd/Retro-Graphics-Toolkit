@@ -39,7 +39,6 @@
 tiles::tiles(struct Project*prj) {
 	this->prj = prj;
 
-	current_tile = 0;
 	tileSize = 0;
 	setDim(8, 8, prj->getBitdepthSys());
 }
@@ -52,7 +51,6 @@ void tiles::setWidth(unsigned w) {
 
 tiles::tiles(const tiles&other, Project*prj) {
 	this->prj = prj;
-	current_tile = other.current_tile;
 	tileSize = other.tileSize;
 
 	setWidth(other.width());

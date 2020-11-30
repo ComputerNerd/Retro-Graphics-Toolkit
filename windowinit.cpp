@@ -54,12 +54,10 @@ void set_mode_tabs(Fl_Widget*, void*) {
 			break;
 
 		case tile_edit:
-			currentProject->tileC->current_tile = window->tile_select->value();
 			palBar.updateSlider(1);
 			break;
 
 		case tile_place:
-			currentProject->tileC->current_tile = window->tile_select_2->value();
 			palBar.updateSlider(2);
 			break;
 

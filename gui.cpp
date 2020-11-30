@@ -123,11 +123,6 @@ void updateTileSelectAmt(uint32_t newMax) {
 
 		--newMax;
 
-		if (currentProject->tileC) { // This check is needed because this functions gets called in the constructor for the tiles class.
-			if (currentProject->tileC->current_tile > newMax)
-				currentProject->tileC->current_tile = newMax;
-		}
-
 		window->tile_select->maximum(newMax);
 		checkMaxSlider(newMax, window->tile_select);
 		window->tile_select_2->maximum(newMax);

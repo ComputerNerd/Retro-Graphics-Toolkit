@@ -95,15 +95,15 @@ void tilesnewfilppedCB(Fl_Widget*, void*) {
 	updateTileSelectAmt();
 }
 void insertTileCB(Fl_Widget*, void*) {
-	pushTilenew(currentProject->tileC->current_tile + 1);
-	currentProject->tileC->insertTile(currentProject->tileC->current_tile + 1);
+	pushTilenew(window->getCurrentTileCurrentTab() + 1);
+	currentProject->tileC->insertTile(window->getCurrentTileCurrentTab() + 1);
 	updateTileSelectAmt();
 	window->redraw();
 }
 void delete_tile_at_location(Fl_Widget*, void*) {
 	/* this function will delete the tile that the user has selected */
-	pushTile(currentProject->tileC->current_tile, tTypeDelete);
-	currentProject->tileC->remove_tile_at(currentProject->tileC->current_tile);
+	pushTile(window->getCurrentTileCurrentTab(), tTypeDelete);
+	currentProject->tileC->remove_tile_at(window->getCurrentTileCurrentTab());
 	window->redraw();
 }
 void new_tile(Fl_Widget*, void*) {
@@ -121,8 +121,8 @@ void update_truecolor(Fl_Widget* o, void* v) {
 }
 void blank_tile(Fl_Widget*, void*) {
 	//this will fill the current tile with zeros
-	pushTile(currentProject->tileC->current_tile, tTypeBoth);
-	currentProject->tileC->blank_tile(currentProject->tileC->current_tile);
+	pushTile(window->getCurrentTileCurrentTab(), tTypeBoth);
+	currentProject->tileC->blank_tile(window->getCurrentTileCurrentTab());
 	window->damage(FL_DAMAGE_USER1);
 }
 void update_offset_tile_edit(Fl_Widget*, void*) {
@@ -132,17 +132,15 @@ void update_offset_tile_edit(Fl_Widget*, void*) {
 }
 void set_tile_current(Fl_Widget* o, void*) {
 	Fl_Slider* s = (Fl_Slider*)o;
-	currentProject->tileC->current_tile = s->value();
 	palBar.updateColorSelectionTile(s->value(), 1);
 	window->redraw();
 }
 void set_tile_currentTP(Fl_Widget* o, void*) {
 	Fl_Slider* s = (Fl_Slider*)o;
-	currentProject->tileC->current_tile = s->value();
 
 	if (tileEditModePlace_G) {
 		pushTilemapEdit(selTileE_G[0], selTileE_G[1]);
-		currentProject->tms->maps[currentProject->curPlane].set_tile(selTileE_G[0], selTileE_G[1], currentProject->tileC->current_tile);
+		currentProject->tms->maps[currentProject->curPlane].set_tile(selTileE_G[0], selTileE_G[1], window->getCurrentTileCurrentTab());
 	}
 
 	palBar.updateColorSelectionTile(s->value(), 2);
@@ -180,26 +178,26 @@ void remove_duplicate_truecolor(Fl_Widget*, void*) {
 void fill_tile(Fl_Widget* o, void*) {
 	//fills tile with currently selected color
 	if (mode_editor == tile_place) {
-		pushTile(currentProject->tileC->current_tile, tTypeTile);
+		pushTile(window->getCurrentTileCurrentTab(), tTypeTile);
 		unsigned color;
 		color = palBar.selBox[2];
 
 		for (unsigned y = 0; y < currentProject->tileC->height(); ++y) {
 			for (unsigned x = 0; x < currentProject->tileC->width(); ++x)
-				currentProject->tileC->setPixel(currentProject->tileC->current_tile, x, y, color);
+				currentProject->tileC->setPixel(window->getCurrentTileCurrentTab(), x, y, color);
 		}
 	}
 	else if (mode_editor == tile_edit) {
-		pushTile(currentProject->tileC->current_tile, tTypeBoth);
+		pushTile(window->getCurrentTileCurrentTab(), tTypeBoth);
 
-		for (uint32_t x = currentProject->tileC->current_tile * currentProject->tileC->tcSize; x < (currentProject->tileC->current_tile * currentProject->tileC->tcSize) + currentProject->tileC->tcSize; x += 4) {
+		for (uint32_t x = window->getCurrentTileCurrentTab() * currentProject->tileC->tcSize; x < (window->getCurrentTileCurrentTab() * currentProject->tileC->tcSize) + currentProject->tileC->tcSize; x += 4) {
 			currentProject->tileC->truetDat[x] = truecolor_temp[0]; //red
 			currentProject->tileC->truetDat[x + 1] = truecolor_temp[1]; //green
 			currentProject->tileC->truetDat[x + 2] = truecolor_temp[2]; //blue
 			currentProject->tileC->truetDat[x + 3] = truecolor_temp[3]; //alpha
 		}
 
-		currentProject->tileC->truecolor_to_tile(palBar.selRow[1], currentProject->tileC->current_tile, false);
+		currentProject->tileC->truecolor_to_tile(palBar.selRow[1], window->getCurrentTileCurrentTab(), false);
 	} else
 		fl_alert("To prevent accidental modification be in the Tile editor or Tile map editor to use this");
 

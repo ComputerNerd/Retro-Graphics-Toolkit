@@ -59,7 +59,6 @@ public:
 	struct Project*prj;
 	unsigned tileSize;/*!< Sets the size of one tile in bytes 16 or 32 depends of if NES or Sega Genesis. */
 	unsigned tcSize; /*!< The size of one truecolor tile in bytes. */
-	uint32_t current_tile;/*!< The current tile that is being edited. */
 	std::vector<uint8_t>tDat;/*!< Tile data*/
 	std::vector<uint8_t>truetDat;/*< Truecolor tile data*/
 	std::vector<uint8_t>extAttrs;

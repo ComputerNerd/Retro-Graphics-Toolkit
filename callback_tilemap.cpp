@@ -84,7 +84,7 @@ void FixOutOfRangeCB(Fl_Widget*, void*) {
 	for (int y = 0; y < currentProject->tms->maps[currentProject->curPlane].mapSizeHA; ++y) {
 		for (int x = 0; x < currentProject->tms->maps[currentProject->curPlane].mapSizeW; ++x) {
 			if (currentProject->tms->maps[currentProject->curPlane].get_tile(x, y) >= currentProject->tileC->amount())
-				currentProject->tms->maps[currentProject->curPlane].set_tile_full(x, y, currentProject->tileC->current_tile, palBar.selRow[2], G_hflip[0], G_vflip[0], G_highlow_p[0]);
+				currentProject->tms->maps[currentProject->curPlane].set_tile_full(x, y, window->getCurrentTileCurrentTab(), palBar.selRow[2], G_hflip[0], G_vflip[0], G_highlow_p[0]);
 		}
 	}
 
@@ -188,7 +188,7 @@ void fill_tile_map_with_tile(Fl_Widget*, void*) {
 	if (fl_ask("This will erase the entire tilemap and fill it with the currently selected tile\nAre you sure you want to do this?")) {
 		for (uint32_t y = 0; y < currentProject->tms->maps[currentProject->curPlane].mapSizeHA; ++y) {
 			for (uint32_t x = 0; x < currentProject->tms->maps[currentProject->curPlane].mapSizeW; ++x)
-				currentProject->tms->maps[currentProject->curPlane].set_tile_full(x, y, currentProject->tileC->current_tile, palBar.selRow[2], G_hflip[0], G_vflip[0], G_highlow_p[0]);
+				currentProject->tms->maps[currentProject->curPlane].set_tile_full(x, y, window->getCurrentTileCurrentTab(), palBar.selRow[2], G_hflip[0], G_vflip[0], G_highlow_p[0]);
 		}
 
 		window->damage(FL_DAMAGE_USER1);

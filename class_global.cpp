@@ -12,8 +12,10 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2020)
 */
+#include <stdexcept>
+
 #include "class_global.h"
 #include "callback_chunk.h"
 #include "callbacksprites.h"
@@ -234,8 +236,8 @@ void editor::draw_non_gui(void) {
 			palBar.drawBoxes(1);
 
 			if (currentProject->tileC->tDat.size()) {
-				currentProject->tileC->draw_truecolor(currentProject->tileC->current_tile, tile_edit_truecolor_off_x, tile_edit_truecolor_off_y, false, false, tiles_size);
-				currentProject->tileC->draw_tile(tile_edit_offset_x, tile_edit_offset_y, currentProject->tileC->current_tile, tiles_size, palBar.selRow[1], false, false, false, false);
+				currentProject->tileC->draw_truecolor(getCurrentTileCurrentTab(), tile_edit_truecolor_off_x, tile_edit_truecolor_off_y, false, false, tiles_size);
+				currentProject->tileC->draw_tile(tile_edit_offset_x, tile_edit_offset_y, getCurrentTileCurrentTab(), tiles_size, palBar.selRow[1], false, false, false, false);
 
 				if (show_grid) {
 					if (tiles_size > 4) {
@@ -259,7 +261,7 @@ void editor::draw_non_gui(void) {
 			tile_placer_tile_offset_y = (double)((double)h() / 600.0) * (double)default_tile_placer_tile_offset_y;
 			palBar.drawBoxes(2);
 			//now draw the tile
-			currentProject->tileC->draw_tile(tile_placer_tile_offset_x, tile_placer_tile_offset_y, currentProject->tileC->current_tile, placer_tile_size, palBar.selRow[2], G_hflip[0], G_vflip[0]);
+			currentProject->tileC->draw_tile(tile_placer_tile_offset_x, tile_placer_tile_offset_y, getCurrentTileCurrentTab(), placer_tile_size, palBar.selRow[2], G_hflip[0], G_vflip[0]);
 			//convert position
 			map_off_y = (float)((float)h() / 600.f) * (float)default_map_off_y;
 			map_off_x = (float)((float)w() / 800.f) * (float)default_map_off_x;
@@ -432,7 +434,6 @@ void editor::updateTileMapGUI(uint32_t x, uint32_t y) {
 	uint32_t cT = currentProject->tms->maps[currentProject->curPlane].get_tile(x, y);
 	tile_select_2->value(cT);
 	palBar.updateColorSelectionTile(cT, 2);
-	currentProject->tileC->current_tile = cT;
 	uint8_t Rm = currentProject->tms->maps[currentProject->curPlane].getPalRow(x, y);
 	palBar.changeRow(Rm, 2);
 	unsigned focus = 0;
@@ -510,13 +511,13 @@ int editor::handle(int event) {
 						unsigned temp_two, temp_one;
 						temp_one = (Fl::event_x() - tile_edit_truecolor_off_x) / tiles_size;
 						temp_two = (Fl::event_y() - tile_edit_truecolor_off_y) / tiles_size;
-						pushTilePixel(currentProject->tileC->current_tile, temp_one, temp_two, tTypeTruecolor);
-						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one, temp_two, 0, currentProject->tileC->current_tile)] = truecolor_temp[0]; //red
-						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one, temp_two, 1, currentProject->tileC->current_tile)] = truecolor_temp[1]; //green
-						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one, temp_two, 2, currentProject->tileC->current_tile)] = truecolor_temp[2]; //blue
-						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one, temp_two, 3, currentProject->tileC->current_tile)] = truecolor_temp[3]; //alpha
-						pushTile(currentProject->tileC->current_tile, tTypeTile);
-						currentProject->tileC->truecolor_to_tile(palBar.selRow[1], currentProject->tileC->current_tile, false);
+						pushTilePixel(getCurrentTileCurrentTab(), temp_one, temp_two, tTypeTruecolor);
+						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one, temp_two, 0, getCurrentTileCurrentTab())] = truecolor_temp[0]; //red
+						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one, temp_two, 1, getCurrentTileCurrentTab())] = truecolor_temp[1]; //green
+						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one, temp_two, 2, getCurrentTileCurrentTab())] = truecolor_temp[2]; //blue
+						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one, temp_two, 3, getCurrentTileCurrentTab())] = truecolor_temp[3]; //alpha
+						pushTile(getCurrentTileCurrentTab(), tTypeTile);
+						currentProject->tileC->truecolor_to_tile(palBar.selRow[1], getCurrentTileCurrentTab(), false);
 						damage(FL_DAMAGE_USER1);
 					}
 
@@ -525,13 +526,13 @@ int editor::handle(int event) {
 						temp_one = (Fl::event_x() - tile_edit_offset_x) / tiles_size;
 						temp_two = (Fl::event_y() - tile_edit_offset_y) / tiles_size;
 						unsigned get_pal = palBar.getEntry(1) * 3;
-						pushTilePixel(currentProject->tileC->current_tile, temp_one, temp_two, tTypeTruecolor);
-						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one, temp_two, 0, currentProject->tileC->current_tile)] = currentProject->pal->rgbPal[get_pal]; //red
-						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one, temp_two, 1, currentProject->tileC->current_tile)] = currentProject->pal->rgbPal[get_pal + 1]; //green
-						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one, temp_two, 2, currentProject->tileC->current_tile)] = currentProject->pal->rgbPal[get_pal + 2]; //blue
-						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one, temp_two, 3, currentProject->tileC->current_tile)] = 255;
-						pushTile(currentProject->tileC->current_tile, tTypeTile);
-						currentProject->tileC->truecolor_to_tile(palBar.selRow[1], currentProject->tileC->current_tile, false);
+						pushTilePixel(getCurrentTileCurrentTab(), temp_one, temp_two, tTypeTruecolor);
+						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one, temp_two, 0, getCurrentTileCurrentTab())] = currentProject->pal->rgbPal[get_pal]; //red
+						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one, temp_two, 1, getCurrentTileCurrentTab())] = currentProject->pal->rgbPal[get_pal + 1]; //green
+						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one, temp_two, 2, getCurrentTileCurrentTab())] = currentProject->pal->rgbPal[get_pal + 2]; //blue
+						currentProject->tileC->truetDat[cal_offset_truecolor(temp_one, temp_two, 3, getCurrentTileCurrentTab())] = 255;
+						pushTile(getCurrentTileCurrentTab(), tTypeTile);
+						currentProject->tileC->truecolor_to_tile(palBar.selRow[1], getCurrentTileCurrentTab(), false);
 						damage(FL_DAMAGE_USER1);
 					}
 
@@ -552,7 +553,7 @@ int editor::handle(int event) {
 						if (Fl::event_button() == FL_LEFT_MOUSE) {
 							if (!((selTileE_G[0] == temp_one) && (selTileE_G[1] == temp_two) && tileEditModePlace_G)) {
 								pushTilemapEdit(temp_one, temp_two);
-								currentProject->tms->maps[currentProject->curPlane].set_tile_full(temp_one, temp_two, currentProject->tileC->current_tile, palBar.selRow[2], G_hflip[0], G_vflip[0], G_highlow_p[0]);
+								currentProject->tms->maps[currentProject->curPlane].set_tile_full(temp_one, temp_two, getCurrentTileCurrentTab(), palBar.selRow[2], G_hflip[0], G_vflip[0], G_highlow_p[0]);
 								setXYdispBlock(temp_one, temp_two);
 							}
 
@@ -581,8 +582,8 @@ int editor::handle(int event) {
 						if (G_vflip[0])
 							temp_two = 7 - temp_two;
 
-						pushTilePixel(currentProject->tileC->current_tile, temp_one, temp_two, tTypeTile);
-						currentProject->tileC->setPixel(currentProject->tileC->current_tile, temp_one, temp_two, palBar.selBox[2]);
+						pushTilePixel(getCurrentTileCurrentTab(), temp_one, temp_two, tTypeTile);
+						currentProject->tileC->setPixel(getCurrentTileCurrentTab(), temp_one, temp_two, palBar.selBox[2]);
 						damage(FL_DAMAGE_USER1);//no need to redraw the gui
 					}
 
@@ -710,4 +711,19 @@ int editor::handle(int event) {
 		return 1;
 
 	return 0;
+}
+unsigned editor::getCurrentTileCurrentTab()const {
+	switch (mode_editor) {
+		case tile_edit:
+			return tile_select->value();
+
+		case tile_place:
+			if (tileEditModePlace_G)
+				return currentProject->tms->maps[currentProject->curPlane].get_tile(selTileE_G[0], selTileE_G[1]);
+
+			return tile_select_2->value();
+
+		default:
+			throw new std::logic_error("Unexpected tab for getCurrentTileCurrentTab." + std::to_string(mode_editor));
+	}
 }

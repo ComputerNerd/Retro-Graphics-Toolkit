@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2020)
 */
 #include <FL/fl_ask.H>
 
@@ -108,7 +108,7 @@ void update_palette(Fl_Widget* o, void* v) {
 	currentProject->pal->changeIndexRaw((unsigned)s->value(), (unsigned)(uintptr_t)v, selectedEntry);
 
 	if (mode_editor == tile_edit)
-		currentProject->tileC->truecolor_to_tile(palBar.selRow[1], currentProject->tileC->current_tile, false); //update tile
+		currentProject->tileC->truecolor_to_tile(palBar.selRow[1], window->tile_select->value(), false); //update tile
 
 	window->redraw();//update the palette
 }
@@ -153,7 +153,7 @@ void set_tile_row(Fl_Widget*, void* row) {
 	switch (mode_editor) {
 		case tile_edit:
 			palBar.changeRow(selrow, 1);
-			currentProject->tileC->truecolor_to_tile(selrow, currentProject->tileC->current_tile, false);
+			currentProject->tileC->truecolor_to_tile(selrow, window->tile_select->value(), false);
 			break;
 
 		case tile_place:
@@ -180,7 +180,7 @@ void pickNearAlg(Fl_Widget*, void*) {
 	currentProject->settings &= ~(nearestColorSettingsMask << nearestColorShift);
 	currentProject->settings |= MenuPopup("Nearest color algorithm selection", "Select an algorithm", 4, old, "ciede2000", "Weighted", "Euclidean distance", "CIE76") << nearestColorShift;
 }
-static bool isModeEditor(void) {
+static bool checkTileEditMode(void) {
 	if (mode_editor != tile_edit) {
 		fl_alert("Be in Tile editor to use this.");
 		return false;
@@ -197,14 +197,14 @@ void rgb_pal_to_entry(Fl_Widget*, void*) {
 	if (currentProject->isFixedPalette())
 		return;
 
-	if (!isModeEditor())
+	if (!checkTileEditMode())
 		return;
 
 	unsigned ent = palBar.getEntry(1);
 	pushPaletteEntry(ent);
 	currentProject->pal->rgbToEntry(window->rgb_red->value(), window->rgb_green->value(), window->rgb_blue->value(), ent);
 	palBar.updateSlider(1);
-	currentProject->tileC->truecolor_to_tile(palBar.selRow[1], currentProject->tileC->current_tile, false);
+	currentProject->tileC->truecolor_to_tile(palBar.selRow[1], window->tile_select->value(), false);
 	window->redraw();
 }
 void entryToRgb(Fl_Widget*, void*) {
@@ -213,7 +213,7 @@ void entryToRgb(Fl_Widget*, void*) {
 		return;
 	}
 
-	if (!isModeEditor())
+	if (!checkTileEditMode())
 		return;
 
 	unsigned en = palBar.getEntry(1) * 3;
@@ -241,7 +241,7 @@ void clearPalette(Fl_Widget*, void*) {
 }
 
 void updateYselection(Fl_Widget*, void* tab) {
-	palBar.updateColorSelectionTile(currentProject->tileC->current_tile, (uintptr_t)tab);
+	palBar.updateColorSelectionTile(window->getCurrentTileCurrentTab(), (uintptr_t)tab);
 }
 
 void setBGcolorTMS9918(Fl_Widget*sliderWidget, void*) {

@@ -27,8 +27,8 @@ local function manIt(c_r,c_i,maxit)
 			zrsqr=square(z_r)
 			zisqr=square(z_i)
 			if (zrsqr + zisqr) > 4. then
-				local color=p*16777215//maxit
-				return color&255,(color>>8)&255,(color>>16)&255
+				local color = math.floor(p * 16777215 / maxit)
+				return bit32.band(color, 255), bit32.band(bit32.rshift(color, 8), 255), bit32.band(bit32.rshift(color, 16), 255)
 			end
 			if (z_r == ckr) and (z_i == cki) then
 				return 0,0,0

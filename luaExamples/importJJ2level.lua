@@ -311,6 +311,8 @@ if p:have(project.levelMask + project.chunksMask + project.mapMask + project.til
 		progress:label('Importing palette')
 		fltk.check()
 		p.palette:importRGB(rgbPalette, colorCnt, 0, colorCnt, 0, -1)
+		progress:label('Creating tables')
+		fltk.check()
 
 		local TileCount = strti(d:sub(1025, 1028))
 		if TileCount > maxTiles then
@@ -360,6 +362,8 @@ if p:have(project.levelMask + project.chunksMask + project.mapMask + project.til
 			o = o + 4
 		end
 
+		progress:label('Setting tilemap')
+		fltk.check()
 		-- Build the tilemap.
 		-- First we need to setup the tilemap for blocks of 32 / tilewidth, 32 / tileheight size. Then set the number of blocks to TileCount.
 		-- Afterwards we enable block mode then set the amount to TileCount.

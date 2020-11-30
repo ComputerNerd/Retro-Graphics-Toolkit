@@ -251,7 +251,7 @@ clearBtn:callback(clearCallback)
 
 tileScrollbar = fltk.scrollbar(8, 8, 28, 580)
 tileScrollbar:range(1, #tileClusters)
-tileScrollbar:step(1, 10)
+tileScrollbar:step(1, 1)
 tileScrollbar:callback(scrollbarUpdate)
 
 clusterTiles(0.6)

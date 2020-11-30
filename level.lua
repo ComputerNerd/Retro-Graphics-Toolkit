@@ -226,7 +226,7 @@ function drawLevel()
 			if src == level.TILES then
 				local tile = p.tiles[a.id + 1]
 				if tile ~= nil then
-					tile:draw(xxs, ys, lvlZoom, bit32.band(bit32.rshift(a.dat, 2), 3), bit32.band(a.dat, 1), bit32.band(a.dat, 2), false, false)
+					tile:draw(xxs, ys, lvlZoom, bit32.band(bit32.rshift(a.dat, 2), 3) + 1, bit32.band(a.dat, 1), bit32.band(a.dat, 2), false, false) -- +1 for the palette row because the first pallete row in Lua is 1 wheras in the data it starts with zero.
 				end
 			elseif src == level.BLOCKS then
 				p.tilemaps[plane + 1].drawBlock(a.id, xxs, ys, bit32.band(a.dat, 3), lvlZoom)

@@ -130,5 +130,6 @@ public:
 	editor(int X, int Y, int W, int H, const char *L = 0);
 	editor(int W, int H, const char *L = 0);
 	int handle(int);
+	unsigned getCurrentTileCurrentTab()const;
 };
 extern editor *window;
