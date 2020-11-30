@@ -143,7 +143,7 @@ function tms9918Graphics1RemapTiles(projectIDX, attrsByTile, forceKeepAllUnique)
 
 	extAttrsFinal = {}
 	for ti = 8, #tilesFinal, 8 do
-		extAttrsFinal[ti // 8] = string.char(tilesFinal[ti][1])
+		extAttrsFinal[math.floor(ti / 8)] = string.char(tilesFinal[ti][1])
 	end
 	ct.extAttrs = table.concat(extAttrsFinal)
 

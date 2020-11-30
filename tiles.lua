@@ -51,7 +51,7 @@ function loadTilesNoGUI(f, prj, offset, defaultRow, getRowFromTilemap, useAlphaZ
 	defaultRow = defaultRow + 1
 
 	local loadedTileData = f:dat(1)
-	local tilesLoaded = #loadedTileData // ct.tileSize
+	local tilesLoaded = math.floor(#loadedTileData / ct.tileSize)
 	ct:assignData(prj.tileType, offset, loadedTileData)
 	local rowMapping = {}
 	if getRowFromTilemap then

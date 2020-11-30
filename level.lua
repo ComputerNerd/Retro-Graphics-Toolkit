@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2019)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2020)
 --]]
 lvlCurLayer = 1
 editX,editY=0,0
@@ -22,8 +22,8 @@ function setSizePer()
 	local p = projects.current
 	local info = p.level.layers[lvlCurLayer].info
 
-	local src = info.src & 3
-	local plane = (info.src>>2) + 1
+	local src = bit32.band(info.src, 3)
+	local plane = bit32.rshift(info.src, 2) + 1
 
 	local chunks = p.chunks
 
@@ -94,7 +94,7 @@ function lvlsetlayer(layerIDX)
 	editX = math.max(0, math.min(editX, curLayerInfo.w - 1))
 	editY = math.max(0, math.min(editY, curLayerInfo.h - 1))
 
-	local layerSource = curLayerInfo.src & 3
+	local layerSource = bit32.band(curLayerInfo.src, 3)
 
 	lvlSrc:value(lvlSrcOptions[layerSource + 1])
 	setScrollBounds()
@@ -190,9 +190,9 @@ function selSlideUpdateMax(src)
 	if src == level.TILES then
 		selSlide:maximum(#p.tiles - 1)
 	elseif src == level.BLOCKS then
-		local plane=(curLayerInfo.src>>2)+1
+		local plane = bit32.band(curLayerInfo.src, 2) + 1
 		local tilemap = p.tilemaps[plane]
-		selSlide:maximum(tilemap.hAll // tilemap.h - 1)
+		selSlide:maximum(math.floor(tilemap.hAll / tilemap.h) - 1)
 	elseif src == level.CHUNKS then
 		selSlide:maximum(#chunks - 1)
 	else
@@ -211,25 +211,25 @@ function drawLevel()
 	end
 	local curLayerInfo = layer.info
 
-	xOff = 168 * rgt.w() // 800
-	yOff = 72 * rgt.h() // 600
+	xOff = 168 * math.floor(rgt.w() / 800)
+	yOff = 72 * math.floor(rgt.h() / 600)
 
 	setScrollBounds()
 	local xs = xOff
 	local ys = yOff
-	local src = curLayerInfo.src & 3
+	local src = bit32.band(curLayerInfo.src, 3)
 	for j = scrollY, curLayerInfo.h - 1 do
 		local xxs = xs
 		for i = scrollX, curLayerInfo.w - 1 do
 			local a = layer[j + 1][i + 1]
-			local plane = curLayerInfo.src >> 2
+			local plane = bit32.rshift(curLayerInfo.src, 2)
 			if src == level.TILES then
 				local tile = p.tiles[a.id + 1]
 				if tile ~= nil then
-					tile:draw(xxs, ys, lvlZoom, (a.dat>>2)&3, a.dat&1, a.dat&2, false, false)
+					tile:draw(xxs, ys, lvlZoom, bit32.band(bit32.rshift(a.dat, 2), 3), bit32.band(a.dat, 1), bit32.band(a.dat, 2), false, false)
 				end
 			elseif src == level.BLOCKS then
-				p.tilemaps[plane + 1].drawBlock(a.id, xxs, ys, a.dat & 3, lvlZoom)
+				p.tilemaps[plane + 1].drawBlock(a.id, xxs, ys, bit32.band(a.dat, 3), lvlZoom)
 			elseif src == level.CHUNKS then
 				local chunks = p.chunks
 				if a.id < #chunks then
@@ -360,8 +360,8 @@ function handleLevel(e)
 		if e==FL.PUSH then
 			x,y=Fl.event_x()-xOff,Fl.event_y()-yOff
 			if x>=0 and y>=0 then
-				x=(x//lvlZoom)+(scrollX*szX)
-				y=(y//lvlZoom)+(scrollY*szY)
+				x= math.floor(x / lvlZoom) + (scrollX*szX)
+				y= math.floor(y / lvlZoom) + (scrollY*szY)
 				level.appendObj(lvlCurLayer)
 				spriteSel:maximum(level.objamt[lvlCurLayer+1]-1)
 				spriteEdit=level.objamt[lvlCurLayer+1]-1
@@ -382,8 +382,8 @@ function handleLevel(e)
 		local layer
 		if e == FL.PUSH or e == FL.SHORTCUT then
 			x,y=Fl.event_x(),Fl.event_y()
-			x=((x-xOff)//(szX*lvlZoom))+scrollX
-			y=((y-yOff)//(szY*lvlZoom))+scrollY
+			x = math.floor((x-xOff) / (szX*lvlZoom)) + scrollX
+			y = math.floor((y-yOff) / (szY*lvlZoom)) + scrollY
 			if x < 0 or y < 0 then
 				return
 			end
@@ -463,17 +463,17 @@ end
 function setLayerSrc(valStr)
 	local p = projects.current
 	local curLayerInfo = p.level.layers[lvlCurLayer].info
-	local plane = (curLayerInfo.src >> 2) + 1
+	local plane = bit32.rshift(curLayerInfo.src, 2) + 1
 
 	local val = lvlSrcLUT[valStr]
 
 	if val == level.BLOCKS and p.tilemaps[plane].useBlocks ~= true then
 		fltk.alert("You must first enable blocks in the plane editor")
-		lvlSrc:value(lvlSrcOptions[(curLayerInfo.src & 3) + 1])
+		lvlSrc:value(lvlSrcOptions[bit32.band(curLayerInfo.src, 3) + 1])
 		return
 	end
 
-	curLayerInfo.src=(curLayerInfo.src&(~3))|val
+	curLayerInfo.src = bit32.replace(curLayerInfo.src, val, 0, 2)
 	rgt.syncProject()--Needed for selSlideUpdateMax
 	selSlideUpdateMax(val)
 	setSizePer()
@@ -509,8 +509,8 @@ function loadS1layoutFname(fname)
 		for j = 1, h do
 			for i = 1, w do
 				local info = layer[j][i]
-				info.id=str:byte(idx)&127
-				info.dat=str:byte(idx)&128
+				info.id = bit32.band(str:byte(idx), 127)
+				info.dat = bit32.band(str:byte(idx), 128)
 				idx=idx+1
 			end
 		end
@@ -518,11 +518,11 @@ function loadS1layoutFname(fname)
 end
 function loadS1layout(unused)
 	local p = projects.current
-	if p:have(project.levelMask|project.chunksMask) then
+	if p:have(project.levelMask + project.chunksMask) then
 		local fname = fl.file_chooser("Load layout")
 		loadS1layoutFname(fname)
 	else
-		project.haveMessage(project.levelMask|project.chunksMask)
+		project.haveMessage(project.levelMask + project.chunksMask)
 	end
 end
 function saveS1layout(unused)
@@ -541,7 +541,7 @@ function saveS1layout(unused)
 					local layerRow = layer[j]
 					for i=1, curLayerInfo.w do
 						local info = layerRow[i]
-						file:write(string.char((info.id&127)|(info.dat&128)))
+						file:write(string.char(bit32.bor(bit32.band(info.id, 127), bit32.band(info.dat, 128))))
 					end
 				end
 				file:close()

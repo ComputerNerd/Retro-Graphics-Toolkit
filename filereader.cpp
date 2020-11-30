@@ -26,6 +26,10 @@
 #include "gui.h"
 #include "luaconfig.h"
 #include "runlua.h"
+extern "C" {
+#include "compat-5.3.h"
+}
+
 filereader::filereader(boost::endian::order endian, unsigned bytesPerElement, const char*title, bool relptr, unsigned offbits, bool be, const char * filename, fileType_t forceType, CompressionType compression) {
 	char*fname = nullptr;
 

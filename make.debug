@@ -6,7 +6,7 @@ include Makefile.common
 
 CFLAGS += -Wall -Wextra -Wdouble-promotion -O0 -ggdb3 -Werror=implicit-function-declaration
 CXXFLAGS := $(CFLAGS) -fno-rtti -std=c++14
-LDFLAGS := -L/usr/lib/fltk/ -lfltk_images -lfltk -lpng -ljpeg -lXft -lXext -lXinerama -lX11 -lz -llua -ldl
+LDFLAGS := -L/usr/lib/fltk/ -lfltk_images -lfltk -lpng -ljpeg -lXft -lXext -lXinerama -lX11 -lz -lluajit-5.1 -ldl
 
 EXECUTABLE := RetroGraphicsToolkit
 all: $(EXECUTABLE)

@@ -6,7 +6,7 @@ include Makefile.common
 
 CFLAGS += -march=native -flto=8 -fuse-linker-plugin -s -O3 -pipe -march=native -fomit-frame-pointer
 CXXFLAGS := $(CFLAGS) -fno-rtti -std=gnu++14
-LDFLAGS := -flto=8 -O3 -march=native -fuse-linker-plugin -s -fno-rtti -std=gnu++14 -L/usr/lib/fltk/ -lfltk_images -lfltk -lpng -ljpeg -lXft -lXext -lXinerama -lX11 -lz -s -llua -ldl
+LDFLAGS := -flto=8 -O3 -march=native -fuse-linker-plugin -s -fno-rtti -std=gnu++14 -L/usr/lib/fltk/ -lfltk_images -lfltk -lpng -ljpeg -lXft -lXext -lXinerama -lX11 -lz -s -lluajit-5.1 -ldl
 
 EXECUTABLE := RetroGraphicsToolkit
 

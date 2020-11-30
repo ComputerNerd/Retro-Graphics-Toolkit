@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2020)
 */
 #include <FL/fl_ask.H>
 #include <cmath>//Mingw workaround
@@ -35,6 +35,10 @@
 #include "class_global.h"
 #include "luaconfig.h"
 #include "callbacklua.h"
+extern "C" {
+#include "compat-5.3.h"
+}
+
 void set_mode_tabs(Fl_Widget*, void*) {
 	Fl_Group * val = (Fl_Group*)(Fl_Tabs*)window->the_tabs->value();
 	uint32_t oldTab = mode_editor;

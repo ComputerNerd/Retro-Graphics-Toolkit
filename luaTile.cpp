@@ -23,6 +23,9 @@
 #include "project.h"
 #include "dub/dub.h"
 #include "CIE.h"
+extern "C" {
+#include "compat-5.3.h"
+}
 
 static unsigned inRangeTile(unsigned tile, size_t projectIDX) {
 	if (tile >= projects->at(projectIDX).tileC->amount()) {
@@ -115,12 +118,12 @@ static int lua_tile_drawTC(lua_State*L) {
 	size_t tile = idxPtr[1];
 
 	projects->at(projectIDX).tileC->draw_truecolor(tile,
-		luaL_optinteger(L, 2, 0), // X
+	        luaL_optinteger(L, 2, 0), // X
 	        luaL_optinteger(L, 3, 0), // Y
 	        lua_toboolean(L, 4), // Hflip
 	        lua_toboolean(L, 5), // Vflip
 	        luaL_optinteger(L, 6, 1) // Zoom
-		);
+	                                              );
 	return 0;
 }
 
@@ -189,6 +192,7 @@ static int lua_tile_rgbaGetChannel(lua_State*L) {
 	size_t tileIDX = idxPtr[1];
 
 	unsigned channel = luaL_checkinteger(L, 2) - 1;
+
 	if (channel >= 4) {
 		luaL_error(L, "Valid channel range is 1 to 4.");
 		return 0;
@@ -198,6 +202,7 @@ static int lua_tile_rgbaGetChannel(lua_State*L) {
 	finalTile.reserve(prj.tileC->tcSize / 4);
 
 	const uint8_t* tilePtr = (const uint8_t*)prj.tileC->getPixelPtrTC(tileIDX, 0, 0);
+
 	for (unsigned i = 0; i < prj.tileC->tcSize; i += 4) {
 		finalTile.emplace_back(tilePtr[channel]);
 		tilePtr += 4;

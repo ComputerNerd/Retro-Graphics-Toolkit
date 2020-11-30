@@ -17,6 +17,10 @@
 #include "runlua.h"
 #include "cbHelper.h"
 #include <stdexcept>
+extern "C" {
+#include "compat-5.3.h"
+}
+
 void luaWidgetCallbackHelper(Fl_Widget*, void*i) {
 	struct cbInfo*c = (struct cbInfo*)i;
 

@@ -25,6 +25,9 @@
 #include "callback_tilemap.h"
 #include "class_global.h" // For window.
 #include "errorMsg.h"
+extern "C" {
+#include "compat-5.3.h"
+}
 
 static int lua_tilemap_dither(lua_State*L) {
 	getProjectIDX

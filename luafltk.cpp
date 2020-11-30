@@ -21,6 +21,11 @@
 #include "dub/dub.h"
 #include "luafltk.hpp"
 #include "luaHelpers.hpp"
+extern "C" {
+#include "compat-5.3.h"
+}
+
+
 static int luafl_ask(lua_State*L) {
 	lua_pushboolean(L, fl_ask("%s", luaL_optstring(L, 1, "Default message")));
 	return 1;
@@ -805,7 +810,7 @@ static const keyPair FLconsts[] = {
 
 
 extern "C" {
-int moonfltk_open_main(lua_State *L);
+	int moonfltk_open_main(lua_State *L);
 }
 
 void createFLTKbindings(lua_State *L) {

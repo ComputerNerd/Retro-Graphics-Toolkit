@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2016)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2020)
 --]]
 
 --[[
@@ -24,6 +24,17 @@ Warning: This file is executed very early. Before the project objects are ready.
 --]]
 
 serpent = require("serpent.src.serpent")
+-- You must install compat53 and bit32 to use luajit.
+
+-- There are a few ways to go about this. One is to install locally. This is helpful if these libraries cannot be installed with your package manager and you don't want to run as root.
+-- luarocks --local --lua-version 5.1 install compat53
+-- luarocks --local --lua-version 5.1 install bit32
+-- Then prior to running Retro Graphics Toolkit run
+-- eval $(luarocks --lua-version 5.1 path)
+
+require("compat53")
+bit32 = require('bit32')
+
 
 Fl.scheme('plastic')
 if is_headless == 0 then

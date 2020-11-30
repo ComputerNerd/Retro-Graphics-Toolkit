@@ -13,3 +13,6 @@
 [submodule "serpent"]
 	path = serpent
 	url = https://github.com/pkulchenko/serpent
+[submodule "lua-compat-5.3"]
+	path = lua-compat-53
+	url = https://github.com/keplerproject/lua-compat-5.3

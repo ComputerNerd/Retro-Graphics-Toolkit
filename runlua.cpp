@@ -64,18 +64,13 @@
 #include "compressionWrapper.h"
 #include "filereader_filereader.hpp"
 #include "iqaLua.hpp"
+extern "C" {
+#include "compat-5.3.h"
+}
 
 static int panic(lua_State *L) {
 	fl_alert("PANIC: unprotected error in call to Lua API (%s)\n", lua_tostring(L, -1));
 	throw 0;//Otherwise abort() would be called when not needed
-}
-static void *l_alloc(void *ud, void *ptr, size_t osize, size_t nsize) {
-	if (nsize)
-		return realloc(ptr, nsize);
-	else {
-		free(ptr);
-		return nullptr;
-	}
 }
 static int lua_palette_fixSliders(lua_State*L) {
 	set_mode_tabs(0, 0);
@@ -1086,7 +1081,7 @@ void registerProjectTables(lua_State*L) {
 }
 
 lua_State*createLuaState(void) {
-	lua_State *L = lua_newstate(l_alloc, NULL);
+	lua_State *L = luaL_newstate();
 
 	if (L) {
 		lua_atpanic(L, &panic);
@@ -1180,8 +1175,8 @@ lua_State*createLuaState(void) {
 		lua_setglobal(L, "pwd");
 		luaopen_posix_errno(L);
 		lua_setglobal(L, "errno");
-		luaopen_posix_stdio(L);
-		lua_setglobal(L, "stdio");
+		/* luaopen_posix_stdio(L);
+		lua_setglobal(L, "stdio"); */
 		luaopen_posix_sched(L);
 		lua_setglobal(L, "sched");
 		luaopen_posix_fnmatch(L);

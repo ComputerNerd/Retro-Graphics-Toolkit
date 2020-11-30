@@ -82,22 +82,26 @@ doAssignQue()
 
 -- At this point trueColorTileList and the current tile data match so all we need to do is use the index in trueColorTileList instead of looking at oldIndices.
 
-differenceList = {}
 differenceByTileCombo = {}
 progress:minimum(1)
 progress:maximum(#trueColorTileList)
 progress:label("Comparing tiles")
+local rgbaByTileByChannel = {}
+for i = 1, #trueColorTileList do
+	local t = cts[i]
+	rgbaByTileByChannel[i] = {}
+	for c = 1, 4 do
+		rgbaByTileByChannel[i][c] = t:rgbaGetChannel(c)
+	end
+end
 for i = 1, #trueColorTileList do
 	for j = 1, #trueColorTileList do
 		if i > j then
 			local ssimMin = 1.0
-			local ti = cts[i]
-			local tj = cts[j]
 			for c = 1, 4 do
-				ssimMin = math.min(ssimMin, iqa.ssim(ti:rgbaGetChannel(c), tj:rgbaGetChannel(c), cts.width, cts.height, cts.width, 0, nil))
+				ssimMin = math.min(ssimMin, iqa.ssim(rgbaByTileByChannel[i][c], rgbaByTileByChannel[j][c], cts.width, cts.height, cts.width, 0, nil))
 			end
 			-- local dif = iqa.mse(trueColorTileList[i][1], trueColorTileList[j][1], cts.width, cts.height, cts.width)
-			table.insert(differenceList, {ssimMin, i, j})
 			if differenceByTileCombo[i] == nil then
 				differenceByTileCombo[i] = {}
 			end
@@ -111,9 +115,6 @@ function sortMostSimilarFirst(a, b)
 	return a[1] > b[1] -- for SSIM the closer to one the most similar
 	-- return a[1] < b[1] -- For MSE the smaller the number the closer it is.
 end
-progress:label("Sorting difference list")
-fltk.check()
-table.sort(differenceList, sortMostSimilarFirst)
 
 
 local tileClusters = {}

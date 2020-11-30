@@ -1,14 +1,16 @@
 function strti(i)
-	return i:byte(1,1)|(i:byte(2,2)<<8)|(i:byte(3,3)<<16)|(i:byte(4,4)<<24)
+	--return i:byte(1,1)|(i:byte(2,2)<<8)|(i:byte(3,3)<<16)|(i:byte(4,4)<<24)
+	return string.unpack('<I4', i)
 end
 function strts(i)
-	return i:byte(1,1)|(i:byte(2,2)<<8)
+	--return bit32.bor(i:byte(1,1), (i:byte(2,2)<<8))
+	return string.unpack('<I2', i)
 end
 function strtb(i)
 	return i:byte(1,1)
 end
 local p = projects.current
-if p:have(project.levelMask | project.chunksMask | project.mapMask | project.tilesMask) then
+if p:have(project.levelMask + project.chunksMask + project.mapMask + project.tilesMask) then
 	local fname=fl.file_chooser("Load j2l",'*.j2l')
 	if not (fname == nil or fname == '') then
 		local file=assert(io.open(fname,"rb"))
@@ -92,8 +94,8 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 		local valid,width,height,idx,validcnt,w4,inf,rw,i={},{},{},8404,0,{},{},{}
 		for i=1,8 do
 			inf[i]=strti(cd1:sub(idx,idx+3))
-			print('Info layer:',i,'Tile width',inf[i]&1,'Tile height',(inf[i]>>1)&1,'Limit visible region',(inf[i]>>2)&1,'Texture mode',(inf[i]>>3)&1,'Parallax stars',(inf[i]>>4)&1,'inf',inf[i])
-			idx=idx+4
+			-- print('Info layer:',i,'Tile width',inf[i]&1,'Tile height',(inf[i]>>1)&1,'Limit visible region',(inf[i]>>2)&1,'Texture mode',(inf[i]>>3)&1,'Parallax stars',(inf[i]>>4)&1,'inf',inf[i])
+			idx = idx + 4
 		end
 		idx=8444
 		for i=1,8 do
@@ -112,7 +114,7 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 		end
 		for i=1,8 do
 			rw[i]=strti(cd1:sub(idx,idx+3))
-			w4[i]=(rw[i]+3)//4
+			w4[i] = math.floor((rw[i] + 3) / 4)
 			idx=idx+4
 			print('Real width layer:',i,rw[i])
 		end
@@ -172,13 +174,13 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 				local tile=strts(cd3:sub(idx,idx+1))
 				local chunkEntry = chunks[i][1][j]
 				local flag
-				if tile & flipBit ~= 0 then
+				if bit32.band(tile, flipBit) ~= 0 then
 					flag = 1
 				else
 					flag = 0
 				end
 				chunkEntry.flag = flag
-				chunkEntry.block = (tile & tileMask) + 1 -- In Lua the first entry is one. In the JJ2 data the first entry is zero.
+				chunkEntry.block = bit32.band(tile, tileMask) + 1 -- In Lua the first entry is one. In the JJ2 data the first entry is zero.
 				idx=idx+2
 			end
 		end
@@ -277,7 +279,7 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 		local rgbPalette = {}
 		local rgbPalIdx = 1
 		for i = 1, 1024, 4 do
-			i4 = (i + 3) // 4
+			i4 = math.floor((i + 3) / 4)
 			PaletteColor[i4] = {}
 			PaletteColor[i4][1] = strtb(d:sub(i, i))
 			PaletteColor[i4][2] = strtb(d:sub(i + 1, i + 1))
@@ -289,7 +291,7 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 			rgbPalIdx = rgbPalIdx + 3
 		end
 
-		local colorCnt = #rgbPalette // 3
+		local colorCnt = math.floor(#rgbPalette / 3)
 		p.palette:importRGB(rgbPalette, colorCnt, 0, colorCnt, 0, -1)
 
 		local TileCount = strti(d:sub(1025, 1028))
@@ -309,7 +311,7 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 				fltk.alert('tileIdx must be a multiple of 1024')
 				return
 			end
-			tileLUT[i] = tileIdx // 1024
+			tileLUT[i] = math.floor(tileIdx / 1024)
 			o = o + 4
 		end
 
@@ -345,8 +347,8 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 		-- Afterwards we enable block mode then set the amount to TileCount.
 		local tilemap = p.tilemaps[1]
 		tilemap:setBlocksEnabled(false) -- Start with them disabled.
-		local tw = 32 // tiles.width
-		local th = 32 // tiles.height
+		local tw = math.floor(32 / tiles.width)
+		local th = math.floor(32 / tiles.height)
 		local downscale = math.floor(tonumber(fl.input(string.format('Downscale 1 to %d', tw))))
 		if tw % downscale ~= 0 then
 			fltk.alert('Invalid downscale.')
@@ -357,8 +359,8 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 			fltk.alert('Invalid downscale. 32 % downscale must == 0.')
 			return
 		end
-		tw = tw // downscale
-		th = th // downscale
+		tw = math.floor(tw / downscale)
+		th = math.floor(th / downscale)
 		tilemap:resize(tw, th)
 		tilemap.useBlocks = true -- Set the flag for use blocks. This only sets the flag so using this alone is bad.
 		tilemap:setBlocksEnabled(true) -- Ensure that any GUI updates take place. By first setting useBlocks we skip the GUI for asking how big the blocks should be.
@@ -383,7 +385,7 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 			fltk.alert('Not a multiple of 1024')
 			return
 		end
-		local tm = (32 // tiles.width // downscale) * (32 // tiles.height // downscale)
+		local tm = (math.floor(math.floor(32 / tiles.width) / downscale)) * (math.floor(math.floor(32 / tiles.height) / downscale))
 		tiles:setAmt(TileCount * tm)
 		for j = 0, TileCount -1 do
 			i = tileLUT[j + 1]
@@ -391,7 +393,7 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 			if downscale == 1 then
 				for y = 0, 31 do
 					for x = 0, 31 do
-						local tileIdx = (j * tm) + (x // tiles.width) + (y // tiles.height * tw) + 1
+						local tileIdx = (j * tm) + math.floor(x / tiles.width) + (math.floor(y / tiles.height) * tw) + 1
 						local palEnt = strtb(d:sub(iof, iof)) + 1
 						local tileRGBA = tiles[tileIdx].rgba
 						local tileRow = tileRGBA[y % tiles.height + 1]
@@ -430,13 +432,13 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 								b = b + fullresTile[y + yy][x + xx][3]
 							end
 						end
-						local tileIdx = (j * tm) + (x // tiles.width // downscale) + (y // tiles.height // downscale * tw) + 1
+						local tileIdx = (j * tm) + (math.floor(math.floor(x / tiles.width) / downscale)) + (math.floor(math.floor(y / tiles.height) / downscale) * tw) + 1
 						local tileRGBA = tiles[tileIdx].rgba
-						local tileRow = tileRGBA[y // downscale % tiles.height + 1]
-						local tilePixel = tileRow[x // downscale % tiles.width + 1]
-						tilePixel.r = r // ds2
-						tilePixel.g = g // ds2
-						tilePixel.b = b // ds2
+						local tileRow = tileRGBA[math.floor(y / downscale) % tiles.height + 1]
+						local tilePixel = tileRow[math.floor(x / downscale) % tiles.width + 1]
+						tilePixel.r = math.floor(r / ds2)
+						tilePixel.g = math.floor(g / ds2)
+						tilePixel.b = math.floor(b / ds2)
 						tilePixel.a = 255
 					end
 				end
@@ -457,15 +459,15 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 						if (x % 8 == 0) then
 							iof = iof + 1
 						end
-						local tileIdx = (j * tm) + (x // tiles.width) + (y // tiles.height * tw) + 1
+						local tileIdx = (j * tm) + math.floor(x / tiles.width) + (math.floor(y / tiles.height) * tw) + 1
 						local tileRGBA = tiles[tileIdx].rgba
 						local tileRow = tileRGBA[y % tiles.height + 1]
 						local tilePixel = tileRow[x % tiles.width + 1]
 
 						local tVal = strtb(d:sub(iof, iof))
-						local tMask = 1 << (x % 8)
+						local tMask = bit32.lshift(1, x % 8)
 						local aVal
-						if tVal & tMask ~= 0 then
+						if bit32.band(tVal, tMask) ~= 0 then
 							aVal = 255
 						else
 							aVal = 0
@@ -484,9 +486,9 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 						end
 
 						local tVal = strtb(d:sub(iof, iof))
-						local tMask = 1 << (x % 8)
+						local tMask = bit32.lshift(1, x % 8)
 						local aVal
-						if tVal & tMask ~= 0 then
+						if bit32.band(tVal, tMask) ~= 0 then
 							aVal = 255
 						else
 							aVal = 0
@@ -505,17 +507,17 @@ if p:have(project.levelMask | project.chunksMask | project.mapMask | project.til
 								a = a + fullresAlpha[y + yy][x + xx]
 							end
 						end
-						local tileIdx = (j * tm) + (x // tiles.width // downscale) + (y // tiles.height // downscale * tw) + 1
+						local tileIdx = (j * tm) + (math.floor(math.floor(x / tiles.width) / downscale)) + (math.floor(math.floor(y / tiles.height) / downscale) * tw) + 1
 						local tileRGBA = tiles[tileIdx].rgba
-						local tileRow = tileRGBA[y // downscale % tiles.height + 1]
-						local tilePixel = tileRow[x // downscale % tiles.width + 1]
+						local tileRow = tileRGBA[math.floor(y / downscale) % tiles.height + 1]
+						local tilePixel = tileRow[math.floor(x / downscale) % tiles.width + 1]
 
-						tilePixel.a = a // ds2
+						tilePixel.a = math.floor(a / ds2)
 					end
 				end
 			end
 		end
 	end
 else
-	p:haveMessage(project.levelMask | project.chunksMask | project.mapMask | project.tilesMask)
+	p:haveMessage(project.levelMask + project.chunksMask + project.mapMask + project.tilesMask)
 end
