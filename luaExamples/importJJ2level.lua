@@ -9,10 +9,20 @@ end
 function strtb(i)
 	return i:byte(1,1)
 end
+local progressWindow = fltk.window(400, 45, "Please Wait")
+local progress = fltk.progress(25, 7, 350, 30, "Reading File")
+progress:color(0x88888800)   -- background color
+progress:selection_color(0x4444ff00) -- progress bar color
+progress:labelcolor(fltk.WHITE)-- percent text color
+progressWindow:done()
+progressWindow:hide()
 local p = projects.current
 if p:have(project.levelMask + project.chunksMask + project.mapMask + project.tilesMask) then
 	local fname=fl.file_chooser("Load j2l",'*.j2l')
 	if not (fname == nil or fname == '') then
+		progressWindow:show()
+
+		fltk.check()
 		local file=assert(io.open(fname,"rb"))
 		local str=file:read('*a')
 		--[[char Copyright[180]; (1,180)
@@ -43,6 +53,8 @@ if p:have(project.levelMask + project.chunksMask + project.mapMask + project.til
 		local Udat3=strti(str:sub(251,254))
 		local Cdat4=strti(str:sub(255,258))
 		local Cdat4=strti(str:sub(255,258))
+		progress:label('Decompressing Data1')
+		fltk.check()
 		local cd1=zlib.inflate()(str:sub(263,263+Cdat1))
 		--[[  short JCSHorizontalOffset; // In pixels (1,2)
 		short Security1; // 0xBA00 if passworded, 0x0000 otherwise (3,4)
@@ -154,11 +166,13 @@ if p:have(project.levelMask + project.chunksMask + project.mapMask + project.til
 		end
 
 		local chunks = p.chunks
-		chunks:setWH(4,1)
-		chunks:setAmt(Udat3/8)
+		chunks:setWH(4, 1)
+		chunks:setAmt(math.floor(Udat3 / 8))
 		--TODO read data2 in order to work with parameters for sprite features
 
 		-- Read chunks
+		progress:label('Decompressing Data3')
+		fltk.check()
 		cd3=zlib.inflate()(str:sub(263+Cdat1+Cdat2,263+Cdat1+Cdat2+Cdat3))
 		idx=1
 		local flipBit
@@ -184,6 +198,8 @@ if p:have(project.levelMask + project.chunksMask + project.mapMask + project.til
 				idx=idx+2
 			end
 		end
+		progress:label('Decompressing Data4')
+		fltk.check()
 		cd4=zlib.inflate()(str:sub(263+Cdat1+Cdat2+Cdat3,263+Cdat1+Cdat2+Cdat3+Cdat4))
 		idx=1
 
@@ -292,6 +308,8 @@ if p:have(project.levelMask + project.chunksMask + project.mapMask + project.til
 		end
 
 		local colorCnt = math.floor(#rgbPalette / 3)
+		progress:label('Importing palette')
+		fltk.check()
 		p.palette:importRGB(rgbPalette, colorCnt, 0, colorCnt, 0, -1)
 
 		local TileCount = strti(d:sub(1025, 1028))
@@ -387,7 +405,10 @@ if p:have(project.levelMask + project.chunksMask + project.mapMask + project.til
 		end
 		local tm = (math.floor(math.floor(32 / tiles.width) / downscale)) * (math.floor(math.floor(32 / tiles.height) / downscale))
 		tiles:setAmt(TileCount * tm)
-		for j = 0, TileCount -1 do
+		progress:label('Setting tiles')
+		progress:minimum(0)
+		progress:maximum(TileCount - 1)
+		for j = 0, TileCount - 1 do
 			i = tileLUT[j + 1]
 			local iof = i * 1024 + 1
 			if downscale == 1 then
@@ -443,14 +464,13 @@ if p:have(project.levelMask + project.chunksMask + project.mapMask + project.til
 					end
 				end
 			end
-		end
-
-		if false then
-			return
+			progress:value(j)
+			fltk.check()
 		end
 
 		d = zlib.inflate()(str:sub(263 + CData1 + CData2, 263 + CData1 + CData2 + CData3))
 
+		progress:label('Setting alpha')
 		for j = 0, TileCount - 1 do
 			local iof = trLut[j + 1]
 			if downscale == 1 then
@@ -516,8 +536,12 @@ if p:have(project.levelMask + project.chunksMask + project.mapMask + project.til
 					end
 				end
 			end
+			progress:value(j)
+			fltk.check()
 		end
 	end
 else
 	p:haveMessage(project.levelMask + project.chunksMask + project.mapMask + project.tilesMask)
 end
+
+progressWindow:hide()
