@@ -722,6 +722,8 @@ unsigned editor::getCurrentTileCurrentTab()const {
 				return currentProject->tms->maps[currentProject->curPlane].get_tile(selTileE_G[0], selTileE_G[1]);
 
 			return tile_select_2->value();
+		case spriteEditor:
+			return spritest->value();
 
 		default:
 			throw new std::logic_error("Unexpected tab for getCurrentTileCurrentTab." + std::to_string(mode_editor));
