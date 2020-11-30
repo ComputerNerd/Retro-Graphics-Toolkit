@@ -36,7 +36,13 @@ function tms9918Graphics1RemapTiles(projectIDX, attrsByTile, forceKeepAllUnique)
 		if bgcol == bgColLookFor then
 			bgcol = 0
 		end
+		if (bgColLookFor == 0) and (bgcol == 1) then
+			bgcol = 0
+		end
 		if fgcol == bgColLookFor then
+			fgcol = 0
+		end
+		if (bgColLookFor == 0) and (fgcol == 1) then
 			fgcol = 0
 		end
 		local mic = math.min(bgcol, fgcol)
