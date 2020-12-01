@@ -377,11 +377,14 @@ void editor::draw_non_gui(void) {
 }
 
 void editor::draw() {
-
 	switch(mode_editor) {
+		case tile_edit:
+			palBar.updateColorSelectionTile(getCurrentTileCurrentTab(), tile_edit);
 		case tile_place:
 			if (tileEditModePlace_G)
 				tile_select_2->value(getCurrentTileCurrentTab());
+
+			palBar.updateColorSelectionTile(getCurrentTileCurrentTab(), tile_place);
 			break;
 	}
 
