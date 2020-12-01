@@ -409,7 +409,7 @@ void tiles::draw_truecolor(uint32_t tile_draw, unsigned x, unsigned y, bool useh
 	} else
 		fl_draw_image(grid, x, y, sizew * zoom, sizeh * zoom, 3);
 }
-void tiles::draw_tile(int x_off, int y_off, uint32_t tile_draw, unsigned zoom, unsigned pal_row, bool Usehflip, bool Usevflip, bool isSprite, bool alpha) {
+void tiles::draw_tile(int x_off, int y_off, uint32_t tile_draw, unsigned zoom, unsigned pal_row, bool Usehflip, bool Usevflip, bool isSprite, bool alpha, unsigned useColor)const {
 	static bool dontShow;
 
 	if (tile_draw >= amount()) {
@@ -441,25 +441,33 @@ void tiles::draw_tile(int x_off, int y_off, uint32_t tile_draw, unsigned zoom, u
 			unsigned rawP = getPixel(tile_draw, Usehflip ? (sizew - 1) - x : x, Usevflip ? (sizeh - 1) - y : y);
 			unsigned pixOff = rawP * 3;
 
-			if (prj->gameSystem == TMS9918 && prj->getTMS9918subSys() != MODE_3) {
+			if (prj->gameSystem == TMS9918 && (isSprite || (prj->getTMS9918subSys() != MODE_3))) {
+
 				unsigned palEnt;
 
-				switch (prj->getTMS9918subSys()) {
-					case MODE_0:
-						palEnt = prj->getPalColTMS9918(); // Only two colors supported for all tiles.
-						break;
+				if (isSprite)
+					palEnt = useColor << 4;
 
-					case MODE_1:
-						// Only one entry for every eight tiles.
-						palEnt = extAttrs[tile_draw / prj->extAttrTilesPerByte()];
-						break;
+				else {
 
-					case MODE_2:
-						palEnt = extAttrs[tile_draw * prj->extAttrBytesPerTile() + y];
-						break;
+					switch (prj->getTMS9918subSys()) {
+						case MODE_0:
+							palEnt = prj->getPalColTMS9918(); // Only two colors supported for all tiles.
+							break;
 
-					default:
-						show_default_error
+						case MODE_1:
+							// Only one entry for every eight tiles.
+							palEnt = extAttrs[tile_draw / prj->extAttrTilesPerByte()];
+							break;
+
+						case MODE_2:
+							palEnt = extAttrs[tile_draw * prj->extAttrBytesPerTile() + y];
+							break;
+
+						default:
+							show_default_error
+					}
+
 				}
 
 				if (pixOff)

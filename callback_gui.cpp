@@ -71,11 +71,12 @@ void Project::setGameSysTMS9918(enum TMS9918SubSys subSysOld) {
 		// Duplicate each attribute 64 (8 tiles * 8 lines) times.
 		std::vector<uint8_t> newExtAttrs;
 		newExtAttrs.reserve(tileC->extAttrs.size() * 64);
+
 		for (unsigned i = 0; i < tileC->extAttrs.size(); ++i) {
-			for (unsigned j = 0; j < 64; ++j) {
+			for (unsigned j = 0; j < 64; ++j)
 				newExtAttrs.emplace_back(tileC->extAttrs[i]);
-			}
 		}
+
 		tileC->extAttrs = newExtAttrs;
 	}
 
@@ -160,20 +161,14 @@ void setGameSystem(Project*prjPtr, uint32_t prjIdx, gameSystemEnum sel) {
 		palBar.setSys(true, true);
 	}
 
+
+
 	switch (sel) {
 		case segaGenesis:
 			bd = 4;
 			prjPtr->gameSystem = segaGenesis;
 			prjPtr->subSystem = 0;
 			prjPtr->setBitdepthSys(bd);
-
-			if (prjPtr->containsData(pjHaveSprites)) {
-				if (window) {
-					window->spritesize[0]->maximum(4);
-					window->spritesize[1]->maximum(4);
-				}
-
-			}
 
 			if (window) {
 				window->subSysC->copy(subSysGenesis);
@@ -199,14 +194,6 @@ void setGameSystem(Project*prjPtr, uint32_t prjIdx, gameSystemEnum sel) {
 					prjPtr->tms->maps[prjPtr->curPlane].resize_tile_map(prjPtr->tms->maps[prjPtr->curPlane].mapSizeW, prjPtr->tms->maps[prjPtr->curPlane].mapSizeHA + 1);
 			}
 
-			if (prjPtr->containsData(pjHaveSprites)) {
-				if (window) {
-					window->spritesize[0]->maximum(1);
-					window->spritesize[1]->maximum(2);
-				}
-
-			}
-
 			if (window) {
 				window->subSysC->copy(subSysNES);
 				window->subSysC->value(prjPtr->subSystem & NES2x2);
@@ -221,14 +208,6 @@ void setGameSystem(Project*prjPtr, uint32_t prjIdx, gameSystemEnum sel) {
 			bd = 4;
 			prjPtr->setBitdepthSys(bd);
 
-			if (prjPtr->containsData(pjHaveSprites)) {
-				if (window) {
-					window->spritesize[0]->maximum(2);
-					window->spritesize[1]->maximum(2);
-				}
-
-			}
-
 			break;
 
 		case TMS9918:
@@ -238,14 +217,6 @@ void setGameSystem(Project*prjPtr, uint32_t prjIdx, gameSystemEnum sel) {
 
 			bd = 1;
 			prjPtr->setBitdepthSys(bd);
-
-			if (prjPtr->containsData(pjHaveSprites)) {
-				if (window) {
-					window->spritesize[0]->maximum(2);
-					window->spritesize[1]->maximum(2);
-				}
-
-			}
 
 			if (window) {
 				window->subSysC->copy(subSysTMS9918);
@@ -285,10 +256,26 @@ void setGameSystem(Project*prjPtr, uint32_t prjIdx, gameSystemEnum sel) {
 
 	}
 
-	if (prjPtr->containsData(pjHaveSprites)) {
-		if (window && (prjIdx == curProjectID))
-			window->updateSpriteSliders();
+	if (prjPtr->containsData(pjHaveSprites) && (prjIdx == curProjectID) && window) {
+		unsigned minTilesX, minTilesY, maxTilesX, maxTilesY;
+		prjPtr->getSpriteSizeMinMax(minTilesX, minTilesY, maxTilesX, maxTilesY);
+		window->spritesize[0]->minimum(minTilesX);
+		window->spritesize[0]->maximum(maxTilesX);
+
+		window->spritesize[1]->minimum(minTilesY);
+		window->spritesize[1]->maximum(maxTilesY);
+
+		if (sel == TMS9918) {
+			window->spritepalrow->label("Color:");
+			window->spritepalrow->maximum(15);
+		} else {
+			window->spritepalrow->label("Palette row:");
+			window->spritepalrow->maximum(prjPtr->pal->getMaxRows(true) - 1); // We can always pass true to getMaxRows because it will still use the regular value when we don't have an alternative palette.
+		}
+
+		window->updateSpriteSliders();
 	}
+
 
 	if (prjPtr->isUniqueData(pjHaveTiles)) {
 		if ((!((sel == masterSystem || sel == gameGear) && (gold == NES) && prjPtr->isUniqueData(pjHaveMap))) && (bd == bdold))

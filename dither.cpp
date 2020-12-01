@@ -872,7 +872,7 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 			retPtr = malloc(w * h);
 	}
 
-	if ((currentProject->gameSystem == TMS9918) && (currentProject->getTMS9918subSys() == MODE_3))
+	if ((!isSprite) && (currentProject->gameSystem == TMS9918) && (currentProject->getTMS9918subSys() == MODE_3))
 		colSpace = true; // The entire palette is available for all pixels.
 
 	uint8_t*indexPtr = (uint8_t*)retPtr;
@@ -892,7 +892,7 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 	Fl_Progress *progress;
 	bool progressHave = false;
 	time_t lasttime = time(NULL);
-	bool haveExt = currentProject->hasExtAttrs();
+	bool haveExt = (!isSprite) && currentProject->hasExtAttrs();
 
 	switch (ditherAlg) {
 		case 7:
@@ -1256,6 +1256,12 @@ void*ditherImage(uint8_t * image, uint32_t w, uint32_t h, bool useAlpha, bool co
 							g_new = currentProject->pal->rgbPal[temp + 1];
 							b_new = currentProject->pal->rgbPal[temp + 2];
 							temp = 3 * ((temp / 3) == (extAttr >> 4));
+						} else if (isSprite && (currentProject->gameSystem == TMS9918)) {
+							temp = chooseTwoColor(0, pal_row, r_old, g_old, b_old) * 3;
+							r_new = currentProject->pal->rgbPal[temp];
+							g_new = currentProject->pal->rgbPal[temp + 1];
+							b_new = currentProject->pal->rgbPal[temp + 2];
+							temp = 3 * ((temp / 3) == pal_row);
 						} else {
 							temp = find_near_color_from_row_rgb(pal_row, r_old, g_old, b_old, (currentProject->pal->haveAlt) && isSprite);
 							r_new = currentProject->pal->rgbPal[temp];

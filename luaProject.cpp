@@ -12,7 +12,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
-	Copyright Sega16 (or whatever you wish to call me) (2012-2018)
+	Copyright Sega16 (or whatever you wish to call me) (2012-2020)
 */
 #include "dub/dub.h"
 #include "luaHelpers.hpp"
@@ -25,6 +25,7 @@
 #include "luaLevel.hpp"
 #include "project.h"
 #include "luaStringStore.hpp"
+#include "class_global.h"
 
 static int project__set_(lua_State *L) {
 	const char *key = luaL_checkstring(L, 2);
@@ -70,8 +71,19 @@ static int lua_project_setPalTab(lua_State*L) {
 }
 
 static int lua_project_setSpriteSizeID(lua_State*L) {
-	getProjectIDX
-	projects->at(projectIDX).setSpriteSizeID(luaL_optinteger(L, 2, 0));
+	getProjectRef
+	prj.setSpriteSizeID(luaL_optinteger(L, 2, 0));
+
+	if ((curProjectID == projectIDX) && prj.containsData(pjHaveSprites) && window) {
+		unsigned minTilesX, minTilesY, maxTilesX, maxTilesY;
+		prj.getSpriteSizeMinMax(minTilesX, minTilesY, maxTilesX, maxTilesY);
+		window->spritesize[0]->minimum(minTilesX);
+		window->spritesize[0]->maximum(maxTilesX);
+
+		window->spritesize[1]->minimum(minTilesY);
+		window->spritesize[1]->maximum(maxTilesY);
+	}
+
 	return 0;
 }
 
@@ -161,7 +173,7 @@ static int project__get_(lua_State *L) {
 		} else if (!strcmp("palColTMS9918", k)) {
 			lua_pushinteger(L, prj.getPalColTMS9918());
 			return 1;
-		} 
+		}
 	}
 
 	return 0;

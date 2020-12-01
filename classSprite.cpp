@@ -65,7 +65,7 @@ void sprite::draw(unsigned x, unsigned y, unsigned zoom) {
 			t += h - 1;
 
 		for (unsigned j = 0; j < h; ++j) {
-			prj->tileC->draw_tile(x, yy, t, zoom, palrow, hflip, vflip, true);
+			prj->tileC->draw_tile(x, yy, t, zoom, palrow, hflip, vflip, true, false, palrow);
 			yy += prj->tileC->height() * zoom;
 
 			if (vflip)

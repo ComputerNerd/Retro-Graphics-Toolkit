@@ -377,9 +377,10 @@ void editor::draw_non_gui(void) {
 }
 
 void editor::draw() {
-	switch(mode_editor) {
+	switch (mode_editor) {
 		case tile_edit:
 			palBar.updateColorSelectionTile(getCurrentTileCurrentTab(), tile_edit);
+
 		case tile_place:
 			if (tileEditModePlace_G)
 				tile_select_2->value(getCurrentTileCurrentTab());
@@ -733,6 +734,7 @@ unsigned editor::getCurrentTileCurrentTab()const {
 				return currentProject->tms->maps[currentProject->curPlane].get_tile(selTileE_G[0], selTileE_G[1]);
 
 			return tile_select_2->value();
+
 		case spriteEditor:
 			return spritest->value();
 
