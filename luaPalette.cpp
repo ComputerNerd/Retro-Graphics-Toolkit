@@ -104,6 +104,27 @@ static int lua_palette_importRGB(lua_State*L) {
 	return 0;
 }
 
+static int lua_palette_getSystemColors(lua_State*L) {
+	getProjectRef
+	if (prj.gameSystem != TMS9918)
+		return luaL_error(L, "Not implemented");
+
+	const uint8_t* colorPtr = TMS9918Palette;
+
+	lua_newtable(L);
+	for (unsigned i = 1; i <= 16; ++i) {
+		lua_newtable(L);
+		for (unsigned j = 1; j <= 3; ++j) {
+			lua_pushinteger(L, *colorPtr++);
+			lua_rawseti(L, -2, j);
+		}
+		lua_rawseti(L, -2, i);
+	}
+
+	return 1;
+	
+}
+
 static int palette__get_(lua_State *L) {
 	checkAlreadyExists
 
@@ -183,6 +204,7 @@ static const struct luaL_Reg palette_member_methods[] = {
 	{ "valueToRGB", lua_palette_valueToRGB},
 	{ "rgbToNearestSystemColor", lua_palette_rgbToNearestSystemColor},
 	{ "importRGB", lua_palette_importRGB},
+	{ "getSystemColors", lua_palette_getSystemColors},
 	{ "deleted", dub::isDeleted    },
 	{ NULL, NULL},
 };

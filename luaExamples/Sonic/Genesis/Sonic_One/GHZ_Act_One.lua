@@ -7,13 +7,13 @@ if not (dir == nil or dir == '') then
 
 	loadTiles(dir, 'GHZ')
 
-	loadTilesOffset(dir, 'GHZ Flower Large', 0x6B80 // 32, 'artunc')
-	loadTilesOffset(dir, 'GHZ Flower Small', 0x6D80 // 32, 'artunc')
-	loadTilesOffset(dir, 'GHZ Waterfall', 0x6F00 // 32, 'artunc')
+	loadTilesOffset(dir, 'GHZ Flower Large', math.floor(0x6B80 / 32), 'artunc')
+	loadTilesOffset(dir, 'GHZ Flower Small', math.floor(0x6D80 / 32), 'artunc')
+	loadTilesOffset(dir, 'GHZ Waterfall', math.floor(0x6F00 / 32), 'artunc')
 
 
-	loadTilesOffset(dir, 'GHZ Flower Stalk', 0x6B00 // 32, 'artnem')
-	loadTilesOffset(dir, 'GHZ Purple Rock', 0x7A00 // 32, 'artnem')
+	loadTilesOffset(dir, 'GHZ Flower Stalk', math.floor(0x6B00 / 32), 'artnem')
+	loadTilesOffset(dir, 'GHZ Purple Rock', math.floor(0x7A00 / 32), 'artnem')
 
 	loadChunks(dir, 'GHZ')
 

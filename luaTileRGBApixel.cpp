@@ -89,6 +89,9 @@ static int tileRGBApixel__get_(lua_State *L) {
 		} else if (!strcmp("b", k)) {
 			lua_pushinteger(L, rgbaPixel[2]);
 			return 1;
+		} else if (!strcmp("a", k)) {
+			lua_pushinteger(L, rgbaPixel[3]);
+			return 1;
 		}
 	}
 

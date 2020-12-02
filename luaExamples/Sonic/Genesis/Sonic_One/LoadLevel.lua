@@ -16,7 +16,7 @@ function loadTilemap(rootDir, levelName)
 		tm.useBlocks = true -- Set the flag for use blocks. This only sets the flag so using this alone is bad.
 		tm:setBlocksEnabled(true) -- Ensure that any GUI updates take place. By first setting useBlocks we skip the GUI for asking how big the blocks should be.
 		local blockData = f:dat(1)
-		local blocksAmt = #blockData // 8
+		local blocksAmt = math.floor(#blockData / 8)
 		tm:setBlocksAmt(blocksAmt)
 		local tmTab = rgt.stringToTable16(blockData)
 		local idx = 1
@@ -25,13 +25,13 @@ function loadTilemap(rootDir, levelName)
 			for x = 1, 2 do
 				local te = tr[x]
 				local v = tmTab[idx]
-				te.tile = (v & 2047) + 1
-				v = v >> 11
-				te.hflip = (v & 1) ~= 0
-				te.vflip = (v & 2) ~= 0
-				v = v >> 2
-				te.row = (v & 3) + 1
-				te.priority = (v & 4) ~= 0
+				te.tile = bit32.band(v, 2047) + 1
+				v = bit32.rshift(v, 11)
+				te.hflip = bit32.band(v, 1) ~= 0
+				te.vflip = bit32.band(v, 2) ~= 0
+				v = bit32.rshift(v, 2)
+				te.row = bit32.band(v, 3) + 1
+				te.priority = bit32.band(v, 4) ~= 0
 
 				idx = idx + 1
 			end
@@ -84,8 +84,8 @@ function loadTilesOffset(rootDir, fname, offset, folder)
 end
 
 function loadChunks(rootDir, levelName)
-	local map16Fname = rootDir .. '/map256/' .. levelName .. '.bin'
-	local f = filereader(endians.big, 2, "", false, 16, true, map16Fname, rgt.tBinary, compressionType.kosinski)
+	local map256Fname = rootDir .. '/map256/' .. levelName .. '.bin'
+	local f = filereader(endians.big, 2, "", false, 16, true, map256Fname, rgt.tBinary, compressionType.kosinski)
 	if f.amt > 0 then
 		local cc = projects.current.chunks
 		cc:setWH(16, 16)
@@ -93,7 +93,7 @@ function loadChunks(rootDir, levelName)
 		cc.usePlane = projects.current.tilemaps.currentIdx
 
 		local loadedData = f:dat(1)
-		local chunkCnt = #loadedData // 512 
+		local chunkCnt = math.floor(#loadedData / 512)
 		cc:setAmt(chunkCnt + 1) -- Chunk zero needs to be blank otherwise the level doesn't load right.
 		
 		local cTab = rgt.stringToTable16(loadedData)
@@ -105,8 +105,8 @@ function loadChunks(rootDir, levelName)
 				for x = 1, 16 do
 					local cx = cy[x]
 					local v = cTab[idx]
-					cx.block = (v & 1023) + 1
-					cx.flag = (v >> 11) & 15 -- The format of the flags match the Sonic 1 format.
+					cx.block = bit32.band(v, 1023) + 1
+					cx.flag = bit32.band(bit32.rshift(v, 11), 15) -- The format of the flags match the Sonic 1 format.
 					
 					idx = idx + 1
 				end
