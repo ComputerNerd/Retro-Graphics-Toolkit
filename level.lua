@@ -224,7 +224,7 @@ function drawLevel()
 			local a = layer[j + 1][i + 1]
 			local plane = bit32.rshift(curLayerInfo.src, 2)
 			if src == level.TILES then
-				local tile = p.tiles[a.id + 1]
+				local tile = p.tiles[a.id]
 				if tile ~= nil then
 					tile:draw(xxs, ys, lvlZoom, bit32.band(bit32.rshift(a.dat, 2), 3) + 1, bit32.band(a.dat, 1), bit32.band(a.dat, 2), false, false) -- +1 for the palette row because the first pallete row in Lua is 1 wheras in the data it starts with zero.
 				end
@@ -232,10 +232,10 @@ function drawLevel()
 				p.tilemaps[plane + 1].drawBlock(a.id, xxs, ys, bit32.band(a.dat, 3), lvlZoom)
 			elseif src == level.CHUNKS then
 				local chunks = p.chunks
-				if a.id < #chunks then
-					chunks[a.id + 1]:draw(xxs,ys,lvlZoom,0,0)
+				if a.id <= #chunks then
+					chunks[a.id]:draw(xxs,ys,lvlZoom,0,0)
 				else
-					print('a.id>=chunks.amt',a.id,#chunks)
+					print('a.id > chunks.amt',a.id, #chunks)
 				end
 			else
 				invalidSource(src)
@@ -398,7 +398,7 @@ function handleLevel(e)
 			if Fl.event_button()==FL.LEFT_MOUSE then
 				if not (editModeLevel and editX==x and editY==y) then
 					local info = layer[y + 1][x + 1]
-					info.id=selectedIdx
+					info.id = selectedIdx + 1
 				end
 				editModeLevel=false
 			else
@@ -447,11 +447,11 @@ function handleLevel(e)
 						shouldDamage = true
 					end
 				end
-				selectedIdx=idBondsChk(info.id+addT)
+				selectedIdx=idBondsChk(info.id + addT)
 				info.id=selectedIdx
 				selSlide:value(selectedIdx)
 			else
-				selectedIdx=idBondsChk(info.id+addT)
+				selectedIdx=idBondsChk(info.id + addT)
 				selSlide:value(selectedIdx)
 			end
 		end
@@ -509,7 +509,7 @@ function loadS1layoutFname(fname)
 		for j = 1, h do
 			for i = 1, w do
 				local info = layer[j][i]
-				info.id = bit32.band(str:byte(idx), 127)
+				info.id = bit32.band(str:byte(idx), 127) + 1
 				info.dat = bit32.band(str:byte(idx), 128)
 				idx=idx+1
 			end
@@ -541,7 +541,7 @@ function saveS1layout(unused)
 					local layerRow = layer[j]
 					for i=1, curLayerInfo.w do
 						local info = layerRow[i]
-						file:write(string.char(bit32.bor(bit32.band(info.id, 127), bit32.band(info.dat, 128))))
+						file:write(string.char(bit32.bor(bit32.band(info.id - 1, 127), bit32.band(info.dat, 128))))
 					end
 				end
 				file:close()

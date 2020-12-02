@@ -43,6 +43,30 @@ static int lua_tilePixels_asGrayscale(lua_State*L) {
 	return 1;
 }
 
+static int lua_tilePixels_rgbaGetChannel(lua_State*L) {
+	getProjectRef
+	size_t tileIDX = idxPtr[1];
+
+	unsigned channel = luaL_checkinteger(L, 2) - 1;
+
+	std::vector<uint8_t> tmpTile;
+	tmpTile.resize(prj.tileC->tcSize);
+	prj.tileC->tileToTrueCol(prj.tileC->tDat.data() + (tileIDX * prj.tileC->tileSize), tmpTile.data(), luaL_checkinteger(L, 3) - 1, true, true);
+
+	std::vector<uint8_t> finalTile;
+	finalTile.reserve(prj.tileC->tcSize / 4);
+
+	const uint8_t* tilePtr = tmpTile.data();
+
+	for (unsigned i = 0; i < prj.tileC->tcSize; i += 4) {
+		finalTile.emplace_back(tilePtr[channel]);
+		tilePtr += 4;
+	}
+
+	lua_pushlstring(L, (const char*)finalTile.data(), finalTile.size());
+	return 1;
+}
+
 static int tilePixels__get_(lua_State *L) {
 	checkAlreadyExists
 
@@ -80,6 +104,7 @@ static const struct luaL_Reg tilePixels_member_methods[] = {
 	{ "__len", tilePixels__len_       },
 	{ "__tostring", tilePixels___tostring  },
 	{ "asGrayscale", lua_tilePixels_asGrayscale},
+	{ "rgbaGetChannel", lua_tilePixels_rgbaGetChannel},
 	{ "deleted", dub::isDeleted    },
 	{ NULL, NULL},
 };

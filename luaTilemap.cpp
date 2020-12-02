@@ -127,7 +127,7 @@ static int lua_tilemaps_setBlocksEnabled(lua_State*L) {
 static int lua_tilemap_drawBlock(lua_State*L) {
 	getProjectIDX
 	size_t tilemapIDX = idxPtr[1];
-	projects->at(projectIDX).tms->maps[tilemapIDX].drawBlock(luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0), luaL_optinteger(L, 5, 0), luaL_optinteger(L, 6, 0));
+	projects->at(projectIDX).tms->maps[tilemapIDX].drawBlock(luaL_optinteger(L, 2, 1) - 1, luaL_optinteger(L, 3, 0), luaL_optinteger(L, 4, 0), luaL_optinteger(L, 5, 0), luaL_optinteger(L, 6, 0));
 	return 0;
 }
 static int lua_tilemap_subTile(lua_State*L) {

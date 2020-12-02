@@ -23,7 +23,7 @@ static int levDat__set_(lua_State *L) {
 		case 1: {
 			if (DUB_ASSERT_KEY(key, "id")) break;
 
-			self->id = luaL_checkinteger(L, 3);
+			self->id = luaL_checkinteger(L, 3) - 1;
 			return 0;
 		}
 
@@ -85,7 +85,7 @@ static int levDat__get_(lua_State *L) {
 		case 1: {
 			if (DUB_ASSERT_KEY(key, "id")) break;
 
-			lua_pushinteger(L, self->id);
+			lua_pushinteger(L, self->id + 1);
 			return 1;
 		}
 
