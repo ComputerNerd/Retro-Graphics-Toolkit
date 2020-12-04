@@ -15,7 +15,9 @@
 	Copyright Sega16 (or whatever you wish to call me) (2012-2020)
 --]]
 function userGuide(userData)--callback functions **must** have the user data (name does not matter) parameter and only that.
-	fltk.alert("The user's guide can be found on the wiki https://github.com/ComputerNerd/Retro-Graphics-Toolkit/wiki or locally in the Manual folder");
+	local help = fltk.help_dialog()
+	help:load("help.html")
+	help:show()
 end
 function allMetaDither(unused)
 	local p = projects.current

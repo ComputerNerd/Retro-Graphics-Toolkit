@@ -43,7 +43,7 @@
 #ifdef WIN32
 
 #include <windows.h>
-#define IQA_INLINE __inline
+#define IQA_INLINE inline
 
 #ifndef INFINITY
     #define INFINITY (float)HUGE_VAL /**< Defined in C99 (Windows is C89) */
@@ -54,7 +54,7 @@
     #define NAN (*(const float *) __nan) /**< Defined in C99 (Windows is C99) */
 #endif
 
-#define IQA_EXPORT __declspec(dllexport)
+#define IQA_EXPORT
 
 #else /* !Windows */
 

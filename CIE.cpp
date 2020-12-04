@@ -47,7 +47,7 @@
  */
 #define GAMMACORRECTION(t)	\
 	(((t) <= 0.0031306684425005883) ? \
-	(12.92*(t)) : (1.055*pow((t), 0.416666666666666667) - 0.055))
+	(12.92*(t)) : (1.055*std::pow((t), 0.416666666666666667) - 0.055))
 
 
 /**
@@ -55,14 +55,14 @@
  */
 #define INVGAMMACORRECTION(t)	\
 	(((t) <= 0.0404482362771076) ? \
-	((t)/12.92) : pow(((t) + 0.055)/1.055, 2.4))
+	((t)/12.92) : std::pow(((t) + 0.055)/1.055, 2.4))
 /** @brief XYZ color of the D65 white point */
 #define WHITEPOINT_X	0.950456
 #define WHITEPOINT_Y	1.0
 #define WHITEPOINT_Z	1.088754
 #define LABF(t)	\
 	((t >= 8.85645167903563082e-3) ? \
-	pow(t,0.333333333333333) : (841.0/108.0)*(t) + (4.0/29.0))
+	std::pow(t,0.333333333333333) : (841.0/108.0)*(t) + (4.0/29.0))
 /**
  * @brief CIE L*a*b* inverse f function
  * http://en.wikipedia.org/wiki/Lab_color_space
@@ -173,7 +173,7 @@ void Lab2Rgb(double *R, double *G, double *B, double L, double a, double b) {
 	Xyz2Rgb(R, G, B, X, Y, Z);
 }
 static uint8_t dToClip(double val) {
-	long v = lround(val * 255.0);
+	long v = std::lround(val * 255.0);
 
 	if (v < 0)
 		v = 0;
@@ -205,8 +205,8 @@ static void Xyz2Lch(double *L, double *C, double *H, double X, double Y, double 
 
 
 	Xyz2Lab(L, &a, &b, X, Y, Z);
-	*C = sqrt(a * a + b * b);
-	*H = atan2(b, a) * 180.0 / M_PI;
+	*C = std::sqrt(a * a + b * b);
+	*H = std::atan2(b, a) * 180.0 / M_PI;
 
 	if (*H < 0.)
 		*H += 360.;
@@ -219,8 +219,8 @@ static void Xyz2Lch(double *L, double *C, double *H, double X, double Y, double 
  * @param L, C, H the input L*C*H* values
  */
 static void Lch2Xyz(double *X, double *Y, double *Z, double L, double C, double H) {
-	double a = C * cos(H * (M_PI / 180.0));
-	double b = C * sin(H * (M_PI / 180.0));
+	double a = C * std::cos(H * (M_PI / 180.0));
+	double b = C * std::sin(H * (M_PI / 180.0));
 
 
 	Lab2Xyz(X, Y, Z, L, a, b);

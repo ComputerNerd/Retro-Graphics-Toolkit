@@ -4,7 +4,7 @@
 
 FLTK (1.3.x or later if compatible)
 Boost
-Lua 5.3 or greater.
+Lua 5.1 or greater or LuaJIT 2 or greater.
 
 ===============================================================================
 				  Instructions
@@ -21,22 +21,32 @@ need Mingw or Mingw-w64.
 This step is only for Windows users. On other operating system, the
 distribution should already have provided FLTK.
 
-You will now need to build FLTK to do this download fltk-1.3.4-2 (or later if
+For MinGW to reduce the distribution size it's recommended but not required
+that MinGW be built using win32 threads instead of posix threads so that way we
+don't have to ship the winpthreads DLL or staticlly link against it. Pass the
+--enable-threads=win32 option to the gcc configure script.
+
+You will now need to build FLTK to do this download fltk-1.3.5 (or later if
 compatible) and extract it into the Retro Graphics Toolkit project folder and
 build it using either ./configure if you are on Windows or if you are cross
 compiling you need to do something like this:
 
-RANLIB=~/mingw/bin/i686-w64-mingw32-gcc-ranlib NM=~/mingw/bin/i686-w64-mingw32-gcc-nm AR=~/mingw/bin/i686-w64-mingw32-gcc-ar CFLAGS="-Os -s -flto=16 -fuse-linker-plugin -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=i686-w64-mingw32 --build=x86_64-unknown-linux-gnu ; make -j16
+RANLIB=/usr/bin/i686-w64-mingw32-gcc-ranlib NM=/usr/bin/i686-w64-mingw32-gcc-nm AR=/usr/bin/i686-w64-mingw32-gcc-ar CFLAGS="-Os -s -flto=16 -fuse-linker-plugin -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=i686-w64-mingw32 --build=x86_64-unknown-linux-gnu ; make -j16
+
+Or to build without LTO:
+
+CFLAGS="-Os -s -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=i686-w64-mingw32 --build=x86_64-unknown-linux-gnu ; make -j16
 
 For some reason if the absolute path is not specified for RANLIB, NM and AR you
 will get errors relating to plugin support needed for LTO.
 
 Regardless of how ./configure is ran you will just need to run make and you are
-done building FLTK.
+done building FLTK. Note that the libraries will compile but after that some of
+the sample programs won't. This won't impact compiling Retro Graphics Toolkit
+and you can safely ignore these errors.
 
-You will also need to put Boost in directory you cloned this repository in.
-After extracting the archive rename boost_version_number to boost. Boost is
-needed for mdcomp.
+You will also need to put Boost in the directory you cloned this repository in.
+After extracting the archive rename boost_version_number to boost.
 
 Optional step to reduce binary size: Run these two commands in the lib
 directory where GCC was compiled. Do likewise in the folder called
@@ -49,31 +59,46 @@ The purpose of that command is to remove all the GCC version strings. If you
 don't run this command you will have hundreds of duplicate GCC version strings
 in the final binary.
 
-In the Retro Graphics Toolkit directory create a folder called luawin. This
-folder shall contain the latest version of Lua. The folder shall not contain a
-folder called something to the effect of luawin/lua-version-number.
+In the Retro Graphics Toolkit directory extract the latest stable version of
+Lua JIT and rename the extracted folder to "LuaJIT-windows-build". Make sure
+you extracted the archive directly in the folder. Don't have
+luaJit-windows-build/LuaJit-2.x.
 
-Extract the latest version of Lua in the newly created folder.
+run
+cd LuaJIT-windows-build/src/
+make HOST_CC="gcc -m32" CROSS=i686-w64-mingw32- TARGET_SYS=Windows -j16
+cp lua51.dll ../../
+cp luajit.exe ../../
 
-Now edit the makefile in src. Edit the line that starts with CC=gcc and remove
-anything that follows it.
+cd ../../
+cp /usr/i686-w64-mingw32/bin/libgcc_s_dw2-1.dll .
 
-On the line that starts with CFLAGS= remove -DLUA_COMPAT_5_2
+# Optional steps to add documentation and make the files smaller to reduce the archive size.
+cp -r LuaJIT-windows-build/doc luajit-doc
+wget https://www.lua.org/ftp/refman-5.1.tar.gz
+tar -xf refman-5.1.tar.gz
+mv lua-5.1 lua-doc
+optipng -o9 -strip all lua-doc/doc/cover.png lua-doc/doc/logo.gif
+rm lua-doc/doc/logo.gif
+sed -i 's/logo.gif/logo.png/g' lua-doc/doc/*.html
 
-If you are using a cross compiler make sure to take into account it's prefix
-also you will need to modify the AR and RANLIB variables if such is the case.
-For example on windows ar, randlib and gcc will need to be prefixed with
-x86_64-w64-mingw32-gcc. You may also need to add extra CFLAGS such as -m32 if
-you are doing a 32-bit build with a 32/64 bit multilib compiler.
+cd ManualSrc
+python3 genManuals_html.py
+rm -rf Manual
+mkdir Manual
+cp Pandoc/*.html Manual/
+cd Manual
+sed -i 's|https://raw.githubusercontent.com/ComputerNerd/Retro-Graphics-Toolkit/master/Docs/Screenshots/||g' *.html
+cp ../../Docs/Screenshots/*.png .
+tree -H '.' -L 1 --noreport --charset utf-8 -P "*.html" > index.html
+find -iname '*.html' -exec htmlmin {} {} \;
+cd ..
+rm -rf ../Manual
+mv Manual ..
+cd ..
+htmlmin help-src.html help.html
 
-Also if you are building on Windows you must replace this line in the Makefile
-	"AR=$(CC) -shared -o" "RANLIB=strip --strip-unneeded" \
-with
-	"AR=$(CC) -shared -static-libgcc -o" "RANLIB=strip --strip-all" \
 
-Now run make mingw
-
-DO NOT RUN MAKE INSTALL.
 
 ===============================================================================
 			  END OF WINDOWS ONLY SECTION

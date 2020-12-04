@@ -1,7 +1,7 @@
 Especially given what can be accomplished via Lua scripting modifying Retro
 Graphics Toolkit to suite your needs or writing a Lua script to what you need
 to do is much faster and easier than writing your own tool. Why reinvent the
-wheel? Why not instead just modify the wheel to suite your needs?
+wheel? Instead modify the wheel to suite your needs.
 
 These changes are very likely to benefit other people as well. It is very
 likely that after you make a change to Retro Graphics Toolkit or write a Lua
