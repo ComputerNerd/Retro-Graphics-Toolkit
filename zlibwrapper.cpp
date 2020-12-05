@@ -15,20 +15,20 @@
    Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
 #include <zlib.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstdint>
 bool decompressFromFile(void * ptr, int size, FILE * fi) {
 	/* allocate inflate state */
 	uint32_t cSize;
-	fread(&cSize, 1, sizeof(uint32_t), fi);
-	void * cDat = malloc(cSize);
+	std::fread(&cSize, 1, sizeof(uint32_t), fi);
+	void * cDat = std::malloc(cSize);
 
 	if (!cDat)
 		return false;
 
-	fread(cDat, 1, cSize, fi);
-	printf("Compressed size %d uncompressed size %d\n", cSize, size);
+	std::fread(cDat, 1, cSize, fi);
+	std::printf("Compressed size %d uncompressed size %d\n", cSize, size);
 	z_stream strm;
 	strm.zalloc = Z_NULL;
 	strm.zfree = Z_NULL;
@@ -81,7 +81,7 @@ bool compressToFile(void * ptr, int size, FILE * fo) {
 
 	switch (ret) {
 		case Z_STREAM_END:
-			printf("Compressed to %d from %d could have maxed out at %d\n", strm.total_out, size, maxS);
+			printf("Compressed to %lu from %d could have maxed out at %d\n", strm.total_out, size, maxS);
 			{	uint32_t outS = strm.total_out;
 				fwrite(&outS, 1, sizeof(uint32_t), fo);
 				fwrite(outb, 1, strm.total_out, fo);

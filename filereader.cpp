@@ -17,7 +17,7 @@
 #include <FL/fl_ask.H>
 #include <FL/filename.H>
 
-#include <stdio.h>
+#include <cstdio>
 #include <sys/stat.h>
 
 #include "errorMsg.h"
@@ -63,12 +63,12 @@ filereader::filereader(boost::endian::order endian, unsigned bytesPerElement, co
 			fileType_t def;
 			def = fileType_t::tBinary;
 
-			if ((!strcmp(ext, ".asm")) || (!strcmp(ext, ".s")))
+			if ((!std::strcmp(ext, ".asm")) || (!std::strcmp(ext, ".s")))
 				def = fileType_t::tASM;
-			else if (!strcmp(ext, ".bex"))
+			else if (!std::strcmp(ext, ".bex"))
 				def = fileType_t::tBEX;
-			else if ((!strcmp(ext, ".h")) || (!strcmp(ext, ".hh")) || (!strcmp(ext, ".hpp"))
-			         || (!strcmp(ext, ".c")) || (!strcmp(ext, ".cpp")) || (!strcmp(ext, ".cxx")) || (!strcmp(ext, ".cc")))
+			else if ((!std::strcmp(ext, ".h")) || (!std::strcmp(ext, ".hh")) || (!std::strcmp(ext, ".hpp"))
+			         || (!std::strcmp(ext, ".c")) || (!std::strcmp(ext, ".cpp")) || (!std::strcmp(ext, ".cxx")) || (!std::strcmp(ext, ".cc")))
 				def = fileType_t::tCheader;
 
 			tp = askSaveType(false, def);

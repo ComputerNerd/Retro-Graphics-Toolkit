@@ -40,10 +40,18 @@ CFLAGS="-Os -s -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=i686-w6
 For some reason if the absolute path is not specified for RANLIB, NM and AR you
 will get errors relating to plugin support needed for LTO.
 
+** If you try building it with bintuils 2.35.1 (and most likely 2.35) and LTO
+it will give you errors. It works with bintuils 2.34. If there is a newer
+version first try that and if not try binutils 2.34 to use LTO.**
+
 Regardless of how ./configure is ran you will just need to run make and you are
 done building FLTK. Note that the libraries will compile but after that some of
 the sample programs won't. This won't impact compiling Retro Graphics Toolkit
 and you can safely ignore these errors.
+
+If you would like to build the samples you may use apply this patch:
+wget https://github.com/fltk/fltk/commit/a0caebb66353f5a2fbee0a2b70a770e51c2aac11.patch
+patch -p1 < a0caebb66353f5a2fbee0a2b70a770e51c2aac11.patch
 
 You will also need to put Boost in the directory you cloned this repository in.
 After extracting the archive rename boost_version_number to boost.
@@ -64,9 +72,15 @@ Lua JIT and rename the extracted folder to "LuaJIT-windows-build". Make sure
 you extracted the archive directly in the folder. Don't have
 luaJit-windows-build/LuaJit-2.x.
 
+Before building LuaJIT edit the makefile in the src folder look for the line
+starting with TARGET_AR= and replace $(CROSS)ar with
+/usr/bin/i686-w64-mingw32-gcc-ar
+Also look for CCOPT= and set it to:
+ -Os -flto -fuse-linker-plugin -fomit-frame-pointer
+
 run
 cd LuaJIT-windows-build/src/
-make HOST_CC="gcc -m32" CROSS=i686-w64-mingw32- TARGET_SYS=Windows -j16
+make HOST_CC="gcc -m32" CROSS=i686-w64-mingw32- TARGET_SYS=Windows CFLAGS="-Os -flto -fuse-linker-plugin" LDFLAGS="$TARGET_CFLAGS" -j16
 cp lua51.dll ../../
 cp luajit.exe ../../
 
@@ -79,6 +93,9 @@ wget https://www.lua.org/ftp/refman-5.1.tar.gz
 tar -xf refman-5.1.tar.gz
 mv lua-5.1 lua-doc
 optipng -o9 -strip all lua-doc/doc/cover.png lua-doc/doc/logo.gif
+advpng -z -4 lua-doc/doc/cover.png
+advpng -z -4 lua-doc/doc/logo.png
+advpng -z -4 luajit-doc/img/contact.png
 rm lua-doc/doc/logo.gif
 sed -i 's/logo.gif/logo.png/g' lua-doc/doc/*.html
 
