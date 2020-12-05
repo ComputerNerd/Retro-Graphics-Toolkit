@@ -10,7 +10,7 @@
 
 -- First make sure that tiles and tilemaps are enabled.
 local p = projects.current
-local haveMask = project.tilesMask | project.mapMask
+local haveMask = project.tilesMask + project.mapMask
 if p:have(haveMask) then
 	local tiles = p.tiles
 	local tilemap = p.tilemaps.current
@@ -68,8 +68,8 @@ if p:have(haveMask) then
 							if isFirstTile then
 								expectedImageWidth = width
 								expectedImageHeight = height
-								tilesX = width // tileWidth
-								tilesY = height // tileHeight
+								tilesX = math.floor(width / tileWidth)
+								tilesY = math.floor(height / tileHeight)
 								tilesPerBlock = tilesX * tilesY
 							else
 								if (width ~= expectedImageWidth) or (height ~= expectedImageHeight) then
@@ -90,7 +90,7 @@ if p:have(haveMask) then
 								local dataIdx = 1
 								for y = 0, height - 1 do
 									for x = 0, width -1 do
-										local tileIdx = (y // tileHeight * tilesX) + (x // tileWidth) + currentTile
+										local tileIdx = (math.floor(y / tileHeight) * tilesX) + math.floor(x / tileWidth) + currentTile
 										local tileRGBA = tiles[tileIdx].rgba
 										local tileRow = tileRGBA[y % tileHeight + 1]
 										local tilePixel = tileRow[x % tileWidth + 1]
@@ -127,7 +127,7 @@ if p:have(haveMask) then
 			yOffset = 0
 		end
 		if shouldAppend then
-			local oldBlockCount = tilemap.hAll // tilemap.height
+			local oldBlockCount = math.floor(tilemap.hAll / tilemap.height)
 			tilemap:setBlocksAmt(blocksLoaded + oldBlockCount)
 		else
 			tilemap:setBlocksEnabled(false) -- Disable blocks and resize the tilemap to contain one block.

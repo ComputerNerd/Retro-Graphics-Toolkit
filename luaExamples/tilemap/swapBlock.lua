@@ -12,11 +12,11 @@ if p:have(project.mapMask) then
 		return
 	end
 
-	firstBlock = tonumber(firstBlock)
-	secondBlock = tonumber(secondBlock)
+	firstBlock = tonumber(firstBlock) + 1
+	secondBlock = tonumber(secondBlock) + 1
 
 	local tilemap = p.tilemaps.current
-	local maxBlock = tilemap.hAll // tilemap.height
+	local maxBlock = math.floor(tilemap.hAll / tilemap.height)
 
 	if firstBlock < 0 or secondBlock < 0 then
 		fltk.alert('Must be greater than or equal to zero.')

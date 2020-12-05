@@ -13,7 +13,6 @@ if p:have(project.tilesMask) then
 					
 					local L, a, b = rgt.rgbToLab(pixel.r / 255., pixel.g / 255., pixel.b / 255.)
 					r, g, bl = rgt.labToRgb(L * Lm, a * am, b * bm)
-					print(r, g, bl)
 
 					pixel.r = math.floor(r * 255.)
 					pixel.g = math.floor(g * 255.)

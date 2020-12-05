@@ -43,7 +43,7 @@ function idxHelper(idx)
 
 	local h,s,l=rgt.rgbToHsl(r/255.,g/255.,b/255.)
 	r,g,b=hsl_to_rgb((h+shift)%1.,s,l)
-	return r*255.//1,g*255.//1,b*255.//1
+	return math.floor(r * 255.), math.floor(g * 255.), math.floor(b *255.)
 end
 function draw(win)
 	local p = projects.current

@@ -53,7 +53,7 @@ if p:have(project.tilesMask) then
 		tilemap:dither()
 	end
 	if p:have(project.spritesMask) then
-		metasprites:ditherAll()
+		allMetaDither(nil)
 	end
 	if p:have(project.palMask) then
 		palette.fixSliders() --calls redraw

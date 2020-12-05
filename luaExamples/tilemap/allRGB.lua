@@ -20,11 +20,11 @@ if p:have(project.mapMask) then
 			fltk.alert('tile height must be a multiple of 4096')
 			return
 		end
-		local tileWidth = 4096 // tiles.width
-		local tileHeight = 4096 // tiles.height
+		local tileWidth = math.floor(4096 / tiles.width)
+		local tileHeight = math.floor(4096 / tiles.height)
 		tilemap:resize(tileWidth, tileHeight)
 
-		local nTiles = imgSizePX // tileSizePX
+		local nTiles = math.floor(imgSizePX / tileSizePX)
 		tiles:setAmt(nTiles)
 
 		-- Setup the tilemap.
@@ -45,9 +45,9 @@ if p:have(project.mapMask) then
 	local i
 	local rgb = 0
 	for i = 1, 4096 * 4096 * 3, 3 do
-		img[i] = rgb & 255
-		img[i + 1] = (rgb >> 8) & 255
-		img[i + 2] = (rgb >> 16) & 255
+		img[i] = bit32.band(rgb, 255)
+		img[i + 1] = bit32.band(bit32.rshift(rgb, 8), 255)
+		img[i + 2] = bit32.band(bit32.rshift(rgb, 16), 255)
 		rgb = rgb + 1
 	end
 	tilemap:imageToTiles(img, -1, false, true)
