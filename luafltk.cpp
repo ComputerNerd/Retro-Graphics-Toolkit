@@ -39,7 +39,11 @@ static int luafl_color_chooser(lua_State*L) {
 	r = luaL_optnumber(L, 3, 0.);
 	g = luaL_optnumber(L, 4, 0.);
 	b = luaL_optnumber(L, 5, 0.);
-	int ret = fl_color_chooser(luaL_optstring(L, 1, "Select a color"), r, g, b, luaL_optinteger(L, 2, -1));
+	int ret = fl_color_chooser(luaL_optstring(L, 1, "Select a color"), r, g, b
+#if (FL_MAJOR_VERSION > 1) || (FL_MINOR_VERSION >= 3)
+			,luaL_optinteger(L, 2, -1)
+#endif
+			);
 
 	if (ret) {
 		lua_pushinteger(L, ret);
@@ -80,7 +84,7 @@ static int luafl_rect(lua_State*L) {
 	int x = luaL_optinteger(L, 1, 0), y = luaL_optinteger(L, 2, 0), w = luaL_optinteger(L, 3, 0), h = luaL_optinteger(L, 4, 0);
 
 	if (lua_type(L, 5) == LUA_TNUMBER)
-		fl_rect(x, y, w, h, luaL_optinteger(L, 5, 0));
+		fl_rect(x, y, w, h, (Fl_Color)luaL_optinteger(L, 5, 0));
 	else
 		fl_rect(x, y, w, h);
 
@@ -146,33 +150,6 @@ static int luafl_end_polygon(lua_State*L) {
 	fl_end_polygon();
 	return 0;
 }
-static int luafl_draw(lua_State*L) {
-	if (lua_type(L, 1) == LUA_TNUMBER) {
-		int parm[3];
-		parm[0] = luaL_optinteger(L, 1, 0);
-		parm[1] = luaL_optinteger(L, 3, 0);
-		parm[2] = luaL_optinteger(L, 4, 0);
-		const char*str = lua_tostring(L, 2);
-
-		if (lua_type(L, 5) == LUA_TNUMBER) //n specified
-			fl_draw(parm[0], str, parm[1], parm[2], luaL_optinteger(L, 5, 0));
-		else
-			fl_draw(parm[0], str, parm[1], parm[2]);
-
-	} else {
-		const char*str = lua_tostring(L, 1);
-		int parm[2];
-		parm[0] = luaL_optinteger(L, 2, 0);
-		parm[1] = luaL_optinteger(L, 3, 0);
-
-		if (lua_type(L, 4) == LUA_TNUMBER) //n specified
-			fl_draw(str, parm[0], parm[1], luaL_optinteger(L, 4, 0));
-		else
-			fl_draw(str, parm[0], parm[1]);
-	}
-
-	return 0;
-}
 /** void fl_rectf(int x, int y, int w, int h)
  * inc/fl_draw.h:206
  */
@@ -196,7 +173,7 @@ static int FLTK_fl_rectf(lua_State *L) {
 			int w = dub::checkinteger(L, 3);
 			int h = dub::checkinteger(L, 4);
 			int c = dub::checkinteger(L, 5);
-			fl_rectf(x, y, w, h, c);
+			fl_rectf(x, y, w, h, (Fl_Color)c);
 			return 0;
 		} else {
 			int x = dub::checkinteger(L, 1);
@@ -225,7 +202,7 @@ static int FLTK_fl_draw_box(lua_State *L) {
 		int w = dub::checkinteger(L, 4);
 		int h = dub::checkinteger(L, 5);
 		int p6 = dub::checkinteger(L, 6);
-		fl_draw_box((Fl_Boxtype)p1, x, y, w, h, p6);
+		fl_draw_box((Fl_Boxtype)p1, x, y, w, h, (Fl_Color)p6);
 		return 0;
 	} catch (std::exception &e) {
 		lua_pushfstring(L, "FLTK.fl_draw_box: %s", e.what());
@@ -411,6 +388,7 @@ static int FLTK_fl_filename_list(lua_State *L) {
 	return lua_error(L);
 }
 
+#if (FL_MAJOR_VERSION > 1) || (FL_MINOR_VERSION >= 3)
 /** void fl_filename_free_list(struct dirent ***l, int n)
  * inc/filename.h:127
  */
@@ -428,6 +406,7 @@ static int FLTK_fl_filename_free_list(lua_State *L) {
 
 	return lua_error(L);
 }
+#endif
 static const luaL_Reg lua_flAPI[] = {
 	{"ask", luafl_ask},
 	{"beep", luafl_beep},
@@ -453,7 +432,6 @@ static const luaL_Reg lua_flAPI[] = {
 	{"end_loop", luafl_end_loop},
 	{"end_points", luafl_end_points},
 	{"end_polygon", luafl_end_polygon},
-	{"draw", luafl_draw},
 	{"draw_box", FLTK_fl_draw_box},
 	{"filename_name", FLTK_fl_filename_name },
 	{"filename_ext", FLTK_fl_filename_ext },
@@ -464,7 +442,9 @@ static const luaL_Reg lua_flAPI[] = {
 	{"filename_match", FLTK_fl_filename_match },
 	{"filename_isdir", FLTK_fl_filename_isdir },
 	{"filename_list", FLTK_fl_filename_list },
+#if (FL_MAJOR_VERSION > 1) || (FL_MINOR_VERSION >= 3)
 	{"filename_free_list", FLTK_fl_filename_free_list },
+#endif
 	{0, 0}
 };
 static int luaFl_check(lua_State*L) {
@@ -562,7 +542,9 @@ static const keyPair FLconsts[] = {
 	{"Button", FL_Button},
 	{"BackSpace", FL_BackSpace},
 	{"Tab", FL_Tab},
+#if (FL_MAJOR_VERSION > 1) || (FL_MINOR_VERSION >= 3)
 	{"Iso_Key", FL_Iso_Key},
+#endif
 	{"Enter", FL_Enter},
 	{"Pause", FL_Pause},
 	{"Scroll_Lock", FL_Scroll_Lock},
@@ -626,9 +608,11 @@ static const keyPair FLconsts[] = {
 	{"ALIGN_IMAGE_OVER_TEXT", FL_ALIGN_IMAGE_OVER_TEXT},
 	{"ALIGN_CLIP", FL_ALIGN_CLIP},
 	{"ALIGN_WRAP", FL_ALIGN_WRAP},
+#if (FL_MAJOR_VERSION > 1) || (FL_MINOR_VERSION >= 3)
 	{"ALIGN_IMAGE_NEXT_TO_TEXT", FL_ALIGN_IMAGE_NEXT_TO_TEXT},
 	{"ALIGN_TEXT_NEXT_TO_IMAGE", FL_ALIGN_TEXT_NEXT_TO_IMAGE},
 	{"ALIGN_IMAGE_BACKDROP", FL_ALIGN_IMAGE_BACKDROP},
+#endif
 	{"ALIGN_TOP_LEFT", FL_ALIGN_TOP_LEFT},
 	{"ALIGN_TOP_RIGHT", FL_ALIGN_TOP_RIGHT},
 	{"ALIGN_BOTTOM_LEFT", FL_ALIGN_BOTTOM_LEFT},
@@ -638,8 +622,10 @@ static const keyPair FLconsts[] = {
 	{"ALIGN_LEFT_BOTTOM", FL_ALIGN_LEFT_BOTTOM},
 	{"ALIGN_RIGHT_BOTTOM", FL_ALIGN_RIGHT_BOTTOM},
 	{"ALIGN_NOWRAP", FL_ALIGN_NOWRAP},
+#if (FL_MAJOR_VERSION > 1) || (FL_MINOR_VERSION >= 3)
 	{"ALIGN_POSITION_MASK", FL_ALIGN_POSITION_MASK},
 	{"ALIGN_IMAGE_MASK", FL_ALIGN_IMAGE_MASK},
+#endif
 	{"HELVETICA", FL_HELVETICA},
 	{"HELVETICA_BOLD", FL_HELVETICA_BOLD},
 	{"HELVETICA_ITALIC", FL_HELVETICA_ITALIC},
@@ -659,7 +645,9 @@ static const keyPair FLconsts[] = {
 	{"FREE_FONT", FL_FREE_FONT},
 	{"BOLD", FL_BOLD},
 	{"ITALIC", FL_ITALIC},
+#if (FL_MAJOR_VERSION > 1) || (FL_MINOR_VERSION >= 3)
 	{"BOLD_ITALIC", FL_BOLD_ITALIC},
+#endif
 	{"FOREGROUND_COLOR", FL_FOREGROUND_COLOR},
 	{"BACKGROUND2_COLOR", FL_BACKGROUND2_COLOR},
 	{"INACTIVE_COLOR", FL_INACTIVE_COLOR},
@@ -821,9 +809,9 @@ void createFLTKbindings(lua_State *L) {
 	luaL_newlib(L, lua_FlAPI);
 	lua_setglobal(L, "Fl");
 
-	lua_createtable(L, 0, FL_FULLSCREEN + arLen(FLconsts));
+	lua_createtable(L, 0, arLen(fl_eventnames) + arLen(FLconsts));
 
-	for (unsigned x = 0; x <= FL_FULLSCREEN; ++x)
+	for (unsigned x = 0; x < arLen(fl_eventnames); ++x)
 		mkKeyunsigned(L, fl_eventnames[x] + 3, x);
 
 	for (unsigned x = 0; x < arLen(FLconsts); ++x)
