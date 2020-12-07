@@ -291,7 +291,9 @@ bool getMaskColorImg(Fl_Shared_Image*loaded_image, bool grayscale, unsigned*rema
 		Cancel->callback(RetCB, 0);
 		Fl_Color_Chooser*colsel = new Fl_Color_Chooser(16, 32, 208, 156, "Background color\nif incorrect click on the image");
 		colsel->rgb(rc, gc, bc);
+#if (FL_MAJOR_VERSION > 1) || (FL_MINOR_VERSION >= 3)
 		colsel->mode(1);
+#endif
 		Fl_Scroll*scroll = new Fl_Scroll(232, 16, 408, 464);
 		box = new ScrollBox(232, 16, w, h);
 		box->scroll = scroll;

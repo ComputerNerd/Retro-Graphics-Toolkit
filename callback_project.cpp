@@ -38,13 +38,17 @@ void setNesTile(Fl_Widget*o, void*) {
 		currentProject->subSystem &= ~NES2x2;
 }
 void saveAllProjectsCB(Fl_Widget*, void*) {
-	if (!load_file_generic("Save projects group as...", true))
+	std::string the_file;
+
+	if (!loadOrSaveFile(the_file, "Save projects group as...", true))
 		return;
 
 	saveAllProjects(the_file.c_str());
 }
 void loadAllProjectsCB(Fl_Widget*, void*) {
-	if (!load_file_generic("Load projects group"))
+	std::string the_file;
+
+	if (!loadOrSaveFile(the_file, "Load projects group"))
 		return;
 
 	pushProjectAll();
@@ -192,7 +196,9 @@ void shareProjectCB(Fl_Widget*o, void*mask) {
 	window->redraw();
 }
 void loadProjectCB(Fl_Widget*, void*) {
-	if (!load_file_generic("Load project", false))
+	std::string the_file;
+
+	if (!loadOrSaveFile(the_file, "Load project", false))
 		return;
 
 	pushProject();
@@ -201,12 +207,11 @@ void loadProjectCB(Fl_Widget*, void*) {
 }
 void saveProjectCB(Fl_Widget*, void*) {
 	currentProject->Name.assign(window->TxtBufProject->text());//Update the project text.
-	char*fname = loadsavefile("Save project as ...", true);
 
-	if (fname) {
-		saveProject(curProjectID, fname);
-		free((void*)fname);
-	}
+	std::string fname;
+
+	if (loadOrSaveFile(fname, "Save project as ...", true))
+		saveProject(curProjectID, fname.c_str());
 }
 void switchProjectCB(Fl_Widget*o, void*) {
 	Fl_Slider* s = (Fl_Slider*)o;

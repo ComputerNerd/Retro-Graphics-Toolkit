@@ -26,6 +26,8 @@
 #include "class_global.h"
 #include "filereader.h"
 void save_tiles(Fl_Widget*, void*) {
+	std::string the_file;
+
 	if (!currentProject->containsData(pjHaveTiles)) {
 		currentProject->haveMessage(pjHaveTiles);
 		return;
@@ -47,7 +49,7 @@ void save_tiles(Fl_Widget*, void*) {
 	if (clipboard)
 		pickedFile = true;
 	else
-		pickedFile = load_file_generic("Pick a location to save tiles", true);
+		pickedFile = loadOrSaveFile(the_file, "Pick a location to save tiles", true);
 
 	if (pickedFile) {
 		CompressionType compression = compressionAsk();
@@ -95,7 +97,9 @@ void save_tiles_truecolor(Fl_Widget*, void*) {
 		return;
 	}
 
-	if (load_file_generic("Save truecolor tiles", true)) {
+	std::string the_file;
+
+	if (loadOrSaveFile(the_file, "Save truecolor tiles", true)) {
 		FILE * myfile;
 		myfile = fopen(the_file.c_str(), "wb");
 

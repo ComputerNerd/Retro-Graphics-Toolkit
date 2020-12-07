@@ -366,6 +366,7 @@ void setvalueSpriteCB(Fl_Widget*o, void*which) {
 			pushSpriteItem(Palrow)
 			if (currentProject->gameSystem != TMS9918)
 				palBar.changeRow(val, 3);
+
 			currentProject->ms->sps[msprt].groups[curSpritegroup].list[curSprite].palrow = val;
 			break;
 

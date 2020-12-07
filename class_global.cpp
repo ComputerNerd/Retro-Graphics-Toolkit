@@ -243,12 +243,12 @@ void editor::draw_non_gui(void) {
 					if (tiles_size > 4) {
 						for (y = 0; y < currentProject->tileC->height(); ++y) {
 							for (x = 0; x < currentProject->tileC->width(); ++x)
-								fl_draw_box(FL_EMBOSSED_FRAME, (x * tiles_size) + tile_edit_offset_x, (y * tiles_size) + tile_edit_offset_y, tiles_size, tiles_size, 0);
+								fl_draw_box(FL_EMBOSSED_FRAME, (x * tiles_size) + tile_edit_offset_x, (y * tiles_size) + tile_edit_offset_y, tiles_size, tiles_size, FL_FOREGROUND_COLOR);
 						}
 
 						for (y = 0; y < currentProject->tileC->height(); y++) {
 							for (x = 0; x < currentProject->tileC->width(); ++x)
-								fl_draw_box(FL_EMBOSSED_FRAME, (x * tiles_size) + tile_edit_truecolor_off_x, (y * tiles_size) + tile_edit_truecolor_off_y, tiles_size, tiles_size, 0);
+								fl_draw_box(FL_EMBOSSED_FRAME, (x * tiles_size) + tile_edit_truecolor_off_x, (y * tiles_size) + tile_edit_truecolor_off_y, tiles_size, tiles_size, FL_FOREGROUND_COLOR);
 						}
 					}
 				}
@@ -275,7 +275,7 @@ void editor::draw_non_gui(void) {
 				//draw box over tiles
 				for (y = 0; y < std::min((currentProject->tms->maps[currentProject->curPlane].mapSizeHA) - map_scroll_pos_y, max_map_h); ++y) {
 					for (x = 0; x < std::min(currentProject->tms->maps[currentProject->curPlane].mapSizeW - map_scroll_pos_x, max_map_w); ++x)
-						fl_draw_box(FL_EMBOSSED_FRAME, map_off_x + ((x * currentProject->tileC->width())*placer_tile_size), map_off_y + ((y * currentProject->tileC->height())*placer_tile_size), placer_tile_size * currentProject->tileC->width(), placer_tile_size * currentProject->tileC->height(), 0);
+						fl_draw_box(FL_EMBOSSED_FRAME, map_off_x + ((x * currentProject->tileC->width())*placer_tile_size), map_off_y + ((y * currentProject->tileC->height())*placer_tile_size), placer_tile_size * currentProject->tileC->width(), placer_tile_size * currentProject->tileC->height(), FL_FOREGROUND_COLOR);
 				}
 			}
 
@@ -285,7 +285,7 @@ void editor::draw_non_gui(void) {
 				yo = ((selTileE_G[1] - map_scroll_pos_y) * currentProject->tileC->height() * placer_tile_size) + map_off_y;
 
 				if ((xo >= map_off_x) && (yo >= map_off_y))
-					fl_draw_box(FL_EMBOSSED_FRAME, xo, yo, placer_tile_size * currentProject->tileC->width() + 1, placer_tile_size * currentProject->tileC->height() + 1, 0);
+					fl_draw_box(FL_EMBOSSED_FRAME, xo, yo, placer_tile_size * currentProject->tileC->width() + 1, placer_tile_size * currentProject->tileC->height() + 1, FL_FOREGROUND_COLOR);
 			}
 
 			break;
@@ -313,7 +313,7 @@ void editor::draw_non_gui(void) {
 				yo += ChunkOff[1];
 
 				if ((xo >= ChunkOff[0]) && (yo >= ChunkOff[1]))
-					fl_draw_box(FL_EMBOSSED_FRAME, xo, yo, tsx + 1, tsy + 1, 0);
+					fl_draw_box(FL_EMBOSSED_FRAME, xo, yo, tsx + 1, tsy + 1, FL_FOREGROUND_COLOR);
 			}
 
 			break;
@@ -368,7 +368,7 @@ void editor::draw_non_gui(void) {
 							break;
 					}
 
-					fl_draw_box(FL_EMBOSSED_FRAME, tileatx, tileaty, (currentProject->ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].w * currentProject->ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].h * currentProject->tileC->height() * 2) + 1, 17, 0);
+					fl_draw_box(FL_EMBOSSED_FRAME, tileatx, tileaty, (currentProject->ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].w * currentProject->ms->sps[curSpritemeta].groups[curSpritegroup].list[curSprite].h * currentProject->tileC->height() * 2) + 1, 17, FL_FOREGROUND_COLOR);
 				}
 			}
 

@@ -31,11 +31,14 @@ compatible) and extract it into the Retro Graphics Toolkit project folder and
 build it using either ./configure if you are on Windows or if you are cross
 compiling you need to do something like this:
 
-RANLIB=/usr/bin/i686-w64-mingw32-gcc-ranlib NM=/usr/bin/i686-w64-mingw32-gcc-nm AR=/usr/bin/i686-w64-mingw32-gcc-ar CFLAGS="-Os -s -flto=16 -fuse-linker-plugin -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=i686-w64-mingw32 --build=x86_64-unknown-linux-gnu ; make -j16
+RANLIB=/usr/bin/i686-w64-mingw32-gcc-ranlib NM=/usr/bin/i686-w64-mingw32-gcc-nm AR=/usr/bin/i686-w64-mingw32-gcc-ar CFLAGS="-DWINVER=0x0400 -Os -s -flto=16 -fuse-linker-plugin -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=i686-w64-mingw32 --build=x86_64-unknown-linux-gnu ; make -j16
 
 Or to build without LTO:
 
 CFLAGS="-Os -s -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=i686-w64-mingw32 --build=x86_64-unknown-linux-gnu ; make -j16
+
+Debug:
+CFLAGS="-Og -ggdb3 -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=i686-w64-mingw32 --build=x86_64-unknown-linux-gnu ; make -j16
 
 For some reason if the absolute path is not specified for RANLIB, NM and AR you
 will get errors relating to plugin support needed for LTO.

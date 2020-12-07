@@ -680,15 +680,17 @@ void tiles::remove_duplicate_tiles(bool tColor) {
 void tiles::tileToTrueCol(const uint8_t*input, uint8_t*output, unsigned row, bool useAlpha, bool alphaZero)const {
 	unsigned toff = row;
 	row *= prj->pal->perRow * 3;
+
 	if (prj->gameSystem == TMS9918)
 		row = 0;
 
 	for (unsigned y = 0; y < sizeh; ++y) {
 		for (unsigned x = 0; x < sizew; ++x) {
 			unsigned temp = getPixel(input, x, y);
-			if (temp && (prj->gameSystem == TMS9918)) {
+
+			if (temp && (prj->gameSystem == TMS9918))
 				temp = toff;
-			}
+
 			*output++ = prj->pal->rgbPal[row + (temp * 3)];
 			*output++ = prj->pal->rgbPal[row + (temp * 3) + 1];
 			*output++ = prj->pal->rgbPal[row + (temp * 3) + 2];

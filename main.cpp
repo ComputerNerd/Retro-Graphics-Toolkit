@@ -73,9 +73,19 @@ int main(int argc, char **argv) {
 	char olddirname[PATH_MAX];
 	getcwd(olddirname, sizeof(olddirname));
 #endif
-	char*tmp = strdup(argv[0]);
-	chdir(dirname(tmp));
-	free((void*)tmp);
+
+	{
+#ifdef _WIN32
+		char tmp[MAX_PATH];
+		strncpy(tmp, argv[0], sizeof(tmp));
+		chdir(dirname(tmp));
+#else
+		char*tmp = strdup(argv[0]);
+		chdir(dirname(tmp));
+		free((void*)tmp);
+#endif
+	}
+
 	bool headless = false, useExampleFolder = false, runScript = false;
 
 	if (argc >= 3) {

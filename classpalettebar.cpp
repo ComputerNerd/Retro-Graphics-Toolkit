@@ -269,7 +269,7 @@ void paletteBar::drawBoxes(unsigned tab) {
 			}
 		}
 
-		fl_draw_box(FL_EMBOSSED_FRAME, selBox[tab]*box_size + ox[tab], selRow[tab]*box_size + oy[tab], box_size, box_size, 0);
+		fl_draw_box(FL_EMBOSSED_FRAME, selBox[tab]*box_size + ox[tab], selRow[tab]*box_size + oy[tab], box_size, box_size, FL_FOREGROUND_COLOR);
 	} else {
 		rgbPtr += a * selRow[tab];
 
@@ -281,10 +281,10 @@ void paletteBar::drawBoxes(unsigned tab) {
 			rgbPtr += 3;
 		}
 
-		fl_draw_box(FL_EMBOSSED_FRAME, selBox[tab]*box_size + ox[tab], oy[tab], box_size, box_size, 0);
+		fl_draw_box(FL_EMBOSSED_FRAME, selBox[tab]*box_size + ox[tab], oy[tab], box_size, box_size, FL_FOREGROUND_COLOR);
 
 		if (hasAltSelection())
-			fl_draw_box(FL_DOWN_FRAME, selBoxAlt[tab]*box_size + ox[tab], oy[tab], box_size, box_size, 0);
+			fl_draw_box(FL_DOWN_FRAME, selBoxAlt[tab]*box_size + ox[tab], oy[tab], box_size, box_size, FL_FOREGROUND_COLOR);
 	}
 }
 unsigned paletteBar::toTab(unsigned realtab) {

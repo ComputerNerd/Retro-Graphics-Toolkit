@@ -116,7 +116,7 @@ void new_tile(Fl_Widget*, void*) {
 }
 void update_truecolor(Fl_Widget* o, void* v) {
 	Fl_Slider* s = (Fl_Slider*)o;
-	truecolor_temp[fl_intptr_t(v)] = s->value();
+	truecolor_temp[intptr_t(v)] = s->value();
 	window->redraw();
 }
 void blank_tile(Fl_Widget*, void*) {

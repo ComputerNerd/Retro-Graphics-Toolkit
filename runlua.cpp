@@ -861,29 +861,6 @@ static const struct keyPairi compressionTypes[] = {
 	{"saxman", (int)CompressionType::Saxman},
 	{"comper", (int)CompressionType::Comper},
 };
-static int lua_tabs_append(lua_State*L) {
-	int rx, ry, rw, rh;
-
-	if (window) {
-		window->the_tabs->client_area(rx, ry, rw, rh);
-		window->tabsMain.emplace_back(new Fl_Group(rx, ry, rw, rh, "Lua scripting"));
-	}
-
-	return 0;
-}
-static int lua_tabs_endAppend(lua_State*L) {
-	if (window)
-		window->tabsMain[window->tabsMain.size() - 1]->end();
-
-	return 0;
-}
-static const luaL_Reg lua_tabAPI[] = {
-	{"appendTab", lua_tabs_append},
-	{"endAppendTab", lua_tabs_endAppend},
-	/*{"deleteTab", lua_tabs_append},
-	{"getTabs", lua_tabs_append},*/
-	{0, 0}
-};
 static void tableToSS(lua_State*L, unsigned idx, std::stringstream&ss) {
 	int len = lua_rawlen(L, idx);
 
@@ -1216,10 +1193,8 @@ void runLuaCD(const char*fname) {
 	free(dup2);
 }
 void runLuaCB(Fl_Widget*, void*) {
-	char*st;
+	std::string st;
 
-	if (st = loadsavefile("Select a Lua script", false)) {
-		runLuaCD(st);
-		free(st);
-	}
+	if (loadOrSaveFile(st, "Select a Lua script", false))
+		runLuaCD(st.c_str());
 }

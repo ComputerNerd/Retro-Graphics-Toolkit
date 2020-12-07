@@ -14,7 +14,12 @@
 	along with Retro Graphics Toolkit. If not, see <http://www.gnu.org/licenses/>.
 	Copyright Sega16 (or whatever you wish to call me) (2012-2017)
 */
+#include <FL/Enumerations.H>
+#if (FL_MAJOR_VERSION > 1) || (FL_MINOR_VERSION >= 3)
 #include <FL/Fl_Native_File_Chooser.H>
+#else
+#include <FL/Fl_File_Chooser.H>
+#endif
 #include <stdint.h>
 #include <cstdarg>
 #include <cstdio>
@@ -37,7 +42,6 @@ bool G_highlow_p[2];
 bool show_grid_placer;
 unsigned tile_zoom_edit;
 uint8_t truecolor_temp[4];/*!< This stores the rgba data selected with the truecolor sliders*/
-std::string the_file;//this is for temporary use only
 unsigned mode_editor;//this is used to determine which thing to draw
 bool showTrueColor;
 bool rowSolo;
@@ -250,7 +254,8 @@ int menuPopupArray(const char * title, const char * text, unsigned def, const Fl
 	return returnVal;
 	return -1;
 }
-bool load_file_generic(const char * the_tile, bool save_file) { //Warning this function sets global variable string the_file
+bool loadOrSaveFile(std::string&result, const char * the_tile, bool save_file) {
+#if (FL_MAJOR_VERSION > 1) || (FL_MINOR_VERSION >= 3)
 	// Create native chooser
 	Fl_Native_File_Chooser native;
 	native.title(the_tile);
@@ -268,49 +273,28 @@ bool load_file_generic(const char * the_tile, bool save_file) { //Warning this f
 
 		case  1:
 			fprintf(stderr, "*** CANCEL\n");
-			//fl_beep();
 			break;		// CANCEL
 
 		default:// Picked File
 			if (native.filename()) {
-				the_file = native.filename();
-				return true;//the only way this this function will return true is the user picked a file
+				result = native.filename();
+				return true;
 			}
 
 			break;
 	}
 
-	return false;//if an error happened or the user did not pick a file the function returns false
-}
-char*loadsavefile(const char * the_tile, bool save_file) {
-	// Create native chooser
-	Fl_Native_File_Chooser native;
-	native.title(the_tile);
+	return false;
+#else
+	const char*fnameTmp = fl_file_chooser(the_tile, nullptr, nullptr);
 
-	if (save_file)
-		native.type(Fl_Native_File_Chooser::BROWSE_SAVE_FILE);
-	else
-		native.type(Fl_Native_File_Chooser::BROWSE_FILE);
+	if (fnameTmp != nullptr && strlen(fnameTmp) > 0) {
+		result = fnameTmp;
+		return true;
+	} else
+		return false;
 
-	// Show native chooser
-	switch (native.show()) {
-		case -1:
-			fl_alert("Error %s", native.errmsg());
-			break;	// ERROR
-
-		case  1:
-			fprintf(stderr, "*** CANCEL\n");
-			//fl_beep();
-			break;		// CANCEL
-
-		default:// Picked File
-			if (native.filename())
-				return strdup(native.filename());
-
-			break;
-	}
-
-	return nullptr;
+#endif
 }
 bool verify_str_number_only(const char * str) {
 	/*!

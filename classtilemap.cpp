@@ -674,39 +674,30 @@ bool tileMap::saveToFile(void) {
 		clipboard = 0;
 
 	bool pickedFile;
-	char*fname = 0, *nesFname = 0;
+	std::string fname, nesFname;
 
 	if (clipboard)
 		pickedFile = true;
 	else
-		fname = loadsavefile("Save tilemap to...", true);
+		pickedFile = loadOrSaveFile(fname, "Save tilemap to...", true);
 
-	if (!fname)
+	if (!pickedFile)
 		return true;
 
-	if (fname) {
-		if (prj->gameSystem == NES) {
-			nesFname = loadsavefile("Save tilemap attributes to...", true);
+	if (prj->gameSystem == NES) {
+		pickedFile = loadOrSaveFile(nesFname, "Save tilemap attributes to...", true);
 
-			if (!nesFname) {
-				free(fname);
-				return true;
-			}
-		}
-
-		CompressionType compression = compressionAsk();
-
-		if (compression == CompressionType::Cancel) {
-			free(fname);
-			free(nesFname);
+		if (!pickedFile)
 			return true;
-		}
-
-		saveToFile(fname, type, clipboard, compression, planeName.c_str(), nesFname);
 	}
 
-	free(fname);
-	free(nesFname);
+	CompressionType compression = compressionAsk();
+
+	if (compression == CompressionType::Cancel)
+		return true;
+
+	saveToFile(fname.c_str(), type, clipboard, compression, planeName.c_str(), nesFname.c_str());
+
 	return true;
 }
 static void zero_error_tile_map(int32_t x) {
@@ -756,7 +747,6 @@ bool tileMap::loadFromFile() {
 	size_t file_size;
 	//get width and height
 	int blocksLoad = fl_ask("Are you loading blocks?");
-	std::string tilemap_file = the_file;
 	int32_t w, h;
 	char * str_ptr;
 

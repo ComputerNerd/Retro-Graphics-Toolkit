@@ -40,6 +40,8 @@ void sortRowbyCB(Fl_Widget*, void*) {
 	window->redraw();
 }
 void save_palette(Fl_Widget*, void*) {
+	std::string the_file;
+
 	if (!currentProject->containsData(pjHavePal)) {
 		currentProject->haveMessage(pjHavePal);
 		return;
@@ -89,7 +91,7 @@ void save_palette(Fl_Widget*, void*) {
 	if (clipboard)
 		pickedFile = true;
 	else
-		pickedFile = load_file_generic("Save palette", true);
+		pickedFile = loadOrSaveFile(the_file, "Save palette", true);
 
 	if (pickedFile)
 		currentProject->pal->savePalette(the_file.c_str(), start, end, skipzero, type, clipboard);

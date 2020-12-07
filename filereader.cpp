@@ -31,16 +31,16 @@ extern "C" {
 }
 
 filereader::filereader(boost::endian::order endian, unsigned bytesPerElement, const char*title, bool relptr, unsigned offbits, bool be, const char * filename, fileType_t forceType, CompressionType compression) {
-	char*fname = nullptr;
+	std::string fname;
 
 	if (!filename) {
 		if (title)
-			fname = loadsavefile(title);
+			fname = loadOrSaveFile(fname, title);
 		else
-			fname = loadsavefile();
+			fname = loadOrSaveFile(fname);
 	}
 
-	const char * useFilename = filename ? filename : fname;
+	const char * useFilename = filename ? filename : fname.c_str();
 
 	if (useFilename) {
 		if (compression == CompressionType::Cancel)
@@ -79,7 +79,6 @@ filereader::filereader(boost::endian::order endian, unsigned bytesPerElement, co
 
 		if (tp == fileType_t::tCancel) {
 			amt = 0;
-			free(fname);
 			return;
 		}
 
@@ -111,7 +110,6 @@ filereader::filereader(boost::endian::order endian, unsigned bytesPerElement, co
 		lua_pushboolean(Lconf, be);
 		lua_pushlstring(Lconf, tmp, st.st_size); //Lua makes a copy of the string
 		lua_pushstring(Lconf, useFilename);
-		free(fname);
 		free(tmp);
 		runLuaFunc(Lconf, 6, 1);
 		size_t len = lua_rawlen(Lconf, -1);

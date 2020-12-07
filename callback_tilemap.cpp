@@ -115,8 +115,10 @@ void save_tilemap_as_image(Fl_Widget*, void*) {
 		return;
 	}
 
+	std::string the_file;
+
 	if (currentProject->containsData(pjHaveTiles | pjHaveMap)) {
-		if (load_file_generic("Save PNG as", true)) {
+		if (loadOrSaveFile(the_file, "Save PNG as", true)) {
 			uint32_t w = currentProject->tms->maps[currentProject->curPlane].mapSizeW * currentProject->tileC->width();
 			uint32_t h = currentProject->tms->maps[currentProject->curPlane].mapSizeHA * currentProject->tileC->height();
 			uint8_t * image = (uint8_t*)malloc(w * h);
@@ -147,7 +149,9 @@ void save_tilemap_as_colspace(Fl_Widget*, void*) {
 		return;
 	}
 
-	if (load_file_generic("Save png as", true) == true) {
+	std::string the_file;
+
+	if (loadOrSaveFile(the_file, "Save png as", true) == true) {
 		uint32_t w = currentProject->tms->maps[currentProject->curPlane].mapSizeW * 8;
 		uint32_t h = currentProject->tms->maps[currentProject->curPlane].mapSizeHA * 8;
 		uint8_t * image = (uint8_t*)malloc(w * h * 3);
@@ -166,7 +170,7 @@ void load_tile_map(Fl_Widget*, void*) {
 	pushTilemapAll(false);
 
 	if (unlikely(!currentProject->tms->maps[currentProject->curPlane].loadFromFile()))
-		alertWrap("Error: Cannot load file %s", the_file.c_str());
+		alertWrap("Error: Cannot load file");
 }
 void save_map(Fl_Widget*, void*) {
 	if (!currentProject->containsData(pjHaveMap)) {
@@ -175,7 +179,7 @@ void save_map(Fl_Widget*, void*) {
 	}
 
 	if (unlikely(!currentProject->tms->maps[currentProject->curPlane].saveToFile()))
-		alertWrap("Error: can not save file %s\nTry making sure that you have permission to save the file here", the_file.c_str());
+		alertWrap("Error: can not save file\nTry making sure that you have permission to save the file here");
 }
 void fill_tile_map_with_tile(Fl_Widget*, void*) {
 	pushTilemapAll(false);
@@ -444,12 +448,10 @@ void load_image_to_tilemapCB(Fl_Widget*, void*o) {
 	else
 		append = fl_choice("Append tiles or overwrite starting at 0?", "Overwrite", "Append", 0);
 
-	char*fname = loadsavefile("Select an image");
+	std::string fname;
 
-	if (fname) {
-		load_image_to_tilemap(fname, over, tilesonly, append);
-		free((void*)fname);
-	}
+	if (loadOrSaveFile(fname, "Select an image"))
+		load_image_to_tilemap(fname.c_str(), over, tilesonly, append);
 }
 void set_prioCB(Fl_Widget*, void*o) {
 	unsigned off = (uintptr_t)o;

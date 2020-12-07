@@ -375,10 +375,12 @@ void ChunkClass::exportSonic1(void)const {
 
 	bool pickedFile;
 
+	std::string the_file;
+
 	if (clipboard)
 		pickedFile = true;
 	else
-		pickedFile = load_file_generic("Save tilemap to", true);
+		pickedFile = loadOrSaveFile(the_file, "Save tilemap to", true);
 
 	if (pickedFile) {
 		CompressionType compression = compressionAsk();

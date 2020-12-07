@@ -316,7 +316,7 @@ public:
 			if (((*rects)[i] >= minx) || ((*rects)[i] <= maxx)) {
 				if (((*rects)[i + 2] >= miny) || ((*rects)[i + 2] <= maxy)) {
 					if (!(*deleted)[i / 4])
-						fl_draw_box(FL_EMBOSSED_FRAME, (*rects)[i] + x(), (*rects)[i + 2] + y(), (*rects)[i + 1] - (*rects)[i] + 1, (*rects)[i + 3] - (*rects)[i + 2] + 1, 0);
+						fl_draw_box(FL_EMBOSSED_FRAME, (*rects)[i] + x(), (*rects)[i + 2] + y(), (*rects)[i + 1] - (*rects)[i] + 1, (*rects)[i + 3] - (*rects)[i + 2] + 1, FL_FOREGROUND_COLOR);
 				}
 			}
 		}
@@ -512,7 +512,9 @@ bool sprites::recttoSprite(int x0, int x1, int y0, int y1, int where, Fl_Shared_
 }
 void sprites::importSpriteSheet(const char*fname) {
 	if (!fname) {
-		if (!load_file_generic("Load image"))
+		std::string the_file;
+
+		if (!loadOrSaveFile(the_file, "Load image"))
 			return;
 
 		fname = the_file.c_str();
@@ -758,7 +760,9 @@ void sprites::importSpriteSheet(const char*fname) {
 }
 extern const char*rtVersionStr;
 void sprites::exportMapping(gameType_t game)const {
-	if (load_file_generic("Save mapping to:", true)) {
+	std::string the_file;
+
+	if (loadOrSaveFile(the_file, "Save mapping to:", true)) {
 		FILE*fp;
 
 		if (game == tSonic1) {
@@ -1269,7 +1273,9 @@ mergeIt:
 	return out;
 }
 void sprites::exportDPLC(gameType_t game)const {
-	if (load_file_generic("Save DPLC", true)) {
+	std::string the_file;
+
+	if (loadOrSaveFile(the_file, "Save DPLC", true)) {
 		FILE*fp;
 
 		if (game == tSonic1) {
@@ -1361,7 +1367,9 @@ searchagain:
 	return txt;
 }
 void sprites::importDPLC(gameType_t game) {
-	if (load_file_generic("Load DPLC")) {
+	std::string the_file;
+
+	if (loadOrSaveFile(the_file, "Load DPLC")) {
 		FILE*fp;
 
 		if (game == tSonic1)
@@ -1422,7 +1430,9 @@ void sprites::importDPLC(gameType_t game) {
 void sprites::importMapping(gameType_t game) {
 	bool append = fl_choice("Append new sprites or overwrite", "Overwrite", "Append", 0);
 
-	if (load_file_generic("Load sprite mapping")) {
+	std::string the_file;
+
+	if (loadOrSaveFile(the_file, "Load sprite mapping")) {
 		unsigned amtnew;
 
 		if (append)
@@ -1878,7 +1888,9 @@ bool sprites::load(FILE*fp, uint32_t version) {
 	return true;
 }
 void sprites::importImg(uint32_t to) {
-	if (load_file_generic("Load image")) {
+	std::string the_file;
+
+	if (loadOrSaveFile(the_file, "Load image")) {
 		Fl_Shared_Image * loaded_image = Fl_Shared_Image::get(the_file.c_str());
 
 		if (!loaded_image) {

@@ -305,7 +305,27 @@ void editor::_editor() {
 		the_tabs = new Fl_Tabs(0, 24, 800, 576);
 		the_tabs->callback(set_mode_tabs);
 		int rx, ry, rw, rh;
+#if (FL_MAJOR_VERSION > 1) || (FL_MINOR_VERSION >= 3)
 		the_tabs->client_area(rx, ry, rw, rh);
+#else
+
+		int y_offset;
+		int label_height = fl_height(labelfont(), labelsize()) + 2 * 2;
+
+		y_offset = label_height;
+
+		rx = the_tabs->x();
+		rw = the_tabs->w();
+
+		if (y_offset >= 0) {		// labels at top
+			ry = the_tabs->y() + y_offset;
+			rh = the_tabs->h() - y_offset;
+		} else {				// labels at bottom
+			ry = the_tabs->y();
+			rh = the_tabs->h() + y_offset;
+		}
+
+#endif
 		{
 			tabsMain.emplace_back(new Fl_Group(rx, ry, rw, rh, "Palette editor"));
 			//stuff related to this group should go here
