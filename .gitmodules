@@ -16,3 +16,6 @@
 [submodule "lua-compat-5.3"]
 	path = lua-compat-53
 	url = https://github.com/keplerproject/lua-compat-5.3
+[submodule "Libunicows"]
+	path = Libunicows
+	url = https://github.com/ComputerNerd/Libunicows

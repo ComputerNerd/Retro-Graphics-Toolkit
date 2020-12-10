@@ -24,21 +24,23 @@ distribution should already have provided FLTK.
 For MinGW to reduce the distribution size it's recommended but not required
 that MinGW be built using win32 threads instead of posix threads so that way we
 don't have to ship the winpthreads DLL or staticlly link against it. Pass the
---enable-threads=win32 option to the gcc configure script.
+--enable-threads=win32 option to the gcc configure script. Another advatage if
+you do this along with disable large file support in libstc++ the EXEs will run
+on older versions of Windows such as Windows 95 and Windows 98.
 
 You will now need to build FLTK to do this download fltk-1.3.5 (or later if
 compatible) and extract it into the Retro Graphics Toolkit project folder and
 build it using either ./configure if you are on Windows or if you are cross
 compiling you need to do something like this:
 
-RANLIB=/usr/bin/i686-w64-mingw32-gcc-ranlib NM=/usr/bin/i686-w64-mingw32-gcc-nm AR=/usr/bin/i686-w64-mingw32-gcc-ar CFLAGS="-DWINVER=0x0400 -Os -s -flto=16 -fuse-linker-plugin -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=i686-w64-mingw32 --build=x86_64-unknown-linux-gnu ; make -j16
+RANLIB=/usr/bin/i586-w64-mingw32-gcc-ranlib NM=/usr/bin/i586-w64-mingw32-gcc-nm AR=/usr/bin/i586-w64-mingw32-gcc-ar CFLAGS="-fno-rtti -DWINVER=0x0400 -Os -s -flto=16 -fuse-linker-plugin -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=i586-w64-mingw32 --build=x86_64-unknown-linux-gnu --enable-gl=no --disable-largefile ; make -j16
 
 Or to build without LTO:
 
-CFLAGS="-Os -s -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=i686-w64-mingw32 --build=x86_64-unknown-linux-gnu ; make -j16
+CFLAGS="-Os -s -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=i586-w64-mingw32 --build=x86_64-unknown-linux-gnu ; make -j16
 
 Debug:
-CFLAGS="-Og -ggdb3 -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=i686-w64-mingw32 --build=x86_64-unknown-linux-gnu ; make -j16
+CFLAGS="-Og -ggdb3 -m32" CXXFLAGS=$CFLAGS LDFLAGS=$CFLAGS ./configure --host=i586-w64-mingw32 --build=x86_64-unknown-linux-gnu ; make -j16
 
 For some reason if the absolute path is not specified for RANLIB, NM and AR you
 will get errors relating to plugin support needed for LTO.
@@ -59,12 +61,16 @@ patch -p1 < a0caebb66353f5a2fbee0a2b70a770e51c2aac11.patch
 You will also need to put Boost in the directory you cloned this repository in.
 After extracting the archive rename boost_version_number to boost.
 
+Next build Libunicows.
+cd Libunicows/src/
+make -f makefile.crossmingw32
+
 Optional step to reduce binary size: Run these two commands in the lib
 directory where GCC was compiled. Do likewise in the folder called
 x86_64-w64-mingw32 (may be different depending on how you compiled your mingw
 toolchain)
 
-find \( -name '*.o' -o -name '*.a' \) -exec i686-w64-mingw32-objcopy -R '.rdata$zzz' {} \;
+find \( -name '*.o' -o -name '*.a' \) -exec i586-w64-mingw32-objcopy -R '.rdata$zzz' {} \;
 
 The purpose of that command is to remove all the GCC version strings. If you
 don't run this command you will have hundreds of duplicate GCC version strings
@@ -77,18 +83,18 @@ luaJit-windows-build/LuaJit-2.x.
 
 Before building LuaJIT edit the makefile in the src folder look for the line
 starting with TARGET_AR= and replace $(CROSS)ar with
-/usr/bin/i686-w64-mingw32-gcc-ar
+/usr/bin/i586-w64-mingw32-gcc-ar
 Also look for CCOPT= and set it to:
  -Os -flto -fuse-linker-plugin -fomit-frame-pointer
 
 run
 cd LuaJIT-windows-build/src/
-make HOST_CC="gcc -m32" CROSS=i686-w64-mingw32- TARGET_SYS=Windows CFLAGS="-Os -flto -fuse-linker-plugin" LDFLAGS="$TARGET_CFLAGS" -j16
+make HOST_CC="gcc -m32" CROSS=i586-w64-mingw32- TARGET_SYS=Windows CFLAGS="-Os -flto -fuse-linker-plugin" LDFLAGS="$TARGET_CFLAGS" -j16
 cp lua51.dll ../../
 cp luajit.exe ../../
 
 cd ../../
-cp /usr/i686-w64-mingw32/bin/libgcc_s_dw2-1.dll .
+cp /usr/i586-w64-mingw32/bin/libgcc_s_dw2-1.dll .
 
 # Optional steps to add documentation and make the files smaller to reduce the archive size.
 cp -r LuaJIT-windows-build/doc luajit-doc
